@@ -6,6 +6,7 @@ import {IsIn, IsNumber, IsObject, IsOptional, IsString} from 'class-validator';
     validations required for said record to be considered valid.
  */
 export default class File extends BaseDomainClass {
+    @IsString()
     @IsOptional()
     id?: string;
 
@@ -42,6 +43,7 @@ export default class File extends BaseDomainClass {
     short_uuid?: string;
 
     constructor(input: {
+        id?: string;
         container_id: string;
         data_source_id?: string;
         file_name: string;
@@ -55,6 +57,7 @@ export default class File extends BaseDomainClass {
         super();
 
         if (input) {
+            if(input.id) this.id = input.id;
             this.container_id = input.container_id;
             if (input.data_source_id) this.data_source_id = input.data_source_id;
             this.file_name = input.file_name;

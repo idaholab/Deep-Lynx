@@ -70,20 +70,56 @@
 
                     <template v-slot:expanded-item="{headers, item }">
                       <td :colspan="headers.length">
-                        <v-container>
-                          <v-row>
-                            <v-col :cols="12">
-                              <v-toolbar
-                                  flat
-                              >
-                                <v-toolbar-title>{{$t('dataQuery.viewProperties')}}</v-toolbar-title>
-                              </v-toolbar>
-
+                        <v-expansion-panels v-model="openPanels">
+                        <!-- Properties -->
+                          <v-expansion-panel>
+                            <v-expansion-panel-header>
+                              <div><span class="text-overline">{{$t('dataQuery.viewProperties')}}:</span></div>
+                            </v-expansion-panel-header>
+                            <v-expansion-panel-content>
                               <json-viewer :value="item.properties"></json-viewer>
-                            </v-col>
-                          </v-row>
-                          <node-files-dialog :icon="true" :node="item"></node-files-dialog>
-                        </v-container>
+                            </v-expansion-panel-content>
+                          </v-expansion-panel>
+                        <!-- Files -->
+                          <v-expansion-panel>
+                            <v-expansion-panel-header>
+                              <div><span class="text-overline">{{$t('dataQuery.nodeFiles')}}:</span></div>
+                            </v-expansion-panel-header>
+                            <v-expansion-panel-content>
+                              <node-files-dialog :icon="true" :node="item"></node-files-dialog>
+                            </v-expansion-panel-content>
+                          </v-expansion-panel>
+                        <!-- Edges -->
+                          <v-expansion-panel v-if="item.links">
+                            <v-expansion-panel-header>
+                              <div><span class="text-overline">{{$t('dataQuery.edges')}}:</span></div>
+                            </v-expansion-panel-header>
+                            <v-expansion-panel-content>
+                              <v-data-table
+                                :headers="edgeHeaders()"
+                                :items="Object.keys(item.links).map(k => {
+                                  return {
+                                    id: item.links[k].id,
+                                    origin: item.links[k].source.metatype_name,
+                                    rel: item.links[k].name,
+                                    destination: item.links[k].target.metatype_name,
+                                    type: getEdgeType(item.links[k], item.id)
+                                  }
+                                })"
+                              >
+                              <template v-slot:[`item.id`]="{ item }">
+                                <v-tooltip top>
+                                  <template v-slot:activator="{on, attrs}">
+                                    <v-icon v-bind="attrs" v-on="on" @click="copyID(item.id)">{{copy}}</v-icon>
+                                  </template>
+                                  <span>{{$t('dataQuery.copyID')}} </span>
+                                  <span>{{item.id}}</span>
+                                </v-tooltip>
+                              </template>
+                              </v-data-table>
+                            </v-expansion-panel-content>
+                          </v-expansion-panel>
+                        </v-expansion-panels>
                       </td>
                     </template>
 
@@ -133,6 +169,7 @@ export default class DataQuery extends Vue {
   results: ResultSet | null = null
   selectedProperties: any| null = null
   expanded = []
+  openPanels: number[] = [0]
 
   copy = mdiFileDocumentMultiple
   activeTabName = 'graph'
@@ -154,6 +191,22 @@ export default class DataQuery extends Vue {
     ]
   }
 
+  edgeHeaders() {
+    return [
+      {text: this.$t('dataQuery.id'), value: 'id'},
+      {text: this.$t('dataQuery.originMetatype'), value: 'origin'},
+      {text: this.$t('dataQuery.relType'), value: 'rel'},
+      {text: this.$t('dataQuery.destinationMetatype'), value: 'destination'},
+      {text: this.$t('dataQuery.linkType'), value: 'type'},
+      {value: 'data-table-expand'}
+    ]
+  }
+
+  getEdgeType(edge: any, nodeID: string) {
+    const type = edge.source.id === nodeID ? 'outgoing' : 'incoming'
+    return type
+  }
+
   async loadResults(queryResult: any) {
     // if queryResult === null, do not show graph
     if (queryResult === null) {
@@ -164,7 +217,7 @@ export default class DataQuery extends Vue {
     this.showGraph = true
     this.activeTabName = 'graph'
     this.tab = this.tabs()[0]
-    this.results = queryResult.nodes
+    this.results = queryResult
   }
 
   disableGraphEdit() {

@@ -283,7 +283,9 @@ export default class DataStagingMapper extends Mapper {
                     AND (type_mappings.active IS TRUE
                         AND EXISTS
                              (SELECT * from type_mapping_transformations
-                              WHERE type_mapping_transformations.type_mapping_id = type_mappings.id))) OR type_mappings.id IS NULL;
+                              WHERE type_mapping_transformations.type_mapping_id = type_mappings.id))) 
+                              OR type_mappings.id IS NULL 
+                              AND data_sources.container_id IS NOT NULL;
                    `;
     }
 
