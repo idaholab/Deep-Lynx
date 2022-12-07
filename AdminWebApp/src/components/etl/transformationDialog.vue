@@ -459,7 +459,7 @@
                                     <template v-if="item.type === 'property'">
                                       <metatype-keys-select
                                           :containerID="containerID"
-                                          :metatypeID="selectedRelationshipPair.origin_metatype_id"
+                                          :metatypeID="selectedRelationshipPair.destination_metatype_id"
                                           :multiple="false"
                                           :propertyName="item.property"
                                           @selected="setFilterPropertyKey(item, ...arguments)"
