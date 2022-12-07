@@ -1930,7 +1930,7 @@ export default class GraphViewer extends Vue {
     }
   }
 
-  async getInfo(data: NodeT) {
+  async getInfo(data: NodeT, update?: boolean) {
     // retrieve node history
     const nodeHistory = await this.$client.retrieveNodeHistory(this.containerID, data.id);
 
@@ -1948,12 +1948,15 @@ export default class GraphViewer extends Vue {
       history: nodeHistory
     }
 
-    // highlight the newly selected node
-    data.selected_node = true
+    if (!update) {
+      // remove the highlight from any previously selected node
+      this.resetNodeSelectForID(data.id)
 
-    // remove the highlight from any previously selected node
-    this.resetNodeSelectForID(data.id)
-    this.previousNodeSelect = data
+      // highlight the newly selected node
+      data.selected_node = true
+
+      this.previousNodeSelect = data
+    }
 
     return nodeHistory
   }
@@ -2149,7 +2152,7 @@ export default class GraphViewer extends Vue {
   }
 
   async nodeUpdated(node: any) {
-    const history = await this.getInfo(node)
+    const history = await this.getInfo(node, true)
 
     // select new version of node
     this.selectedNodeHistory = history[history.length-1].created_at
