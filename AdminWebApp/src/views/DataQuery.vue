@@ -13,6 +13,7 @@
       <v-row>
         <v-col
             cols="12"
+            class="pb-0"
         >
           <v-container flat class="pa-0" style="max-width: 100%" v-show="showGraph">
             <v-tabs
