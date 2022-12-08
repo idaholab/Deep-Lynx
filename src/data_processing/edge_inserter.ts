@@ -16,13 +16,11 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
     const queueMapper = EdgeQueueItemMapper.Instance;
     const repo = new EdgeRepository();
 
-    const transaction = await mapper.startTransaction();
     const edge = plainToClass(Edge, edgeQueueItem.edge);
 
     // run the filters if needed
     const edges = await repo.populateFromParameters(edge);
     if (edges.isError) {
-        await mapper.rollbackTransaction(transaction.value);
         Logger.error(`unable to create edges from parameters: ${edges.error?.error}`);
 
         // if we failed, need to iterate the attempts and set the next attempt date, so we don't swamp the database - this
@@ -52,15 +50,14 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
             const toSave = [...recordBuffer];
             recordBuffer = [];
 
-            saveOperations.push(repo.bulkSave(edge.created_by!, toSave, transaction.value));
+            saveOperations.push(repo.bulkSave(edge.created_by!, toSave));
         }
     });
 
-    saveOperations.push(repo.bulkSave(edge.created_by!, recordBuffer, transaction.value));
+    saveOperations.push(repo.bulkSave(edge.created_by!, recordBuffer));
 
     const saveResults = await Promise.all(saveOperations);
     if (saveResults.filter((result) => result.isError || !result.value).length > 0) {
-        await mapper.rollbackTransaction(transaction.value);
         const error = saveResults.filter((result) => result.isError).map((result) => JSON.stringify(result.error));
         Logger.error(`unable to save edges: ${error}`);
 
@@ -101,7 +98,7 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
         });
 
         if (edgeFiles.length > 0) {
-            const attached = await mapper.BulkAddFile(edgeFiles, transaction.value);
+            const attached = await mapper.BulkAddFile(edgeFiles);
             if (attached.isError) {
                 Logger.error(`unable to attach files to edge ${attached.error?.error}`);
             }
@@ -124,9 +121,8 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
         }
     } else {
         // if the original edge has no filters, then delete the queue item and mark as complete
-        const deleted = await queueMapper.Delete(edgeQueueItem.id!, transaction.value);
+        const deleted = await queueMapper.Delete(edgeQueueItem.id!);
         if (deleted.isError) {
-            await mapper.rollbackTransaction(transaction.value);
             Logger.error(`unable to delete edge queue item: ${deleted.error?.error}`);
 
             await Cache.del(`edge_insertion_${edge.import_data_id}`);
@@ -136,6 +132,5 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
 
     // we lower the TTL last to indicate we've processed it and so that the db has time to propagate the change
     await Cache.set(`edge_insertion_${edge.import_data_id}`, {}, Config.import_cache_ttl);
-    await mapper.completeTransaction(transaction.value);
     return Promise.resolve(Result.Success(true));
 }
