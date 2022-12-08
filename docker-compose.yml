@@ -10,6 +10,17 @@ services:
       - "8090:8090"
     env_file:
       - "./.docker-env"
+  redis-load:
+    build: ./RedisLoader
+    restart: on-failure
+    depends_on:
+      - deep-lynx
+      - timescaledb
+      - redis
+    environment:
+      - POSTGRES_CONNECTION_STRING=postgresql://postgres:root@timescaledb/deep_lynx_dev
+      - REDIS_CONNECTION_STRING=redis://redis:6379
+      - WAIT_HOSTS=deep-lynx:8090
   timescaledb:
     environment:
       - POSTGRES_PASSWORD=root
@@ -17,9 +28,10 @@ services:
     ports:
       - "5432:5432"
   redis:
-    image: "redis:latest"
+    image: "redis/redis-stack:latest"
     ports:
       - "6379:6379"
+      - "8001:8001"
   rabbitmq:
     environment:
       - RABBITMQ_DEFAULT_USER=deeplynx
