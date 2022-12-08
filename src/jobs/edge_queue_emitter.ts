@@ -61,6 +61,8 @@ void postgresAdapter
                                         queue.Put(Config.edge_insertion_queue, instanceToPlain(item)).catch((e) => {
                                             Logger.error(`error reading from cache for staging emitter ${e}`);
                                         });
+
+                                        void Cache.set(`edge_insertion_${item.import_id}`, {}, Config.initial_import_cache_ttl);
                                     }
                                 })
                                 // if we error out we need to go ahead and queue this message anyway, just so we're not dropping
@@ -72,7 +74,6 @@ void postgresAdapter
                                     });
                                 })
                                 .finally(() => {
-                                    void Cache.set(`edge_insertion_${item.import_id}`, {}, Config.initial_import_cache_ttl);
                                     seenImports.set(item.import_id!, undefined);
                                 });
                         });
