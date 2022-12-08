@@ -3,7 +3,8 @@ extern crate core;
 mod errors;
 
 use std::env;
-use chrono::{DateTime, Duration, NaiveDateTime};
+use std::str::FromStr;
+use chrono::{Duration, NaiveDateTime};
 use sqlx::{Pool, Postgres, Row};
 use tokio::time::{Instant, sleep};
 use futures_util::TryStreamExt;
@@ -44,7 +45,14 @@ async fn main() {
     };
 
     // create connection pool
-    let pool = match sqlx::PgPool::connect(connection_string.as_str()).await {
+    let x = match sqlx::postgres::PgConnectOptions::from_str(connection_string.as_str()) {
+        Ok(o) => {o}
+        Err(e) => {
+            panic!("unable to parse connection string {:?}", e)
+        }
+    };
+
+    let pool = match sqlx::PgPool::connect_with(x.extra_float_digits(None)).await {
         Ok(p) => {p}
         Err(e) => {
             panic!("unable to connect to postgres server {:?}", e);
