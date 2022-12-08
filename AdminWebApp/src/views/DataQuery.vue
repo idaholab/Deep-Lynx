@@ -47,7 +47,7 @@
                 <v-card flat>
                   <v-data-table
                       :headers="headers()"
-                      :items="results"
+                      :items="nodes"
                       show-expand
                       :expanded.sync="expanded"
                       :items-per-page="100"
@@ -131,7 +131,7 @@
                 <v-card flat>
                   <json-viewer
                       class="json-viewer px-1 py-5 text-wrap"
-                      :value="results"
+                      :value="nodes"
                       copyable
                       :maxDepth=1
                   />
@@ -154,6 +154,7 @@ import {Component, Prop, Vue} from "vue-property-decorator";
 
 import {ResultSet} from "@/components/queryBuilder/queryBuilder.vue";
 import {mdiFileDocumentMultiple} from "@mdi/js";
+import { NodeT } from "../api/types";
 
 @Component({components: {QueryBuilder, NodeFilesDialog, NodeTimeseriesDataTable, GraphViewer}})
 export default class DataQuery extends Vue {
@@ -168,6 +169,7 @@ export default class DataQuery extends Vue {
   tab: any | null = null
   showGraph = false
   results: ResultSet | null = null
+  nodes: NodeT[] | null = null
   selectedProperties: any| null = null
   expanded = []
   openPanels: number[] = [0]
@@ -219,6 +221,7 @@ export default class DataQuery extends Vue {
     this.activeTabName = 'graph'
     this.tab = this.tabs()[0]
     this.results = queryResult
+    this.nodes = queryResult.nodes
   }
 
   disableGraphEdit() {
