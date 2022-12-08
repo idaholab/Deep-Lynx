@@ -24,7 +24,7 @@ pub struct Node {
     data_staging_id: Option<String>,
     data_source_id: Option<i64>,
     type_mapping_transformation_id: Option<i64>,
-    metadata: serde_json::Value,
+    metadata: Option<serde_json::Value>,
     metatype_uuid: Option<String>
 }
 
