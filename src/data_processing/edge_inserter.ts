@@ -23,7 +23,7 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
     const edges = await repo.populateFromParameters(edge);
     if (edges.isError) {
         await mapper.rollbackTransaction(transaction.value);
-        Logger.debug(`unable to create edges from parameters: ${edges.error?.error}`);
+        Logger.error(`unable to create edges from parameters: ${edges.error?.error}`);
 
         // if we failed, need to iterate the attempts and set the next attempt date, so we don't swamp the database - this
         // is an exponential backoff
@@ -34,7 +34,7 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
 
         const set = await queueMapper.SetNextAttemptAt(edgeQueueItem.id!, edgeQueueItem.next_attempt_at.toISOString(), edges.error?.error);
         if (set.isError) {
-            Logger.debug(`unable to set next retry time for edge queue item ${set.error?.error}`);
+            Logger.error(`unable to set next retry time for edge queue item ${set.error?.error}`);
         }
 
         await Cache.del(`edge_insertion_${edge.import_data_id}`);
@@ -62,7 +62,7 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
     if (saveResults.filter((result) => result.isError || !result.value).length > 0) {
         await mapper.rollbackTransaction(transaction.value);
         const error = saveResults.filter((result) => result.isError).map((result) => JSON.stringify(result.error));
-        Logger.debug(`unable to save edges: ${error}`);
+        Logger.error(`unable to save edges: ${error}`);
 
         // if we failed, need to iterate the attempts and set the next attempt date, so we don't swamp the database - this
         // is an exponential backoff
@@ -73,7 +73,7 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
 
         const set = await queueMapper.SetNextAttemptAt(edgeQueueItem.id!, edgeQueueItem.next_attempt_at.toISOString(), error.join(','));
         if (set.isError) {
-            Logger.debug(`unable to set next retry time for edge queue item ${set.error?.error}`);
+            Logger.error(`unable to set next retry time for edge queue item ${set.error?.error}`);
         }
 
         await Cache.del(`edge_insertion_${edge.import_data_id}`);
