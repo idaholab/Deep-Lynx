@@ -150,7 +150,7 @@ async fn maintenance_loop(pool: &Pool<Postgres>, redis_client: &Client) -> Resul
         loop {
             let mut i = 0;
             let mut stream = sqlx::query_as::<_, Node>(LOOP_QUERY)
-                .bind(time.format("%Y-%m-%d %H:%m%f").to_string())
+                .bind(time.format("%Y-%m-%d %H:%M%S").to_string())
                 .bind(limit)
                 .bind(offset)
                 .fetch(pool);
@@ -175,7 +175,7 @@ async fn maintenance_loop(pool: &Pool<Postgres>, redis_client: &Client) -> Resul
         loop {
             let mut i = 0;
             let mut stream = sqlx::query_as::<_, Node>(DELETED_AT_QUERY)
-                .bind(time.format("%Y-%m-%d %H:%m%f%#z").to_string())
+                .bind(time.format("%Y-%m-%d %H:%M%S").to_string())
                 .bind(limit)
                 .bind(offset)
                 .fetch(pool);
