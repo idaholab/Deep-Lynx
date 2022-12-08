@@ -120,14 +120,14 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
 
         const set = await queueMapper.SetNextAttemptAt(edgeQueueItem.id!, edgeQueueItem.next_attempt_at.toISOString(), 'edge with filters, staying in queue');
         if (set.isError) {
-            Logger.debug(`unable to set next retry time for edge queue item ${set.error?.error}`);
+            Logger.error(`unable to set next retry time for edge queue item ${set.error?.error}`);
         }
     } else {
         // if the original edge has no filters, then delete the queue item and mark as complete
         const deleted = await queueMapper.Delete(edgeQueueItem.id!, transaction.value);
         if (deleted.isError) {
             await mapper.rollbackTransaction(transaction.value);
-            Logger.debug(`unable to delete edge queue item: ${deleted.error?.error}`);
+            Logger.error(`unable to delete edge queue item: ${deleted.error?.error}`);
 
             await Cache.del(`edge_insertion_${edge.import_data_id}`);
             return Promise.resolve(Result.Failure(`unable to delete edge queue item ${deleted.error?.error}`));
