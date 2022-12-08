@@ -347,6 +347,8 @@ export default class EdgeRepository extends Repository implements RepositoryInte
                 const newEdge: Edge = plainToInstance(Edge, {...instanceToPlain(e)});
                 newEdge.origin_id = origin.id;
                 newEdge.destination_id = dest.id;
+                newEdge.origin_parameters = undefined;
+                newEdge.destination_parameters = undefined;
 
                 edges.push(newEdge);
             });
