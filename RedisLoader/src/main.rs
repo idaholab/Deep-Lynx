@@ -52,7 +52,7 @@ async fn main() {
         }
     };
 
-    let pool = match sqlx::PgPool::connect_with(x.extra_float_digits(None).options([("pgbouncer", "true")])).await {
+    let pool = match sqlx::PgPool::connect_with(x.extra_float_digits(None)).await {
         Ok(p) => {p}
         Err(e) => {
             panic!("unable to connect to postgres server {:?}", e);
