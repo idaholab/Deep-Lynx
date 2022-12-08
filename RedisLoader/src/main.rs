@@ -19,9 +19,9 @@ pub struct Node {
     metatype_id: i64,
     metatype_name: String,
     properties: serde_json::Value,
-    original_data_id: String,
+    original_data_id: Option<String>,
     import_data_id: i64,
-    data_staging_id: String,
+    data_staging_id: Option<String>,
     data_source_id: i64,
     type_mapping_transformation_id: i64,
     metadata: serde_json::Value,
@@ -150,7 +150,7 @@ async fn maintenance_loop(pool: &Pool<Postgres>, redis_client: &Client) -> Resul
         loop {
             let mut i = 0;
             let mut stream = sqlx::query_as::<_, Node>(LOOP_QUERY)
-                .bind(time.format("%Y-%m-%d %H:%m%f%#z").to_string())
+                .bind(time.format("%Y-%m-%d %H:%m%f").to_string())
                 .bind(limit)
                 .bind(offset)
                 .fetch(pool);
