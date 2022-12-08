@@ -20,12 +20,12 @@ pub struct Node {
     metatype_name: String,
     properties: serde_json::Value,
     original_data_id: Option<String>,
-    import_data_id: i64,
+    import_data_id: Option<i64>,
     data_staging_id: Option<String>,
-    data_source_id: i64,
-    type_mapping_transformation_id: i64,
+    data_source_id: Option<i64>,
+    type_mapping_transformation_id: Option<i64>,
     metadata: serde_json::Value,
-    metatype_uuid: String
+    metatype_uuid: Option<String>
 }
 
 #[tokio::main]
