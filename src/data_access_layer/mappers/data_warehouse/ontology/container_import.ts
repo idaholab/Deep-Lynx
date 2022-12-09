@@ -1246,7 +1246,7 @@ export default class ContainerImport {
                             const buffer = toSaveKeyBuffer.slice(0);
                             toSaveKeyBuffer = []
 
-                            propertyPromises.push(() => metatypeKeyRepo.bulkSave(input.user, buffer))
+                            propertyPromises.push(() => metatypeKeyRepo.importBulkSave(input.user, buffer))
                         }
 
                         if (toSaveRelationshipBuffer.length > 1000) {
@@ -1259,11 +1259,11 @@ export default class ContainerImport {
 
                     }
 
-                    propertyPromises.push(() => metatypeKeyRepo.bulkSave(input.user, toSaveKeyBuffer));
+                    propertyPromises.push(() => metatypeKeyRepo.importBulkSave(input.user, toSaveKeyBuffer));
                     propertyPromises.push(() => metatypeRelationshipPairRepo.bulkSave(input.user, toSaveRelationshipBuffer, false));
 
                     if (updateKeys.length > 0) {
-                        propertyPromises.push(() => metatypeKeyRepo.bulkSave(input.user, updateKeys));
+                        propertyPromises.push(() => metatypeKeyRepo.importBulkSave(input.user, updateKeys));
                         metatypeKeys.concat(updateKeys);
                     }
 
@@ -1273,6 +1273,11 @@ export default class ContainerImport {
                     }
                 });
                 const propertyResults: Result<boolean>[] = await pAll(propertyPromises, {concurrency: 2});
+
+                // refresh metatype keys view just once now that all keys have been saved
+                metatypeKeyRepo.RefreshView().catch((e) => {
+                    Logger.error(`error refreshing metatype keys view ${e}`);
+                });
 
                 // Invalidate cache for this container as a final step
                 for (const metatype of metatypes) {
