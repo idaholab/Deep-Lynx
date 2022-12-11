@@ -526,6 +526,45 @@ export type ResultT<T> = {
     error: any;
 };
 
+export type MeanExecutionTime = {
+    user_id: string;
+    dbid: string;
+    query: string;
+    mean_exec_time: any;
+};
+
+export type LongRunningTransactions = {
+    pid: string;
+    usename: string;
+    datname: string;
+    query: string;
+    duration: any;
+};
+
+export type Statistics = {
+    edge_queue_items: string;
+    containers: string;
+    metatypes: string;
+    metatype_keys: string;
+    metatype_relationships: string;
+    metatype_relationship_keys: string;
+    metatype_relationship_pairs: string;
+    nodes: string;
+    edges: string;
+    current_nodes: string;
+    current_edges: string;
+    data_staging: string;
+    files: string;
+    migrations: string[];
+};
+
+export type FullStatistics = {
+    mean_execution_time?: MeanExecutionTime;
+    long_running_transactions?: LongRunningTransactions;
+    statistics?: Statistics;
+    version?: string;
+};
+
 // DefaultAvevaDataSourceConfig are sane defaults found through trial and error with the Aveva Deep Lynx Adapter
 // while we could include this on the createDataSourceDialog component, it's so large that it clutters
 // that component - better to pull it out and maintain it here so the connection to Deep Lynx is clear.

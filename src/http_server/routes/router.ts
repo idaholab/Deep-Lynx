@@ -38,6 +38,7 @@ import {
     dataTargetContext,
     serviceUserContext,
     activeOntologyVersionContext,
+    authRequest,
 } from '../middleware';
 import ContainerRoutes from './data_warehouse/ontology/container_routes';
 import MetatypeRoutes from './data_warehouse/ontology/metatype_routes';
@@ -67,6 +68,8 @@ import ImportRoutes from './data_warehouse/import/import_routes';
 import DataQueryRoutes from './data_warehouse/data/data_query_routes';
 import TaskRoutes from './task_runner/task_routes';
 import OntologyVersionRoutes from './data_warehouse/ontology/versioning/ontology_version_routes';
+import StatsMapper from '../../data_access_layer/mappers/stats_mapper';
+import Result from '../../common_classes/result';
 
 const winston = require('winston');
 const expressWinston = require('express-winston');
@@ -105,6 +108,20 @@ export class Router {
         // Auth middleware is mounted as part of the pre-middleware, making all middleware
         // mounted afterwards secure
         this.mountPreMiddleware();
+
+        // statistics endpoint
+        this.app.get(
+            '/stats',
+            authenticateRoute(),
+            currentUser(),
+            authRequest('read', 'stats'),
+            (req: express.Request, res: express.Response, next: express.NextFunction) => {
+                StatsMapper.Instance.FullStatistics()
+                    .then((stats) => stats.asResponse(res))
+                    .catch((e) => Result.Error(e).asResponse(res))
+                    .finally(() => next());
+            },
+        );
 
         // Mount application controllers, middleware is passed in as an array of functions
         ImportRoutes.mount(this.app, [authenticateRoute(), containerContext(), importContext(), dataStagingContext(), dataSourceContext(), currentUser()]);
