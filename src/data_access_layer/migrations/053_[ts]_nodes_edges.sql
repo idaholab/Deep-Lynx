@@ -6,11 +6,6 @@ ALTER TABLE new_nodes ADD CONSTRAINT nnodes_metatype_id_fkey FOREIGN KEY (metaty
 ALTER TABLE new_nodes ADD CONSTRAINT nnodes_type_mapping_transformation_id_fkey FOREIGN KEY (type_mapping_transformation_id) REFERENCES type_mapping_transformations(id) ON UPDATE CASCADE ON DELETE SET NULL;
 ALTER TABLE new_nodes ADD CONSTRAINT nnodes_uniq_id_created_at UNIQUE (id, created_at);
 
-CREATE SEQUENCE new_nodes_id_seq MINVALUE 1;
-ALTER TABLE new_nodes ALTER id SET DEFAULT nextval('new_nodes_id_seq');
-ALTER SEQUENCE new_nodes_id_seq OWNED BY nodes.id;
-SELECT setval('new_nodes_id_seq',  (SELECT MAX(id) FROM nodes));
-
 SELECT create_hypertable('new_nodes', 'created_at', migrate_data => true);
 
 DROP TABLE nodes CASCADE;
@@ -56,12 +51,6 @@ ALTER TABLE new_edges ADD CONSTRAINT edges_type_mapping_transformation_id_fkey F
 CREATE UNIQUE INDEX IF NOT EXISTS new_edges_uniq_idx
     ON new_edges USING btree
         (container_id ASC NULLS LAST, relationship_pair_id ASC NULLS LAST, data_source_id ASC NULLS LAST, created_at ASC NULLS LAST, origin_id ASC NULLS LAST, destination_id ASC NULLS LAST);
-
-
-CREATE SEQUENCE new_edges_id_seq MINVALUE 1;
-ALTER TABLE new_edges ALTER id SET DEFAULT nextval('new_edges_id_seq');
-ALTER SEQUENCE new_edges_id_seq OWNED BY edges.id;
-SELECT setval('new_edges_id_seq',  (SELECT MAX(id) FROM edges));
 
 SELECT create_hypertable('new_edges', 'created_at', migrate_data => true);
 
