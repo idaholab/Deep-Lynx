@@ -61,13 +61,24 @@ CREATE UNIQUE INDEX IF NOT EXISTS new_edges_uniq_idx
 CREATE SEQUENCE new_edges_id_seq MINVALUE 1;
 ALTER TABLE new_edges ALTER id SET DEFAULT nextval('new_edges_id_seq');
 ALTER SEQUENCE new_edges_id_seq OWNED BY edges.id;
-SELECT setval('new_edges_id_seq',  (SELECT MAX(id) FROM new_edges));
+SELECT setval('new_edges_id_seq',  (SELECT MAX(id) FROM edges));
 
 SELECT create_hypertable('new_edges', 'created_at', migrate_data => true);
 
 DROP TABLE edges CASCADE;
 ALTER TABLE new_edges RENAME TO edges;
 
+DROP SEQUENCE IF EXISTS new_nodes_id_seq;
+CREATE SEQUENCE new_nodes_id_seq MINVALUE 1;
+ALTER TABLE nodes ALTER id SET DEFAULT nextval('new_nodes_id_seq');
+ALTER SEQUENCE new_nodes_id_seq OWNED BY nodes.id;
+SELECT setval('new_nodes_id_seq',  (SELECT MAX(id) FROM nodes));
+
+DROP SEQUENCE IF EXISTS new_edges_id_seq;
+CREATE SEQUENCE new_edges_id_seq MINVALUE 1;
+ALTER TABLE edges ALTER id SET DEFAULT nextval('new_edges_id_seq');
+ALTER SEQUENCE new_edges_id_seq OWNED BY edges.id;
+SELECT setval('new_edges_id_seq',  (SELECT MAX(id) FROM edges));
 
 CREATE OR REPLACE VIEW current_edges
 AS
@@ -131,3 +142,4 @@ FROM nodes
          LEFT JOIN metatypes ON metatypes.id = nodes.metatype_id
 WHERE nodes.deleted_at IS NULL
 ORDER BY nodes.id, nodes.created_at DESC;
+
