@@ -75,6 +75,10 @@ async function Start(): Promise<any> {
                 name: 'staging_clean', // will run staging_clean.ts
                 interval: '1 day',
             },
+            {
+                name: 'materialized_view_refresh', // will run staging_clean.ts
+                interval: '3h',
+            },
         ],
     });
 
