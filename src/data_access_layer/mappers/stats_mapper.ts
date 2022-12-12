@@ -60,7 +60,7 @@ export default class StatsMapper extends Mapper {
     // My hope is that this method will allow us to be flexible and create more complicated
     // queries more easily.
     private mean_execution_time(): string {
-        const text = `SELECT userid::regrole, dbid, query, mean_exec_time
+        const text = `SELECT userid::regrole, dbid, query::varchar(4095), mean_exec_time
                       FROM pg_stat_statements
                       ORDER BY mean_exec_time
                               DESC LIMIT 5;`;
@@ -70,7 +70,7 @@ export default class StatsMapper extends Mapper {
 
     private long_running_transaction(): string {
         const text = `
-            SELECT pid, usename, datname, query, now() - xact_start as duration
+            SELECT pid, usename, datname, query::varchar(4095), now() - xact_start as duration
             FROM pg_stat_activity
             WHERE pid <> pg_backend_pid() and state IN ('idle in transaction', 'active')
             ORDER BY duration DESC;`;
