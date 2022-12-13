@@ -130,7 +130,7 @@ export default class EdgeMapper extends Mapper {
             created_by,
             modified_by,
             created_at) VALUES %L 
-            ON CONFLICT(created_at, id) DO UPDATE SET
+            ON CONFLICT(container_id,relationship_pair_id,data_source_id,created_at, origin_id, destination_id) DO UPDATE SET
                 properties = EXCLUDED.properties,
                 metadata = EXCLUDED.metadata
             WHERE EXCLUDED.id = edges.id
