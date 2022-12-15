@@ -6,6 +6,7 @@ import {Writable} from 'stream';
 import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/postgres';
 import DataSourceRepository from '../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import {parentPort} from 'worker_threads';
+import BackedLogger from '../services/logger';
 
 // handle cache clears from parent IF memory cache
 if (Config.cache_provider === 'memory') {
@@ -21,6 +22,11 @@ if (Config.cache_provider === 'memory') {
         }
     });
 }
+
+process.on('unhandledRejection', (reason, promise) => {
+    BackedLogger.error(`Unhandled rejection at ${promise} reason: ${reason}`);
+    process.exit(1);
+});
 
 process.setMaxListeners(100);
 void PostgresAdapter.Instance.init()
