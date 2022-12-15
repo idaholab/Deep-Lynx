@@ -2,7 +2,6 @@ import Edge, {EdgeQueueItem} from '../domain_objects/data_warehouse/data/edge';
 import Result from '../common_classes/result';
 import EdgeRepository from '../data_access_layer/repositories/data_warehouse/data/edge_repository';
 import EdgeMapper from '../data_access_layer/mappers/data_warehouse/data/edge_mapper';
-import Cache from '../services/cache/cache';
 import Config from '../services/config';
 import Logger from '../services/logger';
 import EdgeQueueItemMapper from '../data_access_layer/mappers/data_warehouse/data/edge_queue_item_mapper';
@@ -35,7 +34,6 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
             Logger.error(`unable to set next retry time for edge queue item ${set.error?.error}`);
         }
 
-        await Cache.del(`edge_insertion_${edge.import_data_id}`);
         return Promise.resolve(Result.Failure(`unable to populate edges from parameter ${edges.error?.error}`));
     }
 
@@ -73,7 +71,6 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
             Logger.error(`unable to set next retry time for edge queue item ${set.error?.error}`);
         }
 
-        await Cache.del(`edge_insertion_${edge.import_data_id}`);
         return Promise.resolve(Result.Failure(`unable to save edges ${error}`));
     }
 
@@ -125,12 +122,9 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
         if (deleted.isError) {
             Logger.error(`unable to delete edge queue item: ${deleted.error?.error}`);
 
-            await Cache.del(`edge_insertion_${edge.import_data_id}`);
             return Promise.resolve(Result.Failure(`unable to delete edge queue item ${deleted.error?.error}`));
         }
     }
 
-    // we lower the TTL last to indicate we've processed it and so that the db has time to propagate the change
-    await Cache.set(`edge_insertion_${edge.import_data_id}`, {}, Config.import_cache_ttl);
     return Promise.resolve(Result.Success(true));
 }
