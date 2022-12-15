@@ -155,7 +155,6 @@ export default class FileMapper extends Mapper {
             userID,
         ]);
 
-        const bob = format(text, values);
         return format(text, values);
     }
 
