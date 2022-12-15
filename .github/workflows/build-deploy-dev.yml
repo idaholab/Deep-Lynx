@@ -44,6 +44,18 @@ jobs:
       environment: development
       needs: build-deeplynx-dev
       steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: deeplynx
+          ref: development
+      - name: Checkout tools repo
+        uses: actions/checkout@v3
+        with:
+          repository: Digital-Engineering/kubernetes
+          ref: development
+          path: kubernetes
+          token: ${{ secrets.GH_TOKEN }}
       - shell: bash
         name: Manifest env substitute
         env:
