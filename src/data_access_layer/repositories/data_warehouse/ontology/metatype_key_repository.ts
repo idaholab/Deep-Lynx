@@ -181,8 +181,66 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
     }
 
     async saveFromJSON(metatypeKeys: MetatypeKey[]): Promise<Result<boolean>> {
-        const saved = await this.#mapper.JSONCreate(metatypeKeys);
-        return saved;
+        return await this.#mapper.JSONCreate(metatypeKeys);
+    }
+
+    RefreshView(): Promise<Result<boolean>> {
+        return this.#mapper.RefreshView()
+    }
+
+    // this function is to be used only on container import. it does not refresh the keys view.
+    async importBulkSave(user: User, k: MetatypeKey[]): Promise<Result<boolean>> {
+        const toCreate: MetatypeKey[] = [];
+        const toUpdate: MetatypeKey[] = [];
+        const toReturn: MetatypeKey[] = [];
+
+        for (const key of k) {
+            const errors = await key.validationErrors();
+            if (errors) {
+                return Promise.resolve(Result.Failure(`some keys do not pass validation ${errors.join(',')}`));
+            }
+
+            // clear the parent metatype's cache
+            void this.#metatypeRepo.deleteCached(key.metatype_id!, key.container_id);
+            void this.deleteCachedForMetatype(key.metatype_id!, key.container_id);
+            key.id ? toUpdate.push(key) : toCreate.push(key);
+        }
+
+        // we run the bulk save in a transaction so that on failure we don't get
+        // stuck with partially updated items
+        const transaction = await this.#mapper.startTransaction();
+        if (transaction.isError) return Promise.resolve(Result.Failure(`unable to initiate db transaction`));
+
+        if (toUpdate.length > 0) {
+            const results = await this.#mapper.ImportBulkUpdate(user.id!, toUpdate, transaction.value);
+            if (results.isError) {
+                await this.#mapper.rollbackTransaction(transaction.value);
+                return Promise.resolve(Result.Pass(results));
+            }
+
+            toReturn.push(...results.value);
+        }
+
+        if (toCreate.length > 0) {
+            const results = await this.#mapper.ImportBulkCreate(user.id!, toCreate, transaction.value);
+            if (results.isError) {
+                await this.#mapper.rollbackTransaction(transaction.value);
+                return Promise.resolve(Result.Pass(results));
+            }
+            toReturn.push(...results.value);
+        }
+
+        const committed = await this.#mapper.completeTransaction(transaction.value);
+        if (committed.isError) {
+            void this.#mapper.rollbackTransaction(transaction.value);
+            return Promise.resolve(Result.Failure(`unable to commit changes to database ${committed.error}`));
+        }
+
+        toReturn.forEach((result, i) => {
+            Object.assign(k[i], result);
+        });
+
+        return Promise.resolve(Result.Success(true));
     }
 
     constructor() {

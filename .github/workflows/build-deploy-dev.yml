@@ -39,22 +39,23 @@ jobs:
           az login --service-principal -u $ACR_SP_USER -p $ACR_SP_PASSWORD --tenant $ACR_SP_TENANT
           az account set --subscription $ACR_SUBSCRIPTION
           az acr build -r $ACR_REGISTRY -f $GITHUB_WORKSPACE/deeplynx/Dockerfile -t $ACR_PATH:$GITHUB_SHA-dev .
-      - shell: bash
-        name: ACR build redis-load
-        env:
-          ACR_SP_USER: ${{ secrets.CI_SP_USER }}
-          ACR_SP_PASSWORD: ${{ secrets.CI_SP_PASSWORD }}
-          ACR_REGISTRY: ${{ secrets.CI_REGISTRY }}
-          ACR_PATH: ${{ secrets.CI_REGISTRY_PATH }}
-          ACR_SP_TENANT: ${{ secrets.CI_SP_TENANT }}
-          ACR_SUBSCRIPTION: ${{ secrets.CI_ACR_SUBSCRIPTION }}
-          NODE_ENV: ${{ secrets.NODE_ENV }}
-        run: |
-          cd $GITHUB_WORKSPACE/deeplynx
-          az cloud set --name AzureUSGovernment
-          az login --service-principal -u $ACR_SP_USER -p $ACR_SP_PASSWORD --tenant $ACR_SP_TENANT
-          az account set --subscription $ACR_SUBSCRIPTION
-          az acr build -r $ACR_REGISTRY -f $GITHUB_WORKSPACE/deeplynx/RedisLoader/Dockerfile -t $ACR_PATH:$GITHUB_SHA-loader-dev .
+  deploy-deeplynx-dev:
+      runs-on: [ self-hosted ]
+      environment: development
+      needs: build-deeplynx-dev
+      steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: deeplynx
+          ref: development
+      - name: Checkout tools repo
+        uses: actions/checkout@v3
+        with:
+          repository: Digital-Engineering/kubernetes
+          ref: development
+          path: kubernetes
+          token: ${{ secrets.GH_TOKEN }}
       - shell: bash
         name: Manifest env substitute
         env:
@@ -102,8 +103,8 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/kubernetes/deeplynx/manifests
           envsubst < development.yml > development_final.yml
-      - uses: azure/setup-kubectl@v3
-      - uses: azure/k8s-set-context@v3
+      - uses: Azure/setup-kubectl@v3.1
+      - uses: Azure/k8s-set-context@v3.0
         with:
           method: kubeconfig
           kubeconfig: ${{ secrets.KUBE_CONFIG }}
@@ -121,7 +122,7 @@ jobs:
   mirror-repository:
     runs-on: [ self-hosted ]
     environment: development
-    needs: build-deeplynx-dev
+    needs: deploy-deeplynx-dev
     steps:
       - uses: actions/checkout@v3
         with:

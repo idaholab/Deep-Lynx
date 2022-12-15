@@ -182,8 +182,6 @@ export default class GraphQLRunner {
 
         }
 
-        console.log(options.ontologyVersionID)
-
         let metatypeIDs: string[] = []
         if(options.fullSchema || (options.metatypes && options.metatypes.length > 0)) {
             let metatypeRepo = this.#metatypeRepo
