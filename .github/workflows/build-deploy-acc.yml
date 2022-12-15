@@ -101,6 +101,7 @@ jobs:
   deploy-deeplynx-acc:
     runs-on: [ self-hosted ]
     environment: acceptance
+    needs: build-deeplynx-acc
     steps:
       - name: Checkout
         uses: actions/checkout@v3
