@@ -39,6 +39,23 @@ jobs:
           az login --service-principal -u $ACR_SP_USER -p $ACR_SP_PASSWORD --tenant $ACR_SP_TENANT
           az account set --subscription $ACR_SUBSCRIPTION
           az acr build -r $ACR_REGISTRY -f $GITHUB_WORKSPACE/deeplynx/Dockerfile -t $ACR_PATH:$GITHUB_SHA-dev .
+  deploy-deeplynx-dev:
+      runs-on: [ self-hosted ]
+      environment: development
+      needs: build-deeplynx-dev
+      steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: deeplynx
+          ref: development
+      - name: Checkout tools repo
+        uses: actions/checkout@v3
+        with:
+          repository: Digital-Engineering/kubernetes
+          ref: development
+          path: kubernetes
+          token: ${{ secrets.GH_TOKEN }}
       - shell: bash
         name: Manifest env substitute
         env:
@@ -83,7 +100,6 @@ jobs:
           ELM_HOST: ${{ secrets.ELM_HOST }}
           ELM_IP: ${{ secrets.ELM_IP }}
           NETWORKING_HOST: ${{ secrets.NETWORKING_HOST }}
-          LOG_JOBS: ${{ secrets.LOG_JOBS}}
         run: |
           cd $GITHUB_WORKSPACE/kubernetes/deeplynx/manifests
           envsubst < development.yml > development_final.yml
@@ -106,7 +122,7 @@ jobs:
   mirror-repository:
     runs-on: [ self-hosted ]
     environment: development
-    needs: build-deeplynx-dev
+    needs: deploy-deeplynx-dev
     steps:
       - uses: actions/checkout@v3
         with:
