@@ -98,6 +98,24 @@ jobs:
             scanreport.tsv
             SCAN_READ_ME.txt
 
+  deploy-deeplynx-acc:
+    runs-on: [ self-hosted ]
+    environment: acceptance
+    needs: build-deeplynx-acc
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: deeplynx
+          ref: main
+
+      - name: Checkout tools repo
+        uses: actions/checkout@v3
+        with:
+          repository: Digital-Engineering/kubernetes
+          ref: main
+          path: kubernetes
+          token: ${{ secrets.GH_TOKEN }}
       - shell: bash
         name: Manifest env substitute
         env:
@@ -164,7 +182,7 @@ jobs:
   mirror-repository:
     runs-on: [ self-hosted ]
     environment: production
-    needs: build-deeplynx-acc
+    needs: deploy-deeplynx-acc
     steps:
       - uses: actions/checkout@v3
         with:
@@ -193,10 +211,10 @@ jobs:
       - run: |
           sudo mkdir /opt/swagger && cd /opt/swagger
           sudo wget https://repo1.maven.org/maven2/io/swagger/codegen/v3/swagger-codegen-cli/3.0.35/swagger-codegen-cli-3.0.35.jar -O swagger-codegen-cli.jar
-          git clone ${{ secrets.DL_JS_SDK }} deeplynx-js-sdk
-          git clone ${{ secrets.DL_PY_SDK }} deeplynx-py-sdk
-          git clone ${{ secrets.DL_CSHARP_SDK }} deeplynx-csharp-sdk
-          git clone ${{ secrets.DL_R_SDK }} deeplynx-r-sdk
+          sudo git clone ${{ secrets.DL_JS_SDK }} deeplynx-js-sdk
+          sudo git clone ${{ secrets.DL_PY_SDK }} deeplynx-py-sdk
+          sudo git clone ${{ secrets.DL_CSHARP_SDK }} deeplynx-csharp-sdk
+          sudo git clone ${{ secrets.DL_R_SDK }} deeplynx-r-sdk
           java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l typescript-axios -o deeplynx-js-sdk
           java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l csharp -o deeplynx-csharp-sdk
           java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l r -o deeplynx-r-sdk

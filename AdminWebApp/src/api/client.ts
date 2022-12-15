@@ -28,6 +28,7 @@ import {
     TypeMappingUpgradePayloadT,
     CreateServiceUserPayloadT,
     ServiceUserPermissionSetT,
+    FullStatistics,
 } from '@/api/types';
 import {RetrieveJWT} from '@/auth/authentication_service';
 import {UserT} from '@/auth/types';
@@ -53,6 +54,10 @@ export class Client {
 
     constructor(config?: Config) {
         if (config) this.config = config;
+    }
+
+    retrieveStats(): Promise<FullStatistics> {
+        return this.get<FullStatistics>(`/stats`);
     }
 
     submitGraphQLQuery(containerID: string, query: any, pointInTime?: string): Promise<any> {
