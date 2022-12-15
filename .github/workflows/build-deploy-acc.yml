@@ -98,6 +98,23 @@ jobs:
             scanreport.tsv
             SCAN_READ_ME.txt
 
+  deploy-deeplynx-acc:
+    runs-on: [ self-hosted ]
+    environment: acceptance
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: deeplynx
+          ref: main
+
+      - name: Checkout tools repo
+        uses: actions/checkout@v3
+        with:
+          repository: Digital-Engineering/kubernetes
+          ref: main
+          path: kubernetes
+          token: ${{ secrets.GH_TOKEN }}
       - shell: bash
         name: Manifest env substitute
         env:
@@ -164,7 +181,7 @@ jobs:
   mirror-repository:
     runs-on: [ self-hosted ]
     environment: production
-    needs: build-deeplynx-acc
+    needs: deploy-deeplynx-acc
     steps:
       - uses: actions/checkout@v3
         with:
