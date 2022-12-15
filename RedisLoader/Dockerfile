@@ -12,7 +12,7 @@ RUN apt-get install -y libssl-dev
 
 # Build the app
 RUN rustup default nightly
-RUN cargo build --bin redis_loader --release
+RUN cargo build --bin RedisLoader --release
 
 USER root
 
@@ -20,4 +20,4 @@ USER root
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait
 RUN chmod +x /wait
 
-CMD /wait && ./target/release/redis_loader
+CMD /wait && ./target/release/RedisLoader

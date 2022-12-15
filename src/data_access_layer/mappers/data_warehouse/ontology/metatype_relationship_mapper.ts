@@ -101,6 +101,10 @@ export default class MetatypeRelationshipMapper extends Mapper {
         return super.runStatement(this.unarchiveStatement(id, userID));
     }
 
+    public async JSONCreate(relationships: MetatypeRelationship[]): Promise<Result<boolean>> {
+        return super.runStatement(this.insertFromJSONStatement(relationships))
+    }
+
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
@@ -219,5 +223,34 @@ export default class MetatypeRelationshipMapper extends Mapper {
                 values: [containerID],
             };
         }
+    }
+
+    // usees json_to_recordset to directly insert metatype relationships from json
+    private insertFromJSONStatement(relationships: MetatypeRelationship[]): string {
+        const text = `INSERT INTO metatype_relationships(
+                        container_id,
+                        name,
+                        description,
+                        created_by,
+                        modified_by,
+                        ontology_version,
+                        old_id)
+                    SELECT *
+                    FROM json_to_recordset(%L)
+                    AS ont_import(container_id int8, name text, description text, created_by text, modified_by text, ontology_version int8, old_id int8)
+                    ON CONFLICT (container_id, name, ontology_version) DO UPDATE SET
+                        name = EXCLUDED.name,
+                        old_id = EXCLUDED.old_id,
+                        created_by = EXCLUDED.created_by,
+                        modified_by = EXCLUDED.created_by,
+                        created_at = NOW(),
+                        modified_at = NOW(),
+                        deleted_at = NULL
+                    WHERE EXCLUDED.name = metatype_relationships.name
+                    AND EXCLUDED.container_id = metatype_relationships.container_id
+                    AND EXCLUDED.ontology_version = metatype_relationships.ontology_version`;
+        const values = JSON.stringify(relationships);
+
+        return format(text, values);
     }
 }

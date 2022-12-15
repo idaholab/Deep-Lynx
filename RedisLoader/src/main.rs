@@ -3,8 +3,7 @@ extern crate core;
 mod errors;
 
 use std::env;
-use std::str::FromStr;
-use chrono::{Duration, NaiveDateTime};
+use chrono::{DateTime, Duration, NaiveDateTime};
 use sqlx::{Pool, Postgres, Row};
 use tokio::time::{Instant, sleep};
 use futures_util::TryStreamExt;
@@ -19,13 +18,13 @@ pub struct Node {
     metatype_id: i64,
     metatype_name: String,
     properties: serde_json::Value,
-    original_data_id: Option<String>,
-    import_data_id: Option<i64>,
-    data_staging_id: Option<String>,
-    data_source_id: Option<i64>,
-    type_mapping_transformation_id: Option<i64>,
-    metadata: Option<serde_json::Value>,
-    metatype_uuid: Option<String>
+    original_data_id: String,
+    import_data_id: i64,
+    data_staging_id: String,
+    data_source_id: i64,
+    type_mapping_transformation_id: i64,
+    metadata: serde_json::Value,
+    metatype_uuid: String
 }
 
 #[tokio::main]
@@ -45,14 +44,7 @@ async fn main() {
     };
 
     // create connection pool
-    let x = match sqlx::postgres::PgConnectOptions::from_str(connection_string.as_str()) {
-        Ok(o) => {o}
-        Err(e) => {
-            panic!("unable to parse connection string {:?}", e)
-        }
-    };
-
-    let pool = match sqlx::PgPool::connect_with(x.extra_float_digits(None)).await {
+    let pool = match sqlx::PgPool::connect(connection_string.as_str()).await {
         Ok(p) => {p}
         Err(e) => {
             panic!("unable to connect to postgres server {:?}", e);
@@ -150,7 +142,7 @@ async fn maintenance_loop(pool: &Pool<Postgres>, redis_client: &Client) -> Resul
         loop {
             let mut i = 0;
             let mut stream = sqlx::query_as::<_, Node>(LOOP_QUERY)
-                .bind(time.format("%Y-%m-%d %H:%M:%S").to_string())
+                .bind(time.format("%Y-%m-%d %H:%m%f%#z").to_string())
                 .bind(limit)
                 .bind(offset)
                 .fetch(pool);
@@ -175,7 +167,7 @@ async fn maintenance_loop(pool: &Pool<Postgres>, redis_client: &Client) -> Resul
         loop {
             let mut i = 0;
             let mut stream = sqlx::query_as::<_, Node>(DELETED_AT_QUERY)
-                .bind(time.format("%Y-%m-%d %H:%M:%S").to_string())
+                .bind(time.format("%Y-%m-%d %H:%m%f%#z").to_string())
                 .bind(limit)
                 .bind(offset)
                 .fetch(pool);

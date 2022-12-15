@@ -34,6 +34,8 @@ export default class ContainerRoutes {
 
         app.get('/containers/:containerID/ontology/export', ...middleware, authInContainer('read', 'ontology'), this.exportOntology);
 
+        app.post('/containers/:containerID/ontology/import', ...middleware, authInContainer('write', 'ontology'), this.importOntology);
+
         app.post('/containers/:containerID/permissions', ...middleware, authRequest('write', 'containers'), this.repairPermissions);
 
         app.get('/containers/:containerID/alerts', ...middleware, authInContainer('read', 'ontology'), this.listAlerts);
@@ -317,5 +319,47 @@ export default class ContainerRoutes {
                     });
             })
             .catch((err) => Result.Error(err).asResponse(res));
+    }
+
+    private static importOntology(req: Request, res: Response, next: NextFunction) {
+        if (!req.container) {
+            Result.Failure(`must provide container to import ontology`).asResponse(res);
+            next();
+            return;
+        }
+
+        const streamChunks: Buffer[] = [];
+        let fileBuffer: Buffer = Buffer.alloc(0);
+        const busboy = Busboy({headers: req.headers});
+
+        // if a file has been provided, create a buffer from it
+        busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, info: FileInfo) => {
+            const {filename} = info;
+            const ext = path.extname(filename);
+            if (ext !== '.json') {
+                Result.Failure('Unsupported filetype supplied. Please provide a valid ontology export (.json) file.', 400).asResponse(res);
+                next();
+                return;
+            }
+
+            file.on('data', (data) => {
+                streamChunks.push(data);
+            });
+            file.on('end', () => {
+                fileBuffer = Buffer.concat(streamChunks);
+            });
+        });
+
+        busboy.on('finish', () => {
+            repository
+                .importOntology(req.container!.id!, req.currentUser!, fileBuffer)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => Result.Error(err).asResponse(res))
+                .finally(() => next());
+        });
+
+        return req.pipe(busboy);
     }
 }

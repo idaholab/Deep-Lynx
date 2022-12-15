@@ -2,6 +2,7 @@ import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
 import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
+import Logger from '../../../../services/logger';
 
 const format = require('pg-format');
 
@@ -35,10 +36,20 @@ export default class MetatypeKeyMapper extends Mapper {
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
+        this.RefreshView()
+            .catch((e) => {
+                Logger.error(`error refreshing metatype keys view ${e}`);
+            });
+
         return Promise.resolve(Result.Success(r.value[0]));
     }
 
     public async BulkCreate(userID: string, keys: MetatypeKey[], transaction?: PoolClient): Promise<Result<MetatypeKey[]>> {
+        this.RefreshView()
+            .catch((e) => {
+                Logger.error(`error refreshing metatype keys view ${e}`);
+            });
+
         return super.run(this.createStatement(userID, ...keys), {
             transaction,
             resultClass: this.resultClass,
@@ -68,10 +79,20 @@ export default class MetatypeKeyMapper extends Mapper {
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
+        this.RefreshView()
+            .catch((e) => {
+                Logger.error(`error refreshing metatype keys view ${e}`);
+            });
+
         return Promise.resolve(Result.Success(r.value[0]));
     }
 
     public async BulkUpdate(userID: string, keys: MetatypeKey[], transaction?: PoolClient): Promise<Result<MetatypeKey[]>> {
+        this.RefreshView()
+            .catch((e) => {
+                Logger.error(`error refreshing metatype keys view ${e}`);
+            });
+
         return super.run(this.fullUpdateStatement(userID, ...keys), {
             transaction,
             resultClass: this.resultClass,
@@ -104,6 +125,29 @@ export default class MetatypeKeyMapper extends Mapper {
 
     public async Unarchive(id: string, userID: string): Promise<Result<boolean>> {
         return super.runStatement(this.unarchiveStatement(id, userID));
+    }
+
+    public RefreshView(): Promise<Result<boolean>> {
+        return super.runStatement(this.refreshViewStatement());
+    }
+
+    // these functions are copies only to be used on container import. they do not refresh the keys view.
+    public async ImportBulkCreate(userID: string, keys: MetatypeKey[], transaction?: PoolClient): Promise<Result<MetatypeKey[]>> {
+        return super.run(this.createStatement(userID, ...keys), {
+            transaction,
+            resultClass: this.resultClass,
+        });
+    }
+
+    public async ImportBulkUpdate(userID: string, keys: MetatypeKey[], transaction?: PoolClient): Promise<Result<MetatypeKey[]>> {
+        return super.run(this.fullUpdateStatement(userID, ...keys), {
+            transaction,
+            resultClass: this.resultClass,
+        });
+    }
+
+    public async JSONCreate(metatypeKeys: MetatypeKey[]): Promise<Result<boolean>> {
+        return super.runStatement(this.insertFromJSONStatement(metatypeKeys))
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -171,7 +215,7 @@ export default class MetatypeKeyMapper extends Mapper {
     }
 
     private listFromIDsStatement(ids: string[]): string {
-        const text = `SELECT * FROM metatype_keys WHERE id IN(%L)`;
+        const text = `SELECT * FROM metatype_full_keys WHERE id IN (%L)`;
         const values = ids;
 
         return format(text, values);
@@ -216,32 +260,14 @@ export default class MetatypeKeyMapper extends Mapper {
     // all keys back, both the metatype's own and the inherited keys
     private listStatement(metatypeID: string): QueryConfig {
         return {
-            text: `SELECT * FROM get_metatype_keys($1::bigint) ORDER BY name`,
+            text: `SELECT * FROM metatype_full_keys WHERE metatype_id = $1`,
             values: [metatypeID],
         };
     }
 
     private listKeysStatement(metatype_ids: string[]): QueryConfig {
-        const text = `WITH RECURSIVE parents AS (
-                SELECT id, container_id, name, description, created_at, 
-                    modified_at, created_by, modified_by, ontology_version, 
-                    old_id, deleted_at, id AS key_parent, 1 AS lvl
-                FROM metatypes_view
-                    UNION
-                SELECT v.id, v.container_id, v.name, v.description, v.created_at,
-                    v.modified_at, v.created_by, v.modified_by, v.ontology_version,
-                    v.old_id, v.deleted_at, p.key_parent, p.lvl + 1
-                FROM parents p JOIN metatypes_view v ON p.id = v.parent_id
-            ) SELECT mk.id, p.id AS metatype_id, mk.name, mk.description, 
-                mk.required, mk.property_name, mk.data_type, mk.options, 
-                mk.default_value, mk.validation, mk.created_at, mk.modified_at,
-                mk.created_by, mk.modified_by, mk.ontology_version, 
-                mk.container_id, mk.deleted_at
-            FROM parents p JOIN metatype_keys mk ON p.key_parent = mk.metatype_id
-            WHERE p.id IN (%L)
-            ORDER BY metatype_id, mk.name`;
-        const values = metatype_ids;
-        return format(text, values);
+        const text = `SELECT * FROM metatype_full_keys WHERE metatype_id IN (%L)`;
+        return format(text, metatype_ids);
     }
 
     private fullUpdateStatement(userID: string, ...keys: MetatypeKey[]): string {
@@ -282,18 +308,85 @@ export default class MetatypeKeyMapper extends Mapper {
     private forExportStatement(containerID: string, ontologyVersionID?: string): QueryConfig {
         if (ontologyVersionID) {
             return {
-                text: `SELECT  m.metatype_id, m.property_name, m.data_type, m.required, m.validation, m.options, m.default_value, m.name, m.description, m.id as old_id
+                text: `SELECT  m.metatype_id, m.property_name, m.data_type, m.required, m.validation,
+                    m.options, m.default_value, m.name, m.description, m.id as old_id
                     FROM metatype_keys m 
                     WHERE m.deleted_at IS NULL AND m.container_id = $1 AND m.ontology_version = $2`,
                 values: [containerID, ontologyVersionID],
             };
         } else {
             return {
-                text: `SELECT  m.metatype_id, m.property_name, m.data_type, m.required, m.validation, m.options, m.default_value, m.name, m.description, m.id as old_id
+                text: `SELECT  m.metatype_id, m.property_name, m.data_type, m.required, m.validation,
+                    m.options, m.default_value, m.name, m.description, m.id as old_id
                     FROM metatype_keys m 
                     WHERE m.deleted_at IS NULL AND m.container_id = $1 AND m.ontology_version IS NULL`,
                 values: [containerID],
             };
         }
+    }
+
+    private refreshViewStatement(): QueryConfig {
+        return {
+            text: `REFRESH MATERIALIZED VIEW metatype_full_keys;`,
+            values: []
+        }
+    }
+
+    // usees json_to_recordset to directly insert metatype keys from json
+    private insertFromJSONStatement(keys: MetatypeKey[]) {
+        const text = `INSERT INTO metatype_keys 
+        (metatype_id, container_id, name, description, property_name, required, data_type, options, default_value, validation, created_by, modified_by)
+        SELECT
+            metatypes.id,
+            ont_import.container_id,
+            ont_import.name,
+            ont_import.description,
+            ont_import.property_name,
+            ont_import.required,
+            ont_import.data_type,
+            ont_import.options,
+            ont_import.default_value,
+            ont_import.validation,
+            ont_import.created_by,
+            ont_import.modified_by
+        FROM
+            json_to_recordset(%L) AS ont_import 
+                (container_id int8,
+                name text,
+                description text,
+                property_name text,
+                data_type text,
+                required bool,
+                validation jsonb,
+                options jsonb,
+                default_value jsonb,
+                old_id int8,
+                created_by text,
+                modified_by text,
+                metatype_id int8)
+            LEFT JOIN metatypes ON metatypes.old_id = ont_import.metatype_id
+            ON CONFLICT (metatype_id, property_name)
+            DO UPDATE SET
+                created_by = EXCLUDED.created_by,
+                modified_by = EXCLUDED.created_by,
+                created_at = NOW(),
+                modified_at = NOW(),
+                deleted_at = NULL,
+                name = EXCLUDED.name,
+                metatype_id = EXCLUDED.metatype_id::bigint,
+                container_id = EXCLUDED.container_id::bigint,
+                description = EXCLUDED.description,
+                property_name = EXCLUDED.property_name,
+                required = EXCLUDED.required::boolean,
+                data_type = EXCLUDED.data_type,
+                options = EXCLUDED.options::jsonb,
+                default_value = EXCLUDED.default_value::jsonb,
+                validation = EXCLUDED.validation::jsonb
+            WHERE
+                EXCLUDED.metatype_id = metatype_keys.metatype_id
+                AND EXCLUDED.property_name = metatype_keys.property_name`;
+        const values = JSON.stringify(keys);
+
+        return format(text, values);
     }
 }

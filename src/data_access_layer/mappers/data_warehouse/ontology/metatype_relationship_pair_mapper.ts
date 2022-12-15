@@ -100,6 +100,10 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
         return super.runStatement(this.deleteStatement(pairID));
     }
 
+    public async JSONCreate(relationshipPairs: MetatypeRelationshipPair[]): Promise<Result<boolean>> {
+        return super.runStatement(this.insertFromJSONStatement(relationshipPairs))
+    }
+
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
@@ -166,7 +170,8 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
                         modified_at = NOW(),
                         deleted_at = NULL,
                         name = EXCLUDED.name,
-                        description = EXCLUDED.description
+                        description = EXCLUDED.description,
+                        relationship_type = EXCLUDED.relationship_type
                     WHERE EXCLUDED.relationship_id = metatype_relationship_pairs.relationship_id
                     AND EXCLUDED.origin_metatype_id = metatype_relationship_pairs.origin_metatype_id
                     AND EXCLUDED.destination_metatype_id = metatype_relationship_pairs.destination_metatype_id
@@ -290,5 +295,62 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
                 values: [containerID],
             };
         }
+    }
+
+    // usees json_to_recordset to directly insert metatype relationship pairs from json
+    private insertFromJSONStatement(relationshipPairs: MetatypeRelationshipPair[]) {
+        const text = `INSERT INTO metatype_relationship_pairs 
+                (relationship_id,
+                origin_metatype_id,
+                destination_metatype_id,
+                container_id,
+                name,
+                description,
+                relationship_type,
+                created_by,
+                modified_by,
+                ontology_version)
+            SELECT
+                r.id,
+                origin.id,
+                destination.id,
+                ont_import.container_id,
+                ont_import.name,
+                ont_import.description,
+                ont_import.relationship_type,
+                ont_import.created_by,
+                ont_import.modified_by,
+                ont_import.ontology_version
+            FROM
+                json_to_recordset(%L) AS ont_import 
+                (container_id int8,
+                name text,
+                description text,
+                relationship_type text,
+                old_id int8,
+                created_by text,
+                modified_by text,
+                ontology_version int8,
+                "destinationMetatype" jsonb,
+                "originMetatype" jsonb,
+                relationship jsonb)
+            LEFT JOIN metatype_relationships r ON r.old_id = (ont_import.relationship->>'id')::BIGINT
+            LEFT JOIN metatypes origin ON origin.old_id = (ont_import."originMetatype"->>'id')::BIGINT    
+            LEFT JOIN metatypes destination ON destination.old_id = (ont_import."destinationMetatype"->>'id')::BIGINT
+            ON CONFLICT(relationship_id,origin_metatype_id,destination_metatype_id) DO UPDATE SET
+                    created_by = EXCLUDED.created_by,
+                    modified_by = EXCLUDED.created_by,
+                    created_at = NOW(),
+                    modified_at = NOW(),
+                    deleted_at = NULL,
+                    name = EXCLUDED.name,
+                    description = EXCLUDED.description,
+                    relationship_type = EXCLUDED.relationship_type
+                WHERE EXCLUDED.relationship_id = metatype_relationship_pairs.relationship_id
+                AND EXCLUDED.origin_metatype_id = metatype_relationship_pairs.origin_metatype_id
+                AND EXCLUDED.destination_metatype_id = metatype_relationship_pairs.destination_metatype_id`;
+        const values = JSON.stringify(relationshipPairs);
+
+        return format(text, values);
     }
 }

@@ -242,6 +242,20 @@
           <v-list-item
             two-line
             link
+            v-if="$auth.Auth('ontology', 'write', containerID)"
+            @click="setActiveComponent('container-import')"
+            :input-value="currentMainComponent === 'ContainerImport'"
+            :ripple="{class:'list-ripple'}"
+          >
+            <v-list-item-content>
+              <v-list-item-title>{{$t("home.containerImport")}}</v-list-item-title>
+              <v-list-item-subtitle>{{$t("home.containerImportDescription")}}</v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
+
+          <v-list-item
+            two-line
+            link
             v-if="$auth.Auth('users', 'write', containerID)"
             @click="setActiveComponent('settings')"
             :input-value="currentMainComponent === 'Settings'"
@@ -526,6 +540,7 @@ import OntologyVersioning from "@/views/OntologyVersioning.vue";
 import ContainerAlertBanner from "@/components/ontology/containers/containerAlertBanner.vue";
 import ServiceUsers from "@/views/ServiceUsers.vue";
 import ContainerExport from "@/views/ContainerExport.vue";
+import ContainerImport from "@/views/ContainerImport.vue";
 
 @Component({components: {
     ContainerSelect,
@@ -550,7 +565,8 @@ import ContainerExport from "@/views/ContainerExport.vue";
     OntologyVersioning,
     ContainerAlertBanner,
     ServiceUsers,
-    ContainerExport
+    ContainerExport,
+    ContainerImport
   }})
 export default class Home extends Vue {
   @Prop(String) readonly containerID: string | undefined
@@ -775,6 +791,13 @@ export default class Home extends Vue {
         this.currentMainComponent = "ContainerExport"
         this.componentName = this.$t('home.containerExport')
         this.$router.replace(`/containers/${this.containerID}/container-export`)
+        break;
+      }
+
+      case "container-import": {
+        this.currentMainComponent = "ContainerImport"
+        this.componentName = this.$t('home.containerImport')
+        this.$router.replace(`/containers/${this.containerID}/container-import`)
         break;
       }
 
