@@ -28,6 +28,8 @@ describe('A Standard DataSource Implementation can', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let user: User;
 
+    if(process.env.TIMESCALEDB_ENABLED === "false") {return}
+    
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === '') {
             Logger.debug('skipping export tests, no storage layer');

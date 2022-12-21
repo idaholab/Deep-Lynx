@@ -49,11 +49,11 @@ export function authRequest(action: 'read' | 'write', resource: string, domainPa
                     return;
                 }
 
-                resp.status(400).send('unauthorized');
+                resp.status(401).send('unauthorized');
                 return;
             })
             .catch(() => {
-                resp.status(400).send('unauthorized');
+                resp.status(401).send('unauthorized');
                 return;
             });
     };

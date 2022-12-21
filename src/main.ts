@@ -84,6 +84,11 @@ async function Start(): Promise<any> {
                     timeout: 0,
                 },
                 {
+                    name: 'materialized_view_refresh', // will run staging_clean.ts
+                    interval: '1 day',
+                    timeout: 0,
+                },
+                {
                     name: 'staging_clean', // will run staging_clean.ts
                     interval: '1 day',
                     timeout: 0,
@@ -95,7 +100,6 @@ async function Start(): Promise<any> {
         graceful.listen();
 
         await bree.start();
-
 
         Cache.Instance.on('deleted', (key) => {
             bree.workers.forEach((worker) => {
@@ -109,7 +113,6 @@ async function Start(): Promise<any> {
             });
         });
     }
-
 
     // if enabled, create an initial SuperUser for easier system management
     // if SAML is configured, the initial SAML user will be assigned admin status

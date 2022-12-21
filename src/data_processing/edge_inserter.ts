@@ -2,7 +2,6 @@ import Edge, {EdgeQueueItem} from '../domain_objects/data_warehouse/data/edge';
 import Result from '../common_classes/result';
 import EdgeRepository from '../data_access_layer/repositories/data_warehouse/data/edge_repository';
 import EdgeMapper from '../data_access_layer/mappers/data_warehouse/data/edge_mapper';
-import Cache from '../services/cache/cache';
 import Config from '../services/config';
 import Logger from '../services/logger';
 import EdgeQueueItemMapper from '../data_access_layer/mappers/data_warehouse/data/edge_queue_item_mapper';
@@ -16,17 +15,12 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
     const queueMapper = EdgeQueueItemMapper.Instance;
     const repo = new EdgeRepository();
 
-    const transaction = await mapper.startTransaction();
     const edge = plainToClass(Edge, edgeQueueItem.edge);
-
-    // first thing we do is lower the ttl for this edge, indicating that we're currently processing it
-    await Cache.set(`edge_insertion_${edgeQueueItem.id}`, {}, Config.import_cache_ttl);
 
     // run the filters if needed
     const edges = await repo.populateFromParameters(edge);
     if (edges.isError) {
-        await mapper.rollbackTransaction(transaction.value);
-        Logger.debug(`unable to create edges from parameters: ${edges.error?.error}`);
+        Logger.error(`unable to create edges from parameters: ${edges.error?.error}`);
 
         // if we failed, need to iterate the attempts and set the next attempt date, so we don't swamp the database - this
         // is an exponential backoff
@@ -37,18 +31,33 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
 
         const set = await queueMapper.SetNextAttemptAt(edgeQueueItem.id!, edgeQueueItem.next_attempt_at.toISOString(), edges.error?.error);
         if (set.isError) {
-            Logger.debug(`unable to set next retry time for edge queue item ${set.error?.error}`);
+            Logger.error(`unable to set next retry time for edge queue item ${set.error?.error}`);
         }
 
-        await Cache.del(`edge_insertion_${edgeQueueItem.id}`);
         return Promise.resolve(Result.Failure(`unable to populate edges from parameter ${edges.error?.error}`));
     }
 
-    // run bulk save, so we don't need a user type
-    const inserted = await repo.bulkSave(edge.created_by!, edges.value, transaction.value);
-    if (inserted.isError) {
-        await mapper.rollbackTransaction(transaction.value);
-        Logger.debug(`unable to save edges: ${inserted.error?.error}`);
+    // we need to do batch insert here
+    let recordBuffer: Edge[] = [];
+    const saveOperations: Promise<Result<boolean>>[] = [];
+
+    edges.value.forEach((e) => {
+        recordBuffer.push(e);
+
+        if (recordBuffer.length >= Config.data_source_batch_size) {
+            const toSave = [...recordBuffer];
+            recordBuffer = [];
+
+            saveOperations.push(repo.bulkSave(edge.created_by!, toSave));
+        }
+    });
+
+    saveOperations.push(repo.bulkSave(edge.created_by!, recordBuffer));
+
+    const saveResults = await Promise.all(saveOperations);
+    if (saveResults.filter((result) => result.isError || !result.value).length > 0) {
+        const error = saveResults.filter((result) => result.isError).map((result) => JSON.stringify(result.error));
+        Logger.error(`unable to save edges: ${error}`);
 
         // if we failed, need to iterate the attempts and set the next attempt date, so we don't swamp the database - this
         // is an exponential backoff
@@ -57,13 +66,12 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
 
         edgeQueueItem.next_attempt_at = new Date(check);
 
-        const set = await queueMapper.SetNextAttemptAt(edgeQueueItem.id!, edgeQueueItem.next_attempt_at.toISOString(), inserted.error?.error);
+        const set = await queueMapper.SetNextAttemptAt(edgeQueueItem.id!, edgeQueueItem.next_attempt_at.toISOString(), error.join(','));
         if (set.isError) {
-            Logger.debug(`unable to set next retry time for edge queue item ${set.error?.error}`);
+            Logger.error(`unable to set next retry time for edge queue item ${set.error?.error}`);
         }
 
-        await Cache.del(`edge_insertion_${edgeQueueItem.id}`);
-        return Promise.resolve(Result.Failure(`unable to save edges ${inserted.error?.error}`));
+        return Promise.resolve(Result.Failure(`unable to save edges ${error}`));
     }
 
     // now we attach the files
@@ -87,7 +95,7 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
         });
 
         if (edgeFiles.length > 0) {
-            const attached = await mapper.BulkAddFile(edgeFiles, transaction.value);
+            const attached = await mapper.BulkAddFile(edgeFiles);
             if (attached.isError) {
                 Logger.error(`unable to attach files to edge ${attached.error?.error}`);
             }
@@ -106,21 +114,17 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
 
         const set = await queueMapper.SetNextAttemptAt(edgeQueueItem.id!, edgeQueueItem.next_attempt_at.toISOString(), 'edge with filters, staying in queue');
         if (set.isError) {
-            Logger.debug(`unable to set next retry time for edge queue item ${set.error?.error}`);
+            Logger.error(`unable to set next retry time for edge queue item ${set.error?.error}`);
         }
     } else {
         // if the original edge has no filters, then delete the queue item and mark as complete
-        const deleted = await queueMapper.Delete(edgeQueueItem.id!, transaction.value);
+        const deleted = await queueMapper.Delete(edgeQueueItem.id!);
         if (deleted.isError) {
-            await mapper.rollbackTransaction(transaction.value);
-            Logger.debug(`unable to delete edge queue item: ${deleted.error?.error}`);
+            Logger.error(`unable to delete edge queue item: ${deleted.error?.error}`);
 
-            await Cache.del(`edge_insertion_${edgeQueueItem.id}`);
             return Promise.resolve(Result.Failure(`unable to delete edge queue item ${deleted.error?.error}`));
         }
     }
 
-    await mapper.completeTransaction(transaction.value);
-    await Cache.del(`edge_insertion_${edgeQueueItem.id}`);
     return Promise.resolve(Result.Success(true));
 }

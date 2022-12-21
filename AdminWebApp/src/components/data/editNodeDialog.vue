@@ -38,7 +38,7 @@
                   <!-- Add Property Dialog -->
                   <v-dialog
                     v-model="addPropertyDialog"
-                    @click:outside="closeDialog"
+                    @click:outside="closeAddPropertyDialog"
                     max-width="50%"
                   >
                   <template v-slot:activator="{ on, attrs }">
@@ -98,7 +98,7 @@
                       <v-btn
                         color="blue darken-1"
                         text
-                        @click="closeDialog"
+                        @click="closeAddPropertyDialog"
                       >
                         {{$t("editNode.cancel")}}
                       </v-btn>
@@ -157,7 +157,7 @@ import {MetatypeKeyT, NodeT, PropertyT} from "../../api/types";
 @Component({components: {}})
 export default class EditNodeDialog extends Vue {
   @Prop({required: true})
-  node!: NodeT;
+  node!: any;
 
   @Prop({required: true})
   containerID!: string;
@@ -225,6 +225,11 @@ export default class EditNodeDialog extends Vue {
     this.nodeProperties.forEach( (property: any) => {
       // look at supplied data type to determine property value changes
       // types: ['number', 'number64', 'float', 'float64', 'date', 'string', 'boolean', 'enumeration', 'file', 'list', 'unknown']
+      const key = this.metatypeKeys.filter((key: MetatypeKeyT) => {
+        return key.property_name === property.key
+      })
+      if (key.length > 0) property.type = key[0].data_type
+      
       if (property.type === 'boolean') {
         if (String(property.value).toLowerCase() === "true") {
           property.value = true
@@ -262,26 +267,30 @@ export default class EditNodeDialog extends Vue {
         "id": this.selectedNode!.id
       }
     )
-      .then(results => {
+      .then((results: NodeT[]) => {
         this.close()
-        this.$emit('nodeUpdated', results[0])
+        const emitNode = results[0]
+
+        emitNode.metatype_id = this.node.metatype.id!
+        emitNode.metatype_name = this.node.metatype.name
+        this.$emit('nodeUpdated', emitNode)
       })
       .catch(e => this.errorMessage = this.$t('createNode.errorCreatingAPI') as string + e)
   }
 
   addProperty() {
     this.nodeProperties.push(this.newProperty)
-    this.closeDialog()
+    this.closeAddPropertyDialog()
   }
 
-  deleteProperty(item: any) {
+  deleteProperty(item: PropertyT) {
     this.nodeProperties = this.nodeProperties.filter(( property: PropertyT ) => {
       return property.key !== item.key && property.value !== item.value;
     })
   }
 
   getKey() {
-    const key = this.metatypeKeys.filter((key: any) => {
+    const key = this.metatypeKeys.filter((key: MetatypeKeyT) => {
       return key.property_name === this.newProperty.key
     })
     if (key.length > 0) this.newProperty.type = key[0].data_type
@@ -296,7 +305,7 @@ export default class EditNodeDialog extends Vue {
     this.dialog = false
   }
 
-  closeDialog() {
+  closeAddPropertyDialog() {
     // reset property
     this.newProperty = {
       key: '',

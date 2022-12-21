@@ -8,21 +8,27 @@
             item-value="property_name"
             :disabled="disabled"
             v-model="property"
+            :label="$t('queryBuilder.propertyKey')"
         ></v-combobox>
       </v-col>
       <v-col :cols="3">
         <operators-select :disabled="disabled" @selected="setOperator" :operator="operator"></operators-select>
       </v-col>
       <v-col :cols="6">
-        <v-combobox
-            :disabled="disabled"
-            :multiple="operator === 'in'"
-            :clearable="operator === 'in'"
-            :placeholder="$t('queryBuilder.typeToAdd')"
-            @change="setValue"
-            v-model="value"
-        >
-        </v-combobox>
+        <v-text-field v-if="operator !== 'in'"
+          :placeholder="$t('queryBuilder.typeToAdd')"
+          @change="setValue"
+          :disabled="disabled"
+          v-model="value"
+        ></v-text-field>
+        <v-combobox v-if="operator === 'in'"
+          :disabled="disabled"
+          multiple
+          clearable
+          :placeholder="$t('queryBuilder.typeToAdd')"
+          @change="setValue"
+          v-model="value"
+        ></v-combobox>
       </v-col>
     </v-row>
   </v-container>

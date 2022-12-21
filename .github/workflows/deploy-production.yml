@@ -68,7 +68,7 @@ jobs:
           NETWORKING_HOST: ${{ secrets.NETWORKING_HOST }}
         run: |
           cd $GITHUB_WORKSPACE/kubernetes/deeplynx/manifests
-          envsubst < kubernetes/production.yml > kubernetes/production_final.yml
+          envsubst < production.yml > production_final.yml
       - uses: azure/setup-kubectl@v3
       - uses: azure/k8s-set-context@v3
         with:

@@ -29,6 +29,8 @@ describe('A Data Source Schema Generator', async () => {
     let user: User;
     let stdDataSourceID: string = '';
 
+    if(process.env.TIMESCALEDB_ENABLED === "false") {return}
+
     // this covers testing the hypertable creation and deletion as well
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === '') {

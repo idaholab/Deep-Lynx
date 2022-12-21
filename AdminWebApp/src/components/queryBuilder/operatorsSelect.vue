@@ -20,7 +20,10 @@ export default class OperatorsSelect extends Vue {
   @Prop({required: false, default: false})
   disabled?: boolean
 
-  operators = [
+  @Prop()
+  custom_operators?: {[key: string]: any}[]
+
+  default_operators = [
     {text: 'equals', value: 'eq'},
     {text: 'not equals', value: 'neq'},
     {text: 'like', value: 'like'},
@@ -28,6 +31,9 @@ export default class OperatorsSelect extends Vue {
     {text: 'less than', value: '<'},
     {text: 'greater than', value: '>'},
   ]
+
+  // override default operators if specified
+  operators = this.custom_operators !== undefined ? this.custom_operators : this.default_operators
 
   selected = ""
 

@@ -97,6 +97,10 @@ export default class ImportRoutes {
             authInContainer('read', 'data'),
             this.getFile,
         );
+        app.put(
+            '/containers/:containerID/import/datasources/:sourceID/files/:fileID',
+            ...middleware,
+            authInContainer('write', 'data'), this.updateFile);
         app.get(
             '/containers/:containerID/files/:fileID/download',
             ...middleware,
@@ -358,6 +362,166 @@ export default class ImportRoutes {
             .finally(() => next());
     }
 
+    private static updateFile(req: Request, res: Response, next: NextFunction) {
+        const fileNames: string[] = [];
+        const files: Promise<Result<File>>[] = [];
+        const dataStagingRecords: Promise<Result<Import | DataStaging[] | boolean>>[] = [];
+        const busboy = Busboy({headers: req.headers});
+        const metadata: {[key: string]: any} = {};
+        let metadataFieldCount = 0;
+
+        if (!req.dataSource) {
+            Result.Failure(`unable to find data source`, 404).asResponse(res);
+            next();
+            return;
+        }
+
+        // upload the file to the relevant file storage provider, saving the file name
+        // we can't actually wait on the full upload to finish, so there is no way we
+        // can take information about the upload and pass it later on in the busboy parsing
+        // because of this we're treating the file upload as fairly standalone
+        busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, info: FileInfo) => {
+            const {filename, encoding, mimeType} = info;
+            // check if this is the metadata file - if it is, attempt to process it
+            if (fieldname === 'metadata') {
+                if (mimeType === 'application/json') {
+                    dataStagingRecords.push(
+                        req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
+                            importID: req.query.importID as string | undefined,
+                            returnStagingRecords: true,
+                            bufferSize: Config.data_source_receive_buffer,
+                        }),
+                    );
+                } else if (mimeType === 'text/csv') {
+                    dataStagingRecords.push(
+                        req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
+                            importID: req.query.importID as string | undefined,
+                            returnStagingRecords: true,
+                            transformStream: csv({
+                                downstreamFormat: 'array', // this is necessary as the ReceiveData expects an array of json, not single objects
+                            }),
+                            bufferSize: Config.data_source_receive_buffer,
+                        }),
+                    );
+                } else if (mimeType === 'text/xml' || mimeType === 'application/xml') {
+                    const xmlStream = xmlParser.createStream();
+                    dataStagingRecords.push(
+                        req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
+                            importID: req.query.importID as string | undefined,
+                            returnStagingRecords: true,
+                            transformStream: xmlStream,
+                            bufferSize: Config.data_source_receive_buffer,
+                        }),
+                    );
+                }
+            } else {
+                files.push(
+                    new FileRepository().updateFile(
+                        req.params.fileID,
+                        req.params.containerID,
+                        req.params.sourceID,
+                        req.currentUser!,
+                        filename,
+                        file as Readable,
+                    ),
+                );
+                fileNames.push(filename);
+            }
+        });
+
+        busboy.on('error', (e: any) => {
+            Result.Error(e).asResponse(res);
+            return;
+        });
+
+        // hold on to the field data, we consider this metadata and will create
+        // a record to be ingested by deep lynx once the busboy finishes parsing
+        busboy.on('field', (fieldName: string, value: any) => {
+            metadata[fieldName] = value;
+            metadataFieldCount++;
+        });
+
+        busboy.on('finish', () => {
+            // if there is no additional metadata we do not not create information
+            // to be processed by Deep Lynx, simply store the file and make it available
+            // via the normal file querying channels
+            void Promise.all(files)
+                .then((results) => {
+                    if (dataStagingRecords.length > 0) {
+                        void Promise.all(dataStagingRecords)
+                            .then((stagingResults) => {
+                                stagingResults.forEach((stagingResult) => {
+                                    if (stagingResult.isError) {
+                                        stagingResult.asResponse(res);
+                                        return;
+                                    }
+
+                                    (stagingResult.value as DataStaging[]).forEach((stagingResult) => {
+                                        results.forEach((fileResult) => {
+                                            void stagingRepo
+                                                .addFile(stagingResult, fileResult.value.id!)
+                                                .then((addFileResult) => {
+                                                    if (addFileResult.isError) {
+                                                        Logger.error(`error adding file to staging record ${addFileResult.error?.error}`);
+                                                    } else {
+                                                        Logger.debug(`file added to staging record successfully`);
+                                                    }
+                                                })
+                                                .catch((e) => {
+                                                    Logger.error(`error adding file to staging record ${e}`);
+                                                });
+                                        });
+                                    });
+                                });
+                            })
+                            .catch((e) => {
+                                Result.Error(e).asResponse(res);
+                                return;
+                            });
+                    }
+
+                    if (metadataFieldCount === 0) {
+                        Result.Success(results).asResponse(res);
+                        next();
+                        return;
+                    } else {
+                        const updatePromises: Promise<Result<boolean>>[] = [];
+                        // eslint-disable-next-line @typescript-eslint/no-for-in-array
+                        for (const i in results) {
+                            if (results[i].isError) {
+                                continue;
+                            }
+
+                            results[i].value.metadata = metadata;
+                            updatePromises.push(new FileRepository().save(results[i].value, req.currentUser!));
+                        }
+
+                        void Promise.all(updatePromises)
+                            .then(() => {
+                                if (results.length === 1) {
+                                    results[0].asResponse(res);
+                                    next();
+                                    return;
+                                }
+
+                                Result.Success(results).asResponse(res);
+                                next();
+                                return;
+                            })
+                            .catch((err) => {
+                                Result.Error(err).asResponse(res);
+                            });
+                    }
+                })
+                .catch((e) => {
+                    Result.Error(e).asResponse(res);
+                    return;
+                });
+        });
+
+        return req.pipe(busboy);
+    }
+
     private static downloadFile(req: Request, res: Response, next: NextFunction) {
         fileRepo
             .findByIDAndContainer(req.params.fileID, req.params.containerID)
@@ -444,8 +608,6 @@ export default class ImportRoutes {
                         req.params.sourceID,
                         req.currentUser!,
                         filename,
-                        encoding,
-                        mimeType,
                         file as Readable,
                     ),
                 );

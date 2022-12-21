@@ -8,13 +8,12 @@ import Config from '../services/config';
 import Logger from '../services/logger';
 import {Writable} from 'stream';
 import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/postgres';
-import {ProcessData} from '../data_processing/process';
 import {parentPort} from 'worker_threads';
 import {plainToClass} from 'class-transformer';
-import {DataStaging} from '../domain_objects/data_warehouse/import/import';
 import {EdgeQueueItem} from '../domain_objects/data_warehouse/data/edge';
 import {InsertEdge} from '../data_processing/edge_inserter';
 import Cache from '../services/cache/cache';
+import BackedLogger from '../services/logger';
 
 // handle cache clears from parent IF memory cache
 if (Config.cache_provider === 'memory') {
@@ -30,6 +29,11 @@ if (Config.cache_provider === 'memory') {
         }
     });
 }
+
+process.on('unhandledRejection', (reason, promise) => {
+    BackedLogger.error(`Unhandled rejection at ${promise} reason: ${reason}`);
+    process.exit(1);
+});
 
 void PostgresAdapter.Instance.init()
     .then(() => {
