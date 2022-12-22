@@ -125,6 +125,8 @@ export default class DataTypeMapping extends Vue {
   @Prop({required: false})
   readonly shapeHash!: string
 
+  @Prop({required: false})
+  active?: boolean
 
   @Prop({required: false})
   readonly import!: ImportDataT | null
@@ -159,6 +161,7 @@ export default class DataTypeMapping extends Vue {
       this.$client.retrieveTypeMapping(this.containerID, this.dataSourceID, this.typeMappingID)
           .then((typeMapping) =>{
             this.typeMapping = typeMapping
+            this.typeMapping.active = this.active!
 
             if(this.import) {
               if(this.import!.data) {
@@ -177,6 +180,7 @@ export default class DataTypeMapping extends Vue {
       this.$client.retrieveTypeMappingByShapeHash(this.containerID, this.dataSourceID, this.shapeHash)
           .then((typeMapping) =>{
             this.typeMapping = typeMapping
+            this.typeMapping.active = this.active!
 
             if(this.import) {
               if(this.import!.data) {
