@@ -145,15 +145,12 @@ export default class DataSourceRepository extends Repository implements Reposito
     }
 
     async reprocess(dataSourceID: string): Promise<Result<boolean>> {
-        const result = await this.#mapper.ReprocessDataSource(dataSourceID);
-        if (result.isError) return Promise.resolve(Result.Pass(result));
-
-        // set all imports to processing status
-        const imports = await this.#importRepo.where().dataSourceID('eq', dataSourceID).list();
+        // reprocess each import associated with this data source from oldest to newest
+        const imports = await this.#importRepo.where().dataSourceID('eq', dataSourceID).list({sortBy: 'created_at'})
         if (!imports.isError) {
             imports.value.forEach((i) => {
-                void this.#importRepo.setStatus(i.id!, 'processing', 'reprocessing completed');
-            });
+                void this.#importRepo.reprocess(i.id!);
+            })
         }
 
         return Promise.resolve(Result.Success(true));
