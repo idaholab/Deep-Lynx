@@ -221,8 +221,7 @@
             }"
         >
           <template v-slot:[`item.active`]="{ item }">
-            <v-icon v-if="item.active">mdi-checkbox-marked-circle</v-icon>
-            <v-icon v-else>mdi-checkbox-blank-circle-outline</v-icon>
+            <v-simple-checkbox v-model="item.active" @click.stop="activateMapping(item)"></v-simple-checkbox>
           </template>
 
           <template v-slot:[`item.created_at`]="{ item }">
@@ -351,7 +350,14 @@
         </v-card-title>
 
         <div class="flex-grow-1" v-if="selectedDataSource !== null && mappingDialog">
-          <data-type-mapping :dataSourceID="selectedDataSource.id" :containerID="containerID" :typeMappingID="selectedTypeMapping.id" @mappingCreated="mappingDialog = false" @updated="loadTypeMappings"></data-type-mapping>
+          <data-type-mapping 
+            :dataSourceID="selectedDataSource.id" 
+            :containerID="containerID" 
+            :typeMappingID="selectedTypeMapping.id"
+            :active="selectedTypeMapping?.active"
+            @mappingCreated="mappingDialog = false" 
+            @updated="loadTypeMappings"
+          ></data-type-mapping>
         </div>
         <v-card-actions class="flex-shrink-1">
           <v-spacer></v-spacer>
@@ -600,6 +606,14 @@ export default class DataMapping extends Vue {
           }
         })
         .catch((e: any) =>  this.errorMessage = e)
+  }
+
+  activateMapping(mapping: TypeMappingT) {
+    this.$client.updateTypeMapping(this.containerID, mapping.data_source_id, mapping.id, mapping)
+      .then(() => {
+        this.loadTypeMappings()
+      })
+      .catch((e: any) => this.errorMessage = e)
   }
 
   loadTypeMappings() {
