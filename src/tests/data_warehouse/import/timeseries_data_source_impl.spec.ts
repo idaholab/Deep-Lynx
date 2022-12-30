@@ -17,6 +17,8 @@ import {exec} from 'child_process';
 import {promisify} from 'util';
 import ImportRepository from '../../../data_access_layer/repositories/data_warehouse/import/import_repository';
 import Import from '../../../domain_objects/data_warehouse/import/import';
+import {DataSource} from '../../../interfaces_and_impl/data_warehouse/import/data_source';
+import ImportMapper from '../../../data_access_layer/mappers/data_warehouse/import/import_mapper';
 
 const promiseExec = promisify(exec);
 const csv = require('csvtojson');
@@ -28,8 +30,10 @@ describe('A Standard DataSource Implementation can', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let user: User;
 
-    if(process.env.TIMESCALEDB_ENABLED === "false") {return}
-    
+    if (process.env.TIMESCALEDB_ENABLED === 'false') {
+        return;
+    }
+
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === '') {
             Logger.debug('skipping export tests, no storage layer');
@@ -470,9 +474,13 @@ describe('A Standard DataSource Implementation can', async () => {
             status_message: 'ready',
         });
 
+        await new ImportRepository().save(imports, user);
+        expect(imports.id).not.undefined;
+
         let loader = fastLoad.new({
             connectionString: Config.core_db_connection_string as string,
             dataSource: source?.DataSourceRecord as object,
+            importID: imports.id! as string,
         });
 
         const pass = new PassThrough();
@@ -488,13 +496,23 @@ describe('A Standard DataSource Implementation can', async () => {
         const stream = fs.createReadStream(__dirname + '/1million.csv');
         stream.pipe(pass);
 
-        setTimeout(() => {
-            sourceRepo.delete(source!);
-            fs.unlinkSync(__dirname + '/1million.csv');
-            return Promise.resolve();
-        }, 9000);
+        while (true) {
+            let retrieved = await ImportMapper.Instance.Retrieve(imports.id!);
+            if (!retrieved.isError && retrieved.value.status === 'completed') break;
+
+            await timer(1000);
+        }
+
+        fs.unlinkSync(__dirname + '/1million.csv');
+        return sourceRepo.delete(source as DataSource, {removeData: true, force: true});
     }).timeout(10000);
 });
+
+function timer(ms: number): Promise<any> {
+    return new Promise((resolve) => {
+        setTimeout(() => resolve(true), ms);
+    });
+}
 
 const sampleCSV =
     'Timestamp,Temperature (K),Velocity[i] (m/s),Velocity[j] (m/s),X (m),Y (m),Z (m)\n' +

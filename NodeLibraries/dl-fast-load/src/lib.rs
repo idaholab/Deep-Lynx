@@ -1,23 +1,15 @@
 extern crate core;
 
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::{NaiveDateTime};
 use neon::prelude::*;
-use neon::result::Throw;
 use neon::types::buffer::TypedArray;
 use once_cell::sync::OnceCell;
-use sqlx::postgres::PgPoolOptions;
-use sqlx::PgConnection;
+use sqlx::postgres::{PgPoolOptions};
 use std::borrow::Borrow;
-use std::collections::HashMap;
-use std::future::Future;
 use std::io::{BufReader, Read};
-use std::ops::Deref;
 use std::sync::{mpsc, Arc, Mutex};
-use std::thread;
 use std::time::Instant;
 use tokio::runtime::Runtime;
-use tokio::sync::futures;
-use tokio::sync::mpsc::Sender;
 
 // Return a global tokio runtime or create one if it doesn't exist.
 // Throws a JavaScript exception if the `Runtime` fails to create.
@@ -59,6 +51,10 @@ impl Manager {
         let data_source: Handle<JsObject> = input_object.get(&mut cx, "dataSource")?;
         let data_source_id: Handle<JsString> = data_source.get(&mut cx, "id")?;
         let data_source_id = data_source_id.value(&mut cx);
+
+        let import_id: Handle<JsString> = input_object.get(&mut cx, "importID")?;
+        let import_id= import_id.value(&mut cx);
+        let import_id_for_loop = import_id.clone();
 
         let adapter_type: Handle<JsString> = data_source.get(&mut cx, "adapter_type")?;
         let adapter_type = adapter_type.value(&mut cx);
@@ -127,10 +123,15 @@ impl Manager {
                         None => {}
                         Some(m) => match m {
                             ManagerMessage::Write(message) => {
-                                copier.send(message.as_slice()).await;
+                                let result = copier.send(message.as_slice()).await;
+                                match result {
+                                    Ok(_) => {}
+                                    Err(e) => {
+                                        println!("error while attempting to send a message to the copier thread {:?}", e)
+                                    }
+                                }
                             }
                             ManagerMessage::Close => {
-                                println!("finished");
                                 break;
                             }
                         },
@@ -138,8 +139,36 @@ impl Manager {
                 }
 
                 let result = copier.finish().await;
-                result.unwrap();
+                match result {
+                    Ok(_) => {}
+                    Err(e) => {
+                        println!("error while attempting to finishing copying in the copier thread {:?}", e)
+                    }
+                }
+
                 println!("Time elapsed in writing rows is: {:?}", start.elapsed());
+                println!("Marking import as complete");
+
+                let pool = match PgPoolOptions::new()
+                    .max_connections(5)
+                    .connect(connection_string.borrow())
+                    .await  {
+                    Ok(p) => {p}
+                    Err(e) => {
+                        panic!("unable to open new postgres connection {:?}", e)
+                    }
+                };
+
+                match sqlx::query("UPDATE imports SET status = 'completed' WHERE id = $1::bigint")
+                    .bind(import_id)
+                    .execute(&pool).await {
+                    Ok(_) => {
+                        println!("Import marked as completed successfully")
+                    }
+                    Err(e) => {
+                        panic!("unable to mark import as completed {:?}", e)
+                    }
+                }
             });
 
             let stream = BufReader::with_capacity(4096, NodeStream::new(rx));
@@ -161,7 +190,6 @@ impl Manager {
                 }
             }
 
-            let mut i = 0;
             while let Some(result) = rdr.records().next() {
                 let mut to_send: Vec<String> = vec![];
                 let record = result.unwrap();
@@ -196,13 +224,13 @@ impl Manager {
 
                 // append an additional empty field, will eventually be used to capture metadata
                 to_send.push(String::from(""));
+                to_send.push(import_id_for_loop.clone());
                 let sent = tx1
                     .send(ManagerMessage::Write(
                         [to_send.join("|").as_bytes(), String::from("\n").as_bytes()].concat(),
                     ))
                     .await;
 
-                i += 1;
             }
 
             tx1.send(ManagerMessage::Close).await;

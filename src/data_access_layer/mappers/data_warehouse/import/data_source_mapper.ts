@@ -382,7 +382,7 @@ export default class DataSourceMapper extends Mapper {
             `CREATE TABLE IF NOT EXISTS %I (
                 ${columnStatements.join(',')},
                 _metadata jsonb DEFAULT NULL,
-                _import_id bigint DEFAULT NULL REFERENCES imports(id)
+                _import_id bigint DEFAULT NULL 
                 )`,
             'y_' + source.id!,
         );
