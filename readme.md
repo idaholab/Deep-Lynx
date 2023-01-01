@@ -44,7 +44,7 @@ The initial startup might take a while as the operation must first fetch the pre
 _________
 #### **Requirements**
 
--   node.js 14.x, 15.x, 16.x, 17.x , 18.x
+-   node.js 16.x, 17.x, 18.x, 19.x (untested)
 -   Typescript ^4.x.x
 -   npm ^6.x
 -   Rust ^1.*.* (set to default stable)
