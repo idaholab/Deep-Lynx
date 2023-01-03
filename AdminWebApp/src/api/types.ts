@@ -148,19 +148,27 @@ export type FileT = {
 };
 
 export type NodeT = {
+    // these first few fields are for the graph viewer component, they don't get returned by the API
+    color?: any;
+    collapsed?: boolean;
+    selected_node?: boolean;
+    x?: number;
+    y?: number;
+    label?: any;
     id: string;
+    original_id?: string;
     metatype_id: string;
     metatype_name: string;
-    metatype: MetatypeT;
+    metatype?: MetatypeT;
     properties: PropertyT[] | object;
-    raw_properties: string; // JSON string with the raw properties
+    raw_properties?: string; // JSON string with the raw properties
     container_id: string;
-    original_data_id: string;
+    original_data_id?: string;
     data_source_id: string;
     created_at: string;
     modified_at: string;
-    incoming_edges: EdgeT[];
-    outgoing_edges: EdgeT[];
+    incoming_edges?: EdgeT[];
+    outgoing_edges?: EdgeT[];
 };
 
 export type EdgeT = {
@@ -557,6 +565,8 @@ export type Statistics = {
     files: string;
     migrations: string[];
 };
+
+export type UserT = {[key: string]: any};
 
 export type FullStatistics = {
     mean_execution_time?: MeanExecutionTime;
