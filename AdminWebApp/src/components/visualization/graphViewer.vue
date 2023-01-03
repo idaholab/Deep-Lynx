@@ -2265,7 +2265,7 @@ export default class GraphViewer extends Vue {
     }
 
     // retrieve the earliest creation_date for all published ontology versions for this container
-    const ontologyVersions = await this.$client.listOntologyVersions(this.containerID, {status: 'published'})
+    const ontologyVersions = await this.$client.listOntologyVersions(this.containerID, {status: ['published', 'ready']})
 
     ontologyVersions.forEach((ontologyVersion: OntologyVersionT) => {
       const createdDate = new Date(ontologyVersion.created_at!)
