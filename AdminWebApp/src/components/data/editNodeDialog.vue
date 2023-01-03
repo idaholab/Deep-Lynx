@@ -206,7 +206,7 @@ export default class EditNodeDialog extends Vue {
     this.nodeName = (this.selectedNode!.properties as any).name ? (this.selectedNode!.properties as any).name : this.selectedNode!.id
 
     // grab all metatype keys
-    this.metatypeKeys = await this.$client.listMetatypeKeys(this.containerID, this.selectedNode!.metatype.id)
+    this.metatypeKeys = await this.$client.listMetatypeKeys(this.containerID, this.selectedNode!.metatype!.id!)
 
     if (this.selectedNode) {
       this.nodeProperties = []
@@ -262,7 +262,7 @@ export default class EditNodeDialog extends Vue {
       {
         "container_id": this.containerID,
         "data_source_id": this.dataSourceID,
-        "metatype_id": this.selectedNode!.metatype.id,
+        "metatype_id": this.selectedNode!.metatype!.id,
         "properties": this.property,
         "id": this.selectedNode!.id
       }
