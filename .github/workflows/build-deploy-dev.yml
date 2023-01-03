@@ -40,6 +40,16 @@ jobs:
           az account set --subscription $ACR_SUBSCRIPTION
           az acr build -r $ACR_REGISTRY -f $GITHUB_WORKSPACE/deeplynx/Dockerfile -t $ACR_PATH:$GITHUB_SHA-dev .
 
+  scan-deeplynx-dev:
+    runs-on: [ self-hosted ]
+    environment: Development
+    needs: build-deeplynx-dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: deeplynx
+          ref: development
       - shell: bash
         name: ACR Get Scan
         env:
@@ -97,7 +107,6 @@ jobs:
           path: |
             scanreport.tsv
             SCAN_READ_ME.txt
-            
 
   deploy-deeplynx-dev:
       runs-on: [ self-hosted ]
