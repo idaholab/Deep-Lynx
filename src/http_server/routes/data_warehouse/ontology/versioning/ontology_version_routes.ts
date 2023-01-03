@@ -98,7 +98,7 @@ export default class OntologyVersionRoutes {
         repository = repository.where().containerID('eq', req.container!.id);
 
         if (typeof req.query.status !== 'undefined' && (req.query.status as string) !== '') {
-            repository = repository.and().status('eq', req.query.status);
+            repository = repository.and().status('in', req.query.status);
         }
 
         if (typeof req.query.createdBy !== 'undefined' && (req.query.createdBy as string) !== '') {
