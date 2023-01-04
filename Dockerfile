@@ -33,11 +33,6 @@ RUN npm install cargo-cp-artifact --location=global
 # Bundle app source
 COPY . .
 
-# Build the app
-WORKDIR /srv/core_api/NodeLibraries/dl-fast-load
-RUN cargo clean && npm install
-
-WORKDIR /srv/core_api
 RUN npm ci --include=dev
 RUN npm run build:docker
 RUN cd /srv/core_api/AdminWebApp && npm ci --include=dev && npm run build -- --dest /srv/core_api/dist/http_server/web_gui
@@ -46,7 +41,7 @@ RUN rm -rf /srv/core_api/AdminWebApp/node_modules
 RUN rm -rf .env
 
 FROM node:18.12-buster-slim as production
-RUN sudo apt-get update
+RUN apt-get update
 
 WORKDIR /srv/core_api
 
