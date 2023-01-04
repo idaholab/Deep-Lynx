@@ -46,6 +46,8 @@ RUN rm -rf /srv/core_api/AdminWebApp/node_modules
 RUN rm -rf .env
 
 FROM node:18.12-buster-slim as production
+RUN sudo apt-get update
+
 WORKDIR /srv/core_api
 
 RUN npm update --location=global
