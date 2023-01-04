@@ -334,9 +334,18 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
                 "destinationMetatype" jsonb,
                 "originMetatype" jsonb,
                 relationship jsonb)
-            LEFT JOIN metatype_relationships r ON r.old_id = (ont_import.relationship->>'id')::BIGINT
-            LEFT JOIN metatypes origin ON origin.old_id = (ont_import."originMetatype"->>'id')::BIGINT    
-            LEFT JOIN metatypes destination ON destination.old_id = (ont_import."destinationMetatype"->>'id')::BIGINT
+            LEFT JOIN ( 
+                SELECT DISTINCT ON (name) name, id, old_id
+                FROM metatype_relationships ORDER BY name, id DESC ) r
+                ON r.old_id = (ont_import.relationship->>'id')::BIGINT
+            LEFT JOIN ( 
+                SELECT DISTINCT ON (name) name, id, old_id
+                FROM metatypes ORDER BY name, id DESC ) origin
+                ON origin.old_id = (ont_import."originMetatype"->>'id')::BIGINT    
+            LEFT JOIN ( 
+                SELECT DISTINCT ON (name) name, id, old_id 
+                FROM metatypes ORDER BY name, id DESC ) destination
+                ON destination.old_id = (ont_import."destinationMetatype"->>'id')::BIGINT
             ON CONFLICT(relationship_id,origin_metatype_id,destination_metatype_id) DO UPDATE SET
                     created_by = EXCLUDED.created_by,
                     modified_by = EXCLUDED.created_by,
@@ -345,10 +354,12 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
                     deleted_at = NULL,
                     name = EXCLUDED.name,
                     description = EXCLUDED.description,
-                    relationship_type = EXCLUDED.relationship_type
+                    relationship_type = EXCLUDED.relationship_type,
+                    ontology_version = EXCLUDED.ontology_version
                 WHERE EXCLUDED.relationship_id = metatype_relationship_pairs.relationship_id
                 AND EXCLUDED.origin_metatype_id = metatype_relationship_pairs.origin_metatype_id
-                AND EXCLUDED.destination_metatype_id = metatype_relationship_pairs.destination_metatype_id`;
+                AND EXCLUDED.destination_metatype_id = metatype_relationship_pairs.destination_metatype_id
+                AND EXCLUDED.ontology_version = metatype_relationship_pairs.ontology_version`;
         const values = JSON.stringify(relationshipPairs);
 
         return format(text, values);
