@@ -1,4 +1,4 @@
-FROM cimg/rust:1.65.0-node
+FROM cimg/rust:1.65.0-node as build
 
 USER root
 
@@ -27,7 +27,6 @@ WORKDIR /srv/core_api
 COPY package*.json ./
 
 RUN npm update --location=global
-RUN npm install pm2 --location=global
 RUN npm install cargo-cp-artifact --location=global
 
 # Bundle app source
@@ -37,7 +36,6 @@ COPY . .
 WORKDIR /srv/core_api/NodeLibraries/dl-fast-load
 RUN cargo clean && npm install
 
-
 WORKDIR /srv/core_api
 RUN npm ci --include=dev
 RUN npm run build:docker
@@ -45,6 +43,14 @@ RUN cd /srv/core_api/AdminWebApp && npm ci --include=dev && npm run build -- --d
 RUN rm -rf /srv/core_api/AdminWebApp/node_modules
 # catch any env file a user might have accidentally built into the container
 RUN rm -rf .env
+
+FROM node:18.12-buster-slim as production
+WORKDIR /srv/core_api
+
+RUN npm update --location=global
+RUN npm install pm2 --location=global
+
+COPY --from=build /srv/core_api /srv/core_api
 
 # Add docker-compose-wait tool ----------------------
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait
