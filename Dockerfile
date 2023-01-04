@@ -28,6 +28,7 @@ WORKDIR /srv/core_api
 COPY package*.json ./
 
 RUN npm update --location=global
+RUN npm install npm@latest --location=global
 RUN npm install cargo-cp-artifact --location=global
 
 # Bundle app source
@@ -45,6 +46,7 @@ RUN apt-get update
 
 WORKDIR /srv/core_api
 
+RUN npm install npm@latest --location=global
 RUN npm update --location=global
 RUN npm install pm2 --location=global
 
