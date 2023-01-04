@@ -149,6 +149,8 @@ describe('A Metatype Key', async () => {
         const keys = await storage.BulkCreate('test suite', testKeys);
         expect(keys.isError).false;
 
+        await storage.RefreshView();
+
         const retrieved = await storage.ListForMetatype(metatype.value.id!);
         expect(retrieved.isError).false;
         expect(retrieved.value).not.empty;
