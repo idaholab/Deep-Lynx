@@ -20,8 +20,8 @@ describe('Large object storage can', async () => {
             file_size: 200,
             adapter_file_path: 'test/',
             adapter: '',
-            container_id: ''
-        })
+            container_id: '',
+        });
 
         const result = await provider.uploadPipe(file.adapter_file_path!, file.file_name!, readable, 'text/plain', 'utf8');
         if (result) {
@@ -44,8 +44,8 @@ describe('Large object storage can', async () => {
             file_size: 200,
             adapter_file_path: 'test/',
             adapter: '',
-            container_id: ''
-        })
+            container_id: '',
+        });
 
         const result = await provider.uploadPipe(file.adapter_file_path!, file.file_name!, readable, 'text/plain', 'utf8');
         if (result) {
@@ -57,14 +57,15 @@ describe('Large object storage can', async () => {
         // for testing purposes we just manually overwrite our bogus filepath with OID
         file.adapter_file_path = result.value.filepath;
 
-        const s = fs.createWriteStream('bob.json')
+        const s = fs.createWriteStream('bob.json');
 
         // as long as the stream is open and not undefined, we can count this test as successful
         const stream = await provider.downloadStream(file);
         expect(stream).not.undefined;
 
-        stream?.pipe(s)
+        stream?.pipe(s);
 
+        fs.unlinkSync('bob.json');
         return provider.deleteFile(file);
     });
 });

@@ -195,11 +195,13 @@ export default class ContainerImport {
                     .where()
                     .containerID('eq', container.id!)
                     .and()
-                    .status('eq', 'published').list({sortBy: 'id', sortDesc: true, limit: 1})
+                    .status('in', ['published', 'ready']).list({sortBy: 'id', sortDesc: true})
                 if(results.isError) {
                     Logger.error(`unable to find published version of ontology ${results.error?.error}`)
                 } else if(results.value.length > 0){
-                    ontologyVersionID = results.value[0].id
+                    ontologyVersionID = results.value.find(version => version.status === 'published')?.id
+
+                    if(!ontologyVersionID) ontologyVersionID = results.value.find(version => version.status === 'ready')?.id
                 }
             }
 
@@ -1308,7 +1310,7 @@ export default class ContainerImport {
                     }
                 }
 
-                if(!input.update || !input.ontology_versioning_enabled) {
+                if(!input.ontology_versioning_enabled) {
                     await ontologyRepo.setStatus(input.ontologyVersionID!, 'published')
                 } else {
                     await ontologyRepo.setStatus(input.ontologyVersionID!, 'ready')
@@ -1327,8 +1329,8 @@ export default class ContainerImport {
         });
     }
 
-    async rollbackVersion(containerID: string, ontologyVersionID: string, versioningEnabled: boolean, isUpdate: boolean, errorMessage?: string): Promise<void> {
-        if(isUpdate && !versioningEnabled) {
+    async rollbackVersion(containerID: string, ontologyVersionID: string, versioningEnabled: boolean, isUpdate?: boolean, errorMessage?: string): Promise<void> {
+        if(!versioningEnabled) {
             await ontologyRepo.setStatus(ontologyVersionID, 'published')
         } else {
             await ontologyRepo.setStatus(ontologyVersionID, 'error', errorMessage)

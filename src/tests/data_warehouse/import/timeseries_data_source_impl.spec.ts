@@ -7,21 +7,22 @@ import faker from 'faker';
 import {expect} from 'chai';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
 import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
 import DataSourceRecord, {TimeseriesColumn, TimeseriesDataSourceConfig} from '../../../domain_objects/data_warehouse/import/data_source';
 import DataSourceRepository, {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
-import StandardDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/standard_data_source_impl';
-import HttpDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/http_data_source_impl';
-import AvevaDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/aveva_data_source';
-import JazzDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/jazz_data_source_impl';
 import fs from 'fs';
-import DataStagingRepository from '../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
-import {toStream} from '../../../services/utilities';
-import Import, {DataStaging} from '../../../domain_objects/data_warehouse/import/import';
-import TimeseriesDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/timeseries_data_source';
-import {plainToClass, plainToInstance} from 'class-transformer';
+import {plainToInstance} from 'class-transformer';
+import Config from '../../../services/config';
+import {PassThrough} from 'stream';
+import {exec} from 'child_process';
+import {promisify} from 'util';
+import ImportRepository from '../../../data_access_layer/repositories/data_warehouse/import/import_repository';
+import Import from '../../../domain_objects/data_warehouse/import/import';
+import {DataSource} from '../../../interfaces_and_impl/data_warehouse/import/data_source';
+import ImportMapper from '../../../data_access_layer/mappers/data_warehouse/import/import_mapper';
 
+const promiseExec = promisify(exec);
 const csv = require('csvtojson');
+const fastLoad = require('dl-fast-load');
 
 // Generally testing the standard implementation to verify that the ReceiveData and other underlying functions that most
 // other implementations rely on function ok.
@@ -29,8 +30,10 @@ describe('A Standard DataSource Implementation can', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let user: User;
 
-    if(process.env.TIMESCALEDB_ENABLED === "false") {return}
-    
+    if (process.env.TIMESCALEDB_ENABLED === 'false') {
+        return;
+    }
+
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === '') {
             Logger.debug('skipping export tests, no storage layer');
@@ -374,6 +377,7 @@ describe('A Standard DataSource Implementation can', async () => {
         fs.writeFileSync('./test-timeseries-data.json', sampleJSON);
 
         // now we create an import through the datasource
+
         let received = await source!.ReceiveData(fs.createReadStream('./test-timeseries-data.json'), user);
         expect(received.isError, received.error?.error).false;
 
@@ -392,7 +396,123 @@ describe('A Standard DataSource Implementation can', async () => {
         fs.unlinkSync('./test-timeseries-data.json');
         return sourceRepo.delete(source!);
     });
+
+    it('can ingest data to a hypertable using dl-fast-load', async (done) => {
+        if (process.env.TEST_FAST_LOAD !== 'true') {
+            done();
+            return;
+        }
+        // build the data source first
+        const sourceRepo = new DataSourceRepository();
+
+        await promiseExec(
+            `echo "Timestamp,Temperature (K),Velocity[i] (m/s),Velocity[j] (m/s),X (m),Y (m),Z (m)" > ${__dirname}/1million.csv && perl -E \'for($i=0;$i<1000000;$i++){say "2022-07-18 02:32:27.532059,$i,$i,$i,$i,$i,$i"}\' >> ${__dirname}/1million.csv`,
+        );
+
+        let source = new DataSourceFactory().fromDataSourceRecord(
+            new DataSourceRecord({
+                container_id: containerID,
+                name: 'Test Data Source',
+                active: false,
+                adapter_type: 'timeseries',
+                config: new TimeseriesDataSourceConfig({
+                    columns: [
+                        {
+                            column_name: 'primary_timestamp',
+                            property_name: 'Timestamp',
+                            is_primary_timestamp: true,
+                            type: 'date',
+                            date_conversion_format_string: '%Y-%m-%d %H:%M:%S%.f',
+                        },
+                        {
+                            column_name: 'temperature',
+                            property_name: 'Temperature (K)',
+                            is_primary_timestamp: false,
+                            type: 'number',
+                        },
+                        {
+                            column_name: 'velocity_i',
+                            property_name: 'Velocity[i] (m/s)',
+                            is_primary_timestamp: false,
+                            type: 'number',
+                        },
+                        {
+                            column_name: 'velocity_j',
+                            property_name: 'Velocity[j] (m/s)',
+                            is_primary_timestamp: false,
+                            type: 'number',
+                        },
+                        {
+                            column_name: 'x',
+                            property_name: 'X (m)',
+                            is_primary_timestamp: false,
+                            type: 'number',
+                        },
+                        {
+                            column_name: 'y',
+                            property_name: 'Y (m)',
+                            is_primary_timestamp: false,
+                            type: 'number',
+                        },
+                        {
+                            column_name: 'z',
+                            property_name: 'Z (m)',
+                            is_primary_timestamp: false,
+                            type: 'number',
+                        },
+                    ] as TimeseriesColumn[],
+                }),
+            }),
+        );
+
+        let results = await sourceRepo.save(source!, user);
+        expect(results.isError, results.error?.error).false;
+        expect(source!.DataSourceRecord?.id).not.undefined;
+
+        let imports = new Import({
+            data_source_id: source?.DataSourceRecord?.id!,
+            status_message: 'ready',
+        });
+
+        await new ImportRepository().save(imports, user);
+        expect(imports.id).not.undefined;
+
+        let loader = fastLoad.new({
+            connectionString: Config.core_db_connection_string as string,
+            dataSource: source?.DataSourceRecord as object,
+            importID: imports.id! as string,
+        });
+
+        const pass = new PassThrough();
+
+        pass.on('data', (chunk) => {
+            fastLoad.read(loader, chunk);
+        });
+
+        pass.on('finish', () => {
+            fastLoad.finish(loader);
+        });
+
+        const stream = fs.createReadStream(__dirname + '/1million.csv');
+        stream.pipe(pass);
+
+        while (true) {
+            let retrieved = await ImportMapper.Instance.Retrieve(imports.id!);
+            if (!retrieved.isError && retrieved.value.status === 'completed') break;
+
+            await timer(1000);
+        }
+
+        fs.unlinkSync(__dirname + '/1million.csv');
+        return sourceRepo.delete(source as DataSource, {removeData: true, force: true});
+    }).timeout(10000);
 });
+
+function timer(ms: number): Promise<any> {
+    return new Promise((resolve) => {
+        setTimeout(() => resolve(true), ms);
+    });
+}
 
 const sampleCSV =
     'Timestamp,Temperature (K),Velocity[i] (m/s),Velocity[j] (m/s),X (m),Y (m),Z (m)\n' +
