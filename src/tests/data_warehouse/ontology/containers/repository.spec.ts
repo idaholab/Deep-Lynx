@@ -227,7 +227,44 @@ describe('A Container Repository', async () => {
 
         downloadStream?.pipe(writer);
 
-        fs.unlinkSync(`${container.id}_export.json`);
+        // fs.unlinkSync(`${container.id}_export.json`);
         return repository.delete(container);
     }).timeout(2000);
+
+    it('can import a container', async () => {
+        const repository = new ContainerRepository();
+        const container = new Container({
+            name: faker.name.findName(),
+            description: faker.random.alphaNumeric(),
+        });
+
+        const results = await repository.save(container, user);
+        expect(results.isError).false;
+        expect(container.id).not.undefined;
+
+        const file = await repository.exportOntology(container.id!, user);
+        expect(file.isError).false;
+
+        // now lets check the download
+        let writer = fs.createWriteStream(`${container.id}_export.json`);
+
+        let downloadStream = await new FileRepository().downloadFile(file.value);
+        expect(downloadStream).not.undefined;
+
+        return new Promise(resolve => {
+            downloadStream?.on('end', async function () {
+                // perform ontology import
+                const fileBuffer = fs.readFileSync(`${container.id}_export.json`);
+
+                const containerImport = await repository.importOntology(container.id!, user, fileBuffer);
+                expect(containerImport.isError).false;
+
+                fs.unlinkSync(`${container.id}_export.json`);
+                void repository.delete(container);
+                resolve(undefined);
+            })
+            downloadStream?.pipe(writer);
+        });
+
+    }).timeout(6000);
 });

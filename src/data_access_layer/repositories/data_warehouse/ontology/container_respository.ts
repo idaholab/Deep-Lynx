@@ -316,8 +316,6 @@ export default class ContainerRepository implements RepositoryInterface<Containe
     }
 
     async importOntology(containerID: string, user: User, fileBuffer: Buffer): Promise<Result<string>> {
-        const start = Date.now();
-
         // verify the expected ontology elements are present in the supplied file
         const jsonImport = JSON.parse(fileBuffer.toString('utf8').trim());
 
@@ -368,9 +366,8 @@ export default class ContainerRepository implements RepositoryInterface<Containe
             metatype.ontology_version = newVersionID!;
             metatypes.push(metatype);
         });
-        // console.log(metatypes)
         const metatypeRepo = new MetatypeRepository();
-        const metatypeSuccess = await metatypeRepo.saveFromJSON(metatypes);
+        void await metatypeRepo.saveFromJSON(metatypes);
 
         const relationships: MetatypeRelationship[] = [];
 
@@ -383,7 +380,7 @@ export default class ContainerRepository implements RepositoryInterface<Containe
             relationships.push(relationship);
         });
         const relationshipRepo = new MetatypeRelationshipRepository();
-        const relationshipSuccess = await relationshipRepo.saveFromJSON(relationships);
+        void await relationshipRepo.saveFromJSON(relationships);
 
         // create keys and relationship pairs
         const metatypeKeys: MetatypeKey[] = [];
@@ -394,7 +391,7 @@ export default class ContainerRepository implements RepositoryInterface<Containe
             metatypeKeys.push(key);
         });
         const metatypeKeyRepo = new MetatypeKeyRepository();
-        const metatypeKeySuccess = await metatypeKeyRepo.saveFromJSON(metatypeKeys);
+        void await metatypeKeyRepo.saveFromJSON(metatypeKeys);
 
         // refresh metatype key view
         const mKeyMapper = new MetatypeKeyMapper();
@@ -408,7 +405,7 @@ export default class ContainerRepository implements RepositoryInterface<Containe
             relationshipKeys.push(key);
         });
         const relationshipKeyRepo = new MetatypeRelationshipKeyRepository();
-        const relationshipKeySuccess = await relationshipKeyRepo.saveFromJSON(relationshipKeys);
+        void await relationshipKeyRepo.saveFromJSON(relationshipKeys);
 
         // before relationship pair insert, archive existing relationship pairs under the previous ontology version
         const relationshipPairMapper = new MetatypeRelationshipPairMapper();
@@ -423,10 +420,7 @@ export default class ContainerRepository implements RepositoryInterface<Containe
             relationshipPairs.push(pair);
         });
         const relationshipPairRepo = new MetatypeRelationshipPairRepository();
-        const relationshipPairSuccess = await relationshipPairRepo.saveFromJSON(relationshipPairs);
-
-        const pairsDone = (Date.now() - start) / 1000;
-        // console.log(`Time (s): ${pairsDone}`)
+        void await relationshipPairRepo.saveFromJSON(relationshipPairs);
 
         // after successful ontology imports (or after error), update ontology version statuses
         void ontologyVersionRepo.setStatus(newVersionID!, "published");
