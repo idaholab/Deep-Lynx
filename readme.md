@@ -44,9 +44,10 @@ The initial startup might take a while as the operation must first fetch the pre
 _________
 #### **Requirements**
 
--   node.js 14.x, 15.x, 16.x, 17.x , 18.x-untested
+-   node.js 16.x, 17.x, 18.x, 19.x (untested)
 -   Typescript ^4.x.x
 -   npm ^6.x
+-   Rust ^1.*.* (set to default stable)
 -   Docker ^18.x - _optional_ - for ease of use in development
 
 **_Data Source Requirements_**
@@ -60,6 +61,7 @@ You must follow these steps in the exact order given. Failure to do so will caus
 1. NodeJS must be installed. You can find the download for your platform here: https://nodejs.org/en/download/ **note** - Newer versions of Node may be incompatible with some of the following commands. The most recent version tested that works fully is 16.13.0 - the latest LTS version.
 
 2. Clone the DeepLynx [repository](https://gitlab.software.inl.gov/b650/Deep-Lynx/-/tree/master).
+3. Run `cargo clean && npm install` in the NodeLibraries/dl-fast-load directory - this preps the dl-fast-load rust module for installation
 3. Run `npm upgrade && npm ci` in your local DeepLynx directory.
 4. Copy and rename `.env-sample` to `.env`.
 5. Update `.env` file. See the `readme` or comments in the file itself for details. 

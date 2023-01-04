@@ -12,11 +12,17 @@ import {instanceToPlain, plainToInstance} from 'class-transformer';
 import {parentPort} from 'worker_threads';
 import EdgeQueueItemMapper from '../data_access_layer/mappers/data_warehouse/data/edge_queue_item_mapper';
 import {EdgeQueueItem} from '../domain_objects/data_warehouse/data/edge';
+import BackedLogger from '../services/logger';
 const devnull = require('dev-null');
 process.setMaxListeners(0);
 
 const postgresAdapter = PostgresAdapter.Instance;
 const mapper = EdgeQueueItemMapper.Instance;
+
+process.on('unhandledRejection', (reason, promise) => {
+    BackedLogger.error(`Unhandled rejection at ${promise} reason: ${reason}`);
+    process.exit(1);
+});
 
 // handle cache clears from parent IF memory cache
 if (Config.cache_provider === 'memory') {

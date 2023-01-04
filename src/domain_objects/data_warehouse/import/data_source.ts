@@ -350,6 +350,8 @@ export class TimeseriesNodeParameter {
 export class TimeseriesDataSourceConfig extends BaseDataSourceConfig {
     kind: 'timeseries' = 'timeseries';
 
+    fast_load_enabled = false;
+
     @Type(() => TimeseriesColumn)
     @IsNotEmpty() // we must have columns if creating a timeseries table
     @PrimaryTimestampExists({message: 'must contain exactly one primary timestamp column'})
@@ -366,12 +368,13 @@ export class TimeseriesDataSourceConfig extends BaseDataSourceConfig {
     @IsOptional()
     attachment_parameters: TimeseriesNodeParameter[] = [];
 
-    constructor(input: {columns?: TimeseriesColumn[]; attachment_parameters?: TimeseriesNodeParameter[]; chunk_interval?: string}) {
+    constructor(input: {columns?: TimeseriesColumn[]; attachment_parameters?: TimeseriesNodeParameter[]; chunk_interval?: string; fastLoadEnabled?: boolean}) {
         super();
 
         if (input?.columns) this.columns = input.columns;
         if (input?.attachment_parameters) this.attachment_parameters = input.attachment_parameters;
         if (input?.chunk_interval) this.chunk_interval = input.chunk_interval;
+        if (input?.fastLoadEnabled) this.fast_load_enabled = input.fastLoadEnabled;
     }
 }
 
