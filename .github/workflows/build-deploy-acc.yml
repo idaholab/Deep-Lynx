@@ -40,6 +40,17 @@ jobs:
           az login --service-principal -u $ACR_SP_USER -p $ACR_SP_PASSWORD --tenant $ACR_SP_TENANT
           az account set --subscription $ACR_SUBSCRIPTION
           az acr build -r $ACR_REGISTRY -f $GITHUB_WORKSPACE/deeplynx/Dockerfile -t $ACR_PATH:$GITHUB_SHA-latest .
+
+  scan-deeplynx-acc:
+    runs-on: [ self-hosted ]
+    environment: acceptance
+    needs: build-deeplynx-acc
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: deeplynx
+          ref: main
       - shell: bash
         name: ACR Get Scan
         env:
@@ -182,7 +193,7 @@ jobs:
   mirror-repository:
     runs-on: [ self-hosted ]
     environment: production
-    needs: deploy-deeplynx-acc
+    needs: build-deeplynx-acc
     steps:
       - uses: actions/checkout@v3
         with:
