@@ -221,15 +221,16 @@ jobs:
           java-version: '8'
       - run: |
           sudo mkdir /opt/swagger && cd /opt/swagger
+          sudo chmod 777 /opt/swagger
           sudo wget https://repo1.maven.org/maven2/io/swagger/codegen/v3/swagger-codegen-cli/3.0.35/swagger-codegen-cli-3.0.35.jar -O swagger-codegen-cli.jar
           sudo git clone ${{ secrets.DL_JS_SDK }} deeplynx-js-sdk
           sudo git clone ${{ secrets.DL_PY_SDK }} deeplynx-py-sdk
           sudo git clone ${{ secrets.DL_CSHARP_SDK }} deeplynx-csharp-sdk
           sudo git clone ${{ secrets.DL_R_SDK }} deeplynx-r-sdk
-          sudo java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l typescript-axios -o deeplynx-js-sdk
-          sudo java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l csharp -o deeplynx-csharp-sdk
-          sudo java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l r -o deeplynx-r-sdk
-          sudo java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l python -o deeplynx-py-sdk --additional-properties packageName=deep_lynx projectName=deep_lynx
+          java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l typescript-axios -o deeplynx-js-sdk
+          java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l csharp -o deeplynx-csharp-sdk
+          java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l r -o deeplynx-r-sdk
+          java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l python -o deeplynx-py-sdk --additional-properties packageName=deep_lynx projectName=deep_lynx
           cd deeplynx-js-sdk
           git config --global user.email "${{ secrets.GH_ENTERPRISE_EMAIL }}" && git config --global user.name "${{ secrets.GH_ENTERPRISE_USERNAME }}"
           git add . && git commit -m $GITHUB_SHA || true
