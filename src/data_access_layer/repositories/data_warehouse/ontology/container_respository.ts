@@ -318,7 +318,16 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         if (!ontVersionResult.isError && ontVersionResult.value.length > 0) {
             oldOntologyVersionID = ontVersionResult.value[0].id;
         } else {
-            return Promise.resolve(Result.Failure(`Published ontology version for container ID ${containerID} not found.`));
+            // look for ontology versions with a ready status and use the latest. if none found, return an error
+            const readyVersions =
+                await ontologyVersionRepo.where().containerID('eq', containerID).and().status('eq', 'ready').list({sortDesc: true, sortBy: 'id', limit: 1});
+
+            if (!readyVersions.isError && readyVersions.value.length > 0) {
+                oldOntologyVersionID = readyVersions.value[0].id;
+            } else {
+                return Promise.resolve(Result.Failure(`No ontology version with a status of published or ready was found for container ID ${containerID}. 
+                    Please create one to enable ontology import.`));
+            }
         }
 
         // create new ontology version

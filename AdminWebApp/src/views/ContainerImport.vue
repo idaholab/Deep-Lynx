@@ -119,7 +119,7 @@ export default class ContainerImport extends Vue {
             const error = JSON.parse(response.data.error).error;
             this.errorMessage = `Unable to import container. ${error}`;
           } else {
-            this.successMessage = JSON.parse(response.data.value);
+            this.successMessage = response.data.value;
           }
         })
         .catch((e: any) => {
