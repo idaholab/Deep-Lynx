@@ -222,10 +222,10 @@ jobs:
       - run: |
           sudo mkdir /opt/swagger && cd /opt/swagger
           sudo wget https://repo1.maven.org/maven2/io/swagger/codegen/v3/swagger-codegen-cli/3.0.35/swagger-codegen-cli-3.0.35.jar -O swagger-codegen-cli.jar
-          sudo git clone ${{ secrets.DL_JS_SDK }} deeplynx-js-sdk && sudo chmod 777 deeplynx-js-sdk
-          sudo git clone ${{ secrets.DL_PY_SDK }} deeplynx-py-sdk && sudo chmod 777 deeplynx-py-sdk
-          sudo git clone ${{ secrets.DL_CSHARP_SDK }} deeplynx-csharp-sdk && sudo chmod 777 deeplynx-csharp-sdk
-          sudo git clone ${{ secrets.DL_R_SDK }} deeplynx-r-sdk && sudo chmod 777 deeplynx-r-sdk
+          git clone ${{ secrets.DL_JS_SDK }} deeplynx-js-sdk && sudo chmod 777 deeplynx-js-sdk
+          git clone ${{ secrets.DL_PY_SDK }} deeplynx-py-sdk && sudo chmod 777 deeplynx-py-sdk
+          git clone ${{ secrets.DL_CSHARP_SDK }} deeplynx-csharp-sdk && sudo chmod 777 deeplynx-csharp-sdk
+          git clone ${{ secrets.DL_R_SDK }} deeplynx-r-sdk && sudo chmod 777 deeplynx-r-sdk
           java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l typescript-axios -o deeplynx-js-sdk
           java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l csharp -o deeplynx-csharp-sdk
           java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l r -o deeplynx-r-sdk
