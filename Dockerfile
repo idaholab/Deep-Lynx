@@ -1,6 +1,7 @@
 FROM cimg/rust:1.65.0-node as build
 
 USER root
+RUN sudo apt-get update
 
 # these settings are needed for the admin web gui build, these variables are all baked into the Vue application and thus
 # are available to any end user that wants to dig deep enough in the webpage - as such we don't feel it a security risk
@@ -27,16 +28,12 @@ WORKDIR /srv/core_api
 COPY package*.json ./
 
 RUN npm update --location=global
+RUN npm install npm@latest --location=global
 RUN npm install cargo-cp-artifact --location=global
 
 # Bundle app source
 COPY . .
 
-# Build the app
-WORKDIR /srv/core_api/NodeLibraries/dl-fast-load
-RUN cargo clean && npm install
-
-WORKDIR /srv/core_api
 RUN npm ci --include=dev
 RUN npm run build:docker
 RUN cd /srv/core_api/AdminWebApp && npm ci --include=dev && npm run build -- --dest /srv/core_api/dist/http_server/web_gui
@@ -45,8 +42,11 @@ RUN rm -rf /srv/core_api/AdminWebApp/node_modules
 RUN rm -rf .env
 
 FROM node:18.12-buster-slim as production
+RUN apt-get update
+
 WORKDIR /srv/core_api
 
+RUN npm install npm@latest --location=global
 RUN npm update --location=global
 RUN npm install pm2 --location=global
 
