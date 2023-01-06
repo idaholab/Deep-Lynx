@@ -3,7 +3,7 @@ import {authInContainer, authRequest} from '../../../middleware';
 import ContainerImport, {ContainerImportT} from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_import';
 import ContainerRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
 import {plainToClass} from 'class-transformer';
-import Container from '../../../../domain_objects/data_warehouse/ontology/container';
+import Container, {ContainerExport} from '../../../../domain_objects/data_warehouse/ontology/container';
 import Result from '../../../../common_classes/result';
 import {FileInfo} from 'busboy';
 import FileRepository from '../../../../data_access_layer/repositories/data_warehouse/data/file_repository';
@@ -19,8 +19,8 @@ const containerImport = ContainerImport.Instance;
 export default class ContainerRoutes {
     public static mount(app: Application, middleware: any[]) {
         app.post('/containers', ...middleware, this.createContainer);
-        app.post('/containers/import', ...middleware, this.importContainer);
-        app.put('/containers/import/:containerID', ...middleware, this.importUpdatedContainer);
+        app.post('/containers/import', ...middleware, this.importContainerFromOwl);
+        app.put('/containers/import/:containerID', ...middleware, this.updateContainerFromOwl);
         app.put('/containers', ...middleware, authRequest('write', 'containers'), this.batchUpdate);
 
         // we don't auth this request as the actual handler will only ever show containers
@@ -32,9 +32,9 @@ export default class ContainerRoutes {
         app.delete('/containers/:containerID', ...middleware, authInContainer('write', 'containers'), this.archiveContainer);
         app.post('/containers/:containerID/active', ...middleware, authInContainer('read', 'containers'), this.setActive);
 
-        app.get('/containers/:containerID/ontology/export', ...middleware, authInContainer('read', 'ontology'), this.exportOntology);
+        app.get('/containers/:containerID/export', ...middleware, authInContainer('read', 'ontology'), this.exportContainer);
 
-        app.post('/containers/:containerID/ontology/import', ...middleware, authInContainer('write', 'ontology'), this.importOntology);
+        app.post('/containers/:containerID/import', ...middleware, authInContainer('write', 'ontology'), this.importContainer);
 
         app.post('/containers/:containerID/permissions', ...middleware, authRequest('write', 'containers'), this.repairPermissions);
 
@@ -183,7 +183,7 @@ export default class ContainerRoutes {
         }
     }
 
-    private static importContainer(req: Request, res: Response, next: NextFunction) {
+    private static importContainerFromOwl(req: Request, res: Response, next: NextFunction) {
         const streamChunks: Buffer[] = [];
         let fileBuffer: Buffer = Buffer.alloc(0);
         const input: {[key: string]: any} = {};
@@ -231,7 +231,7 @@ export default class ContainerRoutes {
         return req.pipe(busboy);
     }
 
-    private static importUpdatedContainer(req: Request, res: Response, next: NextFunction) {
+    private static updateContainerFromOwl(req: Request, res: Response, next: NextFunction) {
         const streamChunks: Buffer[] = [];
         let fileBuffer: Buffer = Buffer.alloc(0);
         const input: {[key: string]: any} = {};
@@ -288,15 +288,26 @@ export default class ContainerRoutes {
             .catch((err) => Result.Error(err).asResponse(res));
     }
 
-    private static exportOntology(req: Request, res: Response, next: NextFunction) {
+    private static async exportContainer(req: Request, res: Response, next: NextFunction) {
         if (!req.container) {
-            Result.Failure(`must provide container to export ontology from`).asResponse(res);
+            Result.Failure(`must provide container to export from`).asResponse(res);
             next();
             return;
         }
 
+        let containerExport: ContainerExport = new ContainerExport();
+        if (String(req.query.exportOntology).toLowerCase() === 'true') {
+            containerExport = (await repository.exportOntology(req.container.id!, req.currentUser!, req.query.ontologyVersionID as string | undefined)).value
+        }
+        if (String(req.query.exportDataSources).toLowerCase() === 'true') {
+            // Implement in future update
+        }
+        if (String(req.query.exportTypeMappings).toLowerCase() === 'true') {
+            // Implement in future update
+        }
+
         repository
-            .exportOntology(req.container.id!, req.currentUser!, req.query.ontologyVersionID as string | undefined)
+            .createContainerExportFile(req.container.id!, req.currentUser!, containerExport)
             .then((file) => {
                 if (file.isError) {
                     file.asResponse(res);
@@ -321,9 +332,9 @@ export default class ContainerRoutes {
             .catch((err) => Result.Error(err).asResponse(res));
     }
 
-    private static importOntology(req: Request, res: Response, next: NextFunction) {
+    private static importContainer(req: Request, res: Response, next: NextFunction) {
         if (!req.container) {
-            Result.Failure(`must provide container to import ontology`).asResponse(res);
+            Result.Failure(`must provide container to import`).asResponse(res);
             next();
             return;
         }
@@ -337,7 +348,7 @@ export default class ContainerRoutes {
             const {filename} = info;
             const ext = path.extname(filename);
             if (ext !== '.json') {
-                Result.Failure('Unsupported filetype supplied. Please provide a valid ontology export (.json) file.', 400).asResponse(res);
+                Result.Failure('Unsupported filetype supplied. Please provide a valid export (.json) file.', 400).asResponse(res);
                 next();
                 return;
             }

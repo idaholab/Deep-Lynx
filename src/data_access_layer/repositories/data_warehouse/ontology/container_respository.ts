@@ -1,5 +1,5 @@
 import RepositoryInterface from '../../repository';
-import Container, {ContainerAlert} from '../../../../domain_objects/data_warehouse/ontology/container';
+import Container, {ContainerAlert, ContainerExport} from '../../../../domain_objects/data_warehouse/ontology/container';
 import Result from '../../../../common_classes/result';
 import ContainerMapper from '../../../mappers/data_warehouse/ontology/container_mapper';
 import Authorization from '../../../../domain_objects/access_management/authorization/authorization';
@@ -29,6 +29,7 @@ import MetatypeRelationshipKey from '../../../../domain_objects/data_warehouse/o
 import MetatypeRelationshipKeyRepository from './metatype_relationship_key_repository';
 import MetatypeRelationshipPairRepository from './metatype_relationship_pair_repository';
 import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
+import TypeMappingRepository from "../etl/type_mapping_repository";
 
 /*
     ContainerRepository contains methods for persisting and retrieving a container
@@ -258,7 +259,7 @@ export default class ContainerRepository implements RepositoryInterface<Containe
 
     // export ontology returns a File record with the information needed to download a .json file with the container's
     // exported ontology. Eventually we'll convert this into an OWL file, for now, we just do a File.
-    async exportOntology(containerID: string, user: User, ontologyVersionID?: string): Promise<Result<File>> {
+    async exportOntology(containerID: string, user: User, ontologyVersionID?: string): Promise<Result<ContainerExport>> {
         const repo = new OntologyVersionRepository();
 
         if (!ontologyVersionID) {
@@ -284,35 +285,16 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         const relationship_pairs = await MetatypeRelationshipPairMapper.Instance.ListForExport(containerID, ontologyVersionID);
         if (relationship_pairs.isError) return Promise.resolve(Result.Pass(relationship_pairs));
 
-        const ontologyExport: {[key: string]: any} = {
-            version: 1, // hardcoded for a reason!
-            metatypes: metatypes.value,
-            metatype_keys: metatype_keys.value,
-            relationships: relationships.value,
-            relationship_keys: relationship_keys.value,
-            relationship_pairs: relationship_pairs.value,
-        };
-
-        try {
-            fs.appendFileSync(`container_export_${containerID}.json`, JSON.stringify(ontologyExport));
-
-            // this naming scheme should be enough to avoid clashes
-            const readStream = fs.createReadStream(`container_export_${containerID}.json`);
-            const fileRepo = new FileRepository();
-
-            const file = await fileRepo.uploadFile(containerID, user, `container_export_${containerID}`, readStream);
-            if (file.isError) return Promise.resolve(Result.Pass(file));
-
-            const saved = await fileRepo.save(file.value, user);
-            if (saved.isError) return Promise.resolve(Result.Pass(saved));
-
-            // don't forget to remove the temporary file
-            fs.unlinkSync(`container_export_${containerID}.json`);
-
-            return Promise.resolve(Result.Success(file.value));
-        } catch (e: any) {
-            return Promise.resolve(Result.Error(e));
-        }
+        return Promise.resolve(Result.Success(
+            new ContainerExport({
+                version: 1, // hardcoded for a reason!
+                metatypes: metatypes.value,
+                metatype_keys: metatype_keys.value,
+                relationships: relationships.value,
+                relationship_keys: relationship_keys.value,
+                relationship_pairs: relationship_pairs.value,
+            })
+        ));
     }
 
     async importOntology(containerID: string, user: User, fileBuffer: Buffer): Promise<Result<string>> {
@@ -333,10 +315,10 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         const ontVersionResult =
             await ontologyVersionRepo.where().containerID('eq', containerID).and().status('eq', 'published').list({sortDesc: true, sortBy: 'id', limit: 1});
 
-        if (!ontVersionResult.isError || ontVersionResult.value.length > 0) {
+        if (!ontVersionResult.isError && ontVersionResult.value.length > 0) {
             oldOntologyVersionID = ontVersionResult.value[0].id;
         } else {
-            return Promise.reject(Result.Failure(`Published ontology version for container ID ${containerID} not found.`));
+            return Promise.resolve(Result.Failure(`Published ontology version for container ID ${containerID} not found.`));
         }
 
         // create new ontology version
@@ -423,11 +405,61 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         void await relationshipPairRepo.saveFromJSON(relationshipPairs);
 
         // after successful ontology imports (or after error), update ontology version statuses
-        void ontologyVersionRepo.setStatus(newVersionID!, "published");
-
         void ontologyVersionRepo.setStatus(oldOntologyVersionID!, "deprecated", "Replaced by imported ontology from container file");
 
-        return Promise.resolve(Result.Success('success'));
+        void this.createAlert(
+            new ContainerAlert({containerID, type: "info", message: "Due to the ontology update, please review type mappings."}),
+            user);
+
+        const thisContainer = await this.findByID(containerID);
+        if (thisContainer.value.config?.ontology_versioning_enabled) {
+            // set new ontology version status to ready for version-enabled containers
+            void ontologyVersionRepo.setStatus(newVersionID!, "ready");
+            return Promise.resolve(Result.Success('A new ontology version with the supplied ontology has been created. ' +
+                'Please review and submit for approval and publishing.'));
+        } else {
+            void ontologyVersionRepo.setStatus(newVersionID!, "published");
+
+            // attempt to autoupgrade type mappings for containers without ontology versioning
+            const mappingRepo = new TypeMappingRepository();
+            const containerTypeMappings = await mappingRepo
+                .where()
+                .containerID('eq', containerID)
+                .list(true);
+            const upgradeResult = await mappingRepo.upgradeMappings(newVersionID!, ...containerTypeMappings.value);
+
+            // if there are no mappings present, the value will be undefined. This should not be treated as an error
+            if (upgradeResult[0].isError && typeof(upgradeResult[0].value) !== 'undefined') {
+                return Promise.resolve(Result.Failure('Unable to automatically upgrade type mappings. ' +
+                    'Please review the type mappings for this container.'));
+            }
+
+            return Promise.resolve(Result.Success('Successful container import'));
+        }
+
+    }
+
+    async createContainerExportFile(containerID: string, user: User, containerExport: ContainerExport): Promise<Result<File>>{
+        try {
+            fs.appendFileSync(`container_export_${containerID}.json`, JSON.stringify(containerExport));
+
+            // this naming scheme should be enough to avoid clashes
+            const readStream = fs.createReadStream(`container_export_${containerID}.json`);
+            const fileRepo = new FileRepository();
+
+            const file = await fileRepo.uploadFile(containerID, user, `container_export_${containerID}`, readStream);
+            if (file.isError) return Promise.resolve(Result.Pass(file));
+
+            const saved = await fileRepo.save(file.value, user);
+            if (saved.isError) return Promise.resolve(Result.Pass(saved));
+
+            // don't forget to remove the temporary file
+            fs.unlinkSync(`container_export_${containerID}.json`);
+
+            return Promise.resolve(Result.Success(file.value));
+        } catch (e: any) {
+            return Promise.resolve(Result.Error(e));
+        }
     }
 
     private async getCached(id: string): Promise<Container | undefined> {

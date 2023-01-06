@@ -216,8 +216,11 @@ describe('A Container Repository', async () => {
         expect(results.isError).false;
         expect(container.id).not.undefined;
 
-        const file = await repository.exportOntology(container.id!, user);
-        expect(file.isError).false;
+        const containerExport = await repository.exportOntology(container.id!, user);
+        expect(containerExport.isError).false;
+
+        // create a file from the export
+        const file = await repository.createContainerExportFile(container.id!, user, containerExport.value);
 
         // now lets check the download
         let writer = fs.createWriteStream(`${container.id}_export.json`);
@@ -242,8 +245,11 @@ describe('A Container Repository', async () => {
         expect(results.isError).false;
         expect(container.id).not.undefined;
 
-        const file = await repository.exportOntology(container.id!, user);
-        expect(file.isError).false;
+        const containerExport = await repository.exportOntology(container.id!, user);
+        expect(containerExport.isError).false;
+
+        // create a file from the export
+        const file = await repository.createContainerExportFile(container.id!, user, containerExport.value);
 
         // now lets check the download
         let writer = fs.createWriteStream(`${container.id}_export.json`);

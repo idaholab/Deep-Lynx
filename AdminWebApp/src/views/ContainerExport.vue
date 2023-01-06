@@ -20,13 +20,13 @@
                 <template slot="prepend"><info-tooltip :message="$t('containerExport.exportOntologyHelp')"></info-tooltip> </template>
               </v-checkbox>
 
-            <v-checkbox disabled>
+            <v-checkbox v-model="exportDataSources" disabled>
                 <template v-slot:label>
                   {{$t('containerExport.exportDataSources')}} <p class="text-caption" style="margin-left: 5px"> {{$t('comingSoon')}}</p>
                 </template>
               </v-checkbox>
 
-            <v-checkbox disabled>
+            <v-checkbox v-model="exportTypeMappings" disabled>
                 <template v-slot:label>
                   {{$t('containerExport.exportTypeMappings')}} <p class="text-caption" style="margin-left: 5px"> {{$t('comingSoon')}}</p>
                 </template>
@@ -39,7 +39,7 @@
       </v-card-text>
 
       <v-card-actions>
-        <v-btn color="blue darken-1" class="mt-2" text @click="exportContainer" :disabled="!exportOntology"><span v-if="!loading">{{$t("containerExport.export")}}</span>
+        <v-btn color="blue darken-1" class="mt-2" text @click="exportContainer" :disabled="!exportSelected"><span v-if="!loading">{{$t("containerExport.export")}}</span>
           <span v-if="loading"><v-progress-circular indeterminate></v-progress-circular></span>
         </v-btn>
       </v-card-actions>
@@ -48,7 +48,7 @@
 </template>
 
 <script lang="ts">
-import {Component, Vue} from 'vue-property-decorator'
+import {Component, Vue, Watch} from 'vue-property-decorator'
 import {ContainerT} from "@/api/types";
 import DeleteContainerDialog from "@/components/ontology/containers/deleteContainerDialog.vue";
 import SelectDataSourceTypes from "@/components/dataSources/selectDataSourceTypes.vue";
@@ -65,11 +65,20 @@ export default class ContainerExport extends Vue {
   loading = false
   valid = true
   exportOntology = false
+  exportDataSources = false
+  exportTypeMappings = false
+  exportSelected = false
+
+  @Watch('exportOntology')
+  @Watch('exportDataSources')
+  @Watch('exportTypeMappings')
+  updateImportSelected() {
+    this.exportSelected = this.exportOntology || this.exportDataSources || this.exportTypeMappings;
+  }
 
   beforeMount() {
     this.container = this.$store.getters.activeContainer
   }
-
 
   exportContainer() {
     this.loading = true;
@@ -85,18 +94,23 @@ export default class ContainerExport extends Vue {
       config.auth = {username: Config.deepLynxApiAuthBasicUser, password: Config.deepLynxApiAuthBasicPass} as AxiosBasicCredentials
     }
 
-    const url = buildURL(Config?.deepLynxApiUri, {path: `/containers/${this.container?.id!}/ontology/export`, queryParams: {ontologyVersionID: this.$store.getters.currentOntologyVersionID}})
+    const queryParams: {[key: string]: any} = {ontologyVersionID: this.$store.getters.currentOntologyVersionID}
+    if (this.exportOntology) queryParams.exportOntology = true
+    if (this.exportDataSources) queryParams.exportDataSources = true
+    if (this.exportTypeMappings) queryParams.exportTypeMappings = true
+
+    const url = buildURL(Config?.deepLynxApiUri, {path: `/containers/${this.container?.id!}/export`, queryParams: queryParams})
 
     axios.get(url, config)
         .then((response: AxiosResponse) => {
           if(response.status > 299 || response.status < 200) {
-            this.errorMessage = `Unable to download exported type mappings`
+            this.errorMessage = `Unable to download exported container`
           } else {
             const fetchedURL = window.URL.createObjectURL(new Blob([response.data]))
             const link = document.createElement('a')
 
             link.href = fetchedURL
-            link.setAttribute('download', `${this.container?.name}_Ontology_Export.json`)
+            link.setAttribute('download', `${this.container?.name}_Container_Export.json`)
             document.body.append(link)
             link.click()
           }

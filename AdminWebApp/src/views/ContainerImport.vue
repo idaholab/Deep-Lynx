@@ -20,13 +20,13 @@
                 <template slot="prepend"><info-tooltip :message="$t('containerImport.importOntologyHelp')"></info-tooltip> </template>
               </v-checkbox>
 
-            <v-checkbox disabled>
+            <v-checkbox v-model="importDataSources" disabled>
                 <template v-slot:label>
                   {{$t('containerImport.importDataSources')}} <p class="text-caption" style="margin-left: 5px"> {{$t('comingSoon')}}</p>
                 </template>
               </v-checkbox>
 
-            <v-checkbox disabled>
+            <v-checkbox v-model="importTypeMappings" disabled>
                 <template v-slot:label>
                   {{$t('containerImport.importTypeMappings')}} <p class="text-caption" style="margin-left: 5px"> {{$t('comingSoon')}}</p>
                 </template>
@@ -45,7 +45,7 @@
           </template>
         </v-file-input>
 
-        <v-btn color="blue darken-1" class="mt-2" text @click="importContainer" :disabled="!importOntology || !importFile"><span v-if="!loading">{{$t("containerImport.import")}}</span>
+        <v-btn color="blue darken-1" class="mt-2" text @click="importContainer" :disabled="!importSelected || !importFile"><span v-if="!loading">{{$t("containerImport.import")}}</span>
           <span v-if="loading"><v-progress-circular indeterminate></v-progress-circular></span>
         </v-btn>
       </v-card-actions>
@@ -54,7 +54,7 @@
 </template>
 
 <script lang="ts">
-import {Component, Vue} from 'vue-property-decorator'
+import {Component, Vue, Watch} from 'vue-property-decorator'
 import {ContainerT} from "@/api/types";
 import DeleteContainerDialog from "@/components/ontology/containers/deleteContainerDialog.vue";
 import SelectDataSourceTypes from "@/components/dataSources/selectDataSourceTypes.vue";
@@ -71,7 +71,17 @@ export default class ContainerImport extends Vue {
   loading = false
   valid = true
   importOntology = false
+  importDataSources = false
+  importTypeMappings = false
+  importSelected = false
   importFile: File | null = null
+
+  @Watch('importOntology')
+  @Watch('importDataSources')
+  @Watch('importTypeMappings')
+  updateImportSelected() {
+    this.importSelected = this.importOntology || this.importDataSources || this.importTypeMappings;
+  }
 
   beforeMount() {
     this.container = this.$store.getters.activeContainer;
@@ -98,7 +108,7 @@ export default class ContainerImport extends Vue {
       return true;
     };
 
-    const url = buildURL(Config?.deepLynxApiUri, {path: `/containers/${this.container?.id!}/ontology/import`})
+    const url = buildURL(Config?.deepLynxApiUri, {path: `/containers/${this.container?.id!}/import`})
 
     const formData = new FormData();
     formData.append('export_file', this.importFile!);
@@ -109,7 +119,7 @@ export default class ContainerImport extends Vue {
             const error = JSON.parse(response.data.error).error;
             this.errorMessage = `Unable to import container. ${error}`;
           } else {
-            this.successMessage = 'Successful container import';
+            this.successMessage = JSON.parse(response.data.value);
           }
         })
         .catch((e: any) => {
