@@ -184,6 +184,10 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
         return Promise.resolve(undefined);
     }
 
+    async saveFromJSON(metatypeKeys: MetatypeKey[]): Promise<Result<boolean>> {
+        return await this.#mapper.JSONCreate(metatypeKeys);
+    }
+
     RefreshView(): Promise<Result<boolean>> {
         return this.#mapper.RefreshView();
     }

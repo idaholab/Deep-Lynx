@@ -71,6 +71,12 @@ export default class MetatypeMapper extends Mapper {
         });
     }
 
+    public async ListForExport(containerID: string, ontologyVersionID?: string): Promise<Result<Metatype[]>> {
+        return super.rows(this.forExportStatement(containerID, ontologyVersionID), {
+            resultClass: this.resultClass,
+        });
+    }
+
     public async InUse(id: string): Promise<Result<boolean>> {
         const results = await super.rows<any>(this.inUseStatement(id));
         if (results.isError) return Promise.resolve(Result.Pass(results));
@@ -86,8 +92,16 @@ export default class MetatypeMapper extends Mapper {
         return super.runStatement(this.archiveStatement(id, userID));
     }
 
+    public async ArchiveForImport(ontologyVersionID: string, transaction?: PoolClient): Promise<Result<boolean>> {
+        return super.runStatement(this.archiveForImportStatement(ontologyVersionID), {transaction});
+    }
+
     public async Unarchive(id: string, userID: string): Promise<Result<boolean>> {
         return super.runStatement(this.unarchiveStatement(id, userID));
+    }
+
+    public async JSONCreate(metatypes: Metatype[]): Promise<Result<boolean>> {
+        return super.runStatement(this.insertFromJSONStatement(metatypes))
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -95,7 +109,24 @@ export default class MetatypeMapper extends Mapper {
     // My hope is that this method will allow us to be flexible and create more complicated
     // queries more easily.
     private createStatement(userID: string, ...metatypes: Metatype[]): string {
-        const text = `INSERT INTO metatypes(container_id,name,description, created_by, modified_by, ontology_version) VALUES %L RETURNING *`;
+        const text = `INSERT INTO metatypes(
+                      container_id,
+                      name,
+                      description, 
+                      created_by, 
+                      modified_by, 
+                      ontology_version) VALUES %L 
+                      ON CONFLICT (container_id, name, ontology_version) DO UPDATE SET
+                          name = EXCLUDED.name,
+                          created_by = EXCLUDED.created_by,
+                          modified_by = EXCLUDED.created_by,
+                          created_at = NOW(),
+                          modified_at = NOW(),
+                          deleted_at = NULL
+                      WHERE EXCLUDED.name = metatypes.name 
+                      AND EXCLUDED.container_id = metatypes.container_id 
+                      AND EXCLUDED.ontology_version = metatypes.ontology_version
+                      RETURNING *`;
         const values = metatypes.map((metatype) => [metatype.container_id, metatype.name, metatype.description, userID, userID, metatype.ontology_version]);
 
         return format(text, values);
@@ -122,6 +153,13 @@ export default class MetatypeMapper extends Mapper {
         return {
             text: `UPDATE metatypes SET deleted_at = NOW(), modified_at = NOW(), modified_by = $2  WHERE id = $1`,
             values: [metatypeID, userID],
+        };
+    }
+
+    private archiveForImportStatement(ontologyVersionID: string): QueryConfig {
+        return {
+            text: `UPDATE metatypes SET deleted_at = NOW() WHERE ontology_version = $1`,
+            values: [ontologyVersionID],
         };
     }
 
@@ -160,5 +198,52 @@ export default class MetatypeMapper extends Mapper {
                     SELECT t.id FROM data_type_mapping_transformations WHERE t.metatype_id = $1 ) LIMIT 1`,
             values: [id],
         };
+    }
+
+    private forExportStatement(containerID: string, ontologyVersionID?: string): QueryConfig {
+        if (ontologyVersionID) {
+            return {
+                text: `SELECT m.name, m.description, m.id as old_id
+                    FROM metatypes m 
+                    WHERE m.deleted_at IS NULL AND m.container_id = $1 AND m.ontology_version = $2`,
+                values: [containerID, ontologyVersionID],
+            };
+        } else {
+            return {
+                text: `SELECT m.name, m.description, m.id as old_id
+                    FROM metatypes m 
+                    WHERE m.deleted_at IS NULL AND m.container_id = $1 AND m.ontology_version IS NULL`,
+                values: [containerID],
+            };
+        }
+    }
+
+    // usees json_to_recordset to directly insert metatypes from json
+    private insertFromJSONStatement(metatypes: Metatype[]) {
+        const text = `INSERT INTO metatypes(
+                    container_id,
+                    name,
+                    description,
+                    created_by,
+                    modified_by,
+                    ontology_version,
+                    old_id)
+                SELECT *
+                FROM json_to_recordset(%L)
+                AS ont_import(container_id int8, name text, description text, created_by text, modified_by text, ontology_version int8, old_id int8)
+                ON CONFLICT (container_id, name, ontology_version) DO UPDATE SET
+                        name = EXCLUDED.name,
+                        old_id = EXCLUDED.old_id,
+                        created_by = EXCLUDED.created_by,
+                        modified_by = EXCLUDED.created_by,
+                        created_at = NOW(),
+                        modified_at = NOW(),
+                        deleted_at = NULL
+                    WHERE EXCLUDED.name = metatypes.name 
+                    AND EXCLUDED.container_id = metatypes.container_id 
+                    AND EXCLUDED.ontology_version = metatypes.ontology_version`;
+        const values = JSON.stringify(metatypes);
+
+        return format(text, values);
     }
 }

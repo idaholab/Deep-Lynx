@@ -323,6 +323,11 @@ export default class MetatypeRelationshipRepository extends Repository implement
         return Promise.resolve(deleted);
     }
 
+    async saveFromJSON(relationships: MetatypeRelationship[]): Promise<Result<boolean>> {
+        const saved = await this.#mapper.JSONCreate(relationships);
+        return saved;
+    }
+
     constructor() {
         super(MetatypeRelationshipMapper.viewName);
     }

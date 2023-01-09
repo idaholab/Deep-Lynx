@@ -345,6 +345,11 @@ export default class MetatypeRepository extends Repository implements Repository
         return Promise.resolve(deleted);
     }
 
+    async saveFromJSON(metatypes: Metatype[]): Promise<Result<boolean>> {
+        const saved = await this.#mapper.JSONCreate(metatypes);
+        return saved;
+    }
+
     constructor() {
         super(MetatypeMapper.viewName);
     }
