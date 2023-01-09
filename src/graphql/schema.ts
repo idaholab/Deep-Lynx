@@ -194,7 +194,8 @@ export default class GraphQLRunner {
                 metatypeRepo = metatypeRepo.and().name("%", options.metatypes)
             }
 
-            const metatypeResults = await metatypeRepo.list(true, {sortBy: 'id'});
+            // load metatypes with the keys loaded from the materialized view for speed's sake
+            const metatypeResults = await metatypeRepo.list(true, {sortBy: 'id', loadFromView: true});
             if (metatypeResults.isError) {
                 return Promise.resolve(Result.Pass(metatypeResults));
             }

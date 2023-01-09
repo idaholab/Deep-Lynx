@@ -77,7 +77,7 @@ async function Start(): Promise<any> {
             },
             {
                 name: 'materialized_view_refresh', // will run staging_clean.ts
-                interval: '3h',
+                interval: '1m',
             },
         ],
     });

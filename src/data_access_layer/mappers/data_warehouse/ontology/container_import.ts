@@ -911,6 +911,9 @@ export default class ContainerImport {
                     // retrieve existing container, relationships, metatypes, and relationship pairs
                     oldMetatypeRelationships = (await metatypeRelationshipRepo.where().containerID('eq', input.container.id!).list(false)).value;
 
+                    // we load from the materialized view here because of the possible large amount of keys - however we need to refresh the view
+                    // so we don't have stale data
+                    await MetatypeKeyMapper.Instance.RefreshView();
                     oldMetatypes = (await metatypeRepo.where().containerID('eq', input.container.id!).list(false)).value;
 
                     oldMetatypeRelationshipPairs = (await metatypeRelationshipPairRepo.where().containerID('eq', input.container.id!).list()).value;
@@ -948,7 +951,7 @@ export default class ContainerImport {
 
                             // check metatypeKeys for metatypes to be updated
                             const newMetatypeKeys = classListMap.get(metatype.name).keys;
-                            const oldMetatypeKeys = (await MetatypeKeyMapper.Instance.ListForMetatype(metatype.id!)).value;
+                            const oldMetatypeKeys = (await MetatypeKeyMapper.Instance.ListFromViewForMetatype(metatype.id!)).value;
 
                             for (const key of oldMetatypeKeys) {
                                 if (!newMetatypeKeys.includes(key.name)) {
