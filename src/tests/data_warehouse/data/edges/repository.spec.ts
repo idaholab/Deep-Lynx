@@ -114,8 +114,6 @@ describe('An Edge Repository', async () => {
         const keys2 = await kStorage.BulkCreate('test suite', testKeys2);
         expect(keys2.isError).false;
 
-        await kStorage.RefreshView();
-
         const mixed = [
             new Node({
                 container_id: containerID,

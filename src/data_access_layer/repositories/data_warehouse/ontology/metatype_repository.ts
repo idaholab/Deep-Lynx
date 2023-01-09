@@ -276,7 +276,7 @@ export default class MetatypeRepository extends Repository implements Repository
         return Promise.resolve(Result.Failure('metatype has no id'));
     }
 
-    async findByID(id: string, loadKeys = true): Promise<Result<Metatype>> {
+    async findByID(id: string, loadKeys = true, fromView?: boolean): Promise<Result<Metatype>> {
         const cached = await this.getCached(id);
         if (cached) {
             return Promise.resolve(Result.Success(cached));
@@ -285,24 +285,34 @@ export default class MetatypeRepository extends Repository implements Repository
         const retrieved = await this.#mapper.Retrieve(id);
         // we do not want to cache this unless we have the entire object, keys included
         if (!retrieved.isError && loadKeys) {
-            const keys = await this.#keyMapper.ListForMetatype(retrieved.value.id!);
-            if (!keys.isError) retrieved.value.addKey(...keys.value);
+            if (fromView) {
+                // do not set the cache from the materialized view as it could be out of date data
+                const keys = await this.#keyMapper.ListFromViewForMetatype(retrieved.value.id!);
+                if (!keys.isError) retrieved.value.addKey(...keys.value);
+            } else {
+                const keys = await this.#keyMapper.ListForMetatype(retrieved.value.id!);
+                if (!keys.isError) retrieved.value.addKey(...keys.value);
 
-            // don't fail out on cache set failure, it will log and move on
-            void this.setCache(retrieved.value);
+                // don't fail out on cache set failure, it will log and move on
+                void this.setCache(retrieved.value);
+            }
         }
 
         return Promise.resolve(retrieved);
     }
 
-    async findByUUID(uuid: string, loadKeys = true): Promise<Result<Metatype>> {
+    async findByUUID(uuid: string, loadKeys = true, fromView?: boolean): Promise<Result<Metatype>> {
         const retrieved = await this.#mapper.RetrieveByUUID(uuid);
         // we do not want to cache this unless we have the entire object, keys included
         if (!retrieved.isError && loadKeys) {
-            const keys = await this.#keyMapper.ListForMetatype(retrieved.value.id!);
-            if (!keys.isError) retrieved.value.addKey(...keys.value);
-
-            // don't fail out on cache set failure, it will log and move on
+            if (fromView) {
+                // do not set the cache from the materialized view as it could be out of date data
+                const keys = await this.#keyMapper.ListFromViewForMetatype(retrieved.value.id!);
+                if (!keys.isError) retrieved.value.addKey(...keys.value);
+            } else {
+                const keys = await this.#keyMapper.ListForMetatype(retrieved.value.id!);
+                if (!keys.isError) retrieved.value.addKey(...keys.value);
+            }
         }
 
         return Promise.resolve(retrieved);
@@ -408,7 +418,7 @@ export default class MetatypeRepository extends Repository implements Repository
                 metatype_ids.push(metatype.id!);
             });
 
-            const keys = (await keyRepo.listForMetatypeIDs(metatype_ids)).value;
+            const keys = (await keyRepo.listForMetatypeIDs(metatype_ids, options?.loadFromView)).value;
 
             await Promise.all(
                 results.value.map((metatype) => {
