@@ -130,5 +130,7 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
         }
     }
 
+    await mapper.completeTransaction(transaction.value);
+
     return Promise.resolve(Result.Success(true));
 }

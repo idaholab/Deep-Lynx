@@ -314,7 +314,7 @@ describe('The updated repository layer', async () => {
         }
 
         const nodeResults = await nMapper.BulkCreateOrUpdateByCompositeID(user.id!, nodeList);
-        expect(nodeResults.isError, metatypeResults.error?.error).false;
+        expect(nodeResults.isError, nodeResults.error?.error).false;
         expect(nodeResults.value.length).eq(75);
         nodes = plainToInstance(Node, nodeResults.value);
 
