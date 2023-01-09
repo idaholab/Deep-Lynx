@@ -138,11 +138,14 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
         return Promise.resolve(Result.Success(true));
     }
 
-    async listForMetatype(metatypeID: string): Promise<Result<MetatypeKey[]>> {
+    async listForMetatype(metatypeID: string, fromView?: boolean): Promise<Result<MetatypeKey[]>> {
         const cached = await this.getCachedForMetatype(metatypeID);
         if (cached) {
             return Promise.resolve(Result.Success(cached));
         }
+
+        // we don't cache from the materialized view
+        if (fromView) return this.#mapper.ListFromViewForMetatype(metatypeID);
 
         const keys = await this.#mapper.ListForMetatype(metatypeID);
         if (keys.isError) return Promise.resolve(Result.Pass(keys));
@@ -152,7 +155,8 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
         return Promise.resolve(keys);
     }
 
-    async listForMetatypeIDs(metatype_ids: string[]): Promise<Result<MetatypeKey[]>> {
+    async listForMetatypeIDs(metatype_ids: string[], fromView?: boolean): Promise<Result<MetatypeKey[]>> {
+        if (fromView) return this.#mapper.ListFromViewForMetatypeIDs(metatype_ids);
         return this.#mapper.ListForMetatypeIDs(metatype_ids);
     }
 
@@ -185,7 +189,7 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
     }
 
     RefreshView(): Promise<Result<boolean>> {
-        return this.#mapper.RefreshView()
+        return this.#mapper.RefreshView();
     }
 
     // this function is to be used only on container import. it does not refresh the keys view.

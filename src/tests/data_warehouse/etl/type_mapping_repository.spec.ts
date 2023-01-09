@@ -401,7 +401,7 @@ describe('A Type Mapping Repository', async () => {
             container_id: containerID,
             name: faker.name.findName(),
             description: faker.random.alphaNumeric(),
-            ontology_version: ontologyV1.id!
+            ontology_version: ontologyV1.id!,
         });
 
         const rSaved = await relRepo.save(relV1, user);
@@ -454,15 +454,15 @@ describe('A Type Mapping Repository', async () => {
                 new Condition({
                     key: 'RADIUS',
                     operator: '==',
-                    value: 'CIRCLE'
+                    value: 'CIRCLE',
                 }),
             ],
             keys: [
                 new KeyMapping({
                     key: 'Test',
-                    metatype_key_id: mKeyV1.id
-                })
-            ]
+                    metatype_key_id: mKeyV1.id,
+                }),
+            ],
         });
 
         mapping.addTransformation(transformation1);
@@ -475,15 +475,15 @@ describe('A Type Mapping Repository', async () => {
                 new Condition({
                     key: 'RADIUS',
                     operator: '==',
-                    value: 'CIRCLE'
+                    value: 'CIRCLE',
                 }),
             ],
             keys: [
                 new KeyMapping({
                     key: 'Test',
-                    metatype_relationship_key_id: rKeyV1.id
-                })
-            ]
+                    metatype_relationship_key_id: rKeyV1.id,
+                }),
+            ],
         });
 
         mapping.addTransformation(transformation2);
@@ -505,10 +505,7 @@ describe('A Type Mapping Repository', async () => {
         expect(cloned.isError).false;
 
         // verify that metatype and relationship ids in v2 are not the same ids as v1
-        const fetchMT = await metatypeRepo
-            .where().ontologyVersion('eq', v2id)
-            .and().uuid('eq', metatypeV1.uuid)
-            .list();
+        const fetchMT = await metatypeRepo.where().ontologyVersion('eq', v2id).and().uuid('eq', metatypeV1.uuid).list();
         expect(fetchMT.isError).false;
         const metatypeV2 = fetchMT.value[0];
         expect(metatypeV2.id).not.eq(metatypeV1.id);
@@ -516,10 +513,7 @@ describe('A Type Mapping Repository', async () => {
         expect(metatypeV2.name).eq(metatypeV1.name);
         expect(metatypeV2.keys).not.eq([]);
 
-        const fetchMKey = await mKeyRepo
-            .where().query('ontology_version', 'eq', v2id)
-            .and().uuid('eq', mKeyV1.uuid)
-            .list();
+        const fetchMKey = await mKeyRepo.where().query('ontology_version', 'eq', v2id).and().uuid('eq', mKeyV1.uuid).list();
         expect(fetchMKey.isError).false;
         const mKeyV2 = fetchMKey.value[0];
         expect(mKeyV2.id).not.eq(mKeyV1.id);
@@ -527,10 +521,7 @@ describe('A Type Mapping Repository', async () => {
         expect(mKeyV2.name).eq(mKeyV1.name);
         expect(mKeyV2.metatype_id).eq(metatypeV2.id);
 
-        const fetchRel = await relRepo
-            .where().ontologyVersion('eq', v2id)
-            .and().uuid('eq', relV1.uuid)
-            .list();
+        const fetchRel = await relRepo.where().ontologyVersion('eq', v2id).and().uuid('eq', relV1.uuid).list();
         expect(fetchRel.isError).false;
         const relV2 = fetchRel.value[0];
         expect(relV2.id).not.eq(relV1.id);
@@ -538,10 +529,7 @@ describe('A Type Mapping Repository', async () => {
         expect(relV2.name).eq(relV1.name);
         expect(relV2.keys).not.eq([]);
 
-        const fetchRKey = await rKeyRepo
-            .where().query('ontology_version', 'eq', v2id)
-            .and().uuid('eq', rKeyV1.uuid)
-            .list();
+        const fetchRKey = await rKeyRepo.where().query('ontology_version', 'eq', v2id).and().uuid('eq', rKeyV1.uuid).list();
         expect(fetchRKey.isError).false;
         const rKeyV2 = fetchRKey.value[0];
         expect(rKeyV2.id).not.eq(rKeyV1.id);
@@ -549,10 +537,7 @@ describe('A Type Mapping Repository', async () => {
         expect(rKeyV2.name).eq(rKeyV1.name);
         expect(rKeyV2.metatype_relationship_id).eq(relV2.id);
 
-        const fetchPairs = await pairRepo
-            .where().ontologyVersion('eq', v2id)
-            .and().uuid('eq', pairV1.uuid)
-            .list();
+        const fetchPairs = await pairRepo.where().ontologyVersion('eq', v2id).and().uuid('eq', pairV1.uuid).list();
         expect(fetchPairs.isError).false;
         const pairV2 = fetchPairs.value[0];
         expect(pairV2.id).not.eq(pairV1.id);
@@ -574,7 +559,7 @@ describe('A Type Mapping Repository', async () => {
         // upgrade mapping
         const upgraded = await repo.upgradeMappings(v2id, mapping);
         upgraded.forEach((u) => {
-            expect(u.isError).false;
+            expect(u.isError, JSON.stringify(u.error)).false;
             expect(u.value).true;
         });
 
@@ -594,7 +579,7 @@ describe('A Type Mapping Repository', async () => {
         // clean up
         mapping.transformations?.forEach((t) => {
             mapping.removeTransformation(t);
-        })
+        });
         await repo.delete(mapping);
         await metatypeRepo.delete(metatypeV1);
         await metatypeRepo.delete(dest_type);
@@ -610,7 +595,7 @@ describe('A Type Mapping Repository', async () => {
         await ontologyRepo.delete(ontologyV1);
         await ontologyRepo.delete(ontologyV2);
         return Promise.resolve();
-    })
+    });
 });
 
 const test_raw_payload = {
