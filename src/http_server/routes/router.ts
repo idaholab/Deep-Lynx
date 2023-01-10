@@ -183,8 +183,7 @@ export class Router {
         TaskRoutes.mount(this.app, [authenticateRoute(), containerContext(), taskContext(), currentUser()]);
         OntologyVersionRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser(), ontologyVersionContext()]);
 
-        // OAuth and Identity Provider routes - these are the only routes that serve up
-        // webpages. WE ALSO MOUNT THE '/' ENDPOINT HERE
+        // OAuth and Identity Provider routes
         OAuthRoutes.mount(this.app, [oauthAppContext()]);
 
         RSARoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
@@ -205,6 +204,7 @@ export class Router {
 
         // web gui
         this.app.use('/', express.static(Config.web_gui_dir));
+        this.app.use('/viewer', express.static(Config.web_gl_viewer_dir));
 
         this.app.use(
             helmet({

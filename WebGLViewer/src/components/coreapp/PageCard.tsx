@@ -1,12 +1,9 @@
 import * as React from 'react';
 
-import {
-  Card,
-  CardContent,
-  Typography,
-} from '@mui/material';
+import { Card, CardContent, Typography } from '@mui/material';
 
 import '../../styles/App.scss';
+// @ts-ignore
 import COLORS from '../../styles/variables';
 
 export default function PageCard(props: any) {
@@ -32,7 +29,10 @@ export default function PageCard(props: any) {
           backgroundColor: 'transparent',
         }}
       >
-        <Typography variant="h2" sx={{ textAlign: 'left', paddingBottom: '16px' }}>
+        <Typography
+          variant="h2"
+          sx={{ textAlign: 'left', paddingBottom: '16px' }}
+        >
           {title}
         </Typography>
         {children}

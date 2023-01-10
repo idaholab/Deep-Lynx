@@ -23,6 +23,7 @@ export class Config {
     private readonly _template_dir: string;
     private readonly _asset_dir: string;
     private readonly _web_gui_dir: string;
+    private readonly _web_gl_viewer_dir: string;
 
     private readonly _vue_app_id: string;
 
@@ -149,6 +150,7 @@ export class Config {
         this._template_dir = process.env.TEMPLATE_DIR || './dist/http_server/views';
         this._asset_dir = process.env.ASSET_DIR || './dist/http_server/assets';
         this._web_gui_dir = process.env.WEB_GUI_DIR || './dist/http_server/web_gui';
+        this._web_gl_viewer_dir = process.env.WEB_GL_VIEWER_DIR || './dist/http_server/web_gl';
 
         this._vue_app_id = process.env.VUE_APP_DEEP_LYNX_APP_ID || '';
 
@@ -277,6 +279,10 @@ export class Config {
 
     get web_gui_dir(): string {
         return this._web_gui_dir;
+    }
+
+    get web_gl_viewer_dir(): string {
+        return this._web_gl_viewer_dir;
     }
 
     get email_address(): string {
