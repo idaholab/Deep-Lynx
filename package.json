@@ -161,8 +161,6 @@
         "pg-format": "^1.0.4",
         "pg-large-object": "^2.0.0",
         "pg-query-stream": "^4.2.1",
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0",
         "reflect-metadata": "^0.1.13",
         "short-uuid": "^4.2.0",
         "tslib": "^2.3.0",
