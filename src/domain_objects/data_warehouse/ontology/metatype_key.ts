@@ -71,6 +71,10 @@ export default class MetatypeKey extends BaseDomainClass {
     @IsString()
     uuid?: string;
 
+    // used for migration from one ontology version to another, or as part of the ontology export/import feature
+    @IsOptional()
+    old_id?: string;
+
     constructor(input: {
         metatype_id?: string;
         container_id?: string;

@@ -811,6 +811,7 @@
                               v-if="key.data_type === 'date'"
                               :label="$t('dataMapping.dateFormatString')"
                               @input="setDateConversionFormatStringRecord($event, key)"
+                              :value="propertyKeyFormatString(key)"
                           >
                             <template slot="append-outer">
                               <a href="https://date-fns.org/v2.28.0/docs/parse" target="_blank">
@@ -1978,6 +1979,16 @@ export default class TransformationDialog extends Vue {
 
     if (found) {
       return found.value
+    }
+
+    return null
+  }
+
+  propertyKeyFormatString(metatypeKey: MetatypeKeyT) {
+    const found = this.propertyMapping.find(k => k.metatype_key_id === metatypeKey.id)
+
+    if (found) {
+      return found.date_conversion_format_string
     }
 
     return null

@@ -421,7 +421,6 @@ describe('An Edge Mapper', async () => {
         const keys2 = await kStorage.BulkCreate('test suite', testKeys2);
         expect(keys2.isError).false;
 
-        await kStorage.RefreshView();
         const mixed = [
             new Node({
                 container_id: containerID,
@@ -434,8 +433,6 @@ describe('An Edge Mapper', async () => {
                 properties: payload,
             }),
         ];
-
-        await kStorage.RefreshView();
 
         const node = await nStorage.BulkCreateOrUpdateByCompositeID('test suite', mixed);
         expect(node.isError, metatype.error?.error).false;

@@ -124,8 +124,6 @@ describe('A Node Mapper', async () => {
         const keys = await kStorage.BulkCreate('test suite', testKeys);
         expect(keys.isError).false;
 
-        await kStorage.RefreshView();
-
         const mixed = new Node({
             container_id: containerID,
             metatype: metatype.value.id!,

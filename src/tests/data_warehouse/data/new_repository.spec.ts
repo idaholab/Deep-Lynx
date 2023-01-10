@@ -3,17 +3,17 @@ import PostgresAdapter from '../../../data_access_layer/mappers/db_adapters/post
 import MetatypeKeyMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper';
 import MetatypeMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper';
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import NodeMapper from '../../../data_access_layer/mappers/data_warehouse/data/node_mapper';
 import Container from '../../../domain_objects/data_warehouse/ontology/container';
 import Metatype from '../../../domain_objects/data_warehouse/ontology/metatype';
 import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import MetatypeKey from '../../../domain_objects/data_warehouse/ontology/metatype_key';
 import Node from '../../../domain_objects/data_warehouse/data/node';
-import { User } from '../../../domain_objects/access_management/user';
+import {User} from '../../../domain_objects/access_management/user';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
-import DataSourceRecord, { TimeseriesColumn, TimeseriesDataSourceConfig } from '../../../domain_objects/data_warehouse/import/data_source';
+import DataSourceRecord, {TimeseriesColumn, TimeseriesDataSourceConfig} from '../../../domain_objects/data_warehouse/import/data_source';
 import MetatypeRelationshipMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper';
 import MetatypeRelationship from '../../../domain_objects/data_warehouse/ontology/metatype_relationship';
 import MetatypeRelationshipKey from '../../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
@@ -22,13 +22,13 @@ import MetatypeRelationshipPair from '../../../domain_objects/data_warehouse/ont
 import MetatypeRelationshipPairMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper';
 import EdgeMapper from '../../../data_access_layer/mappers/data_warehouse/data/edge_mapper';
 import Edge from '../../../domain_objects/data_warehouse/data/edge';
-import { plainToInstance } from 'class-transformer';
+import {plainToInstance} from 'class-transformer';
 import MetatypeRepository from '../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository';
 import MetatypeRelationshipRepository from '../../../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_repository';
 import NodeRepository from '../../../data_access_layer/repositories/data_warehouse/data/node_repository';
 import EdgeRepository from '../../../data_access_layer/repositories/data_warehouse/data/edge_repository';
 import MetatypeRelationshipPairRepository from '../../../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_pair_repository';
-import DataSourceRepository, { DataSourceFactory } from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
+import DataSourceRepository, {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import fs from 'fs';
 import DataStagingRepository from '../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 
@@ -68,7 +68,7 @@ describe('The updated repository layer', async () => {
             new User({
                 identity_provider_id: faker.random.uuid(),
                 identity_provider: 'username_password',
-                admin: false, 
+                admin: false,
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),
                 roles: ['superuser'],
@@ -130,6 +130,8 @@ describe('The updated repository layer', async () => {
         expect(metatypeResults.value.length).eq(4);
         metatypes = metatypeResults.value;
 
+        await mkMapper.RefreshView();
+
         metatypes.forEach(async (mt) => {
             const testKeys = [...test_keys];
             testKeys.forEach((key) => (key.metatype_id = mt.id));
@@ -140,8 +142,8 @@ describe('The updated repository layer', async () => {
         const nodeList = [];
 
         function getYear(startYear?: number, endYear?: number) {
-            let start = startYear ? startYear : 1950
-            let end = endYear ? endYear : 2020
+            let start = startYear ? startYear : 1950;
+            let end = endYear ? endYear : 2020;
             return Math.floor(Math.random() * (end - start) + start);
         }
 
@@ -151,7 +153,7 @@ describe('The updated repository layer', async () => {
                 metatype: metatypes[0].id!,
                 properties: {
                     name: faker.name.findName(),
-                    genre: genres[Math.floor(Math.random() * genres.length)]
+                    genre: genres[Math.floor(Math.random() * genres.length)],
                 },
                 data_source_id: dataSourceID,
                 original_data_id: faker.name.findName(),
@@ -182,7 +184,7 @@ describe('The updated repository layer', async () => {
                     genre: genres[Math.floor(Math.random() * genres.length)],
                     year: getYear(1950, 1985),
                     isGoodSong: true,
-                    availability: 'OnDemand'
+                    availability: 'OnDemand',
                 },
                 data_source_id: dataSourceID,
                 original_data_id: faker.name.findName(),
@@ -197,7 +199,7 @@ describe('The updated repository layer', async () => {
                     genre: genres[Math.floor(Math.random() * genres.length)],
                     year: getYear(1950, 1985),
                     isGoodSong: true,
-                    availability: 'SongRadio'
+                    availability: 'SongRadio',
                 },
                 data_source_id: dataSourceID,
                 original_data_id: faker.name.findName(),
@@ -212,7 +214,7 @@ describe('The updated repository layer', async () => {
                     genre: genres[Math.floor(Math.random() * genres.length)],
                     year: getYear(1950, 1985),
                     isGoodSong: false,
-                    availability: 'OnDemand'
+                    availability: 'OnDemand',
                 },
                 data_source_id: dataSourceID,
                 original_data_id: faker.name.findName(),
@@ -227,7 +229,7 @@ describe('The updated repository layer', async () => {
                     genre: genres[Math.floor(Math.random() * genres.length)],
                     year: getYear(1950, 1985),
                     isGoodSong: false,
-                    availability: 'SongRadio'
+                    availability: 'SongRadio',
                 },
                 data_source_id: dataSourceID,
                 original_data_id: faker.name.findName(),
@@ -242,7 +244,7 @@ describe('The updated repository layer', async () => {
                     genre: genres[Math.floor(Math.random() * genres.length)],
                     year: getYear(1986, 2020),
                     isGoodSong: true,
-                    availability: 'OnDemand'
+                    availability: 'OnDemand',
                 },
                 data_source_id: dataSourceID,
                 original_data_id: faker.name.findName(),
@@ -257,7 +259,7 @@ describe('The updated repository layer', async () => {
                     genre: genres[Math.floor(Math.random() * genres.length)],
                     year: getYear(1986, 2020),
                     isGoodSong: true,
-                    availability: 'SongRadio'
+                    availability: 'SongRadio',
                 },
                 data_source_id: dataSourceID,
                 original_data_id: faker.name.findName(),
@@ -272,7 +274,7 @@ describe('The updated repository layer', async () => {
                     genre: genres[Math.floor(Math.random() * genres.length)],
                     year: getYear(1986, 2020),
                     isGoodSong: false,
-                    availability: 'OnDemand'
+                    availability: 'OnDemand',
                 },
                 data_source_id: dataSourceID,
                 original_data_id: faker.name.findName(),
@@ -289,7 +291,7 @@ describe('The updated repository layer', async () => {
                     genre: genres[Math.floor(Math.random() * genres.length)],
                     year: getYear(1986, 2020),
                     isGoodSong: false,
-                    availability: 'SongRadio'
+                    availability: 'SongRadio',
                 },
                 data_source_id: dataSourceID,
                 original_data_id: faker.name.findName(),
@@ -312,7 +314,7 @@ describe('The updated repository layer', async () => {
         }
 
         const nodeResults = await nMapper.BulkCreateOrUpdateByCompositeID(user.id!, nodeList);
-        expect(nodeResults.isError, metatypeResults.error?.error).false;
+        expect(nodeResults.isError, nodeResults.error?.error).false;
         expect(nodeResults.value.length).eq(75);
         nodes = plainToInstance(Node, nodeResults.value);
 
@@ -838,18 +840,14 @@ describe('The updated repository layer', async () => {
     it('can execute a chained query', async () => {
         const mrRepo = new MetatypeRelationshipRepository();
 
-        let query = mrRepo
-            .where()
-            .containerID('eq', containerID)
-            .and()
-            .description('like', '%musician%');
+        let query = mrRepo.where().containerID('eq', containerID).and().description('like', '%musician%');
         expect(query._query.WHERE).not.undefined;
         let queryPart1 = query._query.WHERE![1].split('.')[0];
         let queryPart2 = query._query.WHERE![3].split('.')[0];
         expect(queryPart1).eq(mrRepo._tableAlias);
         expect(queryPart2).eq(mrRepo._tableAlias);
 
-        let results = await query.list()
+        let results = await query.list();
         expect(results.isError).false;
         expect(results.value.length).eq(3);
         results.value.forEach((rel) => {
@@ -864,26 +862,17 @@ describe('The updated repository layer', async () => {
         const nodeRepo = new NodeRepository();
 
         // json format
-        let saveToJson = await nodeRepo
-            .where()
-            .containerID('eq', containerID)
-            .listAllToFile({containerID: containerID, file_type: 'json'});
+        let saveToJson = await nodeRepo.where().containerID('eq', containerID).listAllToFile({containerID: containerID, file_type: 'json'});
         expect(saveToJson.isError).false;
         expect(saveToJson.value.file_size).gt(0);
 
         // csv format
-        let saveToCSV = await nodeRepo
-            .where()
-            .containerID('eq', containerID)
-            .listAllToFile({containerID: containerID, file_type: 'csv'});
+        let saveToCSV = await nodeRepo.where().containerID('eq', containerID).listAllToFile({containerID: containerID, file_type: 'csv'});
         expect(saveToCSV.isError).false;
         expect(saveToCSV.value.file_size).gt(0);
 
         // parquet format
-        let saveToParquet = await nodeRepo
-            .where()
-            .containerID('eq', containerID)
-            .listAllToFile({containerID: containerID, file_type: 'parquet'});
+        let saveToParquet = await nodeRepo.where().containerID('eq', containerID).listAllToFile({containerID: containerID, file_type: 'parquet'});
         expect(saveToParquet.isError).false;
         expect(saveToParquet.value.file_size).gt(0);
 
@@ -901,16 +890,15 @@ describe('The updated repository layer', async () => {
         // C: song is available on demand
 
         // A and B and C
-        const andAndQuery = nodeRepo.where()
+        const andAndQuery = nodeRepo
+            .where()
             .containerID('eq', containerID)
-            .and().metatypeName('eq', 'Song')
-            .and(new NodeRepository()
-                .property('year', '<', 1986)
-                .and(new NodeRepository()
-                    .property('isGoodSong', 'eq', 'true')
-                    .and()
-                    .property('availability', 'eq', 'OnDemand')
-                )
+            .and()
+            .metatypeName('eq', 'Song')
+            .and(
+                new NodeRepository()
+                    .property('year', '<', 1986)
+                    .and(new NodeRepository().property('isGoodSong', 'eq', 'true').and().property('availability', 'eq', 'OnDemand')),
             );
         expect(andAndQuery._query.WHERE).not.undefined;
         let query = andAndQuery._query.WHERE?.join(' ');
@@ -920,23 +908,22 @@ describe('The updated repository layer', async () => {
         expect(andAndResults.isError).false;
         expect(andAndResults.value.length).eq(6);
         andAndResults.value.forEach((node) => {
-            const song = node.properties
+            const song = node.properties;
             expect(song['year' as keyof object]).lessThan(1986);
             expect(song['isGoodSong' as keyof object]).true;
             expect(song['availability' as keyof object]).eq('OnDemand');
         });
 
         // A and (B or C)
-        const andOrQuery = nodeRepo.where()
+        const andOrQuery = nodeRepo
+            .where()
             .containerID('eq', containerID)
-            .and().metatypeName('eq', 'Song')
-            .and(new NodeRepository()
-                .property('year', '<', 1986)
-                .and(new NodeRepository()
-                    .property('isGoodSong', 'eq', 'true')
-                    .or()
-                    .property('availability', 'eq', 'OnDemand')
-                )
+            .and()
+            .metatypeName('eq', 'Song')
+            .and(
+                new NodeRepository()
+                    .property('year', '<', 1986)
+                    .and(new NodeRepository().property('isGoodSong', 'eq', 'true').or().property('availability', 'eq', 'OnDemand')),
             );
         expect(andOrQuery._query.WHERE).not.undefined;
         query = andOrQuery._query.WHERE?.join(' ');
@@ -946,25 +933,24 @@ describe('The updated repository layer', async () => {
         expect(andOrResults.isError).false;
         expect(andOrResults.value.length).eq(18);
         andOrResults.value.forEach((node) => {
-            const song = node.properties
+            const song = node.properties;
             expect(song['year' as keyof object]).lessThan(1986);
             // if property B is not true, property C must be
-            if (song['isGoodSong' as keyof object] === 'false'){
+            if (song['isGoodSong' as keyof object] === 'false') {
                 expect(song['availability' as keyof object]).eq('OnDemand');
             }
         });
 
         // A or (B and C)
-        const orAndQuery = nodeRepo.where()
+        const orAndQuery = nodeRepo
+            .where()
             .containerID('eq', containerID)
-            .and().metatypeName('eq', 'Song')
-            .and(new NodeRepository()
-                .property('year', '<', 1986)
-                .or(new NodeRepository()
-                    .property('isGoodSong', 'eq', 'true')
-                    .and()
-                    .property('availability', 'eq', 'OnDemand')
-                )
+            .and()
+            .metatypeName('eq', 'Song')
+            .and(
+                new NodeRepository()
+                    .property('year', '<', 1986)
+                    .or(new NodeRepository().property('isGoodSong', 'eq', 'true').and().property('availability', 'eq', 'OnDemand')),
             );
         expect(orAndQuery._query.WHERE).not.undefined;
         query = orAndQuery._query.WHERE?.join(' ');
@@ -974,25 +960,24 @@ describe('The updated repository layer', async () => {
         expect(orAndResults.isError).false;
         expect(orAndResults.value.length).eq(30);
         orAndResults.value.forEach((node) => {
-            const song = node.properties
+            const song = node.properties;
             // if A is not true, both B and C must be
-            if (song['year' as keyof object] > 1985){
+            if (song['year' as keyof object] > 1985) {
                 expect(song['isGoodSong' as keyof object]).true;
                 expect(song['availability' as keyof object]).eq('OnDemand');
             }
         });
 
         // A or (B or C)
-        const orOrQuery = nodeRepo.where()
+        const orOrQuery = nodeRepo
+            .where()
             .containerID('eq', containerID)
-            .and().metatypeName('eq', 'Song')
-            .and(new NodeRepository()
-                .property('year', '<', 1986)
-                .or(new NodeRepository()
-                    .property('isGoodSong', 'eq', 'true')
-                    .or()
-                    .property('availability', 'eq', 'OnDemand')
-                )
+            .and()
+            .metatypeName('eq', 'Song')
+            .and(
+                new NodeRepository()
+                    .property('year', '<', 1986)
+                    .or(new NodeRepository().property('isGoodSong', 'eq', 'true').or().property('availability', 'eq', 'OnDemand')),
             );
         expect(orOrQuery._query.WHERE).not.undefined;
         query = orOrQuery._query.WHERE?.join(' ');
@@ -1002,9 +987,9 @@ describe('The updated repository layer', async () => {
         expect(orOrResults.isError).false;
         expect(orOrResults.value.length).eq(42);
         orOrResults.value.forEach((node) => {
-            const song = node.properties
+            const song = node.properties;
             // if A and B are not true, C must be
-            if (song['year' as keyof object] > 1985 && song['isGoodSong' as keyof object] === false){
+            if (song['year' as keyof object] > 1985 && song['isGoodSong' as keyof object] === false) {
                 expect(song['availability' as keyof object]).eq('OnDemand');
             }
         });
@@ -1022,27 +1007,26 @@ describe('The updated repository layer', async () => {
 
         // WHERE (A or (B or C)) AND containerID = id AND metatype = song
         let query = nodeRepo
-            .where(new NodeRepository()
-                .property('year', '>', 1985)
-                .or(new NodeRepository()
-                    .property('isGoodSong', 'eq', 'false')
-                    .or()
-                    .property('availability', 'eq', 'SongRadio')
-                )
+            .where(
+                new NodeRepository()
+                    .property('year', '>', 1985)
+                    .or(new NodeRepository().property('isGoodSong', 'eq', 'false').or().property('availability', 'eq', 'SongRadio')),
             )
-            .and().containerID('eq', containerID)
-            .and().metatypeName('eq', 'Song');
+            .and()
+            .containerID('eq', containerID)
+            .and()
+            .metatypeName('eq', 'Song');
         expect(query._query.WHERE).not.undefined;
         let queryString = query._query.WHERE?.join(' ');
         expect(queryString?.match(alias || [])?.length).eq(5);
-        
+
         let results = await query.list();
         expect(results.isError).false;
         expect(results.value.length).eq(44);
         results.value.forEach((node) => {
-            const song = node.properties
+            const song = node.properties;
             // if A and B are not true, C must be
-            if (song['year' as keyof object] < 1986 && song['isGoodSong' as keyof object] === true){
+            if (song['year' as keyof object] < 1986 && song['isGoodSong' as keyof object] === true) {
                 expect(song['availability' as keyof object]).eq('SongRadio');
             }
             expect(node.container_id).eq(containerID);
@@ -1053,56 +1037,52 @@ describe('The updated repository layer', async () => {
         query = nodeRepo
             .where()
             .containerID('eq', containerID)
-            .and(new NodeRepository()
-                .property('year', '>', 1985)
-                .or(new NodeRepository()
-                    .property('isGoodSong', 'eq', 'false')
-                    .or()
-                    .property('availability', 'eq', 'SongRadio')
-                )
+            .and(
+                new NodeRepository()
+                    .property('year', '>', 1985)
+                    .or(new NodeRepository().property('isGoodSong', 'eq', 'false').or().property('availability', 'eq', 'SongRadio')),
             )
-            .and().metatypeName('eq', 'Song');
+            .and()
+            .metatypeName('eq', 'Song');
         expect(query._query.WHERE).not.undefined;
         queryString = query._query.WHERE?.join(' ');
         expect(queryString?.match(alias || [])?.length).eq(5);
-        
+
         results = await query.list();
         expect(results.isError).false;
         expect(results.value.length).eq(44);
         results.value.forEach((node) => {
-            const song = node.properties
+            const song = node.properties;
             // if A and B are not true, C must be
-            if (song['year' as keyof object] < 1986 && song['isGoodSong' as keyof object] === true){
+            if (song['year' as keyof object] < 1986 && song['isGoodSong' as keyof object] === true) {
                 expect(song['availability' as keyof object]).eq('SongRadio');
             }
             expect(node.container_id).eq(containerID);
             expect(node.metatype_name).eq('Song');
         });
 
-        // WHERE containerID = id AND metatype = song AND (A or (B or C)) 
+        // WHERE containerID = id AND metatype = song AND (A or (B or C))
         query = nodeRepo
             .where()
             .containerID('eq', containerID)
-            .and().metatypeName('eq', 'Song')
-            .and(new NodeRepository()
-                .property('year', '>', 1985)
-                .or(new NodeRepository()
-                    .property('isGoodSong', 'eq', 'false')
-                    .or()
-                    .property('availability', 'eq', 'SongRadio')
-                )
+            .and()
+            .metatypeName('eq', 'Song')
+            .and(
+                new NodeRepository()
+                    .property('year', '>', 1985)
+                    .or(new NodeRepository().property('isGoodSong', 'eq', 'false').or().property('availability', 'eq', 'SongRadio')),
             );
         expect(query._query.WHERE).not.undefined;
         queryString = query._query.WHERE?.join(' ');
         expect(queryString?.match(alias || [])?.length).eq(5);
-        
+
         results = await query.list();
         expect(results.isError).false;
         expect(results.value.length).eq(44);
         results.value.forEach((node) => {
-            const song = node.properties
+            const song = node.properties;
             // if A and B are not true, C must be
-            if (song['year' as keyof object] < 1986 && song['isGoodSong' as keyof object] === true){
+            if (song['year' as keyof object] < 1986 && song['isGoodSong' as keyof object] === true) {
                 expect(song['availability' as keyof object]).eq('SongRadio');
             }
             expect(node.container_id).eq(containerID);
@@ -1118,22 +1098,28 @@ describe('The updated repository layer', async () => {
         const nodeRepo2 = new NodeRepository();
 
         // this join doesn't really make sense but it tests all the join options
-        const query = nodeRepo.where().containerID('eq', containerID)
+        const query = nodeRepo
+            .where()
+            .containerID('eq', containerID)
             .join(edgeRepo._tableName, {
                 conditions: {
                     origin_col: 'id',
-                    destination_col: 'origin_id' 
+                    destination_col: 'origin_id',
                 },
-                join_type: 'INNER'
+                join_type: 'INNER',
             })
-            .join(nodeRepo2._tableName, {
-                conditions: {
-                    origin_col: 'destination_id',
-                    destination_col: 'id',
-                    operator: '<>'
+            .join(
+                nodeRepo2._tableName,
+                {
+                    conditions: {
+                        origin_col: 'destination_id',
+                        destination_col: 'id',
+                        operator: '<>',
+                    },
+                    destination_alias: 'dest',
                 },
-                destination_alias: 'dest'
-            }, edgeRepo._tableName)
+                edgeRepo._tableName,
+            );
         expect(query._query.JOINS).not.undefined;
         let check = new RegExp(`INNER JOIN ${edgeRepo._tableName} .* ON .*id = .*origin_id`);
         expect(query._query.JOINS![0]).match(check);
@@ -1150,15 +1136,17 @@ describe('The updated repository layer', async () => {
         const edgeRepo = new EdgeRepository();
 
         // test all three type options for addFields
-        const query = nodeRepo.where().containerID('eq', containerID)
+        const query = nodeRepo
+            .where()
+            .containerID('eq', containerID)
             .join(edgeRepo._tableName, {
                 conditions: {
                     origin_col: 'id',
-                    destination_col: 'origin_id'
+                    destination_col: 'origin_id',
                 },
-                join_type: 'INNER'
+                join_type: 'INNER',
             })
-            .addFields({'id': 'edge_id', 'properties': 'edge_properties'}, edgeRepo._tableName)
+            .addFields({id: 'edge_id', properties: 'edge_properties'}, edgeRepo._tableName)
             .addFields('metatype_relationship_name', edgeRepo._tableName)
             .addFields(['origin_id', 'destination_id'], edgeRepo._tableName);
         expect(query._query.JOINS).not.undefined;
@@ -1178,7 +1166,7 @@ describe('The updated repository layer', async () => {
             expect(result['origin_id' as keyof object]).not.undefined;
             expect(result['destination_id' as keyof object]).not.undefined;
         });
-        
+
         return Promise.resolve();
     });
 
@@ -1189,17 +1177,21 @@ describe('The updated repository layer', async () => {
         const edges = await edgeRepo.where().containerID('eq', containerID).list();
         expect(edges.isError).false;
         const test_edge_ids: string[] = [];
-        edges.value.slice(0,9).forEach((edge) => {test_edge_ids.push(edge.id!)});
+        edges.value.slice(0, 9).forEach((edge) => {
+            test_edge_ids.push(edge.id!);
+        });
 
-        const query = nodeRepo.where().containerID('eq', containerID)
+        const query = nodeRepo
+            .where()
+            .containerID('eq', containerID)
             .join(edgeRepo._tableName, {
                 conditions: {
                     origin_col: 'id',
-                    destination_col: 'origin_id'
+                    destination_col: 'origin_id',
                 },
-                join_type: 'INNER'
+                join_type: 'INNER',
             })
-            .addFields({'id': 'edge_id', 'properties': 'edge_properties'}, edgeRepo._tableName)
+            .addFields({id: 'edge_id', properties: 'edge_properties'}, edgeRepo._tableName)
             .where()
             .containerID('eq', containerID)
             .and()
@@ -1215,7 +1207,7 @@ describe('The updated repository layer', async () => {
         expect(where).includes(`${nodeAlias}.container_id = '${containerID}'`);
         expect(where![3]).contains(`${nodeAlias}.properties`);
         expect(where![6]).contains(`${edgeAlias}.id`);
-        
+
         const results = await query.list();
         expect(results.isError).false;
         expect(results.value.length).lessThan(10);
@@ -1223,7 +1215,7 @@ describe('The updated repository layer', async () => {
             expect(node.properties['genre' as keyof object]).oneOf(genres);
             expect(node['edge_id' as keyof object]).oneOf(test_edge_ids);
             expect(node.container_id).eq(containerID);
-        })
+        });
 
         return Promise.resolve();
     });
@@ -1232,10 +1224,7 @@ describe('The updated repository layer', async () => {
         // metatype relationship repository fully qualifies all its columns
         const repo = new MetatypeRelationshipPairRepository();
 
-        const query = repo
-            .where().containerID('eq', containerID)
-            .and().name('like', '%performs%')
-            .and().query('destination.name', 'eq', 'Song');
+        const query = repo.where().containerID('eq', containerID).and().name('like', '%performs%').and().query('destination.name', 'eq', 'Song');
         const where = query._query.WHERE;
         expect(where![3]).contains('metatype_relationship_pairs.name');
         expect(where![5]).contains('destination.name');
@@ -1253,13 +1242,15 @@ describe('The updated repository layer', async () => {
         const nodeRepo = new NodeRepository();
         const edgeRepo = new EdgeRepository();
 
-        const query = nodeRepo.where().containerID('eq', containerID)
+        const query = nodeRepo
+            .where()
+            .containerID('eq', containerID)
             .join(edgeRepo._tableName, {
                 conditions: {
                     origin_col: 'id',
                     destination_col: 'origin_id',
                 },
-                join_type: 'INNER'
+                join_type: 'INNER',
             })
             .addFields({"properties #>> '{genre}'": 'genre'})
             .where()
@@ -1293,30 +1284,32 @@ describe('The updated repository layer', async () => {
             .groupBy('properties', 'current_nodes') // testing table alias retrieval
             .groupBy(['data_source_id', 'import_data_id', 'data_staging_id']) // testing list
             .groupBy(['type_mapping_transformation_id', 'original_data_id'], nodeRepo._tableAlias) // testing list with alias
-            .groupBy(['metadata', 'created_at', 'modified_at', 'deleted_at'], 'current_nodes') // testing list with alias retrieval
+            .groupBy(['metadata', 'created_at', 'modified_at', 'deleted_at', 'metadata_properties'], 'current_nodes') // testing list with alias retrieval
             .where()
             .containerID('eq', containerID)
             .list(false, {
                 groupBy: 'created_by,modified_by,metatype_name,metatype_uuid', // testing queryOption in list function
-                sortBy: 'outgoing_edge_count', sortDesc: true, limit: 5}) // sort by highest count first
-        expect(results.isError).false;
+                sortBy: 'outgoing_edge_count',
+                sortDesc: true,
+                limit: 5,
+            }); // sort by highest count first
+        expect(results.isError, JSON.stringify(results.error)).false;
         expect(results.value.length).eq(5);
         // verify a few edge counts
         expect(results.value[0]['outgoing_edge_count' as keyof object]).eq('7');
         expect(results.value[4]['outgoing_edge_count' as keyof object]).eq('5');
 
         return Promise.resolve();
-    })
+    });
 
     it('supports timeseries queries', async () => {
         const repo = new DataSourceRepository();
         // const config = source.DataSourceRecord.config as TimeseriesDataSourceConfig;
 
-        const query = repo.where()
-            .query('temperature', '>', 250, {
-                dataType: 'integer',
-                tableName: `y_${timeSourceID}`
-            });
+        const query = repo.where().query('temperature', '>', 250, {
+            dataType: 'integer',
+            tableName: `y_${timeSourceID}`,
+        });
         expect(query._query.WHERE![1]).contains(`temperature::text > '250'::text`);
 
         const results = await query.listTimeseries(timeSourceID);
@@ -1324,8 +1317,8 @@ describe('The updated repository layer', async () => {
         results.value.forEach((entry) => {
             expect(entry.temperature).greaterThan(250);
             expect(entry.z).eq(0);
-        })
-        
+        });
+
         return Promise.resolve();
     });
 
@@ -1335,32 +1328,38 @@ describe('The updated repository layer', async () => {
         const edgeRepo = new EdgeRepository();
 
         // first join
-        let query = nodeRepo.where().containerID('eq', containerID)
-            .join(stagingRepo._tableName, {conditions: {
-                origin_col: 'data_staging_id',
-                destination_col: 'id',
-            }})
-            .addFields('data', stagingRepo._tableName)
+        let query = nodeRepo
+            .where()
+            .containerID('eq', containerID)
+            .join(stagingRepo._tableName, {
+                conditions: {
+                    origin_col: 'data_staging_id',
+                    destination_col: 'id',
+                },
+            })
+            .addFields('data', stagingRepo._tableName);
         expect(query._query.JOINS).not.undefined;
         let check = new RegExp(`.* JOIN ${stagingRepo._tableName} .* ON .*data_staging_id = .*id`);
         expect(query._query.JOINS?.length).eq(1);
         expect(query._query.JOINS![0]).match(check);
 
         // second join (duplicate)
-        query = query
-            .join(stagingRepo._tableName, {conditions: {
+        query = query.join(stagingRepo._tableName, {
+            conditions: {
                 origin_col: 'data_staging_id',
                 destination_col: 'id',
-            }});
+            },
+        });
         // this second (duplicate) join shouldn't have been added
         expect(query._query.JOINS?.length).eq(1);
 
         // testing a non-duplicate join
-        query = query
-            .join(edgeRepo._tableName, {conditions: {
+        query = query.join(edgeRepo._tableName, {
+            conditions: {
                 origin_col: 'id',
                 destination_col: 'origin_id',
-            }});
+            },
+        });
         // this join should have been added as it isn't a duplicate
         expect(query._query.JOINS?.length).eq(2);
         // ensure that the join added was the right one
@@ -1368,14 +1367,13 @@ describe('The updated repository layer', async () => {
         expect(query._query.JOINS![1]).match(check);
 
         // testing a duplicate join with an alternate alias
-        query = query
-            .join(stagingRepo._tableName, {
-                conditions: {
-                    origin_col: 'data_staging_id',
-                    destination_col: 'id'
-                },
-                destination_alias: 'new_alias'
-            });
+        query = query.join(stagingRepo._tableName, {
+            conditions: {
+                origin_col: 'data_staging_id',
+                destination_col: 'id',
+            },
+            destination_alias: 'new_alias',
+        });
         // this join should have been added as it has a unique alias
         expect(query._query.JOINS?.length).eq(3);
         // ensure that the join added was the right one
@@ -1395,29 +1393,31 @@ describe('The updated repository layer', async () => {
         // create a subquery and save it to this variable
         const sub = nodeRepo.subquery(
             new NodeRepository()
-            .select(['id', 'MAX(created_at) AS created_at'], 'sub_nodes')
-            .from('nodes', 'sub_nodes')
-            .where()
-            .query('created_at', '<', date, {dataType: 'date'})
-            .and()
-            .query('container_id', 'eq', containerID)
-            .and(new NodeRepository()
-                .query('deleted_at', '>', date, {dataType: 'date'})
-                .or()
-                .query('deleted_at', 'is null'))
-            .groupBy('id', 'nodes'));
+                .select(['id', 'MAX(created_at) AS created_at'], 'sub_nodes')
+                .from('nodes', 'sub_nodes')
+                .where()
+                .query('created_at', '<', date, {dataType: 'date'})
+                .and()
+                .query('container_id', 'eq', containerID)
+                .and(new NodeRepository().query('deleted_at', '>', date, {dataType: 'date'}).or().query('deleted_at', 'is null'))
+                .groupBy('id', 'nodes'),
+        );
 
         let query = nodeRepo
             .join('nodes', {conditions: {origin_col: 'id', destination_col: 'id'}, join_type: 'RIGHT'})
-            .join(sub, {
-                conditions: [
-                    {origin_col: 'id', destination_col: 'id'},
-                    {origin_col: 'created_at', destination_col: 'created_at'}
-                ],
-                destination_alias: 'sub',
-                join_type: 'INNER'
-            }, 'nodes')
-            .join('metatypes', {conditions: {origin_col: 'metatype_id', destination_col: 'id'}})
+            .join(
+                sub,
+                {
+                    conditions: [
+                        {origin_col: 'id', destination_col: 'id'},
+                        {origin_col: 'created_at', destination_col: 'created_at'},
+                    ],
+                    destination_alias: 'sub',
+                    join_type: 'INNER',
+                },
+                'nodes',
+            )
+            .join('metatypes', {conditions: {origin_col: 'metatype_id', destination_col: 'id'}});
         let results = await query.list();
         expect(results.isError).false;
         expect(results.value.length).eq(75);
@@ -1425,16 +1425,21 @@ describe('The updated repository layer', async () => {
         // now add a filter to ensure that repository chaining still works
         query = nodeRepo
             .join('nodes', {conditions: {origin_col: 'id', destination_col: 'id'}, join_type: 'RIGHT'})
-            .join(sub, {
-                conditions: [
-                    {origin_col: 'id', destination_col: 'id'},
-                    {origin_col: 'created_at', destination_col: 'created_at'}
-                ],
-                destination_alias: 'sub',
-                join_type: 'INNER'
-            }, 'nodes')
+            .join(
+                sub,
+                {
+                    conditions: [
+                        {origin_col: 'id', destination_col: 'id'},
+                        {origin_col: 'created_at', destination_col: 'created_at'},
+                    ],
+                    destination_alias: 'sub',
+                    join_type: 'INNER',
+                },
+                'nodes',
+            )
             .join('metatypes', {conditions: {origin_col: 'metatype_id', destination_col: 'id'}})
-            .where().query('name', 'eq', 'Musician', {tableName: 'metatypes'});
+            .where()
+            .query('name', 'eq', 'Musician', {tableName: 'metatypes'});
         results = await query.list();
         expect(results.isError).false;
         expect(results.value.length).eq(16);

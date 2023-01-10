@@ -547,9 +547,9 @@ export default class ContainerImport {
                 const classID = selectedClass['rdf:about'];
                 let classLabel = selectedClass['rdfs:label']?.textNode ? selectedClass['rdfs:label']?.textNode : selectedClass['rdfs:label'];
 
-                // if a rdfs:label was not provided, attempt to grab the name via the rdf:about
+                // if a rdfs:label was not provided or is an array, attempt to grab the name via the rdf:about
                 // for ontology IRIs, the name may be after a # or the last /
-                if (typeof classLabel === 'undefined') {
+                if (typeof classLabel === 'undefined' || Array.isArray(classLabel)) {
                     // try # first and then /
                     const aboutSplit = selectedClass['rdf:about'].split('#');
                     const aboutSplitSlash = selectedClass['rdf:about'].split('/');
@@ -557,7 +557,7 @@ export default class ContainerImport {
                     if (aboutSplit.length > 1) {
                         classLabel = aboutSplit[1];
                     } else if (aboutSplitSlash.length > 1) {
-                        classLabel = aboutSplit[aboutSplitSlash.length - 1];
+                        classLabel = aboutSplitSlash[aboutSplitSlash.length - 1];
                     } else if (selectedClass['rdf:about'] != null && selectedClass['rdf:about'] !== '') {
                         classLabel = selectedClass['rdf:about'];
                     } else {
@@ -589,6 +589,10 @@ export default class ContainerImport {
                     // start at 1 since 0 is the parent ID property
                     for (j = 1; j < selectedClass['rdfs:subClassOf'].length; j++) {
                         const property = selectedClass['rdfs:subClassOf'][j]['owl:Restriction'];
+                        // if the property is not found, continue
+                        if (typeof(property) === 'undefined') {
+                            continue;
+                        }
                         const onProperty = property['owl:onProperty']['rdf:resource'];
                         // object or datatype referenced will either be someValuesFrom or qualifiedCardinality and onDataRange
                         let dataRange;
@@ -837,12 +841,17 @@ export default class ContainerImport {
             }
 
             // grab the default ontology description if available and none provided
-            if (ontologyDescription === '' || (ontologyDescription === 'null' && ontologyHead['obo:IAO_0000115'])) {
+            if (ontologyHead['obo:IAO_0000115'] && (ontologyDescription === 'null' || ontologyDescription === '')) {
                 ontologyDescription = ontologyHead['obo:IAO_0000115'].textNode ? ontologyHead['obo:IAO_0000115'].textNode : ontologyHead['obo:IAO_0000115'];
             }
 
+            // try dc:description
+            if (ontologyHead['dc:description'] && (ontologyDescription === 'null' || ontologyDescription === '')) {
+                ontologyDescription = ontologyHead['dc:description'].textNode ? ontologyHead['dc:description'].textNode : ontologyHead['dc:description'];
+            }
+
             // try rdfs:comment if it still hasn't been found
-            if (ontologyDescription === '' || (ontologyDescription === 'null' && ontologyHead['rdfs:comment'])) {
+            if (ontologyHead['rdfs:comment'] && (ontologyDescription === 'null' || ontologyDescription === '')) {
                 ontologyDescription = ontologyHead['rdfs:comment'].textNode ? ontologyHead['rdfs:comment'].textNode : ontologyHead['rdfs:comment'];
             }
 
@@ -887,8 +896,9 @@ export default class ContainerImport {
 
                         if (property.property_type === 'primitive') {
                             const dataProp = dataPropertyMap.get(property.value);
-
+                            if (dataProp) {
                             thisClass.keys.push(dataProp.name);
+                            }
                         } else if (property.property_type === 'relationship') {
                             // use relationshipIDMap for accessing relationships by ID
                             const relationship = relationshipIDMap.get(property.value);
@@ -911,6 +921,9 @@ export default class ContainerImport {
                     // retrieve existing container, relationships, metatypes, and relationship pairs
                     oldMetatypeRelationships = (await metatypeRelationshipRepo.where().containerID('eq', input.container.id!).list(false)).value;
 
+                    // we load from the materialized view here because of the possible large amount of keys - however we need to refresh the view
+                    // so we don't have stale data
+                    await MetatypeKeyMapper.Instance.RefreshView();
                     oldMetatypes = (await metatypeRepo.where().containerID('eq', input.container.id!).list(false)).value;
 
                     oldMetatypeRelationshipPairs = (await metatypeRelationshipPairRepo.where().containerID('eq', input.container.id!).list()).value;
@@ -948,7 +961,7 @@ export default class ContainerImport {
 
                             // check metatypeKeys for metatypes to be updated
                             const newMetatypeKeys = classListMap.get(metatype.name).keys;
-                            const oldMetatypeKeys = (await MetatypeKeyMapper.Instance.ListForMetatype(metatype.id!)).value;
+                            const oldMetatypeKeys = (await MetatypeKeyMapper.Instance.ListFromViewForMetatype(metatype.id!)).value;
 
                             for (const key of oldMetatypeKeys) {
                                 if (!newMetatypeKeys.includes(key.name)) {

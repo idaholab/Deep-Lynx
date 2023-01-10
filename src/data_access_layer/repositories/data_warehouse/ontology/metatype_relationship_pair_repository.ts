@@ -12,8 +12,6 @@ import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatyp
 import MetatypeRelationship from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship';
 import {User} from '../../../../domain_objects/access_management/user';
 import {PoolClient} from 'pg';
-import GraphQLRunner from '../../../../graphql/schema';
-import MetatypeRelationshipMapper from '../../../mappers/data_warehouse/ontology/metatype_relationship_mapper';
 
 /*
     MetatypeRelationshipPair contains methods for persisting and retrieving a metatype relationship pair
@@ -292,6 +290,11 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         if (!deleted) Logger.error(`unable to remove metatype relationship pair ${id} from cache`);
 
         return Promise.resolve(deleted);
+    }
+
+    async saveFromJSON(relationshipPairs: MetatypeRelationshipPair[]): Promise<Result<boolean>> {
+        const saved = await this.#mapper.JSONCreate(relationshipPairs);
+        return saved;
     }
 
     constructor() {

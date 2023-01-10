@@ -28,6 +28,7 @@
   },
   "exclude": [
     "./AdminWebApp",
-    "./NodeLibraries"
+    "./NodeLibraries",
+    "./WebGLViewer"
   ]
 }

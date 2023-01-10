@@ -121,6 +121,7 @@ export default class MetatypeRoutes {
                     offset: req.query.offset ? +req.query.offset : undefined,
                     sortBy: req.query.sortBy,
                     sortDesc: req.query.sortDesc ? String(req.query.sortDesc).toLowerCase() === 'true' : undefined,
+                    loadFromView: req.query.loadFromView ? String(req.query.loadFromView).toLowerCase() === 'true' : undefined,
                 } as QueryOptions)
                 .then((result) => {
                     result.asResponse(res);
