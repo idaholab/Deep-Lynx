@@ -171,7 +171,7 @@ export default class TypeTransformationRepository extends Repository implements 
         const relationshipKeys: MetatypeRelationshipKey[] = [];
 
         if (metatypeKeyIDs.length > 0) {
-            const fetchedKeys = await this.#metatypeKeyMapper.ListFromIDs(metatypeKeyIDs);
+            const fetchedKeys = await this.#metatypeKeyMapper.ListFromViewIDs(metatypeKeyIDs);
             if (!fetchedKeys.isError) metatypeKeys.push(...fetchedKeys.value);
         }
 

@@ -131,6 +131,8 @@ describe('A Node Repository', async () => {
 
         regexMetatype.addKey(added.value);
 
+        await kStorage.RefreshView();
+
         return Promise.resolve();
     });
 
@@ -218,6 +220,9 @@ describe('A Node Repository', async () => {
         mixed[0].properties = updatedPayload;
         mixed[1].properties = updatedPayload;
         mixed[2].properties = updatedPayload;
+        mixed[0].id = undefined;
+        mixed[1].id = undefined;
+        mixed[2].id = undefined;
 
         saved = await nodeRepo.bulkSave(user, mixed);
         expect(saved.isError).false;

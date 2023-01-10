@@ -43,7 +43,11 @@ export class Utilities {
     }
 
     formatISODate(date: string): string {
-        return date.split('T').join(' ').substring(0, 19)
+        if (date) {
+            return date.split('T').join(' ').substring(0, 19)
+        } else {
+            return date
+        }
     }
 
 }

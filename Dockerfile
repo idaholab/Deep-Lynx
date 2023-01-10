@@ -1,4 +1,7 @@
-FROM node:16-alpine
+FROM cimg/rust:1.65.0-node as build
+
+USER root
+RUN sudo apt-get update
 
 # these settings are needed for the admin web gui build, these variables are all baked into the Vue application and thus
 # are available to any end user that wants to dig deep enough in the webpage - as such we don't feel it a security risk
@@ -14,22 +17,23 @@ ENV VUE_APP_DEEP_LYNX_APP_ID="root"
 
 # turn off jobs on the main thread as this spins up PM2 with the worker
 ENV RUN_JOBS=false
+# set the default db to the one we'd see in the docker compose
 ENV CORE_DB_CONNECTION_STRING=postgresql://postgres:root@timescaledb:5432/deep_lynx_dev
 
-# Create the base directory and make user "node" the owner
-RUN mkdir /srv/core_api && chown node:node /srv/core_api
+# Create the base directory and set the rust version to use default stable
+RUN mkdir /srv/core_api
+RUN rustup default stable
 
 WORKDIR /srv/core_api
-COPY --chown=node:node package*.json ./
+COPY package*.json ./
 
-# RUN apt update && apt upgrade -y
 RUN npm update --location=global
-RUN npm install pm2 --location=global
+RUN npm install npm@latest --location=global
+RUN npm install cargo-cp-artifact --location=global
 
 # Bundle app source
-COPY --chown=node:node . .
+COPY . .
 
-# Build the app
 RUN npm ci --include=dev
 RUN npm run build:docker
 RUN cd /srv/core_api/AdminWebApp && npm ci --include=dev && npm run build -- --dest /srv/core_api/dist/http_server/web_gui
@@ -39,7 +43,16 @@ RUN npm run build:web-gl
 # catch any env file a user might have accidentally built into the container
 RUN rm -rf .env
 
-USER root
+FROM node:18.12-buster-slim as production
+RUN apt-get update
+
+WORKDIR /srv/core_api
+
+RUN npm install npm@latest --location=global
+RUN npm update --location=global
+RUN npm install pm2 --location=global
+
+COPY --from=build /srv/core_api /srv/core_api
 
 # Add docker-compose-wait tool ----------------------
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait

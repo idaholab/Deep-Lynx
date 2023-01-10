@@ -128,6 +128,11 @@ export default class MetatypeRelationshipKeyRepository extends Repository implem
         return Promise.resolve(Result.Success(true));
     }
 
+    async saveFromJSON(relationshipKeys: MetatypeRelationshipKey[]): Promise<Result<boolean>> {
+        const saved = await this.#mapper.JSONCreate(relationshipKeys);
+        return saved;
+    }
+
     constructor() {
         super(MetatypeRelationshipKeyMapper.tableName);
     }

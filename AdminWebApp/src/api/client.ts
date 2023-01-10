@@ -893,10 +893,10 @@ export class Client {
         return this.get<UserContainerInviteT[]>(`/users/invites`);
     }
 
-    listOntologyVersions(containerID: string, {status, createdBy}: {status?: string; createdBy?: string}): Promise<OntologyVersionT[]> {
+    listOntologyVersions(containerID: string, {status, createdBy}: {status?: string | string[]; createdBy?: string}): Promise<OntologyVersionT[]> {
         const query: {[key: string]: any} = {};
 
-        if (status) query.status = status;
+        if (status) query.status = Array.isArray(status) ? status.join(',') : status;
         if (createdBy) query.createdBy = createdBy;
 
         return this.get<OntologyVersionT[]>(`/containers/${containerID}/ontology/versions`, query);

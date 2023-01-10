@@ -54,6 +54,10 @@ export default class MetatypeRelationship extends BaseDomainClass {
     @Type(() => Date)
     deleted_at?: Date;
 
+    // used for migration from one ontology version to another, or as part of the ontology export/import feature
+    @IsOptional()
+    old_id?: string;
+
     constructor(input: {container_id?: string; name: string; description: string; ontology_version?: string}) {
         super();
 

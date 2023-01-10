@@ -1134,7 +1134,7 @@ export default class GraphViewer extends Vue {
       });
 
       // save the query for future use
-      this.query = this.results.query
+      this.query = (this.results.query) ? this.results.query : null
     }
 
     // fetch the edges
@@ -1252,7 +1252,7 @@ export default class GraphViewer extends Vue {
     const graphElem = this.$refs.forcegraph as HTMLElement;
 
     if (graphElem != null) {
-      this.canvas = this.forceGraph(graphElem)
+      this.canvas = this.forceGraph!(graphElem)
           .width(graphElem.offsetWidth) // canvas width
           .height(graphElem.offsetHeight) // canvas height
           .minZoom(this.minZoom)
@@ -1265,7 +1265,7 @@ export default class GraphViewer extends Vue {
           .onNodeRightClick(node => {
             // double clicks can be difficult to do dragging a node and custom timing to determine single or double click
             // right clicks will open up a new graph around the selected node, while double clicks will center and zoom
-            this.openNodeGraphDialog(node)
+            this.openNodeGraphDialog(node as NodeT)
           }) // open node properties on right click
           .nodeCanvasObject((node: any, ctx, globalScale) => {
             const MAX_FONT_SIZE = 24/globalScale; // ranges from 1 zoomed in to ~30 zoomed out
@@ -1501,7 +1501,7 @@ export default class GraphViewer extends Vue {
                 metatypeID: undefined,
                 loadRelationships: false,
               })
-                  .then((pairs: MetatypeRelationshipPairT[]) => {
+                  .then((pairs: MetatypeRelationshipPairT[] | number) => {
                     this.relationshipPairs = pairs as MetatypeRelationshipPairT[]
                   })
                   .catch(e => this.errorMessage = e)
@@ -1765,7 +1765,7 @@ export default class GraphViewer extends Vue {
 
     this.graph.nodes.forEach((node: NodeT) => {
       // check if color has already been set, and then append name if so
-      let colorEntry = nodeColorsMap.get(node.color)
+      let colorEntry = nodeColorsMap.get(node.color!)
       const dataSourceName = `${this.datasources.get(node.data_source_id)?.name} (#${node.data_source_id})`
 
       if (colorEntry) {
@@ -1939,7 +1939,7 @@ export default class GraphViewer extends Vue {
       container_id: data.container_id,
       data_source_id: data.data_source_id,
       metatype: {
-        id: data.metatype_id || data.metatype.id,
+        id: data.metatype_id || data.metatype?.id,
         name: data.metatype_name
       },
       properties: data.properties,
@@ -1979,7 +1979,7 @@ export default class GraphViewer extends Vue {
   }
 
   nodeDistance(node1: NodeT, node2: NodeT) {
-    return Math.sqrt(Math.pow(node1.x - node2.x, 2) + Math.pow(node1.y - node2.y, 2));
+    return Math.sqrt(Math.pow(node1.x! - node2.x!, 2) + Math.pow(node1.y! - node2.y!, 2));
   }
 
   setInterimLink(source: any, target: any) {
@@ -2097,10 +2097,10 @@ export default class GraphViewer extends Vue {
     this.$client.createEdge(this.containerID,
         {
           "container_id": this.containerID,
-          "data_source_id": this.selectedDataSource.id,
+          "data_source_id": this.selectedDataSource!.id,
           "origin_id": this.interimLink.source.id,
           "destination_id": this.interimLink.target.id,
-          "relationship_pair_id": this.selectedRelationshipPair.id,
+          "relationship_pair_id": this.selectedRelationshipPair!.id,
           "properties": this.edgeProperties,
         }
     )
@@ -2110,7 +2110,7 @@ export default class GraphViewer extends Vue {
           const refinedEdge = {
             collapsed: false,
             id: results[0].id,
-            name: this.selectedRelationshipPair.relationship_name,
+            name: (this.selectedRelationshipPair) ? this.selectedRelationshipPair.relationship_name : "Name missing",
             nodePairId: this.interimLink.source.id + '_' + this.interimLink.target.id,
             source: this.interimLink.source,
             target: this.interimLink.target
@@ -2256,7 +2256,7 @@ export default class GraphViewer extends Vue {
     }
 
     // create a map of users
-    const users = await this.$client.listUsers(this.containerID)
+    const users = await this.$client.listUsersInContainer(this.containerID)
 
     for (const user of users) {
       if (user.id != undefined) {
@@ -2265,7 +2265,7 @@ export default class GraphViewer extends Vue {
     }
 
     // retrieve the earliest creation_date for all published ontology versions for this container
-    const ontologyVersions = await this.$client.listOntologyVersions(this.containerID, {status: 'published'})
+    const ontologyVersions = await this.$client.listOntologyVersions(this.containerID, {status: ['published', 'ready']})
 
     ontologyVersions.forEach((ontologyVersion: OntologyVersionT) => {
       const createdDate = new Date(ontologyVersion.created_at!)

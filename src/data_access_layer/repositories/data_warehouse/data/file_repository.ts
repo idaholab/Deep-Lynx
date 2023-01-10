@@ -8,9 +8,9 @@ import {Readable} from 'stream';
 import BlobStorageProvider from '../../../../services/blob_storage/blob_storage';
 // we had to move the event repo into the repo instead of the mapper to avoid a cyclical import problem when dealing
 // with listing results to a file
-import EventRepository from "../../event_system/event_repository";
-import Event from "../../../../domain_objects/event_system/event";
-import Logger from "../../../../services/logger";
+import EventRepository from '../../event_system/event_repository';
+import Event from '../../../../domain_objects/event_system/event';
+import Logger from '../../../../services/logger';
 
 /*
     FileRepository contains methods for persisting and retrieving file records
@@ -29,9 +29,9 @@ export default class FileRepository extends Repository implements RepositoryInte
                 if (result.isError) {
                     Logger.error(`unable to delete file from storage provider ${result.error?.error}`);
                 }
-            })
+            });
         }
-        
+
         if (f.id) {
             return this.#mapper.Delete(f.id);
         }
@@ -73,7 +73,6 @@ export default class FileRepository extends Repository implements RepositoryInte
                     event: {fileID: f.id},
                 }),
             );
-
         } else {
             const created = await this.#mapper.Create(user.id!, f);
             if (created.isError) return Promise.resolve(Result.Pass(created));
@@ -88,7 +87,6 @@ export default class FileRepository extends Repository implements RepositoryInte
                     event: {fileID: f.id},
                 }),
             );
-
         }
 
         return Promise.resolve(Result.Success(true));
@@ -109,17 +107,17 @@ export default class FileRepository extends Repository implements RepositoryInte
      */
     async uploadFile(
         containerID: string,
-        dataSourceID: string,
         user: User,
         filename: string,
         stream: Readable,
+        dataSourceID?: string,
     ): Promise<Result<File>> {
         const provider = BlobStorageProvider();
 
         if (!provider) return Promise.resolve(Result.Failure('no storage provider set'));
 
         // run the actual file upload the storage provider
-        const result = await provider.uploadPipe(`containers/${containerID}/datasources/${dataSourceID}/`, filename, stream);
+        const result = await provider.uploadPipe(`containers/${containerID}/datasources/${dataSourceID ? dataSourceID : '0'}/`, filename, stream);
         if (result.isError) return Promise.resolve(Result.Pass(result));
 
         const file = new File({

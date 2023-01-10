@@ -24,11 +24,11 @@ export default class StatsMapper extends Mapper {
         const full = new FullStatistics();
 
         if (!mean_execution_time.isError) full.mean_execution_time = mean_execution_time.value;
-        else Logger.error(statistics.error);
+        else Logger.error(mean_execution_time.error.error);
         if (!long_running_queries.isError) full.long_running_transactions = long_running_queries.value;
-        else Logger.error(statistics.error);
+        else Logger.error(long_running_queries.error.error);
         if (!statistics.isError) full.statistics = statistics.value;
-        else Logger.error(statistics.error);
+        else Logger.error(statistics.error.error);
 
         return Promise.resolve(Result.Success(full));
     }

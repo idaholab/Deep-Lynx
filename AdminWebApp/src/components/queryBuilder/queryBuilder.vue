@@ -184,6 +184,7 @@ import {NodeT} from "@/api/types";
 import { buildSchema } from 'graphql';
 import {mdiInformation} from "@mdi/js";
 
+// @ts-ignore - needed because there are no declaration files here
 import CodeMirror from 'codemirror';
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/addon/hint/show-hint';

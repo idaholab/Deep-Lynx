@@ -3,9 +3,10 @@ import {authInContainer, authRequest} from '../../../middleware';
 import ContainerImport, {ContainerImportT} from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_import';
 import ContainerRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
 import {plainToClass} from 'class-transformer';
-import Container from '../../../../domain_objects/data_warehouse/ontology/container';
+import Container, {ContainerExport} from '../../../../domain_objects/data_warehouse/ontology/container';
 import Result from '../../../../common_classes/result';
 import {FileInfo} from 'busboy';
+import FileRepository from '../../../../data_access_layer/repositories/data_warehouse/data/file_repository';
 
 const Busboy = require('busboy');
 const Buffer = require('buffer').Buffer;
@@ -18,8 +19,8 @@ const containerImport = ContainerImport.Instance;
 export default class ContainerRoutes {
     public static mount(app: Application, middleware: any[]) {
         app.post('/containers', ...middleware, this.createContainer);
-        app.post('/containers/import', ...middleware, this.importContainer);
-        app.put('/containers/import/:containerID', ...middleware, this.importUpdatedContainer);
+        app.post('/containers/import', ...middleware, this.importContainerFromOwl);
+        app.put('/containers/import/:containerID', ...middleware, this.updateContainerFromOwl);
         app.put('/containers', ...middleware, authRequest('write', 'containers'), this.batchUpdate);
 
         // we don't auth this request as the actual handler will only ever show containers
@@ -30,6 +31,10 @@ export default class ContainerRoutes {
         app.put('/containers/:containerID', ...middleware, authInContainer('write', 'containers'), this.updateContainer);
         app.delete('/containers/:containerID', ...middleware, authInContainer('write', 'containers'), this.archiveContainer);
         app.post('/containers/:containerID/active', ...middleware, authInContainer('read', 'containers'), this.setActive);
+
+        app.get('/containers/:containerID/export', ...middleware, authInContainer('read', 'ontology'), this.exportContainer);
+
+        app.post('/containers/:containerID/import', ...middleware, authInContainer('write', 'ontology'), this.importContainer);
 
         app.post('/containers/:containerID/permissions', ...middleware, authRequest('write', 'containers'), this.repairPermissions);
 
@@ -178,7 +183,7 @@ export default class ContainerRoutes {
         }
     }
 
-    private static importContainer(req: Request, res: Response, next: NextFunction) {
+    private static importContainerFromOwl(req: Request, res: Response, next: NextFunction) {
         const streamChunks: Buffer[] = [];
         let fileBuffer: Buffer = Buffer.alloc(0);
         const input: {[key: string]: any} = {};
@@ -226,7 +231,7 @@ export default class ContainerRoutes {
         return req.pipe(busboy);
     }
 
-    private static importUpdatedContainer(req: Request, res: Response, next: NextFunction) {
+    private static updateContainerFromOwl(req: Request, res: Response, next: NextFunction) {
         const streamChunks: Buffer[] = [];
         let fileBuffer: Buffer = Buffer.alloc(0);
         const input: {[key: string]: any} = {};
@@ -281,5 +286,91 @@ export default class ContainerRoutes {
                 set.asResponse(res);
             })
             .catch((err) => Result.Error(err).asResponse(res));
+    }
+
+    private static async exportContainer(req: Request, res: Response, next: NextFunction) {
+        if (!req.container) {
+            Result.Failure(`must provide container to export from`).asResponse(res);
+            next();
+            return;
+        }
+
+        let containerExport: ContainerExport = new ContainerExport();
+        if (String(req.query.exportOntology).toLowerCase() === 'true') {
+            containerExport = (await repository.exportOntology(req.container.id!, req.currentUser!, req.query.ontologyVersionID as string | undefined)).value
+        }
+        if (String(req.query.exportDataSources).toLowerCase() === 'true') {
+            // Implement in future update
+        }
+        if (String(req.query.exportTypeMappings).toLowerCase() === 'true') {
+            // Implement in future update
+        }
+
+        repository
+            .createContainerExportFile(req.container.id!, req.currentUser!, containerExport)
+            .then((file) => {
+                if (file.isError) {
+                    file.asResponse(res);
+                    return;
+                }
+
+                res.attachment(file.value.file_name);
+                new FileRepository()
+                    .downloadFile(file.value)
+                    .then((stream) => {
+                        if (!stream) {
+                            res.sendStatus(500);
+                            return;
+                        }
+
+                        stream.pipe(res);
+                    })
+                    .catch((err) => {
+                        Result.Error(err).asResponse(res);
+                    });
+            })
+            .catch((err) => Result.Error(err).asResponse(res));
+    }
+
+    private static importContainer(req: Request, res: Response, next: NextFunction) {
+        if (!req.container) {
+            Result.Failure(`must provide container to import`).asResponse(res);
+            next();
+            return;
+        }
+
+        const streamChunks: Buffer[] = [];
+        let fileBuffer: Buffer = Buffer.alloc(0);
+        const busboy = Busboy({headers: req.headers});
+
+        // if a file has been provided, create a buffer from it
+        busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, info: FileInfo) => {
+            const {filename} = info;
+            const ext = path.extname(filename);
+            if (ext !== '.json') {
+                Result.Failure('Unsupported filetype supplied. Please provide a valid export (.json) file.', 400).asResponse(res);
+                next();
+                return;
+            }
+
+            file.on('data', (data) => {
+                streamChunks.push(data);
+            });
+            file.on('end', () => {
+                fileBuffer = Buffer.concat(streamChunks);
+            });
+        });
+
+        busboy.on('finish', () => {
+            repository
+                .importOntology(req.container!.id!, req.currentUser!, fileBuffer)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => Result.Error(err).asResponse(res))
+                .finally(() => next());
+        });
+
+        return req.pipe(busboy);
     }
 }

@@ -605,10 +605,10 @@ export default class ImportRoutes {
                 files.push(
                     new FileRepository().uploadFile(
                         req.params.containerID,
-                        req.params.sourceID,
                         req.currentUser!,
                         filename,
                         file as Readable,
+                        req.params.sourceID,
                     ),
                 );
                 fileNames.push(filename);
