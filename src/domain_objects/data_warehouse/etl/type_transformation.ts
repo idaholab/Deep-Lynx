@@ -987,7 +987,12 @@ export default class TypeTransformation extends BaseDomainClass {
 
                 // if it's a number we assume we're dealing with unix time
                 if (typeof value === 'number') {
-                    return new Conversion({original_value: value, converted_value: toDate(value).toISOString()});
+                    try {
+                        const convertedDate = date_conversion_format ? parse(value.toString(), date_conversion_format, new Date()) : new Date(value);
+                        return new Conversion({original_value: value, converted_value: convertedDate.toISOString()});
+                    } catch (e) {
+                        return new Conversion({original_value: value, errors: `unable to convert value to date using format string: ${e}`});
+                    }
                 }
 
                 if (typeof value === 'string') {
