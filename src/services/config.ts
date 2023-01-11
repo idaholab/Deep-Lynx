@@ -116,12 +116,14 @@ export class Config {
     private readonly _cache_graphql: boolean;
 
     private readonly _cors_origins: string[] | string;
+    private readonly _tz: string;
 
     private constructor() {
         // Either assign a sane default of the env var is missing, or create your
         // own checks on process.env. There is most likely a more elegant way but
         // I like including sane defaults in the app itself vs. an env-sample file
 
+        this._tz = process.env.TZ || 'GMT';
         this._project_dir = process.env.PROJECT_DIR || './dist';
         this._root_address = process.env.ROOT_ADDRESS || 'http://localhost:8090';
         this._email_address = process.env.EMAIL_ADDRESS || 'do+not+reply@deeplynx.org';
