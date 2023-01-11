@@ -988,12 +988,13 @@ export default class TypeTransformation extends BaseDomainClass {
                 // if it's a number we assume we're dealing with unix time
                 if (typeof value === 'number') {
                     try {
-                        const convertedDate = date_conversion_format
-                            ? new Date(
-                                  (parse(value.toString(), date_conversion_format, new Date()) as any) -
-                                      parse(value.toString(), date_conversion_format, new Date()).getTimezoneOffset() * 60 * 1000,
-                              )
-                            : new Date(value);
+                        let convertedDate = date_conversion_format ? parse(value.toString(), date_conversion_format, new Date()) : new Date(value);
+
+                        convertedDate =
+                            date_conversion_format?.includes('x') || date_conversion_format?.includes('X')
+                                ? convertedDate
+                                : new Date((convertedDate as any) - convertedDate.getTimezoneOffset() * 60 * 1000);
+
                         return new Conversion({original_value: value, converted_value: convertedDate.toISOString()});
                     } catch (e) {
                         return new Conversion({original_value: value, errors: `unable to convert value to date using format string: ${e}`});
@@ -1002,12 +1003,13 @@ export default class TypeTransformation extends BaseDomainClass {
 
                 if (typeof value === 'string') {
                     try {
-                        const convertedDate = date_conversion_format
-                            ? new Date(
-                                  (parse(value, date_conversion_format, new Date()) as any) -
-                                      parse(value, date_conversion_format, new Date()).getTimezoneOffset() * 60 * 1000,
-                              )
-                            : new Date(value);
+                        let convertedDate = date_conversion_format ? parse(value, date_conversion_format, new Date()) : new Date(value);
+
+                        convertedDate =
+                            date_conversion_format?.includes('x') || date_conversion_format?.includes('X')
+                                ? convertedDate
+                                : new Date((convertedDate as any) - convertedDate.getTimezoneOffset() * 60 * 1000);
+
                         return new Conversion({original_value: value, converted_value: convertedDate.toISOString()});
                     } catch (e) {
                         return new Conversion({original_value: value, errors: `unable to convert value to date using format string: ${e}`});
