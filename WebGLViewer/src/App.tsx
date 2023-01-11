@@ -4,6 +4,8 @@ import { Box, CssBaseline } from '@mui/material';
 import { useTheme, ThemeProvider, createTheme } from '@mui/material/styles';
 import { useAppSelector, useAppDispatch } from '../app/hooks';
 
+// @ts-ignore
+import COLORS from './styles/variables';
 import './styles/App.scss';
 import { Routes, Route } from 'react-router-dom';
 
@@ -16,9 +18,12 @@ import { PaletteMode } from '@mui/material';
 const getDesignTokens = (mode: PaletteMode) => ({
   palette: {
     mode,
-    // primary: {
-    //   main: 'rgb(18, 18, 18)',
-    // },
+    primary: {
+      main: COLORS.colorPrimary,
+    },
+    secondary: {
+      main: COLORS.colorSecondary,
+    },
     // background: {
     //   default: 'rgb(18, 18, 18)',
     //   paper: 'rgb(18, 18, 18)',
