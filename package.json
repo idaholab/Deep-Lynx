@@ -111,7 +111,7 @@
         "casbin-pg-adapter": "^1.4.0",
         "class-transformer": "^0.5.1",
         "class-transformer-validator": "^0.9.1",
-        "class-validator": "^0.13.1",
+        "class-validator": "^0.14.0",
         "copyfiles": "^2.4.1",
         "core-js": "^3.25.1",
         "cors": "^2.8.5",
