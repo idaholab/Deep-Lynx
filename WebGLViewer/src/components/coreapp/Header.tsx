@@ -5,12 +5,25 @@ import Drawer from '@mui/material/Drawer';
 import CssBaseline from '@mui/material/CssBaseline';
 import MuiAppBar, { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
+import List from '@mui/material/List';
 import Typography from '@mui/material/Typography';
+import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import InboxIcon from '@mui/icons-material/MoveToInbox';
+import MailIcon from '@mui/icons-material/Mail';
+import Paper from '@mui/material/Paper';
 
 import SideBarLeft from './SideBarLeft';
 import SideBarRight from './SideBarRight';
+// @ts-ignore
+import COLORS from '../../styles/variables';
 
 const drawerWidth = 340;
 
@@ -43,7 +56,15 @@ const AppBar = styled(MuiAppBar, {
   transition: theme.transitions.create(['margin', 'width'], {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
-  })
+  }),
+  ...(open && {
+    width: `calc(100% - ${drawerWidth}px)`,
+    marginLeft: `${drawerWidth}px`,
+    transition: theme.transitions.create(['margin', 'width'], {
+      easing: theme.transitions.easing.easeOut,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+  }),
 }));
 
 const DrawerHeader = styled('div')(({ theme }) => ({
@@ -55,7 +76,7 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   justifyContent: 'flex-end',
 }));
 
-export default function PersistentDrawerLeft(props: any) {
+export default function Header(props: any) {
   const { children } = props;
 
   const theme = useTheme();
@@ -73,23 +94,24 @@ export default function PersistentDrawerLeft(props: any) {
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
-      <AppBar position="fixed" color={"secondary"} sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            onClick={handleDrawerOpenLeftState}
-            edge="start"
-            sx={{ mr: 2 }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap component="div">
-            WebGL Viewer
-          </Typography>
-        </Toolbar>
-      </AppBar>
-
+      <Box sx={{ width: '100%', height: '64px', backgroundColor: COLORS.colorSecondary }}>
+        <AppBar position="fixed" open={openLeft} color={"secondary"}>
+          <Toolbar>
+            <IconButton
+              color="inherit"
+              aria-label="open drawer"
+              onClick={handleDrawerOpenLeftState}
+              edge="start"
+              sx={{ mr: 2, }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography variant="h6" noWrap component="div">
+              WebGL Viewer
+            </Typography>
+          </Toolbar>
+        </AppBar>
+      </Box>
       <Drawer
         sx={{
           width: drawerWidth,
@@ -97,14 +119,26 @@ export default function PersistentDrawerLeft(props: any) {
           '& .MuiDrawer-paper': {
             width: drawerWidth,
             boxSizing: 'border-box',
-            marginTop: '64px',
           },
         }}
         variant="persistent"
         anchor="left"
         open={openLeft}
       >
-        <SideBarLeft/>
+        <Box>
+          <Paper square={true} elevation={3} sx={{ width: '100%', height: '64px', backgroundColor: COLORS.colorSecondary }}>
+            <Toolbar>
+              <img width="100" src="/assets/lynx-white.png" />
+              {/* <IconButton onClick={handleDrawerOpenLeftState}>
+                {theme.direction === 'ltr' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+              </IconButton> */}
+            </Toolbar>
+          </Paper>
+        </Box>
+
+
+        
+        <SideBarLeft />
         <a
           aria-label="open drawer"
           onClick={handleDrawerOpenRightState}
@@ -115,25 +149,24 @@ export default function PersistentDrawerLeft(props: any) {
           Temp Right Drawer Trigger
         </a>
       </Drawer>
-
       <Main open={openLeft} sx={{ flexGrow: 1, marginTop: '64px' }}>
         {children}
         <Drawer
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
+          sx={{
             width: drawerWidth,
-            boxSizing: 'border-box',
-            marginTop: '64px',
-          },
-        }}
-        variant="persistent"
-        anchor="right"
-        open={openRight}
-      >
-        <SideBarRight/>
-      </Drawer>
+            flexShrink: 0,
+            '& .MuiDrawer-paper': {
+              width: drawerWidth,
+              boxSizing: 'border-box',
+              marginTop: '64px',
+            },
+          }}
+          variant="persistent"
+          anchor="right"
+          open={openRight}
+        >
+          <SideBarRight/>
+        </Drawer>
       </Main>
     </Box>
   );

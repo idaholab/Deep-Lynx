@@ -7,11 +7,10 @@ const COLORS = {
   colorProblemBackground: 'rgba(255, 255, 0, 0.25)',
   colorError: 'rgba(255, 82, 82, 1)',
   colorErrorBackground: 'rgba(255, 82, 82, 0.25)',
-  colorBackgroundGray: '#121212',
-  colorCardGray: '#1e1e1e',
-  colorGrayDarkest: 'rgb(18, 18, 18, 1)',
-  colorGrayDarker: 'rgba(30, 30, 30, 1)',
-  colorGrayDark: 'rgba(255, 82, 82, 0.25)',
+  colorLightgray: '#DCDDDE',
+  colorLightgray2: '#dadada',
+  colorDarkgray: '#AFAFAF',
+  colorDarkgray2: '#888888',
 };
 
 export default COLORS;
