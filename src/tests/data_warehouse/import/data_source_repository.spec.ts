@@ -2,7 +2,7 @@ import {User} from '../../../domain_objects/access_management/user';
 import Logger from '../../../services/logger';
 import PostgresAdapter from '../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import ContainerStorage from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import Container from '../../../domain_objects/data_warehouse/ontology/container';
+import Container, {ContainerExport} from '../../../domain_objects/data_warehouse/ontology/container';
 import faker from 'faker';
 import {expect} from 'chai';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
@@ -15,9 +15,13 @@ import HttpDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/impo
 import {toStream} from '../../../services/utilities';
 import Import from '../../../domain_objects/data_warehouse/import/import';
 import TimeseriesDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/timeseries_data_source';
+import fs from 'fs';
+import FileRepository from '../../../data_access_layer/repositories/data_warehouse/data/file_repository';
+import ContainerRepository from '../../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
+import {DataSource} from '../../../interfaces_and_impl/data_warehouse/import/data_source';
 
 // some general tests on data sources that aren't specific to the implementation
-describe('A Datasource Repository can', async () => {
+describe('A Datasource Repository', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let user: User;
     let dataSource: StandardDataSourceImpl | HttpDataSourceImpl | TimeseriesDataSourceImpl | undefined;
@@ -82,7 +86,8 @@ describe('A Datasource Repository can', async () => {
     after(async () => {
         await UserMapper.Instance.Delete(user.id!);
         await ContainerMapper.Instance.Delete(containerID);
-        return PostgresAdapter.Instance.close();
+        void PostgresAdapter.Instance.close();
+        return Promise.resolve();
     });
 
     it('will not delete data source if data is present', async () => {
@@ -182,6 +187,57 @@ describe('A Datasource Repository can', async () => {
 
         return sourceRepo.delete(source!, {force: true});
     });
+
+    it('can import data sources from a container export file', async () => {
+        // build the data source first
+        const sourceRepo = new DataSourceRepository();
+
+        const source = new DataSourceFactory().fromDataSourceRecord(
+            new DataSourceRecord({
+                container_id: containerID,
+                name: 'Test Data Source',
+                active: false,
+                adapter_type: 'standard',
+                data_format: 'json',
+            }),
+        );
+
+        let results = await sourceRepo.save(source!, user);
+        expect(results.isError).false;
+        expect(source!.DataSourceRecord?.id).not.undefined;
+
+        const sourceExport = await sourceRepo.listForExport();
+        expect(sourceExport.isError).false;
+        expect(sourceExport.value.length > 0);
+
+        let containerExport: ContainerExport = new ContainerExport();
+        containerExport.data_sources = sourceExport.value as DataSource[];
+
+        const containerRepo = new ContainerRepository();
+        // create a file from the export
+        const file = await containerRepo.createContainerExportFile(containerID, user, containerExport);
+
+        // now lets check the download
+        let writer = fs.createWriteStream(`${containerID}_export.json`);
+
+        let downloadStream = await new FileRepository().downloadFile(file.value);
+        expect(downloadStream).not.undefined;
+
+        return new Promise((resolve) => {
+            downloadStream?.on('end', async function () {
+                // perform data source import
+                const fileBuffer = fs.readFileSync(`${containerID}_export.json`);
+
+                const dataSourceImport = await sourceRepo.importDataSources(containerID!, user, fileBuffer);
+                expect(dataSourceImport.isError).false;
+
+                fs.unlinkSync(`${containerID}_export.json`);
+                void sourceRepo.delete(source!, {force: true});
+                resolve(undefined);
+            });
+            downloadStream?.pipe(writer);
+        });
+    }).timeout(4000);
 });
 
 const test_payload = {

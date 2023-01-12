@@ -250,4 +250,8 @@ export default class StandardDataSourceImpl implements DataSource {
         // no additional processing is needed on the record prior to storage
         return Promise.resolve(this.DataSourceRecord!);
     }
+
+    ToExport(): Promise<DataSourceRecord> {
+        return Promise.resolve(this.DataSourceRecord!);
+    }
 }

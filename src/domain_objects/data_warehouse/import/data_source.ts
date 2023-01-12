@@ -411,6 +411,9 @@ export default class DataSourceRecord extends BaseDomainClass {
     @IsBoolean()
     active = false; // we don't want to start something processing unless user specifies
 
+    @IsBoolean()
+    archived = false;
+
     @ValidateNested()
     @Type(() => BaseDataSourceConfig, {
         keepDiscriminatorProperty: true,
@@ -439,6 +442,7 @@ export default class DataSourceRecord extends BaseDomainClass {
         status?: 'ready' | 'polling' | 'error';
         status_message?: string;
         data_retention_days?: number;
+        archived?: boolean;
     }) {
         super();
         this.config = new StandardDataSourceConfig();
@@ -453,6 +457,7 @@ export default class DataSourceRecord extends BaseDomainClass {
             if (input.status) this.status = input.status;
             if (input.status_message) this.status_message = input.status_message;
             if (input.data_retention_days) this.config.data_retention_days = input.data_retention_days;
+            if (input.archived) this.archived = input.archived;
         }
     }
 }

@@ -10,6 +10,7 @@ import MetatypeRelationship from "./metatype_relationship";
 import MetatypeKey from "./metatype_key";
 import MetatypeRelationshipKey from "./metatype_relationship_key";
 import MetatypeRelationshipPair from "./metatype_relationship_pair";
+import {DataSource} from "../../../interfaces_and_impl/data_warehouse/import/data_source";
 
 /*
     ContainerConfig allows the user and system to toggle features at a container
@@ -211,6 +212,9 @@ export class ContainerExport extends NakedDomainClass {
 
     @IsOptional()
     relationship_pairs?: MetatypeRelationshipPair[];
+
+    @IsOptional()
+    data_sources?: DataSource[];
 
     constructor(input?: {version?: number, metatypes?: Metatype[]; metatype_keys?: MetatypeKey[];
         relationships?: MetatypeRelationship[]; relationship_keys?: MetatypeRelationshipKey[], relationship_pairs?: MetatypeRelationshipPair[]}) {
