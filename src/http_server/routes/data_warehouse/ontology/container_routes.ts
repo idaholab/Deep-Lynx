@@ -304,7 +304,7 @@ export default class ContainerRoutes {
         }
         if (String(req.query.exportDataSources).toLowerCase() === 'true') {
             const dsRepository = new DataSourceRepository();
-            const dataSourceExport = await dsRepository.where().containerID('eq', req.container.id!).listForExport();
+            const dataSourceExport = await dsRepository.listForExport(req.container.id!);
             containerExport.data_sources = dataSourceExport.value as DataSource[];
         }
         if (String(req.query.exportTypeMappings).toLowerCase() === 'true') {

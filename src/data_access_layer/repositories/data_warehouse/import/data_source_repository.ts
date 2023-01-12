@@ -248,8 +248,8 @@ export default class DataSourceRepository extends Repository implements Reposito
         return Promise.resolve(Result.Success(results.value.map((record) => this.#factory.fromDataSourceRecord(record))));
     }
 
-    async listForExport(options?: QueryOptions, transaction?: PoolClient): Promise<Result<(DataSource | undefined)[]>> {
-        const results = await this.where().archived(false).list(options, transaction);
+    async listForExport(containerID: string, options?: QueryOptions, transaction?: PoolClient): Promise<Result<(DataSource | undefined)[]>> {
+        const results = await this.where().containerID('eq', containerID).and().archived(false).list(options, transaction);
 
         const dataSources = results.value.map((source) => {
             return source?.ToExport()!;
