@@ -206,7 +206,7 @@ describe('A Datasource Repository', async () => {
         expect(results.isError).false;
         expect(source!.DataSourceRecord?.id).not.undefined;
 
-        const sourceExport = await sourceRepo.listForExport();
+        const sourceExport = await sourceRepo.listForExport(containerID);
         expect(sourceExport.isError).false;
         expect(sourceExport.value.length > 0);
 
