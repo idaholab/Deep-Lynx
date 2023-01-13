@@ -113,6 +113,7 @@ export default class StandardDataSourceImpl implements DataSource {
                             value_nodes: this.DataSourceRecord?.config?.value_nodes,
                             stop_nodes: this.DataSourceRecord?.config?.stop_nodes,
                         }),
+                        file_attached: options?.has_files,
                     }),
                 );
 
@@ -152,6 +153,7 @@ export default class StandardDataSourceImpl implements DataSource {
                         value_nodes: this.DataSourceRecord?.config?.value_nodes,
                         stop_nodes: this.DataSourceRecord?.config?.stop_nodes,
                     }),
+                    file_attached: options?.has_files,
                 });
 
                 if (this.DataSourceRecord && (!this.DataSourceRecord.config?.data_retention_days || this.DataSourceRecord.config?.data_retention_days === 0)) {

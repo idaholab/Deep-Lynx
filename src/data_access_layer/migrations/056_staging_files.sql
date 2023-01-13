@@ -1,0 +1,2 @@
+ALTER TABLE data_staging ADD COLUMN file_attached BOOLEAN DEFAULT FALSE;
+ALTER TABLE edge_queue_items ADD COLUMN file_attached BOOLEAN DEFAULT FALSE;
