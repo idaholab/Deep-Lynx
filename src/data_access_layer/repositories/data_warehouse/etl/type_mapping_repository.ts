@@ -37,9 +37,9 @@ export default class TypeMappingRepository extends Repository implements Reposit
     #transformationRepo: TypeTransformationRepository = new TypeTransformationRepository();
     #transformationMapper: TypeTransformationMapper = TypeTransformationMapper.Instance;
 
-    delete(t: TypeMapping): Promise<Result<boolean>> {
+    async delete(t: TypeMapping): Promise<Result<boolean>> {
         if (t.id) {
-            void this.deleteCached(t);
+            await this.deleteCached(t);
 
             return this.#mapper.Delete(t.id);
         }
@@ -61,18 +61,24 @@ export default class TypeMappingRepository extends Repository implements Reposit
 
     // shape hashes are unique only to data sources, so it will need both to find one
     async findByShapeHash(shapeHash: string, dataSourceID: string, loadTransformations = true): Promise<Result<TypeMapping>> {
+        const cached = await this.getCachedByShapeHash(shapeHash, dataSourceID);
+        if (cached) return Promise.resolve(Result.Success(cached));
+
         const retrieved = await this.#mapper.RetrieveByShapeHash(dataSourceID, shapeHash);
 
         if (!retrieved.isError && loadTransformations) {
             // we do not want to cache this object unless we have the entire object
             const transformations = await this.#transformationMapper.ListForTypeMapping(retrieved.value.id!);
             if (!transformations.isError) retrieved.value.addTransformation(...transformations.value);
+
+            await this.setCache(retrieved.value);
         }
 
         return Promise.resolve(retrieved);
     }
 
     async save(t: TypeMapping, user: User, saveTransformations = true, transaction?: PoolClient): Promise<Result<boolean>> {
+        await this.deleteCached(t);
         let internalTransaction = false;
 
         const errors = await t.validationErrors();
