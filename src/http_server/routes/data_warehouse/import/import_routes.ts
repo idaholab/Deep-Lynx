@@ -97,10 +97,7 @@ export default class ImportRoutes {
             authInContainer('read', 'data'),
             this.getFile,
         );
-        app.put(
-            '/containers/:containerID/import/datasources/:sourceID/files/:fileID',
-            ...middleware,
-            authInContainer('write', 'data'), this.updateFile);
+        app.put('/containers/:containerID/import/datasources/:sourceID/files/:fileID', ...middleware, authInContainer('write', 'data'), this.updateFile);
         app.get(
             '/containers/:containerID/files/:fileID/download',
             ...middleware,
@@ -577,6 +574,7 @@ export default class ImportRoutes {
                             importID: req.query.importID as string | undefined,
                             returnStagingRecords: true,
                             bufferSize: Config.data_source_receive_buffer,
+                            has_files: true,
                         }),
                     );
                 } else if (mimeType === 'text/csv') {
@@ -588,6 +586,7 @@ export default class ImportRoutes {
                                 downstreamFormat: 'array', // this is necessary as the ReceiveData expects an array of json, not single objects
                             }),
                             bufferSize: Config.data_source_receive_buffer,
+                            has_files: true,
                         }),
                     );
                 } else if (mimeType === 'text/xml' || mimeType === 'application/xml') {
@@ -598,19 +597,12 @@ export default class ImportRoutes {
                             returnStagingRecords: true,
                             transformStream: xmlStream,
                             bufferSize: Config.data_source_receive_buffer,
+                            has_files: true,
                         }),
                     );
                 }
             } else {
-                files.push(
-                    new FileRepository().uploadFile(
-                        req.params.containerID,
-                        req.currentUser!,
-                        filename,
-                        file as Readable,
-                        req.params.sourceID,
-                    ),
-                );
+                files.push(new FileRepository().uploadFile(req.params.containerID, req.currentUser!, filename, file as Readable, req.params.sourceID));
                 fileNames.push(filename);
             }
         });

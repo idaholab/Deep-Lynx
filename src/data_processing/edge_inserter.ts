@@ -6,7 +6,7 @@ import Config from '../services/config';
 import Logger from '../services/logger';
 import EdgeQueueItemMapper from '../data_access_layer/mappers/data_warehouse/data/edge_queue_item_mapper';
 import FileMapper from '../data_access_layer/mappers/data_warehouse/data/file_mapper';
-import {EdgeFile} from '../domain_objects/data_warehouse/data/file';
+import {DataStagingFile, EdgeFile} from '../domain_objects/data_warehouse/data/file';
 import {plainToClass} from 'class-transformer';
 
 // InsertEdge takes a single EdgeQueueItem and attempts to insert it into the database without making any changes
@@ -78,33 +78,36 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
     }
 
     // now we attach the files
-    const stagingFiles = await FileMapper.Instance.ListForDataStagingRaw(edge.data_staging_id!);
-    if (stagingFiles.isError) {
-        Logger.error(`unable to fetch files for data staging records ${stagingFiles.error?.error}`);
-    }
 
-    if (!stagingFiles.isError) {
-        const edgeFiles: EdgeFile[] = [];
-
-        stagingFiles.value.forEach((file) => {
-            edges.value.forEach((e) => {
-                edgeFiles.push(
-                    new EdgeFile({
-                        edge_id: e.id!,
-                        file_id: file.file_id!,
-                    }),
-                );
-            });
-        });
-
-        if (edgeFiles.length > 0) {
-            const attached = await mapper.BulkAddFile(edgeFiles, transaction.value);
-            if (attached.isError) {
-                Logger.error(`unable to attach files to edge ${attached.error?.error}`);
-            }
+    if (edgeQueueItem.file_attached) {
+        const stagingFiles = await FileMapper.Instance.ListForDataStagingRaw(edge.data_staging_id!);
+        if (stagingFiles.isError) {
+            Logger.error(`unable to fetch files for data staging records ${stagingFiles.error?.error}`);
         }
-    } else {
-        Logger.error(`unable to list files for potential edge ${stagingFiles.error?.error}`);
+
+        if (!stagingFiles.isError) {
+            const edgeFiles: EdgeFile[] = [];
+
+            stagingFiles.value.forEach((file) => {
+                edges.value.forEach((e) => {
+                    edgeFiles.push(
+                        new EdgeFile({
+                            edge_id: e.id!,
+                            file_id: file.file_id!,
+                        }),
+                    );
+                });
+            });
+
+            if (edgeFiles.length > 0) {
+                const attached = await mapper.BulkAddFile(edgeFiles, transaction.value);
+                if (attached.isError) {
+                    Logger.error(`unable to attach files to edge ${attached.error?.error}`);
+                }
+            }
+        } else {
+            Logger.error(`unable to list files for potential edge ${stagingFiles.error?.error}`);
+        }
     }
 
     // if the original edge item is one with filters, we continually put it back on the queue until it either hits the limit

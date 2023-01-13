@@ -221,7 +221,10 @@ export class EdgeQueueItem extends NakedDomainClass {
     @IsOptional()
     error?: string;
 
-    constructor(input: {edge: object; import_id: string; attempts?: number; next_attempt_at?: Date; error?: string}) {
+    @IsOptional()
+    file_attached?: boolean = false;
+
+    constructor(input: {edge: object; import_id: string; attempts?: number; next_attempt_at?: Date; error?: string; file_attached?: boolean}) {
         super();
 
         if (input) {
@@ -230,6 +233,7 @@ export class EdgeQueueItem extends NakedDomainClass {
             if (input.attempts) this.attempts = input.attempts;
             if (input.next_attempt_at) this.next_attempt_at = input.next_attempt_at;
             if (input.error) this.error = input.error;
+            if (input.file_attached) this.file_attached = input.file_attached;
         }
     }
 }
