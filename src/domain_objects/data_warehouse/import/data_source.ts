@@ -34,6 +34,7 @@ export class ReceiveDataOptions {
     transformStream?: Transform; // streams to pipe to, prior to piping to the JSONStream
     bufferSize = 1000; // buffer size for timeseries records to be inserted into the db, modify this at runtime if needed
     websocket?: WebSocket;
+    has_files?: boolean = false; // dictates that this piece of data has files attached
     errorCallback?: (error: any) => void;
 }
 

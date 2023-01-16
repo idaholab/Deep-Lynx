@@ -10,7 +10,7 @@ import NodeRepository from '../data_access_layer/repositories/data_warehouse/dat
 import Node, {IsNodes} from '../domain_objects/data_warehouse/data/node';
 import Edge, {EdgeQueueItem, IsEdges} from '../domain_objects/data_warehouse/data/edge';
 import DataStagingRepository from '../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
-import {NodeFile} from '../domain_objects/data_warehouse/data/file';
+import {DataStagingFile, NodeFile} from '../domain_objects/data_warehouse/data/file';
 import NodeMapper from '../data_access_layer/mappers/data_warehouse/data/node_mapper';
 import TimeseriesEntry, {IsTimeseries} from '../domain_objects/data_warehouse/data/timeseries';
 import Cache from '../services/cache/cache';
@@ -81,9 +81,15 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
 
     // we must fetch the file records for these data staging records, so that once they're processed we can attach
     // the files to the resulting nodes/edges - this is not a failure state if we can't fetch them - log and move on
-    const stagingFiles = await FileMapper.Instance.ListForDataStagingRaw(staging.id!);
-    if (stagingFiles.isError) {
-        Logger.error(`unable to fetch files for data staging records ${stagingFiles.error?.error}`);
+    let stagingFiles: DataStagingFile[] = [];
+
+    if (staging.file_attached) {
+        const files = await FileMapper.Instance.ListForDataStagingRaw(staging.id!);
+        if (files.isError) {
+            Logger.error(`unable to fetch files for data staging records ${files.error?.error}`);
+        } else {
+            stagingFiles = files.value;
+        }
     }
 
     let nodesToInsert: Node[] = [];
@@ -133,11 +139,11 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
 
         // now that the nodes are inserted, attempt to attach any files from their original staging records
         // to them
-        if (!stagingFiles.isError && stagingFiles.value.length > 0) {
+        if (stagingFiles.length > 0) {
             const nodeFiles: NodeFile[] = [];
 
             nodesToInsert.forEach((node) => {
-                const toAttach = stagingFiles.value.filter((stagingFile) => stagingFile.data_staging_id === node.data_staging_id);
+                const toAttach = stagingFiles.filter((stagingFile) => stagingFile.data_staging_id === node.data_staging_id);
                 if (toAttach) {
                     toAttach.forEach((stagingFile) => {
                         nodeFiles.push(
@@ -159,7 +165,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
 
     // we send the edges to the edge queue item table so that they can be processed separately
     const edgesToQueue: EdgeQueueItem[] = edgesToInsert.map((e) => {
-        return new EdgeQueueItem({edge: classToPlain(e), import_id: staging.import_id!});
+        return new EdgeQueueItem({edge: classToPlain(e), import_id: staging.import_id!, file_attached: staging.file_attached});
     });
 
     // send queue edges to queue

@@ -41,8 +41,8 @@ export default class TypeTransformationRepository extends Repository implements 
         const mappingRepo = new TypeMappingRepository();
 
         if(options && options.force) {
-            void this.deleteCached(t);
-            void mappingRepo.deleteCached(t.type_mapping_id!);
+            await this.deleteCached(t);
+            await mappingRepo.deleteCached(t.type_mapping_id!);
 
             if(options.removeData) {
                 return this.#mapper.DeleteWithData(t.id)
@@ -59,8 +59,8 @@ export default class TypeTransformationRepository extends Repository implements 
             return Promise.resolve(Result.Failure(`unable to delete transformation as data exists that was created by utilizing this transformation`))
         }
 
-        void this.deleteCached(t);
-        void mappingRepo.deleteCached(t.type_mapping_id!);
+        await this.deleteCached(t);
+        await mappingRepo.deleteCached(t.type_mapping_id!);
 
         const removed = await this.#mapper.DeleteHypertable(t.id)
         if(removed.isError) {
@@ -74,15 +74,15 @@ export default class TypeTransformationRepository extends Repository implements 
         }
     }
 
-    archive(u: User, t: TypeTransformation): Promise<Result<boolean>> {
+    async archive(u: User, t: TypeTransformation): Promise<Result<boolean>> {
         if(!t.id)
             return Promise.resolve(Result.Failure('cannot archive type transformation: no id present'))
 
         const mappingRepo = new TypeMappingRepository();
 
         // we must delete the cached versions so as to get the archived field updated
-        void this.deleteCached(t);
-        void mappingRepo.deleteCached(t.type_mapping_id!);
+        await this.deleteCached(t);
+        await mappingRepo.deleteCached(t.type_mapping_id!);
 
         return this.#mapper.Archive(t.id, u.id!)
     }
@@ -113,6 +113,12 @@ export default class TypeTransformationRepository extends Repository implements 
     }
 
     async save(t: TypeTransformation, user: User): Promise<Result<boolean>> {
+        const mappingRepo = new TypeMappingRepository();
+
+        // we must delete the cached versions so as to get the archived field updated
+        await this.deleteCached(t);
+        await mappingRepo.deleteCached(t.type_mapping_id!);
+
         const errors = await t.validationErrors();
         if (errors) {
             return Promise.resolve(Result.Failure(`type transformation does not pass validation ${errors.join(',')}`));

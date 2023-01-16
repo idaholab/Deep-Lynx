@@ -88,6 +88,10 @@ export class DataStaging extends NakedDomainClass {
     @IsOptional()
     container_id?: string;
 
+    // we need to have this so we can stop spamming the database on the db on processing
+    @IsOptional()
+    file_attached?: boolean = false;
+
     @Type(() => BaseDataSourceConfig, {
         keepDiscriminatorProperty: true,
         discriminator: {
@@ -103,7 +107,7 @@ export class DataStaging extends NakedDomainClass {
     })
     data_source_config?: StandardDataSourceConfig | HttpDataSourceConfig | JazzDataSourceConfig | AvevaDataSourceConfig = new StandardDataSourceConfig();
 
-    constructor(input: {data_source_id: string; import_id: string; data: any; shape_hash?: string; container_id?: string}) {
+    constructor(input: {data_source_id: string; import_id: string; data: any; shape_hash?: string; container_id?: string; file_attached?: boolean}) {
         super();
 
         if (input) {
@@ -112,6 +116,7 @@ export class DataStaging extends NakedDomainClass {
             this.data = input.data;
             if (input.shape_hash) this.shape_hash = input.shape_hash;
             if (input.container_id) this.container_id = input.container_id;
+            if (input.file_attached) this.file_attached = input.file_attached;
         }
     }
 }

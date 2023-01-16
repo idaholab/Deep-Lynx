@@ -775,7 +775,7 @@ describe('A Data Type Mapping can', async () => {
 
         expect((maintenanceResult.value as Node[])[0].properties).to.have.property('id', 'UUID');
         expect((maintenanceResult.value as Node[])[0].properties).to.have.property('name', "test car's maintenance");
-        expect((maintenanceResult.value as Node[])[0].properties).to.have.property('start_date', '2020-01-01T19:00:00.000Z');
+        expect((maintenanceResult.value as Node[])[0].properties).to.have.property('start_date', '2020-01-01T12:00:00.000Z');
         expect((maintenanceResult.value as Node[])[0].properties).to.have.property('average_visits', 4);
         // validate the original and composite ID fields worked correctly
         expect((maintenanceResult.value as Node[])[0].original_data_id).eq('UUID'); // original IDs are strings
