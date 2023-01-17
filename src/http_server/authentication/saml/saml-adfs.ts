@@ -7,7 +7,7 @@ import Result from '../../../common_classes/result';
 import {User} from '../../../domain_objects/access_management/user';
 import {serialize} from 'class-transformer';
 
-const SamlStrategy = require('passport-saml').Strategy;
+import {Strategy as SamlStrategy} from '@node-saml/passport-saml';
 
 export function SetSamlAdfs(app: express.Application) {
     // do not set the auth strategy if we don't have a public/private key pair.
@@ -39,13 +39,14 @@ export function SetSamlAdfs(app: express.Application) {
                 entryPoint: Config.saml_adfs_entry_point,
                 issuer: Config.saml_adfs_issuer,
                 callbackUrl: Config.saml_adfs_callback,
-                privateCert: fs.readFileSync(Config.saml_adfs_private_cert_path, 'utf-8'),
+                privateKey: fs.readFileSync(Config.saml_adfs_private_cert_path, 'utf-8'),
                 cert: fs.readFileSync(Config.saml_adfs_public_cert_path, 'utf-8'),
                 signatureAlgorithm: 'sha256',
-                RACComparison: 'exact',
+                racComparison: 'exact',
                 disableRequestedAuthnContext: true,
                 identifierFormat: null,
             },
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             (profile: any, done: any) => {
                 const storage = UserMapper.Instance;
 
@@ -81,6 +82,23 @@ export function SetSamlAdfs(app: express.Application) {
                                             resolve(done(null, serialize(user.value)));
                                         });
                                 });
+                            } else {
+                                resolve(done(null, serialize(result.value)));
+                            }
+                        })
+                        .catch((error) => resolve(done(error, false)));
+                });
+            },
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
+            (profile: any, done: any) => {
+                const storage = UserMapper.Instance;
+
+                return new Promise((resolve) => {
+                    storage
+                        .RetrieveByEmail(profile[Config.saml_claims_email])
+                        .then((result) => {
+                            if (result.isError) {
+                                resolve(done(result.error, false));
                             } else {
                                 resolve(done(null, serialize(result.value)));
                             }
