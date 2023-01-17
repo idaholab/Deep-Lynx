@@ -67,9 +67,9 @@ export default class EdgeQueueItemMapper extends Mapper {
     private createStatement(...items: EdgeQueueItem[]): string {
         const text = `INSERT INTO edge_queue_items(
                        edge,
-                       import_id, 
-                       next_attempt_at) VALUES %L RETURNING *`;
-        const values = items.map((item) => [item.edge, item.import_id, item.next_attempt_at]);
+                       import_id 
+                       ) VALUES %L RETURNING *`;
+        const values = items.map((item) => [item.edge, item.import_id]);
 
         return format(text, values);
     }
