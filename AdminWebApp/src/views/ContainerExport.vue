@@ -20,10 +20,12 @@
                 <template slot="prepend"><info-tooltip :message="$t('containerExport.exportOntologyHelp')"></info-tooltip> </template>
               </v-checkbox>
 
-            <v-checkbox v-model="exportDataSources" disabled>
+            <v-checkbox v-model="exportDataSources">
                 <template v-slot:label>
-                  {{$t('containerExport.exportDataSources')}} <p class="text-caption" style="margin-left: 5px"> {{$t('comingSoon')}}</p>
+                  {{$t('containerExport.exportDataSources')}} <p class="text-caption" style="margin-left: 5px"> {{$t('beta')}}</p>
                 </template>
+
+                <template slot="prepend"><info-tooltip :message="$t('containerExport.exportDataSourceHelp')"></info-tooltip> </template>
               </v-checkbox>
 
             <v-checkbox v-model="exportTypeMappings" disabled>

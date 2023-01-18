@@ -351,4 +351,15 @@ export default class JazzDataSourceImpl extends StandardDataSourceImpl implement
 
         return Promise.resolve(output);
     }
+
+    ToExport(): Promise<DataSourceRecord> {
+        const output = plainToClass(DataSourceRecord, {});
+        Object.assign(output, this.DataSourceRecord);
+
+        if ((output.config as JazzDataSourceConfig).token) {
+            (output.config as JazzDataSourceConfig).token = undefined;
+        }
+
+        return Promise.resolve(output);
+    }
 }
