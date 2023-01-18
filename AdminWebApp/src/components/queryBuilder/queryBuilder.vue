@@ -63,13 +63,14 @@
                 <v-col class="d-flex flex-row">
                   <v-spacer />
                   <div class="mr-5">
-                    <v-select
+                    <v-combobox
                       :items="limitOptions"
                       v-model="limit"
                       :label="$t('queryBuilder.recordLimit')"
+                      @change="setLimit"
                       style="max-width: 90px;"
                     >
-                    </v-select>
+                    </v-combobox>
                   </div>
                   <div>
                     <v-btn v-if="!results" @click="submitQuery" style="margin-top: 15px">
@@ -519,6 +520,10 @@ relationshipSampleQuery =
       this.updateSelectedQuery(this.metatypeSampleQuery)
       this.rawQueryResult = {}
     }
+  }
+
+  setLimit(limit: number) {
+    this.limit = limit
   }
 
   submitQuery() {

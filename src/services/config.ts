@@ -23,6 +23,7 @@ export class Config {
     private readonly _template_dir: string;
     private readonly _asset_dir: string;
     private readonly _web_gui_dir: string;
+    private readonly _web_gl_viewer_dir: string;
 
     private readonly _vue_app_id: string;
 
@@ -115,12 +116,14 @@ export class Config {
     private readonly _cache_graphql: boolean;
 
     private readonly _cors_origins: string[] | string;
+    private readonly _tz: string;
 
     private constructor() {
         // Either assign a sane default of the env var is missing, or create your
         // own checks on process.env. There is most likely a more elegant way but
         // I like including sane defaults in the app itself vs. an env-sample file
 
+        this._tz = process.env.TZ || 'GMT';
         this._project_dir = process.env.PROJECT_DIR || './dist';
         this._root_address = process.env.ROOT_ADDRESS || 'http://localhost:8090';
         this._email_address = process.env.EMAIL_ADDRESS || 'do+not+reply@deeplynx.org';
@@ -149,6 +152,7 @@ export class Config {
         this._template_dir = process.env.TEMPLATE_DIR || './dist/http_server/views';
         this._asset_dir = process.env.ASSET_DIR || './dist/http_server/assets';
         this._web_gui_dir = process.env.WEB_GUI_DIR || './dist/http_server/web_gui';
+        this._web_gl_viewer_dir = process.env.WEB_GL_VIEWER_DIR || './dist/http_server/web_gl';
 
         this._vue_app_id = process.env.VUE_APP_DEEP_LYNX_APP_ID || '';
 
@@ -227,8 +231,8 @@ export class Config {
 
         this._edge_insertion_backoff_multiplier = process.env.EDGE_INSERTION_BACKOFF_MULTIPLIER
             ? parseInt(process.env.EDGE_INSERTION_BACKOFF_MULTIPLIER, 10)
-            : 5;
-        this._edge_insertion_max_retry = process.env.EDGE_INSERTION_MAX_RETRY ? parseInt(process.env.EDGE_INSERTION_MAX_RETRY, 10) : 10;
+            : 300;
+        this._edge_insertion_max_retry = process.env.EDGE_INSERTION_MAX_RETRY ? parseInt(process.env.EDGE_INSERTION_MAX_RETRY, 10) : 5;
 
         this._rabbitmq_url = process.env.RABBITMQ_URL || 'amqp://localhost';
         this._azure_service_bus_connection_string = process.env.AZURE_SERVICE_BUS_CONNECTION_STRING || '';
@@ -277,6 +281,10 @@ export class Config {
 
     get web_gui_dir(): string {
         return this._web_gui_dir;
+    }
+
+    get web_gl_viewer_dir(): string {
+        return this._web_gl_viewer_dir;
     }
 
     get email_address(): string {

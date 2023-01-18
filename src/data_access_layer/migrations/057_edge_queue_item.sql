@@ -1,0 +1,1 @@
+ALTER TABLE edge_queue_items ADD COLUMN created_at TIMESTAMP DEFAULT NOW();

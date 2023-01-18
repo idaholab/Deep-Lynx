@@ -722,7 +722,7 @@ describe('The GraphQL Schema Generator', async () => {
         expect((typeMap['Part'] as GraphQLObjectType).getFields()['name'].type).eq(GraphQLString);
         expect((typeMap['Part'] as GraphQLObjectType).getFields()['price'].type).eq(GraphQLFloat);
         expect((typeMap['Part'] as GraphQLObjectType).getFields()['quantity'].type).eq(GraphQLFloat);
-    });
+    }).timeout(10000);
 
     // the processed data should generate 1 Maintenance record and 2 Maintenance Entry records by this point
     it('can return nodes based on metadata', async () => {

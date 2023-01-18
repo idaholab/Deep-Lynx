@@ -38,10 +38,12 @@ RUN npm ci --include=dev
 RUN npm run build:docker
 RUN cd /srv/core_api/AdminWebApp && npm ci --include=dev && npm run build -- --dest /srv/core_api/dist/http_server/web_gui
 RUN rm -rf /srv/core_api/AdminWebApp/node_modules
+# Build the Viewer
+RUN npm run build:web-gl
 # catch any env file a user might have accidentally built into the container
 RUN rm -rf .env
 
-FROM node:18.12-buster-slim as production
+FROM node:18.13-buster-slim as production
 RUN apt-get update
 
 WORKDIR /srv/core_api

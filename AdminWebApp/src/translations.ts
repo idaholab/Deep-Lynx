@@ -984,7 +984,7 @@ export default {
             resultingTypes: 'Metatype/Metatype Relationship/Name',
             requiredField: 'Required Field',
             dateFormatString: 'Date Format String(blank for ISO)',
-            dateFormatStringHelp: 'Formatting your date/time',
+            dateFormatStringHelp: 'Formatting your date/time - if you do not include a timezone, we will assume UTC time.',
             selectNodeID: 'Target Node',
             selectNodeIDHelp: 'These fields allow you to select which node this time series data should be attached to.',
             nodeIDKey: 'Node ID Key',

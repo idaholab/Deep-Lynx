@@ -200,6 +200,7 @@ export default class DataTypeMapping extends Vue {
     this.$client.retrieveTransformations(this.containerID, this.dataSourceID, this.typeMapping?.id!)
         .then((transformations) => {
           this.transformations = transformations
+          this.$emit("updated")
         })
         .catch(e => this.errorMessage = e)
   }
