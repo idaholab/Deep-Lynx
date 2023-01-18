@@ -6,32 +6,33 @@ import {plainToClass, plainToInstance} from 'class-transformer';
 import Node, {NodeIDPayload} from '../../../../domain_objects/data_warehouse/data/node';
 import EdgeRepository from '../../../../data_access_layer/repositories/data_warehouse/data/edge_repository';
 import Edge from '../../../../domain_objects/data_warehouse/data/edge';
+import Tag from '../../../../domain_objects/data_warehouse/data/tag';
 import NodeLeafRepository from '../../../../data_access_layer/repositories/data_warehouse/data/node_leaf_repository';
 import GraphQLRunner from '../../../../graphql/schema';
 import {graphql} from 'graphql';
 import {stringToValidPropertyName} from '../../../../services/utilities';
 import NodeGraphQLSchemaGenerator from '../../../../graphql/node_graph_schema';
 import DataSourceGraphQLSchemaGenerator from '../../../../graphql/timeseries_schema';
+import TagRepository from '../../../../data_access_layer/repositories/data_warehouse/data/tag_repository';
 
 const nodeRepo = new NodeRepository();
 const edgeRepo = new EdgeRepository();
+const tagRepo = new TagRepository();
 
 export default class GraphRoutes {
     public static mount(app: Application, middleware: any[]) {
+        // Nodes
         app.post('/containers/:containerID/graphs/nodes/', ...middleware, authInContainer('write', 'data'), this.createOrUpdateNodes);
         app.get('/containers/:containerID/graphs/nodes/metatype/:metatypeID', ...middleware, authInContainer('read', 'data'), this.listNodesByMetatypeID);
         app.get('/containers/:containerID/graphs/nodes/', ...middleware, authInContainer('read', 'data'), this.listNodes);
         app.get('/containers/:containerID/graphs/nodes/:nodeID', ...middleware, authInContainer('read', 'data'), this.retrieveNode);
-
-        // This should return all edges which contain one of the ids in the payload
-        app.post('/containers/:containerID/graphs/nodes/edges', ...middleware, authInContainer('read', 'data'), this.retrieveEdges);
-
+        app.delete('/containers/:containerID/graphs/nodes/:nodeID', ...middleware, authInContainer('write', 'data'), this.deleteNode);
         // This should return a node and all connected nodes and connecting edges for n layers.
         app.get('/containers/:containerID/graphs/nodes/:nodeID/graph', ...middleware, authInContainer('read', 'data'), this.retrieveNthNodes);
 
+        // Timeseries
         app.post('/containers/:containerID/graphs/nodes/:nodeID/timeseries', ...middleware, authInContainer('read', 'data'), this.queryTimeseriesData);
         app.get('/containers/:containerID/graphs/nodes/:nodeID/timeseries', ...middleware, authInContainer('read', 'data'), this.queryTimeseriesDataTypes);
-
         app.post(
             '/containers/:containerID/import/datasources/:dataSourceID/data',
             ...middleware,
@@ -39,21 +40,102 @@ export default class GraphRoutes {
             this.queryTimeseriesDataSource,
         );
 
+        // Files
         app.get('/containers/:containerID/graphs/nodes/:nodeID/files', ...middleware, authInContainer('read', 'data'), this.listFilesForNode);
         app.put('/containers/:containerID/graphs/nodes/:nodeID/files/:fileID', ...middleware, authInContainer('write', 'data'), this.attachFileToNode);
         app.delete('/containers/:containerID/graphs/nodes/:nodeID/files/:fileID', ...middleware, authInContainer('write', 'data'), this.detachFileFromNode);
-
+        app.put('/containers/:containerID/graphs/edges/:edgeID/files/:fileID', ...middleware, authInContainer('write', 'data'), this.attachFileToEdge);
+        app.delete('/containers/:containerID/graphs/edges/:edgeID/files/:fileID', ...middleware, authInContainer('write', 'data'), this.detachFileFromEdge);
+        
+        // Edges
         app.post('/containers/:containerID/graphs/edges/', ...middleware, authInContainer('write', 'data'), this.createOrUpdateEdges);
         app.get('/containers/:containerID/graphs/edges/:edgeID', ...middleware, authInContainer('read', 'data'), this.retrieveEdge);
         app.get('/containers/:containerID/graphs/edges/', ...middleware, authInContainer('read', 'data'), this.listEdges);
-
         app.get('/containers/:containerID/graphs/edges/:edgeID/files', ...middleware, authInContainer('read', 'data'), this.listFilesForEdge);
-        app.put('/containers/:containerID/graphs/edges/:edgeID/files/:fileID', ...middleware, authInContainer('write', 'data'), this.attachFileToEdge);
-        app.delete('/containers/:containerID/graphs/edges/:edgeID/files/:fileID', ...middleware, authInContainer('write', 'data'), this.detachFileFromEdge);
-
-        app.delete('/containers/:containerID/graphs/nodes/:nodeID', ...middleware, authInContainer('write', 'data'), this.deleteNode);
+        // This should return all edges which contain one of the ids in the payload
+        app.post('/containers/:containerID/graphs/nodes/edges', ...middleware, authInContainer('read', 'data'), this.retrieveEdges);
         app.delete('/containers/:containerID/graphs/edges/:edgeID', ...middleware, authInContainer('write', 'data'), this.archiveEdge);
+        
+        // Tags
+        app.post('/containers/:containerID/graphs/tags', ...middleware, authInContainer('write', 'data'), this.createTag)
+        app.put('/containers/:containerID/graphs/tags/:tagID/nodes/:nodeID', ...middleware, authInContainer('write', 'data'), this.attachTagToNode);
+        app.put('/containers/:containerID/graphs/tags/:tagID/edges/:edgeID', ...middleware, authInContainer('write', 'data'), this.attachTagToEdge);
+        app.put('/containers/:containerID/graphs/tags/:tagID/files/:fileID', ...middleware, authInContainer('write', 'data'), this.attachTagToFile);
     }
+
+    private static createTag(req: Request, res: Response, next: NextFunction) {
+
+        let payload: Tag[] = []; 
+
+        if (Array.isArray(req.body)) {
+            payload = plainToInstance(Tag, req.body);
+        } else {
+            payload = [plainToInstance(Tag, req.body as object)];
+        }
+
+        if (req.container) {
+            payload.forEach((tag: Tag) => {
+                tag.container_id = req.container!.id!;
+            });
+        }
+
+        payload.forEach((tag: Tag) => {
+            tagRepo.save(tag, req.currentUser!)
+            .then((result) => {
+                if (result.isError) {
+                    Result.Error(result.error?.error).asResponse(res);
+                    return;
+                }
+
+                Result.Success(payload).asResponse(res);
+            })
+            .catch((err) => {
+                Result.Error(err).asResponse(res);
+            })
+            .finally(() => next());;
+        })
+
+    }
+
+    private static attachTagToNode(req: Request, res: Response, next: NextFunction) {
+        if(req.tag && req.node) {
+            tagRepo.tagNode(req.tag, req.node)
+            .then((result) => {
+                result.asResponse(res);
+            })
+            .catch((err) => {
+                Result.Error(err).asResponse(res);
+            })
+            .finally(() => next());
+        }
+    }
+
+    private static attachTagToEdge(req: Request, res: Response, next: NextFunction) {
+        if(req.tag && req.edge) {
+            tagRepo.tagEdge(req.tag, req.edge)
+            .then((result) => {
+                result.asResponse(res);
+            })
+            .catch((err) => {
+                Result.Error(err).asResponse(res);
+            })
+            .finally(() => next());
+        }
+    }
+
+    private static attachTagToFile(req: Request, res: Response, next: NextFunction) {
+        if(req.tag && req.file) {
+            tagRepo.tagFile(req.tag, req.file)
+            .then((result) => {
+                result.asResponse(res);
+            })
+            .catch((err) => {
+                Result.Error(err).asResponse(res);
+            })
+            .finally(() => next());
+        }
+    }
+
     private static listNodes(req: Request, res: Response, next: NextFunction) {
         // fresh instance of the repo to avoid filter issues
         if (req.container) {

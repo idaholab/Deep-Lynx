@@ -24,6 +24,7 @@ import DataSourceRepository from '../data_access_layer/repositories/data_warehou
 import DataTargetRepository from '../data_access_layer/repositories/data_warehouse/export/data_target_repository';
 import FileRepository from '../data_access_layer/repositories/data_warehouse/data/file_repository';
 import TaskRepository from '../data_access_layer/repositories/task_runner/task_repository';
+import TagRepository from '../data_access_layer/repositories/data_warehouse/data/tag_repository';
 import EventActionRepository from '../data_access_layer/repositories/event_system/event_action_repository';
 import EventActionStatusRepository from '../data_access_layer/repositories/event_system/event_action_status_repository';
 import OntologyVersionRepository from '../data_access_layer/repositories/data_warehouse/ontology/versioning/ontology_version_repository';
@@ -840,6 +841,36 @@ export function fileContext(): any {
                 }
 
                 req.file = result.value;
+                next();
+            })
+            .catch((error) => {
+                resp.status(500).json(error);
+                return;
+            });
+    };
+}
+
+// tagContext will attempt to fetch a tag by id specified by the
+// id query parameter. If one is fetched it will pass it on in request context.
+// route must contain the param labeled "tagID"
+export function tagContext(): any {
+    return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
+        // if we don't have an id, don't fail, just pass without action
+        if (!req.params.tagID) {
+            next();
+            return;
+        }
+
+        const repo = new TagRepository();
+
+        repo.findByID(req.params.tagID)
+            .then((result) => {
+                if (result.isError) {
+                    resp.status(result.error?.errorCode!).json(result);
+                    return;
+                }
+
+                req.tag = result.value;
                 next();
             })
             .catch((error) => {
