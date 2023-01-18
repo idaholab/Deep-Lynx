@@ -17,7 +17,7 @@ import {
     GraphQLNonNull, graphql,
 } from 'graphql';
 import MetatypeRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_repository';
-import Result, { ErrorNotFound } from '../common_classes/result';
+import Result, { ErrorUnauthorized } from '../common_classes/result';
 import GraphQLJSON from 'graphql-type-json';
 import Metatype from '../domain_objects/data_warehouse/ontology/metatype';
 import MetatypeRelationship from '../domain_objects/data_warehouse/ontology/metatype_relationship';
@@ -29,7 +29,6 @@ import EdgeRepository from '../data_access_layer/repositories/data_warehouse/dat
 import MetatypeRelationshipRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_repository';
 import NodeLeafRepository from '../data_access_layer/repositories/data_warehouse/data/node_leaf_repository';
 import OntologyVersionRepository from '../data_access_layer/repositories/data_warehouse/ontology/versioning/ontology_version_repository';
-import TypeTransformationMapper from '../data_access_layer/mappers/data_warehouse/etl/type_transformation_mapper';
 import {plainToClass} from "class-transformer";
 import Node from "../domain_objects/data_warehouse/data/node";
 import {Transform} from "stream";
@@ -39,8 +38,6 @@ import gql from "graphql-tag";
 import MetatypeRelationshipPair from "../domain_objects/data_warehouse/ontology/metatype_relationship_pair";
 import {isMainThread, Worker} from "worker_threads";
 import OntologyVersion from '../domain_objects/data_warehouse/ontology/versioning/ontology_version';
-
-const GRAPHQLSCHEMA: Map<string, GraphQLSchema> = new Map<string, GraphQLSchema>();
 
 // GraphQLSchemaGenerator takes a container and generates a valid GraphQL schema for all contained metatypes. This will
 // allow users to query and filter data based on node type, the various properties that type might have, and other bits
@@ -69,11 +66,25 @@ export default class GraphQLRunner {
                 const schema = await this.ForContainer(containerID, options)
                 if(schema.isError) return Promise.reject(schema.error)
 
-                return graphql({
+                const queryResult = await graphql({
                     schema: schema.value,
                     source: query.query,
                     variableValues: query.variables
                 })
+
+                // override default error message with something more useful
+                if (queryResult.errors) {
+                    const errors = queryResult.errors.map((error: any) => error.message as string)
+                    const mtIndex = errors.findIndex(e => e === 'Cannot query field "metatypes" on type "Query".')
+                    const relIndex = errors.findIndex(e => e === 'Cannot query field "relationships" on type "Query".')
+                    if (mtIndex !== -1) {
+                        queryResult.errors[mtIndex].message = `Cannot query metatype(s) "${options.metatypes.join(', ')}" on type "metatypes"`
+                    } else if (relIndex !== -1) {
+                        queryResult.errors[relIndex].message = `Cannot query relationship(s) "${options.relationships.join(', ')}" on type "relationships"`
+                    }
+                }
+
+                return queryResult
             } else {
                 options.fullSchema = true;
                 const worker = new Worker(__dirname+'/schema_worker.js', {
