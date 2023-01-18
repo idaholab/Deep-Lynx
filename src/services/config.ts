@@ -231,8 +231,8 @@ export class Config {
 
         this._edge_insertion_backoff_multiplier = process.env.EDGE_INSERTION_BACKOFF_MULTIPLIER
             ? parseInt(process.env.EDGE_INSERTION_BACKOFF_MULTIPLIER, 10)
-            : 5;
-        this._edge_insertion_max_retry = process.env.EDGE_INSERTION_MAX_RETRY ? parseInt(process.env.EDGE_INSERTION_MAX_RETRY, 10) : 10;
+            : 300;
+        this._edge_insertion_max_retry = process.env.EDGE_INSERTION_MAX_RETRY ? parseInt(process.env.EDGE_INSERTION_MAX_RETRY, 10) : 5;
 
         this._rabbitmq_url = process.env.RABBITMQ_URL || 'amqp://localhost';
         this._azure_service_bus_connection_string = process.env.AZURE_SERVICE_BUS_CONNECTION_STRING || '';

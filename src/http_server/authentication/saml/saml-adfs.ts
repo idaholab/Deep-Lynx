@@ -46,6 +46,7 @@ export function SetSamlAdfs(app: express.Application) {
                 disableRequestedAuthnContext: true,
                 identifierFormat: null,
             },
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             (profile: any, done: any) => {
                 const storage = UserMapper.Instance;
 

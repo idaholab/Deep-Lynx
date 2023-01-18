@@ -2,6 +2,7 @@ import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
 import {EdgeQueueItem} from '../../../../domain_objects/data_warehouse/data/edge';
+import config from '../../../../services/config';
 
 const format = require('pg-format');
 
@@ -66,9 +67,9 @@ export default class EdgeQueueItemMapper extends Mapper {
     private createStatement(...items: EdgeQueueItem[]): string {
         const text = `INSERT INTO edge_queue_items(
                        edge,
-                       import_id, 
-                       next_attempt_at) VALUES %L RETURNING *`;
-        const values = items.map((item) => [item.edge, item.import_id, item.next_attempt_at]);
+                       import_id 
+                       ) VALUES %L RETURNING *`;
+        const values = items.map((item) => [item.edge, item.import_id]);
 
         return format(text, values);
     }
@@ -102,6 +103,9 @@ export default class EdgeQueueItemMapper extends Mapper {
     }
 
     public needRetriedStreamingStatement(): string {
-        return `SElECT * FROM edge_queue_items WHERE next_attempt_at < NOW() AT TIME ZONE 'utc'`;
+        // default to loading the latest first
+        return `SElECT * FROM edge_queue_items 
+         WHERE next_attempt_at < NOW() AT TIME ZONE 'utc' AND attempts <= ${config.edge_insertion_max_retries} 
+         ORDER BY created_at DESC`;
     }
 }
