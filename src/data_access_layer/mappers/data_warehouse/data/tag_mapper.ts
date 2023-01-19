@@ -1,10 +1,15 @@
+// Common Classes
 import Result from '../../../../common_classes/result';
-import Mapper from '../../mapper';
-import {PoolClient, QueryConfig} from 'pg';
+
+// Domain Objects
 import Tag from '../../../../domain_objects/data_warehouse/data/tag';
 
-const format = require('pg-format');
+// Mapper
+import Mapper from '../../mapper';
 
+// PostgreSQL
+import {PoolClient, QueryConfig} from 'pg';
+const format = require('pg-format');
 
 export default class TagMapper extends Mapper {
     public resultClass = Tag;

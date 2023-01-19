@@ -1,18 +1,27 @@
-import RepositoryInterface, {Repository} from '../../repository';
-import Tag from '../../../../domain_objects/data_warehouse/data/tag';
+// Common Classes
 import Result from '../../../../common_classes/result';
-import NodeMapper from '../../../mappers/data_warehouse/data/node_mapper';
-import {PoolClient} from 'pg';
-import {User} from '../../../../domain_objects/access_management/user';
-import Logger from '../../../../services/logger';
+
+// Domain Objects
 import Node from '../../../../domain_objects/data_warehouse/data/node';
 import Edge from '../../../../domain_objects/data_warehouse/data/edge';
 import File from '../../../../domain_objects/data_warehouse/data/file';
+import Tag from '../../../../domain_objects/data_warehouse/data/tag';
+import {User} from '../../../../domain_objects/access_management/user';
+
+// Logger
+import Logger from '../../../../services/logger';
+
+// Mapper
 import TagMapper from '../../../mappers/data_warehouse/data/tag_mapper';
+
+// PostgreSQL
+import {PoolClient} from 'pg';
+
+// Repository
+import RepositoryInterface, {Repository} from '../../repository';
 
 export default class TagRepository extends Repository implements RepositoryInterface<Tag> {
     #mapper: TagMapper = TagMapper.Instance;
-    #nodeMapper: NodeMapper = NodeMapper.Instance;
     
     constructor() {
         super(TagMapper.viewName)

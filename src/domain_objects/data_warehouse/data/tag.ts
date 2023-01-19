@@ -1,9 +1,14 @@
-import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_domain_class';
+// Class Validators
 import {IsObject, IsOptional, IsString, ValidateIf} from 'class-validator';
+
+// Common Classes
+import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_domain_class';
+
+// Ontology
 import Container from '../ontology/container';
 
 /*
-    File represents a file record in the Deep Lynx database and the various
+    Tag represents a tag record in the Deep Lynx database and the various
     validations required for said record to be considered valid.
  */
 export default class Tag extends BaseDomainClass {
