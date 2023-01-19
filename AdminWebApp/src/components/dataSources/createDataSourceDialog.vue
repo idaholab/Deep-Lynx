@@ -29,8 +29,7 @@
                   @input="selectAdapter"
                   :label="$t('createDataSource.sourceType')"
                   required
-              >
-              </v-select>
+              />
 
               <div v-if="newDataSource.adapter_type === 'standard'">
                 <p><b>{{$t('createDataSource.description')}}</b></p>
@@ -98,7 +97,7 @@
 
               </div>
 
-                <div v-if="newDataSource.adapter_type === 'jazz'">
+              <div v-if="newDataSource.adapter_type === 'jazz'">
                 <p><b>{{$t('createDataSource.description')}}</b></p>
                 <p>{{$t('createDataSource.jazzDescription')}}</p>
                   <v-text-field
@@ -155,7 +154,7 @@
                       :label="$t('createDataSource.secure')"
                       required
                   ></v-checkbox>
-                </div>
+              </div>
 
               <div v-if="newDataSource.adapter_type === 'aveva'">
                 <p><b>{{$t('createDataSource.description')}}</b></p>
@@ -326,6 +325,58 @@
                         type="number"
                     ></v-text-field>
 
+                  </v-col>
+                </v-row>
+              </div>
+
+              <div v-if="newDataSource.adapter_type === 'p6'">
+                <v-select v-if="newDataSource.adapter_type === 'p6' && container.config.configured_data_sources.length > 0"
+                  :items="p6configOptions()"
+                  @input="selectP6config"
+                  :label="$t('createDataSource.customP6config')"
+                />
+                <p><b>{{($t('createDataSource.description'))}}</b></p>
+                <p>{{$t('createDataSource.p6Description')}}</p>
+
+                <v-row>
+                  <v-col :cols="6">
+                    <v-text-field
+                      :disabled="p6preset.endpoint"
+                      v-model="p6Config.endpoint"
+                      :label="$t('createDataSource.p6endpoint')"
+                      :rules="[v => !!v || $t('dataMapping.required')]"
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col :cols="6">
+                    <v-text-field
+                      :disabled="p6preset.projectID"
+                      v-model="p6Config.projectID"
+                      :label="$t('createDataSource.p6projectID')"
+                      :rules="[v => !!v || $t('dataMapping.required')]"
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
+
+                <v-row>
+                  <v-col :cols="6">
+                    <v-text-field
+                      v-model="p6Config.username"
+                      :label="$t('createDataSource.username')"
+                      :type="p6preset.username ? 'password' : 'text'"
+                      :rules="[v => !!v || $t('dataMapping.required')]"
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col :cols="6">
+                    <v-text-field
+                      v-model="p6Config.password"
+                      :label="$t('createDataSource.password')"
+                      :append-icon="(hideP6pass ? 'mdi-eye' : 'mdi-eye-off')"
+                      @click:append="() => (hideP6pass = !hideP6pass)"
+                      :type="hideP6pass ? 'password' : 'text'"
+                      :rules="[v => !!v || $t('dataMapping.required')]"
+                    ></v-text-field>
                   </v-col>
                 </v-row>
               </div>
@@ -578,9 +629,11 @@ import {
   DefaultAvevaDataSourceConfig,
   DefaultHttpDataSourceConfig,
   DefaultJazzDataSourceConfig,
+  DefaultP6DataSourceConfig,
   DefaultStandardDataSourceConfig, DefaultTimeseriesDataSourceConfig,
   HttpDataSourceConfig,
   JazzDataSourceConfig,
+  P6DataSourceConfig,
   StandardDataSourceConfig,
   TimeseriesDataSourceConfig
 } from "@/api/types";
@@ -600,6 +653,12 @@ export default class CreateDataSourceDialog extends Vue {
   valueNodes = []
   dataRetentionDays = 30
   expandedTimeSeries: any[] = []
+  container: ContainerT | undefined = undefined;
+  p6preset = {
+    endpoint: false,
+    projectID: false,
+  }
+  hideP6pass = true
 
   newDataSource: DataSourceT = {
     name: "",
@@ -613,6 +672,7 @@ export default class CreateDataSourceDialog extends Vue {
   httpConfig: HttpDataSourceConfig = DefaultHttpDataSourceConfig()
   jazzConfig: JazzDataSourceConfig = DefaultJazzDataSourceConfig()
   avevaConfig: AvevaDataSourceConfig = DefaultAvevaDataSourceConfig()
+  p6Config: P6DataSourceConfig = DefaultP6DataSourceConfig()
   timeseriesConfig:TimeseriesDataSourceConfig = DefaultTimeseriesDataSourceConfig();
 
   dataTypes = [
@@ -644,6 +704,10 @@ export default class CreateDataSourceDialog extends Vue {
     {text: ">=", value: ">=", requiresValue: true},
   ]
 
+  beforeMount() {
+    this.container = this.$store.getters.activeContainer;
+  }
+
   adapterTypes() {
     const types =  [
       {text: this.$t('createDataSource.standard'), value: 'standard', description: this.$t('createDataSource.standardDescription')},
@@ -651,12 +715,11 @@ export default class CreateDataSourceDialog extends Vue {
       {text: this.$t('createDataSource.jazz'), value: 'jazz', description: this.$t('createDataSource.jazzDescription')},
       {text: this.$t('createDataSource.aveva'), value: 'aveva', description: this.$t('createDataSource.avevaDescription')},
       {text: this.$t('createDataSource.timeseries'), value: 'timeseries', description: this.$t('createDataSource.timeseriesDescription')},
+      {text: this.$t('createDataSource.p6'), value: 'p6', description: this.$t('createDataSource.p6description')}
     ]
 
-    const container: ContainerT = this.$store.getters.activeContainer;
-
-    if(container.config.enabled_data_sources && container.config.enabled_data_sources.length > 0) {
-      return types.filter(t => container.config.enabled_data_sources.find(s => s === t.value))
+    if(this.container!.config.enabled_data_sources && this.container!.config.enabled_data_sources.length > 0) {
+      return types.filter(t => this.container!.config.enabled_data_sources.find(s => s === t.value))
     } else {
       return types
     }
@@ -703,9 +766,29 @@ export default class CreateDataSourceDialog extends Vue {
     ]
   }
 
-
-    selectAdapter(adapter: string) {
+  selectAdapter(adapter: string) {
     this.newDataSource.adapter_type = adapter
+  }
+
+  p6configOptions() {
+    const options: string[] = ['Default P6 Adapter'];
+    this.container?.config.configured_data_sources?.forEach((source) => {
+      options.push(source.name)
+    })
+    return options;
+  }
+
+  selectP6config(configName: string) {
+    if (configName !== 'Default P6 Adapter') {
+      const index = this.container?.config.configured_data_sources?.findIndex(config => config.name === configName)
+      const selectedConfig = this.container!.config.configured_data_sources![index!] as P6DataSourceConfig
+      // Using object assign here otherwise some changes to the source will also be made to the config template
+      Object.assign(this.p6Config, selectedConfig)
+    } else {
+      this.p6Config = DefaultP6DataSourceConfig()
+    }
+    this.p6preset.endpoint = this.p6Config.endpoint ? true : false;
+    this.p6preset.projectID = this.p6Config.projectID ? true : false;
   }
 
   selectAuthMethodHttp(authMethod: string) {
@@ -751,6 +834,11 @@ export default class CreateDataSourceDialog extends Vue {
         break;
       }
 
+      case "p6": {
+        this.newDataSource.config = this.p6Config
+        break;
+      }
+
       case "timeseries": {
         this.newDataSource.config = this.timeseriesConfig;
         this.newDataSource.active = true;
@@ -791,11 +879,16 @@ export default class CreateDataSourceDialog extends Vue {
       active: false,
       config: undefined
     }
+    this.p6preset = {
+      endpoint: false,
+      projectID: false,
+    }
 
     this.standardConfig = DefaultStandardDataSourceConfig()
     this.httpConfig = DefaultHttpDataSourceConfig()
     this.jazzConfig = DefaultJazzDataSourceConfig()
     this.avevaConfig = DefaultAvevaDataSourceConfig()
+    this.p6Config = DefaultP6DataSourceConfig()
   }
 
   validColumnName(index: any, value: any) {

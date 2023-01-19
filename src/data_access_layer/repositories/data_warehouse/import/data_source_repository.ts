@@ -9,10 +9,12 @@ import {PoolClient} from 'pg';
 import ImportMapper from '../../../mappers/data_warehouse/import/import_mapper';
 import JazzDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/jazz_data_source_impl';
 import AvevaDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/aveva_data_source';
+import P6DataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/p6_data_source';
 import {DataSource} from '../../../../interfaces_and_impl/data_warehouse/import/data_source';
 import ImportRepository from './import_repository';
 import TimeseriesDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/timeseries_data_source';
 import File from '../../../../domain_objects/data_warehouse/data/file';
+import Logger from '../../../../services/logger';
 import {plainToClass} from 'class-transformer';
 
 /*
@@ -33,7 +35,6 @@ export default class DataSourceRepository extends Repository implements Reposito
     async delete(t: DataSource, options?: DeleteOptions): Promise<Result<boolean>> {
         if (!t.DataSourceRecord || !t.DataSourceRecord.id)
             return Promise.resolve(Result.Failure(`cannot delete data source: no data source record or record lacking id`));
-
         const hasImports = await ImportMapper.Instance.ExistForDataSource(t.DataSourceRecord.id);
 
         if (options) {
@@ -76,8 +77,14 @@ export default class DataSourceRepository extends Repository implements Reposito
         let savedRecord: DataSourceRecord;
 
         if (toSave.id) {
+            // check for unique source name within container scope
+            const sources = await new DataSourceRepository()
+                .where().containerID('eq', toSave.container_id)
+                .and().id('neq', toSave.id).list();
+            if (sources.isError) return Promise.resolve(Result.Failure(`unable to list data sources for container ${sources.error}`));
+
             // to allow partial updates we must first fetch the original object
-            const original = await this.findByID(toSave.id);
+            const original = await this.findByID(toSave.id!);
             if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
 
             const originalToSave = await original.value.ToSave();
@@ -89,6 +96,10 @@ export default class DataSourceRepository extends Repository implements Reposito
 
             savedRecord = updated.value;
         } else {
+            // check for unique source name within container scope
+            const sources = await new DataSourceRepository().where().containerID('eq', toSave.container_id).list();
+            if (sources.isError) return Promise.resolve(Result.Failure(`unable to list data sources for container ${sources.error}`));
+
             // we need a transaction so that a hypertable failure can delete data source as well
             const transaction = await this.#mapper.startTransaction();
 
@@ -165,7 +176,6 @@ export default class DataSourceRepository extends Repository implements Reposito
         if (t.DataSourceRecord && t.DataSourceRecord.id) {
             const set = await this.#mapper.SetActive(t.DataSourceRecord.id, user.id!);
             if (set.isError) return Promise.resolve(Result.Pass(set));
-
             return Promise.resolve(Result.Success(true));
         } else return Promise.resolve(Result.Failure(`data source's record must be instantiated and have an id`));
     }
@@ -310,7 +320,7 @@ export default class DataSourceRepository extends Repository implements Reposito
 export class DataSourceFactory {
     fromDataSourceRecord(
         sourceRecord: DataSourceRecord,
-    ): StandardDataSourceImpl | HttpDataSourceImpl | JazzDataSourceImpl | AvevaDataSourceImpl | TimeseriesDataSourceImpl | undefined {
+    ): StandardDataSourceImpl | HttpDataSourceImpl | JazzDataSourceImpl | AvevaDataSourceImpl | TimeseriesDataSourceImpl | P6DataSourceImpl | undefined {
         switch (sourceRecord.adapter_type) {
             case 'http': {
                 return new HttpDataSourceImpl(sourceRecord);
@@ -331,6 +341,10 @@ export class DataSourceFactory {
 
             case 'aveva': {
                 return new AvevaDataSourceImpl(sourceRecord);
+            }
+
+            case 'p6': {
+                return new P6DataSourceImpl(sourceRecord);
             }
 
             case 'timeseries': {
