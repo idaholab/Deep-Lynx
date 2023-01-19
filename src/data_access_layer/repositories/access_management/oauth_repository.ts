@@ -178,7 +178,7 @@ export default class OAuthRepository extends Repository implements RepositoryInt
             if (!valid) return new Promise((resolve) => resolve(Result.Failure('invalid client')));
         }
 
-        const token = jwt.sign(classToPlain(UserToReturnUser(user.value)), Config.encryption_key_secret, {expiresIn: '720m'});
+        const token = jwt.sign(classToPlain(UserToReturnUser(user.value)), Config.encryption_key_secret, {expiresIn: '720m', algorithm: 'RS256'});
 
         return new Promise((resolve) => resolve(Result.Success(token)));
     }

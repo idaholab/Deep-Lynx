@@ -13,6 +13,7 @@ import {DataSource} from '../../../../interfaces_and_impl/data_warehouse/import/
 import ImportRepository from './import_repository';
 import TimeseriesDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/timeseries_data_source';
 import File from '../../../../domain_objects/data_warehouse/data/file';
+import {plainToClass} from 'class-transformer';
 
 /*
     DataSourceRepository contains methods for persisting and retrieving data sources
@@ -115,6 +116,43 @@ export default class DataSourceRepository extends Repository implements Reposito
         return Promise.resolve(Result.Success(true));
     }
 
+    async importDataSources(containerID: string, user: User, fileBuffer: Buffer): Promise<Result<string>> {
+        const jsonImport = JSON.parse(fileBuffer.toString('utf8').trim());
+
+        if (!('data_sources' in jsonImport)) {
+            return Promise.resolve(Result.Failure('Container export file does not contain all necessary sections for a data source export.'));
+        }
+
+        const currentDataSources = await this.where().containerID('eq', containerID).list();
+
+        for (const source of jsonImport.data_sources) {
+            if (!source.DataSourceRecord) {
+                return Promise.resolve(Result.Failure('Data source provided in import with invalid format. Please review.'));
+            }
+
+            const dataSourceRecord = plainToClass(DataSourceRecord, source.DataSourceRecord as object);
+
+            const dataSource = this.#factory.fromDataSourceRecord(dataSourceRecord);
+            if (!dataSource || !dataSource.DataSourceRecord) {
+                return Promise.resolve(Result.Failure('Unknown data source adapter type provided in export file.'));
+            }
+
+            const existingDataSource = currentDataSources.value.find((ds) => ds?.DataSourceRecord?.name === dataSource.DataSourceRecord!.name);
+            if (existingDataSource) {
+                dataSource.DataSourceRecord.id = existingDataSource.DataSourceRecord?.id;
+            } else {
+                dataSource.DataSourceRecord.id = undefined;
+            }
+
+            dataSource.DataSourceRecord.container_id = containerID;
+            dataSource.DataSourceRecord.active = false;
+
+            void (await this.save(dataSource, user));
+        }
+
+        return Promise.resolve(Result.Success('Successful data source import.'));
+    }
+
     // setting a data source to inactive will automatically stop the process loop
     async setInactive(t: DataSource, user: User): Promise<Result<boolean>> {
         if (t.DataSourceRecord && t.DataSourceRecord.id) {
@@ -145,14 +183,11 @@ export default class DataSourceRepository extends Repository implements Reposito
     }
 
     async reprocess(dataSourceID: string): Promise<Result<boolean>> {
-        const result = await this.#mapper.ReprocessDataSource(dataSourceID);
-        if (result.isError) return Promise.resolve(Result.Pass(result));
-
-        // set all imports to processing status
-        const imports = await this.#importRepo.where().dataSourceID('eq', dataSourceID).list();
+        // reprocess each import associated with this data source from oldest to newest
+        const imports = await this.#importRepo.where().dataSourceID('eq', dataSourceID).list({sortBy: 'created_at'});
         if (!imports.isError) {
             imports.value.forEach((i) => {
-                void this.#importRepo.setStatus(i.id!, 'processing', 'reprocessing completed');
+                void this.#importRepo.reprocess(i.id!);
             });
         }
 
@@ -211,6 +246,18 @@ export default class DataSourceRepository extends Repository implements Reposito
         if (results.isError) return Promise.resolve(Result.Pass(results));
 
         return Promise.resolve(Result.Success(results.value.map((record) => this.#factory.fromDataSourceRecord(record))));
+    }
+
+    async listForExport(containerID: string, options?: QueryOptions, transaction?: PoolClient): Promise<Result<(DataSource | undefined)[]>> {
+        const results = await this.where().containerID('eq', containerID).and().archived(false).list(options, transaction);
+
+        const dataSources = results.value.map((source) => {
+            return source?.ToExport()!;
+        });
+
+        const dsResults = await Promise.all(dataSources);
+
+        return Promise.resolve(Result.Success(dsResults.map((record) => this.#factory.fromDataSourceRecord(record))));
     }
 
     // you will see errors chaining this method with any of the query functions except timeseries query. I debated throwing

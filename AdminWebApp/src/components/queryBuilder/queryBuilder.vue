@@ -63,13 +63,14 @@
                 <v-col class="d-flex flex-row">
                   <v-spacer />
                   <div class="mr-5">
-                    <v-select
+                    <v-combobox
                       :items="limitOptions"
                       v-model="limit"
                       :label="$t('queryBuilder.recordLimit')"
+                      @change="setLimit"
                       style="max-width: 90px;"
                     >
-                    </v-select>
+                    </v-combobox>
                   </div>
                   <div>
                     <v-btn v-if="!results" @click="submitQuery" style="margin-top: 15px">
@@ -134,9 +135,15 @@
                     <span>Need Help?</span>
                   </v-tooltip>
                 </v-col>
+                <v-spacer />
+                <v-btn @click="submitRawQuery" style="margin-top: 15px; margin-right: 15px">
+                  <v-progress-circular indeterminate v-if="loading"></v-progress-circular>
+                  <span v-if="!loading">{{$t('queryBuilder.runQuery')}}</span>
+                </v-btn>
               </v-row>
+              
 
-              <v-row>
+              <v-row style="margin-bottom:15px">
                 <v-col :cols="6">
                   <v-card style="height: 100%">
                   <textarea v-observe-visibility="initCodeMirror" v-model="metatypeSampleQuery" ref="queryEditor"></textarea>
@@ -156,17 +163,7 @@
                   </v-card>
                 </v-col>
               </v-row>
-              <v-row>
-                <v-col class="d-flex flex-row">
-                  <v-spacer />
-                  <div class="mb-5" >
-                    <v-btn @click="submitRawQuery" style="margin-top: 15px">
-                      <v-progress-circular indeterminate v-if="loading"></v-progress-circular>
-                      <span v-if="!loading">{{$t('queryBuilder.runQuery')}}</span>
-                    </v-btn>
-                  </div>
-                </v-col>
-              </v-row>
+
             </v-tab-item>
           </v-tabs-items>
         </v-card>
@@ -188,6 +185,7 @@ import {NodeT} from "@/api/types";
 import { buildSchema } from 'graphql';
 import {mdiInformation} from "@mdi/js";
 
+// @ts-ignore - needed because there are no declaration files here
 import CodeMirror from 'codemirror';
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/addon/hint/show-hint';
@@ -207,6 +205,7 @@ export default class QueryBuilder extends Vue {
   loading = false
   errorMessage = ""
   queryParts: QueryPart[] = []
+  query: string | null = null
   previousResults: ResultSet[] = []
   results: ResultSet | null = null
   limit = 100
@@ -512,6 +511,7 @@ relationshipSampleQuery =
 
   resetQuery() {
     this.queryParts = []
+    this.query = null
     this.results = null
 
     // reset raw query if applicable
@@ -522,13 +522,20 @@ relationshipSampleQuery =
     }
   }
 
+  setLimit(limit: number) {
+    this.limit = limit
+  }
+
   submitQuery() {
     const id = uuidv4()
     this.loading = true
 
-    this.results = {id, query: this.queryParts, nodes: []}
+    this.results = {id, queryParts: this.queryParts, nodes: []}
 
-    this.$client.submitGraphQLQuery(this.containerID, this.buildQuery())
+    const query = this.buildQuery()
+    this.query = query.query
+
+    this.$client.submitGraphQLQuery(this.containerID, query)
         .then((results: any) => {
           if(results.errors) {
             this.errorMessage = results.errors[0].message ? 
@@ -538,12 +545,12 @@ relationshipSampleQuery =
 
           this.previousResults.push({
             id: id,
-            query: JSON.parse(JSON.stringify(this.queryParts)),
+            queryParts: JSON.parse(JSON.stringify(this.queryParts)),
             nodes: results.data.nodes,
             ran: new Date()
           })
 
-          this.results = {id, query: this.queryParts, nodes: results.data.nodes}
+          this.results = {id, queryParts: this.queryParts, query: query.query, nodes: results.data.nodes}
           this.$emit('results', this.results)
         })
         .catch(e => {
@@ -555,7 +562,8 @@ relationshipSampleQuery =
 
   setResult(result: ResultSet) {
     this.results = result
-    this.queryParts = result.query
+    this.queryParts = result.queryParts
+    this.query = result.query || null
     this.activeTab = 'queryBuilder'
     this.$emit('results', this.results)
   }
@@ -569,16 +577,27 @@ relationshipSampleQuery =
       switch(part.componentName) {
         case('MetatypeFilter'): {
           if(part.operator === 'in') {
-            args.push(`metatype_id:{operator: "${part.operator}", value: [${part.value}]} `)
+            if(part.options!.limitOntology){
+              args.push(`metatype_id:{operator: "${part.operator}", value: [${part.value}]} `)
+            } else {
+              // explicitly wrap uuids in quotes to prevent parsing errors
+              const uuids: string[] = [];
+              Array(part.options!.uuids).forEach((uuid) => { uuids.push(`"${uuid}"`) })
+              args.push(`metatype_uuid:{operator: "${part.operator}", value: [${uuids}]} `)
+            }
           } else {
-            args.push(`metatype_id:{operator: "${part.operator}", value: "${part.value}"} `)
+            if(part.options!.limitOntology) {
+              args.push(`metatype_id:{operator: "${part.operator}", value: "${part.value}"} `)
+            } else {
+              args.push(`metatype_uuid:{operator: "${part.operator}", value: "${part.options!.uuids}"}`)
+            }
           }
 
           // we make the assumption that this is a property filter
           if(part.nested!.length > 0) {
             part.nested!.forEach(nested => {
               if(nested.operator === 'in') {
-                propertyArgs.push(`{key: "${nested.property}", value: [${nested.value}], operator: "${nested.operator}"},`)
+                propertyArgs.push(`{key: "${nested.property}", value: "${nested.value.join(",")}", operator: "${nested.operator}"},`)
               } else {
                 propertyArgs.push(`{key: "${nested.property}", value: "${nested.value}", operator: "${nested.operator}"},`)
               }
@@ -607,7 +626,7 @@ relationshipSampleQuery =
 
         case('OriginalIDFilter'): {
           if(part.operator === 'in') {
-            args.push(`original_id:{operator: "${part.operator}", value: [${part.value}]} `)
+            args.push(`original_id:{operator: "${part.operator}", value: "${part.value.join(",")}"} `)
           } else {
             args.push(`original_id:{operator: "${part.operator}", value: "${part.value}"} `)
           }
@@ -650,11 +669,13 @@ export type QueryPart = {
   operator: string;
   value: any;
   nested?: QueryPart[];
+  options?: {[key: string]: any}
 }
 
 export type ResultSet = {
   id: string;
-  query: QueryPart[];
+  queryParts: QueryPart[];
+  query?: string;
   nodes: NodeT[];
   ran?: Date;
 }

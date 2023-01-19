@@ -228,6 +228,34 @@
           <v-list-item
             two-line
             link
+            v-if="$auth.Auth('ontology', 'read', containerID)"
+            @click="setActiveComponent('container-export')"
+            :input-value="currentMainComponent === 'ContainerExport'"
+            :ripple="{class:'list-ripple'}"
+          >
+            <v-list-item-content>
+              <v-list-item-title>{{$t("home.containerExport")}}</v-list-item-title>
+              <v-list-item-subtitle>{{$t("home.containerExportDescription")}}</v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
+
+          <v-list-item
+            two-line
+            link
+            v-if="$auth.Auth('ontology', 'write', containerID)"
+            @click="setActiveComponent('container-import')"
+            :input-value="currentMainComponent === 'ContainerImport'"
+            :ripple="{class:'list-ripple'}"
+          >
+            <v-list-item-content>
+              <v-list-item-title>{{$t("home.containerImport")}}</v-list-item-title>
+              <v-list-item-subtitle>{{$t("home.containerImportDescription")}}</v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
+
+          <v-list-item
+            two-line
+            link
             v-if="$auth.Auth('users', 'write', containerID)"
             @click="setActiveComponent('settings')"
             :input-value="currentMainComponent === 'Settings'"
@@ -349,7 +377,8 @@
         <v-container class="justify-end">
           <span class="d-block text-h6" style="margin-bottom: 10px">{{$t('home.bugs')}} <a href="mailto:GRP-deeplynx-team@inl.gov">{{$t('home.contactUs')}}</a> </span>
           <span class="d-block text-h6" style="margin-bottom: 10px">{{$t('containerSelect.needHelp')}} <a :href="helpLink()">{{$t('containerSelect.wiki')}}</a> </span>
-          <span class="d-block text-h6">&copy; {{ new Date().getFullYear() }} Idaho National Laboratory</span>
+          <span class="d-block text-h6" style="margin-bottom: 10px">&copy; {{ new Date().getFullYear() }} Idaho National Laboratory</span>
+          <span class="d-block text-h6" v-if="$auth.IsAdmin() && stats ">{{ stats.version }}</span>
         </v-container>
       </template>
     </v-navigation-drawer>
@@ -369,6 +398,62 @@
       <!-- Else: Dashboard Landing Page -->
       <v-container fluid v-else>
         <v-row>
+
+            <v-col :cols="12" :md="6" :lg="6" v-if="$auth.IsAdmin()">
+              <v-card class="d-flex flex-column height-full">
+                <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('home.migrations')}}</v-card-title>
+                <v-card-text>
+                  <v-col :cols="12"><json-viewer :value="stats.statistics.migrations"></json-viewer></v-col>
+                </v-card-text>
+              </v-card>
+            </v-col>
+
+            <v-col :cols="12" :md="6" :lg="6" v-if="$auth.IsAdmin()">
+              <v-card class="d-flex flex-column height-full">
+                <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('home.recordCounts')}}</v-card-title>
+                <v-card-text>
+                  <v-list disabled>
+                    <v-list-item-group
+                        color="primary"
+                    >
+                      <v-list-item
+                          v-for="(item, i) in Object.keys(stats.statistics)"
+                          :key="i"
+                      >
+                        <v-list-item-content v-if="item !== 'migrations'">
+                          <p>{{item}}</p>
+                          {{stats.statistics[item]}}
+                        </v-list-item-content>
+                      </v-list-item>
+                    </v-list-item-group>
+                  </v-list>
+                </v-card-text>
+              </v-card>
+            </v-col>
+
+          <v-col :cols="12" :md="6" :lg="6" v-if="$auth.IsAdmin()">
+            <v-card class="d-flex flex-column height-full">
+              <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('home.longRunningTransactions')}}</v-card-title>
+              <v-data-table
+                  :headers="transactionHeaders()"
+                  :items="stats.long_running_transactions"
+              ></v-data-table>
+              <v-card-text>
+              </v-card-text>
+            </v-card>
+          </v-col>
+
+          <v-col :cols="12" :md="6" :lg="6" v-if="$auth.IsAdmin() && stats.mean_execution_time">
+            <v-card class="d-flex flex-column height-full">
+              <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('home.meanExecutionTime')}}</v-card-title>
+              <v-data-table
+                  :headers="meanExecHeaders()"
+                  :items="stats.mean_execution_time"
+              ></v-data-table>
+              <v-card-text>
+              </v-card-text>
+            </v-card>
+          </v-col>
 
           <!-- Dashboard Landing Page Card: Welcome to Deep Lynx! -->
           <v-col cols="12" :md="6" :lg="6">
@@ -506,11 +591,13 @@ import LanguageSelect from "@/components/general/languageSelect.vue";
 import ContainerSelect from "@/components/ontology/containers/containerSelect.vue"
 import {TranslateResult} from "vue-i18n";
 import {UserT} from "@/auth/types";
-import {ContainerT, DataSourceT} from "@/api/types";
+import {ContainerT, DataSourceT, FullStatistics} from "@/api/types";
 import Config from "@/config";
 import OntologyVersioning from "@/views/OntologyVersioning.vue";
 import ContainerAlertBanner from "@/components/ontology/containers/containerAlertBanner.vue";
 import ServiceUsers from "@/views/ServiceUsers.vue";
+import ContainerExport from "@/views/ContainerExport.vue";
+import ContainerImport from "@/views/ContainerImport.vue";
 
 @Component({components: {
     ContainerSelect,
@@ -534,7 +621,9 @@ import ServiceUsers from "@/views/ServiceUsers.vue";
     Containers,
     OntologyVersioning,
     ContainerAlertBanner,
-    ServiceUsers
+    ServiceUsers,
+    ContainerExport,
+    ContainerImport
   }})
 export default class Home extends Vue {
   @Prop(String) readonly containerID: string | undefined
@@ -550,13 +639,39 @@ export default class Home extends Vue {
   argument: string = this.arguments
   componentKey = 0 // this is so we can force a re-render of certain components on component change - assign as key
   dataManagementEnabled = Config.dataManagementEnabled
+  stats: FullStatistics | null = null;
 
   metatypesCount = 0
   relationshipCount = 0
   dataSources: DataSourceT[] = []
 
+  transactionHeaders() {
+    return [
+      {text: this.$t('home.pid'), value: 'pid'},
+      {text: this.$t('home.userName'), value: 'usename'},
+      {text: this.$t('home.databaseName'), value: 'datname'},
+      {text: this.$t('home.query'), value: 'query'},
+      {text: this.$t('home.duration'), value: 'duration.milliseconds'},
+    ]
+  }
+
+  meanExecHeaders() {
+    return [
+      {text: this.$t('home.userID'), value: 'user_id'},
+      {text: this.$t('home.databaseID'), value: 'dbid'},
+      {text: this.$t('home.query'), value: 'query'},
+      {text: this.$t('home.meanExecTime'), value: 'mean_exec_time'},
+    ]
+  }
+
   beforeMount() {
     this.$store.dispatch('refreshCurrentOntologyVersions');
+
+    if(this.$auth.IsAdmin()) {
+      this.$client.retrieveStats()
+          .then(stats => this.stats = stats)
+          .catch(e => this.errorMessage = e)
+    }
   }
 
 
@@ -752,6 +867,20 @@ export default class Home extends Vue {
         this.currentMainComponent = "ServiceUsers"
         this.componentName = this.$t('home.serviceUsers')
         this.$router.replace(`/containers/${this.containerID}/service-users`)
+        break;
+      }
+
+      case "container-export": {
+        this.currentMainComponent = "ContainerExport"
+        this.componentName = this.$t('home.containerExport')
+        this.$router.replace(`/containers/${this.containerID}/container-export`)
+        break;
+      }
+
+      case "container-import": {
+        this.currentMainComponent = "ContainerImport"
+        this.componentName = this.$t('home.containerImport')
+        this.$router.replace(`/containers/${this.containerID}/container-import`)
         break;
       }
 

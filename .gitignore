@@ -21,3 +21,7 @@ profile-logs
 /src/tests/test-data.json
 /src/tests/test-data.csv
 /src/tests/private-key.pem
+/NodeLibraries/dl-fast-load/target/
+/NodeLibraries/dl-fast-load/index.node
+/RedisLoader/target/
+/RedisLoader/RedisLoader.iml

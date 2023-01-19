@@ -28,6 +28,7 @@ import {
     TypeMappingUpgradePayloadT,
     CreateServiceUserPayloadT,
     ServiceUserPermissionSetT,
+    FullStatistics,
 } from '@/api/types';
 import {RetrieveJWT} from '@/auth/authentication_service';
 import {UserT} from '@/auth/types';
@@ -55,12 +56,19 @@ export class Client {
         if (config) this.config = config;
     }
 
-    submitGraphQLQuery(containerID: string, query: any): Promise<any> {
+    retrieveStats(): Promise<FullStatistics> {
+        return this.get<FullStatistics>(`/stats`);
+    }
+
+    submitGraphQLQuery(containerID: string, query: any, pointInTime?: string): Promise<any> {
         if (query.query) {
             query.query = query.query.replace(/\n/g, '');
         }
 
-        return this.postRawReturn<any>(`/containers/${containerID}/data`, query);
+        const queryParams: {[key: string]: any} = {};
+        if (pointInTime) queryParams.pointInTime = pointInTime;
+
+        return this.postRawReturn<any>(`/containers/${containerID}/data`, query, queryParams);
     }
 
     submitNodeGraphQLQuery(containerID: string, nodeID: string, query: any): Promise<any> {
@@ -652,8 +660,11 @@ export class Client {
         return this.get<FileT[]>(`/containers/${containerID}/graphs/nodes/${nodeID}/files`);
     }
 
-    listEdgesForNodeIDs(containerID: string, nodeIDS: string[]): Promise<EdgeT[]> {
-        return this.post<EdgeT[]>(`/containers/${containerID}/graphs/nodes/edges`, {node_ids: nodeIDS});
+    listEdgesForNodeIDs(containerID: string, nodeIDS: string[], pointInTime?: string): Promise<EdgeT[]> {
+        const query: {[key: string]: any} = {};
+        if (pointInTime) query.pointInTime = pointInTime;
+
+        return this.post<EdgeT[]>(`/containers/${containerID}/graphs/nodes/edges`, {node_ids: nodeIDS}, query);
     }
 
     listDataSources(containerID: string, archived = false, timeseries = false): Promise<DataSourceT[]> {
@@ -882,10 +893,10 @@ export class Client {
         return this.get<UserContainerInviteT[]>(`/users/invites`);
     }
 
-    listOntologyVersions(containerID: string, {status, createdBy}: {status?: string; createdBy?: string}): Promise<OntologyVersionT[]> {
+    listOntologyVersions(containerID: string, {status, createdBy}: {status?: string | string[]; createdBy?: string}): Promise<OntologyVersionT[]> {
         const query: {[key: string]: any} = {};
 
-        if (status) query.status = status;
+        if (status) query.status = Array.isArray(status) ? status.join(',') : status;
         if (createdBy) query.createdBy = createdBy;
 
         return this.get<OntologyVersionT[]>(`/containers/${containerID}/ontology/versions`, query);

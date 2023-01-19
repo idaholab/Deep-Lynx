@@ -138,11 +138,14 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
         return Promise.resolve(Result.Success(true));
     }
 
-    async listForMetatype(metatypeID: string): Promise<Result<MetatypeKey[]>> {
+    async listForMetatype(metatypeID: string, fromView?: boolean): Promise<Result<MetatypeKey[]>> {
         const cached = await this.getCachedForMetatype(metatypeID);
         if (cached) {
             return Promise.resolve(Result.Success(cached));
         }
+
+        // we don't cache from the materialized view
+        if (fromView) return this.#mapper.ListFromViewForMetatype(metatypeID);
 
         const keys = await this.#mapper.ListForMetatype(metatypeID);
         if (keys.isError) return Promise.resolve(Result.Pass(keys));
@@ -152,7 +155,8 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
         return Promise.resolve(keys);
     }
 
-    async listForMetatypeIDs(metatype_ids: string[]): Promise<Result<MetatypeKey[]>> {
+    async listForMetatypeIDs(metatype_ids: string[], fromView?: boolean): Promise<Result<MetatypeKey[]>> {
+        if (fromView) return this.#mapper.ListFromViewForMetatypeIDs(metatype_ids);
         return this.#mapper.ListForMetatypeIDs(metatype_ids);
     }
 
@@ -178,6 +182,69 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
         }
 
         return Promise.resolve(undefined);
+    }
+
+    async saveFromJSON(metatypeKeys: MetatypeKey[]): Promise<Result<boolean>> {
+        return await this.#mapper.JSONCreate(metatypeKeys);
+    }
+
+    RefreshView(): Promise<Result<boolean>> {
+        return this.#mapper.RefreshView();
+    }
+
+    // this function is to be used only on container import. it does not refresh the keys view.
+    async importBulkSave(user: User, k: MetatypeKey[]): Promise<Result<boolean>> {
+        const toCreate: MetatypeKey[] = [];
+        const toUpdate: MetatypeKey[] = [];
+        const toReturn: MetatypeKey[] = [];
+
+        for (const key of k) {
+            const errors = await key.validationErrors();
+            if (errors) {
+                return Promise.resolve(Result.Failure(`some keys do not pass validation ${errors.join(',')}`));
+            }
+
+            // clear the parent metatype's cache
+            void this.#metatypeRepo.deleteCached(key.metatype_id!, key.container_id);
+            void this.deleteCachedForMetatype(key.metatype_id!, key.container_id);
+            key.id ? toUpdate.push(key) : toCreate.push(key);
+        }
+
+        // we run the bulk save in a transaction so that on failure we don't get
+        // stuck with partially updated items
+        const transaction = await this.#mapper.startTransaction();
+        if (transaction.isError) return Promise.resolve(Result.Failure(`unable to initiate db transaction`));
+
+        if (toUpdate.length > 0) {
+            const results = await this.#mapper.ImportBulkUpdate(user.id!, toUpdate, transaction.value);
+            if (results.isError) {
+                await this.#mapper.rollbackTransaction(transaction.value);
+                return Promise.resolve(Result.Pass(results));
+            }
+
+            toReturn.push(...results.value);
+        }
+
+        if (toCreate.length > 0) {
+            const results = await this.#mapper.ImportBulkCreate(user.id!, toCreate, transaction.value);
+            if (results.isError) {
+                await this.#mapper.rollbackTransaction(transaction.value);
+                return Promise.resolve(Result.Pass(results));
+            }
+            toReturn.push(...results.value);
+        }
+
+        const committed = await this.#mapper.completeTransaction(transaction.value);
+        if (committed.isError) {
+            void this.#mapper.rollbackTransaction(transaction.value);
+            return Promise.resolve(Result.Failure(`unable to commit changes to database ${committed.error}`));
+        }
+
+        toReturn.forEach((result, i) => {
+            Object.assign(k[i], result);
+        });
+
+        return Promise.resolve(Result.Success(true));
     }
 
     constructor() {

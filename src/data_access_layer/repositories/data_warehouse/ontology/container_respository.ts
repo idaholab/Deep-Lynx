@@ -1,5 +1,5 @@
 import RepositoryInterface from '../../repository';
-import Container, {ContainerAlert} from '../../../../domain_objects/data_warehouse/ontology/container';
+import Container, {ContainerAlert, ContainerExport} from '../../../../domain_objects/data_warehouse/ontology/container';
 import Result from '../../../../common_classes/result';
 import ContainerMapper from '../../../mappers/data_warehouse/ontology/container_mapper';
 import Authorization from '../../../../domain_objects/access_management/authorization/authorization';
@@ -9,7 +9,27 @@ import {plainToClass, serialize} from 'class-transformer';
 import Config from '../../../../services/config';
 import {User} from '../../../../domain_objects/access_management/user';
 import ContainerAlertMapper from '../../../mappers/data_warehouse/ontology/container_alert_mapper';
-import GraphQLRunner from '../../../../graphql/schema';
+import MetatypeMapper from '../../../mappers/data_warehouse/ontology/metatype_mapper';
+import OntologyVersionRepository from './versioning/ontology_version_repository';
+import MetatypeKeyMapper from '../../../mappers/data_warehouse/ontology/metatype_key_mapper';
+import MetatypeRelationshipMapper from '../../../mappers/data_warehouse/ontology/metatype_relationship_mapper';
+import MetatypeRelationshipKeyMapper from '../../../mappers/data_warehouse/ontology/metatype_relationship_key_mapper';
+import MetatypeRelationshipPairMapper from '../../../mappers/data_warehouse/ontology/metatype_relationship_pair_mapper';
+import fs from 'fs';
+import FileRepository from '../data/file_repository';
+import File from '../../../../domain_objects/data_warehouse/data/file';
+import OntologyVersion from '../../../../domain_objects/data_warehouse/ontology/versioning/ontology_version';
+import MetatypeRepository from './metatype_repository';
+import MetatypeRelationshipRepository from './metatype_relationship_repository';
+import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
+import MetatypeRelationship from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship';
+import MetatypeKeyRepository from './metatype_key_repository';
+import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
+import MetatypeRelationshipKey from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
+import MetatypeRelationshipKeyRepository from './metatype_relationship_key_repository';
+import MetatypeRelationshipPairRepository from './metatype_relationship_pair_repository';
+import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
+import TypeMappingRepository from '../etl/type_mapping_repository';
 
 /*
     ContainerRepository contains methods for persisting and retrieving a container
@@ -235,6 +255,228 @@ export default class ContainerRepository implements RepositoryInterface<Containe
 
     async activeAlertsForContainer(containerID: string): Promise<Result<ContainerAlert[]>> {
         return this.#alertMapper.ListUnacknowledgedForContainer(containerID);
+    }
+
+    // export ontology returns a File record with the information needed to download a .json file with the container's
+    // exported ontology. Eventually we'll convert this into an OWL file, for now, we just do a File.
+    async exportOntology(containerID: string, user: User, ontologyVersionID?: string): Promise<Result<ContainerExport>> {
+        const repo = new OntologyVersionRepository();
+
+        if (!ontologyVersionID) {
+            const result = await repo.where().containerID('eq', containerID).and().status('eq', 'published').list({sortDesc: true, sortBy: 'id', limit: 1});
+
+            if (!result.isError || result.value.length > 0) {
+                ontologyVersionID = result.value[0].id;
+            }
+        }
+
+        const metatypes = await MetatypeMapper.Instance.ListForExport(containerID, ontologyVersionID);
+        if (metatypes.isError) return Promise.resolve(Result.Pass(metatypes));
+
+        const metatype_keys = await MetatypeKeyMapper.Instance.ListForExport(containerID, ontologyVersionID);
+        if (metatype_keys.isError) return Promise.resolve(Result.Pass(metatype_keys));
+
+        const relationships = await MetatypeRelationshipMapper.Instance.ListForExport(containerID, ontologyVersionID);
+        if (relationships.isError) return Promise.resolve(Result.Pass(relationships));
+
+        const relationship_keys = await MetatypeRelationshipKeyMapper.Instance.ListForExport(containerID, ontologyVersionID);
+        if (relationship_keys.isError) return Promise.resolve(Result.Pass(relationship_keys));
+
+        const relationship_pairs = await MetatypeRelationshipPairMapper.Instance.ListForExport(containerID, ontologyVersionID);
+        if (relationship_pairs.isError) return Promise.resolve(Result.Pass(relationship_pairs));
+
+        return Promise.resolve(
+            Result.Success(
+                new ContainerExport({
+                    version: 1, // hardcoded for a reason!
+                    metatypes: metatypes.value,
+                    metatype_keys: metatype_keys.value,
+                    relationships: relationships.value,
+                    relationship_keys: relationship_keys.value,
+                    relationship_pairs: relationship_pairs.value,
+                }),
+            ),
+        );
+    }
+
+    async importOntology(containerID: string, user: User, fileBuffer: Buffer): Promise<Result<string>> {
+        // verify the expected ontology elements are present in the supplied file
+        const jsonImport = JSON.parse(fileBuffer.toString('utf8').trim());
+
+        if (
+            !('metatypes' in jsonImport) ||
+            !('metatype_keys' in jsonImport) ||
+            !('relationships' in jsonImport) ||
+            !('relationship_keys' in jsonImport) ||
+            !('relationship_pairs' in jsonImport)
+        ) {
+            return Promise.resolve(Result.Failure('Container export file does not contain all necessary sections for an ontology export.'));
+        }
+
+        const ontologyVersionRepo = new OntologyVersionRepository();
+        let oldOntologyVersionID;
+
+        const ontVersionResult = await ontologyVersionRepo
+            .where()
+            .containerID('eq', containerID)
+            .and()
+            .status('eq', 'published')
+            .list({sortDesc: true, sortBy: 'id', limit: 1});
+
+        if (!ontVersionResult.isError && ontVersionResult.value.length > 0) {
+            oldOntologyVersionID = ontVersionResult.value[0].id;
+        } else {
+            // look for ontology versions with a ready status and use the latest. if none found, return an error
+            const readyVersions = await ontologyVersionRepo
+                .where()
+                .containerID('eq', containerID)
+                .and()
+                .status('eq', 'ready')
+                .list({sortDesc: true, sortBy: 'id', limit: 1});
+
+            if (!readyVersions.isError && readyVersions.value.length > 0) {
+                oldOntologyVersionID = readyVersions.value[0].id;
+            } else {
+                return Promise.resolve(
+                    Result.Failure(`No ontology version with a status of published or ready was found for container ID ${containerID}. 
+                    Please create one to enable ontology import.`),
+                );
+            }
+        }
+
+        // create new ontology version
+        const ontologyVersion = new OntologyVersion({
+            container_id: containerID,
+            name: `Container Import - ${new Date().toDateString()}`,
+            description: 'Created from imported container file',
+            status: 'generating',
+        });
+
+        const newVersion = await ontologyVersionRepo.save(ontologyVersion, user);
+
+        if (newVersion.isError) {
+            return Promise.resolve(Result.Failure('Unable to create new ontology version.'));
+        }
+
+        const newVersionID = ontologyVersion.id;
+
+        // create metatypes and relationships
+        const metatypes: Metatype[] = [];
+
+        // add needed fields to metatypes
+        jsonImport.metatypes.forEach((metatype: any) => {
+            metatype.container_id = containerID;
+            metatype.created_by = user.id!;
+            metatype.modified_by = user.id!;
+            metatype.ontology_version = newVersionID!;
+            metatypes.push(metatype);
+        });
+        const metatypeRepo = new MetatypeRepository();
+        void (await metatypeRepo.saveFromJSON(metatypes));
+
+        const relationships: MetatypeRelationship[] = [];
+
+        // add needed fields to relationships
+        jsonImport.relationships.forEach((relationship: any) => {
+            relationship.container_id = containerID;
+            relationship.created_by = user.id!;
+            relationship.modified_by = user.id!;
+            relationship.ontology_version = parseInt(newVersionID!, 10);
+            relationships.push(relationship);
+        });
+        const relationshipRepo = new MetatypeRelationshipRepository();
+        void (await relationshipRepo.saveFromJSON(relationships));
+
+        // create keys and relationship pairs
+        const metatypeKeys: MetatypeKey[] = [];
+        jsonImport.metatype_keys.forEach((key: any) => {
+            key.container_id = containerID;
+            key.created_by = user.id!;
+            key.modified_by = user.id!;
+            metatypeKeys.push(key);
+        });
+        const metatypeKeyRepo = new MetatypeKeyRepository();
+        void (await metatypeKeyRepo.saveFromJSON(metatypeKeys));
+
+        // refresh metatype key view
+        const mKeyMapper = new MetatypeKeyMapper();
+        void mKeyMapper.RefreshView();
+
+        const relationshipKeys: MetatypeRelationshipKey[] = [];
+        jsonImport.relationship_keys.forEach((key: any) => {
+            key.container_id = containerID;
+            key.created_by = user.id!;
+            key.modified_by = user.id!;
+            relationshipKeys.push(key);
+        });
+        const relationshipKeyRepo = new MetatypeRelationshipKeyRepository();
+        void (await relationshipKeyRepo.saveFromJSON(relationshipKeys));
+
+        // before relationship pair insert, archive existing relationship pairs under the previous ontology version
+        const relationshipPairMapper = new MetatypeRelationshipPairMapper();
+        void relationshipPairMapper.ArchiveForImport(oldOntologyVersionID!);
+
+        const relationshipPairs: MetatypeRelationshipPair[] = [];
+        jsonImport.relationship_pairs.forEach((pair: any) => {
+            pair.container_id = containerID;
+            pair.created_by = user.id!;
+            pair.modified_by = user.id!;
+            pair.ontology_version = parseInt(newVersionID!, 10);
+            relationshipPairs.push(pair);
+        });
+        const relationshipPairRepo = new MetatypeRelationshipPairRepository();
+        void (await relationshipPairRepo.saveFromJSON(relationshipPairs));
+
+        // after successful ontology imports (or after error), update ontology version statuses
+        void ontologyVersionRepo.setStatus(oldOntologyVersionID!, 'deprecated', 'Replaced by imported ontology from container file');
+
+        void this.createAlert(new ContainerAlert({containerID, type: 'info', message: 'Due to the ontology update, please review type mappings.'}), user);
+
+        const thisContainer = await this.findByID(containerID);
+        if (thisContainer.value.config?.ontology_versioning_enabled) {
+            // set new ontology version status to ready for version-enabled containers
+            void ontologyVersionRepo.setStatus(newVersionID!, 'ready');
+            return Promise.resolve(
+                Result.Success('A new ontology version with the supplied ontology has been created. Please review and submit for approval and publishing.'),
+            );
+        } else {
+            void ontologyVersionRepo.setStatus(newVersionID!, 'published');
+
+            // attempt to autoupgrade type mappings for containers without ontology versioning
+            const mappingRepo = new TypeMappingRepository();
+            const containerTypeMappings = await mappingRepo.where().containerID('eq', containerID).list(true);
+            const upgradeResult = await mappingRepo.upgradeMappings(newVersionID!, ...containerTypeMappings.value);
+
+            // if there are no mappings present, the value will be undefined. This should not be treated as an error
+            if (upgradeResult[0].isError && typeof upgradeResult[0].value !== 'undefined') {
+                return Promise.resolve(Result.Failure('Unable to automatically upgrade type mappings. Please review the type mappings for this container.'));
+            }
+
+            return Promise.resolve(Result.Success('Successful ontology import. '));
+        }
+    }
+
+    async createContainerExportFile(containerID: string, user: User, containerExport: ContainerExport): Promise<Result<File>> {
+        try {
+            fs.appendFileSync(`container_export_${containerID}.json`, JSON.stringify(containerExport));
+
+            // this naming scheme should be enough to avoid clashes
+            const readStream = fs.createReadStream(`container_export_${containerID}.json`);
+            const fileRepo = new FileRepository();
+
+            const file = await fileRepo.uploadFile(containerID, user, `container_export_${containerID}`, readStream);
+            if (file.isError) return Promise.resolve(Result.Pass(file));
+
+            const saved = await fileRepo.save(file.value, user);
+            if (saved.isError) return Promise.resolve(Result.Pass(saved));
+
+            // don't forget to remove the temporary file
+            fs.unlinkSync(`container_export_${containerID}.json`);
+
+            return Promise.resolve(Result.Success(file.value));
+        } catch (e: any) {
+            return Promise.resolve(Result.Error(e));
+        }
     }
 
     private async getCached(id: string): Promise<Container | undefined> {

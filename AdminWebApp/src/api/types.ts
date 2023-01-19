@@ -148,19 +148,27 @@ export type FileT = {
 };
 
 export type NodeT = {
+    // these first few fields are for the graph viewer component, they don't get returned by the API
+    color?: any;
+    collapsed?: boolean;
+    selected_node?: boolean;
+    x?: number;
+    y?: number;
+    label?: any;
     id: string;
+    original_id?: string;
     metatype_id: string;
     metatype_name: string;
-    metatype: MetatypeT;
+    metatype?: MetatypeT;
     properties: PropertyT[] | object;
-    raw_properties: string; // JSON string with the raw properties
+    raw_properties?: string; // JSON string with the raw properties
     container_id: string;
-    original_data_id: string;
+    original_data_id?: string;
     data_source_id: string;
     created_at: string;
     modified_at: string;
-    incoming_edges: EdgeT[];
-    outgoing_edges: EdgeT[];
+    incoming_edges?: EdgeT[];
+    outgoing_edges?: EdgeT[];
 };
 
 export type EdgeT = {
@@ -524,6 +532,47 @@ export type ResultT<T> = {
     value: T;
     isError: boolean;
     error: any;
+};
+
+export type MeanExecutionTime = {
+    user_id: string;
+    dbid: string;
+    query: string;
+    mean_exec_time: any;
+};
+
+export type LongRunningTransactions = {
+    pid: string;
+    usename: string;
+    datname: string;
+    query: string;
+    duration: any;
+};
+
+export type Statistics = {
+    edge_queue_items: string;
+    containers: string;
+    metatypes: string;
+    metatype_keys: string;
+    metatype_relationships: string;
+    metatype_relationship_keys: string;
+    metatype_relationship_pairs: string;
+    nodes: string;
+    edges: string;
+    current_nodes: string;
+    current_edges: string;
+    data_staging: string;
+    files: string;
+    migrations: string[];
+};
+
+export type UserT = {[key: string]: any};
+
+export type FullStatistics = {
+    mean_execution_time?: MeanExecutionTime;
+    long_running_transactions?: LongRunningTransactions;
+    statistics?: Statistics;
+    version?: string;
 };
 
 // DefaultAvevaDataSourceConfig are sane defaults found through trial and error with the Aveva Deep Lynx Adapter

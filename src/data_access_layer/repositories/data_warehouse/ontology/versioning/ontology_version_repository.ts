@@ -9,7 +9,6 @@ import TypeMappingMapper from '../../../../mappers/data_warehouse/etl/type_mappi
 import Logger from '../../../../../services/logger';
 import ContainerRepository from '../container_respository';
 import {ContainerAlert} from '../../../../../domain_objects/data_warehouse/ontology/container';
-import GraphQLRunner from '../../../../../graphql/schema';
 
 export default class OntologyVersionRepository extends Repository implements RepositoryInterface<OntologyVersion> {
     #mapper: OntologyVersionMapper = OntologyVersionMapper.Instance;
@@ -52,7 +51,7 @@ export default class OntologyVersionRepository extends Repository implements Rep
         if (result.isError) return Promise.resolve(Result.Pass(result));
 
         // on creation each ontology version should be populated with the base version, or a NULL base version - this
-        // function should not be waited on and the cloning function handles it's own status changes of the ontology
+        // function should not be waited on and the cloning function handles its own status changes of the ontology
         // version
         if (baseOntologyVersion) {
             void this.cloneOntology(user, baseOntologyVersion, result.value.id!, result.value.container_id!);
@@ -148,6 +147,16 @@ export default class OntologyVersionRepository extends Repository implements Rep
 
     createdBy(operator: string, value: any) {
         super.query('created_by', operator, value);
+        return this;
+    }
+
+    publishedAt(operator: string, value: any) {
+        super.query('published_at', operator, value);
+        return this;
+    }
+
+    createdAt(operator: string, value: any) {
+        super.query('created_at', operator, value);
         return this;
     }
 

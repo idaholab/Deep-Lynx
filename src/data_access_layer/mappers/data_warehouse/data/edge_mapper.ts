@@ -101,10 +101,6 @@ export default class EdgeMapper extends Mapper {
         return super.runStatement(this.deleteStatement(id));
     }
 
-    public RunEdgeLinker(): Promise<Result<boolean>> {
-        return super.runStatement(this.linkEdgesStatement());
-    }
-
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
@@ -130,7 +126,7 @@ export default class EdgeMapper extends Mapper {
             created_by,
             modified_by,
             created_at) VALUES %L 
-            ON CONFLICT(created_at, id) DO UPDATE SET
+            ON CONFLICT(container_id,relationship_pair_id,data_source_id,created_at, origin_id, destination_id) DO UPDATE SET
                 properties = EXCLUDED.properties,
                 metadata = EXCLUDED.metadata
             WHERE EXCLUDED.id = edges.id
@@ -258,15 +254,6 @@ export default class EdgeMapper extends Mapper {
         return {
             text: `DELETE FROM edge_files WHERE edge_id = $1 AND file_id = $2`,
             values: [edgeID, fileID],
-        };
-    }
-
-    // linkEdgesStatement runs a stored procedure on every row in the edges table that matches the WHERE statement
-    // the stored procedure handles "orphaned" edges and attempts to connect them to their correct nodes based on
-    // the composite id of the node's original id, data source id, and metatype id
-    private linkEdgesStatement(): QueryConfig {
-        return {
-            text: `SELECT link_edge(edges.*) FROM edges WHERE origin_id IS NULL OR destination_id IS NULL`,
         };
     }
 }

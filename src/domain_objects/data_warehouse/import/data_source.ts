@@ -34,6 +34,7 @@ export class ReceiveDataOptions {
     transformStream?: Transform; // streams to pipe to, prior to piping to the JSONStream
     bufferSize = 1000; // buffer size for timeseries records to be inserted into the db, modify this at runtime if needed
     websocket?: WebSocket;
+    has_files?: boolean = false; // dictates that this piece of data has files attached
     errorCallback?: (error: any) => void;
 }
 
@@ -350,6 +351,8 @@ export class TimeseriesNodeParameter {
 export class TimeseriesDataSourceConfig extends BaseDataSourceConfig {
     kind: 'timeseries' = 'timeseries';
 
+    fast_load_enabled = false;
+
     @Type(() => TimeseriesColumn)
     @IsNotEmpty() // we must have columns if creating a timeseries table
     @PrimaryTimestampExists({message: 'must contain exactly one primary timestamp column'})
@@ -366,12 +369,13 @@ export class TimeseriesDataSourceConfig extends BaseDataSourceConfig {
     @IsOptional()
     attachment_parameters: TimeseriesNodeParameter[] = [];
 
-    constructor(input: {columns?: TimeseriesColumn[]; attachment_parameters?: TimeseriesNodeParameter[]; chunk_interval?: string}) {
+    constructor(input: {columns?: TimeseriesColumn[]; attachment_parameters?: TimeseriesNodeParameter[]; chunk_interval?: string; fastLoadEnabled?: boolean}) {
         super();
 
         if (input?.columns) this.columns = input.columns;
         if (input?.attachment_parameters) this.attachment_parameters = input.attachment_parameters;
         if (input?.chunk_interval) this.chunk_interval = input.chunk_interval;
+        if (input?.fastLoadEnabled) this.fast_load_enabled = input.fastLoadEnabled;
     }
 }
 
@@ -408,6 +412,9 @@ export default class DataSourceRecord extends BaseDomainClass {
     @IsBoolean()
     active = false; // we don't want to start something processing unless user specifies
 
+    @IsBoolean()
+    archived = false;
+
     @ValidateNested()
     @Type(() => BaseDataSourceConfig, {
         keepDiscriminatorProperty: true,
@@ -436,6 +443,7 @@ export default class DataSourceRecord extends BaseDomainClass {
         status?: 'ready' | 'polling' | 'error';
         status_message?: string;
         data_retention_days?: number;
+        archived?: boolean;
     }) {
         super();
         this.config = new StandardDataSourceConfig();
@@ -450,6 +458,7 @@ export default class DataSourceRecord extends BaseDomainClass {
             if (input.status) this.status = input.status;
             if (input.status_message) this.status_message = input.status_message;
             if (input.data_retention_days) this.config.data_retention_days = input.data_retention_days;
+            if (input.archived) this.archived = input.archived;
         }
     }
 }

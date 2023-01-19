@@ -1,10 +1,16 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_domain_class';
-import {ArrayContains, IsArray, IsBoolean, IsDate, IsIn, IsNotEmpty, IsOptional, IsString, MinLength, ValidateNested} from 'class-validator';
+import {ArrayContains, IsArray, IsBoolean, IsDate, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, MinLength, ValidateNested} from 'class-validator';
 import Result from '../../../common_classes/result';
 import Authorization from '../../access_management/authorization/authorization';
 import Logger from '../../../services/logger';
 import {Type} from 'class-transformer';
+import Metatype from "./metatype";
+import MetatypeRelationship from "./metatype_relationship";
+import MetatypeKey from "./metatype_key";
+import MetatypeRelationshipKey from "./metatype_relationship_key";
+import MetatypeRelationshipPair from "./metatype_relationship_pair";
+import {DataSource} from "../../../interfaces_and_impl/data_warehouse/import/data_source";
 
 /*
     ContainerConfig allows the user and system to toggle features at a container
@@ -183,6 +189,43 @@ export class ContainerAlert extends NakedDomainClass {
             if (input.acknowledgedAt) this.acknowledged_at = input.acknowledgedAt;
             if (input.acknowledgedBy) this.acknowledged_by = input.acknowledgedBy;
             if (input.createdBy) this.created_by = input.createdBy;
+        }
+    }
+}
+
+export class ContainerExport extends NakedDomainClass {
+    @IsOptional()
+    @IsNumber()
+    version?: number;
+
+    @IsOptional()
+    metatypes?: Metatype[];
+
+    @IsOptional()
+    metatype_keys?: MetatypeKey[];
+
+    @IsOptional()
+    relationships?: MetatypeRelationship[];
+
+    @IsOptional()
+    relationship_keys?: MetatypeRelationshipKey[];
+
+    @IsOptional()
+    relationship_pairs?: MetatypeRelationshipPair[];
+
+    @IsOptional()
+    data_sources?: DataSource[];
+
+    constructor(input?: {version?: number, metatypes?: Metatype[]; metatype_keys?: MetatypeKey[];
+        relationships?: MetatypeRelationship[]; relationship_keys?: MetatypeRelationshipKey[], relationship_pairs?: MetatypeRelationshipPair[]}) {
+        super();
+        if (input) {
+            this.version = input.version;
+            this.metatypes = input.metatypes;
+            this.metatype_keys = input.metatype_keys;
+            this.relationships = input.relationships;
+            this.relationship_keys = input.relationship_keys;
+            this.relationship_pairs = input.relationship_pairs;
         }
     }
 }

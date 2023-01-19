@@ -1,5 +1,5 @@
 import RepositoryInterface, {FileOptions, QueryOptions, Repository} from '../../repository';
-import Node, {NodeTransformation} from '../../../../domain_objects/data_warehouse/data/node';
+import Node from '../../../../domain_objects/data_warehouse/data/node';
 import Result from '../../../../common_classes/result';
 import NodeMapper from '../../../mappers/data_warehouse/data/node_mapper';
 import {PoolClient} from 'pg';
@@ -49,10 +49,10 @@ export default class NodeRepository extends Repository implements RepositoryInte
     }
 
     async findNodeHistoryByID(id: string, transaction?: PoolClient): Promise<Result<Node[]>> {
-        const nodes = await this.#mapper.ListHistory(id, transaction);
+        const nodes = await this.#mapper.RetrieveHistory(id, transaction);
 
         if (nodes.isError) {
-            return Promise.reject(nodes.error)
+            return Promise.reject(nodes.error);
         }
 
         return Promise.resolve(nodes);

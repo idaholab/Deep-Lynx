@@ -8,15 +8,21 @@ import QueryStream from 'pg-query-stream';
 import Logger from '../services/logger';
 import Cache from '../services/cache/cache';
 import Config from '../services/config';
-import {plainToClass, classToPlain, instanceToPlain, plainToInstance} from 'class-transformer';
+import {instanceToPlain, plainToInstance} from 'class-transformer';
 import {parentPort} from 'worker_threads';
 import EdgeQueueItemMapper from '../data_access_layer/mappers/data_warehouse/data/edge_queue_item_mapper';
 import {EdgeQueueItem} from '../domain_objects/data_warehouse/data/edge';
+import BackedLogger from '../services/logger';
 const devnull = require('dev-null');
 process.setMaxListeners(0);
 
 const postgresAdapter = PostgresAdapter.Instance;
 const mapper = EdgeQueueItemMapper.Instance;
+
+process.on('unhandledRejection', (reason, promise) => {
+    BackedLogger.error(`Unhandled rejection at ${promise} reason: ${reason}`);
+    process.exit(1);
+});
 
 // handle cache clears from parent IF memory cache
 if (Config.cache_provider === 'memory') {
@@ -47,35 +53,23 @@ void postgresAdapter
                         }
 
                         const stream = client.query(new QueryStream(mapper.needRetriedStreamingStatement()));
-                        const promises: Promise<boolean>[] = [];
-                        const putPromises: Promise<boolean>[] = [];
 
                         stream.on('data', (data) => {
                             const item = plainToInstance(EdgeQueueItem, data as object);
 
-                            // check to see if the edge queue item is in the cache, indicating that there is a high probability that
-                            // this message is already in the queue and either is being processed or waiting to be processed
-                            promises.push(
-                                new Promise((resolve) => {
-                                    Cache.get(`edge_insertion_${item.id}`)
-                                        .then((set) => {
-                                            if (!set) {
-                                                // if the item isn't the cache, we can go ahead and queue data
-                                                putPromises.push(queue.Put(Config.edge_insertion_queue, instanceToPlain(item)));
-                                            }
-                                        })
-                                        // if we error out we need to go ahead and queue this message anyway, just so we're not dropping
-                                        // data
-                                        .catch((e) => {
-                                            Logger.error(`error reading from cache for staging emitter ${e}`);
-                                            putPromises.push(queue.Put(Config.edge_insertion_queue, instanceToPlain(item)));
-                                        })
-                                        .finally(() => {
-                                            void Cache.set(`edge_insertion_${item.id}`, {}, Config.initial_import_cache_ttl);
-                                            resolve(true);
-                                        });
-                                }),
-                            );
+                            // if the item isn't the cache, we can go ahead and queue data
+                            queue.Put(Config.edge_insertion_queue, instanceToPlain(item)).catch((e) => {
+                                Logger.error(`error reading from cache for staging emitter ${e}`);
+                            });
+
+                            // immediately set the next attempt time, this is how we handle back-pressuring for edge
+                            // queue items
+                            const currentTime = new Date().getTime();
+                            const check = currentTime + Math.pow(Config.edge_insertion_backoff_multiplier, item.attempts++) * 1000;
+
+                            item.next_attempt_at = new Date(check);
+
+                            void EdgeQueueItemMapper.Instance.SetNextAttemptAt(item.id!, item.next_attempt_at.toISOString());
                         });
 
                         stream.on('error', (e: Error) => {
@@ -88,20 +82,18 @@ void postgresAdapter
 
                         stream.on('end', () => {
                             done();
-
-                            Promise.all(promises).finally(() => {
-                                Promise.all(putPromises).finally(() => {
-                                    if (parentPort) parentPort.postMessage('done');
-                                    else {
-                                        process.exit(0);
-                                    }
-                                });
-                            });
                         });
 
                         // we pipe to devnull because we need to trigger the stream and don't
                         // care where the data ultimately ends up
                         stream.pipe(devnull({objectMode: true}));
+
+                        setTimeout(() => {
+                            if (parentPort) parentPort.postMessage('done');
+                            else {
+                                process.exit(0);
+                            }
+                        }, 10000);
                     });
                 };
 
