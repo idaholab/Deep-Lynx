@@ -470,7 +470,7 @@ export default class TypeMappingRoutes {
                     Result.Failure(e).asResponse(res);
                     return;
                 });
-                // String(req.query.inUse).toLowerCase()
+                
                 // once the file has been read, convert to mappings and then attempt the import
                 stream.on('end', () => {
                     const mappings = plainToClass(TypeMapping, objects);
