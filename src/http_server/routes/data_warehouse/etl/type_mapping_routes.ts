@@ -9,6 +9,8 @@ import TypeTransformation from '../../../../domain_objects/data_warehouse/etl/ty
 import TypeTransformationRepository from '../../../../data_access_layer/repositories/data_warehouse/etl/type_transformation_repository';
 import TypeMapping, {TypeMappingExportPayload, TypeMappingUpgradePayload} from '../../../../domain_objects/data_warehouse/etl/type_mapping';
 import {FileInfo} from 'busboy';
+import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
+import { none } from 'fp-ts/lib/Option';
 
 const JSONStream = require('JSONStream');
 const Busboy = require('busboy');
@@ -199,7 +201,7 @@ export default class TypeMappingRoutes {
                             });
                     } else {
                         mappingRepo
-                            .importToDataSource(payload.target_data_source, user, ...results.value)
+                            .importToDataSource(payload.target_data_source, user, String(req.dataSource?.DataSourceRecord?.active).toLowerCase(), ...results.value)
                             .then((result) => {
                                 res.status(200).json(result);
                                 next();
@@ -438,7 +440,7 @@ export default class TypeMappingRoutes {
             const repo = new TypeMappingRepository();
             const payload = plainToClass(TypeMapping, req.body);
 
-            repo.importToDataSource(req.dataSource.DataSourceRecord?.id!, user, ...payload)
+            repo.importToDataSource(req.dataSource.DataSourceRecord?.id!, user, String(req.dataSource?.DataSourceRecord?.active).toLowerCase(), ...payload)
                 .then((results) => {
                     res.status(201).json(results);
                     next();
@@ -468,11 +470,11 @@ export default class TypeMappingRoutes {
                     Result.Failure(e).asResponse(res);
                     return;
                 });
-
+                // String(req.query.inUse).toLowerCase()
                 // once the file has been read, convert to mappings and then attempt the import
                 stream.on('end', () => {
                     const mappings = plainToClass(TypeMapping, objects);
-                    importResults.push(repo.importToDataSource(req.dataSource?.DataSourceRecord?.id!, user, ...mappings));
+                    importResults.push(repo.importToDataSource(req.dataSource?.DataSourceRecord?.id!, user, String(req.dataSource?.DataSourceRecord?.active).toLowerCase(), ...mappings));
                 });
 
                 try {
