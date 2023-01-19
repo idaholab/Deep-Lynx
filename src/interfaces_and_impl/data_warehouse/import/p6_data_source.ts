@@ -51,4 +51,19 @@ export default class P6DataSourceImpl extends StandardDataSourceImpl implements 
 
         return Promise.resolve(output);
     }
+
+    ToExport(): Promise<DataSourceRecord> {
+        const output = plainToClass(DataSourceRecord, {});
+        Object.assign(output, this.DataSourceRecord);
+
+        if ((output.config as P6DataSourceConfig).username) {
+            (output.config as P6DataSourceConfig).username = undefined;
+        }
+        
+        if ((output.config as P6DataSourceConfig).password) {
+            (output.config as P6DataSourceConfig).password = undefined;
+        }
+
+        return Promise.resolve(output);
+    }
 }
