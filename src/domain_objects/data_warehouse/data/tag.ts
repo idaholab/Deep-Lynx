@@ -24,6 +24,7 @@ export default class Tag extends BaseDomainClass {
 
     @ValidateIf((o) => typeof o.composite_original_id !== 'undefined' && o.composite_original_id !== null)
     @IsString()
+    @IsOptional()
     data_source_id?: string;
 
     @IsString()
@@ -43,7 +44,7 @@ export default class Tag extends BaseDomainClass {
         id?: string;
         tag_name: string;
         container_id: Container | string;
-        data_source_id: string;
+        data_source_id?: string;
         import_data_id?: string;
         data_staging_id?: string;
         metadata?: object;
