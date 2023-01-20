@@ -163,6 +163,12 @@ export default class ContainerRepository implements RepositoryInterface<Containe
             return this.#mapper.List();
         }
 
+        // listing containers for service users looks a little different 
+        // than listing them for a regular user
+        if (user.identity_provider === 'service') {
+            return this.#mapper.ListForServiceUser(user.id!);
+        }
+
         // using the casbin filtered grouping function, fetch all permission sets for
         // user. Those permissions sets will contain all domains, or containers, a user
         // is a part of. With that information we can then query for the entirety of

@@ -77,6 +77,7 @@ export default {
             cancel: 'Cancel',
             save: 'Save',
             create: 'Create',
+            delete: 'Delete',
             changeContainer: 'Change Container',
             welcomeCardTitle: 'Welcome to Deep Lynx!',
             welcomeCardText:
@@ -671,6 +672,7 @@ export default {
             timeseries: 'Timeseries',
             unique: 'Unique',
             aveva: 'Aveva',
+            p6: 'P6',
             description: 'Description',
             jazz: 'Jazz',
             http: 'HTTP Poller',
@@ -681,6 +683,7 @@ export default {
                 'This data source is an active poller against a user provided HTTP endpoint. Each poll will take the response and create an import for it, passing a query parameter with the last successful poll time.',
             jazzDescription: 'This is the Jazz/Doors Next Generation data source. This allows you to pull in artifacts automatically from the Jazz/DNG server.',
             avevaDescription: 'This is a wrapper over the standard data source, but contains Aveva Everything3D specific configuration values.',
+            p6Description: 'This is a wrapper over the standard data source, but contains Oracle Primavera P6 specific configuration values.',
             timeseriesDescription:
                 'This data source is built specifically for timeseries data. Users must design a timeseries data table and set attachment parameters prior to successful creation. Users upload timeseries data directly to this source, bypassing the standard type mapping system. You can find more information and help ',
             here: 'here',
@@ -734,12 +737,20 @@ export default {
                 structure: 'Structure',
                 cable: 'Cable',
             },
+            p6endpoint: 'P6 Endpoint',
+            p6projectID: 'P6 Project ID',
+            p6alias: 'Source Alias',
+            p6defaultConfig: 'P6 Default Configurations',
+            p6defaultConfigDescription: 'Configure a default server address and project ID to help container users more easily set up P6. This config can be selected from a dropdown when creating a new P6 datasource.',
+            addConfiguration: 'Create New Configuration',
+            customP6config: 'Select a P6 source configuration',
             dataRetentionDays: 'Raw Data Retention Policy (days)',
             dataRetentionHelp:
                 'This controls how many days Deep Lynx will retain the raw data you import. A value of 0 will retain no raw data after processing and a value of -1 will retain raw data indefinitely.',
         },
         editDataSource: {
             timeout: 'Timeout (ms)',
+            p6: 'P6',
             aveva: 'Aveva',
             jazz: 'Jazz',
             http: 'HTTP Poller',
@@ -789,6 +800,8 @@ export default {
                 structure: 'Structure',
                 cable: 'Cable',
             },
+            p6endpoint: 'P6 Endpoint',
+            p6projectID: 'P6 Project ID',
             dataRetentionDays: 'Raw Data Retention Policy (days)',
             dataRetentionHelp:
                 'This controls how many days Deep Lynx will retain the raw data you import. A value of 0 will retain no raw data after processing and a value of -1 will retain raw data indefinitely.',
@@ -811,6 +824,13 @@ export default {
             withData: 'Delete all data ingested by Data Source',
             withDataWarning:
                 'Data may have already been ingested for this Data Source. We will remove this data by default so as to avoid "orphaned" data, or data that we cannot trace back to an individual Data Source. If you would like to keep this data and orphan it, please uncheck the box below.',
+        },
+        configuredSource: {
+            addNew: 'Add New Configured Source',
+            new: 'New Configured Source',
+            edit: 'Edit Configured Source',
+            delete: 'Delete Configured Source',
+            confirmDelete: 'Would you like to delete this pre-set Data Source configuration?',
         },
         deleteContainer: {
             deleteContainer: 'Delete Container',

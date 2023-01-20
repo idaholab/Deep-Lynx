@@ -179,7 +179,6 @@ export default class DataSources extends Vue {
   @Prop({required: true})
   readonly containerID!: string;
 
-  dialog= false
   select = ""
   dataSourcesLoading = false
   timeseriesLoading = false
@@ -224,7 +223,6 @@ export default class DataSources extends Vue {
         .catch(e => this.errorMessage = e)
         .finally(() => this.timeseriesLoading = false)
   }
-
 
   toggleDataSourceActive(dataSource: DataSourceT) {
     if(dataSource.active) {

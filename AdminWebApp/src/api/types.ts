@@ -6,6 +6,7 @@ export type ContainerT = {
         data_versioning_enabled: boolean;
         ontology_versioning_enabled: boolean;
         enabled_data_sources: string[];
+        configured_data_sources?: {[key: string]: any}[];
     };
     created_at: string;
     modified_at: string;
@@ -200,7 +201,7 @@ export type DataSourceT = {
     adapter_type: string | undefined;
     active: boolean;
     archived?: boolean;
-    config: StandardDataSourceConfig | HttpDataSourceConfig | AvevaDataSourceConfig | JazzDataSourceConfig | TimeseriesDataSourceConfig | undefined;
+    config: StandardDataSourceConfig | HttpDataSourceConfig | AvevaDataSourceConfig | JazzDataSourceConfig | TimeseriesDataSourceConfig | P6DataSourceConfig | undefined;
     created_at?: string;
     modified_at?: string;
     created_by?: string;
@@ -301,6 +302,17 @@ export type AvevaDataSourceConfig = {
     value_nodes?: string[];
     data_retention_days?: number;
 };
+
+export type P6DataSourceConfig = {
+    kind: 'p6';
+    endpoint: string;
+    projectID: string;
+    username: string;
+    password: string;
+    stop_nodes?: string[];
+    value_nodes?: string[];
+    data_retention_days?: number;
+}
 
 export type ImportT = {
     id: string;
@@ -685,6 +697,16 @@ export function DefaultJazzDataSourceConfig(): JazzDataSourceConfig {
         limit: 10,
         data_retention_days: 30,
     };
+}
+
+export function DefaultP6DataSourceConfig(): P6DataSourceConfig {
+    return {
+        kind: 'p6',
+        endpoint: '',
+        projectID: '',
+        username: '',
+        password: ''
+    }
 }
 
 export function DefaultHttpDataSourceConfig(): HttpDataSourceConfig {

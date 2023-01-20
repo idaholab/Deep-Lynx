@@ -320,6 +320,47 @@
                 </v-row>
               </div>
 
+              <div v-if="dataSource.adapter_type === 'p6'">
+                <v-row>
+                  <v-col :cols="6">
+                    <v-text-field
+                      v-model="dataSource.config.endpoint"
+                      :label="$t('editDataSource.p6endpoint')"
+                      :rules="[v => !!v || 'Item is required']"
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col :cols="6">
+                    <v-text-field
+                      v-model="dataSource.config.projectID"
+                      :label="$t('editDataSource.p6projectID')"
+                      :rules="[v => !!v || 'Item is required']"
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
+
+                <v-row>
+                  <v-col :cols="6">
+                    <v-text-field
+                      v-model="dataSource.config.username"
+                      :label="$t('editDataSource.username')"
+                      :rules="[v => !!v || 'Item is required']"
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col :cols="6">
+                    <v-text-field
+                      v-model="dataSource.config.password"
+                      :label="$t('editDataSource.password')"
+                      :append-icon="(hideP6pass ? 'mdi-eye' : 'mdi-eye-off')"
+                      @click:append="() => (hideP6pass = !hideP6pass)"
+                      :type="hideP6pass ? 'password' : 'text'"
+                      :rules="[v => !!v || 'Item is required']"
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
+              </div>
+
               <div v-if="dataSource.adapter_type === 'timeseries'">
                 <h4>{{$t('dataMapping.tableDesign')}}<info-tooltip :message="$t('dataMapping.tableDesignHelp')"></info-tooltip></h4>
 
@@ -562,6 +603,7 @@ export default class EditDataSourceDialog extends Vue {
   select: string | null = ""
   authMethods = [{text: "Basic", value: 'basic'}, {text: "Token", value: 'token'}]
   expandedTimeSeries: any[] = []
+  hideP6pass = true
 
   dataTypes = [
     'number',
@@ -599,6 +641,7 @@ export default class EditDataSourceDialog extends Vue {
       {text: this.$t('editDataSource.http'), value: 'http'},
       {text: this.$t('editDataSource.jazz'), value: 'jazz'},
       {text: this.$t('editDataSource.aveva'), value: 'aveva'},
+      {text: this.$t('editDataSource.p6'), value: 'p6'},
       {text: this.$t('createDataSource.timeseries'), value: 'timeseries'},
     ]
   }

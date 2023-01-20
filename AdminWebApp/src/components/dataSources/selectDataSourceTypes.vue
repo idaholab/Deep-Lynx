@@ -33,6 +33,7 @@ export default class SelectDataSourceTypes extends Vue {
   values?: string[]
 
   errorMessage = ""
+
   selected = [{
     text: "Standard",
     value: "standard"
@@ -57,6 +58,9 @@ export default class SelectDataSourceTypes extends Vue {
     {
     text: "Aveva",
     value: "aveva"
+  },{
+    text: "P6",
+    value: "p6"
   },{
     text: "Timeseries",
     value: "timeseries"
