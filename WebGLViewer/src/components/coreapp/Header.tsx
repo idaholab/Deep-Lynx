@@ -5,19 +5,9 @@ import Drawer from '@mui/material/Drawer';
 import CssBaseline from '@mui/material/CssBaseline';
 import MuiAppBar, { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
-import List from '@mui/material/List';
 import Typography from '@mui/material/Typography';
-import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import InboxIcon from '@mui/icons-material/MoveToInbox';
-import MailIcon from '@mui/icons-material/Mail';
 import Paper from '@mui/material/Paper';
 
 import SideBarLeft from './SideBarLeft';
@@ -25,7 +15,7 @@ import SideBarRight from './SideBarRight';
 // @ts-ignore
 import COLORS from '../../styles/variables';
 
-const drawerWidth = 340;
+const drawerWidth = 365;
 
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })<{
   open?: boolean;
@@ -109,6 +99,16 @@ export default function Header(props: any) {
             <Typography variant="h6" noWrap component="div">
               WebGL Viewer
             </Typography>
+            <a
+              aria-label="open drawer"
+              onClick={handleDrawerOpenRightState}
+              style={{
+                cursor: 'pointer',
+                marginLeft: 'auto'
+              }}
+            >
+              Temp Right Drawer Trigger
+            </a>
           </Toolbar>
         </AppBar>
       </Box>
@@ -119,37 +119,23 @@ export default function Header(props: any) {
           '& .MuiDrawer-paper': {
             width: drawerWidth,
             boxSizing: 'border-box',
+            background: COLORS.colorLightgray,
           },
         }}
         variant="persistent"
         anchor="left"
         open={openLeft}
       >
-        <Box>
-          <Paper square={true} elevation={3} sx={{ width: '100%', height: '64px', backgroundColor: COLORS.colorSecondary }}>
-            <Toolbar>
-              <img width="100" src="/assets/lynx-white.png" />
-              {/* <IconButton onClick={handleDrawerOpenLeftState}>
-                {theme.direction === 'ltr' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
-              </IconButton> */}
+        
+          <Paper square={true} elevation={3} sx={{ width: '100%', height: '64px', backgroundColor: COLORS.colorSecondary, }}>
+            <Toolbar sx={{ padding: 0 }}>
+              <img alt="Deep Lynx Logo" width="100" src="/assets/lynx-white.png" />
             </Toolbar>
           </Paper>
-        </Box>
-
-
-        
+    
         <SideBarLeft />
-        <a
-          aria-label="open drawer"
-          onClick={handleDrawerOpenRightState}
-          style={{
-            cursor: 'pointer'
-          }}
-        >
-          Temp Right Drawer Trigger
-        </a>
       </Drawer>
-      <Main open={openLeft} sx={{ flexGrow: 1, marginTop: '64px' }}>
+      <Main open={openLeft} sx={{ flexGrow: 1, marginTop: '64px', zIndex: '0' }}>
         {children}
         <Drawer
           sx={{

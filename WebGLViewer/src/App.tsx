@@ -73,26 +73,50 @@ function App() {
   const theme = useTheme();
 
   theme.typography.h1 = {
+    fontFamily: [
+      'Montserrat',
+      'serif',
+    ].join(','),
     fontSize: '1rem',
   };
 
   theme.typography.h2 = {
+    fontFamily: [
+      'Montserrat',
+      'serif',
+    ].join(','),
     fontSize: '1.5rem',
   };
 
   theme.typography.h3 = {
+    fontFamily: [
+      'Montserrat',
+      'serif',
+    ].join(','),
     fontSize: '1.25rem',
   };
 
   theme.typography.h4 = {
+    fontFamily: [
+      'Montserrat',
+      'serif',
+    ].join(','),
     fontSize: '1rem',
   };
 
   theme.typography.h5 = {
+    fontFamily: [
+      'Montserrat',
+      'serif',
+    ].join(','),
     fontSize: '1rem',
   };
 
   theme.typography.h6 = {
+    fontFamily: [
+      'Montserrat',
+      'serif',
+    ].join(','),
     fontSize: '1rem',
   };
 

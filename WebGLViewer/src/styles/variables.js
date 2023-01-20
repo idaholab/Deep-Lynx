@@ -9,6 +9,7 @@ const COLORS = {
   colorErrorBackground: 'rgba(255, 82, 82, 0.25)',
   colorLightgray: '#DCDDDE',
   colorLightgray2: '#dadada',
+  colorLightgray3: '#c4c4c4',
   colorDarkgray: '#AFAFAF',
   colorDarkgray2: '#888888',
 };
