@@ -87,4 +87,82 @@ export default class TagFunctions {
             .finally(() => next());
         }
     }
+
+    public static listTagsForNode(req: Request, res: Response, next: NextFunction) {
+        if(req.node) {
+            tagRepo.listTagsForNode(req.node)
+            .then((result) => {
+                result.asResponse(res);
+            })
+            .catch((err) => {
+                Result.Error(err).asResponse(res);
+            })
+            .finally(() => next());
+        }
+    }
+
+    public static listTagsForFile(req: Request, res: Response, next: NextFunction) {
+        if(req.file) {
+            tagRepo.listTagsForFile(req.file)
+            .then((result) => {
+                result.asResponse(res);
+            })
+            .catch((err) => {
+                Result.Error(err).asResponse(res);
+            })
+            .finally(() => next());
+        }
+    }
+
+    public static listTagsForEdge(req: Request, res: Response, next: NextFunction) {
+        if(req.edge) {
+            tagRepo.listTagsForEdge(req.edge)
+            .then((result) => {
+                result.asResponse(res);
+            })
+            .catch((err) => {
+                Result.Error(err).asResponse(res);
+            })
+            .finally(() => next());
+        }
+    }
+
+    public static listNodesWithTag(req: Request, res: Response, next: NextFunction) {
+        if(req.tag) {
+            tagRepo.listNodesWithTag(req.tag)
+            .then((result) => {
+                result.asResponse(res);
+            })
+            .catch((err) => {
+                Result.Error(err).asResponse(res);
+            })
+            .finally(() => next());
+        }
+    }
+
+    public static listFilesWithTag(req: Request, res: Response, next: NextFunction) {
+        if(req.tag) {
+            tagRepo.listFilesWithTag(req.tag)
+            .then((result) => {
+                result.asResponse(res);
+            })
+            .catch((err) => {
+                Result.Error(err).asResponse(res);
+            })
+            .finally(() => next());
+        }
+    }
+
+    public static listEdgesWithTag(req: Request, res: Response, next: NextFunction) {
+        if(req.tag) {
+            tagRepo.listEdgesWithTag(req.tag)
+            .then((result) => {
+                result.asResponse(res);
+            })
+            .catch((err) => {
+                Result.Error(err).asResponse(res);
+            })
+            .finally(() => next());
+        }
+    }
 }

@@ -50,9 +50,15 @@ export default class GraphRoutes {
         app.delete('/containers/:containerID/graphs/edges/:edgeID', ...middleware, authInContainer('write', 'data'), EdgeFunctions.archiveEdge);
         
         // Tag Routes
-        app.post('/containers/:containerID/graphs/tags', ...middleware, authInContainer('write', 'data'), TagFunctions.createTag)
+        app.post('/containers/:containerID/graphs/tags', ...middleware, authInContainer('write', 'data'), TagFunctions.createTag);
         app.put('/containers/:containerID/graphs/tags/:tagID/nodes/:nodeID', ...middleware, authInContainer('write', 'data'), TagFunctions.attachTagToNode);
         app.put('/containers/:containerID/graphs/tags/:tagID/edges/:edgeID', ...middleware, authInContainer('write', 'data'), TagFunctions.attachTagToEdge);
         app.put('/containers/:containerID/graphs/tags/:tagID/files/:fileID', ...middleware, authInContainer('write', 'data'), TagFunctions.attachTagToFile);
+        app.get('/containers/:containerID/graphs/tags/nodes/:nodeID', ...middleware, authInContainer('read', 'data'), TagFunctions.listTagsForNode);
+        app.get('/containers/:containerID/graphs/tags/files/:fileID', ...middleware, authInContainer('read', 'data'), TagFunctions.listTagsForFile);
+        app.get('/containers/:containerID/graphs/tags/edges/:edgeID', ...middleware, authInContainer('read', 'data'), TagFunctions.listTagsForEdge);
+        app.get('/containers/:containerID/graphs/tags/:tagID/nodes', ...middleware, authInContainer('read', 'data'), TagFunctions.listNodesWithTag);
+        app.get('/containers/:containerID/graphs/tags/:tagID/files', ...middleware, authInContainer('read', 'data'), TagFunctions.listFilesWithTag);
+        app.get('/containers/:containerID/graphs/tags/:tagID/edges', ...middleware, authInContainer('read', 'data'), TagFunctions.listEdgesWithTag);
     }
 }

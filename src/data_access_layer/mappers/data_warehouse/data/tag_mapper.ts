@@ -3,6 +3,9 @@ import Result from '../../../../common_classes/result';
 
 // Domain Objects
 import Tag from '../../../../domain_objects/data_warehouse/data/tag';
+import Edge from '../../../../domain_objects/data_warehouse/data/edge';
+import File from '../../../../domain_objects/data_warehouse/data/file';
+import Node from '../../../../domain_objects/data_warehouse/data/node';
 
 // Mapper
 import Mapper from '../../mapper';
@@ -79,6 +82,42 @@ export default class TagMapper extends Mapper {
 
     public async TagEdge(tagID: string, edgeID: string): Promise<Result<boolean>> {
         return super.runStatement(this.tagEdgeStatement(tagID, edgeID));
+    }
+
+    public async TagsForNode(nodeID: string): Promise<Result<Tag[]>> {
+        return super.rows<Tag>(this.tagsForNode(nodeID), {
+            resultClass: this.resultClass,
+        });
+    }
+
+    public async TagsForFile(fileID: string): Promise<Result<Tag[]>> {
+        return super.rows<Tag>(this.tagsForFile(fileID), {
+            resultClass: this.resultClass,
+        });
+    }
+
+    public async TagsForEdge(edgeID: string): Promise<Result<Tag[]>> {
+        return super.rows<Tag>(this.tagsForEdge(edgeID), {
+            resultClass: this.resultClass,
+        });
+    }
+
+    public async NodesWithTag(tagID: string): Promise<Result<Node[]>> {
+        return super.rows<Node>(this.nodesWithTag(tagID), {
+            resultClass: Node,
+        });
+    }
+
+    public async FilesWithTag(tagID: string): Promise<Result<File[]>> {
+        return super.rows<File>(this.filesWithTag(tagID), {
+            resultClass: File,
+        });
+    }
+
+    public async EdgesWithTag(tagID: string): Promise<Result<Edge[]>> {
+        return super.rows<Edge>(this.edgesWithTag(tagID), {
+            resultClass: Edge,
+        });
     }
 
     // Statements
@@ -189,6 +228,48 @@ export default class TagMapper extends Mapper {
         return {
             text: `INSERT INTO edge_tags(tag_id, edge_id) VALUES ($1, $2)`,
             values: [tagID, edgeID]
+        }
+    }
+
+    private tagsForNode(nodeID: string): QueryConfig {
+        return {
+            text: `SELECT tags.* FROM node_tags LEFT JOIN tags ON tags.id = node_tags.tag_id WHERE node_id = $1`,
+            values: [nodeID],
+        }
+    }
+
+    private tagsForFile(fileID: string): QueryConfig {
+        return {
+            text: `SELECT tags.* FROM file_tags LEFT JOIN tags ON tags.id = file_tags.tag_id WHERE file_id = $1`,
+            values: [fileID],
+        }
+    }
+
+    private tagsForEdge(edgeID: string): QueryConfig {
+        return {
+            text: `SELECT tags.* FROM edge_tags LEFT JOIN tags ON tags.id = edge_tags.tag_id WHERE edge_id = $1`,
+            values: [edgeID],
+        }
+    }
+
+    private nodesWithTag(tagID: string): QueryConfig {
+        return {
+            text: `SELECT nodes.* FROM nodes LEFT JOIN node_tags ON nodes.id = node_tags.node_id WHERE tag_id = $1`,
+            values: [tagID],
+        }
+    }
+
+    private filesWithTag(tagID: string): QueryConfig {
+        return {
+            text: `SELECT files.* FROM files LEFT JOIN file_tags ON files.id = file_tags.file_id WHERE tag_id = $1`,
+            values: [tagID],
+        }
+    }
+
+    private edgesWithTag(tagID: string): QueryConfig {
+        return {
+            text: `SELECT edges.* FROM edges LEFT JOIN edge_tags ON edges.id = edge_tags.edge_id WHERE tag_id = $1`,
+            values: [tagID],
         }
     }
 }
