@@ -201,7 +201,7 @@ export default class TypeMappingRoutes {
                             });
                     } else {
                         mappingRepo
-                            .importToDataSource(payload.target_data_source, user, String(req.dataSource?.DataSourceRecord?.active).toLowerCase(), ...results.value)
+                            .importToDataSource(payload.target_data_source, user, false, ...results.value)
                             .then((result) => {
                                 res.status(200).json(result);
                                 next();
@@ -428,6 +428,13 @@ export default class TypeMappingRoutes {
     private static importTypeMappings(req: Request, res: Response, next: NextFunction) {
         const user = req.currentUser!;
         const importResults: Promise<Result<TypeMapping>[]>[] = [];
+        let active : boolean;
+
+        if(req.query['isEnabled' as keyof object] === 'true') {
+            active = true;
+        } else {
+            active = false;
+        }
 
         if (!req.dataSource) {
             Result.Failure(`unable to find data source`, 404).asResponse(res);
@@ -439,8 +446,8 @@ export default class TypeMappingRoutes {
         if (req.headers['content-type']?.includes('application/json')) {
             const repo = new TypeMappingRepository();
             const payload = plainToClass(TypeMapping, req.body);
-
-            repo.importToDataSource(req.dataSource.DataSourceRecord?.id!, user, String(req.dataSource?.DataSourceRecord?.active).toLowerCase(), ...payload)
+            
+            repo.importToDataSource(req.dataSource.DataSourceRecord?.id!, user, active, ...payload)
                 .then((results) => {
                     res.status(201).json(results);
                     next();
@@ -474,7 +481,7 @@ export default class TypeMappingRoutes {
                 // once the file has been read, convert to mappings and then attempt the import
                 stream.on('end', () => {
                     const mappings = plainToClass(TypeMapping, objects);
-                    importResults.push(repo.importToDataSource(req.dataSource?.DataSourceRecord?.id!, user, String(req.dataSource?.DataSourceRecord?.active).toLowerCase(), ...mappings));
+                    importResults.push(repo.importToDataSource(req.dataSource?.DataSourceRecord?.id!, user, active, ...mappings));
                 });
 
                 try {

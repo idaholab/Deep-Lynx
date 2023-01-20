@@ -307,7 +307,7 @@ describe('A Type Mapping Repository', async () => {
         expect(mapping.transformations![0]!.id).not.undefined;
 
         // first we attempt to export them into the same container but separate data source
-        let exported = await repo.importToDataSource(targetDataSourceID, user, String(active).toLowerCase(), mapping);
+        let exported = await repo.importToDataSource(targetDataSourceID, user, active, mapping);
         for (const result of exported) {
             expect(result.isError).false;
             expect(result.value.id).not.eq(mapping.id); // should be a new mapping
@@ -324,7 +324,7 @@ describe('A Type Mapping Repository', async () => {
         expect(mappings.value[0].transformations?.length).eq(1);
 
         // next export the mappings into a separate container
-        exported = await repo.importToDataSource(dataSource2ID, user, String(active).toLowerCase(), mapping);
+        exported = await repo.importToDataSource(dataSource2ID, user, active, mapping);
         for (const result of exported) {
             expect(result.isError).false;
             expect(result.value.id).not.eq(mapping.id); // should be a new mapping
