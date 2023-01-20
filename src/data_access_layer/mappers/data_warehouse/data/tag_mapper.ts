@@ -154,7 +154,6 @@ export default class TagMapper extends Mapper {
             created_by,
             modified_by) VALUES %L 
             ON CONFLICT(id, tag_name) DO UPDATE SET
-                properties = EXCLUDED.properties,
                 metadata = EXCLUDED.metadata,
                 modified_at = NOW()
             WHERE EXCLUDED.id = tags.id
@@ -190,7 +189,6 @@ export default class TagMapper extends Mapper {
                         modified_by,
                         created_at) VALUES %L
                         ON CONFLICT(id, tag_name) DO UPDATE SET
-                            properties = EXCLUDED.properties,
                             metadata = EXCLUDED.metadata,
                             modified_at = NOW()
                         WHERE EXCLUDED.id = tags.id 
