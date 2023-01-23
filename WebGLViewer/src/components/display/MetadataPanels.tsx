@@ -1,10 +1,14 @@
 import * as React from 'react';
+import Box from '@mui/material/Box';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import Typography from '@mui/material/Typography';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Divider from '@mui/material/Divider';
+
+// @ts-ignore
+import COLORS from '../../styles/variables';
 
 export default function ControlledAccordions() {
   // type panels = any[] | any;
@@ -29,7 +33,6 @@ export default function ControlledAccordions() {
       data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
     }
   ];
-  // const [panels, setPanels] = (panelsDefault)
 
   const handleChange =
     (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
@@ -37,12 +40,38 @@ export default function ControlledAccordions() {
     };
 
   return (
-    <div>
+    <>
       {panelsDefault.map((object: any, index) => (
         <Accordion
           key={index}
           expanded={expanded === `panel${index+1}`}
           onChange={handleChange(`panel${index+1}`)}
+          sx={{
+            '&.MuiAccordion-root': {
+              border: `1px solid ${COLORS.colorDarkgray}`,
+              '&:first-of-type': {
+                marginTop: '0px !important'
+              },
+              '&:not(:first-of-type)': {
+                marginTop: '-1px'
+              },
+            },
+            '&.Mui-expanded': {
+              borderTopLeftRadius: '4px',
+              borderTopRightRadius: '4px',
+              borderBottomLeftRadius: '4px',
+              borderBottomRightRadius: '4px',
+              marginTop: '16px!important'
+            },
+            '&.Mui-expanded + .MuiAccordion-root': {
+              borderTopLeftRadius: '4px',
+              borderTopRightRadius: '4px',
+            },
+            '&:has(+ .Mui-expanded)' : {
+              borderBottomLeftRadius: '4px',
+              borderBottomRightRadius: '4px',
+            },
+          }}
         >
           <AccordionSummary
             expandIcon={<ExpandMoreIcon />}
@@ -62,6 +91,6 @@ export default function ControlledAccordions() {
           </AccordionDetails>
         </Accordion>
       ))}
-    </div>
+    </>
   );
 }

@@ -15,7 +15,6 @@
     "@emotion/styled": "^11.10.5",
     "@fontsource/montserrat": "^4.5.13",
     "@fontsource/source-sans-pro": "^4.5.11",
-    "@mkyy/mui-search-bar": "^0.5.2",
     "@mui/icons-material": "^5.10.16",
     "@mui/material": "^5.10.16",
     "@reduxjs/toolkit": "^1.9.1",

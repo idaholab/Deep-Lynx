@@ -57,6 +57,7 @@ const AppBar = styled(MuiAppBar, {
   }),
 }));
 
+
 const DrawerHeader = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
@@ -84,8 +85,11 @@ export default function Header(props: any) {
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
-      <Box sx={{ width: '100%', height: '64px', backgroundColor: COLORS.colorSecondary }}>
-        <AppBar position="fixed" open={openLeft} color={"secondary"}>
+      <Box sx={{ width: '100%', height: '64px', position: 'fixed', backgroundColor: COLORS.colorSecondary, zIndex: 1 }}>
+        <Paper square={true} elevation={3} sx={{ width: '100%', height: '64px', backgroundColor: COLORS.colorSecondary }} ></Paper>
+      </Box>
+      <Box>
+        <AppBar position="fixed" elevation={0} open={openLeft} color={"secondary"}>
           <Toolbar>
             <IconButton
               color="inherit"
@@ -127,11 +131,11 @@ export default function Header(props: any) {
         open={openLeft}
       >
         
-          <Paper square={true} elevation={3} sx={{ width: '100%', height: '64px', backgroundColor: COLORS.colorSecondary, }}>
-            <Toolbar sx={{ padding: 0 }}>
-              <img alt="Deep Lynx Logo" width="100" src="/assets/lynx-white.png" />
-            </Toolbar>
-          </Paper>
+        <Paper square={true} elevation={3} sx={{ width: '102%', height: '64px', backgroundColor: COLORS.colorSecondary, }}>
+          <Toolbar sx={{ padding: 0 }}>
+            <img alt="Deep Lynx Logo" width="100" src="/assets/lynx-white.png" style={{ marginLeft: '-8px' }} />
+          </Toolbar>
+        </Paper>
     
         <SideBarLeft />
       </Drawer>
