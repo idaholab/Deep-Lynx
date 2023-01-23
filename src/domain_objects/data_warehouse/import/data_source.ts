@@ -46,7 +46,7 @@ export class ReceiveDataOptions {
  validate against
 */
 export class BaseDataSourceConfig extends NakedDomainClass {
-    kind: 'http' | 'standard' | 'manual' | 'jazz' | 'aveva' | 'timeseries' = 'standard';
+    kind: 'http' | 'standard' | 'manual' | 'jazz' | 'aveva' | 'timeseries' | 'p6' = 'standard';
 
     // advanced configuration, while we allow the user to set these it's generally
     // assumed that only those with technical knowledge or experience would be modifying
@@ -294,6 +294,24 @@ export class AvevaDataSourceConfig extends BaseDataSourceConfig {
     };
 }
 
+export class P6DataSourceConfig extends BaseDataSourceConfig {
+    kind: 'p6' = 'p6';
+
+    // not constraining this to URL since p6 address could be a remote desktop address
+    endpoint?: string;
+
+    @IsString()
+    projectID?: string;
+
+    @IsString()
+    @Exclude({toPlainOnly: true})
+    username?: string;
+
+    @IsString()
+    @Exclude({toPlainOnly: true})
+    password?: string;
+}
+
 export class TimeseriesColumn {
     // id is completely optional, we include it mainly because we need to be able to differentiate on the gui
     @IsOptional()
@@ -394,7 +412,7 @@ export default class DataSourceRecord extends BaseDomainClass {
     name?: string;
 
     @IsString()
-    @IsIn(['http', 'standard', 'manual', 'jazz', 'aveva', 'timeseries'])
+    @IsIn(['http', 'standard', 'manual', 'jazz', 'aveva', 'timeseries', 'p6'])
     adapter_type = 'standard';
 
     @IsString()
@@ -412,6 +430,9 @@ export default class DataSourceRecord extends BaseDomainClass {
     @IsBoolean()
     active = false; // we don't want to start something processing unless user specifies
 
+    @IsBoolean()
+    archived = false;
+
     @ValidateNested()
     @Type(() => BaseDataSourceConfig, {
         keepDiscriminatorProperty: true,
@@ -424,10 +445,11 @@ export default class DataSourceRecord extends BaseDomainClass {
                 {value: HttpDataSourceConfig, name: 'http'},
                 {value: AvevaDataSourceConfig, name: 'aveva'},
                 {value: TimeseriesDataSourceConfig, name: 'timeseries'},
+                {value: P6DataSourceConfig, name: 'p6'}
             ],
         },
     })
-    config?: StandardDataSourceConfig | HttpDataSourceConfig | JazzDataSourceConfig | AvevaDataSourceConfig | TimeseriesDataSourceConfig =
+    config?: StandardDataSourceConfig | HttpDataSourceConfig | JazzDataSourceConfig | AvevaDataSourceConfig | TimeseriesDataSourceConfig | P6DataSourceConfig =
         new StandardDataSourceConfig();
 
     constructor(input: {
@@ -435,11 +457,12 @@ export default class DataSourceRecord extends BaseDomainClass {
         name: string;
         adapter_type: string;
         active?: boolean;
-        config?: StandardDataSourceConfig | HttpDataSourceConfig | JazzDataSourceConfig | AvevaDataSourceConfig | TimeseriesDataSourceConfig;
+        config?: StandardDataSourceConfig | HttpDataSourceConfig | JazzDataSourceConfig | AvevaDataSourceConfig | TimeseriesDataSourceConfig | P6DataSourceConfig;
         data_format?: string;
         status?: 'ready' | 'polling' | 'error';
         status_message?: string;
         data_retention_days?: number;
+        archived?: boolean;
     }) {
         super();
         this.config = new StandardDataSourceConfig();
@@ -454,6 +477,7 @@ export default class DataSourceRecord extends BaseDomainClass {
             if (input.status) this.status = input.status;
             if (input.status_message) this.status_message = input.status_message;
             if (input.data_retention_days) this.config.data_retention_days = input.data_retention_days;
+            if (input.archived) this.archived = input.archived;
         }
     }
 }

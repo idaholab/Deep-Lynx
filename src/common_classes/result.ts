@@ -39,7 +39,7 @@ export default class Result<TSuccess> {
 
     // this is a helper method that allows use to utilize the class-transformer
     // when working with express.js returns
-    public asResponse(resp: express.Response, code?: number) {
+    public asResponse(resp: express.Response, code?: number, decrypted?: boolean) {
         if (this.isError) {
             resp.status(this.error?.errorCode ? this.error.errorCode : 500);
         } else if (code) {
@@ -50,7 +50,15 @@ export default class Result<TSuccess> {
 
         resp.setHeader('Content-Type', 'application/json');
         this.error = JSON.stringify(this.error);
-        resp.send(instanceToPlain(this));
+
+        // the decrypted option can be used to return decrypted data when specified.
+        // this should be safeguarded by ensuring write permissions and adding a query param
+        // to prevent accidentally exposing any sensitive data.
+        if (decrypted === true) {
+            resp.send(instanceToPlain(this, {ignoreDecorators: true}));
+        } else {
+            resp.send(instanceToPlain(this));
+        }
     }
 
     constructor(value: TSuccess, isError: boolean, error?: Error) {

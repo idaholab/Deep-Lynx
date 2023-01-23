@@ -70,8 +70,12 @@ export default class KeyPairMapper extends Mapper {
         });
     }
 
-    public async KeysForUser(userID: string): Promise<Result<KeyPair[]>> {
-        return super.rows(this.keysForUserStatement(userID), {resultClass: this.resultClass});
+    public async KeysForUser(userID: string, note?: string): Promise<Result<KeyPair[]>> {
+        if (note) {
+            return super.rows(this.keysForUserByNoteStatement(userID, note), {resultClass: this.resultClass});
+        } else {
+            return super.rows(this.keysForUserStatement(userID), {resultClass: this.resultClass});
+        }
     }
 
     public DeleteForUser(key: string, userID: string): Promise<Result<boolean>> {
@@ -119,6 +123,13 @@ export default class KeyPairMapper extends Mapper {
             text: `SELECT key, user_id, note FROM keypairs WHERE user_id = $1`,
             values: [userID],
         };
+    }
+
+    private keysForUserByNoteStatement(userID: string, note: string): QueryConfig {
+        return {
+            text: `SELECT key, user_id, note FROM keypairs WHERE user_id = $1 AND note = $2`,
+            values: [userID, note]
+        }
     }
 
     private deleteStatement(key: string): QueryConfig {
