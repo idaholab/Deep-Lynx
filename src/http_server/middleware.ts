@@ -101,11 +101,11 @@ export function authenticateRoute(): any {
         // basic assumes we are sending the username/password each request. In this
         // case we don't rely on the session for any login/user information
         case 'basic': {
-            return passport.authenticate('basic', {session: true});
+            return passport.authenticate('basic', {session: true, keepSessionInfo: true});
         }
 
         case 'token': {
-            return passport.authenticate('jwt', {session: false});
+            return passport.authenticate('jwt', {session: false, keepSessionInfo: true});
         }
 
         default: {

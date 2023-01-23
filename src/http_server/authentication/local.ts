@@ -46,7 +46,7 @@ export function LocalAuthMiddleware(req: express.Request, resp: express.Response
         return;
     }
 
-    passport.authenticate('local', (err, user, info) => {
+    passport.authenticate('local', {keepSessionInfo: true}, (err, user, info) => {
         if (err) {
             return resp.redirect(buildUrl('/oauth', {queryParams: {error: `${err}`}}));
         }
