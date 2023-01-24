@@ -32,12 +32,10 @@ import FileMapper from '../../../../data_access_layer/mappers/data_warehouse/dat
 import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import EdgeMapper from '../../../../data_access_layer/mappers/data_warehouse/data/edge_mapper';
 
-describe("TagMapper", async() => {
-    let containerID: string =  process.env.TEST_CONTAINER_ID || '';
+describe('TagMapper', async () => {
+    let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let dataSourceID: string = '';
     let tagID: string = '';
-
-    await PostgresAdapter.Instance.init();
 
     const cMapper = ContainerStorage.Instance;
     const dsMapper = DataSourceMapper.Instance;
@@ -48,6 +46,8 @@ describe("TagMapper", async() => {
             Logger.debug('skipping tags graph tests, no storage layer');
             this.skip();
         }
+
+        await PostgresAdapter.Instance.init();
 
         // Create the Container
         const container = await cMapper.Create(
@@ -61,7 +61,7 @@ describe("TagMapper", async() => {
         expect(container.isError).false;
         expect(container.value.id).not.null;
         containerID = container.value.id!;
-    
+
         // Create the DataSource
         const dataSource = await dsMapper.Create(
             'test suite',
@@ -85,13 +85,13 @@ describe("TagMapper", async() => {
                 tag_name: faker.name.findName(),
                 container_id: containerID!,
                 data_source_id: dataSourceID!,
-            })
-        )
+            }),
+        );
 
         expect(tag.isError).false;
         expect(tag.value.id).not.null;
         tagID = tag.value.id!;
-        
+
         return Promise.resolve();
     });
 
@@ -101,21 +101,20 @@ describe("TagMapper", async() => {
     });
 
     it('can create a tag', async () => {
-
         const tag = await tMapper.Create(
             'test suite',
             new Tag({
                 tag_name: faker.name.findName(),
                 container_id: containerID!,
                 data_source_id: dataSourceID!,
-            })
-        )
+            }),
+        );
 
         expect(tag.isError).false;
         expect(tag.value.id).not.null;
 
         return Promise.resolve();
-    })
+    });
 
     it('can tag a node', async () => {
         const tMapper = TagMapper.Instance;
@@ -136,11 +135,14 @@ describe("TagMapper", async() => {
         expect(metatype.value).not.empty;
 
         // Create the node
-        const node = await nMapper.CreateOrUpdateByCompositeID('test suite', new Node({
-            container_id: containerID!,
-            metatype: metatype.value,
-            properties: {}
-        }));
+        const node = await nMapper.CreateOrUpdateByCompositeID(
+            'test suite',
+            new Node({
+                container_id: containerID!,
+                metatype: metatype.value,
+                properties: {},
+            }),
+        );
 
         expect(node.isError, metatype.error?.error).false;
 
@@ -156,13 +158,16 @@ describe("TagMapper", async() => {
         const fMapper = FileMapper.Instance;
 
         // Create the file
-        const file = await fMapper.Create('test suite', new File({
-            container_id: containerID,
-            file_name: faker.name.findName(),
-            file_size: 100,
-            adapter_file_path: faker.name.findName(),
-            adapter: 'filesystem'
-        }));
+        const file = await fMapper.Create(
+            'test suite',
+            new File({
+                container_id: containerID,
+                file_name: faker.name.findName(),
+                file_size: 100,
+                adapter_file_path: faker.name.findName(),
+                adapter: 'filesystem',
+            }),
+        );
 
         expect(file.isError).false;
         expect(file.value).not.empty;
@@ -173,7 +178,7 @@ describe("TagMapper", async() => {
         expect(tagFile.value).true;
 
         return Promise.resolve();
-    })
+    });
 
     it('can tag an edge', async () => {
         const eMapper = EdgeMapper.Instance;
@@ -196,20 +201,26 @@ describe("TagMapper", async() => {
         expect(metatype.value).not.empty;
 
         // Create the Nodes
-        const node_a = await nMapper.CreateOrUpdateByCompositeID('test suite', new Node({
-            container_id: containerID!,
-            metatype: metatype.value,
-            properties: {
-                node: 'a'
-            }
-        }));
-        const node_b = await nMapper.CreateOrUpdateByCompositeID('test suite', new Node({
-            container_id: containerID!,
-            metatype: metatype.value,
-            properties: {
-                node: 'b'
-            }
-        }));
+        const node_a = await nMapper.CreateOrUpdateByCompositeID(
+            'test suite',
+            new Node({
+                container_id: containerID!,
+                metatype: metatype.value,
+                properties: {
+                    node: 'a',
+                },
+            }),
+        );
+        const node_b = await nMapper.CreateOrUpdateByCompositeID(
+            'test suite',
+            new Node({
+                container_id: containerID!,
+                metatype: metatype.value,
+                properties: {
+                    node: 'b',
+                },
+            }),
+        );
 
         expect(node_a.isError).false;
         expect(node_b.isError).false;
@@ -267,6 +278,5 @@ describe("TagMapper", async() => {
         expect(tagEdge.value).true;
 
         return Promise.resolve();
-
-    })
+    });
 });
