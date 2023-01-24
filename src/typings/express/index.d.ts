@@ -1,6 +1,7 @@
 import Container from '../../domain_objects/data_warehouse/ontology/container';
 import Metatype from '../../domain_objects/data_warehouse/ontology/metatype';
 import File from '../../domain_objects/data_warehouse/data/file';
+import Tag from '../../domain_objects/data_warehouse/data/tag';
 import MetatypeRelationship from '../../domain_objects/data_warehouse/ontology/metatype_relationship';
 import MetatypeRelationshipPair from '../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
 import MetatypeKey from '../../domain_objects/data_warehouse/ontology/metatype_key';
@@ -51,6 +52,7 @@ declare global {
             dataSource?: DataSource;
             dataTarget?: DataTarget;
             file?: File;
+            tag?: Tag;
             task?: TaskRecord;
             ontologyVersion?: OntologyVersion;
             activeOntologyVersion?: OntologyVersion;

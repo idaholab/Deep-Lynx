@@ -1,4 +1,6 @@
 openapi: 3.0.1
+x-stoplight:
+  id: tr5pyoyxdqv3w
 info:
   title: Deep Lynx
   description: |-
@@ -4893,6 +4895,213 @@ paths:
 
           Optionally, any metadata can be added
       x-internal: false
+  '/containers/{container_id}/graphs/tags':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+    post:
+      summary: Create Tag
+      operationId: post-containers-container_id-graphs-tags
+      responses:
+        '200':
+          description: OK
+      description: Create a Tag
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tag_name:
+                  type: string
+                container_id:
+                  type: integer
+            examples:
+              example-1:
+                value: {}
+  '/containers/{container_id}/graphs/tags/{tag_id}/nodes/{node_id}':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: node_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: tag_id
+        in: path
+        required: true
+    put:
+      summary: Tag Node
+      operationId: put-containers-container_id-graphs-tags-nodes-node_id
+      responses:
+        '200':
+          description: OK
+      description: Attach Tag to Node
+  '/containers/{container_id}/graphs/tags/{tag_id}/edges/{edge_id}':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: edge_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: tag_id
+        in: path
+        required: true
+    put:
+      summary: Tag Edge
+      operationId: put-containers-container_id-graphs-tags-tag_id-edges-edge_id
+      responses:
+        '200':
+          description: OK
+      description: Tag an Edge
+  '/containers/{container_id}/graphs/tags/{tag_id}/files/{file_id}':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: file_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: tag_id
+        in: path
+        required: true
+    put:
+      summary: Tag File
+      operationId: put-containers-container_id-graphs-tags-tag_id-files-file_id
+      responses:
+        '200':
+          description: OK
+      description: Tag a File
+  '/containers/{container_id}/graphs/tags/nodes/{node_id}':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: node_id
+        in: path
+        required: true
+    get:
+      summary: List Tags for Node
+      tags: []
+      responses: {}
+      operationId: get-containers-container_id-graphs-tags-nodes-node_id
+      description: List all Tags on a Node
+  '/containers/{container_id}/graphs/tags/files/{file_id}':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: file_id
+        in: path
+        required: true
+    get:
+      summary: List Tags for File
+      tags: []
+      responses: {}
+      operationId: get-containers-container_id-graphs-tags-files-file_id
+      description: List all Tags for a File
+  '/containers/{container_id}/graphs/tags/edges/{edge_id}':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: edge_id
+        in: path
+        required: true
+    get:
+      summary: List Tags for Edge
+      tags: []
+      responses: {}
+      operationId: get-containers-container_id-graphs-tags-edges-edge_id
+      description: List all Tags for an Edge
+  '/containers/{container_id}/graphs/tags/{tag_id}/nodes':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: tag_id
+        in: path
+        required: true
+    get:
+      summary: List Nodes with Tag
+      tags: []
+      responses: {}
+      operationId: get-containers-container_id-graphs-tags-nodes-tag_id
+      description: List all Nodes with a Tag
+  '/containers/{container_id}/graphs/tags/{tag_id}/files':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: tag_id
+        in: path
+        required: true
+    get:
+      summary: List Files with Tag
+      tags: []
+      responses: {}
+      operationId: get-containers-container_id-graphs-tags-tag_id-files
+      description: List all Files with Tag
+  '/containers/{container_id}/graphs/tags/{tag_id}/edges':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: tag_id
+        in: path
+        required: true
+    get:
+      summary: List Edges with Tag
+      tags: []
+      responses: {}
+      operationId: get-containers-container_id-graphs-tags-tag_id-edges
+      description: List all Edges with Tag
 components:
   securitySchemes:
     BearerAuth:
