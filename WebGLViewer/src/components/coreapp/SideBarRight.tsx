@@ -16,7 +16,7 @@ import ListItemText from '@mui/material/ListItemText';
 
 import MetadataPanels from '../display/MetadataPanels';
 
-export default function SideBarLeft(props: any) {
+export default function SideBarRight(props: any) {
   const { children } = props;
 
   const theme = useTheme();

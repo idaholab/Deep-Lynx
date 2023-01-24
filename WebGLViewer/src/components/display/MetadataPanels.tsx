@@ -1,12 +1,38 @@
 import * as React from 'react';
+import Box from '@mui/material/Box';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import Typography from '@mui/material/Typography';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Divider from '@mui/material/Divider';
+
+// @ts-ignore
+import COLORS from '../../styles/variables';
 
 export default function ControlledAccordions() {
+  // type panels = any[] | any;
+  type panelsDefault = Object[];
   const [expanded, setExpanded] = React.useState<string | false>(false);
+
+  const panelsDefault = [
+    {
+      title: 'General Settings',
+      data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
+    },
+    {
+      title: 'Users',
+      data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
+    },
+    {
+      title: 'Advanced Settings',
+      data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
+    },
+    {
+      title: 'Personal Data',
+      data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
+    }
+  ];
 
   const handleChange =
     (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
@@ -14,72 +40,57 @@ export default function ControlledAccordions() {
     };
 
   return (
-    <div>
-      <Accordion expanded={expanded === 'panel1'} onChange={handleChange('panel1')}>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          aria-controls="panel1bh-content"
-          id="panel1bh-header"
+    <>
+      {panelsDefault.map((object: any, index) => (
+        <Accordion
+          key={index}
+          expanded={expanded === `panel${index+1}`}
+          onChange={handleChange(`panel${index+1}`)}
+          sx={{
+            '&.MuiAccordion-root': {
+              border: `1px solid ${COLORS.colorDarkgray}`,
+              '&:first-of-type': {
+                marginTop: '0px !important'
+              },
+              '&:not(:first-of-type)': {
+                marginTop: '-1px'
+              },
+            },
+            '&.Mui-expanded': {
+              borderTopLeftRadius: '4px',
+              borderTopRightRadius: '4px',
+              borderBottomLeftRadius: '4px',
+              borderBottomRightRadius: '4px',
+              marginTop: '16px!important'
+            },
+            '&.Mui-expanded + .MuiAccordion-root': {
+              borderTopLeftRadius: '4px',
+              borderTopRightRadius: '4px',
+            },
+            '&:has(+ .Mui-expanded)' : {
+              borderBottomLeftRadius: '4px',
+              borderBottomRightRadius: '4px',
+            },
+          }}
         >
-          <Typography sx={{ flexShrink: 0 }}>
-            General settings
-          </Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Typography>
-            Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat.
-            Aliquam eget maximus est, id dignissim quam.
-          </Typography>
-        </AccordionDetails>
-      </Accordion>
-      <Accordion expanded={expanded === 'panel2'} onChange={handleChange('panel2')}>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          aria-controls="panel2bh-content"
-          id="panel2bh-header"
-        >
-          <Typography sx={{ flexShrink: 0 }}>Users</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Typography>
-            Donec placerat, lectus sed mattis semper, neque lectus feugiat lectus,
-            varius pulvinar diam eros in elit. Pellentesque convallis laoreet
-            laoreet.
-          </Typography>
-        </AccordionDetails>
-      </Accordion>
-      <Accordion expanded={expanded === 'panel3'} onChange={handleChange('panel3')}>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          aria-controls="panel3bh-content"
-          id="panel3bh-header"
-        >
-          <Typography sx={{ flexShrink: 0 }}>
-            Advanced settings
-          </Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Typography>
-            Nunc vitae orci ultricies, auctor nunc in, volutpat nisl. Integer sit
-            amet egestas eros, vitae egestas augue. Duis vel est augue.
-          </Typography>
-        </AccordionDetails>
-      </Accordion>
-      <Accordion expanded={expanded === 'panel4'} onChange={handleChange('panel4')}>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          aria-controls="panel4bh-content"
-          id="panel4bh-header"
-        >
-          <Typography sx={{ flexShrink: 0 }}>Personal data</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Typography>
-            Nunc vitae orci ultricies, auctor nunc in, volutpat nisl. Integer sit
-            amet egestas eros, vitae egestas augue. Duis vel est augue.
-          </Typography>
-        </AccordionDetails>
-      </Accordion>
-    </div>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            aria-controls={'panel' + (index+1) + 'bh-content'}
+            id={'panel' + (index+1) + 'bh-header'}
+            sx={{ minHeight: '48px !important', '& .MuiAccordionSummary-content.Mui-expanded': { margin: '8px 0 !important' } }}
+          >
+            <Typography sx={{ flexShrink: 0 }}>
+              { object.title }
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails sx={{ paddingTop: '0px' }}>
+            <Divider sx={{ margin: '0 -16px' }} />
+            <Typography sx={{ paddingTop: '12px' }}>
+              { object.data }
+            </Typography>
+          </AccordionDetails>
+        </Accordion>
+      ))}
+    </>
   );
 }

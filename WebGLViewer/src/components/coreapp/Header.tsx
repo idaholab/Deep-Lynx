@@ -8,11 +8,14 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
+import Paper from '@mui/material/Paper';
 
 import SideBarLeft from './SideBarLeft';
 import SideBarRight from './SideBarRight';
+// @ts-ignore
+import COLORS from '../../styles/variables';
 
-const drawerWidth = 340;
+const drawerWidth = 365;
 
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })<{
   open?: boolean;
@@ -43,8 +46,17 @@ const AppBar = styled(MuiAppBar, {
   transition: theme.transitions.create(['margin', 'width'], {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
-  })
+  }),
+  ...(open && {
+    width: `calc(100% - ${drawerWidth}px)`,
+    marginLeft: `${drawerWidth}px`,
+    transition: theme.transitions.create(['margin', 'width'], {
+      easing: theme.transitions.easing.easeOut,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+  }),
 }));
+
 
 const DrawerHeader = styled('div')(({ theme }) => ({
   display: 'flex',
@@ -55,7 +67,7 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   justifyContent: 'flex-end',
 }));
 
-export default function PersistentDrawerLeft(props: any) {
+export default function Header(props: any) {
   const { children } = props;
 
   const theme = useTheme();
@@ -73,23 +85,37 @@ export default function PersistentDrawerLeft(props: any) {
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
-      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            onClick={handleDrawerOpenLeftState}
-            edge="start"
-            sx={{ mr: 2 }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap component="div">
-            WebGL Viewer
-          </Typography>
-        </Toolbar>
-      </AppBar>
-
+      <Box sx={{ width: '100%', height: '64px', position: 'fixed', backgroundColor: COLORS.colorSecondary, zIndex: 1 }}>
+        <Paper square={true} elevation={3} sx={{ width: '100%', height: '64px', backgroundColor: COLORS.colorSecondary }} ></Paper>
+      </Box>
+      <Box>
+        <AppBar position="fixed" elevation={0} open={openLeft} color={"secondary"}>
+          <Toolbar>
+            <IconButton
+              color="inherit"
+              aria-label="open drawer"
+              onClick={handleDrawerOpenLeftState}
+              edge="start"
+              sx={{ mr: 2, }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography variant="h6" noWrap component="div">
+              WebGL Viewer
+            </Typography>
+            <a
+              aria-label="open drawer"
+              onClick={handleDrawerOpenRightState}
+              style={{
+                cursor: 'pointer',
+                marginLeft: 'auto'
+              }}
+            >
+              Temp Right Drawer Trigger
+            </a>
+          </Toolbar>
+        </AppBar>
+      </Box>
       <Drawer
         sx={{
           width: drawerWidth,
@@ -97,43 +123,40 @@ export default function PersistentDrawerLeft(props: any) {
           '& .MuiDrawer-paper': {
             width: drawerWidth,
             boxSizing: 'border-box',
-            marginTop: '64px',
+            background: COLORS.colorLightgray,
           },
         }}
         variant="persistent"
         anchor="left"
         open={openLeft}
       >
-        <SideBarLeft/>
-        <a
-          aria-label="open drawer"
-          onClick={handleDrawerOpenRightState}
-          style={{
-            cursor: 'pointer'
-          }}
-        >
-          Temp Right Drawer Trigger
-        </a>
+        
+        <Paper square={true} elevation={3} sx={{ width: '102%', height: '64px', backgroundColor: COLORS.colorSecondary, }}>
+          <Toolbar sx={{ padding: 0 }}>
+            <img alt="Deep Lynx Logo" width="100" src="/assets/lynx-white.png" style={{ marginLeft: '-8px' }} />
+          </Toolbar>
+        </Paper>
+    
+        <SideBarLeft />
       </Drawer>
-
-      <Main open={openLeft} sx={{ flexGrow: 1, marginTop: '64px' }}>
+      <Main open={openLeft} sx={{ flexGrow: 1, marginTop: '64px', zIndex: '0' }}>
         {children}
         <Drawer
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
+          sx={{
             width: drawerWidth,
-            boxSizing: 'border-box',
-            marginTop: '64px',
-          },
-        }}
-        variant="persistent"
-        anchor="right"
-        open={openRight}
-      >
-        <SideBarRight/>
-      </Drawer>
+            flexShrink: 0,
+            '& .MuiDrawer-paper': {
+              width: drawerWidth,
+              boxSizing: 'border-box',
+              marginTop: '64px',
+            },
+          }}
+          variant="persistent"
+          anchor="right"
+          open={openRight}
+        >
+          <SideBarRight/>
+        </Drawer>
       </Main>
     </Box>
   );
