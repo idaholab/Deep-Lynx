@@ -17,8 +17,7 @@ import {User} from '../../../../domain_objects/access_management/user';
 import NodeRepository from '../../../repositories/data_warehouse/data/node_repository';
 import EdgeRepository from '../../../repositories/data_warehouse/data/edge_repository';
 import {stringToValidPropertyName} from "../../../../services/utilities";
-import OntologyVersionRepository
-    from "../../../repositories/data_warehouse/ontology/versioning/ontology_version_repository";
+import OntologyVersionRepository from "../../../repositories/data_warehouse/ontology/versioning/ontology_version_repository";
 import OntologyVersion from "../../../../domain_objects/data_warehouse/ontology/versioning/ontology_version";
 const convert = require('xml-js');
 const xmlToJson = require('xml-2-json-streaming');

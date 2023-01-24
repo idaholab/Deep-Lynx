@@ -52,6 +52,18 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         return Promise.resolve(edge);
     }
 
+    async findEdgeHistoryByID(id: string, includeRawData: boolean, transaction?: PoolClient): Promise<Result<Edge[]>> {
+        const edges = (includeRawData === true)
+            ? await this.#mapper.RetrieveRawDataHistory(id, transaction)
+            : await this.#mapper.RetrieveHistory(id, transaction);
+        
+            if (edges.isError) {
+                return Promise.reject(edges.error)
+            }
+
+            return Promise.resolve(edges);
+    }
+
     async findByRelationship(origin: string, relationship: string, destination: string, transaction?: PoolClient): Promise<Result<Edge[]>> {
         return this.#mapper.RetrieveByRelationship(origin, relationship, destination, transaction);
     }

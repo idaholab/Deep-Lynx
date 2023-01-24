@@ -749,12 +749,21 @@ export class Client {
     retrieveNodeHistory(containerID: string, nodeID: string): Promise<NodeT[]> {
         const query: {[key: string]: any} = {};
         query.history = 'true';
+        query.includeRawData = 'true';
 
         return this.get<NodeT[]>(`/containers/${containerID}/graphs/nodes/${nodeID}`, query);
     }
 
     retrieveEdge(containerID: string, edgeID: string): Promise<EdgeT> {
         return this.get<EdgeT>(`/containers/${containerID}/graphs/edges/${edgeID}`);
+    }
+
+    retrieveEdgeHistory(containerID: string, edgeID: string): Promise<EdgeT[]> {
+        const query: {[key: string]: any} = {};
+        query.history = 'true';
+        query.includeRawData = 'true';
+
+        return this.get<EdgeT[]>(`/containers/${containerID}/graphs/edges/${edgeID}`, query);
     }
 
     countNodes(containerID: string, dataSourceID: string): Promise<number> {

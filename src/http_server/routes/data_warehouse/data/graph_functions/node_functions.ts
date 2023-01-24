@@ -36,6 +36,12 @@ export default class NodeFunctions {
                 repo = repo.and().dataSourceID('eq', req.query.dataSourceID);
             }
 
+            if (String(req.query.includeRawData).toLowerCase() === 'true') {
+                repo = repo
+                .join('data_staging', {conditions: {origin_col:'data_staging_id', destination_col:'id'}})
+                .addFields({'data': 'raw_data_properties'}, repo._aliasMap.get('data_staging'))
+            }
+
             if (req.query.count !== undefined && String(req.query.count).toLowerCase() === 'true') {
                 repo.count(undefined, {
                     limit: req.query.limit ? +req.query.limit : undefined,
@@ -71,19 +77,18 @@ export default class NodeFunctions {
 
     public static retrieveNode(req: Request, res: Response, next: NextFunction) {
         // first check if the node history is desired, otherwise load the single current node
-        if (String(req.query.history).toLowerCase() === 'true') {
-            if (req.container) {
-                nodeRepo.findNodeHistoryByID(req.params.nodeID)
-                    .then((result) => {
-                        if (result.isError && result.error) {
-                            result.asResponse(res);
-                            return;
-                        }
-                        res.status(200).json(result);
-                    })
-                    .catch((err) => Result.Failure(err, 404).asResponse(res))
-                    .finally(() => next());
-            }
+        if (String(req.query.history).toLowerCase() === 'true' && req.container) {
+            const includeRawData = (String(req.query.includeRawData).toLowerCase() === 'true') ? true : false
+            nodeRepo.findNodeHistoryByID(req.params.nodeID, includeRawData)
+                .then((result) => {
+                    if (result.isError && result.error) {
+                        result.asResponse(res);
+                        return;
+                    }
+                    res.status(200).json(result);
+                })
+                .catch((err) => Result.Failure(err, 404).asResponse(res))
+                .finally(() => next());
         } else {
             if (req.node) {
                 Result.Success(req.node).asResponse(res);
@@ -120,25 +125,29 @@ export default class NodeFunctions {
     public static listNodesByMetatypeID(req: Request, res: Response, next: NextFunction) {
         // fresh instance of the repo to avoid filter issues
         if (req.container && req.metatype) {
-            const repo = new NodeRepository();
-            repo.where()
+            let repo = new NodeRepository();
+            repo = repo.where()
                 .containerID('eq', req.container.id!)
                 .and()
-                .metatypeID('eq', req.metatype.id)
-                .and()
-                .list(String(req.query.loadMetatypes).toLowerCase() === 'true', {
-                    limit: req.query.limit ? +req.query.limit : undefined,
-                    offset: req.query.offset ? +req.query.offset : undefined,
-                })
-                .then((result) => {
-                    if (result.isError && result.error) {
-                        result.asResponse(res);
-                        return;
-                    }
-                    res.status(200).json(result);
-                })
-                .catch((err) => Result.Failure(err, 404).asResponse(res))
-                .finally(() => next());
+                .metatypeID('eq', req.metatype.id);
+            if (String(req.query.includeRawData).toLowerCase() === 'true') {
+                repo = repo
+                .join('data_staging', {conditions: {origin_col:'data_staging_id', destination_col:'id'}})
+                .addFields({'data': 'raw_data_properties'}, repo._aliasMap.get('data_staging'))
+            }
+            repo.list(String(req.query.loadMetatypes).toLowerCase() === 'true', {
+                limit: req.query.limit ? +req.query.limit : undefined,
+                offset: req.query.offset ? +req.query.offset : undefined,
+            })
+            .then((result) => {
+                if (result.isError && result.error) {
+                    result.asResponse(res);
+                    return;
+                }
+                res.status(200).json(result);
+            })
+            .catch((err) => Result.Failure(err, 404).asResponse(res))
+            .finally(() => next());
         } else {
             Result.Failure(`container or metatype not found`, 404).asResponse(res);
             next();

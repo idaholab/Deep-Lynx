@@ -550,14 +550,32 @@
               </div>
 
               <div v-if="newDataSource.adapter_type && newDataSource.adapter_type !== 'timeseries'">
+                <v-checkbox v-model="rawRetentionEnabled">
+                  <template v-slot:label>
+                    {{$t('containers.rawRetentionEnabled')}}<p class="text-caption" style="margin-left: 5px"></p>
+                  </template>
+
+                  <template slot="prepend"><info-tooltip :message="$t('containers.rawRetentionHelp')"></info-tooltip></template>
+                </v-checkbox>
+
                 <small>{{$t('createDataSource.dataRetentionHelp')}}</small>
-                <v-text-field
-                  type="number"
-                  v-model="dataRetentionDays"
-                  :min="-1"
-                >
-                  <template v-slot:label>{{$t('createDataSource.dataRetentionDays')}} </template>
-                </v-text-field>
+                <div v-if="rawRetentionEnabled">
+                  <v-text-field
+                    :value="-1"
+                    disabled
+                  >
+                    <template v-slot:label>{{$t('createDataSource.dataRetentionDays')}} </template>
+                  </v-text-field>
+                </div>
+                <div v-else>
+                  <v-text-field
+                    type="number"
+                    v-model="dataRetentionDays"
+                    :min="-1"
+                  >
+                    <template v-slot:label>{{$t('createDataSource.dataRetentionDays')}} </template>
+                  </v-text-field>
+                </div>
                 <v-checkbox
                     v-model="newDataSource.active"
                     :label="$t('createDataSource.enable')"
@@ -652,6 +670,7 @@ export default class CreateDataSourceDialog extends Vue {
   stopNodes = []
   valueNodes = []
   dataRetentionDays = 30
+  rawRetentionEnabled = false
   expandedTimeSeries: any[] = []
   container: ContainerT | undefined = undefined;
   p6preset = {
@@ -704,6 +723,7 @@ export default class CreateDataSourceDialog extends Vue {
     {text: ">=", value: ">=", requiresValue: true},
   ]
 
+
   beforeMount() {
     this.container = this.$store.getters.activeContainer;
   }
@@ -717,6 +737,7 @@ export default class CreateDataSourceDialog extends Vue {
       {text: this.$t('createDataSource.timeseries'), value: 'timeseries', description: this.$t('createDataSource.timeseriesDescription')},
       {text: this.$t('createDataSource.p6'), value: 'p6', description: this.$t('createDataSource.p6description')}
     ]
+
 
     if(this.container!.config.enabled_data_sources && this.container!.config.enabled_data_sources.length > 0) {
       return types.filter(t => this.container!.config.enabled_data_sources.find(s => s === t.value))
@@ -852,7 +873,12 @@ export default class CreateDataSourceDialog extends Vue {
 
     if(this.stopNodes.length > 0) this.newDataSource.config.stop_nodes = this.stopNodes
     if(this.valueNodes.length > 0) this.newDataSource.config.value_nodes = this.valueNodes
-    this.newDataSource.config.data_retention_days = parseInt(String(this.dataRetentionDays), 10)
+    if(this.rawRetentionEnabled) {
+      this.newDataSource.config.raw_retention_enabled = true
+      this.newDataSource.config.data_retention_days = -1
+    } else {
+      this.newDataSource.config.data_retention_days = parseInt(String(this.dataRetentionDays), 10)
+    }
 
     this.$client.createDataSource(this.containerID, this.newDataSource)
         .then((dataSource)=> {
@@ -879,6 +905,7 @@ export default class CreateDataSourceDialog extends Vue {
       active: false,
       config: undefined
     }
+    this.rawRetentionEnabled = false
     this.p6preset = {
       endpoint: false,
       projectID: false,

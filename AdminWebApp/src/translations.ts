@@ -167,6 +167,11 @@ export default {
             deleteEdge: 'Delete Edge',
             nodeFiles: 'Files',
             nodeTimeseries: 'Timeseries Data',
+            rawData: 'Raw Data',
+            noRawDataAvailable: 'No Raw Data Available',
+            rawDataKey: 'Raw Data Property Key',
+            metadataKey: 'Metadata Property Key',
+            metadataProperties: 'Metadata Properties',
             name: 'Name',
             value: 'Value',
             dataQuery: 'Data Query',
@@ -191,6 +196,8 @@ export default {
             nodeProperties: 'Properties',
             edgeProperties: 'Properties',
             relType: 'Relationship',
+            nodeHistory: 'Node History',
+            edgeHistory: 'Edge History',
             originMetatype: 'Origin Metatype',
             destinationMetatype: 'Destination Metatype',
             linkType: 'Type',
@@ -868,6 +875,14 @@ export default {
             in: 'in',
             tooltip: 'Reprocess Data from Data Source',
         },
+        refreshData: {
+            reprocess: 'Reprocess Data',
+            updateAlert: 'You have just updated your type mappings. Would you like to reprocess your data or continue editing your type mappings?',
+            later: 'Remind Me Later',
+            continue: 'Continue Mapping',
+            reprocessWarning: 'Clicking the reprocess button will reprocess all data in this datasource. Please ensure all type mappings are up to date and enabled before reprocessing.',
+            cancel: 'Cancel'
+        },
         deleteTransformation: {
             deleteTransformation: 'Delete Transformation',
             deleteTitle: 'Delete Transformation Permanently',
@@ -1017,6 +1032,9 @@ export default {
             addColumn: 'Add Column',
             configurationHelp: 'Transformation configuration options, generally how to deal with errors on key mapping and conversion.',
             done: 'Done',
+            metadataMappingTitle: 'Metadata Property Mapping',
+            metadataMappingHelp: 'Select any additional relevant payload keys to be included as metadata. These are properties that may not fit into the ontology but are still important to hold on to.',
+            metadataMappingKey: 'Select Additional Properties as Metadata'
         },
         deleteTypeMapping: {
             deleteTypeMapping: 'Delete Type Mapping',
@@ -1184,7 +1202,9 @@ export default {
             importHelp: 'Need Help? Details on creating or updating a container via an ontology file can be found on our',
             importWikiLink: 'https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/Creating-an-Ontology#importing-an-ontology',
             ontologyVersioningEnabled: 'Ontology Versioning Enabled',
+            rawRetentionEnabled: 'Raw Data Preservation Enabled',
             ontologyVersioningHelp: 'Toggle whether or not this container will maintain historical versions of the ontology.',
+            rawRetentionHelp: 'Toggle whether or not this data source will preserve data indefinitely and display original data records for nodes and edges',
         },
         containerSelect: {
             container: 'Container',
@@ -1337,6 +1357,7 @@ export default {
         },
         queryBuilder: {
             limitOntology: 'Limit results to current Ontology version',
+            includeRawDataHistory: 'Include raw data history in search',
             recordLimit: 'Limit',
             previousQueries: 'Previous Queries',
             queryBuilder: 'Query Builder',
@@ -1350,6 +1371,8 @@ export default {
             MetatypeFilter: 'Filter by Metatype',
             IDFilter: 'Filter by ID(s)',
             OriginalIDFilter: 'Filter by Original ID',
+            RawDataFilter: 'Filter by Raw data property',
+            MetadataFilter: 'Filter by Metadata property',
             metatype: 'Metatype',
             propertyKey: 'Property Key',
             typeToAdd: 'Type and hit Enter to add',
@@ -1361,6 +1384,7 @@ export default {
             newQuery: 'New Query',
             PropertyFilter: 'Property Filter',
             results: 'result(s)',
+            createdBy: 'Created By',
         },
     },
     es: {

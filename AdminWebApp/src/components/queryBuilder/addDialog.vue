@@ -34,7 +34,7 @@
 
 <script lang="ts">
 
-import {Component, Vue} from "vue-property-decorator";
+import {Component, Vue, Prop} from "vue-property-decorator";
 
 @Component
 export default class AddDialog extends Vue {
@@ -42,12 +42,16 @@ export default class AddDialog extends Vue {
   model = 0
 
   options() {
-    return [
+    const options = [
       {text: this.$t('queryBuilder.MetatypeFilter'), value: 'MetatypeFilter'},
       {text: this.$t('queryBuilder.DataSourceFilter'), value: 'DataSourceFilter'},
       {text: this.$t('queryBuilder.IDFilter'), value: 'IDFilter'},
       {text: this.$t('queryBuilder.OriginalIDFilter'), value: 'OriginalIDFilter'},
+      {text: this.$t('queryBuilder.MetadataFilter'), value: "MetadataFilter"},
+      {text: this.$t('queryBuilder.RawDataFilter'), value: 'RawDataFilter'}
     ]
+
+    return options
   }
 
   select(filterName: string) {

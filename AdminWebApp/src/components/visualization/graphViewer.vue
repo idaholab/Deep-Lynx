@@ -182,9 +182,7 @@
       </v-toolbar>
 
       <!-- Node Card -->
-
       <v-card v-if="nodeDialog" :style="'height: 100%; max-height: ' + graphHeight + 'px; z-index: 4; position: absolute; min-width: 400px; max-width: 50%; overflow-y: scroll;'">
-
         <div class="mt-2 pt-3 px-5 pb-5 height-full">
           <h4 class="primary--text">{{$t('dataQuery.nodeInformation')}}</h4>
 
@@ -197,6 +195,7 @@
                 <div><span class="text-overline">Created At:</span> {{currentNodeInfo.created_at}}</div>
                 <div><span class="text-overline">Modified At:</span> {{currentNodeInfo.modified_at}}</div>
                 <v-expansion-panels multiple v-model="openPanels">
+                  <!-- Properties -->
                   <v-expansion-panel>
                     <v-expansion-panel-header>
                       <div><span class="text-overline">{{$t('dataQuery.nodeProperties')}}:</span></div>
@@ -209,6 +208,7 @@
                         >
                       </edit-node-dialog>
                     </v-expansion-panel-header>
+                    
                     <v-expansion-panel-content>
                       <v-data-table
                           :items="Object.keys(currentNodeInfo.properties).map(k => {
@@ -220,11 +220,10 @@
 
                     </v-expansion-panel-content>
                   </v-expansion-panel>
-
                   <!-- Node History View -->
                   <v-expansion-panel>
                     <v-expansion-panel-header>
-                      <div><span class="text-overline">Node History:</span></div>
+                      <div><span class="text-overline">{{$t('dataQuery.nodeHistory')}}</span></div>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
                       <v-list>
@@ -236,7 +235,7 @@
                             two-line
                             v-for="(item, i) in currentNodeInfo.history"
                             :key="i"
-                            @click="getInfo(item)"
+                            @click="getInfo(item, undefined, i)"
                             :value="item.created_at"
                           >
 
@@ -246,14 +245,14 @@
 
                             <v-list-item-content>
                               <v-list-item-title>{{$utils.formatISODate(item.created_at)}}</v-list-item-title>
-                              <v-list-item-subtitle>Created by: {{users[item.created_by]?.display_name}} ({{item.created_by }})</v-list-item-subtitle>
+                              <v-list-item-subtitle>{{$t('dataQuery.createdBy')}}: {{users[item.created_by]?.display_name}} ({{item.created_by }})</v-list-item-subtitle>
                             </v-list-item-content>
                           </v-list-item>
                         </v-list-item-group>
                       </v-list>
                     </v-expansion-panel-content>
                   </v-expansion-panel>
-
+                  <!-- Node Files -->
                   <v-expansion-panel>
                     <v-expansion-panel-header>
                       <div><span class="text-overline">{{$t('dataQuery.nodeFiles')}}:</span></div>
@@ -262,13 +261,43 @@
                       <node-files-dialog :icon="true" :node="currentNodeInfo"></node-files-dialog>
                     </v-expansion-panel-content>
                   </v-expansion-panel>
-
+                  <!-- Timeseries -->
                   <v-expansion-panel>
                     <v-expansion-panel-header>
                       <div><span class="text-overline">{{$t('dataQuery.nodeTimeseries')}}:</span></div>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
                       <node-timeseries-data-table :nodeID="currentNodeInfo.id" :containerID="containerID"></node-timeseries-data-table>
+                    </v-expansion-panel-content>
+                  </v-expansion-panel>
+                  <!-- Metadata Properties -->
+                  <v-expansion-panel v-if="currentNodeInfo.metadata_properties !== null">
+                    <v-expansion-panel-header>
+                      <div><span class="text-overline">{{$t('dataQuery.metadataProperties')}}:</span></div>
+                    </v-expansion-panel-header>
+                    <v-expansion-panel-content>
+                      <v-container fluid>
+                        <json-viewer 
+                          :value="currentNodeInfo.metadata_properties"
+                          copyable
+                          :maxDepth="4"
+                        />
+                      </v-container>
+                    </v-expansion-panel-content>
+                  </v-expansion-panel>
+                  <!-- Raw Data -->
+                  <v-expansion-panel v-if="currentNodeInfo.raw_data && currentNodeInfo.raw_data !== null">
+                    <v-expansion-panel-header>
+                      <div><span class="text-overline">{{$t('dataQuery.rawData')}}:</span></div>
+                    </v-expansion-panel-header>
+                    <v-expansion-panel-content>
+                      <v-container fluid>
+                        <json-viewer
+                          :value="currentNodeInfo.raw_data"
+                          copyable
+                          :maxDepth="4"
+                        />
+                      </v-container>
                     </v-expansion-panel-content>
                   </v-expansion-panel>
                 </v-expansion-panels>
@@ -286,12 +315,10 @@
           </v-row>
 
         </div>
-
       </v-card>
 
       <!-- Edge Card -->
       <v-card v-if="edgeDialog" :style="'height: 100%; max-height: ' + graphHeight + 'px; z-index: 4; position: absolute; min-width: 400px; max-width: 50%; overflow-y: scroll;'">
-
         <div class="mt-2 pt-3 px-5 pb-5 height-full">
           <h4 class="primary--text">{{$t('dataQuery.edgeInformation')}}</h4>
           <div v-if="currentEdgeInfo !== null">
@@ -306,6 +333,7 @@
                   multiple v-model="openPanels" 
                   v-if="currentEdgeInfo.properties !== null"
                 >
+                  <!-- Properties -->
                   <v-expansion-panel>
                     <v-expansion-panel-header>
                       <div><span class="text-overline">{{$t('dataQuery.edgeProperties')}}:</span></div>
@@ -317,6 +345,64 @@
                         })"
                         :headers="propertyHeaders()"
                       ></v-data-table>
+                    </v-expansion-panel-content>
+                  </v-expansion-panel>
+                  <!-- Edge History View -->
+                  <v-expansion-panel>
+                    <v-expansion-panel-header>
+                      <div><span class="text-overline">{{$t('dataQuery.edgeHistory')}}:</span></div>
+                    </v-expansion-panel-header>
+                    <v-expansion-panel-content>
+                      <v-list>
+                        <v-list-item-group
+                          color="primary"
+                          v-model="selectedEdgeHistory"
+                        >
+                          <v-list-item
+                            two-line
+                            v-for="(item, i) in currentEdgeInfo.history"
+                            :key="i"
+                            @click="getEdgeInfo(item, i)"
+                          >
+                            <v-list-item-icon style="margin-right: 12px">
+                              <v-icon color="#b2df8a">mdi-edit</v-icon>
+                            </v-list-item-icon>
+
+                            <v-list-item-content>
+                              <v-list-item-title>{{$utils.formatISODate(item.created_at)}}</v-list-item-title>
+                              <v-list-item-subtitle>{{$t('dataQuery.createdBy')}}: {{users[item.created_by]?.display_name}} ({{item.created_by}})</v-list-item-subtitle>
+                            </v-list-item-content>
+                          </v-list-item>
+                        </v-list-item-group>
+                      </v-list>
+                    </v-expansion-panel-content>
+                  </v-expansion-panel>
+                  <!-- Metadata Properties -->
+                  <v-expansion-panel v-if="currentEdgeInfo.metadata_properties !== null">
+                    <v-expansion-panel-header>
+                      <div><span class="text-overline">{{$t('dataQuery.metadataProperties')}}:</span></div>
+                    </v-expansion-panel-header>
+                    <v-expansion-panel-content>
+                      <json-viewer
+                        :value="currentEdgeInfo.metadata_properties"
+                        copyable
+                        :maxDepth="4"
+                      />
+                    </v-expansion-panel-content>
+                  </v-expansion-panel>
+                  <!-- Raw Data -->
+                  <v-expansion-panel v-if="currentEdgeInfo.raw_data && currentEdgeInfo.raw_data !== null">
+                    <v-expansion-panel-header>
+                      <div><span class="text-overline">{{$t('dataQuery.rawData')}}:</span></div>
+                    </v-expansion-panel-header>
+                    <v-expansion-panel-content>
+                      <v-container fluid>
+                        <json-viewer
+                          :value="currentEdgeInfo.raw_data"
+                          copyable
+                          :maxDepth="4"
+                        />
+                      </v-container>
                     </v-expansion-panel-content>
                   </v-expansion-panel>
                 </v-expansion-panels>
@@ -856,7 +942,6 @@
         </template>
       </v-card>
     </v-dialog>
-
   </div>
 </template>
 
@@ -1724,11 +1809,15 @@ export default class GraphViewer extends Vue {
             properties: historicalNode.properties,
             created_at: historicalNode.created_at,
             modified_at: historicalNode.modified_at,
-            history: history
+            metadata_properties: historicalNode ? historicalNode.metadata_properties : node.metadata_properties,
+            history: history,
+            raw_data: history[history.length - 1]['raw_data_properties' as keyof object]
           }
 
         } else {
           this.selectedNodeHistory = history[0].created_at
+          // metadata will not load unless a history version is selected; ensure something is always loaded
+          this.currentNodeInfo.metadata_properties = node.metadata_properties
         }
 
         // minimize the legend
@@ -1930,7 +2019,7 @@ export default class GraphViewer extends Vue {
     }
   }
 
-  async getInfo(data: NodeT, update?: boolean) {
+  async getInfo(data: NodeT, update?: boolean, index?: number) {
     // retrieve node history
     const nodeHistory = await this.$client.retrieveNodeHistory(this.containerID, data.id);
 
@@ -1945,9 +2034,16 @@ export default class GraphViewer extends Vue {
       properties: data.properties,
       created_at: this.$utils.formatISODate(data.created_at),
       modified_at: this.$utils.formatISODate(data.modified_at),
+      metadata_properties: data.metadata_properties,
       history: nodeHistory
     }
 
+    if (index) {
+      this.currentNodeInfo.raw_data = nodeHistory[index]['raw_data_properties' as keyof object]
+    } else {
+      this.currentNodeInfo.raw_data = nodeHistory[nodeHistory.length - 1]['raw_data_properties' as keyof object]
+    }
+    
     if (!update) {
       // remove the highlight from any previously selected node
       this.resetNodeSelectForID(data.id)
@@ -1961,7 +2057,9 @@ export default class GraphViewer extends Vue {
     return nodeHistory
   }
 
-  getEdgeInfo(data: EdgeT) {
+  async getEdgeInfo(data: EdgeT, index?: number) {
+    const edgeHistory = await this.$client.retrieveEdgeHistory(this.containerID, data.id);
+
     this.currentEdgeInfo = {
       id: data.id,
       container_id: this.containerID,
@@ -1975,6 +2073,14 @@ export default class GraphViewer extends Vue {
       properties: data.properties,
       created_at: this.$utils.formatISODate(data.created_at),
       modified_at: this.$utils.formatISODate(data.modified_at),
+      metadata_properties: data.metadata_properties,
+      history: edgeHistory
+    }
+
+    if (index) {
+      this.currentEdgeInfo.raw_data = edgeHistory[index]['raw_data_properties' as keyof object]
+    } else {
+      this.currentEdgeInfo.raw_data = edgeHistory[edgeHistory.length - 1]['raw_data_properties' as keyof object]
     }
   }
 

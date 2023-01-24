@@ -51,7 +51,8 @@
                       :disabled="results !== null"
                       :containerID="containerID"
                       :queryPart="part"
-                      @update="updateQueryPart(part, ...arguments)"></component>
+                      @update="updateQueryPart(part, ...arguments)"
+                    />
                   </v-card>
                   <v-card v-if="!results" style="margin-top: 10px" class="pa-4">
                     <p class="mb-2">{{$t('queryBuilder.clickToAdd')}}</p>
@@ -184,6 +185,8 @@ import {v4 as uuidv4} from 'uuid'
 import {NodeT} from "@/api/types";
 import { buildSchema } from 'graphql';
 import {mdiInformation} from "@mdi/js";
+import RawDataFilter from "./rawDataFilter.vue";
+import MetadataFilter from "./metadataFilter.vue";
 
 // @ts-ignore - needed because there are no declaration files here
 import CodeMirror from 'codemirror';
@@ -196,7 +199,7 @@ import 'codemirror-graphql/lint';
 import 'codemirror-graphql/mode';
 
 
-@Component({components: {AddDialog, DataSourceFilter, MetatypeFilter, OriginalIDFilter, IDFilter}})
+@Component({components: {AddDialog, DataSourceFilter, MetatypeFilter, OriginalIDFilter, IDFilter, RawDataFilter, MetadataFilter}})
 export default class QueryBuilder extends Vue {
   @Prop({required: true})
   readonly containerID!: string
@@ -572,6 +575,8 @@ relationshipSampleQuery =
   buildQuery(): any {
     const args: string[] = []
     const propertyArgs: string[] = []
+    const rawDataProps: string[] = []
+    const metadataProps: string[] = []
 
     this.queryParts.forEach(part => {
       switch(part.componentName) {
@@ -632,6 +637,24 @@ relationshipSampleQuery =
           }
           break;
         }
+
+        case('RawDataFilter'): {
+          if(part.operator === 'in') {
+            rawDataProps.push(`{key: "${part.key}", operator: "${part.operator}", value: "${part.value.join(",")}", historical: ${part.options!.historical}}`)
+          } else {
+            rawDataProps.push(`{key: "${part.key}", operator: "${part.operator}", value: "${part.value}", historical: ${part.options!.historical}}`)
+          }
+          break;
+        }
+
+        case('MetadataFilter'): {
+          if(part.operator === 'in') {
+            metadataProps.push(`{key: "${part.key}", operator: "${part.operator}", value: "${part.value.join(",")}", historical: ${part.options!.historical}}`)
+          } else {
+            metadataProps.push(`{key: "${part.key}", operator: "${part.operator}", value: "${part.value}"}`)
+          }
+          break;
+        }
       }
     })
 
@@ -645,6 +668,8 @@ relationshipSampleQuery =
     limit: ${this.limit}
     ${(args.length >  0) ? ","+args.join(','): ""}
     ${(propertyArgs.length > 0) ? ', properties: [' + propertyArgs.join(",") + "]" : ''}
+    ${(rawDataProps.length > 0) ? ', raw_data_properties: [' + rawDataProps.join(",") + "]" : ''}
+    ${(metadataProps.length > 0) ? ', metadata_properties: [' + metadataProps.join(",") + "]": ''}
     ){
         id
         original_id
@@ -655,6 +680,9 @@ relationshipSampleQuery =
         created_at
         modified_at
         properties
+        metadata_properties
+        raw_data_properties
+        raw_data_history
 }
 }`
     }
@@ -665,6 +693,7 @@ relationshipSampleQuery =
 export type QueryPart = {
   id: string; // needed for uniqueness, assigned here not by component
   componentName: string;
+  key?: string;
   property?: string;
   operator: string;
   value: any;

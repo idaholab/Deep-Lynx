@@ -78,7 +78,7 @@
                               <div><span class="text-overline">{{$t('dataQuery.viewProperties')}}:</span></div>
                             </v-expansion-panel-header>
                             <v-expansion-panel-content>
-                              <json-viewer :value="item.properties"></json-viewer>
+                              <json-viewer :value="item.properties" copyable/>
                             </v-expansion-panel-content>
                           </v-expansion-panel>
                         <!-- Files -->
@@ -118,6 +118,24 @@
                                 </v-tooltip>
                               </template>
                               </v-data-table>
+                            </v-expansion-panel-content>
+                          </v-expansion-panel>
+                        <!-- Metadata Properties -->
+                          <v-expansion-panel v-if="item.metadata_properties">
+                            <v-expansion-panel-header>
+                              <div><span class="text-overline">{{$t('dataQuery.metadataProperties')}}:</span></div>
+                            </v-expansion-panel-header>
+                            <v-expansion-panel-content>
+                              <json-viewer :value="item.metadata_properties" copyable/>
+                            </v-expansion-panel-content>
+                          </v-expansion-panel>
+                        <!-- Raw Data -->
+                          <v-expansion-panel v-if="item.raw_data_history">
+                            <v-expansion-panel-header>
+                              <div><span class="text-overline">{{$t('dataQuery.rawData')}}:</span></div>
+                            </v-expansion-panel-header>
+                            <v-expansion-panel-content>
+                              <json-viewer :value="item.raw_data_history" copyable/>
                             </v-expansion-panel-content>
                           </v-expansion-panel>
                         </v-expansion-panels>

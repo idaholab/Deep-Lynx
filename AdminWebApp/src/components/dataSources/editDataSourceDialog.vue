@@ -518,14 +518,33 @@
               </div>
 
               <div v-if="dataSource.adapter_type && dataSource.adapter_type !== 'timeseries'">
+                <v-checkbox v-model="dataSource.config.raw_retention_enabled">
+                  <template v-slot:label>
+                    {{$t('containers.rawRetentionEnabled')}}<p class="text-caption" style="margin-left: 5px"></p>
+                  </template>
+
+                  <template slot="prepend"><info-tooltip :message="$t('containers.rawRetentionHelp')"></info-tooltip></template>
+                </v-checkbox>
+
                 <small>{{$t('editDataSource.dataRetentionHelp')}}</small>
-                <v-text-field
-                  type="number"
-                  v-model="dataSource.config.data_retention_days"
-                  :min="-1"
-                >
-                  <template v-slot:label>{{$t('editDataSource.dataRetentionDays')}} </template>
-                </v-text-field>
+                <div v-if="dataSource.config.raw_retention_enabled">
+                  <v-text-field
+                    :value="-1"
+                    disabled
+                  >
+                    <template v-slot:label>{{$t('editDataSource.dataRetentionDays')}} </template>
+                  </v-text-field>
+                </div>
+                <div v-else>
+                  <v-text-field
+                    type="number"
+                    v-model="dataSource.config.data_retention_days"
+                    :min="-1"
+                  >
+                    <template v-slot:label>{{$t('editDataSource.dataRetentionDays')}} </template>
+                  </v-text-field>
+                </div>
+                
                 <v-checkbox
                     v-model="dataSource.active"
                     :label="$t('editDataSource.enable')"
@@ -635,7 +654,7 @@ export default class EditDataSourceDialog extends Vue {
 ]
 
 
-    adapterTypes() {
+  adapterTypes() {
     return [
       {text: this.$t('editDataSource.standard'), value: 'standard'},
       {text: this.$t('editDataSource.http'), value: 'http'},
