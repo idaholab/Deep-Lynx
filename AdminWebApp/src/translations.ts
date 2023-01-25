@@ -45,8 +45,8 @@ export default {
             ontologyUpdateDescription: 'Update via Ontology File',
             import: 'Import',
             imported: 'Data Imported',
-            data: 'Data',
-            dataQuery: 'Graph',
+            dataManagement: 'Data Management',
+            dataQuery: 'Data Viewer',
             dataQueryDescription: 'Query and Edit Data',
             dataSources: 'Data Sources',
             dataSourcesDescription: 'Configure Data Import Sources',
@@ -56,8 +56,8 @@ export default {
             dataMappingDescription: 'Manage Data Mappings',
             dataExport: 'Graph Export',
             dataExportDescription: 'Manage Data Export',
-            dataManagement: 'Data Management',
-            dataManagementDescription: 'Create and Manage Datasets',
+            dataEditor: 'Data Editor',
+            dataEditorDescription: 'Create and Manage Datasets',
             settings: 'Settings',
             settingsDescription: 'Container Level Settings',
             dataImports: 'Import Data',
@@ -65,7 +65,7 @@ export default {
             containerAdministration: 'Container Administration',
             containerUsers: 'Container Users',
             containerUsersDescription: 'Manage Container Users',
-            administration: 'App Administration',
+            administration: 'DeepLynx Administration',
             users: 'Users',
             usersDescription: 'Manage All Users',
             containers: 'Containers',
@@ -748,7 +748,8 @@ export default {
             p6projectID: 'P6 Project ID',
             p6alias: 'Source Alias',
             p6defaultConfig: 'P6 Default Configurations',
-            p6defaultConfigDescription: 'Configure a default server address and project ID to help container users more easily set up P6. This config can be selected from a dropdown when creating a new P6 datasource.',
+            p6defaultConfigDescription:
+                'Configure a default server address and project ID to help container users more easily set up P6. This config can be selected from a dropdown when creating a new P6 datasource.',
             addConfiguration: 'Create New Configuration',
             customP6config: 'Select a P6 source configuration',
             dataRetentionDays: 'Raw Data Retention Policy (days)',
@@ -880,8 +881,9 @@ export default {
             updateAlert: 'You have just updated your type mappings. Would you like to reprocess your data or continue editing your type mappings?',
             later: 'Remind Me Later',
             continue: 'Continue Mapping',
-            reprocessWarning: 'Clicking the reprocess button will reprocess all data in this datasource. Please ensure all type mappings are up to date and enabled before reprocessing.',
-            cancel: 'Cancel'
+            reprocessWarning:
+                'Clicking the reprocess button will reprocess all data in this datasource. Please ensure all type mappings are up to date and enabled before reprocessing.',
+            cancel: 'Cancel',
         },
         deleteTransformation: {
             deleteTransformation: 'Delete Transformation',
@@ -1033,8 +1035,9 @@ export default {
             configurationHelp: 'Transformation configuration options, generally how to deal with errors on key mapping and conversion.',
             done: 'Done',
             metadataMappingTitle: 'Metadata Property Mapping',
-            metadataMappingHelp: 'Select any additional relevant payload keys to be included as metadata. These are properties that may not fit into the ontology but are still important to hold on to.',
-            metadataMappingKey: 'Select Additional Properties as Metadata'
+            metadataMappingHelp:
+                'Select any additional relevant payload keys to be included as metadata. These are properties that may not fit into the ontology but are still important to hold on to.',
+            metadataMappingKey: 'Select Additional Properties as Metadata',
         },
         deleteTypeMapping: {
             deleteTypeMapping: 'Delete Type Mapping',
