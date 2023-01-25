@@ -44,6 +44,11 @@ export type Config = {
     password?: string;
 };
 
+export type GraphQLOptions = {
+    pointInTime?: string;
+    metadataEnabled?: boolean;
+}
+
 // We provide both a a constructor and a singleton type instance for consumption. The
 // singleton applies sane defaults based on the configuration file. We know however
 // that there might be instances in which you might want to maintain connections to two
@@ -60,13 +65,14 @@ export class Client {
         return this.get<FullStatistics>(`/stats`);
     }
 
-    submitGraphQLQuery(containerID: string, query: any, pointInTime?: string): Promise<any> {
+    submitGraphQLQuery(containerID: string, query: any, options?: GraphQLOptions): Promise<any> {
         if (query.query) {
             query.query = query.query.replace(/\n/g, '');
         }
 
         const queryParams: {[key: string]: any} = {};
-        if (pointInTime) queryParams.pointInTime = pointInTime;
+        if (options?.pointInTime) queryParams.pointInTime = options.pointInTime;
+        if (options?.metadataEnabled) queryParams.metadataEnabled = options.metadataEnabled;
 
         return this.postRawReturn<any>(`/containers/${containerID}/data`, query, queryParams);
     }

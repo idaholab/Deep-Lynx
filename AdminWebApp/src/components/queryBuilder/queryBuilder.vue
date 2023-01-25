@@ -41,7 +41,7 @@
                 <v-col :cols="12" align="center">
                   <v-card style="margin-top: 10px" class="pa-4">
                     <v-checkbox
-                      v-model="includeMetadata"
+                      v-model="metadataEnabled"
                       label="Include Metadata in Query (may impact performance)"
                       :disabled="results !== null"
                     ></v-checkbox>
@@ -144,6 +144,10 @@
                   </v-tooltip>
                 </v-col>
                 <v-spacer />
+                <v-checkbox class="mr-5"
+                  v-model="metadataEnabled"
+                  label="Include Metadata in Query (may impact performance)"
+                ></v-checkbox>
                 <v-btn @click="submitRawQuery" style="margin-top: 15px; margin-right: 15px">
                   <v-progress-circular indeterminate v-if="loading"></v-progress-circular>
                   <span v-if="!loading">{{$t('queryBuilder.runQuery')}}</span>
@@ -221,7 +225,7 @@ export default class QueryBuilder extends Vue {
   limit = 100
   limitOptions = [100, 500, 1000, 10000]
   info = mdiInformation
-  includeMetadata = false
+  metadataEnabled = false
 
   codeMirror: CodeMirror.EditorFromTextArea | null = null
 
@@ -478,7 +482,7 @@ relationshipSampleQuery =
       }
 
       this.loading = true
-      this.$client.submitGraphQLQuery(this.containerID, { query: `${this.codeMirror?.getValue()}` })
+      this.$client.submitGraphQLQuery(this.containerID, { query: `${this.codeMirror?.getValue()}` }, {metadataEnabled: this.metadataEnabled})
         .then((queryResult: any) => {
           if(queryResult.errors) {
             this.errorMessage = queryResult.errors.map((error: any) => error.message as string).join(' ')
@@ -488,6 +492,7 @@ relationshipSampleQuery =
 
           this.rawQueryResult = queryResult
           this.loading = false
+          this.metadataEnabled = false
         })
         .catch((err: string) => {
           this.errorMessage = 'There is a problem with the GraphQL query or server error. Please see the result tab.'
@@ -521,7 +526,7 @@ relationshipSampleQuery =
   }
 
   resetQuery() {
-    this.includeMetadata = false
+    this.metadataEnabled = false
     this.queryParts = []
     this.query = null
     this.results = null
@@ -547,7 +552,7 @@ relationshipSampleQuery =
     const query = this.buildQuery()
     this.query = query.query
 
-    this.$client.submitGraphQLQuery(this.containerID, query)
+    this.$client.submitGraphQLQuery(this.containerID, query, {metadataEnabled: this.metadataEnabled})
         .then((results: any) => {
           if(results.errors) {
             this.errorMessage = results.errors[0].message ? 
@@ -562,7 +567,7 @@ relationshipSampleQuery =
             ran: new Date()
           })
 
-          this.results = {id, queryParts: this.queryParts, query: query.query, nodes: results.data.nodes, includeMetadata: this.includeMetadata}
+          this.results = {id, queryParts: this.queryParts, query: query.query, nodes: results.data.nodes, metadataEnabled: this.metadataEnabled}
           this.$emit('results', this.results)
         })
         .catch(e => {
@@ -574,7 +579,7 @@ relationshipSampleQuery =
 
   setResult(result: ResultSet) {
     this.results = result
-    this.results.includeMetadata = this.includeMetadata
+    this.results.metadataEnabled = this.metadataEnabled
     this.queryParts = result.queryParts
     this.query = result.query || null
     this.activeTab = 'queryBuilder'
@@ -690,9 +695,9 @@ relationshipSampleQuery =
         created_at
         modified_at
         properties
-        ${this.includeMetadata ? 'metadata_properties' : ''}
-        ${this.includeMetadata ? 'raw_data_properties' : ''}
-        ${this.includeMetadata ? 'raw_data_history' : ''}
+        ${this.metadataEnabled ? 'metadata_properties' : ''}
+        ${this.metadataEnabled ? 'raw_data_properties' : ''}
+        ${this.metadataEnabled ? 'raw_data_history' : ''}
 }
 }`
     }
@@ -717,7 +722,7 @@ export type ResultSet = {
   query?: string;
   nodes: NodeT[];
   ran?: Date;
-  includeMetadata?: boolean;
+  metadataEnabled?: boolean;
 }
 </script>
 

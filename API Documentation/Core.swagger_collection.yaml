@@ -393,6 +393,15 @@ paths:
           required: true
           schema:
             type: string
+        - schema:
+            type: boolean
+            default: 'false'
+          in: query
+          name: metadataEnabled
+        - schema:
+            type: string
+          in: query
+          name: pointInTime
       requestBody:
         content:
           application/json:
