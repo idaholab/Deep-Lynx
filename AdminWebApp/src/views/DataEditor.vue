@@ -3,7 +3,7 @@
     <error-banner :message="errorMessage"></error-banner>
     <success-banner :message="successMessage"></success-banner>
     <v-toolbar flat color="white">
-      <v-toolbar-title>{{$t('home.dataManagementDescription')}}</v-toolbar-title>
+      <v-toolbar-title>{{$t('home.dataEditorDescription')}}</v-toolbar-title>
     </v-toolbar>
     <div class="mx-2">
       <select-data-source
@@ -32,8 +32,8 @@
             <h3 class="text-h3">{{$t('dataManagement.nodeTableTitle')}}</h3>
             <v-spacer></v-spacer>
             <create-node-button
-              :dataSourceID="selectedDataSource.id" 
-              :containerID="containerID" 
+              :dataSourceID="selectedDataSource.id"
+              :containerID="containerID"
               :disabled="!selectedDataSource.active || selectedDataSource.archived"
               @nodeCreated="listNodes() && listEdges()"
             >
@@ -41,13 +41,13 @@
           </v-col>
         </template>
         <template v-slot:[`item.actions`]="{ item }">
-          <edit-node-dialog 
-            :node="item" 
+          <edit-node-dialog
+            :node="item"
             :icon="true"
-            :dataSourceID="selectedDataSource.id" 
+            :dataSourceID="selectedDataSource.id"
             :containerID="containerID"
             :disabled="!selectedDataSource.active || selectedDataSource.archived"
-            @nodeUpdated="listNodes() && listEdges()" 
+            @nodeUpdated="listNodes() && listEdges()"
             >
           </edit-node-dialog>
           <v-icon
@@ -78,8 +78,8 @@
             <h3 class="text-h3">{{$t('dataManagement.edgeTableTitle')}}</h3>
             <v-spacer></v-spacer>
             <create-edge-dialog
-              :dataSourceID="selectedDataSource.id" 
-              :containerID="containerID" 
+              :dataSourceID="selectedDataSource.id"
+              :containerID="containerID"
               :disabled="!selectedDataSource.active || selectedDataSource.archived"
               @edgeCreated="listEdges()"
             >
@@ -120,7 +120,7 @@ import EditNodeDialog from "@/components/data/editNodeDialog.vue";
     EditNodeDialog
   }
 })
-export default class DataManagement extends Vue {
+export default class DataEditor extends Vue {
   @Prop({required: true})
   readonly containerID!: string;
 
@@ -161,8 +161,8 @@ export default class DataManagement extends Vue {
         text: this.$t('dataManagement.name'),
         value: "properties.name"
       },
-      { text: this.$t('dataManagement.viewDeleteData'),  
-        value: 'actions', sortable: false 
+      { text: this.$t('dataManagement.viewDeleteData'),
+        value: 'actions', sortable: false
       }]
   }
 
@@ -187,8 +187,8 @@ export default class DataManagement extends Vue {
         text: this.$t('dataManagement.relationshipType'),
         value: "metatypeRelationshipPair.relationship_type"
       },
-      { text: this.$t('dataManagement.viewDeleteData'),  
-        value: 'actions', sortable: false 
+      { text: this.$t('dataManagement.viewDeleteData'),
+        value: 'actions', sortable: false
       }]
   }
 
