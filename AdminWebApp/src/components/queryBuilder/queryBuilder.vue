@@ -39,6 +39,13 @@
             <v-tab-item class="mx-5">
               <v-row>
                 <v-col :cols="12" align="center">
+                  <v-card style="margin-top: 10px" class="pa-4">
+                    <v-checkbox
+                      v-model="includeMetadata"
+                      label="Include Metadata in Query (may impact performance)"
+                      :disabled="results !== null"
+                    ></v-checkbox>
+                  </v-card>
                   <v-card v-for="part in queryParts" :key="part.id" style="margin-top: 10px">
                     <v-card-title>
                       {{$t(`queryBuilder.${part.componentName}`)}}
@@ -214,6 +221,7 @@ export default class QueryBuilder extends Vue {
   limit = 100
   limitOptions = [100, 500, 1000, 10000]
   info = mdiInformation
+  includeMetadata = false
 
   codeMirror: CodeMirror.EditorFromTextArea | null = null
 
@@ -513,6 +521,7 @@ relationshipSampleQuery =
   }
 
   resetQuery() {
+    this.includeMetadata = false
     this.queryParts = []
     this.query = null
     this.results = null
@@ -553,7 +562,7 @@ relationshipSampleQuery =
             ran: new Date()
           })
 
-          this.results = {id, queryParts: this.queryParts, query: query.query, nodes: results.data.nodes}
+          this.results = {id, queryParts: this.queryParts, query: query.query, nodes: results.data.nodes, includeMetadata: this.includeMetadata}
           this.$emit('results', this.results)
         })
         .catch(e => {
@@ -565,6 +574,7 @@ relationshipSampleQuery =
 
   setResult(result: ResultSet) {
     this.results = result
+    this.results.includeMetadata = this.includeMetadata
     this.queryParts = result.queryParts
     this.query = result.query || null
     this.activeTab = 'queryBuilder'
@@ -680,9 +690,9 @@ relationshipSampleQuery =
         created_at
         modified_at
         properties
-        metadata_properties
-        raw_data_properties
-        raw_data_history
+        ${this.includeMetadata ? 'metadata_properties' : ''}
+        ${this.includeMetadata ? 'raw_data_properties' : ''}
+        ${this.includeMetadata ? 'raw_data_history' : ''}
 }
 }`
     }
@@ -707,6 +717,7 @@ export type ResultSet = {
   query?: string;
   nodes: NodeT[];
   ran?: Date;
+  includeMetadata?: boolean;
 }
 </script>
 
