@@ -92,7 +92,7 @@ void postgresAdapter
 
                                 setTimeout(() => {
                                     resolve();
-                                }, 10000);
+                                }, 100000);
                             });
 
                             // we pipe to devnull because we need to trigger the stream and don't
