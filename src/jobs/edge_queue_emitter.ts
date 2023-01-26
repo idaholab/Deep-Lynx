@@ -60,18 +60,14 @@ void postgresAdapter
                             }
 
                             const stream = client.query(new QueryStream(mapper.needRetriedStreamingStatement()));
-                            let buffer: Promise<boolean>[] = [];
 
                             stream.on('data', (data) => {
                                 const item = plainToInstance(EdgeQueueItem, data as object);
 
                                 // if the item isn't the cache, we can go ahead and queue data
-                                buffer.push(queue.Put(Config.edge_insertion_queue, instanceToPlain(item)));
-
-                                if (buffer.length > 500) {
-                                    const toWait = [...buffer];
-                                    buffer = [];
-                                }
+                                queue.Put(Config.edge_insertion_queue, instanceToPlain(item)).catch((e) => {
+                                    Logger.error(`error reading from cache for staging emitter ${e}`);
+                                });
 
                                 // immediately set the next attempt time, this is how we handle back-pressuring for edge
                                 // queue items
@@ -96,7 +92,7 @@ void postgresAdapter
 
                                 setTimeout(() => {
                                     resolve();
-                                }, 100000);
+                                }, 10000);
                             });
 
                             // we pipe to devnull because we need to trigger the stream and don't
