@@ -391,59 +391,6 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-
-    <v-dialog
-      v-model="refreshDialog"
-      width="60%"
-    >
-      <v-card class="d-flex flex-column">
-        <v-card-title class="grey lighten-2 flex-shrink-1">
-          <span class="headline text-h3">{{$t('refreshData.reprocess')}}?</span>
-          <v-flex class="text-right">
-            <v-icon class="justify-right" @click="refreshDialog = false">mdi-window-close</v-icon>
-          </v-flex>
-        </v-card-title>
-
-        <v-card-text>
-          <v-alert type="info">
-            {{$t('refreshData.updateAlert')}}
-          </v-alert>
-        </v-card-text>
-
-        <v-card-actions class="flex-shrink-1">
-          <v-spacer></v-spacer>
-          <v-btn color="red darken-1" text @click="refreshDialog = false; refreshCountdown = 3">{{$t('refreshData.later')}}</v-btn>
-          <v-btn color="blue darken-1" text @click="refreshDialog = false">{{$t('refreshData.continue')}}</v-btn>
-          <v-btn color="blue darken-1" text @click="reprocessData">{{$t('refreshData.reprocess')}}</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <v-dialog
-      v-model="reprocessDialog"
-      width="60%"
-    >
-      <v-card class="d-flex flex-column">
-        <v-card-title class="grey lighten-2 flex-shrink-1">
-          <span class="headline text-h3">{{$t('refreshData.reprocess')}}</span>
-          <v-flex class="text-right">
-            <v-icon class="justify-right" @click="reprocessDialog = false">mdi-window-close</v-icon>
-          </v-flex>
-        </v-card-title>
-
-        <v-card-text>
-          <v-alert type="warning">
-            {{$t('refreshData.reprocessWarning')}}
-          </v-alert>
-        </v-card-text>
-
-        <v-card-actions class="flex-shrink-1">
-          <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="reprocessDialog = false">{{$t('refreshData.cancel')}}</v-btn>
-          <v-btn color="blue darken-1" text @click="reprocessData">{{$t('refreshData.reprocess')}}</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
   </div>
 </template>
 
@@ -486,7 +433,6 @@ export default class DataMapping extends Vue {
   dataDialog = false
   upgradeDialog = false
   mappingDialog = false
-  refreshDialog = false
   samplePayload: object | null = null
   successMessage = ""
   noTransformationsCount = 0
@@ -498,8 +444,6 @@ export default class DataMapping extends Vue {
   importedMappingResults: ResultT<any>[] = []
   reviewMappings = false
   currentOntologyVersion: OntologyVersionT | null = null
-  refreshCountdown = 0
-  reprocessDialog = false
 
   typeMappingCount = 0
   selectedTypeMapping: TypeMappingT | null = null
@@ -725,11 +669,6 @@ export default class DataMapping extends Vue {
                   this.typeMappings = results
                 })
                 .catch(e => this.errorMessage = e)
-            if (updated && this.refreshCountdown === 0) {
-              this.refreshDialog = true
-            } else if (updated) {
-              this.refreshCountdown -= 1
-            }
           })
           .catch(e => this.errorMessage = e)
     }
@@ -808,14 +747,6 @@ export default class DataMapping extends Vue {
           })
           .catch(e => this.errorMessage = e)
     }
-  }
-
-  reprocessData() {
-    if (this.selectedDataSource) {
-      this.$client.reprocessDataSource(this.selectedDataSource.container_id!, this.selectedDataSource.id!)
-    }
-    this.refreshDialog = false
-    this.reprocessDialog = false
   }
 
   mappingDeleted() {
