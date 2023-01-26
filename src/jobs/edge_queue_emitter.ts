@@ -45,59 +45,79 @@ void postgresAdapter
         QueueFactory()
             .then((queue) => {
                 const emitter = () => {
-                    void postgresAdapter.Pool.connect((err, client, done) => {
-                        if (typeof err !== 'undefined') {
-                            Logger.error(JSON.stringify(err));
-                            done();
-                            return;
-                        }
+                    return new Promise<void>((resolve) => {
+                        void postgresAdapter.Pool.connect((err, client, done) => {
+                            if (typeof err !== 'undefined') {
+                                Logger.error(JSON.stringify(err));
+                                done();
 
-                        const stream = client.query(new QueryStream(mapper.needRetriedStreamingStatement()));
+                                Logger.error(`unexpected error in edge queue item emitter emitter thread ${JSON.stringify(err)}`);
+                                if (parentPort) parentPort.postMessage('done');
+                                else {
+                                    process.exit(0);
+                                }
+                                return;
+                            }
 
-                        stream.on('data', (data) => {
-                            const item = plainToInstance(EdgeQueueItem, data as object);
+                            const stream = client.query(new QueryStream(mapper.needRetriedStreamingStatement()));
 
-                            // if the item isn't the cache, we can go ahead and queue data
-                            queue.Put(Config.edge_insertion_queue, instanceToPlain(item)).catch((e) => {
-                                Logger.error(`error reading from cache for staging emitter ${e}`);
+                            stream.on('data', (data) => {
+                                const item = plainToInstance(EdgeQueueItem, data as object);
+
+                                // if the item isn't the cache, we can go ahead and queue data
+                                queue.Put(Config.edge_insertion_queue, instanceToPlain(item)).catch((e) => {
+                                    Logger.error(`error reading from cache for staging emitter ${e}`);
+                                });
+
+                                // immediately set the next attempt time, this is how we handle back-pressuring for edge
+                                // queue items
+                                const currentTime = new Date().getTime();
+                                const check = currentTime + Math.pow(Config.edge_insertion_backoff_multiplier, item.attempts++) * 1000;
+
+                                item.next_attempt_at = new Date(check);
+
+                                void EdgeQueueItemMapper.Instance.SetNextAttemptAt(item.id!, item.next_attempt_at.toISOString());
                             });
 
-                            // immediately set the next attempt time, this is how we handle back-pressuring for edge
-                            // queue items
-                            const currentTime = new Date().getTime();
-                            const check = currentTime + Math.pow(Config.edge_insertion_backoff_multiplier, item.attempts++) * 1000;
+                            stream.on('error', (e: Error) => {
+                                Logger.error(`unexpected error in edge queue item emitter emitter thread ${e}`);
+                                if (parentPort) parentPort.postMessage('done');
+                                else {
+                                    process.exit(0);
+                                }
+                            });
 
-                            item.next_attempt_at = new Date(check);
+                            stream.on('end', () => {
+                                done();
 
-                            void EdgeQueueItemMapper.Instance.SetNextAttemptAt(item.id!, item.next_attempt_at.toISOString());
+                                setTimeout(() => {
+                                    resolve();
+                                }, 10000);
+                            });
+
+                            // we pipe to devnull because we need to trigger the stream and don't
+                            // care where the data ultimately ends up
+                            stream.pipe(devnull({objectMode: true}));
                         });
-
-                        stream.on('error', (e: Error) => {
-                            Logger.error(`unexpected error in edge queue item emitter emitter thread ${e}`);
-                            if (parentPort) parentPort.postMessage('done');
-                            else {
-                                process.exit(0);
-                            }
-                        });
-
-                        stream.on('end', () => {
-                            done();
-                        });
-
-                        // we pipe to devnull because we need to trigger the stream and don't
-                        // care where the data ultimately ends up
-                        stream.pipe(devnull({objectMode: true}));
-
-                        setTimeout(() => {
-                            if (parentPort) parentPort.postMessage('done');
-                            else {
-                                process.exit(0);
-                            }
-                        }, 10000);
                     });
                 };
 
-                emitter();
+                emitter()
+                    .catch((e) => {
+                        void PostgresAdapter.Instance.close();
+
+                        Logger.error(`unable to initiate edge queue emitter: ${e}`);
+                        if (parentPort) parentPort.postMessage('done');
+                        else {
+                            process.exit(1);
+                        }
+                    })
+                    .finally(() => {
+                        if (parentPort) parentPort.postMessage('done');
+                        else {
+                            process.exit(0);
+                        }
+                    });
             })
             .catch((e) => {
                 void PostgresAdapter.Instance.close();
