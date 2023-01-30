@@ -56,7 +56,7 @@ void postgresAdapter
 
                             // check to see if the importID is in the cache, indicating that there is a high probability that
                             // this message is already in the queue and either is being processed or waiting to be processed
-                            Cache.get(`imports_${staging.import_id}`)
+                            Cache.get(`imports:${staging.import_id}`)
                                 .then((set) => {
                                     // if it's set but in our list of seen imports then odds are we're the one putting this import
                                     // in, so we need to handle that fact
@@ -80,7 +80,7 @@ void postgresAdapter
                                 .finally(() => {
                                     if (staging.import_id) {
                                         // we set the cache value and push the imports into seen imports
-                                        Cache.set(`imports_${staging.import_id}`, {}, Config.initial_import_cache_ttl).catch((e) => {
+                                        Cache.set(`imports:${staging.import_id}`, {}, Config.initial_import_cache_ttl).catch((e) => {
                                             Logger.error(`unexpected error in data staging emitter emitter thread when attempting to put import on cache ${e}`);
                                         });
 
