@@ -44,7 +44,7 @@ async function Start(): Promise<any> {
             {
                 name: 'edge_item_queue', // will run edge_item_queue.js
                 interval: '1m',
-                timeout: '1m',
+                timeout: 0,
             },
         ],
     });
