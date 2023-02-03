@@ -42,7 +42,7 @@ export default class MetatypeRepository extends Repository implements Repository
 
             Object.assign(original.value, m);
 
-            void this.deleteCached(m.id, m.container_id);
+            void this.deleteCached(m.id);
 
             const result = await this.#mapper.Update(user.id!, original.value, transaction.value);
             if (result.isError) {
@@ -114,7 +114,7 @@ export default class MetatypeRepository extends Repository implements Repository
 
             if (metatype.id) {
                 toUpdate.push(metatype);
-                void this.deleteCached(metatype.id, metatype.container_id);
+                void this.deleteCached(metatype.id);
             } else {
                 toCreate.push(metatype);
             }
@@ -248,7 +248,7 @@ export default class MetatypeRepository extends Repository implements Repository
 
     async delete(m: Metatype): Promise<Result<boolean>> {
         if (m.id) {
-            void this.deleteCached(m.id, m.container_id);
+            void this.deleteCached(m.id);
 
             return this.#mapper.Delete(m.id);
         }
@@ -258,7 +258,7 @@ export default class MetatypeRepository extends Repository implements Repository
 
     archive(user: User, m: Metatype): Promise<Result<boolean>> {
         if (m.id) {
-            void this.deleteCached(m.id, m.container_id);
+            void this.deleteCached(m.id);
 
             return this.#mapper.Archive(m.id, user.id!);
         }
@@ -268,7 +268,7 @@ export default class MetatypeRepository extends Repository implements Repository
 
     unarchive(user: User, m: Metatype): Promise<Result<boolean>> {
         if (m.id) {
-            void this.deleteCached(m.id, m.container_id);
+            void this.deleteCached(m.id);
 
             return this.#mapper.Unarchive(m.id, user.id!);
         }
@@ -335,11 +335,11 @@ export default class MetatypeRepository extends Repository implements Repository
         return Promise.resolve(set);
     }
 
-    async deleteCached(id: string, containerID?: string): Promise<boolean> {
+    async deleteCached(id: string): Promise<boolean> {
         const deleted = await Cache.del(`${MetatypeMapper.tableName}:${id}`);
         if (!deleted) Logger.error(`unable to remove metatype ${id} from cache`);
 
-        const keysDeleted = await new MetatypeKeyRepository().deleteCachedForMetatype(id, containerID);
+        const keysDeleted = await new MetatypeKeyRepository().deleteCachedForMetatype(id);
         if (!keysDeleted) Logger.error(`unable to remove keys for metatype ${id} from cache`);
 
         return Promise.resolve(deleted);

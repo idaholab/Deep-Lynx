@@ -1296,7 +1296,7 @@ export default class ContainerImport {
                 // Invalidate cache for this container as a final step
                 for (const metatype of metatypes) {
                     // this will also invalidate cached keys for these metatypes
-                    if (metatype.id) void metatypeRepo.deleteCached(metatype.id, input.container.id);
+                    if (metatype.id) void metatypeRepo.deleteCached(metatype.id);
                 }
                 for (const metatypeRelationship of metatypeRelationships) {
                     if (metatypeRelationship.id) void metatypeRelationshipRepo.deleteCached(metatypeRelationship.id, input.container.id);

@@ -249,15 +249,15 @@ export function metatypeContext(): any {
 // route must contain the param labeled "metatypeKeyID"
 export function metatypeKeyContext(): any {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
-        // if we don't have an id, don't fail, just pass without action
-        if (!req.params.metatypeKeyID) {
+        // if we don't have an id or metatype ID, don't fail, just pass without action
+        if (!(req.params.metatypeKeyID && req.params.metatypeID)) {
             next();
             return;
         }
 
         const repo = new MetatypeKeyRepository();
 
-        repo.findByID(req.params.metatypeKeyID)
+        repo.findByID(req.params.metatypeKeyID, req.params.metatypeID)
             .then((result) => {
                 if (result.isError) {
                     resp.status(result.error?.errorCode!).json(result);

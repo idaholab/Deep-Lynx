@@ -17,6 +17,7 @@ import TimeseriesEntry, {TimeseriesData, TimeseriesMetadata} from '../data/times
 import NodeRepository from '../../../data_access_layer/repositories/data_warehouse/data/node_repository';
 import {PoolClient} from 'pg';
 import NodeMapper from '../../../data_access_layer/mappers/data_warehouse/data/node_mapper';
+import MetatypeKeyRepository from "../../../data_access_layer/repositories/data_warehouse/ontology/metatype_key_repository";
 
 /*
    Condition represents a logical operation which can determine whether or not
@@ -510,13 +511,14 @@ export default class TypeTransformation extends BaseDomainClass {
         const timeseriesData: TimeseriesData[] = [];
         const failedConversions: Conversion[] = [];
         const conversions: Conversion[] = [];
+        const metatypeKeyRepo = new MetatypeKeyRepository();
 
         if ((this.type === 'node' || this.type === 'edge') && this.keys) {
             for (const k of this.keys) {
                 // separate the metatype and metatype relationship keys from each other
                 // the type mapping _should_ have easily handled the combination of keys
                 if (k.metatype_key_id) {
-                    const fetched = await MetatypeKeyMapper.Instance.Retrieve(k.metatype_key_id);
+                    const fetched = await metatypeKeyRepo.findByID(k.metatype_key_id, this.metatype_id);
                     if (fetched.isError) {
                         Logger.error('unable to fetch keys to map payload, metatype key does not exist');
                         continue;
