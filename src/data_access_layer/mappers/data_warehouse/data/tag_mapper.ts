@@ -126,11 +126,13 @@ export default class TagMapper extends Mapper {
         const text = `INSERT INTO tags(
             tag_name,
             container_id,
+            data_source_id,
             metadata,
             created_by) VALUES %L RETURNING *`;
         const values = tags.map((tag) => [
             tag.tag_name,
             tag.container_id,
+            tag.data_source_id,
             JSON.stringify(tag.metadata),
             userID,
         ])
@@ -150,6 +152,7 @@ export default class TagMapper extends Mapper {
             id,
             tag_name,
             container_id,
+            data_source_id,
             metadata,
             created_by,
             modified_by) VALUES %L 
@@ -163,6 +166,7 @@ export default class TagMapper extends Mapper {
             t.id,
             t.tag_name,
             t.container_id,
+            t.data_source_id,
             JSON.stringify(t.metadata),
             userID,
             userID,
@@ -183,6 +187,7 @@ export default class TagMapper extends Mapper {
                         id,
                         tag_name,
                         container_id,
+                        data_source_id,
                         metadata,
                         modified_at,
                         created_by,
@@ -198,6 +203,7 @@ export default class TagMapper extends Mapper {
             t.id,
             t.tag_name,
             t.container_id,
+            t.data_source_id,
             JSON.stringify(t.metadata),
             t.modified_at,
             userID,

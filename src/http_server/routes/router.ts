@@ -178,7 +178,7 @@ export class Router {
         ]);
         /* This query route is considered deprecated */
         QueryRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
-        GraphRoutes.mount(this.app, [authenticateRoute(), containerContext(), nodeContext(), edgeContext(), fileContext(), tagContext(), metatypeContext(), currentUser()]);
+        GraphRoutes.mount(this.app, [authenticateRoute(), containerContext(), dataSourceContext(), nodeContext(), edgeContext(), fileContext(), tagContext(), metatypeContext(), currentUser()]);
         EventRoutes.mount(this.app, [authenticateRoute(), containerContext(), eventActionContext(), eventActionStatusContext(), currentUser()]);
         DataQueryRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
         TaskRoutes.mount(this.app, [authenticateRoute(), containerContext(), taskContext(), currentUser()]);

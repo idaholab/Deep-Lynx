@@ -32,7 +32,7 @@ export default class TagFunctions {
         }
     
         payload.forEach((tag: Tag) => {
-            tagRepo.save(tag, req.currentUser!)
+            tagRepo.create(tag, req.currentUser!)
             .then((result) => {
                 if (result.isError) {
                     Result.Error(result.error?.error).asResponse(res);
@@ -44,7 +44,7 @@ export default class TagFunctions {
             .catch((err) => {
                 Result.Error(err).asResponse(res);
             })
-            .finally(() => next());;
+            .finally(() => next());
         })
     
     }
