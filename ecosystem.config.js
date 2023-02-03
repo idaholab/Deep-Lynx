@@ -5,8 +5,16 @@ module.exports = {
             script: './dist/main.js',
         },
         {
-            name: 'worker',
-            script: './dist/worker.js',
+            name: 'emitter_worker',
+            script: './dist/emitter_worker.js',
+        },
+        {
+            name: 'event_worker',
+            script: './dist/event_worker.js',
+        },
+        {
+            name: 'queue_worker',
+            script: './dist/queue_worker.js',
         },
     ],
 };

@@ -162,6 +162,7 @@ export type NodeT = {
     metatype_name: string;
     metatype?: MetatypeT;
     properties: PropertyT[] | object;
+    metadata_properties?: object;
     raw_properties?: string; // JSON string with the raw properties
     container_id: string;
     original_data_id?: string;
@@ -184,6 +185,7 @@ export type EdgeT = {
     metatype_relationship_name?: string;
     relationship_id?: string;
     properties: PropertyT[] | object;
+    metadata_properties?: object;
     created_at: string;
     modified_at: string;
 };
@@ -217,6 +219,7 @@ export type StandardDataSourceConfig = {
     stop_nodes?: string[];
     value_nodes?: string[];
     data_retention_days?: number;
+    raw_retention_enabled?: boolean;
 };
 
 export type TimeseriesColumn = {
@@ -245,6 +248,7 @@ export type TimeseriesDataSourceConfig = {
     stop_nodes?: string[];
     value_nodes?: string[];
     data_retention_days?: number;
+    raw_retention_enabled?: boolean;
 };
 
 export type HttpDataSourceConfig = {
@@ -260,6 +264,7 @@ export type HttpDataSourceConfig = {
     stop_nodes?: string[];
     value_nodes?: string[];
     data_retention_days?: number;
+    raw_retention_enabled?: boolean;
 };
 
 export type JazzDataSourceConfig = {
@@ -275,6 +280,7 @@ export type JazzDataSourceConfig = {
     stop_nodes?: string[];
     value_nodes?: string[];
     data_retention_days?: number;
+    raw_retention_enabled?: boolean;
 };
 
 export type AvevaDataSourceConfig = {
@@ -301,6 +307,7 @@ export type AvevaDataSourceConfig = {
     stop_nodes?: string[];
     value_nodes?: string[];
     data_retention_days?: number;
+    raw_retention_enabled?: boolean;
 };
 
 export type P6DataSourceConfig = {
@@ -312,6 +319,7 @@ export type P6DataSourceConfig = {
     stop_nodes?: string[];
     value_nodes?: string[];
     data_retention_days?: number;
+    raw_retention_enabled?: boolean;
 }
 
 export type ImportT = {
@@ -377,6 +385,7 @@ export type TypeMappingTransformationKeyMapping = {
     data_conversion_format_string?: string;
     column_name?: string;
     is_primary_timestamp?: boolean;
+    is_metadata_key?: boolean;
     value_type?: string;
 };
 
@@ -594,6 +603,7 @@ export function DefaultAvevaDataSourceConfig(): AvevaDataSourceConfig {
     return {
         kind: 'aveva',
         data_retention_days: 30,
+        raw_retention_enabled: false,
         ignore_dbs: [
             'SYSTEM',
             'DICTIONARY',
@@ -696,6 +706,7 @@ export function DefaultJazzDataSourceConfig(): JazzDataSourceConfig {
         timeout: 30000,
         limit: 10,
         data_retention_days: 30,
+        raw_retention_enabled: false,
     };
 }
 
@@ -705,8 +716,9 @@ export function DefaultP6DataSourceConfig(): P6DataSourceConfig {
         endpoint: '',
         projectID: '',
         username: '',
-        password: ''
-    }
+        password: '',
+        raw_retention_enabled: false,
+    };
 }
 
 export function DefaultHttpDataSourceConfig(): HttpDataSourceConfig {
@@ -718,6 +730,7 @@ export function DefaultHttpDataSourceConfig(): HttpDataSourceConfig {
         poll_interval: 10,
         timeout: 15000,
         data_retention_days: 30,
+        raw_retention_enabled: false,
     };
 }
 
@@ -726,6 +739,7 @@ export function DefaultStandardDataSourceConfig(): StandardDataSourceConfig {
         kind: 'standard',
         data_type: 'json',
         data_retention_days: 30,
+        raw_retention_enabled: false,
     };
 }
 

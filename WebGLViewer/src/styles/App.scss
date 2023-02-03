@@ -5,14 +5,21 @@
   font-size: 16px;
   line-height: 24px;
   font-weight: 400;
-
   color-scheme: light dark;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+}
+
+.material-symbols-rounded {
+  color: #fff;
+  font-variation-settings:
+  'FILL' 1,
+  'wght' 400,
+  'GRAD' 0,
+  'opsz' 48
 }
 
 .logo {
@@ -48,4 +55,8 @@
 
 .read-the-docs {
   color: #888;
+}
+
+Button {
+  text-transform: capitalize !important;
 }

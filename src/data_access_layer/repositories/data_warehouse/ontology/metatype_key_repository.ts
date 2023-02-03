@@ -24,7 +24,8 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
 
     delete(k: MetatypeKey): Promise<Result<boolean>> {
         if (k.id) {
-            void this.#metatypeRepo.deleteCached(k.metatype_id!, k.container_id);
+            void this.deleteCached(k.id, k.metatype_id!);
+            void this.#metatypeRepo.deleteCached(k.metatype_id!);
             return this.#mapper.Delete(k.id);
         }
 
@@ -33,7 +34,8 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
 
     archive(user: User, k: MetatypeKey): Promise<Result<boolean>> {
         if (k.id) {
-            void this.#metatypeRepo.deleteCached(k.metatype_id!, k.container_id);
+            void this.deleteCached(k.id, k.metatype_id!);
+            void this.#metatypeRepo.deleteCached(k.metatype_id!);
             return this.#mapper.Archive(k.id, user.id!);
         }
 
@@ -42,15 +44,26 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
 
     unarchive(user: User, k: MetatypeKey): Promise<Result<boolean>> {
         if (k.id) {
-            void this.#metatypeRepo.deleteCached(k.metatype_id!, k.container_id);
+            void this.deleteCached(k.id, k.metatype_id!);
+            void this.#metatypeRepo.deleteCached(k.metatype_id!);
             return this.#mapper.Unarchive(k.id, user.id!);
         }
 
         return Promise.resolve(Result.Failure(`key has no id`));
     }
 
-    findByID(id: string): Promise<Result<MetatypeKey>> {
-        return this.#mapper.Retrieve(id);
+    async findByID(id: string, metatypeID?: string): Promise<Result<MetatypeKey>> {
+        const cached = await this.getCached(id, metatypeID!);
+        if (cached) {
+            return Promise.resolve(Result.Success(cached));
+        }
+
+        const retrieved = await this.#mapper.Retrieve(id);
+
+        // don't fail out on cache set failure, it will log and move on
+        void this.setCache(retrieved.value);
+
+        return Promise.resolve(retrieved);
     }
 
     async save(m: MetatypeKey, user: User): Promise<Result<boolean>> {
@@ -60,12 +73,12 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
         }
 
         // clear the parent metatype's cache
-        void this.#metatypeRepo.deleteCached(m.metatype_id!, m.container_id);
-        void this.deleteCachedForMetatype(m.metatype_id!, m.container_id);
+        void this.#metatypeRepo.deleteCached(m.metatype_id!);
+        void this.deleteCachedForMetatype(m.metatype_id!);
 
         if (m.id) {
             // to allow partial updates we must first fetch the original object
-            const original = await this.findByID(m.id);
+            const original = await this.findByID(m.id, m.metatype_id);
             if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
 
             Object.assign(original.value, m);
@@ -96,8 +109,8 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
             }
 
             // clear the parent metatype's cache
-            void this.#metatypeRepo.deleteCached(key.metatype_id!, key.container_id);
-            void this.deleteCachedForMetatype(key.metatype_id!, key.container_id);
+            void this.#metatypeRepo.deleteCached(key.metatype_id!);
+            void this.deleteCachedForMetatype(key.metatype_id!);
             key.id ? toUpdate.push(key) : toCreate.push(key);
         }
 
@@ -160,9 +173,12 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
         return this.#mapper.ListForMetatypeIDs(metatype_ids);
     }
 
-    async deleteCachedForMetatype(metatypeID: string, containerID?: string): Promise<boolean> {
+    async deleteCachedForMetatype(metatypeID: string): Promise<boolean> {
         const deleted = await Cache.del(`${MetatypeMapper.tableName}:${metatypeID}:keys`);
         if (!deleted) Logger.error(`unable to remove metatype ${metatypeID}'s keys from cache`);
+
+        const flushed = await Cache.flushByPattern(`${MetatypeMapper.tableName}:${metatypeID}:keys:*`);
+        if (!flushed) Logger.error(`unable to remove metatype ${metatypeID}'s keys by pattern from cache`);
 
         return Promise.resolve(deleted);
     }
@@ -188,6 +204,30 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
         return await this.#mapper.JSONCreate(metatypeKeys);
     }
 
+    private async setCache(k: MetatypeKey): Promise<boolean> {
+        const set = await Cache.set(`metatypes:${k.metatype_id}:keys:${k.id}`, k, Config.cache_default_ttl);
+        if (!set) Logger.error(`unable to set cache for metatype key ${k.id}`);
+
+        return Promise.resolve(set);
+    }
+
+    private async deleteCached(id: string, metatypeID: string): Promise<boolean> {
+        const deleted = await Cache.del(`metatypes:${metatypeID}:keys:${id}`);
+        if (!deleted) Logger.error(`unable to remove metatype key ${id} from cache`);
+
+        return Promise.resolve(deleted);
+    }
+
+    private async getCached(id: string, metatypeID: string): Promise<MetatypeKey | undefined> {
+        const cached = await Cache.get<object>(`metatypes:${metatypeID}:keys:${id}`);
+        if (cached) {
+            const metatypeKey = plainToClass(MetatypeKey, cached);
+            return Promise.resolve(metatypeKey);
+        }
+
+        return Promise.resolve(undefined);
+    }
+
     RefreshView(): Promise<Result<boolean>> {
         return this.#mapper.RefreshView();
     }
@@ -205,8 +245,8 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
             }
 
             // clear the parent metatype's cache
-            void this.#metatypeRepo.deleteCached(key.metatype_id!, key.container_id);
-            void this.deleteCachedForMetatype(key.metatype_id!, key.container_id);
+            void this.#metatypeRepo.deleteCached(key.metatype_id!);
+            void this.deleteCachedForMetatype(key.metatype_id!);
             key.id ? toUpdate.push(key) : toCreate.push(key);
         }
 

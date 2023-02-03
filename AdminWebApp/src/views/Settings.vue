@@ -26,13 +26,17 @@
                   :rules="[v => !!v || $t('dataMapping.required')]"
               ></v-textarea>
 
-              <v-checkbox v-model="container.config.ontology_versioning_enabled">
-                <template v-slot:label>
-                  {{$t('containers.ontologyVersioningEnabled')}} <p class="text-caption" style="margin-left: 5px"> {{$t('beta')}}</p>
-                </template>
+              <v-row>
+                <v-col :cols="6">
+                  <v-checkbox v-model="container.config.ontology_versioning_enabled">
+                    <template v-slot:label>
+                      {{$t('containers.ontologyVersioningEnabled')}}<p class="text-caption" style="margin-left: 5px">{{$t('beta')}}</p>
+                    </template>
 
-                <template slot="prepend"><info-tooltip :message="$t('containers.ontologyVersioningHelp')"></info-tooltip> </template>
-              </v-checkbox>
+                    <template slot="prepend"><info-tooltip :message="$t('containers.ontologyVersioningHelp')"></info-tooltip></template>
+                  </v-checkbox>
+                </v-col>
+              </v-row>
             </v-form>
             <h1 v-else>{{$t('containers.noneSelected')}}</h1>
           </v-col>

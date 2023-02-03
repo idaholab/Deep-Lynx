@@ -356,7 +356,7 @@
             :typeMappingID="selectedTypeMapping.id"
             :active="selectedTypeMapping?.active"
             @mappingCreated="mappingDialog = false" 
-            @updated="loadTypeMappings"
+            @updated="loadTypeMappings(true)"
           ></data-type-mapping>
         </div>
         <v-card-actions class="flex-shrink-1">
@@ -375,7 +375,7 @@
         <v-card-title class="grey lighten-2 flex-shrink-1">
           <span class="headline text-h3">{{$t('dataImports.editTypeMapping')}}</span>
           <v-flex class="text-right">
-            <v-icon class="justify-right"  @click="mappingDialog = false">mdi-window-close</v-icon>
+            <v-icon class="justify-right"  @click="upgradeDialog = false">mdi-window-close</v-icon>
           </v-flex>
         </v-card-title>
 
@@ -616,7 +616,7 @@ export default class DataMapping extends Vue {
       .catch((e: any) => this.errorMessage = e)
   }
 
-  loadTypeMappings() {
+  loadTypeMappings(updated?: boolean) {
     if(this.selectedDataSource) {
       this.mappingsLoading= true
       this.typeMappings = []
@@ -779,7 +779,7 @@ export default class DataMapping extends Vue {
     const errors = results.filter(r => r.isError)
     if(errors.length > 0){
       this.errorMessage = `Errors importing type mappings: check type mapping file or logs for more information`
-      this.loadTypeMappings()
+      this.loadTypeMappings(true)
     } else {
       this.$router.go(0);
     }
@@ -802,7 +802,7 @@ export default class DataMapping extends Vue {
 
     this.$client.upgradeTypeMappings(this.containerID, this.selectedDataSource?.id!, payload)
     .then(() => {
-      this.loadTypeMappings()
+      this.loadTypeMappings(true)
       this.$forceUpdate()
     })
     .catch(e => this.errorMessage = e)

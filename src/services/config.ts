@@ -144,7 +144,7 @@ export class Config {
         this._cache_redis_connection_string = process.env.CACHE_REDIS_CONNECTION_STRING || '//localhost:6379';
         // default to 6 hours for the initial import cache, subsequent should be 30 seconds
         this._initial_import_cache_ttl = process.env.INITIAL_IMPORT_CACHE_TTL ? parseInt(process.env.INITIAL_IMPORT_CACHE_TTL!, 10) : 21600;
-        this._import_cache_ttl = process.env.IMPORT_CACHE_TTL ? parseInt(process.env.IMPORT_CACHE_TTL!, 10) : 30;
+        this._import_cache_ttl = process.env.IMPORT_CACHE_TTL ? parseInt(process.env.IMPORT_CACHE_TTL!, 10) : 300;
 
         this._core_db_connection_string = process.env.CORE_DB_CONNECTION_STRING || '';
         this._timescaledb_enabled = process.env.TIMESCALEDB_ENABLED === 'true';

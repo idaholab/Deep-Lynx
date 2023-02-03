@@ -54,6 +54,7 @@ export interface CacheInterface {
     del(key: string): Promise<boolean>;
     flush(): Promise<boolean>;
     get<T>(key: string): Promise<T | undefined>;
+    flushByPattern(pattern: string): Promise<boolean>;
 }
 
 /*
@@ -98,6 +99,10 @@ export class MemoryCacheImpl implements CacheInterface {
         this._emitter.emit('flushed');
 
         return new Promise((resolve) => resolve(true));
+    }
+    flushByPattern(pattern: string): Promise<boolean> {
+        // in the case of memory cache, this method is the same as flush
+        return this.flush()
     }
 
     constructor(emitter: EventEmitter) {
@@ -168,6 +173,35 @@ export class RedisCacheImpl implements CacheInterface {
 
         this._emitter.emit('flushed');
         return new Promise((resolve) => resolve(true));
+    }
+
+    flushByPattern(pattern: string): Promise<boolean> {
+        const stream = this._redis.scanStream({match: pattern});
+
+        // wrapping this in a promise, that way it won't return before stream is complete
+        return new Promise((resolve) => {
+            stream.on('data', async (keys: string[]) => {
+                const deleted = await this._redis.del(keys);
+
+                // deleted returns an integer indicating how many objects were
+                // deleted. If this does not match the length of objects found,
+                // throw an error
+                if (deleted !== keys.length) {
+                    Logger.error(`error deleting value(s) from redis: ${deleted}`)
+                    resolve(false)
+                }
+            });
+
+            stream.on('error', (e: Error) => {
+                Logger.error(`error deleting value(s) from redis: ${e}`);
+                resolve(false)
+            })
+
+            stream.on('end', () => {
+                this._emitter.emit('flushed');
+                resolve(true)
+            });
+        });
     }
 
     constructor(emitter: EventEmitter) {

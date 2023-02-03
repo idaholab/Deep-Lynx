@@ -69,6 +69,12 @@ export default class EdgeFunctions {
                     );
             }
 
+            if (String(req.query.includeRawData).toLowerCase() === 'true') {
+                repo = repo
+                .join('data_staging', {conditions: {origin_col:'data_staging_id', destination_col:'id'}})
+                .addFields({'data': 'raw_data_properties'}, repo._aliasMap.get('data_staging'));
+            }
+
             if (req.query.count !== undefined && String(req.query.count).toLowerCase() === 'true') {
                 repo.count(undefined, {
                     limit: req.query.limit ? +req.query.limit : undefined,
@@ -103,12 +109,27 @@ export default class EdgeFunctions {
     }
 
     public static retrieveEdge(req: Request, res: Response, next: NextFunction) {
-        if (req.edge) {
-            Result.Success(req.edge).asResponse(res);
-            next();
+        // first check if the edge history is desired, otherwise load the single current edge
+        if (String(req.query.history).toLowerCase() === 'true' && req.container) {
+            const includeRawData = (String(req.query.includeRawData).toLowerCase() === 'true') ? true : false
+            edgeRepo.findEdgeHistoryByID(req.params.edgeID, includeRawData)
+                .then((result) => {
+                    if (result.isError && result.error) {
+                        result.asResponse(res);
+                        return;
+                    }
+                    res.status(200).json(result);
+                })
+                .catch((err) => Result.Failure(err, 404).asResponse(res))
+                .finally(() => next());
         } else {
-            Result.Failure(`edge not found`, 404).asResponse(res);
-            next();
+            if (req.edge) {
+                Result.Success(req.edge).asResponse(res);
+                next();
+            } else {
+                Result.Failure(`edge not found`, 404).asResponse(res);
+                next();
+            }
         }
     }
 
@@ -135,6 +156,12 @@ export default class EdgeFunctions {
 
         if (typeof req.query.dataSourceID !== 'undefined' && (req.query.dataSourceID as string) !== '') {
             repository = repository.and().dataSourceID('eq', req.query.dataSourceID);
+        }
+
+        if (String(req.query.includeRawData).toLowerCase() === 'true') {
+            repository = repository
+            .join('data_staging', {conditions: {origin_col:'data_staging_id', destination_col:'id'}})
+            .addFields({'data': 'raw_data_properties'}, repository._aliasMap.get('data_staging'))
         }
 
         if (req.query.count !== undefined && String(req.query.count).toLowerCase() === 'true') {
