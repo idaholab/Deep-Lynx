@@ -205,7 +205,7 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
     }
 
     private async setCache(k: MetatypeKey): Promise<boolean> {
-        const set = await Cache.set(`metatypes:${k.metatype_id}:keys:${k.id}`, k, Config.cache_default_ttl);
+        const set = await Cache.set(`metatypes:${k.metatype_id}:keys:${k.id}`, serialize(k), Config.cache_default_ttl);
         if (!set) Logger.error(`unable to set cache for metatype key ${k.id}`);
 
         return Promise.resolve(set);
