@@ -218,7 +218,7 @@ export default class WebGLFunctions {
 
                         void Promise.all(updatePromises)
                             .then(() => {
-
+                                console.log(results);
                                 results.forEach(result => {
                                     const file = result.value;
                                     res.locals.tags.forEach((tag: Tag) => {

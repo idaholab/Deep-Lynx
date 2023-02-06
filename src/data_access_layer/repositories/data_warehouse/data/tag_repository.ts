@@ -32,6 +32,7 @@ export default class TagRepository extends Repository implements RepositoryInter
         const t = new Tag({
             tag_name: tag.tag_name!,
             container_id: tag.container_id!,
+            metadata: tag.metadata!
         })
 
         const saved = await this.save(t, user, transaction);
@@ -40,19 +41,26 @@ export default class TagRepository extends Repository implements RepositoryInter
         return Promise.resolve(Result.Success(t));
     }
 
+    async retrieve(tag_name: string, transaction?: PoolClient): Promise<Result<Tag>> {
+        const tag = await this.#mapper.Retrieve(tag_name, transaction);
+        if (tag.isError) Logger.error('unable to load tag');
+
+        return Promise.resolve(tag);
+    }
+
+    async findByID(id: string, transaction?: PoolClient): Promise<Result<Tag>> {
+        const tag = await this.#mapper.RetrieveByID(id, transaction);
+        if (tag.isError) Logger.error('unable to load tag');
+
+        return Promise.resolve(tag);
+    }
+
     delete(tag: Tag): Promise<Result<boolean>> {
         if (tag.id) {
             return this.#mapper.Delete(tag.id);
         }
 
         return Promise.resolve(Result.Failure('tag must have id'));
-    }
-
-    async findByID(id: string, transaction?: PoolClient): Promise<Result<Tag>> {
-        const tag = await this.#mapper.Retrieve(id, transaction);
-        if (tag.isError) Logger.error(`unable to load tag`);
-
-        return Promise.resolve(tag);
     }
 
     async save(tag: Tag, user: User, transaction?: PoolClient): Promise<Result<boolean>> {
@@ -68,9 +76,9 @@ export default class TagRepository extends Repository implements RepositoryInter
             internalTransaction = true;
         }
 
+        // If the incoming tag has an id, find the existing tag and update it
         if (tag.id) {
-            // to allow partial updates we must first fetch the original object
-            const original = await this.findByID(tag.id);
+            const original = await this.findByID(tag.id!);
             if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
 
             Object.assign(original.value, tag);
@@ -81,15 +89,30 @@ export default class TagRepository extends Repository implements RepositoryInter
                 return Promise.resolve(Result.Pass(results));
             }
 
-            Object.assign(tag, results.value);
         } else {
-            const results = await this.#mapper.Create(user.id!, tag);
-            if (results.isError) {
-                if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
-                return Promise.resolve(Result.Pass(results));
+            // If the incoming tag already exists in the database (tag name), update it
+            const original = await this.retrieve(tag.tag_name!);
+            if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
+            else if (original.value) {
+                Object.assign(original.value, tag);
+
+                const results = await this.#mapper.Update(user.id!, original.value);
+                if (results.isError) {
+                    if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
+                    return Promise.resolve(Result.Pass(results));
+                }
+                Object.assign(tag, results.value);
+            }
+            else {
+                // If the incoming tag doesn't exist in the database, create a new one
+                const results = await this.#mapper.Create(user.id!, tag);
+                if (results.isError) {
+                    if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
+                    return Promise.resolve(Result.Pass(results));
+                }
+                Object.assign(tag, results.value);
             }
 
-            Object.assign(tag, results.value);
         }
 
         if (internalTransaction) {

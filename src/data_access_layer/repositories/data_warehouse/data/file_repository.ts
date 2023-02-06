@@ -39,6 +39,13 @@ export default class FileRepository extends Repository implements RepositoryInte
         return Promise.resolve(Result.Failure(`file must have id`));
     }
 
+    async retrieve(tag_name: string, transaction?: PoolClient): Promise<Result<File>> {
+        const tag = await this.#mapper.Retrieve(tag_name, transaction);
+        if (tag.isError) Logger.error('unable to load file');
+
+        return Promise.resolve(tag);
+    }
+
     findByID(id: string): Promise<Result<File>> {
         return this.#mapper.Retrieve(id);
     }
@@ -53,8 +60,8 @@ export default class FileRepository extends Repository implements RepositoryInte
             return Promise.resolve(Result.Failure(`file does not pass validation ${errors.join(',')}`));
         }
 
+        // If the incoming file has an id, find the existing file and update it
         if (f.id) {
-            // to allow partial updates we must first fetch the original object
             const original = await this.findByID(f.id);
             if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
 
@@ -74,10 +81,26 @@ export default class FileRepository extends Repository implements RepositoryInte
                 }),
             );
         } else {
-            const created = await this.#mapper.Create(user.id!, f);
-            if (created.isError) return Promise.resolve(Result.Pass(created));
+            // If the incoming file already exists in the database (md5hash), update it
+            const original = await this.retrieve(f.md5hash!);
+            if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
+            else if (original.value) {
+                Object.assign(original.value, f);
 
-            Object.assign(f, created.value);
+                const results = await this.#mapper.Update(user.id!, original.value);
+                if (results.isError) {
+                    return Promise.resolve(Result.Pass(results));
+                }
+                Object.assign(f, results.value);
+            }
+            else {
+                // If the incoming file doesn't exist in the database, create a new one
+                const results = await this.#mapper.Create(user.id!, f);
+                if (results.isError) {
+                    return Promise.resolve(Result.Pass(results));
+                }
+                Object.assign(f, results.value);
+            }
 
             this.#eventRepo.emit(
                 new Event({

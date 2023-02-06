@@ -41,8 +41,18 @@ export default class TagMapper extends Mapper {
         return Promise.resolve(Result.Success(r.value[0]));
     }
 
-    public async Retrieve(id: string, transaction?: PoolClient): Promise<Result<Tag>> {
-        return super.retrieve<Tag>(this.retrieveStatement(id), {
+    public async Retrieve(tag_name: string, transaction?: PoolClient): Promise<Result<Tag>> {
+        const r = await super.run<Tag>(this.retrieveStatement(tag_name), {
+            transaction,
+            resultClass: this.resultClass,
+        });
+        if (r.isError) return Promise.resolve(Result.Pass(r));
+
+        return Promise.resolve(Result.Success(r.value[0]));
+    }
+
+    public async RetrieveByID(tag_name: string, transaction?: PoolClient): Promise<Result<Tag>> {
+        return super.retrieve<Tag>(this.retrieveByIdStatement(tag_name), {
             transaction,
             resultClass: this.resultClass,
         });
@@ -140,7 +150,14 @@ export default class TagMapper extends Mapper {
         return format(text, values);
     }
 
-    private retrieveStatement(id: string): QueryConfig {
+    private retrieveStatement(tag_name: string): QueryConfig {
+        return {
+            text: `SELECT * FROM tags WHERE tag_name = $1`,
+            values: [tag_name],
+        };
+    }
+
+    private retrieveByIdStatement(id: string): QueryConfig {
         return {
             text: `SELECT * FROM tags WHERE id = $1`,
             values: [id],
@@ -156,7 +173,8 @@ export default class TagMapper extends Mapper {
             metadata,
             created_by,
             modified_by) VALUES %L 
-            ON CONFLICT(id, tag_name) DO UPDATE SET
+            ON CONFLICT(tag_name) DO UPDATE SET
+                id = EXCLUDED.id,
                 metadata = EXCLUDED.metadata,
                 modified_at = NOW()
             WHERE EXCLUDED.id = tags.id
@@ -216,21 +234,21 @@ export default class TagMapper extends Mapper {
 
     private tagFileStatement(tagID: string, fileID: string): QueryConfig {
         return {
-            text: `INSERT INTO file_tags(tag_id, file_id) VALUES ($1, $2)`,
+            text: `INSERT INTO file_tags(tag_id, file_id) VALUES ($1, $2) ON CONFLICT(tag_id, file_id) DO NOTHING`,
             values: [tagID, fileID],
         };
     }
 
     private tagNodeStatement(tagID: string, nodeID: string): QueryConfig {
         return {
-            text: `INSERT INTO node_tags(tag_id, node_id) VALUES ($1, $2)`,
+            text: `INSERT INTO node_tags(tag_id, node_id) VALUES ($1, $2) ON CONFLICT(tag_id, node_id) DO NOTHING`,
             values: [tagID, nodeID]
         }
     }
 
     private tagEdgeStatement(tagID: string, edgeID: string): QueryConfig {
         return {
-            text: `INSERT INTO edge_tags(tag_id, edge_id) VALUES ($1, $2)`,
+            text: `INSERT INTO edge_tags(tag_id, edge_id) VALUES ($1, $2) ON CONFLICT(tag_id, edge_id) DO NOTHING`,
             values: [tagID, edgeID]
         }
     }
@@ -265,7 +283,7 @@ export default class TagMapper extends Mapper {
 
     private filesWithTag(tagID: string): QueryConfig {
         return {
-            text: `SELECT files.* FROM files LEFT JOIN file_tags ON files.id = file_tags.file_id WHERE tag_id = $1`,
+            text: `SELECT DISTINCT ON (file_name) files.* FROM files LEFT JOIN file_tags ON files.id = file_tags.file_id WHERE tag_id = $1  ORDER BY file_name, created_at DESC;`,
             values: [tagID],
         }
     }

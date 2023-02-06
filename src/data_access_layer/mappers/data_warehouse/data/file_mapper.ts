@@ -49,7 +49,7 @@ export default class FileMapper extends Mapper {
     }
 
     public async BulkUpdate(userID: string, f: File[], transaction?: PoolClient): Promise<Result<File>> {
-        const r = await super.run(this.fullUpdateStatement(userID, ...f), {
+        const r = await super.run(this.updateStatement(userID, ...f), {
             transaction,
             resultClass: this.resultClass,
         });
@@ -59,7 +59,7 @@ export default class FileMapper extends Mapper {
     }
 
     public async Update(userID: string, f: File, transaction?: PoolClient): Promise<Result<File>> {
-        const r = await super.run(this.fullUpdateStatement(userID, f), {
+        const r = await super.run(this.updateStatement(userID, f), {
             transaction,
             resultClass: this.resultClass,
         });
@@ -68,8 +68,19 @@ export default class FileMapper extends Mapper {
         return Promise.resolve(Result.Success(r.value[0]));
     }
 
-    public async Retrieve(id: string): Promise<Result<File>> {
-        return super.retrieve<File>(this.retrieveStatement(id), {
+    public async Retrieve(md5hash: string, transaction?: PoolClient): Promise<Result<File>> {
+        const r = await super.run<File>(this.retrieveStatement(md5hash), {
+            transaction,
+            resultClass: this.resultClass,
+        });
+        if (r.isError) return Promise.resolve(Result.Pass(r));
+
+        return Promise.resolve(Result.Success(r.value[0]));
+    }
+
+    public async RetrieveByID(tag_name: string, transaction?: PoolClient): Promise<Result<File>> {
+        return super.retrieve<File>(this.retrieveByIdStatement(tag_name), {
+            transaction,
             resultClass: this.resultClass,
         });
     }
@@ -140,7 +151,8 @@ export default class FileMapper extends Mapper {
                   md5hash,
                   short_uuid,
                   created_by,
-                  modified_by) VALUES %L RETURNING *`;
+                  modified_by)
+                  VALUES %L RETURNING *`;
         const values = files.map((file) => [
             file.container_id,
             file.file_name,
@@ -158,27 +170,28 @@ export default class FileMapper extends Mapper {
         return format(text, values);
     }
 
-    private fullUpdateStatement(userID: string, ...files: File[]): string {
+    private updateStatement(userID: string, ...files: File[]): string {
         const text = `INSERT INTO files(
-                id,
-                container_id,
-                file_name,
-                file_size,
-                adapter_file_path,
-                adapter,
-                metadata,
-                data_source_id,
-                md5hash,
-                short_uuid,
-                created_by,
-                modified_by) VALUES %L 
-                ON CONFLICT(id, md5hash) DO UPDATE SET
-                    file_name = EXCLUDED.file_name,
-                    file_size = EXCLUDED.file_size,
-                    metadata = EXCLUDED.metadata,
-                    modified_at = NOW()
-                WHERE EXCLUDED.id = files.id
-                 RETURNING *`;
+            id,
+            container_id,
+            file_name,
+            file_size,
+            adapter_file_path,
+            adapter,
+            metadata,
+            data_source_id,
+            md5hash,
+            short_uuid,
+            created_by,
+            modified_by) VALUES %L 
+            ON CONFLICT(md5hash) DO UPDATE SET
+                id = EXCLUDED.id,
+                file_name = EXCLUDED.file_name,
+                file_size = EXCLUDED.file_size,
+                metadata = EXCLUDED.metadata,
+                modified_at = NOW()
+            WHERE EXCLUDED.id = files.id
+            RETURNING *`;
 
         const values = files.map((file) => [
             file.id,
@@ -205,7 +218,14 @@ export default class FileMapper extends Mapper {
         };
     }
 
-    private retrieveStatement(id: string): QueryConfig {
+    private retrieveStatement(md5hash: string): QueryConfig {
+        return {
+            text: `SELECT * FROM files WHERE md5hash = $1`,
+            values: [md5hash],
+        };
+    }
+
+    private retrieveByIdStatement(id: string): QueryConfig {
         return {
             text: `SELECT * FROM files WHERE id = $1`,
             values: [id],
