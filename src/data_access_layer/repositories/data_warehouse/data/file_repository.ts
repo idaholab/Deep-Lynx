@@ -47,7 +47,7 @@ export default class FileRepository extends Repository implements RepositoryInte
     }
 
     findByID(id: string): Promise<Result<File>> {
-        return this.#mapper.Retrieve(id);
+        return this.#mapper.RetrieveByID(id);
     }
 
     findByIDAndContainer(id: string, containerID: string): Promise<Result<File>> {
@@ -81,39 +81,25 @@ export default class FileRepository extends Repository implements RepositoryInte
                 }),
             );
         } else {
-            // If the incoming file already exists in the database (md5hash), update it
-            const original = await this.retrieve(f.md5hash!);
-            if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
-            else if (original.value) {
-                Object.assign(original.value, f);
-
-                const results = await this.#mapper.Update(user.id!, original.value);
-                if (results.isError) {
-                    return Promise.resolve(Result.Pass(results));
-                }
-                Object.assign(f, results.value);
-            }
-            else {
                 // If the incoming file doesn't exist in the database, create a new one
                 const results = await this.#mapper.Create(user.id!, f);
                 if (results.isError) {
                     return Promise.resolve(Result.Pass(results));
                 }
                 Object.assign(f, results.value);
+
+                this.#eventRepo.emit(
+                    new Event({
+                        containerID: f.container_id,
+                        dataSourceID: f.data_source_id,
+                        eventType: 'file_created',
+                        event: {fileID: f.id},
+                    }),
+                );
             }
-
-            this.#eventRepo.emit(
-                new Event({
-                    containerID: f.container_id,
-                    dataSourceID: f.data_source_id,
-                    eventType: 'file_created',
-                    event: {fileID: f.id},
-                }),
-            );
-        }
-
-        return Promise.resolve(Result.Success(true));
+        return Promise.resolve(Result.Success(true)); 
     }
+        
 
     // creates a readable stream for downloading a file
     downloadFile(f: File): Promise<Readable | undefined> {
