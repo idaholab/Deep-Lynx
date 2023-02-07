@@ -24,6 +24,8 @@ export default class EventRoutes {
         app.get('/event_actions/:actionID', ...middleware, authInContainer('read', 'data'), this.retrieveEventAction);
         app.delete('/event_actions/:actionID', ...middleware, authInContainer('write', 'data'), this.deleteEventAction);
 
+        app.get('/event_actions/:actionID/event_action_status', ...middleware, authInContainer('read', 'data'), this.listEventActionStatusForEventAction);
+
         app.put('/event_action_status/:statusID', ...middleware, authInContainer('write', 'data'), this.updateEventActionStatus);
         app.get('/event_action_status', ...middleware, authInContainer('read', 'data'), this.listEventActionStatuses);
         app.get('/event_action_status/:statusID', ...middleware, authInContainer('read', 'data'), this.retrieveEventActionStatus);
@@ -190,6 +192,28 @@ export default class EventRoutes {
             })
             .catch((err) => Result.Failure(err, 404).asResponse(res))
             .finally(() => next());
+    }
+
+    private static listEventActionStatusForEventAction(req: Request, res: Response, next: NextFunction) {
+        if (req.eventAction) {
+            const repo = new EventActionStatusRepository();
+
+            repo.where()
+                .eventActionID('eq', req.eventAction.id)
+                .list()
+                .then((result) => {
+                    if (result.isError && result.error) {
+                        res.status(result.error.errorCode).json(result);
+                        return;
+                    }
+                    res.status(200).json(result);
+                })
+                .catch((err) => Result.Failure(err, 404).asResponse(res))
+                .finally(() => next());
+        } else {
+            Result.Failure(`event action not found`, 404).asResponse(res);
+            next();
+        }
     }
 
     private static retrieveEventActionStatus(req: Request, res: Response, next: NextFunction) {

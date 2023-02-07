@@ -52,6 +52,17 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         return Promise.resolve(edge);
     }
 
+    async findEdgeHistoryByID(id: string, includeRawData: boolean, transaction?: PoolClient): Promise<Result<Edge[]>> {
+        const edges =
+            includeRawData === true ? await this.#mapper.RetrieveRawDataHistory(id, transaction) : await this.#mapper.RetrieveHistory(id, transaction);
+
+        if (edges.isError) {
+            return Promise.reject(edges.error);
+        }
+
+        return Promise.resolve(edges);
+    }
+
     async findByRelationship(origin: string, relationship: string, destination: string, transaction?: PoolClient): Promise<Result<Edge[]>> {
         return this.#mapper.RetrieveByRelationship(origin, relationship, destination, transaction);
     }
@@ -249,74 +260,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
      of the transaction
      */
     private async validateRelationship(e: Edge, transaction?: PoolClient): Promise<Result<boolean>> {
-        let origin: Node;
-        if (e.origin_id) {
-            const request = await this.#nodeRepo.findByID(e.origin_id, transaction);
-            if (request.isError) {
-                return Promise.resolve(Result.Failure('origin node not found'));
-            }
-
-            origin = request.value;
-        } else if (e.origin_original_id && e.origin_data_source_id && e.origin_metatype_id) {
-            const request = await this.#nodeRepo.findByCompositeID(e.origin_original_id, e.origin_data_source_id, e.origin_metatype_id, transaction);
-            if (request.isError) {
-                return Promise.resolve(Result.Failure('origin node not found'));
-            }
-
-            origin = request.value;
-            e.origin_id = request.value.id!;
-        } else if (e.origin_original_id && e.data_source_id && e.origin_metatype_id) {
-            const request = await this.#nodeRepo.findByCompositeID(e.origin_original_id, e.data_source_id, e.origin_metatype_id, transaction);
-            if (request.isError) {
-                return Promise.resolve(Result.Failure('origin node not found'));
-            }
-
-            origin = request.value;
-            e.origin_id = request.value.id!;
-        } else {
-            return Promise.resolve(Result.Failure('no origin node id or original node id with metatype and data source provided'));
-        }
-
-        let destination: Node;
-        if (e.destination_id) {
-            const request = await this.#nodeRepo.findByID(e.destination_id, transaction);
-            if (request.isError) {
-                return Promise.resolve(Result.Failure('destination node not found'));
-            }
-
-            destination = request.value;
-        } else if (e.destination_original_id && e.destination_data_source_id && e.destination_metatype_id) {
-            const request = await this.#nodeRepo.findByCompositeID(
-                e.destination_original_id,
-                e.destination_data_source_id,
-                e.destination_metatype_id,
-                transaction,
-            );
-            if (request.isError) {
-                return Promise.resolve(Result.Failure('origin node not found'));
-            }
-
-            destination = request.value;
-            e.destination_id = request.value.id!;
-        } else if (e.destination_original_id && e.data_source_id && e.destination_metatype_id) {
-            const request = await this.#nodeRepo.findByCompositeID(e.destination_original_id, e.data_source_id, e.destination_metatype_id, transaction);
-            if (request.isError) {
-                return Promise.resolve(Result.Failure('destination node not found'));
-            }
-
-            destination = request.value;
-            e.destination_id = request.value.id!;
-        } else {
-            return Promise.resolve(Result.Failure('no destination node id or original node idea with metatype and data source provided'));
-        }
-
-        if (
-            e.metatypeRelationshipPair!.origin_metatype_id !== origin.metatype_id ||
-            e.metatypeRelationshipPair!.destination_metatype_id !== destination.metatype_id
-        ) {
-            return Promise.resolve(Result.Failure('origin and destination node types do not match relationship pair'));
-        }
-
+        // TODO: figure out a way to validate relationships that doesn't include hammering the database
         return Promise.resolve(Result.Success(true));
     }
 

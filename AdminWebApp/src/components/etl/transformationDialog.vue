@@ -690,8 +690,8 @@
                   <h4 class="text-h4">
                     {{ $t('dataMapping.metatypePropertyMapping') }}
                     <small class="mx-2">
-                      <span v-if="!rootArray">{{ propertyMapping.length }} / {{ payloadKeys.length }} properties selected</span>
-                      <span v-if="rootArray">{{ propertyMapping.length }} / {{ payloadSelectedArrayKeys.length }} array properties selected ({{ payloadKeys.length }} available)</span>
+                      <span v-if="!rootArray">{{ graphProperties.length }} / {{ payloadKeys.length }} properties selected</span>
+                      <span v-if="rootArray">{{ graphProperties.length }} / {{ payloadKeys.length }} properties selected ({{ payloadSelectedArrayKeys.length }} array properties available)</span>
                     </small>
                     <info-tooltip :message="$t('dataMapping.PropertyMappingHelp')"></info-tooltip>
                   </h4>
@@ -908,6 +908,27 @@
                     </template>
                   </v-simple-table>
                 </template>
+              </v-expansion-panel-content>
+            </v-expansion-panel>
+            <v-expansion-panel>
+              <v-expansion-panel-header>
+                <h4 class="text-h4">
+                  {{$t('dataMapping.metadataMappingTitle')}}
+                  <small class="mx-2">
+                    <span v-if="!rootArray">{{ metadataKeys.length }} / {{ payloadKeys.length }} properties selected</span>
+                    <span v-if="rootArray">{{ metadataKeys.length }} / {{ payloadKeys.length }} properties selected ({{ payloadSelectedArrayKeys.length }} array properties available)</span>
+                  </small>
+                </h4>
+                <v-spacer></v-spacer>
+              </v-expansion-panel-header>
+              <v-expansion-panel-content>
+                <p>{{ $t('dataMapping.metadataMappingHelp') }}</p>
+                <v-combobox
+                  :items="payloadKeys"
+                  multiple
+                  :label="$t('dataMapping.metadataMappingKey')"
+                  v-model="metadataKeys"
+                />
               </v-expansion-panel-content>
             </v-expansion-panel>
             <v-expansion-panel>
@@ -1264,6 +1285,8 @@ export default class TransformationDialog extends Vue {
   payloadSelectedArrayKeys: any = []
   payloadArrayKeys: any = []
   rootArray: any = null
+  metadataKeys: string[] = []
+  graphProperties: { [key: string]: any }[] = []
 
   operators = [
     {text: "==", value: "==", requiresValue: true},
@@ -1439,6 +1462,8 @@ export default class TransformationDialog extends Vue {
     this.selectedMetatype = null
     this.selectedMetatypeKeys = []
     this.propertyMapping = []
+    this.metadataKeys = []
+    this.graphProperties = []
   }
 
   editReset() {
@@ -1452,6 +1477,10 @@ export default class TransformationDialog extends Vue {
             this.uniqueIdentifierKey = this.transformation?.unique_identifier_key
 
             if (Array.isArray(this.transformation?.keys)) this.propertyMapping = this.transformation?.keys as Array<{ [key: string]: any }>
+            if(this.propertyMapping) {
+              this.metadataKeys = this.propertyMapping.filter(k => k.is_metadata_key === true).map(k => k.key) as Array<string>
+              this.graphProperties = this.propertyMapping.filter(k => (k.metatype_key_id || k.metatype_relationship_key_id)) as Array<{[key: string]: any}>
+            }
           })
           .catch(e => this.errorMessage = e)
     }
@@ -1473,6 +1502,10 @@ export default class TransformationDialog extends Vue {
 
 
             if (Array.isArray(this.transformation?.keys)) this.propertyMapping = this.transformation?.keys as Array<{ [key: string]: any }>
+            if(this.propertyMapping) {
+              this.metadataKeys = this.propertyMapping.filter(k => k.is_metadata_key === true).map(k => k.key) as Array<string>
+              this.graphProperties = this.propertyMapping.filter(k => (k.metatype_key_id || k.metatype_relationship_key_id)) as Array<{[key: string]: any}>
+            }
           })
           .catch(e => this.errorMessage = e)
     }
@@ -1820,6 +1853,8 @@ export default class TransformationDialog extends Vue {
       return;
     }
 
+    this.setMetadataKeys()
+
     this.loading = true
     const payload: { [key: string]: any } = {}
     payload.config = {}
@@ -1870,6 +1905,8 @@ export default class TransformationDialog extends Vue {
     this.loading = true
     const payload: { [key: string]: any } = {}
     payload.config = {}
+
+    this.setMetadataKeys()
 
     // include either the metatype or metatype relationship pair id, not both
     payload.metatype_id = (this.selectedMetatype?.id) ? this.selectedMetatype.id : ""
@@ -2065,6 +2102,30 @@ export default class TransformationDialog extends Vue {
       id: uuidv4(),
       key: key,
       metatype_key_id: metatypeKey.id
+    })
+  }
+
+  setMetadataKeys() {
+    this.propertyMapping.forEach(k => {
+      // set all metadata keys to false to ensure only selected keys are true
+      k.is_metadata_key = false
+      // if key already exists, set metadata key to true
+      if(this.metadataKeys.includes(k.key)) {
+        k.is_metadata_key = true
+        this.metadataKeys = this.metadataKeys.filter(m => m !== k.key)
+      }
+    })
+    // add any nonexistent keys
+    this.metadataKeys.forEach(key => this.addMetadataKey(key))
+    // remove superfluous keys from previous runs
+    this.propertyMapping = this.propertyMapping.filter(k => !(k.is_metadata_key === false && !k.metatype_key_id && !k.metatype_relationship_key_id))
+  }
+
+  addMetadataKey(key: string) {
+    this.propertyMapping.push({
+      id: uuidv4(),
+      key: key,
+      is_metadata_key: true
     })
   }
 

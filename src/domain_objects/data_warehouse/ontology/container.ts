@@ -28,7 +28,11 @@ export class ContainerConfig extends NakedDomainClass {
     @IsOptional()
     enabled_data_sources?: string[] = [];
 
-    constructor(input?: {data_versioning_enabled: boolean; ontology_versioning_enabled?: boolean; enabled_data_sources?: string[]}) {
+    constructor(input?: {
+        data_versioning_enabled: boolean; 
+        ontology_versioning_enabled?: boolean; 
+        enabled_data_sources?: string[];
+    }) {
         super();
 
         if (input) {

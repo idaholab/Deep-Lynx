@@ -377,6 +377,32 @@ export default class GraphQLRunner {
             },
         });
 
+        const recordInfoWithRawData = new GraphQLObjectType({
+            name: 'recordInfoWithRawData',
+            fields: {
+                id: {type: GraphQLString},
+                container_id: {type: GraphQLString},
+                data_source_id: {type: GraphQLString},
+                original_id: {type: GraphQLJSON}, // since the original ID might be a number, treat it as valid JSON
+                import_id: {type: GraphQLString},
+                metatype_id: {type: GraphQLString},
+                metatype_name: {type: GraphQLString},
+                metatype_uuid: {type: GraphQLString},
+                created_at: {type: GraphQLString},
+                deleted_at: {type: GraphQLString},
+                created_by: {type: GraphQLString},
+                modified_at: {type: GraphQLString},
+                modified_by: {type: GraphQLString},
+                metadata: {type: GraphQLJSON},
+                metadata_properties: {type: GraphQLJSON},
+                properties: {type: GraphQLJSON},
+                count: {type: GraphQLInt},
+                page: {type: GraphQLInt},
+                raw_data_properties: {type: GraphQLJSON},
+                raw_data_history: {type: GraphQLJSON},
+            },
+        });
+
         // needed when a user decides they want the results as a file vs. a raw return
         const fileInfo = new GraphQLObjectType({
             name: 'fileInfo',
@@ -390,6 +416,28 @@ export default class GraphQLRunner {
             },
         });
 
+        const rawDataInputType = new GraphQLList(
+            new GraphQLInputObjectType({
+                name: 'raw_data_input',
+                fields: {
+                    key: {type: GraphQLString},
+                    operator: {type: GraphQLString},
+                    value: {type: GraphQLString},
+                    historical: {type: GraphQLBoolean}, // used to specify query type
+                }
+            })
+        );
+
+        const metadataInputType = new GraphQLList(
+            new GraphQLInputObjectType({
+                name: 'metadata_input',
+                fields: {
+                    key: {type: GraphQLString},
+                    operator: {type: GraphQLString},
+                    value: {type: GraphQLString},
+                }
+            })
+        );
 
         const metatypeMapper = (metatype: Metatype) => {
             if (!metatype.keys || metatype.keys.length === 0) return;
@@ -471,6 +519,8 @@ export default class GraphQLRunner {
                     ...this.inputFieldsForMetatype(metatype),
                     _record: {type: recordInputType},
                     _relationship: {type: relationshipInputType},
+                    raw_data_properties: {type: rawDataInputType},
+                    metadata_properties: {type: metadataInputType},
                 },
                 description: metatype.description,
                 type: options.returnFile
@@ -485,6 +535,11 @@ export default class GraphQLRunner {
                                 const output: {[key: string]: {[key: string]: GraphQLNamedType | GraphQLList<any>}} = {};
                                 output._record = {type: recordInfo};
                                 output._relationship = {type: relationshipInfo};
+                                if (options.metadataEnabled) {
+                                    output.raw_data_properties = {type: GraphQLJSON};
+                                    output.raw_data_history = {type: GraphQLJSON};
+                                    output.metadata_properties = {type: GraphQLJSON};
+                                }
                                 output._file = {type: fileInfo};
 
                                 metatype.keys?.forEach((metatypeKey) => {
@@ -692,6 +747,8 @@ export default class GraphQLRunner {
                 args: {
                     ...this.inputFieldsForRelationship(relationship),
                     _record: {type: edgeRecordInputType},
+                    raw_data_properties: {type: rawDataInputType},
+                    metadata_properties: {type: metadataInputType},
                 },
                 description: relationship.description,
                 type: (options.returnFile) ? fileInfo : new GraphQLList(
@@ -703,6 +760,11 @@ export default class GraphQLRunner {
                         fields: () => {
                             const output: {[key: string]: {[key: string]: GraphQLNamedType | GraphQLList<any>}} = {};
                             output._record = {type: edgeRecordInfo};
+                            if (options.metadataEnabled) {
+                                output.raw_data_properties = {type: GraphQLJSON};
+                                output.raw_data_history = {type: GraphQLJSON};
+                                output.metadata_properties = {type: GraphQLJSON};
+                            }
 
                             relationship.keys?.forEach((relationshipKey) => {
                                 const propertyName = stringToValidPropertyName(relationshipKey.property_name);
@@ -904,82 +966,89 @@ export default class GraphQLRunner {
         };
 
         fields.nodes = {
-            args: {id: {type: new GraphQLInputObjectType({
-                name: "node_input_id",
-                fields: {
-                    operator: {type: GraphQLString},
-                    value: {type: new GraphQLList(GraphQLJSON)}
-                }
-            })},
-            data_source_id: {type: new GraphQLInputObjectType({
-                name: "node_input_data_source_id",
-                fields : {
-                    operator: {type: GraphQLString},
-                    value: {type: new GraphQLList(GraphQLJSON)}
-                }
-            })},
-            metatype_id: {type: new GraphQLInputObjectType({
-                name: "node_input_metatype_id",
-                fields : {
-                    operator: {type: GraphQLString},
-                    value: {type: new GraphQLList(GraphQLJSON)}
-                }
-            })},
-            metatype_uuid: {type: new GraphQLInputObjectType({
-                name: "node_input_metatype_uuid",
-                fields : {
-                    operator: {type: GraphQLString},
-                    value: {type: new GraphQLList(GraphQLJSON)}
-                }
-            })},
-            metatype_name: {type: new GraphQLInputObjectType({
-                name: "node_input_metatype_name",
-                fields : {
-                    operator: {type: GraphQLString},
-                    value: {type: new GraphQLList(GraphQLJSON)}
-                }
-            })},
-            original_id: {type: new GraphQLInputObjectType({
-                name: "node_input_original_id",
-                fields : {
-                    operator: {type: GraphQLString},
-                    value: {type: new GraphQLList(GraphQLJSON)}
-                }
-            })},
-            properties:{type: new GraphQLList( new GraphQLInputObjectType({
-                name: "node_input_properties",
-                fields : {
-                    key: {type: GraphQLString},
-                    operator: {type: GraphQLString},
-                    value: {type: new GraphQLList(GraphQLJSON)}
-                }
-            }))}, // since the original ID might be a number, treat it as valid JSON
-            import_id: {type: new GraphQLInputObjectType({
-                name: "node_input_import_id",
-                fields : {
-                    operator: {type: GraphQLString},
-                    value: {type: new GraphQLList(GraphQLJSON)}
-                }
-            })},
-            created_at: {type: new GraphQLInputObjectType({
-                name: "node_record_input_created_at",
-                fields : {
-                    operator: {type: GraphQLString},
-                    value: {type: new GraphQLList(GraphQLJSON)}
-                }
-            })},
-            modified_at: {type: new GraphQLInputObjectType({
-                name: "node_record_input_modified_at",
-                fields : {
-                    operator: {type: GraphQLString},
-                    value: {type: new GraphQLList(GraphQLJSON)}
-                }
-            })},
-            limit: {type: GraphQLInt, defaultValue: 10000},
-            page: {type: GraphQLInt, defaultValue: 1},},
-            type: (options.returnFile) ? fileInfo : new GraphQLList(recordInfo),
+            args: {
+                id: {type: new GraphQLInputObjectType({
+                    name: "node_input_id",
+                    fields: {
+                        operator: {type: GraphQLString},
+                        value: {type: new GraphQLList(GraphQLJSON)}
+                    }
+                })},
+                data_source_id: {type: new GraphQLInputObjectType({
+                    name: "node_input_data_source_id",
+                    fields : {
+                        operator: {type: GraphQLString},
+                        value: {type: new GraphQLList(GraphQLJSON)}
+                    }
+                })},
+                metatype_id: {type: new GraphQLInputObjectType({
+                    name: "node_input_metatype_id",
+                    fields : {
+                        operator: {type: GraphQLString},
+                        value: {type: new GraphQLList(GraphQLJSON)}
+                    }
+                })},
+                metatype_uuid: {type: new GraphQLInputObjectType({
+                    name: "node_input_metatype_uuid",
+                    fields : {
+                        operator: {type: GraphQLString},
+                        value: {type: new GraphQLList(GraphQLJSON)}
+                    }
+                })},
+                metatype_name: {type: new GraphQLInputObjectType({
+                    name: "node_input_metatype_name",
+                    fields : {
+                        operator: {type: GraphQLString},
+                        value: {type: new GraphQLList(GraphQLJSON)}
+                    }
+                })},
+                original_id: {type: new GraphQLInputObjectType({
+                    name: "node_input_original_id",
+                    fields : {
+                        operator: {type: GraphQLString},
+                        value: {type: new GraphQLList(GraphQLJSON)}
+                    }
+                })},
+                properties:{type: new GraphQLList( new GraphQLInputObjectType({
+                    name: "node_input_properties",
+                    fields : {
+                        key: {type: GraphQLString},
+                        operator: {type: GraphQLString},
+                        value: {type: new GraphQLList(GraphQLJSON)}
+                    }
+                }))}, // since the original ID might be a number, treat it as valid JSON
+                import_id: {type: new GraphQLInputObjectType({
+                    name: "node_input_import_id",
+                    fields : {
+                        operator: {type: GraphQLString},
+                        value: {type: new GraphQLList(GraphQLJSON)}
+                    }
+                })},
+                created_at: {type: new GraphQLInputObjectType({
+                    name: "node_record_input_created_at",
+                    fields : {
+                        operator: {type: GraphQLString},
+                        value: {type: new GraphQLList(GraphQLJSON)}
+                    }
+                })},
+                modified_at: {type: new GraphQLInputObjectType({
+                    name: "node_record_input_modified_at",
+                    fields : {
+                        operator: {type: GraphQLString},
+                        value: {type: new GraphQLList(GraphQLJSON)}
+                    }
+                })},
+                limit: {type: GraphQLInt, defaultValue: 10000},
+                page: {type: GraphQLInt, defaultValue: 1},
+            },
+            type: (options.returnFile) ? fileInfo : (options.metadataEnabled ? new GraphQLList(recordInfoWithRawData) : new GraphQLList(recordInfo)),
             resolve: this.resolverForNodes(containerID, options) as any
         };
+
+        if (options.metadataEnabled) {
+            fields.nodes.args.metadata_properties = {type: metadataInputType}
+            fields.nodes.args.raw_data_properties = {type: rawDataInputType}
+        }
 
         const schema = new GraphQLSchema({
             query: new GraphQLObjectType({
@@ -1091,6 +1160,38 @@ export default class GraphQLRunner {
                 }
             }
 
+            // only do this if metadata is enabled
+            if (resolverOptions?.metadataEnabled && input.raw_data_properties && Array.isArray(input.raw_data_properties)) {
+                let joinTable: string | undefined = undefined;
+                input.raw_data_properties.forEach((prop) => {
+                    // apply conditions only if historical is specified
+                    if (prop.historical) {
+                        joinTable = 'nodes' //override table that we are joining with
+                        repo = repo.join('nodes', {conditions: {origin_col: 'id', destination_col: 'id'}})
+                    }
+                    // join to data staging to get raw data
+                    repo = repo
+                    .join('data_staging', {conditions: {origin_col: 'data_staging_id', destination_col: 'id'}}, joinTable)
+                    repo = repo.and().queryJsonb(
+                        prop.key, 'data',
+                        prop.operator, prop.value,
+                        {tableName: 'data_staging'}
+                    )
+                    // reset join table
+                    joinTable = undefined;
+                })
+            }
+
+            // only do this if metadata is enabled
+            if (resolverOptions?.metadataEnabled && input.metadata_properties && Array.isArray(input.metadata_properties)) {
+                input.metadata_properties.forEach((prop) => {
+                    repo = repo.and().queryJsonb(
+                        prop.key, 'metadata_properties',
+                        prop.operator, prop.value
+                    )
+                })
+            }
+
             // variable to store results of edge DB call if _relationship input
             let edgeResults: {[key: string]: any} = {};
             if (input._relationship) {
@@ -1140,6 +1241,11 @@ export default class GraphQLRunner {
                     deleted_at: {type: 'TIMESTAMP_MILLIS', optional: true},
                 }
             }
+            if (resolverOptions?.metadataEnabled) {
+                parquet_schema.raw_data_properties = {type: 'JSON'}
+                parquet_schema.raw_data_history = {type: 'JSON'}
+                parquet_schema.metadata_properties = {type: 'JSON'}
+            }
 
             // we must map out what the graphql refers to a metatype's keys are vs. what they actually are so
             // that we can map the query properly
@@ -1162,7 +1268,7 @@ export default class GraphQLRunner {
             // iterate through the input object, ignoring reserved properties and adding all others to
             // the query as property queries,
             Object.keys(input).forEach((key) => {
-                if (key === '_record' || key === '_relationship') {
+                if (key === '_record' || key === '_relationship' || key === 'raw_data_properties' || key === 'metadata_properties') {
                     return;
                 }
 
@@ -1179,6 +1285,30 @@ export default class GraphQLRunner {
                 sortBy = `properties->${sortBy}`;
             }
 
+            // complete any metadata joins only as needed
+            if (resolverOptions?.metadataEnabled) {
+                // subquery for historical raw data
+                const history = repo.subquery(
+                    new NodeRepository()
+                    .select('id', 'sub_nodes')
+                    .select('jsonb_agg(data) AS history', 'raw_data')
+                    .from('nodes', 'sub_nodes')
+                    .join(
+                        'data_staging', {
+                        conditions: {origin_col: 'data_staging_id', destination_col: 'id'},
+                        destination_alias: 'raw_data'
+                    })
+                    .groupBy('id', 'sub_nodes')
+                )
+
+                // join to subquery
+                repo = repo
+                .join('data_staging', {conditions: {destination_col: 'id', origin_col: 'data_staging_id'}})
+                .addFields('data', 'data_staging')
+                .join(history, {conditions: {origin_col: 'id', destination_col: 'id'}, destination_alias: 'raw_data_history'})
+                .addFields('history', 'raw_data_history')
+            }
+            
             // wrapping the end resolver in a promise ensures that we don't return prior to all results being
             // fetched
             if(resolverOptions && resolverOptions.returnFile) {
@@ -1189,26 +1319,50 @@ export default class GraphQLRunner {
                 const transform = new Transform({objectMode: true, transform: (chunk: object, _: any, done: (o: any, a: any) => any ) => {
                     const node = plainToClass(Node, chunk)
 
-
-                    done(null, {
-                        _deep_lynx_id: node.id,
-                        ...node.properties,
-                        _record: {
-                            id: node.id,
-                            data_source_id: node.data_source_id,
-                            original_id: node.original_data_id,
-                            import_id: node.import_data_id,
-                            metatype_id: node.metatype_id,
-                            metatype_uuid: node.metatype_uuid,
-                            metatype_name: node.metatype_name,
-                            metadata: node.metadata,
-                            created_at: node.created_at?.toISOString(),
-                            created_by: node.created_by,
-                            modified_at: node.modified_at?.toISOString(),
-                            modified_by: node.modified_by,
-                            deleted_at: node.deleted_at
-                        },
-                    })
+                    if (resolverOptions.metadataEnabled) {
+                        done(null, {
+                            _deep_lynx_id: node.id,
+                            ...node.properties,
+                            _record: {
+                                id: node.id,
+                                data_source_id: node.data_source_id,
+                                original_id: node.original_data_id,
+                                import_id: node.import_data_id,
+                                metatype_id: node.metatype_id,
+                                metatype_uuid: node.metatype_uuid,
+                                metatype_name: node.metatype_name,
+                                metadata: node.metadata,
+                                created_at: node.created_at?.toISOString(),
+                                created_by: node.created_by,
+                                modified_at: node.modified_at?.toISOString(),
+                                modified_by: node.modified_by,
+                                deleted_at: node.deleted_at
+                            },
+                            metadata_properties: node.metadata_properties,
+                            raw_data_properties: node['data' as keyof object],
+                            raw_data_history: node['history' as keyof object],
+                        });
+                    } else {
+                        done(null, {
+                            _deep_lynx_id: node.id,
+                            ...node.properties,
+                            _record: {
+                                id: node.id,
+                                data_source_id: node.data_source_id,
+                                original_id: node.original_data_id,
+                                import_id: node.import_data_id,
+                                metatype_id: node.metatype_id,
+                                metatype_uuid: node.metatype_uuid,
+                                metatype_name: node.metatype_name,
+                                metadata: node.metadata,
+                                created_at: node.created_at?.toISOString(),
+                                created_by: node.created_by,
+                                modified_at: node.modified_at?.toISOString(),
+                                modified_by: node.modified_by,
+                                deleted_at: node.deleted_at
+                            }
+                        });
+                    }
                 }})
 
 
@@ -1222,7 +1376,9 @@ export default class GraphQLRunner {
                             parquet_schema,
                             containerID}, {
                             sortBy,
-                            sortDesc: input._record?.sortDesc
+                            sortDesc: input._record?.sortDesc,
+                            distinct: true,
+                            distinct_on: {table: 'current_nodes', column: 'id'}
                         })
                         .then((result) => {
                             if (result.isError) {
@@ -1243,7 +1399,9 @@ export default class GraphQLRunner {
                             limit: input._record?.limit ? input._record.limit : 10000,
                             offset: input._record?.page ? input._record.limit * (input._record.page > 0 ? input._record.page - 1 : 0) : undefined,
                             sortBy,
-                            sortDesc: input._record?.sortDesc
+                            sortDesc: input._record?.sortDesc,
+                            distinct: true,
+                            distinct_on: {table: 'current_nodes', column: 'id'}
                         })
                         .then((results) => {
                             if (results.isError) {
@@ -1263,7 +1421,7 @@ export default class GraphQLRunner {
                                     });
                                 }
 
-                                nodeOutput.push({
+                                const toPush: {[key: string]: any} = {
                                     _deep_lynx_id: node.id,
                                     ...properties,
                                     _record: {
@@ -1279,8 +1437,16 @@ export default class GraphQLRunner {
                                         created_by: node.created_by,
                                         modified_at: node.modified_at?.toISOString(),
                                         modified_by: node.modified_by,
-                                    },
-                                });
+                                    }
+                                }
+
+                                if (resolverOptions?.metadataEnabled) {
+                                    toPush.metadata_properties = node.metadata_properties,
+                                    toPush.raw_data_properties = node['data' as keyof object],
+                                    toPush.raw_data_history = node['history' as keyof object]
+                                };
+
+                                nodeOutput.push(toPush);
                             });
 
                             resolve(nodeOutput);
@@ -1416,11 +1582,63 @@ export default class GraphQLRunner {
                 })
             }
 
+            if (resolverOptions?.metadataEnabled && input.raw_data_properties && Array.isArray(input.raw_data_properties)) {
+                let joinTable: string | undefined = undefined;
+                input.raw_data_properties.forEach((prop) => {
+                    // apply conditions only if historical is specified
+                    if (prop.historical) {
+                        joinTable = 'nodes' //override table that we are joining with
+                        repo = repo.join('nodes', {conditions: {origin_col: 'id', destination_col: 'id'}})
+                    }
+                    // join to data staging to get raw data
+                    repo = repo
+                    .join('data_staging', {conditions: {origin_col: 'data_staging_id', destination_col: 'id'}}, joinTable)
+                    repo = repo.and().queryJsonb(
+                        prop.key, 'data',
+                        prop.operator, prop.value,
+                        {tableName: 'data_staging'}
+                    )
+                    // reset join table
+                    joinTable = undefined;
+                })
+            }
+
+            if (input.metadata_properties && Array.isArray(input.metadata_properties)) {
+                input.metadata_properties.forEach((prop) => {
+                    repo = repo.and().queryJsonb(
+                        prop.key, 'metadata_properties',
+                        prop.operator, prop.value
+                    )
+                })
+            }
+
             let sortBy: string | undefined = input._record?.sortBy
             if(input._record?.sortProp) {
                 sortBy = `properties->${sortBy}`;
             }
 
+            // complete any metadata joins only as needed
+            if (resolverOptions?.metadataEnabled) {
+                // subquery for historical raw data
+                const history = repo.subquery(
+                    new NodeRepository()
+                    .select('id', 'sub_nodes')
+                    .select('jsonb_agg(data) AS history', 'raw_data')
+                    .from('nodes', 'sub_nodes')
+                    .join(
+                        'data_staging', {
+                        conditions: {origin_col: 'data_staging_id', destination_col: 'id'},
+                        destination_alias: 'raw_data'
+                    })
+                    .groupBy('id', 'sub_nodes')
+                )
+
+                repo = repo
+                .join('data_staging', {conditions: {destination_col: 'id', origin_col: 'data_staging_id'}})
+                .addFields('data', 'data_staging')
+                .join(history, {conditions: {origin_col: 'id', destination_col: 'id'}, destination_alias: 'raw_data_history'})
+                .addFields('history', 'raw_data_history')
+            }
 
             // wrapping the end resolver in a promise ensures that we don't return prior to all results being
             // fetched
@@ -1432,24 +1650,43 @@ export default class GraphQLRunner {
                 const transform = new Transform({objectMode: true, transform: (chunk: object, _: any, done: (o: any, a: any) => any ) => {
                     const node = plainToClass(Node, chunk)
 
-
-                    done(null, {
-                        id: node.id,
-                        data_source_id: node.data_source_id,
-                        original_id: node.original_data_id,
-                        import_id: node.import_data_id,
-                        metatype_id: node.metatype_id,
-                        metatype_name: node.metatype_name,
-                        metatype_uuid: node.metatype_uuid,
-                        metadata: node.metadata,
-                        created_at: node.created_at?.toISOString(),
-                        created_by: node.created_by,
-                        modified_at: node.modified_at?.toISOString(),
-                        modified_by: node.modified_by,
-                        properties: node.properties,
-                    })
+                    if (resolverOptions.metadataEnabled) {
+                        done(null, {
+                            id: node.id,
+                            data_source_id: node.data_source_id,
+                            original_id: node.original_data_id,
+                            import_id: node.import_data_id,
+                            metatype_id: node.metatype_id,
+                            metatype_name: node.metatype_name,
+                            metatype_uuid: node.metatype_uuid,
+                            metadata: node.metadata,
+                            created_at: node.created_at?.toISOString(),
+                            created_by: node.created_by,
+                            modified_at: node.modified_at?.toISOString(),
+                            modified_by: node.modified_by,
+                            properties: node.properties,
+                            metadata_properties: node.metadata_properties,
+                            raw_data_properties: node['data' as keyof object],
+                            raw_data_history: node['history' as keyof object],
+                        })
+                    } else {
+                        done(null, {
+                            id: node.id,
+                            data_source_id: node.data_source_id,
+                            original_id: node.original_data_id,
+                            import_id: node.import_data_id,
+                            metatype_id: node.metatype_id,
+                            metatype_name: node.metatype_name,
+                            metatype_uuid: node.metatype_uuid,
+                            metadata: node.metadata,
+                            created_at: node.created_at?.toISOString(),
+                            created_by: node.created_by,
+                            modified_at: node.modified_at?.toISOString(),
+                            modified_by: node.modified_by,
+                            properties: node.properties,
+                        })
+                    }
                 }})
-
 
                 // eslint-disable-next-line @typescript-eslint/no-misused-promises
                 return new Promise((resolve, reject) =>
@@ -1460,7 +1697,9 @@ export default class GraphQLRunner {
                             transformStreams: [transform],
                             containerID}, {
                             sortBy,
-                            sortDesc: input._records?.sortDesc
+                            sortDesc: input._records?.sortDesc,
+                            distinct: true,
+                            distinct_on: {table: 'current_nodes', column: 'id'}
                         })
                         .then((result) => {
                             if (result.isError) {
@@ -1481,7 +1720,9 @@ export default class GraphQLRunner {
                             limit: input.limit ? input.limit : 10000,
                             offset: input.page ? input.limit * (input.page > 0 ? input.page - 1 : 0) : undefined,
                             sortBy,
-                            sortDesc: input._record?.sortDesc
+                            sortDesc: input._record?.sortDesc,
+                            distinct: true,
+                            distinct_on: {table: 'current_nodes', column: 'id'}
                         })
                         .then((results) => {
                             if (results.isError) {
@@ -1501,7 +1742,7 @@ export default class GraphQLRunner {
                                     });
                                 }
 
-                                nodeOutput.push({
+                                const toPush: {[key: string]: any} = {
                                     id: node.id,
                                     container_id: node.container_id,
                                     data_source_id: node.data_source_id,
@@ -1515,8 +1756,16 @@ export default class GraphQLRunner {
                                     created_by: node.created_by,
                                     modified_at: node.modified_at?.toISOString(),
                                     modified_by: node.modified_by,
-                                    properties: node.properties,
-                                });
+                                    properties: node.properties
+                                }
+
+                                if (resolverOptions?.metadataEnabled) {
+                                    toPush.metadata_properties = node.metadata_properties,
+                                    toPush.raw_data_properties = node['data' as keyof object],
+                                    toPush.raw_data_history = node['history' as keyof object]
+                                }
+
+                                nodeOutput.push(toPush);
                             });
 
                             resolve(nodeOutput);
@@ -1700,6 +1949,36 @@ export default class GraphQLRunner {
                 }
             }
 
+            if (options?.metadataEnabled && input.raw_data_properties && Array.isArray(input.raw_data_properties)) {
+                let joinTable: string | undefined = undefined;
+                input.raw_data_properties.forEach((prop) => {
+                    // apply conditions only if historical is specified
+                    if (prop.historical) {
+                        joinTable = 'edges' //override table that we are joining with
+                        repo = repo.join('edges', {conditions: {origin_col: 'id', destination_col: 'id'}})
+                    }
+                    // join to data staging to get raw data
+                    repo = repo
+                    .join('data_staging', {conditions: {origin_col: 'data_staging_id', destination_col: 'id'}}, joinTable)
+                    repo = repo.and().queryJsonb(
+                        prop.key, 'data',
+                        prop.operator, prop.value,
+                        {tableName: 'data_staging'}
+                    )
+                    // reset join table
+                    joinTable = undefined;
+                })
+            }
+
+            if (options?.metadataEnabled && input.metadata_properties && Array.isArray(input.metadata_properties)) {
+                input.metadata_properties.forEach((prop) => {
+                    repo = repo.and().queryJsonb(
+                        prop.key, 'metadata_properties',
+                        prop.operator, prop.value
+                    )
+                })
+            }
+
             // we must map out what the graphql refers to a relationship's keys are
             // vs. what they actually are so that we can map the query properly
             const propertyMap: {
@@ -1719,7 +1998,7 @@ export default class GraphQLRunner {
             // iterate through the input object, ignoring reserved properties
             // and adding all others to the query as property queries
             Object.keys(input).forEach((key) => {
-                if (key === '_record') {
+                if (key === '_record' || key === 'raw_data_properties' || key === 'metadata_properties') {
                     return;
                 }
 
@@ -1731,6 +2010,29 @@ export default class GraphQLRunner {
                 repo = repo.and().property(propertyMap[key].name, input[key].operator, input[key].value, propertyMap[key].data_type);
             });
 
+            // complete any metadata joins only as needed
+            if (options?.metadataEnabled) {
+                // subquery for historical raw data
+                const history = repo.subquery(
+                    new EdgeRepository()
+                    .select('id', 'sub_edges')
+                    .select('jsonb_agg(data) AS history', 'raw_data')
+                    .from('edges', 'sub_edges')
+                    .join(
+                        'data_staging', {
+                        conditions: {origin_col: 'data_staging_id', destination_col: 'id'},
+                        destination_alias: 'raw_data'
+                    })
+                    .groupBy('id', 'sub_edges')
+                )
+
+                repo = repo
+                .join('data_staging', {conditions: {destination_col: 'id', origin_col: 'data_staging_id'}})
+                .addFields('data', 'data_staging')
+                .join(history, {conditions: {origin_col: 'id', destination_col: 'id'}, destination_alias: 'raw_data_history'})
+                .addFields('history', 'raw_data_history')
+            }
+
             if(options && options.returnFile) {
                 // first we build a transform stream so that the raw edge return is formatted correctly
                 // note that we know that originating stream is in object mode, so we're able to cast correctly
@@ -1739,29 +2041,56 @@ export default class GraphQLRunner {
                 const transform = new Transform({objectMode: true, transform: (chunk: object, _: any, done: (o: any, a: any) => any ) => {
                     const edge = plainToClass(Edge, chunk)
 
-
-                    done(null, {
-                        ...edge.properties,
-                        _record: {
-                            id: edge.id,
-                            pair_id: edge.relationship_pair_id,
-                            data_source_id: edge.data_source_id,
-                            import_id: edge.import_data_id,
-                            origin_id: edge.origin_id,
-                            origin_metatype_id: edge.origin_metatype_id,
-                            origin_metatype_uuid: edge.origin_metatype_uuid,
-                            destination_id: edge.destination_id,
-                            destination_metatype_id: edge.destination_metatype_id,
-                            destination_metatype_uuid: edge.destination_metatype_uuid,
-                            relationship_name: edge.metatype_relationship_name,
-                            relationship_pair_uuid: edge.metatype_relationship_uuid,
-                            metadata: edge.metadata,
-                            created_at: edge.created_at?.toISOString(),
-                            created_by: edge.created_by,
-                            modified_at: edge.modified_at?.toISOString(),
-                            modified_by: edge.modified_by,
-                        },
-                    })
+                    if (options.metadataEnabled) {
+                        done(null, {
+                            ...edge.properties,
+                            _record: {
+                                id: edge.id,
+                                pair_id: edge.relationship_pair_id,
+                                data_source_id: edge.data_source_id,
+                                import_id: edge.import_data_id,
+                                origin_id: edge.origin_id,
+                                origin_metatype_id: edge.origin_metatype_id,
+                                origin_metatype_uuid: edge.origin_metatype_uuid,
+                                destination_id: edge.destination_id,
+                                destination_metatype_id: edge.destination_metatype_id,
+                                destination_metatype_uuid: edge.destination_metatype_uuid,
+                                relationship_name: edge.metatype_relationship_name,
+                                relationship_pair_uuid: edge.metatype_relationship_uuid,
+                                metadata: edge.metadata,
+                                created_at: edge.created_at?.toISOString(),
+                                created_by: edge.created_by,
+                                modified_at: edge.modified_at?.toISOString(),
+                                modified_by: edge.modified_by,
+                            },
+                            metadata_properties: edge.metadata_properties,
+                            raw_data_properties: edge['data' as keyof object],
+                            raw_data_history: edge['history' as keyof object],
+                        });
+                    } else {
+                        done(null, {
+                            ...edge.properties,
+                            _record: {
+                                id: edge.id,
+                                pair_id: edge.relationship_pair_id,
+                                data_source_id: edge.data_source_id,
+                                import_id: edge.import_data_id,
+                                origin_id: edge.origin_id,
+                                origin_metatype_id: edge.origin_metatype_id,
+                                origin_metatype_uuid: edge.origin_metatype_uuid,
+                                destination_id: edge.destination_id,
+                                destination_metatype_id: edge.destination_metatype_id,
+                                destination_metatype_uuid: edge.destination_metatype_uuid,
+                                relationship_name: edge.metatype_relationship_name,
+                                relationship_pair_uuid: edge.metatype_relationship_uuid,
+                                metadata: edge.metadata,
+                                created_at: edge.created_at?.toISOString(),
+                                created_by: edge.created_by,
+                                modified_at: edge.modified_at?.toISOString(),
+                                modified_by: edge.modified_by,
+                            }
+                        });
+                    }
                 }})
 
 
@@ -1812,7 +2141,7 @@ export default class GraphQLRunner {
                                     });
                                 }
 
-                                edgeOutput.push({
+                                const toPush: {[key: string]: any} = {
                                     ...properties,
                                     _record: {
                                         id: edge.id,
@@ -1832,8 +2161,16 @@ export default class GraphQLRunner {
                                         created_by: edge.created_by,
                                         modified_at: edge.modified_at?.toISOString(),
                                         modified_by: edge.modified_by,
-                                    },
-                                });
+                                    }
+                                }
+
+                                if (options?.metadataEnabled) {
+                                    toPush.metadata_properties = edge.metadata_properties,
+                                    toPush.raw_data_properties = edge['data' as keyof object],
+                                    toPush.raw_data_history = edge['history' as keyof object]
+                                }
+
+                                edgeOutput.push(toPush);
                             });
 
                             resolve(edgeOutput);
@@ -2196,4 +2533,5 @@ export type ResolverOptions = {
     relationships?: string[] // relationship names to search
     fullSchema?: boolean;
     pointInTime?: string; // timestamp for use in retrieving historical data and ontology versions
+    metadataEnabled?: boolean;
 }

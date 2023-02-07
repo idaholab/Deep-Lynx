@@ -67,6 +67,10 @@ export default class Edge extends BaseDomainClass {
     @IsObject()
     properties: object = {};
 
+    @IsObject()
+    @IsOptional()
+    metadata_properties: object = {};
+
     @IsString()
     @IsOptional()
     import_data_id?: string;
@@ -145,6 +149,7 @@ export default class Edge extends BaseDomainClass {
         metatype_relationship_pair: MetatypeRelationshipPair | string;
         metatype_name?: string;
         properties: object;
+        metadata_properties?: object;
         import_data_id?: string;
         data_staging_id?: string;
         data_source_id?: string;
@@ -170,6 +175,7 @@ export default class Edge extends BaseDomainClass {
                 this.metatypeRelationshipPair = input.metatype_relationship_pair;
             } else this.metatypeRelationshipPair = plainToClass(MetatypeRelationshipPair, {id: input.metatype_relationship_pair});
             this.properties = input.properties;
+            if (input.metadata_properties) this.metadata_properties = input.metadata_properties;
             if (input.import_data_id) this.import_data_id = input.import_data_id;
             if (input.data_staging_id) this.data_staging_id = input.data_staging_id;
             if (input.data_source_id) this.data_source_id = input.data_source_id;

@@ -31,7 +31,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
     const transaction = await stagingMapper.startTransaction();
 
     // first thing we do is set the cache to a lower ttl for this import, indicating that we are currently processing it
-    await Cache.set(`imports_${staging.import_id}`, {}, Config.import_cache_ttl);
+    await Cache.set(`imports:${staging.import_id}`, {}, Config.import_cache_ttl);
 
     // pull the transformations, abort if none
     if (!staging.shape_hash) {

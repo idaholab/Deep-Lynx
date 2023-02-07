@@ -26,6 +26,8 @@ export default class DataQueryRoutes {
             }
         }
 
+        const metadataEnabled = (req.query.metadataEnabled === 'true')
+
         runner
             .RunQuery(
                 req.container?.id!,
@@ -35,6 +37,7 @@ export default class DataQueryRoutes {
                     returnFile: String(req.query.returnFile).toLowerCase() === 'true',
                     returnFileType: String(req.query.returnFileType).toLowerCase(),
                     pointInTime: req.query.pointInTime as string,
+                    metadataEnabled: metadataEnabled,
                     query: req.body.query,
                 },
             )

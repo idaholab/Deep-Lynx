@@ -17,6 +17,7 @@ import TimeseriesEntry, {TimeseriesData, TimeseriesMetadata} from '../data/times
 import NodeRepository from '../../../data_access_layer/repositories/data_warehouse/data/node_repository';
 import {PoolClient} from 'pg';
 import NodeMapper from '../../../data_access_layer/mappers/data_warehouse/data/node_mapper';
+import MetatypeKeyRepository from "../../../data_access_layer/repositories/data_warehouse/ontology/metatype_key_repository";
 
 /*
    Condition represents a logical operation which can determine whether or not
@@ -106,6 +107,10 @@ export class KeyMapping extends NakedDomainClass {
     @IsOptional()
     @IsString()
     key?: string;
+
+    @IsOptional()
+    @IsBoolean()
+    is_metadata_key?: boolean;
 
     @ValidateIf((o) => o.metatype_relationship_key_id === null && typeof o.metatype_relationship_key_id === 'undefined')
     @IsUUID()
@@ -502,16 +507,18 @@ export default class TypeTransformation extends BaseDomainClass {
     private async generateResults(data: DataStaging, index?: number[]): Promise<Result<Node[] | Edge[] | TimeseriesEntry[]>> {
         const newPayload: {[key: string]: any} = {};
         const newPayloadRelationship: {[key: string]: any} = {};
+        const newMetadataPayload: {[key: string]: any} = {};
         const timeseriesData: TimeseriesData[] = [];
         const failedConversions: Conversion[] = [];
         const conversions: Conversion[] = [];
+        const metatypeKeyRepo = new MetatypeKeyRepository();
 
         if ((this.type === 'node' || this.type === 'edge') && this.keys) {
             for (const k of this.keys) {
                 // separate the metatype and metatype relationship keys from each other
                 // the type mapping _should_ have easily handled the combination of keys
                 if (k.metatype_key_id) {
-                    const fetched = await MetatypeKeyMapper.Instance.Retrieve(k.metatype_key_id);
+                    const fetched = await metatypeKeyRepo.findByID(k.metatype_key_id, this.metatype_id);
                     if (fetched.isError) {
                         Logger.error('unable to fetch keys to map payload, metatype key does not exist');
                         continue;
@@ -636,6 +643,35 @@ export default class TypeTransformation extends BaseDomainClass {
                         }
                     }
                 }
+
+                if(k.is_metadata_key) {
+                    if(k.key) {
+                        const value = TypeTransformation.getNestedValue(k.key, data.data, index);
+
+                        if (typeof value === 'undefined') {
+                            switch (this.config.on_key_extraction_error) {
+                                case 'fail': {
+                                    break;
+                                }
+
+                                // skip since no metadata keys are required
+                                case 'fail on required': {
+                                    continue;
+                                }
+
+                                // ignore means we can skip this key
+                                case 'ignore': {
+                                    continue;
+                                }
+                            }
+                        }
+
+                        // do not perform datatype conversions for metadata
+                        newMetadataPayload[k.key] = value;
+                    } else {
+                        return Promise.resolve(Result.Failure('unable to map metadata key, key name not supplied'));
+                    }
+                }
             }
         }
 
@@ -696,6 +732,7 @@ export default class TypeTransformation extends BaseDomainClass {
             const node = new Node({
                 metatype: this.metatype_id,
                 properties: newPayload,
+                metadata_properties: newMetadataPayload,
                 type_mapping_transformation_id: this.id,
                 data_source_id: data.data_source_id,
                 container_id: this.container_id!,
@@ -747,6 +784,7 @@ export default class TypeTransformation extends BaseDomainClass {
             const edge = new Edge({
                 metatype_relationship_pair: this.metatype_relationship_pair_id,
                 properties: newPayloadRelationship,
+                metadata_properties: newMetadataPayload,
                 type_mapping_transformation_id: this.id,
                 data_source_id: data.data_source_id,
                 container_id: this.container_id!,

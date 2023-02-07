@@ -13,6 +13,7 @@ import TypeMapping from '../../../domain_objects/data_warehouse/etl/type_mapping
 import {DataSource} from './data_source';
 import {QueueFactory} from '../../../services/queue/queue';
 const JSONStream = require('JSONStream');
+import Cache from '../../../services/cache/cache';
 
 /*
     StandardDataSourceImpl is the most basic of data sources, and serves as the base
@@ -84,6 +85,9 @@ export default class StandardDataSourceImpl implements DataSource {
             Logger.error(`unable to retrieve and lock import ${retrievedImport.error}`);
             return Promise.resolve(Result.Failure(`unable to retrieve ${retrievedImport.error?.error}`));
         }
+
+        // set the cache value, so we don't spam with the listing function
+        await Cache.set(`imports:${importID}`, {}, Config.initial_import_cache_ttl);
 
         // a buffer, once it's full we'll write these records to the database and wipe to start again
         let recordBuffer: DataStaging[] = [];

@@ -48,8 +48,10 @@ export default class NodeRepository extends Repository implements RepositoryInte
         return Promise.resolve(node);
     }
 
-    async findNodeHistoryByID(id: string, transaction?: PoolClient): Promise<Result<Node[]>> {
-        const nodes = await this.#mapper.RetrieveHistory(id, transaction);
+    async findNodeHistoryByID(id: string, includeRawData: boolean, transaction?: PoolClient): Promise<Result<Node[]>> {
+        const nodes = (includeRawData === true)
+            ? await this.#mapper.RetrieveRawDataHistory(id, transaction)
+            : await this.#mapper.RetrieveHistory(id, transaction);
 
         if (nodes.isError) {
             return Promise.reject(nodes.error);
