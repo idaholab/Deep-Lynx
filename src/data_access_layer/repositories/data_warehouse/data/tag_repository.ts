@@ -55,6 +55,21 @@ export default class TagRepository extends Repository implements RepositoryInter
         return Promise.resolve(tag);
     }
 
+    async update(tag: Tag, user: User, transaction?: PoolClient): Promise<Result<Tag>> {
+
+        const t = new Tag({
+            id: tag.id!,
+            tag_name: tag.tag_name!,
+            container_id: tag.container_id!,
+            metadata: tag.metadata!
+        })
+
+        const saved = await this.save(t, user, transaction);
+        if (saved.isError) return Promise.resolve(Result.Pass(saved));
+
+        return Promise.resolve(Result.Success(t));
+    }
+
     delete(tag: Tag): Promise<Result<boolean>> {
         if (tag.id) {
             return this.#mapper.Delete(tag.id);
