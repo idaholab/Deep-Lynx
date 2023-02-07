@@ -12,21 +12,13 @@ import Tag from '../../../../../domain_objects/data_warehouse/data/tag';
 // Express
 import {NextFunction, Request, Response} from 'express';
 
-// Mappers
-import FileDataStorage from '../../../../../data_access_layer/mappers/data_warehouse/data/file_mapper';
-
 // Repository
 import TagRepository from '../../../../../data_access_layer/repositories/data_warehouse/data/tag_repository';
-import ImportRepository from '../../../../../data_access_layer/repositories/data_warehouse/import/import_repository';
 import FileRepository from '../../../../../data_access_layer/repositories/data_warehouse/data/file_repository';
 import DataStagingRepository from '../../../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
-const fileRepo = new FileRepository();
 const stagingRepo = new DataStagingRepository();
+const fileRepo = new FileRepository();
 const tagRepo = new TagRepository();
-
-// Graph Functions
-import FileFunctions from '../../import/import_functions/file_functions';
-import TagFunctions from './tag_functions';
 
 // Utilities
 import {Readable} from 'stream';
@@ -50,9 +42,9 @@ export default class WebGLFunctions {
         let payload: Tag[] = []; 
     
         if (Array.isArray(req.query.tag)) {
-            payload = plainToInstance(Tag, [{tag_name: req.query.tag, container_id: req.container!.id!}]);
+            payload = plainToInstance(Tag, [{tag_name: req.query.tag, metadata: {webgl: true}, container_id: req.container!.id!}]);
         } else {
-            payload = [plainToInstance(Tag, {tag_name: req.query.tag, container_id: req.container!.id!} as object)];
+            payload = [plainToInstance(Tag, {tag_name: req.query.tag, metadata: {webgl: true}, container_id: req.container!.id!} as object)];
         }
     
         if (req.container) {
@@ -136,7 +128,7 @@ export default class WebGLFunctions {
                     );
                 }
             } else {
-                files.push(new FileRepository().uploadFile(req.params.containerID, req.currentUser!, filename, file as Readable, req.params.sourceID));
+                files.push(fileRepo.uploadFile(req.params.containerID, req.currentUser!, filename, file as Readable, req.params.sourceID));
                 fileNames.push(filename);
             }
         });
@@ -197,7 +189,7 @@ export default class WebGLFunctions {
                         results.forEach(result => {
                             const file = result.value;
                             res.locals.tags.forEach((tag: Tag) => {
-                                tagWebGL(tag, file);
+                                WebGLFunctions.tagWebGL(tag, file);
                             });
                         })
 
@@ -213,7 +205,7 @@ export default class WebGLFunctions {
                             }
 
                             results[i].value.metadata = metadata;
-                            updatePromises.push(new FileRepository().save(results[i].value, req.currentUser!));
+                            updatePromises.push(fileRepo.save(results[i].value, req.currentUser!));
                         }
 
                         void Promise.all(updatePromises)
@@ -222,7 +214,7 @@ export default class WebGLFunctions {
                                 results.forEach(result => {
                                     const file = result.value;
                                     res.locals.tags.forEach((tag: Tag) => {
-                                        tagWebGL(tag, file);
+                                        WebGLFunctions.tagWebGL(tag, file);
                                     });
                                 })
                                 
@@ -243,9 +235,10 @@ export default class WebGLFunctions {
 
         return req.pipe(busboy);
     }
+
+    private static tagWebGL(tag: Tag, file: File) {
+        tagRepo.tagFile(tag, file);
+    }
 }
 
-function tagWebGL(tag: Tag, file: File) {
-    console.log("tagging file " + file.id + "with tag " + tag.tag_name + `(${tag.id})`);
-    tagRepo.tagFile(tag, file);
-}
+

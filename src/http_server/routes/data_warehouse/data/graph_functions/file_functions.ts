@@ -308,6 +308,7 @@ export default class FileFunctions {
         busboy.on('field', (fieldName: string, value: any) => {
             metadata[fieldName] = value;
             metadataFieldCount++;
+            console.log(fieldName);
         });
 
         busboy.on('finish', () => {

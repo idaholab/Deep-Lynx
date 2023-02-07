@@ -95,7 +95,6 @@ export default class TagRepository extends Repository implements RepositoryInter
             if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
             else if (original.value) {
                 Object.assign(original.value, tag);
-
                 const results = await this.#mapper.Update(user.id!, original.value);
                 if (results.isError) {
                     if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);

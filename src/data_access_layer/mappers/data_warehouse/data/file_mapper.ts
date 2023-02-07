@@ -78,8 +78,8 @@ export default class FileMapper extends Mapper {
         return Promise.resolve(Result.Success(r.value[0]));
     }
 
-    public async RetrieveByID(tag_name: string, transaction?: PoolClient): Promise<Result<File>> {
-        return super.retrieve<File>(this.retrieveByIdStatement(tag_name), {
+    public async RetrieveByID(id: string, transaction?: PoolClient): Promise<Result<File>> {
+        return super.retrieve<File>(this.retrieveByIdStatement(id), {
             transaction,
             resultClass: this.resultClass,
         });
@@ -184,8 +184,7 @@ export default class FileMapper extends Mapper {
             short_uuid,
             created_by,
             modified_by) VALUES %L 
-            ON CONFLICT(md5hash) DO UPDATE SET
-                id = EXCLUDED.id,
+            ON CONFLICT(id, md5hash) DO UPDATE SET
                 file_name = EXCLUDED.file_name,
                 file_size = EXCLUDED.file_size,
                 metadata = EXCLUDED.metadata,
