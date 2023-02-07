@@ -23,12 +23,20 @@
                   :label="$t('createDataSource.name')"
                   :rules="[v => !!v || $t('dataMapping.required')]"
               ></v-text-field>
-              <v-select
-                  v-model="select"
-                  :items="adapterTypes()"
-                  @input="selectAdapter"
-                  :label="$t('createDataSource.sourceType')"
-                  required
+
+              <v-select v-if="timeseries"
+                v-model="select"
+                :items="{text: $t('createDataSource.timeseries'), value: 'timeseries', description: $t('createDataSource.timeseriesDescription')}"
+                :label="$t('createDataSource.sourceType')"
+                @input="selectAdapter"
+                required
+              />
+              <v-select v-else
+                v-model="select"
+                :items="adapterTypes()"
+                @input="selectAdapter"
+                :label="$t('createDataSource.sourceType')"
+                required
               />
 
               <div v-if="newDataSource.adapter_type === 'standard'">
@@ -511,7 +519,7 @@
                   <template v-slot:[`item.operator`]="{ item }">
                     <v-select
                         :label="$t('dataMapping.operators')"
-                        :items=operators
+                        :items=getOperators(item.type)
                         v-model="item.operator"
                         :rules="[v => !!v || $t('dataMapping.required')]"
                     />
@@ -519,20 +527,49 @@
 
 
                   <template v-slot:[`item.value`]="{ item}">
-                    <v-text-field
+                    <div v-if="item.type && item.type ==='data_source'">
+                      <select-data-source
+                        :containerID="containerID"
+                        :multiple="item.operator === 'in'"
+                        :disabled="!item.type"
+                        :dataSourceID="item.value"
+                        @selected="setDataSource(...arguments, item)"
+                      />
+                    </div>
+
+                    <div v-else-if="item.type && item.type === 'metatype_name'">
+                      <search-metatypes
+                        :disabled="!item.type"
+                        :containerID="containerID"
+                        :multiple="item.operator === 'in'"
+                        :metatypeName="item.value"
+                        @selected="setMetatype(...arguments, item)"
+                      />
+                    </div>
+
+                    <div v-else>
+                      <v-text-field
                         v-if="item.type && item.type ==='property'"
                         :label="$t('createDataSource.key')"
                         v-model="item.key"
                         :rules="[v => !!v || $t('dataMapping.required')]"
-                    >
-                    </v-text-field>
+                      />
 
-                    <v-text-field
+                      <v-text-field v-if="item.operator !== 'in'"
+                        :disabled="item.type === 'property' && !item.key"
                         :label="$t('createDataSource.value')"
                         v-model="item.value"
                         :rules="[v => !!v || $t('dataMapping.required')]"
-                    >
-                    </v-text-field>
+                      />
+                      <v-combobox v-if="item.operator === 'in'"
+                        :disabled="item.type === 'property' && !item.key"
+                        multiple
+                        clearable
+                        :placeholder="$t('queryBuilder.typeToAdd')"
+                        v-model="item.value"
+                      />
+                    </div>
+                    
                   </template>
 
                   <template v-slot:[`item.actions`]="{ index }">
@@ -651,15 +688,21 @@ import {
   DefaultStandardDataSourceConfig, DefaultTimeseriesDataSourceConfig,
   HttpDataSourceConfig,
   JazzDataSourceConfig,
+  MetatypeT,
   P6DataSourceConfig,
   StandardDataSourceConfig,
   TimeseriesDataSourceConfig
 } from "@/api/types";
+import SelectDataSource from './selectDataSource.vue';
+import SearchMetatypes from '../ontology/metatypes/searchMetatypes.vue';
 
-@Component
+@Component({components:{SelectDataSource, SearchMetatypes}})
 export default class CreateDataSourceDialog extends Vue {
   @Prop({required: true})
   readonly containerID!: string;
+
+  @Prop({required: false})
+  timeseries?: boolean
 
   errorMessage = ""
   dialog= false
@@ -712,15 +755,15 @@ export default class CreateDataSourceDialog extends Vue {
     {text: 'Id', value: 'id'}];
 
   operators = [
-    {text: "==", value: "==", requiresValue: true},
-    {text: "!=", value: "!=", requiresValue: true},
+    {text: "equals", value: "==", requiresValue: true},
+    {text: "not equals", value: "!=", requiresValue: true},
     {text: "in", value: "in", requiresValue: true},
     {text: "contains", value: "contains", requiresValue: true},
     {text: "exists", value: "exists", requiresValue: false},
-    {text: "<", value: "<", requiresValue: true},
-    {text: "<=", value: "<=", requiresValue: true},
-    {text: ">", value: ">", requiresValue: true},
-    {text: ">=", value: ">=", requiresValue: true},
+    {text: "less than", value: "<", requiresValue: true},
+    {text: "less than or equal to", value: "<=", requiresValue: true},
+    {text: "greater than", value: ">", requiresValue: true},
+    {text: "greater than or equal to", value: ">=", requiresValue: true},
   ]
 
 
@@ -734,7 +777,6 @@ export default class CreateDataSourceDialog extends Vue {
       {text: this.$t('createDataSource.http'), value: 'http', description: this.$t('createDataSource.httpDescription')},
       {text: this.$t('createDataSource.jazz'), value: 'jazz', description: this.$t('createDataSource.jazzDescription')},
       {text: this.$t('createDataSource.aveva'), value: 'aveva', description: this.$t('createDataSource.avevaDescription')},
-      {text: this.$t('createDataSource.timeseries'), value: 'timeseries', description: this.$t('createDataSource.timeseriesDescription')},
       {text: this.$t('createDataSource.p6'), value: 'p6', description: this.$t('createDataSource.p6description')}
     ]
 
@@ -785,6 +827,55 @@ export default class CreateDataSourceDialog extends Vue {
       },
       {text: this.$t('dataMapping.actions'), value: "actions", sortable: false}
     ]
+  }
+
+  // return only operators that make sense based on parameter filter type
+  getOperators(paramFilter: string) {
+    const baseOperators = [
+      {text: "equals", value: "==", requiresValue: true},
+      {text: "not equals", value: "!=", requiresValue: true},
+      {text: "in", value: "in", requiresValue: true},
+    ]
+
+    if (paramFilter === 'data_source' || paramFilter === 'metatype_name') {
+      return baseOperators
+    }
+
+    if (paramFilter === 'metatype_id' || paramFilter === 'id') {
+      return baseOperators.concat([
+        {text: "less than", value: "<", requiresValue: true},
+        {text: "less than or equal to", value: "<=", requiresValue: true},
+        {text: "greater than", value: ">", requiresValue: true},
+        {text: "greater than or equal to", value: ">=", requiresValue: true},
+      ]);
+    }
+
+    return this.operators
+  }
+
+  setDataSource(dataSources: DataSourceT | DataSourceT[], item: any) {
+    if (Array.isArray(dataSources)) {
+      const ids: string[] = []
+      dataSources.forEach(source => ids.push(source.id!))
+
+      item.value = ids
+    } else {
+      item.value = dataSources.id!
+    }
+  }
+
+  setMetatype(metatypes: MetatypeT | MetatypeT[], item: any) {
+    if (Array.isArray(metatypes)) {
+      const names: string [] = []
+      
+      metatypes.forEach(mt => {
+        names.push(mt.name!)
+      })
+
+      item.value = names
+    } else {
+      item.value = metatypes.name!
+    }
   }
 
   selectAdapter(adapter: string) {
