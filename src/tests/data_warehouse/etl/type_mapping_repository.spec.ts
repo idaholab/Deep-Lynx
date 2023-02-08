@@ -35,7 +35,6 @@ describe('A Type Mapping Repository', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let dataSourceID: string;
     let targetDataSourceID: string;
-    let active: boolean;
     let user: User;
     let metatype: Metatype;
     let key: MetatypeKey;
@@ -173,7 +172,6 @@ describe('A Type Mapping Repository', async () => {
         expect(exp2.isError).false;
         expect(exp2.value).not.empty;
         targetDataSourceID = exp2.value.id!;
-        active = exp2.value.active;
 
         // create the data source in the new container for mapping/transformation import/export tests
         const exp3 = await DataSourceMapper.Instance.Create(
@@ -307,7 +305,7 @@ describe('A Type Mapping Repository', async () => {
         expect(mapping.transformations![0]!.id).not.undefined;
 
         // first we attempt to export them into the same container but separate data source
-        let exported = await repo.importToDataSource(targetDataSourceID, user, active, mapping);
+        let exported = await repo.importToDataSource(targetDataSourceID, user, false, mapping);
         for (const result of exported) {
             expect(result.isError).false;
             expect(result.value.id).not.eq(mapping.id); // should be a new mapping
@@ -324,7 +322,7 @@ describe('A Type Mapping Repository', async () => {
         expect(mappings.value[0].transformations?.length).eq(1);
 
         // next export the mappings into a separate container
-        exported = await repo.importToDataSource(dataSource2ID, user, active, mapping);
+        exported = await repo.importToDataSource(dataSource2ID, user, false, mapping);
         for (const result of exported) {
             expect(result.isError).false;
             expect(result.value.id).not.eq(mapping.id); // should be a new mapping
