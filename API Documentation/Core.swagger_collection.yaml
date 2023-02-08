@@ -2794,6 +2794,11 @@ paths:
                 metadata:
                   type: string
                   format: binary
+            examples:
+              example-1:
+                value:
+                  file: string
+                  metadata: string
         description: |-
           This should be a collection of files and normal fields. If you include a file field and call that "metadata" - you can include a normal metadata upload as either a json, csv, or xml file. This data will be processed like a normal import and the files attached to the processed data. Once Deep Lynx generates nodes and edges from that data, any files attached will automatically be attached to the resulting nodes/edges as well.
 
@@ -5111,6 +5116,79 @@ paths:
       responses: {}
       operationId: get-containers-container_id-graphs-tags-tag_id-edges
       description: List all Edges with Tag
+  '/containers/{container_id}/import/datasources/{data_source_id}/webgl':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: data_source_id
+        in: path
+        required: true
+    post:
+      summary: Upload WebGL
+      operationId: post-containers-container_id-import-datasources-data_source_id-webgl
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadFileResponse'
+              examples:
+                example-1:
+                  value: {}
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: object
+            examples:
+              example-1:
+                value: {}
+        description: 'The user must upload 4 distinct files as part of the request body. '
+      description: 'Upload a webgl asset into DeepLynx. This route creates a tag, uploads the files in the request body, and associates the tag with these files. The newly created tag automatically has {"webgl": true} appended to its metadata.'
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: tag
+          description: 'Tag name for the webgl files. All tags created through this route will automatically have {"webgl": true} appended to their metadata'
+  '/containers/{container_id}/graphs/tags/{tag_id}':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: tag_id
+        in: path
+        required: true
+    put:
+      summary: Update Tag
+      operationId: put-containers-container_id-graphs-tags-tag_id
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tag_name:
+                  type: string
+                metadata:
+                  type: object
+      description: 'Update a tag. You can update a tag''s name, or metadata'
 components:
   securitySchemes:
     BearerAuth:
