@@ -29,16 +29,10 @@ export default class TagRepository extends Repository implements RepositoryInter
 
     async create(tag: Tag, user: User, transaction?: PoolClient): Promise<Result<Tag>> {
 
-        const t = new Tag({
-            tag_name: tag.tag_name!,
-            container_id: tag.container_id!,
-            metadata: tag.metadata!
-        })
-
-        const saved = await this.save(t, user, transaction);
+        const saved = await this.save(tag, user, transaction);
         if (saved.isError) return Promise.resolve(Result.Pass(saved));
 
-        return Promise.resolve(Result.Success(t));
+        return Promise.resolve(Result.Success(tag));
     }
 
     async retrieve(tag_name: string, transaction?: PoolClient): Promise<Result<Tag>> {
