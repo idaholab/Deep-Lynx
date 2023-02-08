@@ -20,7 +20,7 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
     // run the filters if needed
     const edges = await repo.populateFromParameters(edge);
     if (edges.isError) {
-        Logger.debug(`unable to create edges from parameters: ${edges.error?.error}`);
+        Logger.error(`unable to create edges from parameters: ${edges.error?.error}`);
 
         // if we failed, need to iterate the attempts and set the next attempt date, so we don't swamp the database - this
         // is an exponential backoff
@@ -31,12 +31,13 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
 
         const set = await queueMapper.SetNextAttemptAt(edgeQueueItem.id!, edgeQueueItem.next_attempt_at.toISOString(), edges.error?.error);
         if (set.isError) {
-            Logger.debug(`unable to set next retry time for edge queue item ${set.error?.error}`);
+            Logger.error(`unable to set next retry time for edge queue item ${set.error?.error}`);
         }
 
         return Promise.resolve(Result.Failure(`unable to populate edges from parameter ${edges.error?.error}`));
     }
 
+    Logger.debug(`created ${edges.value.length} from edge parameters`);
     // we need to do batch insert here
     let recordBuffer: Edge[] = [];
     const saveOperations: Promise<Result<boolean>>[] = [];
@@ -54,10 +55,11 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
 
     saveOperations.push(repo.bulkSave(edge.created_by!, recordBuffer));
 
+    Logger.debug(`saving ${saveOperations.length} edges`);
     const saveResults = await Promise.all(saveOperations);
     if (saveResults.filter((result) => result.isError || !result.value).length > 0) {
         const error = saveResults.filter((result) => result.isError).map((result) => JSON.stringify(result.error));
-        Logger.debug(`unable to save edges: ${error}`);
+        Logger.error(`unable to save edges: ${error}`);
 
         // if we failed, need to iterate the attempts and set the next attempt date, so we don't swamp the database - this
         // is an exponential backoff

@@ -50,6 +50,9 @@ export default class SearchMetatypes extends Vue {
   metatypeUUID?: string | string[]
 
   @Prop({required: false})
+  metatypeName?: string | string[]
+
+  @Prop({required: false})
   rules?: any
 
   search = ""
@@ -94,6 +97,16 @@ export default class SearchMetatypes extends Vue {
             this.emitSelected(this.selectedMetatype)
           })
           .finally(() => this.loading = false)
+    } else if (this.metatypeName) {
+      if (Array.isArray(this.metatypeName)) {
+        this.metatypeName = (this.metatypeName as string[]).join(',')
+      }
+      this.$client.listMetatypes(this.containerID, {nameIn: this.metatypeName, loadKeys: false, ontologyVersion: this.$store.getters.currentOntologyVersionID})
+        .then((metatypes) => {
+          this.selectedMetatype = metatypes as MetatypeT[]
+        })
+        .catch((e: any) => this.errorMessage = e)
+        .finally(() => this.loading = false)
     } else {
       this.loading = false
     }
