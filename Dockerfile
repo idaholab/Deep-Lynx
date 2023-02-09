@@ -46,7 +46,6 @@ RUN rm -rf .env
 
 FROM node:18.13-buster-slim as production
 RUN apt-get update
-RUN sudo apt-get upgrade libtasn1-6
 
 WORKDIR /srv/core_api
 
