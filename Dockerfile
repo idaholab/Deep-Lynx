@@ -2,6 +2,7 @@ FROM cimg/rust:1.65.0-node as build
 
 USER root
 RUN sudo apt-get update
+RUN sudo apt-get upgrade libtasn1-6
 
 # these settings are needed for the admin web gui build, these variables are all baked into the Vue application and thus
 # are available to any end user that wants to dig deep enough in the webpage - as such we don't feel it a security risk
@@ -43,7 +44,7 @@ RUN npm run build:web-gl
 # catch any env file a user might have accidentally built into the container
 RUN rm -rf .env
 
-FROM node:18.13-buster-slim as production
+FROM node:18.14.0-buster-slim as production
 RUN apt-get update
 
 WORKDIR /srv/core_api

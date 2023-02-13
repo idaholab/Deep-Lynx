@@ -326,7 +326,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
     // by name instead of uuid - so there is potential for issues, use with caution. We return the newly modified/created
     // type mappings as well as failed mappings so that the end user can perform a review of the export - check the value
     // of isError on the return to determine if import was successful
-    async importToDataSource(targetSourceID: string, user: User, ...originalMappings: TypeMapping[]): Promise<Result<TypeMapping>[]> {
+    async importToDataSource(targetSourceID: string, user: User, active: boolean, ...originalMappings: TypeMapping[]): Promise<Result<TypeMapping>[]> {
         // pull in the target data source, immediately error out if the source isn't valid, we also need it for the container
         // in this case we're using the data source mapper because we have no need of actually performing any operations
         const targetDataSource = await this.#dataSourceMapper.Retrieve(targetSourceID);
@@ -355,7 +355,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
                         // call the repo's save method on the modified mapping.
                         mapping.data_source_id = targetDataSource.value.id;
                         mapping.container_id = targetDataSource.value.container_id;
-                        mapping.active = false; // always inactivate the mapping after modification
+                        mapping.active = active; 
 
                         // now we must iterate through the transformations and potentially back-fill the metatype/relationship
                         // ids and key ids if all that are present are the names - note that this will not modify the mapping if
