@@ -78,6 +78,10 @@ export default class ContainerMapper extends Mapper {
         return super.rows(this.listFromIDsStatement(ids), {resultClass: this.resultClass});
     }
 
+    public async ListForServiceUser(userID: string): Promise<Result<Container[]>> {
+        return super.rows(this.listForServiceUserStatement(userID), {resultClass: this.resultClass});
+    }
+
     public async Archive(containerID: string, userID: string): Promise<Result<boolean>> {
         return super.runStatement(this.archiveStatement(containerID, userID));
     }
@@ -164,5 +168,15 @@ export default class ContainerMapper extends Mapper {
         const values = ids;
 
         return format(text, values);
+    }
+
+    private listForServiceUserStatement(userID: string): QueryConfig {
+        return {
+            text: `SELECT c.*
+                    FROM container_service_users cs
+                    JOIN containers c ON cs.container_id = c.id
+                    WHERE cs.user_id = $1`,
+            values: [userID],
+        };
     }
 }

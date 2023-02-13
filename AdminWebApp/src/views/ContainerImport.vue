@@ -20,10 +20,12 @@
                 <template slot="prepend"><info-tooltip :message="$t('containerImport.importOntologyHelp')"></info-tooltip> </template>
               </v-checkbox>
 
-            <v-checkbox v-model="importDataSources" disabled>
+            <v-checkbox v-model="importDataSources">
                 <template v-slot:label>
-                  {{$t('containerImport.importDataSources')}} <p class="text-caption" style="margin-left: 5px"> {{$t('comingSoon')}}</p>
+                  {{$t('containerImport.importDataSources')}} <p class="text-caption" style="margin-left: 5px"> {{$t('beta')}}</p>
                 </template>
+
+                <template slot="prepend"><info-tooltip :message="$t('containerImport.importDataSourceHelp')"></info-tooltip> </template>
               </v-checkbox>
 
             <v-checkbox v-model="importTypeMappings" disabled>
@@ -108,7 +110,12 @@ export default class ContainerImport extends Vue {
       return true;
     };
 
-    const url = buildURL(Config?.deepLynxApiUri, {path: `/containers/${this.container?.id!}/import`})
+    const queryParams: {[key: string]: any} = {}
+    if (this.importOntology) queryParams.importOntology = true
+    if (this.importDataSources) queryParams.importDataSources = true
+    if (this.importTypeMappings) queryParams.importTypeMappings = true
+
+    const url = buildURL(Config?.deepLynxApiUri, {path: `/containers/${this.container?.id!}/import`, queryParams: queryParams})
 
     const formData = new FormData();
     formData.append('export_file', this.importFile!);

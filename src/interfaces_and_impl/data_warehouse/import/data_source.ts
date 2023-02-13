@@ -26,7 +26,11 @@ export interface DataSource {
     // should fire a one time function, not a perpetual function
     Run(): Promise<void>;
 
-    // this final method is so that the data source can run any encryption or source
+    // this method is so that the data source can run any encryption or source
     // specific functions prior to the data source record being saved into the database
     ToSave(): Promise<DataSourceRecord>;
+
+    // ToExport should modify a data source return by stripping any elements of the specific data source
+    // that should not be released outside the DeepLynx system
+    ToExport(): Promise<DataSourceRecord>;
 }

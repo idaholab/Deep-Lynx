@@ -323,7 +323,6 @@ export default class OAuthRoutes {
     }
 
     private static loginPage(req: Request, res: Response, next: NextFunction) {
-        req.logout((err: any) => {}); // in case a previous user logged into a session
         const oauthRequest = oauthRepo.authorizationFromRequest(req);
 
         return res.render('login', {
@@ -360,18 +359,20 @@ export default class OAuthRoutes {
                 passport.authenticate('saml', {
                     failureRedirect: '/unauthorized',
                     failureFlash: true,
+                    keepSessionInfo: true,
                 })(req, res);
             });
         } else {
             passport.authenticate('saml', {
                 failureRedirect: '/unauthorized',
                 failureFlash: true,
+                keepSessionInfo: true,
             })(req, res);
         }
     }
 
     private static saml(req: Request, res: Response, next: NextFunction) {
-        passport.authenticate('saml', (err, user, info) => {
+        passport.authenticate('saml', {keepSessionInfo: true}, (err, user, info) => {
             if (err) {
                 res.redirect(buildUrl('/oauth', {queryParams: {error: `${err}`}}));
                 return;
@@ -402,7 +403,7 @@ export default class OAuthRoutes {
     }
 
     private static logout(req: Request, res: Response, next: NextFunction) {
-        req.logout((err: any) => {});
+        req.logout({keepSessionInfo: true}, (err: any) => {});
 
         if (req.query.redirect_uri) {
             return res.redirect(req.query.redirect_uri as string);
@@ -629,7 +630,7 @@ export default class OAuthRoutes {
                     }
 
                     try {
-                        const token = jwt.sign(classToPlain(user.value), Config.encryption_key_secret, {expiresIn: expiry, algorithm: 'RS256'});
+                        const token = jwt.sign(classToPlain(user.value), Config.encryption_key_secret, {expiresIn: expiry, algorithm: 'RS256', allowInsecureKeySizes: true});
                         res.status(200).json(token);
                         return;
                     } catch (e: any) {

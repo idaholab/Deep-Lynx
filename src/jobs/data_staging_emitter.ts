@@ -15,6 +15,7 @@ import DataStagingMapper from '../data_access_layer/mappers/data_warehouse/impor
 import {DataStaging} from '../domain_objects/data_warehouse/import/import';
 import {parentPort} from 'worker_threads';
 import BackedLogger from '../services/logger';
+import {Transform, TransformCallback} from 'stream';
 const devnull = require('dev-null');
 process.setMaxListeners(0);
 
@@ -47,74 +48,134 @@ void postgresAdapter
         QueueFactory()
             .then((queue) => {
                 const emitter = () => {
-                    void postgresAdapter.Pool.connect((err, client, done) => {
-                        const stream = client.query(new QueryStream(dataStagingMapper.listImportUninsertedActiveMappingStatement()));
-                        const seenImports: Map<string, undefined> = new Map<string, undefined>();
+                    return new Promise<void>((resolve) => {
+                        postgresAdapter.Pool.connect((err, client, done) => {
+                            const stream = client.query(new QueryStream(dataStagingMapper.listImportUninsertedActiveMappingStatement()));
+                            const seenImports: Map<string, undefined> = new Map<string, undefined>();
 
-                        stream.on('data', (data) => {
-                            const staging = plainToClass(DataStaging, data as object);
+                            class transform extends Transform {
+                                public putPromises: Promise<boolean>[] = [];
 
-                            // check to see if the importID is in the cache, indicating that there is a high probability that
-                            // this message is already in the queue and either is being processed or waiting to be processed
-                            Cache.get(`imports_${staging.import_id}`)
-                                .then((set) => {
-                                    // if it's set but in our list of seen imports then odds are we're the one putting this import
-                                    // in, so we need to handle that fact
-                                    if (!set || (set && seenImports.has(staging.import_id!))) {
-                                        // if the import isn't the cache, we can go ahead and queue the staging data
-                                        queue.Put(Config.process_queue, staging).catch((e) => {
-                                            Logger.error(
-                                                `unexpected error in data staging emitter emitter thread when attempting to put message on queue ${e}`,
-                                            );
-                                        });
-                                    }
-                                })
-                                // if we error out we need to go ahead and queue this message anyway, just so we're not dropping
-                                // data
-                                .catch((e) => {
-                                    Logger.error(`error reading from cache for staging emitter ${e}`);
-                                    queue.Put(Config.process_queue, staging).catch((e) => {
-                                        Logger.error(`unexpected error in data staging emitter emitter thread when attempting to put message on queue ${e}`);
+                                constructor() {
+                                    super({
+                                        objectMode: true,
+                                        transform: (data: any, encoding: BufferEncoding, callback: TransformCallback) => {
+                                            const staging = plainToClass(DataStaging, data as object);
+
+                                            // check to see if the importID is in the cache, indicating that there is a high probability that
+                                            // this message is already in the queue and either is being processed or waiting to be processed
+                                            Cache.get(`imports:${staging.import_id}`)
+                                                .then((set) => {
+                                                    // if it's set but in our list of seen imports then odds are we're the one putting this import
+                                                    // in, so we need to handle that fact
+                                                    if (!set || (set && seenImports.has(staging.import_id!))) {
+                                                        // if the import isn't the cache, we can go ahead and queue the staging data
+                                                        this.putPromises.push(queue.Put(Config.process_queue, staging));
+                                                    }
+                                                })
+                                                // if we error out we need to go ahead and queue this message anyway, just so we're not dropping
+                                                // data
+                                                .catch((e) => {
+                                                    Logger.error(`error reading from cache for staging emitter ${e}`);
+                                                    this.putPromises.push(queue.Put(Config.process_queue, staging));
+                                                })
+                                                .finally(() => {
+                                                    if (staging.import_id) {
+                                                        // we set the cache value and push the imports into seen imports
+                                                        Cache.set(`imports:${staging.import_id}`, {}, Config.initial_import_cache_ttl).catch((e) => {
+                                                            Logger.error(
+                                                                `unexpected error in data staging emitter when attempting to put import on cache ${e}`,
+                                                            );
+                                                        });
+
+                                                        seenImports.set(staging.import_id, undefined);
+                                                    }
+
+                                                    // check the buffer, await if needed
+                                                    if (this.putPromises.length > 500) {
+                                                        const buffer = [...this.putPromises];
+                                                        this.putPromises = [];
+                                                        void Promise.all(buffer)
+                                                            .catch((e) => {
+                                                                Logger.error(`error while awaiting put promises in data staging emitter ${JSON.stringify(e)}`);
+                                                                callback(e, null);
+                                                            })
+                                                            .finally(() => {
+                                                                callback(null, staging);
+                                                            });
+                                                    } else {
+                                                        callback(null, staging);
+                                                    }
+                                                });
+                                        },
                                     });
-                                })
-                                .finally(() => {
-                                    if (staging.import_id) {
-                                        // we set the cache value and push the imports into seen imports
-                                        Cache.set(`imports_${staging.import_id}`, {}, Config.initial_import_cache_ttl).catch((e) => {
-                                            Logger.error(`unexpected error in data staging emitter emitter thread when attempting to put import on cache ${e}`);
+                                }
+                            }
+
+                            const emitterStream = new transform();
+
+                            // we have to handle the leftover buffer
+                            emitterStream.on('end', () => {
+                                if (emitterStream.putPromises.length > 0) {
+                                    const buffer = [...emitterStream.putPromises];
+                                    emitterStream.putPromises = [];
+                                    void Promise.all(buffer)
+                                        .catch((e) => {
+                                            Logger.error(`error while awaiting put promises in data staging emitter ${JSON.stringify(e)}`);
+                                            if (parentPort) parentPort.postMessage('done');
+                                            else {
+                                                process.exit(1);
+                                            }
+                                        })
+                                        .finally(() => {
+                                            done();
+                                            resolve();
                                         });
+                                } else {
+                                    done();
+                                    resolve();
+                                }
+                            });
 
-                                        seenImports.set(staging.import_id, undefined);
-                                    }
-                                });
+                            emitterStream.on('error', (e: Error) => {
+                                Logger.error(`unexpected error in data staging emitter emitter thread ${JSON.stringify(e)}`);
+                                if (parentPort) parentPort.postMessage('done');
+                                else {
+                                    process.exit(1);
+                                }
+                            });
+
+                            stream.on('error', (e: Error) => {
+                                Logger.error(`unexpected error in data staging emitter emitter thread ${JSON.stringify(e)}`);
+                                if (parentPort) parentPort.postMessage('done');
+                                else {
+                                    process.exit(1);
+                                }
+                            });
+
+                            // we pipe to devnull because we need to trigger the stream and don't
+                            // care where the data ultimately ends up
+                            stream.pipe(emitterStream).pipe(devnull({objectMode: true}));
                         });
-
-                        stream.on('error', (e: Error) => {
-                            Logger.error(`unexpected error in data staging emitter emitter thread ${e}`);
-                            if (parentPort) parentPort.postMessage('done');
-                            else {
-                                process.exit(0);
-                            }
-                        });
-
-                        stream.on('end', () => {
-                            done();
-                        });
-
-                        // we pipe to devnull because we need to trigger the stream and don't
-                        // care where the data ultimately ends up
-                        stream.pipe(devnull({objectMode: true}));
-
-                        setTimeout(() => {
-                            if (parentPort) parentPort.postMessage('done');
-                            else {
-                                process.exit(0);
-                            }
-                        }, 10000);
                     });
                 };
 
-                emitter();
+                emitter()
+                    .catch((e) => {
+                        void PostgresAdapter.Instance.close();
+
+                        Logger.error(`error in data staging emitter: ${JSON.stringify(e)}`);
+                        if (parentPort) parentPort.postMessage('done');
+                        else {
+                            process.exit(1);
+                        }
+                    })
+                    .finally(() => {
+                        if (parentPort) parentPort.postMessage('done');
+                        else {
+                            process.exit(0);
+                        }
+                    });
             })
             .catch((e) => {
                 void PostgresAdapter.Instance.close();

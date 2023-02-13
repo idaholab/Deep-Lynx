@@ -38,6 +38,17 @@
             <v-list-item-title>{{$t("Dashboard")}}</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
+        <v-list-item
+            link
+            v-if="$auth.Auth('data', 'write', containerID)"
+            @click="setActiveComponent('data-query')"
+            :input-value="currentMainComponent === 'DataQuery'"
+            :ripple="{class:'list-ripple'}"
+        >
+          <v-list-item-content>
+            <v-list-item-title>{{$t("home.dataQuery")}}</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
         <v-list-group :value="false" dense :ripple="{class:'list-ripple'}">
           <template v-slot:activator>
             <v-list-item-title>{{$t("home.taxonomy")}}</v-list-item-title>
@@ -121,21 +132,8 @@
           :ripple="{class:'list-ripple'}"
         >
           <template v-slot:activator>
-            <v-list-item-title>{{$t("home.data")}}</v-list-item-title>
+            <v-list-item-title>{{$t("home.dataManagement")}}</v-list-item-title>
           </template>
-          <v-list-item
-            two-line
-            link
-            v-if="$auth.Auth('data', 'write', containerID)"
-            @click="setActiveComponent('data-query')"
-            :input-value="currentMainComponent === 'DataQuery'"
-            :ripple="{class:'list-ripple'}"
-          >
-            <v-list-item-content>
-              <v-list-item-title>{{$t("home.dataQuery")}}</v-list-item-title>
-              <v-list-item-subtitle>{{$t("home.dataQueryDescription")}}</v-list-item-subtitle>
-            </v-list-item-content>
-          </v-list-item>
           <v-list-item
             two-line
             link
@@ -178,14 +176,14 @@
                <v-list-item
             two-line
             link
-            v-if="$auth.Auth('data', 'write', containerID) && dataManagementEnabled"
-            @click="setActiveComponent('data-management')"
-            :input-value="currentMainComponent === 'DataManagement'"
+            v-if="$auth.Auth('data', 'write', containerID) && dataEditorEnabled"
+            @click="setActiveComponent('data-editor')"
+            :input-value="currentMainComponent === 'DataEditor'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
-              <v-list-item-title>{{$t("home.dataManagement")}}-<small>{{$t("home.beta")}}</small></v-list-item-title>
-              <v-list-item-subtitle>{{$t("home.dataManagementDescription")}}</v-list-item-subtitle>
+              <v-list-item-title>{{$t("home.dataEditor")}}-<small>{{$t("home.beta")}}</small></v-list-item-title>
+              <v-list-item-subtitle>{{$t("home.dataEditorDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
           <v-list-item
@@ -580,7 +578,7 @@ import DataExport from "@/views/DataExport.vue"
 import DataImports from "@/views/DataImports.vue"
 import DataQuery from "@/views/DataQuery.vue"
 import DataSources from "@/views/DataSources.vue"
-import DataManagement from "@/views/DataManagement.vue"
+import DataEditor from "@/views/DataEditor.vue"
 import DataMapping from "@/views/DataMapping.vue"
 import Settings from "@/views/Settings.vue"
 import Users from "@/views/Users.vue"
@@ -613,7 +611,7 @@ import ContainerImport from "@/views/ContainerImport.vue";
     DataExport,
     DataQuery,
     DataSources,
-    DataManagement,
+    DataEditor,
     DataMapping,
     Settings,
     ContainerUsers,
@@ -638,7 +636,7 @@ export default class Home extends Vue {
   componentName: string | TranslateResult = 'Home'
   argument: string = this.arguments
   componentKey = 0 // this is so we can force a re-render of certain components on component change - assign as key
-  dataManagementEnabled = Config.dataManagementEnabled
+  dataEditorEnabled = Config.dataEditorEnabled
   stats: FullStatistics | null = null;
 
   metatypesCount = 0
@@ -779,10 +777,10 @@ export default class Home extends Vue {
         break;
       }
 
-      case "data-management": {
-        this.currentMainComponent = "DataManagement";
-        this.componentName = "Data Management"
-        this.$router.replace(`/containers/${this.containerID}/data-management`)
+      case "data-editor": {
+        this.currentMainComponent = "DataEditor";
+        this.componentName = "Data Editor"
+        this.$router.replace(`/containers/${this.containerID}/data-editor`)
         break;
       }
 

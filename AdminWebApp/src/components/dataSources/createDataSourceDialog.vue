@@ -23,14 +23,21 @@
                   :label="$t('createDataSource.name')"
                   :rules="[v => !!v || $t('dataMapping.required')]"
               ></v-text-field>
-              <v-select
-                  v-model="select"
-                  :items="adapterTypes()"
-                  @input="selectAdapter"
-                  :label="$t('createDataSource.sourceType')"
-                  required
-              >
-              </v-select>
+
+              <v-select v-if="timeseries"
+                v-model="select"
+                :items="{text: $t('createDataSource.timeseries'), value: 'timeseries', description: $t('createDataSource.timeseriesDescription')}"
+                :label="$t('createDataSource.sourceType')"
+                @input="selectAdapter"
+                required
+              />
+              <v-select v-else
+                v-model="select"
+                :items="adapterTypes()"
+                @input="selectAdapter"
+                :label="$t('createDataSource.sourceType')"
+                required
+              />
 
               <div v-if="newDataSource.adapter_type === 'standard'">
                 <p><b>{{$t('createDataSource.description')}}</b></p>
@@ -98,7 +105,7 @@
 
               </div>
 
-                <div v-if="newDataSource.adapter_type === 'jazz'">
+              <div v-if="newDataSource.adapter_type === 'jazz'">
                 <p><b>{{$t('createDataSource.description')}}</b></p>
                 <p>{{$t('createDataSource.jazzDescription')}}</p>
                   <v-text-field
@@ -155,7 +162,7 @@
                       :label="$t('createDataSource.secure')"
                       required
                   ></v-checkbox>
-                </div>
+              </div>
 
               <div v-if="newDataSource.adapter_type === 'aveva'">
                 <p><b>{{$t('createDataSource.description')}}</b></p>
@@ -330,6 +337,58 @@
                 </v-row>
               </div>
 
+              <div v-if="newDataSource.adapter_type === 'p6'">
+                <v-select v-if="newDataSource.adapter_type === 'p6' && container.config.configured_data_sources.length > 0"
+                  :items="p6configOptions()"
+                  @input="selectP6config"
+                  :label="$t('createDataSource.customP6config')"
+                />
+                <p><b>{{($t('createDataSource.description'))}}</b></p>
+                <p>{{$t('createDataSource.p6Description')}}</p>
+
+                <v-row>
+                  <v-col :cols="6">
+                    <v-text-field
+                      :disabled="p6preset.endpoint"
+                      v-model="p6Config.endpoint"
+                      :label="$t('createDataSource.p6endpoint')"
+                      :rules="[v => !!v || $t('dataMapping.required')]"
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col :cols="6">
+                    <v-text-field
+                      :disabled="p6preset.projectID"
+                      v-model="p6Config.projectID"
+                      :label="$t('createDataSource.p6projectID')"
+                      :rules="[v => !!v || $t('dataMapping.required')]"
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
+
+                <v-row>
+                  <v-col :cols="6">
+                    <v-text-field
+                      v-model="p6Config.username"
+                      :label="$t('createDataSource.username')"
+                      :type="p6preset.username ? 'password' : 'text'"
+                      :rules="[v => !!v || $t('dataMapping.required')]"
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col :cols="6">
+                    <v-text-field
+                      v-model="p6Config.password"
+                      :label="$t('createDataSource.password')"
+                      :append-icon="(hideP6pass ? 'mdi-eye' : 'mdi-eye-off')"
+                      @click:append="() => (hideP6pass = !hideP6pass)"
+                      :type="hideP6pass ? 'password' : 'text'"
+                      :rules="[v => !!v || $t('dataMapping.required')]"
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
+              </div>
+
               <div v-if="newDataSource.adapter_type === 'timeseries'">
                 <p><b>{{$t('createDataSource.description')}}</b></p>
                 <p>{{$t('createDataSource.timeseriesDescription')}} <a :href="$t('dataMapping.tableDesignHelpLink')" target="_blank">{{$t('dataMapping.here')}}.</a></p>
@@ -460,7 +519,7 @@
                   <template v-slot:[`item.operator`]="{ item }">
                     <v-select
                         :label="$t('dataMapping.operators')"
-                        :items=operators
+                        :items=getOperators(item.type)
                         v-model="item.operator"
                         :rules="[v => !!v || $t('dataMapping.required')]"
                     />
@@ -468,20 +527,49 @@
 
 
                   <template v-slot:[`item.value`]="{ item}">
-                    <v-text-field
+                    <div v-if="item.type && item.type ==='data_source'">
+                      <select-data-source
+                        :containerID="containerID"
+                        :multiple="item.operator === 'in'"
+                        :disabled="!item.type"
+                        :dataSourceID="item.value"
+                        @selected="setDataSource(...arguments, item)"
+                      />
+                    </div>
+
+                    <div v-else-if="item.type && item.type === 'metatype_name'">
+                      <search-metatypes
+                        :disabled="!item.type"
+                        :containerID="containerID"
+                        :multiple="item.operator === 'in'"
+                        :metatypeName="item.value"
+                        @selected="setMetatype(...arguments, item)"
+                      />
+                    </div>
+
+                    <div v-else>
+                      <v-text-field
                         v-if="item.type && item.type ==='property'"
                         :label="$t('createDataSource.key')"
                         v-model="item.key"
                         :rules="[v => !!v || $t('dataMapping.required')]"
-                    >
-                    </v-text-field>
+                      />
 
-                    <v-text-field
+                      <v-text-field v-if="item.operator !== 'in'"
+                        :disabled="item.type === 'property' && !item.key"
                         :label="$t('createDataSource.value')"
                         v-model="item.value"
                         :rules="[v => !!v || $t('dataMapping.required')]"
-                    >
-                    </v-text-field>
+                      />
+                      <v-combobox v-if="item.operator === 'in'"
+                        :disabled="item.type === 'property' && !item.key"
+                        multiple
+                        clearable
+                        :placeholder="$t('queryBuilder.typeToAdd')"
+                        v-model="item.value"
+                      />
+                    </div>
+                    
                   </template>
 
                   <template v-slot:[`item.actions`]="{ index }">
@@ -499,14 +587,32 @@
               </div>
 
               <div v-if="newDataSource.adapter_type && newDataSource.adapter_type !== 'timeseries'">
+                <v-checkbox v-model="rawRetentionEnabled">
+                  <template v-slot:label>
+                    {{$t('containers.rawRetentionEnabled')}}<p class="text-caption" style="margin-left: 5px"></p>
+                  </template>
+
+                  <template slot="prepend"><info-tooltip :message="$t('containers.rawRetentionHelp')"></info-tooltip></template>
+                </v-checkbox>
+
                 <small>{{$t('createDataSource.dataRetentionHelp')}}</small>
-                <v-text-field
-                  type="number"
-                  v-model="dataRetentionDays"
-                  :min="-1"
-                >
-                  <template v-slot:label>{{$t('createDataSource.dataRetentionDays')}} </template>
-                </v-text-field>
+                <div v-if="rawRetentionEnabled">
+                  <v-text-field
+                    :value="-1"
+                    disabled
+                  >
+                    <template v-slot:label>{{$t('createDataSource.dataRetentionDays')}} </template>
+                  </v-text-field>
+                </div>
+                <div v-else>
+                  <v-text-field
+                    type="number"
+                    v-model="dataRetentionDays"
+                    :min="-1"
+                  >
+                    <template v-slot:label>{{$t('createDataSource.dataRetentionDays')}} </template>
+                  </v-text-field>
+                </div>
                 <v-checkbox
                     v-model="newDataSource.active"
                     :label="$t('createDataSource.enable')"
@@ -578,17 +684,25 @@ import {
   DefaultAvevaDataSourceConfig,
   DefaultHttpDataSourceConfig,
   DefaultJazzDataSourceConfig,
+  DefaultP6DataSourceConfig,
   DefaultStandardDataSourceConfig, DefaultTimeseriesDataSourceConfig,
   HttpDataSourceConfig,
   JazzDataSourceConfig,
+  MetatypeT,
+  P6DataSourceConfig,
   StandardDataSourceConfig,
   TimeseriesDataSourceConfig
 } from "@/api/types";
+import SelectDataSource from './selectDataSource.vue';
+import SearchMetatypes from '../ontology/metatypes/searchMetatypes.vue';
 
-@Component
+@Component({components:{SelectDataSource, SearchMetatypes}})
 export default class CreateDataSourceDialog extends Vue {
   @Prop({required: true})
   readonly containerID!: string;
+
+  @Prop({required: false})
+  timeseries?: boolean
 
   errorMessage = ""
   dialog= false
@@ -599,7 +713,14 @@ export default class CreateDataSourceDialog extends Vue {
   stopNodes = []
   valueNodes = []
   dataRetentionDays = 30
+  rawRetentionEnabled = false
   expandedTimeSeries: any[] = []
+  container: ContainerT | undefined = undefined;
+  p6preset = {
+    endpoint: false,
+    projectID: false,
+  }
+  hideP6pass = true
 
   newDataSource: DataSourceT = {
     name: "",
@@ -613,6 +734,7 @@ export default class CreateDataSourceDialog extends Vue {
   httpConfig: HttpDataSourceConfig = DefaultHttpDataSourceConfig()
   jazzConfig: JazzDataSourceConfig = DefaultJazzDataSourceConfig()
   avevaConfig: AvevaDataSourceConfig = DefaultAvevaDataSourceConfig()
+  p6Config: P6DataSourceConfig = DefaultP6DataSourceConfig()
   timeseriesConfig:TimeseriesDataSourceConfig = DefaultTimeseriesDataSourceConfig();
 
   dataTypes = [
@@ -633,16 +755,21 @@ export default class CreateDataSourceDialog extends Vue {
     {text: 'Id', value: 'id'}];
 
   operators = [
-    {text: "==", value: "==", requiresValue: true},
-    {text: "!=", value: "!=", requiresValue: true},
+    {text: "equals", value: "==", requiresValue: true},
+    {text: "not equals", value: "!=", requiresValue: true},
     {text: "in", value: "in", requiresValue: true},
     {text: "contains", value: "contains", requiresValue: true},
     {text: "exists", value: "exists", requiresValue: false},
-    {text: "<", value: "<", requiresValue: true},
-    {text: "<=", value: "<=", requiresValue: true},
-    {text: ">", value: ">", requiresValue: true},
-    {text: ">=", value: ">=", requiresValue: true},
+    {text: "less than", value: "<", requiresValue: true},
+    {text: "less than or equal to", value: "<=", requiresValue: true},
+    {text: "greater than", value: ">", requiresValue: true},
+    {text: "greater than or equal to", value: ">=", requiresValue: true},
   ]
+
+
+  beforeMount() {
+    this.container = this.$store.getters.activeContainer;
+  }
 
   adapterTypes() {
     const types =  [
@@ -650,13 +777,12 @@ export default class CreateDataSourceDialog extends Vue {
       {text: this.$t('createDataSource.http'), value: 'http', description: this.$t('createDataSource.httpDescription')},
       {text: this.$t('createDataSource.jazz'), value: 'jazz', description: this.$t('createDataSource.jazzDescription')},
       {text: this.$t('createDataSource.aveva'), value: 'aveva', description: this.$t('createDataSource.avevaDescription')},
-      {text: this.$t('createDataSource.timeseries'), value: 'timeseries', description: this.$t('createDataSource.timeseriesDescription')},
+      {text: this.$t('createDataSource.p6'), value: 'p6', description: this.$t('createDataSource.p6description')}
     ]
 
-    const container: ContainerT = this.$store.getters.activeContainer;
 
-    if(container.config.enabled_data_sources && container.config.enabled_data_sources.length > 0) {
-      return types.filter(t => container.config.enabled_data_sources.find(s => s === t.value))
+    if(this.container!.config.enabled_data_sources && this.container!.config.enabled_data_sources.length > 0) {
+      return types.filter(t => this.container!.config.enabled_data_sources.find(s => s === t.value))
     } else {
       return types
     }
@@ -703,9 +829,78 @@ export default class CreateDataSourceDialog extends Vue {
     ]
   }
 
+  // return only operators that make sense based on parameter filter type
+  getOperators(paramFilter: string) {
+    const baseOperators = [
+      {text: "equals", value: "==", requiresValue: true},
+      {text: "not equals", value: "!=", requiresValue: true},
+      {text: "in", value: "in", requiresValue: true},
+    ]
 
-    selectAdapter(adapter: string) {
+    if (paramFilter === 'data_source' || paramFilter === 'metatype_name') {
+      return baseOperators
+    }
+
+    if (paramFilter === 'metatype_id' || paramFilter === 'id') {
+      return baseOperators.concat([
+        {text: "less than", value: "<", requiresValue: true},
+        {text: "less than or equal to", value: "<=", requiresValue: true},
+        {text: "greater than", value: ">", requiresValue: true},
+        {text: "greater than or equal to", value: ">=", requiresValue: true},
+      ]);
+    }
+
+    return this.operators
+  }
+
+  setDataSource(dataSources: DataSourceT | DataSourceT[], item: any) {
+    if (Array.isArray(dataSources)) {
+      const ids: string[] = []
+      dataSources.forEach(source => ids.push(source.id!))
+
+      item.value = ids
+    } else {
+      item.value = dataSources.id!
+    }
+  }
+
+  setMetatype(metatypes: MetatypeT | MetatypeT[], item: any) {
+    if (Array.isArray(metatypes)) {
+      const names: string [] = []
+      
+      metatypes.forEach(mt => {
+        names.push(mt.name!)
+      })
+
+      item.value = names
+    } else {
+      item.value = metatypes.name!
+    }
+  }
+
+  selectAdapter(adapter: string) {
     this.newDataSource.adapter_type = adapter
+  }
+
+  p6configOptions() {
+    const options: string[] = ['Default P6 Adapter'];
+    this.container?.config.configured_data_sources?.forEach((source) => {
+      options.push(source.name)
+    })
+    return options;
+  }
+
+  selectP6config(configName: string) {
+    if (configName !== 'Default P6 Adapter') {
+      const index = this.container?.config.configured_data_sources?.findIndex(config => config.name === configName)
+      const selectedConfig = this.container!.config.configured_data_sources![index!] as P6DataSourceConfig
+      // Using object assign here otherwise some changes to the source will also be made to the config template
+      Object.assign(this.p6Config, selectedConfig)
+    } else {
+      this.p6Config = DefaultP6DataSourceConfig()
+    }
+    this.p6preset.endpoint = this.p6Config.endpoint ? true : false;
+    this.p6preset.projectID = this.p6Config.projectID ? true : false;
   }
 
   selectAuthMethodHttp(authMethod: string) {
@@ -751,6 +946,11 @@ export default class CreateDataSourceDialog extends Vue {
         break;
       }
 
+      case "p6": {
+        this.newDataSource.config = this.p6Config
+        break;
+      }
+
       case "timeseries": {
         this.newDataSource.config = this.timeseriesConfig;
         this.newDataSource.active = true;
@@ -764,7 +964,12 @@ export default class CreateDataSourceDialog extends Vue {
 
     if(this.stopNodes.length > 0) this.newDataSource.config.stop_nodes = this.stopNodes
     if(this.valueNodes.length > 0) this.newDataSource.config.value_nodes = this.valueNodes
-    this.newDataSource.config.data_retention_days = parseInt(String(this.dataRetentionDays), 10)
+    if(this.rawRetentionEnabled) {
+      this.newDataSource.config.raw_retention_enabled = true
+      this.newDataSource.config.data_retention_days = -1
+    } else {
+      this.newDataSource.config.data_retention_days = parseInt(String(this.dataRetentionDays), 10)
+    }
 
     this.$client.createDataSource(this.containerID, this.newDataSource)
         .then((dataSource)=> {
@@ -791,11 +996,17 @@ export default class CreateDataSourceDialog extends Vue {
       active: false,
       config: undefined
     }
+    this.rawRetentionEnabled = false
+    this.p6preset = {
+      endpoint: false,
+      projectID: false,
+    }
 
     this.standardConfig = DefaultStandardDataSourceConfig()
     this.httpConfig = DefaultHttpDataSourceConfig()
     this.jazzConfig = DefaultJazzDataSourceConfig()
     this.avevaConfig = DefaultAvevaDataSourceConfig()
+    this.p6Config = DefaultP6DataSourceConfig()
   }
 
   validColumnName(index: any, value: any) {

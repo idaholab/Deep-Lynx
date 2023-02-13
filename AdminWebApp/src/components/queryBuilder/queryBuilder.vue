@@ -39,6 +39,13 @@
             <v-tab-item class="mx-5">
               <v-row>
                 <v-col :cols="12" align="center">
+                  <v-card style="margin-top: 10px" class="pa-4">
+                    <v-checkbox
+                      v-model="metadataEnabled"
+                      label="Include Metadata in Query (may impact performance)"
+                      :disabled="results !== null"
+                    ></v-checkbox>
+                  </v-card>
                   <v-card v-for="part in queryParts" :key="part.id" style="margin-top: 10px">
                     <v-card-title>
                       {{$t(`queryBuilder.${part.componentName}`)}}
@@ -51,7 +58,8 @@
                       :disabled="results !== null"
                       :containerID="containerID"
                       :queryPart="part"
-                      @update="updateQueryPart(part, ...arguments)"></component>
+                      @update="updateQueryPart(part, ...arguments)"
+                    />
                   </v-card>
                   <v-card v-if="!results" style="margin-top: 10px" class="pa-4">
                     <p class="mb-2">{{$t('queryBuilder.clickToAdd')}}</p>
@@ -63,13 +71,14 @@
                 <v-col class="d-flex flex-row">
                   <v-spacer />
                   <div class="mr-5">
-                    <v-select
+                    <v-combobox
                       :items="limitOptions"
                       v-model="limit"
                       :label="$t('queryBuilder.recordLimit')"
+                      @change="setLimit"
                       style="max-width: 90px;"
                     >
-                    </v-select>
+                    </v-combobox>
                   </div>
                   <div>
                     <v-btn v-if="!results" @click="submitQuery" style="margin-top: 15px">
@@ -135,6 +144,10 @@
                   </v-tooltip>
                 </v-col>
                 <v-spacer />
+                <v-checkbox class="mr-5"
+                  v-model="metadataEnabled"
+                  label="Include Metadata in Query (may impact performance)"
+                ></v-checkbox>
                 <v-btn @click="submitRawQuery" style="margin-top: 15px; margin-right: 15px">
                   <v-progress-circular indeterminate v-if="loading"></v-progress-circular>
                   <span v-if="!loading">{{$t('queryBuilder.runQuery')}}</span>
@@ -183,6 +196,8 @@ import {v4 as uuidv4} from 'uuid'
 import {NodeT} from "@/api/types";
 import { buildSchema } from 'graphql';
 import {mdiInformation} from "@mdi/js";
+import RawDataFilter from "./rawDataFilter.vue";
+import MetadataFilter from "./metadataFilter.vue";
 
 // @ts-ignore - needed because there are no declaration files here
 import CodeMirror from 'codemirror';
@@ -195,7 +210,7 @@ import 'codemirror-graphql/lint';
 import 'codemirror-graphql/mode';
 
 
-@Component({components: {AddDialog, DataSourceFilter, MetatypeFilter, OriginalIDFilter, IDFilter}})
+@Component({components: {AddDialog, DataSourceFilter, MetatypeFilter, OriginalIDFilter, IDFilter, RawDataFilter, MetadataFilter}})
 export default class QueryBuilder extends Vue {
   @Prop({required: true})
   readonly containerID!: string
@@ -210,6 +225,7 @@ export default class QueryBuilder extends Vue {
   limit = 100
   limitOptions = [100, 500, 1000, 10000]
   info = mdiInformation
+  metadataEnabled = false
 
   codeMirror: CodeMirror.EditorFromTextArea | null = null
 
@@ -466,7 +482,7 @@ relationshipSampleQuery =
       }
 
       this.loading = true
-      this.$client.submitGraphQLQuery(this.containerID, { query: `${this.codeMirror?.getValue()}` })
+      this.$client.submitGraphQLQuery(this.containerID, { query: `${this.codeMirror?.getValue()}` }, {metadataEnabled: this.metadataEnabled})
         .then((queryResult: any) => {
           if(queryResult.errors) {
             this.errorMessage = queryResult.errors.map((error: any) => error.message as string).join(' ')
@@ -476,6 +492,7 @@ relationshipSampleQuery =
 
           this.rawQueryResult = queryResult
           this.loading = false
+          this.metadataEnabled = false
         })
         .catch((err: string) => {
           this.errorMessage = 'There is a problem with the GraphQL query or server error. Please see the result tab.'
@@ -509,6 +526,7 @@ relationshipSampleQuery =
   }
 
   resetQuery() {
+    this.metadataEnabled = false
     this.queryParts = []
     this.query = null
     this.results = null
@@ -521,6 +539,10 @@ relationshipSampleQuery =
     }
   }
 
+  setLimit(limit: number) {
+    this.limit = limit
+  }
+
   submitQuery() {
     const id = uuidv4()
     this.loading = true
@@ -530,7 +552,7 @@ relationshipSampleQuery =
     const query = this.buildQuery()
     this.query = query.query
 
-    this.$client.submitGraphQLQuery(this.containerID, query)
+    this.$client.submitGraphQLQuery(this.containerID, query, {metadataEnabled: this.metadataEnabled})
         .then((results: any) => {
           if(results.errors) {
             this.errorMessage = results.errors[0].message ? 
@@ -545,7 +567,7 @@ relationshipSampleQuery =
             ran: new Date()
           })
 
-          this.results = {id, queryParts: this.queryParts, query: query.query, nodes: results.data.nodes}
+          this.results = {id, queryParts: this.queryParts, query: query.query, nodes: results.data.nodes, metadataEnabled: this.metadataEnabled}
           this.$emit('results', this.results)
         })
         .catch(e => {
@@ -557,6 +579,7 @@ relationshipSampleQuery =
 
   setResult(result: ResultSet) {
     this.results = result
+    this.results.metadataEnabled = this.metadataEnabled
     this.queryParts = result.queryParts
     this.query = result.query || null
     this.activeTab = 'queryBuilder'
@@ -567,6 +590,8 @@ relationshipSampleQuery =
   buildQuery(): any {
     const args: string[] = []
     const propertyArgs: string[] = []
+    const rawDataProps: string[] = []
+    const metadataProps: string[] = []
 
     this.queryParts.forEach(part => {
       switch(part.componentName) {
@@ -627,6 +652,24 @@ relationshipSampleQuery =
           }
           break;
         }
+
+        case('RawDataFilter'): {
+          if(part.operator === 'in') {
+            rawDataProps.push(`{key: "${part.key}", operator: "${part.operator}", value: "${part.value.join(",")}", historical: ${part.options!.historical}}`)
+          } else {
+            rawDataProps.push(`{key: "${part.key}", operator: "${part.operator}", value: "${part.value}", historical: ${part.options!.historical}}`)
+          }
+          break;
+        }
+
+        case('MetadataFilter'): {
+          if(part.operator === 'in') {
+            metadataProps.push(`{key: "${part.key}", operator: "${part.operator}", value: "${part.value.join(",")}", historical: ${part.options!.historical}}`)
+          } else {
+            metadataProps.push(`{key: "${part.key}", operator: "${part.operator}", value: "${part.value}"}`)
+          }
+          break;
+        }
       }
     })
 
@@ -640,6 +683,8 @@ relationshipSampleQuery =
     limit: ${this.limit}
     ${(args.length >  0) ? ","+args.join(','): ""}
     ${(propertyArgs.length > 0) ? ', properties: [' + propertyArgs.join(",") + "]" : ''}
+    ${(rawDataProps.length > 0) ? ', raw_data_properties: [' + rawDataProps.join(",") + "]" : ''}
+    ${(metadataProps.length > 0) ? ', metadata_properties: [' + metadataProps.join(",") + "]": ''}
     ){
         id
         original_id
@@ -650,6 +695,9 @@ relationshipSampleQuery =
         created_at
         modified_at
         properties
+        ${this.metadataEnabled ? 'metadata_properties' : ''}
+        ${this.metadataEnabled ? 'raw_data_properties' : ''}
+        ${this.metadataEnabled ? 'raw_data_history' : ''}
 }
 }`
     }
@@ -660,6 +708,7 @@ relationshipSampleQuery =
 export type QueryPart = {
   id: string; // needed for uniqueness, assigned here not by component
   componentName: string;
+  key?: string;
   property?: string;
   operator: string;
   value: any;
@@ -673,6 +722,7 @@ export type ResultSet = {
   query?: string;
   nodes: NodeT[];
   ran?: Date;
+  metadataEnabled?: boolean;
 }
 </script>
 

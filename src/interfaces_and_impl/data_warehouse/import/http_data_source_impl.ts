@@ -228,4 +228,20 @@ export default class HttpDataSourceImpl extends StandardDataSourceImpl implement
 
         return Promise.resolve(output);
     }
+
+    ToExport(): Promise<DataSourceRecord> {
+        const output = plainToClass(DataSourceRecord, {});
+        Object.assign(output, this.DataSourceRecord);
+
+        if ((output.config as HttpDataSourceConfig).auth_method === 'basic') {
+            (output.config as HttpDataSourceConfig).username = undefined;
+            (output.config as HttpDataSourceConfig).password = undefined;
+        }
+
+        if ((output.config as HttpDataSourceConfig).auth_method === 'token') {
+            (output.config as HttpDataSourceConfig).token = undefined;
+        }
+
+        return Promise.resolve(output);
+    }
 }

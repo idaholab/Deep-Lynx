@@ -70,6 +70,10 @@ export default class Node extends BaseDomainClass {
     @IsObject()
     properties: object = {};
 
+    @IsObject()
+    @IsOptional()
+    metadata_properties: object = {};
+
     @IsString()
     @IsOptional()
     original_data_id?: string;
@@ -104,6 +108,7 @@ export default class Node extends BaseDomainClass {
         metatype: Metatype | string;
         metatype_name?: string;
         properties: object;
+        metadata_properties?: object;
         original_data_id?: string;
         import_data_id?: string;
         data_staging_id?: string;
@@ -119,6 +124,7 @@ export default class Node extends BaseDomainClass {
             input.metatype instanceof Metatype ? (this.metatype = input.metatype) : (this.metatype = plainToClass(Metatype, {id: input.metatype}));
             if (input.metatype_name) this.metatype_name = input.metatype_name;
             this.properties = input.properties;
+            if (input.metadata_properties) this.metadata_properties = input.metadata_properties;
             if (input.original_data_id) this.original_data_id = input.original_data_id;
             if (input.import_data_id) this.import_data_id = input.import_data_id;
             if (input.data_staging_id) this.data_staging_id = input.data_staging_id;

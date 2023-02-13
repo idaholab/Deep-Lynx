@@ -125,6 +125,13 @@ export default class NodeMapper extends Mapper {
         });
     }
 
+    public async RetrieveRawDataHistory(id: string, transaction?: PoolClient): Promise<Result<Node[]>> {
+        return super.rows<Node>(this.retrieveRawDataHistoryStatement(id), {
+            transaction,
+            resultClass: this.resultClass,
+        });
+    }
+
     public async RetrieveByCompositeOriginalID(originalID: string, dataSourceID: string, metatypeID: string, transaction?: PoolClient): Promise<Result<Node>> {
         return super.retrieve(this.retrieveByCompositeOriginalIDStatement(dataSourceID, metatypeID, originalID), {transaction, resultClass: this.resultClass});
     }
@@ -145,6 +152,7 @@ export default class NodeMapper extends Mapper {
                   container_id,
                   metatype_id,
                   properties,
+                  metadata_properties,
                   original_data_id,
                   data_source_id,
                   type_mapping_transformation_id,
@@ -158,13 +166,14 @@ export default class NodeMapper extends Mapper {
                       properties = EXCLUDED.properties,
                       metadata = EXCLUDED.metadata,
                       deleted_at = EXCLUDED.deleted_at
-                  WHERE EXCLUDED.id = nodes.id 
+                  WHERE EXCLUDED.id = nodes.id AND EXCLUDED.properties IS DISTINCT FROM nodes.properties
                    RETURNING *`;
 
         const values = nodes.map((n) => [
             n.container_id,
             n.metatype ? n.metatype.id : n.metatype_id,
             JSON.stringify(n.properties),
+            JSON.stringify(n.metadata_properties),
             n.original_data_id,
             n.data_source_id,
             n.type_mapping_transformation_id,
@@ -185,6 +194,7 @@ export default class NodeMapper extends Mapper {
             container_id,
             metatype_id,
             properties,
+            metadata_properties,
             original_data_id,
             data_source_id,
             type_mapping_transformation_id,
@@ -199,6 +209,7 @@ export default class NodeMapper extends Mapper {
             n.container_id,
             n.metatype ? n.metatype.id : n.metatype_id,
             JSON.stringify(n.properties),
+            JSON.stringify(n.metadata_properties),
             n.original_data_id,
             n.data_source_id,
             n.type_mapping_transformation_id,
@@ -226,7 +237,18 @@ export default class NodeMapper extends Mapper {
             FROM nodes LEFT JOIN metatypes ON nodes.metatype_id = metatypes.id
             WHERE nodes.id = $1 ORDER BY nodes.created_at ASC`,
             values: [nodeID],
-        }
+        };
+    }
+
+    // retrieves node history with raw data records attached
+    private retrieveRawDataHistoryStatement(nodeID: string): QueryConfig {
+        return {
+            text: `SELECT nodes.*, metatypes.name as metatype_name, data_staging.data AS raw_data_properties
+            FROM nodes LEFT JOIN metatypes ON nodes.metatype_id = metatypes.id
+            LEFT JOIN data_staging ON nodes.data_staging_id = data_staging.id
+            WHERE nodes.id = $1 ORDER BY nodes.created_at ASC`,
+            values: [nodeID],
+        };
     }
 
     private domainRetrieveStatement(nodeID: string, containerID: string): QueryConfig {

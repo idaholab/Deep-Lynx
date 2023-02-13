@@ -75,6 +75,20 @@ export default class EdgeMapper extends Mapper {
         });
     }
 
+    public async RetrieveHistory(id: string, transaction?: PoolClient): Promise<Result<Edge[]>> {
+        return super.rows<Edge>(this.retrieveHistoryStatement(id), {
+            transaction,
+            resultClass: this.resultClass,
+        });
+    }
+
+    public async RetrieveRawDataHistory(id: string, transaction?: PoolClient): Promise<Result<Edge[]>> {
+        return super.rows<Edge>(this.retrieveRawDataHistoryStatement(id), {
+            transaction,
+            resultClass: this.resultClass,
+        });
+    }
+
     public RetrieveByRelationship(origin: string, relationship: string, destination: string, transaction?: PoolClient): Promise<Result<Edge[]>> {
         return super.rows<Edge>(this.retrieveByRelationshipStatement(origin, relationship, destination), {
             transaction,
@@ -112,6 +126,7 @@ export default class EdgeMapper extends Mapper {
             origin_id,
             destination_id,
             properties,
+            metadata_properties,
             data_source_id,
             type_mapping_transformation_id,
             origin_original_id,
@@ -129,7 +144,7 @@ export default class EdgeMapper extends Mapper {
             ON CONFLICT(container_id,relationship_pair_id,data_source_id,created_at, origin_id, destination_id) DO UPDATE SET
                 properties = EXCLUDED.properties,
                 metadata = EXCLUDED.metadata
-            WHERE EXCLUDED.id = edges.id
+            WHERE EXCLUDED.id = edges.id AND excluded.properties IS DISTINCT FROM edges.properties
             RETURNING *`;
 
         const values = edges.map((e) => [
@@ -138,6 +153,7 @@ export default class EdgeMapper extends Mapper {
             e.origin_id,
             e.destination_id,
             JSON.stringify(e.properties),
+            JSON.stringify(e.metadata_properties),
             e.data_source_id,
             e.type_mapping_transformation_id,
             e.origin_original_id,
@@ -165,6 +181,7 @@ export default class EdgeMapper extends Mapper {
             origin_id,
             destination_id,
             properties,
+            metadata_properties,
             data_source_id,
             type_mapping_transformation_id,
             origin_original_id,
@@ -186,6 +203,7 @@ export default class EdgeMapper extends Mapper {
             e.origin_id,
             e.destination_id,
             JSON.stringify(e.properties),
+            JSON.stringify(e.metadata_properties),
             e.data_source_id,
             e.type_mapping_transformation_id,
             e.origin_original_id,
@@ -208,6 +226,27 @@ export default class EdgeMapper extends Mapper {
         return {
             text: `SELECT * FROM current_edges WHERE id = $1`,
             values: [id],
+        };
+    }
+
+    private retrieveHistoryStatement(edgeID: string): QueryConfig {
+        return {
+            text: `SELECT edges.*, metatype_relationships.name AS metatype_relationship_name
+            FROM edges LEFT JOIN metatype_relationship_pairs ON edges.relationship_pair_id = metatype_relationship_pairs.id
+            LEFT JOIN metatype_relationships ON metatype_relationship_pairs.relationship_id = metatype_relationships.id
+            WHERE edges.id = $1 ORDER BY edges.created_at ASC`,
+            values: [edgeID],
+        };
+    }
+
+    private retrieveRawDataHistoryStatement(edgeID: string): QueryConfig {
+        return {
+            text: `SELECT edges.*, metatype_relationships.name AS metatype_relationship_name, data_staging.data AS raw_data_properties
+            FROM edges LEFT JOIN metatype_relationship_pairs ON edges.relationship_pair_id = metatype_relationship_pairs.id
+            LEFT JOIN metatype_relationships ON metatype_relationship_pairs.relationship_id = metatype_relationships.id
+            LEFT JOIN data_staging ON edges.data_staging_id = data_staging.id
+            WHERE edges.id = $1 ORDER BY edges.created_at ASC`,
+            values: [edgeID],
         };
     }
 

@@ -932,6 +932,7 @@ export type FileOptions = {
 export type DeleteOptions = {
     force?: boolean;
     removeData?: boolean;
+    user?: User;
 };
 
 export type ConstructorOptions = {

@@ -46,6 +46,7 @@ export function SetSamlAdfs(app: express.Application) {
                 disableRequestedAuthnContext: true,
                 identifierFormat: null,
             },
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             (profile: any, done: any) => {
                 const storage = UserMapper.Instance;
 
@@ -68,7 +69,9 @@ export function SetSamlAdfs(app: express.Application) {
                                             new User({
                                                 identity_provider_id: profile[Config.saml_claims_email],
                                                 identity_provider: 'saml_adfs',
-                                                display_name: profile[Config.saml_claims_name],
+                                                display_name: profile[Config.saml_claims_name]
+                                                    ? profile[Config.saml_claims_name]
+                                                    : profile[Config.saml_claims_email],
                                                 email: profile[Config.saml_claims_email],
                                                 admin: users.value.length === 0,
                                             }),

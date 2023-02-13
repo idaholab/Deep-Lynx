@@ -6,4 +6,8 @@ export default class AvevaDataSourceImpl extends StandardDataSourceImpl implemen
     constructor(record: DataSourceRecord) {
         super(record);
     }
+
+    ToExport(): Promise<DataSourceRecord> {
+        return Promise.resolve(this.DataSourceRecord!);
+    }
 }

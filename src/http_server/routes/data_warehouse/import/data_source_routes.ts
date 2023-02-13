@@ -6,6 +6,7 @@ import Result from '../../../../common_classes/result';
 import DataSourceRepository, {DataSourceFactory} from '../../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import {QueryOptions} from '../../../../data_access_layer/repositories/repository';
 import DataStagingRepository from '../../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
+import Authorization from '../../../../domain_objects/access_management/authorization/authorization';
 
 const dataSourceRepo = new DataSourceRepository();
 const dataSourceFactory = new DataSourceFactory();
@@ -33,6 +34,13 @@ export default class DataSourceRoutes {
 
             const payload = plainToClass(DataSourceRecord, req.body as object);
             payload.container_id = req.container.id!;
+
+            // verify that payload contains name
+            if (!payload.name) {
+                Result.Failure(`data source must contain a name`).asResponse(res);
+                next();
+                return;
+            }
 
             const dataSource = dataSourceFactory.fromDataSourceRecord(payload);
             if (!dataSource) {
@@ -185,13 +193,20 @@ export default class DataSourceRoutes {
                     sortBy: req.query.sortBy,
                     sortDesc: req.query.sortDesc ? String(req.query.sortDesc).toLowerCase() === 'true' : undefined,
                 } as QueryOptions)
-                .then((result) => {
+                .then(async (result) => {
                     if (result.isError) {
                         result.asResponse(res);
                         return;
                     }
 
-                    Result.Success(result.value.map((source) => source?.DataSourceRecord!)).asResponse(res);
+                    // check if user as write access on datasources and that 'decrypted' was specified as true
+                    const writePermissions = await Authorization.AuthUser(req.currentUser, 'write', 'data', req.params.containerID)
+                    const decrypted = writePermissions && req.query.decrypted === 'true'
+
+                    // if 'decrypted' is true, this will return usernames and passwords as part of the listed datasources.
+                    // Otherwise data sources will be listed without this information. This is used to enable adapters such as P6
+                    // to access this user-specified data without DeepLynx having to talk out to the adapters directly.
+                    Result.Success(result.value.map((source) => source?.DataSourceRecord!)).asResponse(res, undefined, decrypted);
                 })
                 .catch((err) => {
                     Result.Failure(err, 404).asResponse(res);
@@ -216,6 +231,7 @@ export default class DataSourceRoutes {
                 .delete(req.dataSource, {
                     force: String(req.query.forceDelete).toLowerCase() === 'true',
                     removeData: String(req.query.removeData).toLowerCase() === 'true',
+                    user: req.currentUser!
                 })
                 .then((result) => {
                     result.asResponse(res);

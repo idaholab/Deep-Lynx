@@ -7,6 +7,9 @@ import Container, {ContainerExport} from '../../../../domain_objects/data_wareho
 import Result from '../../../../common_classes/result';
 import {FileInfo} from 'busboy';
 import FileRepository from '../../../../data_access_layer/repositories/data_warehouse/data/file_repository';
+import DataSourceRepository from '../../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
+import {DataSource} from '../../../../interfaces_and_impl/data_warehouse/import/data_source';
+import pAll from 'p-all';
 
 const Busboy = require('busboy');
 const Buffer = require('buffer').Buffer;
@@ -297,10 +300,12 @@ export default class ContainerRoutes {
 
         let containerExport: ContainerExport = new ContainerExport();
         if (String(req.query.exportOntology).toLowerCase() === 'true') {
-            containerExport = (await repository.exportOntology(req.container.id!, req.currentUser!, req.query.ontologyVersionID as string | undefined)).value
+            containerExport = (await repository.exportOntology(req.container.id!, req.currentUser!, req.query.ontologyVersionID as string | undefined)).value;
         }
         if (String(req.query.exportDataSources).toLowerCase() === 'true') {
-            // Implement in future update
+            const dsRepository = new DataSourceRepository();
+            const dataSourceExport = await dsRepository.listForExport(req.container.id!);
+            containerExport.data_sources = dataSourceExport.value as DataSource[];
         }
         if (String(req.query.exportTypeMappings).toLowerCase() === 'true') {
             // Implement in future update
@@ -361,14 +366,30 @@ export default class ContainerRoutes {
             });
         });
 
-        busboy.on('finish', () => {
-            repository
-                .importOntology(req.container!.id!, req.currentUser!, fileBuffer)
-                .then((result) => {
-                    result.asResponse(res);
-                })
-                .catch((err) => Result.Error(err).asResponse(res))
-                .finally(() => next());
+        busboy.on('finish', async () => {
+            // check query params supplied and attempt to import
+            const importPromises: (() => Promise<Result<string>>)[] = [];
+            const importReturn: Result<string> = new Result('', false);
+
+            if (String(req.query.importOntology).toLowerCase() === 'true') {
+                importPromises.push(() => repository.importOntology(req.container!.id!, req.currentUser!, fileBuffer));
+            }
+            if (String(req.query.importDataSources).toLowerCase() === 'true') {
+                const dsRepository = new DataSourceRepository();
+                importPromises.push(() => dsRepository.importDataSources(req.container!.id!, req.currentUser!, fileBuffer));
+            }
+            if (String(req.query.importTypeMappings).toLowerCase() === 'true') {
+                // Implement in future update
+            }
+
+            const importResults: Result<string>[] = await pAll(importPromises, {concurrency: 2});
+            importResults.forEach((result: Result<string>) => {
+                importReturn.value = importReturn.value.concat(result.value, ' ');
+            });
+
+            importReturn.asResponse(res);
+
+            next();
         });
 
         return req.pipe(busboy);

@@ -17,8 +17,7 @@ import {User} from '../../../../domain_objects/access_management/user';
 import NodeRepository from '../../../repositories/data_warehouse/data/node_repository';
 import EdgeRepository from '../../../repositories/data_warehouse/data/edge_repository';
 import {stringToValidPropertyName} from "../../../../services/utilities";
-import OntologyVersionRepository
-    from "../../../repositories/data_warehouse/ontology/versioning/ontology_version_repository";
+import OntologyVersionRepository from "../../../repositories/data_warehouse/ontology/versioning/ontology_version_repository";
 import OntologyVersion from "../../../../domain_objects/data_warehouse/ontology/versioning/ontology_version";
 const convert = require('xml-js');
 const xmlToJson = require('xml-2-json-streaming');
@@ -1297,7 +1296,7 @@ export default class ContainerImport {
                 // Invalidate cache for this container as a final step
                 for (const metatype of metatypes) {
                     // this will also invalidate cached keys for these metatypes
-                    if (metatype.id) void metatypeRepo.deleteCached(metatype.id, input.container.id);
+                    if (metatype.id) void metatypeRepo.deleteCached(metatype.id);
                 }
                 for (const metatypeRelationship of metatypeRelationships) {
                     if (metatypeRelationship.id) void metatypeRelationshipRepo.deleteCached(metatypeRelationship.id, input.container.id);

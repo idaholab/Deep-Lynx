@@ -5,7 +5,6 @@
 import Logger from '../services/logger';
 import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/postgres';
 import {parentPort} from 'worker_threads';
-import DataStagingMapper from '../data_access_layer/mappers/data_warehouse/import/data_staging_mapper';
 import MetatypeKeyMapper from '../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper';
 
 const postgresAdapter = PostgresAdapter.Instance;

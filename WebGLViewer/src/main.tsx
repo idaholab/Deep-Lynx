@@ -6,6 +6,7 @@ import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 
 import '@fontsource/source-sans-pro';
+import '@fontsource/montserrat';
 
 import App from './App'
 import './styles/App.scss';

@@ -98,7 +98,7 @@
         <v-toolbar flat color="white">
           <v-toolbar-title>{{$t('home.dataSourcesDescription')}}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <create-data-source-dialog :containerID="containerID" @dataSourceCreated="refreshDataSources(); refreshTimeseriesDataSources()" @timeseriesSourceCreated="activeTab === 'timeseriesDatasources'"></create-data-source-dialog>
+          <create-data-source-dialog :timeseries="true" :containerID="containerID" @dataSourceCreated="refreshDataSources(); refreshTimeseriesDataSources()" @timeseriesSourceCreated="activeTab === 'timeseriesDatasources'"></create-data-source-dialog>
         </v-toolbar>
       </template>
       <template v-slot:[`item.copy`]="{ item }">
@@ -138,21 +138,21 @@
         <edit-data-source-dialog
             :containerID="containerID"
             :dataSource="item"
-            @dataSourceUpdated="refreshDataSources"
+            @dataSourceUpdated="refreshTimeseriesDataSources"
         >
         </edit-data-source-dialog>
         <delete-data-source-dialog
             v-if="!item.archived"
-            @dataSourceDeleted="refreshDataSources()"
-            @dataSourceArchived="refreshDataSources()"
+            @dataSourceDeleted="refreshTimeseriesDataSources()"
+            @dataSourceArchived="refreshTimeseriesDataSources()"
             :containerID="item.container_id"
             :dataSource="item"
             icon="both"></delete-data-source-dialog>
         <delete-data-source-dialog
             v-else
             :containerID="item.container_id"
-            @dataSourceDeleted="refreshDataSources()"
-            @dataSourceArchived="refreshDataSources()"
+            @dataSourceDeleted="refreshTimeseriesDataSources()"
+            @dataSourceArchived="refreshTimeseriesDataSources()"
             :dataSource="item"
             icon="trash"></delete-data-source-dialog>
       </template>
@@ -179,7 +179,6 @@ export default class DataSources extends Vue {
   @Prop({required: true})
   readonly containerID!: string;
 
-  dialog= false
   select = ""
   dataSourcesLoading = false
   timeseriesLoading = false
@@ -224,7 +223,6 @@ export default class DataSources extends Vue {
         .catch(e => this.errorMessage = e)
         .finally(() => this.timeseriesLoading = false)
   }
-
 
   toggleDataSourceActive(dataSource: DataSourceT) {
     if(dataSource.active) {

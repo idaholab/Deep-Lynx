@@ -14,8 +14,6 @@ import NodeRepository from '../../../../data_access_layer/repositories/data_ware
 import Node from '../../../../domain_objects/data_warehouse/data/node';
 import DataSourceMapper from '../../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
 import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
-import fs from 'fs';
-import LargeObject from '../../../../services/blob_storage/pg_large_file_impl';
 
 describe('A Node Repository', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -368,6 +366,115 @@ describe('A Node Repository', async () => {
         await nodeRepo.delete(mixed[0]);
         return nodeRepo.delete(mixed[1]);
     }).timeout(30000);
+
+    it('can query raw data on nodes', async () => {
+        const nodeRepo = new NodeRepository();
+        // used to test node history
+        let originalID = faker.name.findName();
+
+        const nodes = [
+            new Node({
+                container_id: containerID,
+                metatype,
+                properties: payload,
+                original_data_id: faker.name.findName(),
+                data_source_id: dataSourceID,
+            }),
+            new Node({
+                container_id: containerID,
+                metatype,
+                properties: payload,
+                original_data_id: originalID,
+                data_source_id: dataSourceID,
+            }),
+        ];
+
+        let saved = await nodeRepo.bulkSave(user, nodes);
+        expect(saved.isError, saved.error?.error).false;
+        nodes.forEach((node) => {
+            expect(node.id).not.undefined;
+            expect(node.properties).to.have.deep.property('flower_name', 'Daisy');
+        });
+
+        nodes[0].properties = updatedPayload;
+        nodes[1].properties = updatedPayload;
+
+        saved = await nodeRepo.bulkSave(user, nodes);
+        expect(saved.isError, saved.error?.error).false;
+        nodes.forEach((node) => {
+            expect(node.id).not.undefined;
+            expect(node.properties).to.have.deep.property('flower_name', 'Violet');
+        });
+
+        // list nodes with and without raw data
+        let results = await nodeRepo.where().containerID('eq', containerID).list();
+        expect(results.value.length).eq(2);
+        results.value.forEach((node) => {
+            // field is not present
+            expect(node['raw_data_properties' as keyof object]).undefined;
+        })
+
+        results = await nodeRepo
+            .where().containerID('eq', containerID)
+            .join('data_staging', {conditions: {origin_col:'data_staging_id', destination_col:'id'}})
+            .addFields({'data': 'raw_data_properties'}, nodeRepo._aliasMap.get('data_staging'))
+            .list();
+        expect(results.value.length).eq(2);
+        results.value.forEach((node) => {
+            // field is present
+            expect(node['raw_data_properties' as keyof object]).not.undefined;
+            // null because there is no import record
+            expect(node['raw_data_properties' as keyof object]).null;
+        })
+
+        // list by metatype with and without raw data
+        results = await nodeRepo
+            .where().containerID('eq', containerID)
+            .and().metatypeID('eq', metatype.id).list();
+        results.value.forEach((node) => {
+            expect(node.metatype_id).eq(metatype.id);
+            // field is not present
+            expect(node['raw_data_properties' as keyof object]).undefined;
+        })
+
+        results = await nodeRepo
+            .where().containerID('eq', containerID)
+            .and().metatypeID('eq', metatype.id)
+            .join('data_staging', {conditions: {origin_col:'data_staging_id', destination_col:'id'}})
+            .addFields({'data': 'raw_data_properties'}, nodeRepo._aliasMap.get('data_staging'))
+            .list();
+        results.value.forEach((node) => {
+            expect(node.metatype_id).eq(metatype.id);
+            // field is present
+            expect(node['raw_data_properties' as keyof object]).not.undefined;
+            // null because there is no import record
+            expect(node['raw_data_properties' as keyof object]).null;
+        })
+
+        // list history with and without raw data
+        results = await nodeRepo.findNodeHistoryByID(nodes[1].id!, false);
+        expect(results.value.length).eq(2);
+        results.value.forEach((version) => {
+            expect(version.id).eq(nodes[1].id);
+            expect(version.original_data_id).eq(nodes[1].original_data_id);
+            // field is not present
+            expect(version['raw_data_properties' as keyof object]).undefined;
+        });
+
+        results = await nodeRepo.findNodeHistoryByID(nodes[1].id!, true);
+        expect(results.value.length).eq(2);
+        results.value.forEach((version) => {
+            expect(version.id).eq(nodes[1].id);
+            expect(version.original_data_id).eq(nodes[1].original_data_id);
+            // field is present
+            expect(version['raw_data_properties' as keyof object]).not.undefined;
+            // null because there is no import record
+            expect(version['raw_data_properties' as keyof object]).null;
+        });
+
+        await nodeRepo.delete(nodes[0]);
+        return nodeRepo.delete(nodes[1]);
+    });
 });
 
 const payload: {[key: string]: any} = {

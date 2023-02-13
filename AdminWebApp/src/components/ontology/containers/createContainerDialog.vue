@@ -51,7 +51,6 @@
                 <template slot="append-outer"><info-tooltip :message="$t('containers.owlUrlHelp')"></info-tooltip> </template>
               </v-text-field>
 
-
               <v-checkbox v-model="newContainer.config.ontology_versioning_enabled">
                 <template v-slot:label>
                   {{$t('containers.ontologyVersioningEnabled')}}<p class="text-caption" style="margin-left: 5px"> {{$t('beta')}}</p>
