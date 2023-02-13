@@ -77,8 +77,6 @@ export default class WebGLFunctions {
         const files: Promise<Result<File>>[] = [];
         const dataStagingRecords: Promise<Result<Import | DataStaging[] | boolean>>[] = [];
         const busboy = Busboy({headers: req.headers});
-        const metadata: {[key: string]: any} = {};
-        let metadataFieldCount = 0;
 
         if (!req.dataSource) {
             Result.Failure(`unable to find data source`, 404).asResponse(res);
@@ -92,57 +90,13 @@ export default class WebGLFunctions {
         // because of this we're treating the file upload as fairly standalone
         busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, info: FileInfo) => {
             const {filename, encoding, mimeType} = info;
-            // check if this is the metadata file - if it is, attempt to process it
-            if (fieldname === 'metadata') {
-                if (mimeType === 'application/json') {
-                    dataStagingRecords.push(
-                        req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
-                            importID: req.query.importID as string | undefined,
-                            returnStagingRecords: true,
-                            bufferSize: Config.data_source_receive_buffer,
-                            has_files: true,
-                        }),
-                    );
-                } else if (mimeType === 'text/csv') {
-                    dataStagingRecords.push(
-                        req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
-                            importID: req.query.importID as string | undefined,
-                            returnStagingRecords: true,
-                            transformStream: csv({
-                                downstreamFormat: 'array', // this is necessary as the ReceiveData expects an array of json, not single objects
-                            }),
-                            bufferSize: Config.data_source_receive_buffer,
-                            has_files: true,
-                        }),
-                    );
-                } else if (mimeType === 'text/xml' || mimeType === 'application/xml') {
-                    const xmlStream = xmlParser.createStream();
-                    dataStagingRecords.push(
-                        req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
-                            importID: req.query.importID as string | undefined,
-                            returnStagingRecords: true,
-                            transformStream: xmlStream,
-                            bufferSize: Config.data_source_receive_buffer,
-                            has_files: true,
-                        }),
-                    );
-                }
-            } else {
-                files.push(fileRepo.uploadFile(req.params.containerID, req.currentUser!, filename, file as Readable, req.params.sourceID));
-                fileNames.push(filename);
-            }
+            files.push(fileRepo.uploadFile(req.params.containerID, req.currentUser!, filename, file as Readable, req.params.sourceID));
+            fileNames.push(filename);
         });
 
         busboy.on('error', (e: any) => {
             Result.Error(e).asResponse(res);
             return;
-        });
-
-        // hold on to the field data, we consider this metadata and will create
-        // a record to be ingested by deep lynx once the busboy finishes parsing
-        busboy.on('field', (fieldName: string, value: any) => {
-            metadata[fieldName] = value;
-            metadataFieldCount++;
         });
 
         busboy.on('finish', () => {
@@ -184,48 +138,16 @@ export default class WebGLFunctions {
                             });
                     }
 
-                    if (metadataFieldCount === 0) {
+                    results.forEach(result => {
+                        const file = result.value;
+                        res.locals.tags.forEach((tag: Tag) => {
+                            WebGLFunctions.tagWebGL(tag, file);
+                        });
+                    })
 
-                        results.forEach(result => {
-                            const file = result.value;
-                            res.locals.tags.forEach((tag: Tag) => {
-                                WebGLFunctions.tagWebGL(tag, file);
-                            });
-                        })
-
-                        Result.Success(results).asResponse(res);
-                        next();
-                        return;
-                    } else {
-                        const updatePromises: Promise<Result<boolean>>[] = [];
-                        // eslint-disable-next-line @typescript-eslint/no-for-in-array
-                        for (const i in results) {
-                            if (results[i].isError) {
-                                continue;
-                            }
-
-                            results[i].value.metadata = metadata;
-                            updatePromises.push(fileRepo.save(results[i].value, req.currentUser!));
-                        }
-
-                        void Promise.all(updatePromises)
-                            .then(() => {
-                                console.log(results);
-                                results.forEach(result => {
-                                    const file = result.value;
-                                    res.locals.tags.forEach((tag: Tag) => {
-                                        WebGLFunctions.tagWebGL(tag, file);
-                                    });
-                                })
-                                
-                                Result.Success(results).asResponse(res);
-                                next();
-                                return;
-                            })
-                            .catch((err) => {
-                                Result.Error(err).asResponse(res);
-                            });
-                    }
+                    Result.Success(results).asResponse(res);
+                    next();
+                    return;
                 })
                 .catch((e) => {
                     Result.Error(e).asResponse(res);
