@@ -630,7 +630,7 @@ export default class OAuthRoutes {
                     }
 
                     try {
-                        const token = jwt.sign(classToPlain(user.value), Config.encryption_key_secret, {expiresIn: expiry, algorithm: 'RS256'});
+                        const token = jwt.sign(classToPlain(user.value), Config.encryption_key_secret, {expiresIn: expiry, algorithm: 'RS256', allowInsecureKeySizes: true});
                         res.status(200).json(token);
                         return;
                     } catch (e: any) {
