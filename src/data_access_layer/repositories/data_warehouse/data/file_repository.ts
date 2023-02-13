@@ -39,13 +39,6 @@ export default class FileRepository extends Repository implements RepositoryInte
         return Promise.resolve(Result.Failure(`file must have id`));
     }
 
-    async retrieve(tag_name: string, transaction?: PoolClient): Promise<Result<File>> {
-        const tag = await this.#mapper.Retrieve(tag_name, transaction);
-        if (tag.isError) Logger.error('unable to load file');
-
-        return Promise.resolve(tag);
-    }
-
     findByID(id: string): Promise<Result<File>> {
         return this.#mapper.RetrieveByID(id);
     }

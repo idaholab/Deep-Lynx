@@ -15,9 +15,6 @@ import {QueryOptions} from '../../../../data_access_layer/repositories/repositor
 import Logger from '../../../../services/logger';
 import Config from '../../../../services/config';
 
-// Route Function Handlers
-import FileFunctions from './import_functions/file_functions';
-
 import express from 'express';
 import {FileInfo} from 'busboy';
 const csv = require('csvtojson');
@@ -90,23 +87,6 @@ export default class ImportRoutes {
             express.json({limit: `${Config.max_request_body_size}mb`}),
             authInContainer('write', 'data'),
             this.deleteImportData,
-        );
-
-        app.post('/containers/:containerID/import/datasources/:sourceID/files', ...middleware, authInContainer('write', 'data'), FileFunctions.uploadFile);
-        app.get(
-            '/containers/:containerID/files/:fileID',
-            ...middleware,
-            express.json({limit: `${Config.max_request_body_size}mb`}),
-            authInContainer('read', 'data'),
-            FileFunctions.getFile,
-        );
-        app.put('/containers/:containerID/import/datasources/:sourceID/files/:fileID', ...middleware, authInContainer('write', 'data'), FileFunctions.updateFile);
-        app.get(
-            '/containers/:containerID/files/:fileID/download',
-            ...middleware,
-            express.json({limit: `${Config.max_request_body_size}mb`}),
-            authInContainer('read', 'data'),
-            FileFunctions.downloadFile,
         );
     }
 

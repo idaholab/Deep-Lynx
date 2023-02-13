@@ -35,7 +35,7 @@ const xmlParser = xmlToJson();
 export default class FileFunctions {
 
     public static getFile(req: Request, res: Response, next: NextFunction) {
-        FileDataStorage.Instance.Retrieve(req.params.fileID)
+        fileRepo.findByID(req.params.fileID)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
@@ -104,7 +104,7 @@ export default class FileFunctions {
                 }
             } else {
                 files.push(
-                    new FileRepository().updateFile(
+                    fileRepo.updateFile(
                         req.params.fileID,
                         req.params.containerID,
                         req.params.sourceID,
@@ -308,7 +308,6 @@ export default class FileFunctions {
         busboy.on('field', (fieldName: string, value: any) => {
             metadata[fieldName] = value;
             metadataFieldCount++;
-            console.log(fieldName);
         });
 
         busboy.on('finish', () => {

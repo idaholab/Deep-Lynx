@@ -68,16 +68,6 @@ export default class FileMapper extends Mapper {
         return Promise.resolve(Result.Success(r.value[0]));
     }
 
-    public async Retrieve(md5hash: string, transaction?: PoolClient): Promise<Result<File>> {
-        const r = await super.run<File>(this.retrieveStatement(md5hash), {
-            transaction,
-            resultClass: this.resultClass,
-        });
-        if (r.isError) return Promise.resolve(Result.Pass(r));
-
-        return Promise.resolve(Result.Success(r.value[0]));
-    }
-
     public async RetrieveByID(id: string, transaction?: PoolClient): Promise<Result<File>> {
         return super.retrieve<File>(this.retrieveByIdStatement(id), {
             transaction,
@@ -214,13 +204,6 @@ export default class FileMapper extends Mapper {
         return {
             text: `DELETE FROM files WHERE id = $1`,
             values: [containerID],
-        };
-    }
-
-    private retrieveStatement(md5hash: string): QueryConfig {
-        return {
-            text: `SELECT * FROM files WHERE md5hash = $1`,
-            values: [md5hash],
         };
     }
 
