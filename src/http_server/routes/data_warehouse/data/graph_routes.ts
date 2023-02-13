@@ -70,7 +70,6 @@ export default class GraphRoutes {
             FileFunctions.downloadFile,
         );
         app.get('/containers/:containerID/graphs/nodes/:nodeID/files', ...middleware, authInContainer('read', 'data'), FileFunctions.listFilesForNode);
-        app.get('/containers/:containerID/graphs/edges/:edgeID/files', ...middleware, authInContainer('read', 'data'), FileFunctions.listFilesForEdge);
         app.put('/containers/:containerID/graphs/nodes/:nodeID/files/:fileID', ...middleware, authInContainer('write', 'data'), FileFunctions.attachFileToNode);
         app.delete(
             '/containers/:containerID/graphs/nodes/:nodeID/files/:fileID',
@@ -78,6 +77,7 @@ export default class GraphRoutes {
             authInContainer('write', 'data'),
             FileFunctions.detachFileFromNode,
         );
+        app.get('/containers/:containerID/graphs/edges/:edgeID/files', ...middleware, authInContainer('read', 'data'), FileFunctions.listFilesForEdge);
         app.put('/containers/:containerID/graphs/edges/:edgeID/files/:fileID', ...middleware, authInContainer('write', 'data'), FileFunctions.attachFileToEdge);
         app.delete(
             '/containers/:containerID/graphs/edges/:edgeID/files/:fileID',
