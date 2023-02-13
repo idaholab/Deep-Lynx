@@ -3772,6 +3772,12 @@ paths:
                 file:
                   type: string
                   format: binary
+      parameters:
+        - schema:
+            type: boolean
+            default: false
+          in: query
+          name: isEnabled
   '/containers/{container_id}/import/datasources/{data_source_id}/mappings/{mapping_id}/transformations':
     get:
       tags:
