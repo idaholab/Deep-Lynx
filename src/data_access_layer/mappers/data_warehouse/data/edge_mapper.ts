@@ -144,7 +144,7 @@ export default class EdgeMapper extends Mapper {
             ON CONFLICT(container_id,relationship_pair_id,data_source_id,created_at, origin_id, destination_id) DO UPDATE SET
                 properties = EXCLUDED.properties,
                 metadata = EXCLUDED.metadata
-            WHERE EXCLUDED.id = edges.id AND excluded.properties IS DISTINCT FROM edgges.properties
+            WHERE EXCLUDED.id = edges.id AND excluded.properties IS DISTINCT FROM edges.properties
             RETURNING *`;
 
         const values = edges.map((e) => [
