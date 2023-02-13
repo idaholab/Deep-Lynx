@@ -356,7 +356,6 @@ export default class TypeMappingRepository extends Repository implements Reposit
                         mapping.data_source_id = targetDataSource.value.id;
                         mapping.container_id = targetDataSource.value.container_id;
                         mapping.active = active; 
-                            // always inactivate the mapping after modification
 
                         // now we must iterate through the transformations and potentially back-fill the metatype/relationship
                         // ids and key ids if all that are present are the names - note that this will not modify the mapping if
