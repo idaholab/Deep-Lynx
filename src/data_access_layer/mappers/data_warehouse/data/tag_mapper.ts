@@ -171,8 +171,9 @@ export default class TagMapper extends Mapper {
             metadata,
             created_by,
             modified_by) VALUES %L 
-            ON CONFLICT(id, created_at) DO UPDATE SET
+            ON CONFLICT(id) DO UPDATE SET
                 tag_name = EXCLUDED.tag_name,
+                container_id = EXCLUDED.container_id,
                 metadata = tags.metadata || EXCLUDED.metadata,
                 modified_at = NOW()
             WHERE EXCLUDED.id = tags.id
