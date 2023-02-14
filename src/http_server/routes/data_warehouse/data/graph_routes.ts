@@ -108,6 +108,6 @@ export default class GraphRoutes {
         app.get('/containers/:containerID/graphs/tags/:tagID/edges', ...middleware, authInContainer('read', 'data'), TagFunctions.listEdgesWithTag);
 
         // WebGL Routes
-        app.post('/containers/:containerID/import/datasources/:sourceID/webgl', ...middleware, authInContainer('write', 'data'), WebGLFunctions.createTag, WebGLFunctions.uploadFiles);
+        app.post('/containers/:containerID/graphs/webgl', ...middleware, authInContainer('write', 'data'), WebGLFunctions.createTag, WebGLFunctions.uploadFiles);
     }
 }
