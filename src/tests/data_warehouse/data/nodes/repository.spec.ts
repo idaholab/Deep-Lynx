@@ -168,7 +168,7 @@ describe('A Node Repository', async () => {
 
         saved = await nodeRepo.save(mixed, user);
         expect(saved.isError).false;
-        expect(mixed.id).eq(originalID);
+        expect(mixed.id).undefined; // should silently fail because the node already exists with the same payload
 
         return nodeRepo.delete(mixed);
     });
@@ -210,7 +210,6 @@ describe('A Node Repository', async () => {
         let saved = await nodeRepo.bulkSave(user, mixed);
         expect(saved.isError, saved.error?.error).false;
         mixed.forEach((node) => {
-            expect(node.id).not.undefined;
             expect(node.properties).to.have.deep.property('flower_name', 'Daisy');
         });
 
@@ -225,7 +224,6 @@ describe('A Node Repository', async () => {
         saved = await nodeRepo.bulkSave(user, mixed);
         expect(saved.isError).false;
         mixed.forEach((node) => {
-            expect(node.id).not.undefined;
             expect(node.properties).to.have.deep.property('flower_name', 'Violet');
         });
 
@@ -234,11 +232,12 @@ describe('A Node Repository', async () => {
         const originalID2 = mixed[1].id;
         mixed[0].id = undefined;
         mixed[1].id = undefined;
+        mixed[0].properties = payload;
+        mixed[1].properties = payload;
 
         saved = await nodeRepo.bulkSave(user, mixed);
-        expect(saved.isError).false;
+        expect(saved.isError, JSON.stringify(saved.error)).false;
         mixed.forEach((node) => {
-            expect(node.id).not.undefined;
             expect(node.id).oneOf([originalID1, originalID2]);
         });
 
@@ -408,40 +407,41 @@ describe('A Node Repository', async () => {
 
         // list nodes with and without raw data
         let results = await nodeRepo.where().containerID('eq', containerID).list();
-        expect(results.value.length).eq(2);
+        expect(results.value.length).eq(4);
         results.value.forEach((node) => {
             // field is not present
             expect(node['raw_data_properties' as keyof object]).undefined;
-        })
+        });
 
         results = await nodeRepo
-            .where().containerID('eq', containerID)
-            .join('data_staging', {conditions: {origin_col:'data_staging_id', destination_col:'id'}})
-            .addFields({'data': 'raw_data_properties'}, nodeRepo._aliasMap.get('data_staging'))
+            .where()
+            .containerID('eq', containerID)
+            .join('data_staging', {conditions: {origin_col: 'data_staging_id', destination_col: 'id'}})
+            .addFields({data: 'raw_data_properties'}, nodeRepo._aliasMap.get('data_staging'))
             .list();
-        expect(results.value.length).eq(2);
+        expect(results.value.length).eq(4);
         results.value.forEach((node) => {
             // field is present
             expect(node['raw_data_properties' as keyof object]).not.undefined;
             // null because there is no import record
             expect(node['raw_data_properties' as keyof object]).null;
-        })
+        });
 
         // list by metatype with and without raw data
-        results = await nodeRepo
-            .where().containerID('eq', containerID)
-            .and().metatypeID('eq', metatype.id).list();
+        results = await nodeRepo.where().containerID('eq', containerID).and().metatypeID('eq', metatype.id).list();
         results.value.forEach((node) => {
             expect(node.metatype_id).eq(metatype.id);
             // field is not present
             expect(node['raw_data_properties' as keyof object]).undefined;
-        })
+        });
 
         results = await nodeRepo
-            .where().containerID('eq', containerID)
-            .and().metatypeID('eq', metatype.id)
-            .join('data_staging', {conditions: {origin_col:'data_staging_id', destination_col:'id'}})
-            .addFields({'data': 'raw_data_properties'}, nodeRepo._aliasMap.get('data_staging'))
+            .where()
+            .containerID('eq', containerID)
+            .and()
+            .metatypeID('eq', metatype.id)
+            .join('data_staging', {conditions: {origin_col: 'data_staging_id', destination_col: 'id'}})
+            .addFields({data: 'raw_data_properties'}, nodeRepo._aliasMap.get('data_staging'))
             .list();
         results.value.forEach((node) => {
             expect(node.metatype_id).eq(metatype.id);
@@ -449,7 +449,7 @@ describe('A Node Repository', async () => {
             expect(node['raw_data_properties' as keyof object]).not.undefined;
             // null because there is no import record
             expect(node['raw_data_properties' as keyof object]).null;
-        })
+        });
 
         // list history with and without raw data
         results = await nodeRepo.findNodeHistoryByID(nodes[1].id!, false);

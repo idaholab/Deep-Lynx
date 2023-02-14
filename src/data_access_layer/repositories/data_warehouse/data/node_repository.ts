@@ -49,9 +49,8 @@ export default class NodeRepository extends Repository implements RepositoryInte
     }
 
     async findNodeHistoryByID(id: string, includeRawData: boolean, transaction?: PoolClient): Promise<Result<Node[]>> {
-        const nodes = (includeRawData === true)
-            ? await this.#mapper.RetrieveRawDataHistory(id, transaction)
-            : await this.#mapper.RetrieveHistory(id, transaction);
+        const nodes =
+            includeRawData === true ? await this.#mapper.RetrieveRawDataHistory(id, transaction) : await this.#mapper.RetrieveHistory(id, transaction);
 
         if (nodes.isError) {
             return Promise.reject(nodes.error);
@@ -120,7 +119,9 @@ export default class NodeRepository extends Repository implements RepositoryInte
                 return Promise.resolve(Result.Pass(results));
             }
 
-            Object.assign(n, results.value);
+            if (results.value?.id) {
+                Object.assign(n, results.value);
+            }
         } else {
             const results = await this.#mapper.CreateOrUpdateByCompositeID(user.id!, n);
             if (results.isError) {
@@ -128,7 +129,9 @@ export default class NodeRepository extends Repository implements RepositoryInte
                 return Promise.resolve(Result.Pass(results));
             }
 
-            Object.assign(n, results.value);
+            if (results.value?.id) {
+                Object.assign(n, results.value);
+            }
         }
 
         if (internalTransaction) {
@@ -233,13 +236,17 @@ export default class NodeRepository extends Repository implements RepositoryInte
         }
 
         toReturn.forEach((result, i) => {
-            Object.assign(nodes[i], result);
+            if (result?.id) {
+                Object.assign(nodes[i], result);
+            }
         });
 
         if (internalTransaction) {
             const commit = await this.#mapper.completeTransaction(transaction);
             if (commit.isError) return Promise.resolve(Result.Pass(commit));
         }
+
+        nodes = nodes.filter((n) => n.id);
 
         return Promise.resolve(Result.Success(true));
     }
