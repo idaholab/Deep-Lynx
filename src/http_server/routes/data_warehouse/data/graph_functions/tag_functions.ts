@@ -32,7 +32,7 @@ export default class TagFunctions {
         }
     
         payload.forEach((tag: Tag) => {
-            tagRepo.save(tag, req.currentUser!)
+            tagRepo.create(tag, req.currentUser!)
             .then((result) => {
                 if (result.isError) {
                     Result.Error(result.error?.error).asResponse(res);
@@ -44,9 +44,31 @@ export default class TagFunctions {
             .catch((err) => {
                 Result.Error(err).asResponse(res);
             })
-            .finally(() => next());;
+            .finally(() => next());
         })
     
+    }
+
+    public static updateTag(req: Request, res: Response, next: NextFunction) {
+
+        if (req.tag && req.container) {
+
+            let payload: Tag = plainToInstance(Tag, {...req.body, id: req.tag.id!, container_id: req.container.id!} as object);
+
+            tagRepo.update(payload, req.currentUser!)
+            .then((result) => {
+                if (result.isError) {
+                    Result.Error(result.error?.error).asResponse(res);
+                    return;
+                }
+    
+                Result.Success(result).asResponse(res);
+            })
+            .catch((err) => {
+                Result.Error(err).asResponse(res);
+            })
+            .finally(() => next());
+        }
     }
     
     public static attachTagToNode(req: Request, res: Response, next: NextFunction) {
