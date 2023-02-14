@@ -29,6 +29,7 @@ import {
     CreateServiceUserPayloadT,
     ServiceUserPermissionSetT,
     FullStatistics,
+    TagT,
 } from '@/api/types';
 import {RetrieveJWT} from '@/auth/authentication_service';
 import {UserT} from '@/auth/types';
@@ -47,7 +48,7 @@ export type Config = {
 export type GraphQLOptions = {
     pointInTime?: string;
     metadataEnabled?: boolean;
-}
+};
 
 // We provide both a a constructor and a singleton type instance for consumption. The
 // singleton applies sane defaults based on the configuration file. We know however
@@ -1110,6 +1111,54 @@ export class Client {
 
     deleteOntologyVersion(containerID: string, versionID: string): Promise<boolean> {
         return this.delete(`/containers/${containerID}/ontology/versions/${versionID}`);
+    }
+
+    createTagForFile(containerID: string, tags: TagT[]): Promise<boolean> {
+        return this.post(`/containers/${containerID}/graphs/tags`, tags);
+    }
+
+    listFilesWithAnyTag(containerID: string): Promise<any> {
+        return this.get(`/containers/${containerID}/graphs/tags/files`);
+    }
+
+    listTagsForFile(containerID: string, fileID: string): Promise<TagT> {
+        return this.get(`/containers/${containerID}/graphs/tags/files/${fileID}`);
+    }
+
+    listTagsForContainer(containerID: string): Promise<TagT[]> {
+        // TODO: Implement
+        return this.get(`/containers/${containerID}/graphs/tags`);
+    }
+
+    listTagsForNode(containerID: string, nodeID: string): Promise<TagT[]> {
+        return this.get(`/containers/${containerID}/graphs/tags/nodes/${nodeID}`);
+    }
+
+    attachTagToNode(containerID: string, tagID: string, nodeID: string): Promise<TagT> {
+        return this.put(`/containers/${containerID}/graphs/tags/${tagID}/nodes/${nodeID}`);
+    }
+
+    detachTagFromNode(containerID: string, tagID: string, nodeID: string): Promise<boolean> {
+        // TODO: Implement
+        return this.delete(`/containers/${containerID}/graphs/tags/${tagID}/nodes/${nodeID}`);
+    }
+
+    listTagsForEdge(containerID: string, edgeID: string): Promise<TagT[]> {
+        return this.get(`/containers/${containerID}/graphs/tags/edges/${edgeID}`);
+    }
+
+    attachTagToEdge(containerID: string, tagID: string, edgeID: string): Promise<TagT> {
+        return this.put(`/containers/${containerID}/graphs/tags/${tagID}/edges/${edgeID}`);
+    }
+
+    detachTagFromEdge(containerID: string, tagID: string, edgeID: string): Promise<boolean> {
+        // TODO: Implement
+        return this.delete(`/containers/${containerID}/graphs/tags/${tagID}/edges/${edgeID}`);
+    }
+
+    createWebGLTagsAndFiles(containerID: string): Promise<boolean> {
+        // TODO: Implement
+        return this.post(`/containers/${containerID}/import/datasources/:sourceID/webgl`, {});
     }
 
     private async get<T>(uri: string, queryParams?: {[key: string]: any}): Promise<T> {

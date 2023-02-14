@@ -18,13 +18,13 @@ import TagMapper from '../../../mappers/data_warehouse/data/tag_mapper';
 import {PoolClient} from 'pg';
 
 // Repository
-import RepositoryInterface, {Repository} from '../../repository';
+import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
 
 export default class TagRepository extends Repository implements RepositoryInterface<Tag> {
     #mapper: TagMapper = TagMapper.Instance;
-    
+
     constructor() {
-        super(TagMapper.viewName)
+        super(TagMapper.tableName);
     }
 
     delete(tag: Tag): Promise<Result<boolean>> {
@@ -87,8 +87,7 @@ export default class TagRepository extends Repository implements RepositoryInter
         return Promise.resolve(Result.Success(true));
     }
 
-    async tagNode(tag: Tag, node: Node) : Promise<Result<boolean>> {
-
+    async tagNode(tag: Tag, node: Node): Promise<Result<boolean>> {
         if (!node.id) {
             return Promise.resolve(Result.Failure('node must have id'));
         }
@@ -96,8 +95,7 @@ export default class TagRepository extends Repository implements RepositoryInter
         return this.#mapper.TagNode(tag.id!, node.id);
     }
 
-    async tagEdge(tag: Tag, edge: Edge) : Promise<Result<boolean>> {
-
+    async tagEdge(tag: Tag, edge: Edge): Promise<Result<boolean>> {
         if (!edge.id) {
             return Promise.resolve(Result.Failure('edge must have id'));
         }
@@ -105,8 +103,7 @@ export default class TagRepository extends Repository implements RepositoryInter
         return this.#mapper.TagEdge(tag.id!, edge.id);
     }
 
-    async tagFile(tag: Tag, file: File) : Promise<Result<boolean>> {
-
+    async tagFile(tag: Tag, file: File): Promise<Result<boolean>> {
         if (!file.id) {
             return Promise.resolve(Result.Failure('file must have id'));
         }
@@ -114,40 +111,51 @@ export default class TagRepository extends Repository implements RepositoryInter
         return this.#mapper.TagFile(tag.id!, file.id);
     }
 
-    async listTagsForNode(node: Node) : Promise<Result<Tag[]>> {
+    async list(queryOptions?: QueryOptions, transaction?: PoolClient): Promise<Result<Tag[]>> {
+        const results = await super.findAll<Tag>(queryOptions, {
+            transaction,
+            resultClass: Tag,
+        });
+        console.log(results);
 
+        if (results.isError) return Promise.resolve(Result.Pass(results));
+
+        return Promise.resolve(Result.Success(results.value));
+    }
+
+    async listFilesWithAnyTag(): Promise<Result<File[]>> {
+        return this.#mapper.FilesWithAnyTag();
+
+        // join the tables, then list with where clause in front
+        // see schema.ts line 1086 and nearby
+    }
+
+    async listTagsForNode(node: Node): Promise<Result<Tag[]>> {
         return this.#mapper.TagsForNode(node.id!);
-
     }
 
-    async listTagsForFile(file: File) : Promise<Result<Tag[]>> {
-
+    async listTagsForFile(file: File): Promise<Result<Tag[]>> {
         return this.#mapper.TagsForFile(file.id!);
-
     }
 
-    async listTagsForEdge(edge: Edge) : Promise<Result<Tag[]>> {
-
+    async listTagsForEdge(edge: Edge): Promise<Result<Tag[]>> {
         return this.#mapper.TagsForEdge(edge.id!);
-
     }
 
-    async listNodesWithTag(tag: Tag) : Promise<Result<Node[]>> {
-        
+    async listNodesWithTag(tag: Tag): Promise<Result<Node[]>> {
         return this.#mapper.NodesWithTag(tag.id!);
-
     }
 
-    async listFilesWithTag(tag: Tag) : Promise<Result<File[]>> {
-        
+    async listFilesWithTag(tag: Tag): Promise<Result<File[]>> {
         return this.#mapper.FilesWithTag(tag.id!);
-        
     }
 
-    async listEdgesWithTag(tag: Tag) : Promise<Result<Edge[]>> {
-        
+    async listEdgesWithTag(tag: Tag): Promise<Result<Edge[]>> {
         return this.#mapper.EdgesWithTag(tag.id!);
-        
     }
 
+    containerID(operator: string, value: any) {
+        super.query('container_id', operator, value);
+        return this;
+    }
 }

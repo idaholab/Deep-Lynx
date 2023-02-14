@@ -203,7 +203,14 @@ export type DataSourceT = {
     adapter_type: string | undefined;
     active: boolean;
     archived?: boolean;
-    config: StandardDataSourceConfig | HttpDataSourceConfig | AvevaDataSourceConfig | JazzDataSourceConfig | TimeseriesDataSourceConfig | P6DataSourceConfig | undefined;
+    config:
+        | StandardDataSourceConfig
+        | HttpDataSourceConfig
+        | AvevaDataSourceConfig
+        | JazzDataSourceConfig
+        | TimeseriesDataSourceConfig
+        | P6DataSourceConfig
+        | undefined;
     created_at?: string;
     modified_at?: string;
     created_by?: string;
@@ -320,7 +327,7 @@ export type P6DataSourceConfig = {
     value_nodes?: string[];
     data_retention_days?: number;
     raw_retention_enabled?: boolean;
-}
+};
 
 export type ImportT = {
     id: string;
@@ -594,6 +601,16 @@ export type FullStatistics = {
     long_running_transactions?: LongRunningTransactions;
     statistics?: Statistics;
     version?: string;
+};
+
+export type TagT = {
+    id?: string;
+    tag_name?: string;
+    container_id?: string;
+    data_source_id?: string;
+    import_data_id?: string;
+    data_staging_id?: string;
+    metadata?: object;
 };
 
 // DefaultAvevaDataSourceConfig are sane defaults found through trial and error with the Aveva Deep Lynx Adapter

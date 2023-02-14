@@ -198,6 +198,19 @@
               <v-list-item-subtitle>{{$t("home.dataExportDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
+          <v-list-item
+              two-line
+              link
+              v-if="$auth.Auth('data', 'write', containerID)"
+              @click="setActiveComponent('file-manager')"
+              :input-value="currentMainComponent === 'FileManager'"
+              :ripple="{class:'list-ripple'}"
+          >
+            <v-list-item-content>
+              <v-list-item-title>{{$t("home.fileManager")}}</v-list-item-title>
+              <v-list-item-subtitle>{{$t("home.fileManagerDescription")}}</v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
         </v-list-group>
 
         <v-list-group
@@ -596,6 +609,7 @@ import ContainerAlertBanner from "@/components/ontology/containers/containerAler
 import ServiceUsers from "@/views/ServiceUsers.vue";
 import ContainerExport from "@/views/ContainerExport.vue";
 import ContainerImport from "@/views/ContainerImport.vue";
+import FileManager from "@/views/FileManager.vue";
 
 @Component({components: {
     ContainerSelect,
@@ -621,7 +635,8 @@ import ContainerImport from "@/views/ContainerImport.vue";
     ContainerAlertBanner,
     ServiceUsers,
     ContainerExport,
-    ContainerImport
+    ContainerImport,
+    FileManager
   }})
 export default class Home extends Vue {
   @Prop(String) readonly containerID: string | undefined
@@ -788,6 +803,13 @@ export default class Home extends Vue {
         this.currentMainComponent = "DataExport";
         this.componentName = this.$t('home.dataExport')
         this.$router.replace(`/containers/${this.containerID}/data-export`)
+        break;
+      }
+
+      case "file-manager": {
+        this.currentMainComponent = "FileManager";
+        this.componentName = this.$t('home.fileManager')
+        this.$router.replace(`/containers/${this.containerID}/file-manager`)
         break;
       }
 

@@ -17,7 +17,6 @@ const format = require('pg-format');
 export default class TagMapper extends Mapper {
     public resultClass = Tag;
     public static tableName = 'tags';
-    public static viewName = 'current_tags';
 
     private static instance: TagMapper;
 
@@ -84,6 +83,12 @@ export default class TagMapper extends Mapper {
         return super.runStatement(this.tagEdgeStatement(tagID, edgeID));
     }
 
+    public async FilesWithAnyTag(): Promise<Result<File[]>> {
+        return super.rows<File>(this.filesWithAnyTag(), {
+            resultClass: File,
+        });
+    }
+
     public async TagsForNode(nodeID: string): Promise<Result<Tag[]>> {
         return super.rows<Tag>(this.tagsForNode(nodeID), {
             resultClass: this.resultClass,
@@ -128,12 +133,7 @@ export default class TagMapper extends Mapper {
             container_id,
             metadata,
             created_by) VALUES %L RETURNING *`;
-        const values = tags.map((tag) => [
-            tag.tag_name,
-            tag.container_id,
-            JSON.stringify(tag.metadata),
-            userID,
-        ])
+        const values = tags.map((tag) => [tag.tag_name, tag.container_id, JSON.stringify(tag.metadata), userID]);
 
         return format(text, values);
     }
@@ -159,14 +159,7 @@ export default class TagMapper extends Mapper {
             WHERE EXCLUDED.id = tags.id
             RETURNING *`;
 
-        const values = tags.map((t) => [
-            t.id,
-            t.tag_name,
-            t.container_id,
-            JSON.stringify(t.metadata),
-            userID,
-            userID,
-        ]);
+        const values = tags.map((t) => [t.id, t.tag_name, t.container_id, JSON.stringify(t.metadata), userID, userID]);
 
         return format(text, values);
     }
@@ -218,56 +211,66 @@ export default class TagMapper extends Mapper {
     private tagNodeStatement(tagID: string, nodeID: string): QueryConfig {
         return {
             text: `INSERT INTO node_tags(tag_id, node_id) VALUES ($1, $2)`,
-            values: [tagID, nodeID]
-        }
+            values: [tagID, nodeID],
+        };
     }
 
     private tagEdgeStatement(tagID: string, edgeID: string): QueryConfig {
         return {
             text: `INSERT INTO edge_tags(tag_id, edge_id) VALUES ($1, $2)`,
-            values: [tagID, edgeID]
-        }
+            values: [tagID, edgeID],
+        };
+    }
+
+    private filesWithAnyTag(): QueryConfig {
+        return {
+            text: `SELECT files.*, tags.*
+                    FROM files
+                    JOIN file_tags ON files.id = file_tags.file_id
+                    JOIN tags ON file_tags.tag_id = tags.id;`,
+            values: [],
+        };
     }
 
     private tagsForNode(nodeID: string): QueryConfig {
         return {
             text: `SELECT tags.* FROM node_tags LEFT JOIN tags ON tags.id = node_tags.tag_id WHERE node_id = $1`,
             values: [nodeID],
-        }
+        };
     }
 
     private tagsForFile(fileID: string): QueryConfig {
         return {
             text: `SELECT tags.* FROM file_tags LEFT JOIN tags ON tags.id = file_tags.tag_id WHERE file_id = $1`,
             values: [fileID],
-        }
+        };
     }
 
     private tagsForEdge(edgeID: string): QueryConfig {
         return {
             text: `SELECT tags.* FROM edge_tags LEFT JOIN tags ON tags.id = edge_tags.tag_id WHERE edge_id = $1`,
             values: [edgeID],
-        }
+        };
     }
 
     private nodesWithTag(tagID: string): QueryConfig {
         return {
             text: `SELECT nodes.* FROM nodes LEFT JOIN node_tags ON nodes.id = node_tags.node_id WHERE tag_id = $1`,
             values: [tagID],
-        }
+        };
     }
 
     private filesWithTag(tagID: string): QueryConfig {
         return {
             text: `SELECT files.* FROM files LEFT JOIN file_tags ON files.id = file_tags.file_id WHERE tag_id = $1`,
             values: [tagID],
-        }
+        };
     }
 
     private edgesWithTag(tagID: string): QueryConfig {
         return {
             text: `SELECT edges.* FROM edges LEFT JOIN edge_tags ON edges.id = edge_tags.edge_id WHERE tag_id = $1`,
             values: [tagID],
-        }
+        };
     }
 }
