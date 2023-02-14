@@ -51,8 +51,8 @@ export default class TagMapper extends Mapper {
         return Promise.resolve(Result.Success(r.value[0]));
     }
 
-    public async RetrieveByID(tag_name: string, transaction?: PoolClient): Promise<Result<Tag>> {
-        return super.retrieve<Tag>(this.retrieveByIdStatement(tag_name), {
+    public async RetrieveByID(id: string, transaction?: PoolClient): Promise<Result<Tag>> {
+        return super.retrieve<Tag>(this.retrieveByIdStatement(id), {
             transaction,
             resultClass: this.resultClass,
         });
