@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.1",
   "x-stoplight": {
-    "id": "91dyne2z0m5xd"
+    "id": "tnc6hl9b9eimk"
   },
   "info": {
     "title": "Deep Lynx",
@@ -7834,6 +7834,101 @@
         "responses": {},
         "operationId": "get-containers-container_id-graphs-tags-tag_id-edges",
         "description": "List all Edges with Tag"
+      }
+    },
+    "/containers/{container_id}/graphs/tags/{tag_id}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "container_id",
+          "in": "path",
+          "required": true
+        },
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "tag_id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "put": {
+        "summary": "Update Tag",
+        "operationId": "put-containers-container_id-graphs-tags-tag_id",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "description": "Update a tag",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "tag_name": {
+                    "type": "string"
+                  },
+                  "metadata": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "description": ""
+        }
+      }
+    },
+    "/containers/{container_id}/graphs/webgl": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "container_id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "post": {
+        "summary": "Upload Webgl",
+        "operationId": "post-containers-container_id-graphs-webgl",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "description": "Upload a WebGL build. The tag will be created if it doesn't exist, and the file will be uploaded. The tag is then associated with the file. The tag will automatically have {'webgl': true} added to its metadata field",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "description": ""
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "tag",
+            "description": "Tag name"
+          }
+        ]
       }
     }
   },
