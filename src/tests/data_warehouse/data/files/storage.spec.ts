@@ -97,7 +97,7 @@ describe('A File can', async () => {
             }),
         );
 
-        const retrieved = await mapper.Retrieve(file.value.id!);
+        const retrieved = await mapper.RetrieveByID(file.value.id!);
         expect(retrieved.isError).false;
         expect(retrieved.value.id).eq(file.value.id);
 
@@ -126,7 +126,7 @@ describe('A File can', async () => {
         const updateResult = await mapper.Update('test-suite', file.value);
         expect(updateResult.isError).false;
 
-        const retrieved = await mapper.Retrieve(file.value.id!);
+        const retrieved = await mapper.RetrieveByID(file.value.id!);
         expect(retrieved.isError).false;
         expect(retrieved.value.id).eq(file.value.id);
         expect(file.value.adapter).eq('azure_blob');

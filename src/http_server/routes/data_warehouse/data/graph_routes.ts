@@ -1,4 +1,5 @@
 // Express
+import express from 'express';
 import {Application} from 'express';
 
 // Middleware
@@ -10,6 +11,10 @@ import NodeFunctions from './graph_functions/node_functions';
 import FileFunctions from './graph_functions/file_functions';
 import EdgeFunctions from './graph_functions/edge_functions';
 import TimeseriesFunctions from './graph_functions/timeseries_functions';
+import WebGLFunctions from './graph_functions/webgl_functions';
+
+// Utilities
+import Config from '../../../../services/config';
 
 export default class GraphRoutes {
     public static mount(app: Application, middleware: any[]) {
@@ -48,8 +53,23 @@ export default class GraphRoutes {
         );
 
         // File Routes
+        app.post('/containers/:containerID/import/datasources/:sourceID/files', ...middleware, authInContainer('write', 'data'), FileFunctions.uploadFile);
+        app.get(
+            '/containers/:containerID/files/:fileID',
+            ...middleware,
+            express.json({limit: `${Config.max_request_body_size}mb`}),
+            authInContainer('read', 'data'),
+            FileFunctions.getFile,
+        );
+        app.put('/containers/:containerID/import/datasources/:sourceID/files/:fileID', ...middleware, authInContainer('write', 'data'), FileFunctions.updateFile);
+        app.get(
+            '/containers/:containerID/files/:fileID/download',
+            ...middleware,
+            express.json({limit: `${Config.max_request_body_size}mb`}),
+            authInContainer('read', 'data'),
+            FileFunctions.downloadFile,
+        );
         app.get('/containers/:containerID/graphs/nodes/:nodeID/files', ...middleware, authInContainer('read', 'data'), FileFunctions.listFilesForNode);
-        app.get('/containers/:containerID/graphs/edges/:edgeID/files', ...middleware, authInContainer('read', 'data'), FileFunctions.listFilesForEdge);
         app.put('/containers/:containerID/graphs/nodes/:nodeID/files/:fileID', ...middleware, authInContainer('write', 'data'), FileFunctions.attachFileToNode);
         app.delete(
             '/containers/:containerID/graphs/nodes/:nodeID/files/:fileID',
@@ -57,6 +77,7 @@ export default class GraphRoutes {
             authInContainer('write', 'data'),
             FileFunctions.detachFileFromNode,
         );
+        app.get('/containers/:containerID/graphs/edges/:edgeID/files', ...middleware, authInContainer('read', 'data'), FileFunctions.listFilesForEdge);
         app.put('/containers/:containerID/graphs/edges/:edgeID/files/:fileID', ...middleware, authInContainer('write', 'data'), FileFunctions.attachFileToEdge);
         app.delete(
             '/containers/:containerID/graphs/edges/:edgeID/files/:fileID',
@@ -75,6 +96,7 @@ export default class GraphRoutes {
 
         // Tag Routes
         app.post('/containers/:containerID/graphs/tags', ...middleware, authInContainer('write', 'data'), TagFunctions.createTag);
+        app.put('/containers/:containerID/graphs/tags/:tagID', ...middleware, authInContainer('write', 'data'), TagFunctions.updateTag);
         app.put('/containers/:containerID/graphs/tags/:tagID/nodes/:nodeID', ...middleware, authInContainer('write', 'data'), TagFunctions.attachTagToNode);
         app.put('/containers/:containerID/graphs/tags/:tagID/edges/:edgeID', ...middleware, authInContainer('write', 'data'), TagFunctions.attachTagToEdge);
         app.put('/containers/:containerID/graphs/tags/:tagID/files/:fileID', ...middleware, authInContainer('write', 'data'), TagFunctions.attachTagToFile);
@@ -85,5 +107,8 @@ export default class GraphRoutes {
         app.get('/containers/:containerID/graphs/tags/:tagID/nodes', ...middleware, authInContainer('read', 'data'), TagFunctions.listNodesWithTag);
         app.get('/containers/:containerID/graphs/tags/:tagID/files', ...middleware, authInContainer('read', 'data'), TagFunctions.listFilesWithTag);
         app.get('/containers/:containerID/graphs/tags/:tagID/edges', ...middleware, authInContainer('read', 'data'), TagFunctions.listEdgesWithTag);
+
+        // WebGL Routes
+        app.post('/containers/:containerID/graphs/webgl', ...middleware, authInContainer('write', 'data'), WebGLFunctions.createTag, WebGLFunctions.uploadFiles);
     }
 }
