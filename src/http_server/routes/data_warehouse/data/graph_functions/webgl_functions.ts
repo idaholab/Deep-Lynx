@@ -75,14 +75,7 @@ export default class WebGLFunctions {
     public static uploadFiles(req: Request, res: Response, next: NextFunction) {
         const fileNames: string[] = [];
         const files: Promise<Result<File>>[] = [];
-        const dataStagingRecords: Promise<Result<Import | DataStaging[] | boolean>>[] = [];
         const busboy = Busboy({headers: req.headers});
-
-        if (!req.dataSource) {
-            Result.Failure(`unable to find data source`, 404).asResponse(res);
-            next();
-            return;
-        }
 
         // upload the file to the relevant file storage provider, saving the file name
         // we can't actually wait on the full upload to finish, so there is no way we
@@ -105,39 +98,6 @@ export default class WebGLFunctions {
             // via the normal file querying channels
             void Promise.all(files)
                 .then((results) => {
-                    if (dataStagingRecords.length > 0) {
-                        void Promise.all(dataStagingRecords)
-                            .then((stagingResults) => {
-                                stagingResults.forEach((stagingResult) => {
-                                    if (stagingResult.isError) {
-                                        stagingResult.asResponse(res);
-                                        return;
-                                    }
-
-                                    (stagingResult.value as DataStaging[]).forEach((stagingResult) => {
-                                        results.forEach((fileResult) => {
-                                            void stagingRepo
-                                                .addFile(stagingResult, fileResult.value.id!)
-                                                .then((addFileResult) => {
-                                                    if (addFileResult.isError) {
-                                                        Logger.error(`error adding file to staging record ${addFileResult.error?.error}`);
-                                                    } else {
-                                                        Logger.debug(`file added to staging record successfully`);
-                                                    }
-                                                })
-                                                .catch((e) => {
-                                                    Logger.error(`error adding file to staging record ${e}`);
-                                                });
-                                        });
-                                    });
-                                });
-                            })
-                            .catch((e) => {
-                                Result.Error(e).asResponse(res);
-                                return;
-                            });
-                    }
-
                     results.forEach(result => {
                         const file = result.value;
                         res.locals.tags.forEach((tag: Tag) => {
