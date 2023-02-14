@@ -1,11 +1,11 @@
 {
   "openapi": "3.0.1",
   "x-stoplight": {
-    "id": "tr5pyoyxdqv3w"
+    "id": "91dyne2z0m5xd"
   },
   "info": {
     "title": "Deep Lynx",
-    "description": "The construction of megaprojects has consistently demonstrated challenges for project managers in regard to meeting cost, schedule, and performance requirements. Megaproject construction challenges are common place within megaprojects with many active projects in the United States failing to meet cost and schedule efforts by significant margins. Currently, engineering teams operate in siloed tools and disparate teams where connections across design, procurement, and construction systems are translated manually or over brittle point-to-point integrations. The manual nature of data exchange increases the risk of silent errors in the reactor design, with each silent error cascading across the design. These cascading errors lead to uncontrollable risk during construction, resulting in significant delays and cost overruns. Deep Lynx allows for an integrated platform during design and operations of mega projects.\n\nThe Deep Lynx Core API delivers a few main features.\n\n1. Provides a set of methods and endpoints for manipulating data in an object oriented database. This allows us to store complex datatypes as records and then to compile them into actual, modifiable objects at run-time. Users can store taxonomies or ontologies in a readable format.\n\n2. Provides methods for storing and retrieving data in a graph database. This data is structured and validated against the aformentioned object oriented database before storage.",
+    "description": "The construction of megaprojects has consistently demonstrated challenges for project managers in regard to meeting cost, schedule, and performance requirements. Megaproject construction challenges are common place within megaprojects with many active projects in the United States failing to meet cost and schedule efforts by significant margins. Currently, engineering teams operate in siloed tools and disparate teams where connections across design, procurement, and construction systems are translated manually or over brittle point-to-point integrations. The manual nature of data exchange increases the risk of silent errors in the reactor design, with each silent error cascading across the design. These cascading errors lead to uncontrollable risk during construction, resulting in significant delays and cost overruns. Deep Lynx allows for an integrated platform during design and operations of mega projects.\nThe Deep Lynx Core API delivers a few main features.\n1. Provides a set of methods and endpoints for manipulating data in an object oriented database. This allows us to store complex datatypes as records and then to compile them into actual, modifiable objects at run-time. Users can store taxonomies or ontologies in a readable format.\n2. Provides methods for storing and retrieving data in a graph database. This data is structured and validated against the aformentioned object oriented database before storage.",
     "contact": {},
     "version": "1.0",
     "license": {
@@ -169,7 +169,7 @@
           "Containers"
         ],
         "summary": "Create Container",
-        "description": "Creates a new container object. Containers are the root level object and are considered to contain both the ontology(in form of Metatypes, Metatype Keys, and MetatypeRelationships) as well as the data stored under that ontology.\n\nEndpoint will accept both a single container request object, or an array of container request objects",
+        "description": "Creates a new container object. Containers are the root level object and are considered to contain both the ontology(in form of Metatypes, Metatype Keys, and MetatypeRelationships) as well as the data stored under that ontology.\nEndpoint will accept both a single container request object, or an array of container request objects",
         "operationId": "CreateContainer",
         "requestBody": {
           "content": {
@@ -541,7 +541,7 @@
           "Data Query"
         ],
         "summary": "Query Graph (Deprecated)",
-        "description": "Query the graph of the specified container using GraphQL. GraphQL queries may be formatted as json or plain text.\n\nThis has been deprecated in favor of the `/containers/{container_id}/data` endpoint.",
+        "description": "Query the graph of the specified container using GraphQL. GraphQL queries may be formatted as json or plain text.\nThis has been deprecated in favor of the `/containers/{container_id}/data` endpoint.",
         "operationId": "QueryGraph",
         "parameters": [
           {
@@ -2306,7 +2306,7 @@
           "Metatype Keys"
         ],
         "summary": "Create Metatype Key",
-        "description": "Creates a new key for a metatype. Keys consist of a unique key name (unique to the metatype only), key type, default values, and allowed values. Of those, only the first two are required.\n\nThe `dataType` field accepts only one of the following values: number, string, date, boolean, enumeration, file. \n\nThe fields `defaultValue` and `options` will only accept an array of the following types: string, boolean, number, float.\n\nPass in an array for bulk creation.\n\nCurrently the validation and cardinality functionality of keys are NOT checked at data insertion.",
+        "description": "Creates a new key for a metatype. Keys consist of a unique key name (unique to the metatype only), key type, default values, and allowed values. Of those, only the first two are required.\nThe `dataType` field accepts only one of the following values: number, string, date, boolean, enumeration, file. \nThe fields `defaultValue` and `options` will only accept an array of the following types: string, boolean, number, float.\nPass in an array for bulk creation.\nCurrently the validation and cardinality functionality of keys are NOT checked at data insertion.",
         "operationId": "CreateMetatypeKey",
         "parameters": [
           {
@@ -2653,7 +2653,7 @@
           "Metatype Relationships"
         ],
         "summary": "Create Metatype Relationship",
-        "description": "Create a new metatype relationship. Describes the connection that could exist between two metatypes and acts as a vehicle for relationship specific keys.\n\nPass in an array for bulk creation.",
+        "description": "Create a new metatype relationship. Describes the connection that could exist between two metatypes and acts as a vehicle for relationship specific keys.\nPass in an array for bulk creation.",
         "operationId": "CreateMetatypeRelationship",
         "parameters": [
           {
@@ -2866,7 +2866,7 @@
           "Metatype Relationship Keys"
         ],
         "summary": "Create Metatype Relationship Key",
-        "description": "Creates a new key for a metatype relationship. Keys consist of a unique key name (unique to the metatype relationship), key type, default values, and allowed values. Of those, only the first two are required.\n\nThe `dataType` field accepts only one of the following values: number, string, date, boolean, enumeration, file. \n\nThe fields `defaultValue` and `options` will only accept an array of the following types: string, boolean, number, float.",
+        "description": "Creates a new key for a metatype relationship. Keys consist of a unique key name (unique to the metatype relationship), key type, default values, and allowed values. Of those, only the first two are required.\nThe `dataType` field accepts only one of the following values: number, string, date, boolean, enumeration, file. \nThe fields `defaultValue` and `options` will only accept an array of the following types: string, boolean, number, float.",
         "operationId": "CreateMetatypeRelationshipKey",
         "parameters": [
           {
@@ -3177,7 +3177,7 @@
           "Metatype Relationship Pairs"
         ],
         "summary": "Create Metatype Relationship Pair",
-        "description": "Create a new Metaype Relationship Pair. Describes the connection between two metatypes by connecting them using a Metatype Relationship.\n\nPass in an array for bulk creation.",
+        "description": "Create a new Metaype Relationship Pair. Describes the connection between two metatypes by connecting them using a Metatype Relationship.\nPass in an array for bulk creation.",
         "operationId": "CreateMetatypeRelationshipPair",
         "parameters": [
           {
@@ -4137,7 +4137,7 @@
           "Data Sources"
         ],
         "summary": "Upload File",
-        "description": "Uploads a file and it's metadata to Deep Lynx. All additional fields on the multipart form will be processed and added as metadata to the file upload itself. \n\nThis should be a collection of files and normal fields. If you include a file field and call that \"metadata\" - you can include a normal metadata upload as either a json, csv, or xml file. This data will be processed like a normal import and the files attached to the processed data. Once Deep Lynx generates nodes and edges from that data, any files attached will automatically be attached to the resulting nodes/edges as well.\n\nNOTE: The metadata file you upload, if json, must be wrapped in an array. If you do not pass in an array of objects, even if it's a single object, then Deep Lynx will attempt to split up your metadata into its parts instead of treating it like a whole object.",
+        "description": "Uploads a file and it's metadata to Deep Lynx. All additional fields on the multipart form will be processed and added as metadata to the file upload itself. \nThis should be a collection of files and normal fields. If you include a file field and call that \"metadata\" - you can include a normal metadata upload as either a json, csv, or xml file. This data will be processed like a normal import and the files attached to the processed data. Once Deep Lynx generates nodes and edges from that data, any files attached will automatically be attached to the resulting nodes/edges as well.\nNOTE: The metadata file you upload, if json, must be wrapped in an array. If you do not pass in an array of objects, even if it's a single object, then Deep Lynx will attempt to split up your metadata into its parts instead of treating it like a whole object.",
         "operationId": "UploadFile",
         "parameters": [
           {
@@ -4193,18 +4193,10 @@
                     "format": "binary"
                   }
                 }
-              },
-              "examples": {
-                "example-1": {
-                  "value": {
-                    "file": "string",
-                    "metadata": "string"
-                  }
-                }
               }
             }
           },
-          "description": "This should be a collection of files and normal fields. If you include a file field and call that \"metadata\" - you can include a normal metadata upload as either a json, csv, or xml file. This data will be processed like a normal import and the files attached to the processed data. Once Deep Lynx generates nodes and edges from that data, any files attached will automatically be attached to the resulting nodes/edges as well.\n\nNOTE: The metadata file you upload, if json, must be wrapped in an array. If you do not pass in an array of objects, even if it's a single object, then Deep Lynx will attempt to split up your metadata into its parts instead of treating it like a whole object."
+          "description": "This should be a collection of files and normal fields. If you include a file field and call that \"metadata\" - you can include a normal metadata upload as either a json, csv, or xml file. This data will be processed like a normal import and the files attached to the processed data. Once Deep Lynx generates nodes and edges from that data, any files attached will automatically be attached to the resulting nodes/edges as well.\nNOTE: The metadata file you upload, if json, must be wrapped in an array. If you do not pass in an array of objects, even if it's a single object, then Deep Lynx will attempt to split up your metadata into its parts instead of treating it like a whole object."
         }
       }
     },
@@ -5737,7 +5729,17 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "in": "query",
+            "name": "isEnabled"
+          }
+        ]
       }
     },
     "/containers/{container_id}/import/datasources/{data_source_id}/mappings/{mapping_id}/transformations": {
@@ -7502,7 +7504,7 @@
               }
             }
           },
-          "description": "Key/value pair where the key is named 'file' and the file is any file. \n\nOptionally, any metadata can be added"
+          "description": "Key/value pair where the key is named 'file' and the file is any file. \nOptionally, any metadata can be added"
         },
         "x-internal": false
       }
@@ -7536,8 +7538,8 @@
                   "tag_name": {
                     "type": "string"
                   },
-                  "container_id": {
-                    "type": "integer"
+                  "metadata": {
+                    "type": "object"
                   }
                 }
               },
@@ -7547,20 +7549,14 @@
                 }
               }
             },
-            "application/xml": {
+            "application/javascript": {
               "schema": {
                 "type": "object",
-                "properties": {
-                  "tag_name": {
-                    "type": "string"
-                  },
-                  "metadata": {
-                    "type": "object"
-                  }
-                }
+                "properties": {}
               }
             }
-          }
+          },
+          "description": ""
         }
       }
     },
@@ -7838,125 +7834,6 @@
         "responses": {},
         "operationId": "get-containers-container_id-graphs-tags-tag_id-edges",
         "description": "List all Edges with Tag"
-      }
-    },
-    "/containers/{container_id}/import/datasources/{data_source_id}/webgl": {
-      "parameters": [
-        {
-          "schema": {
-            "type": "string"
-          },
-          "name": "container_id",
-          "in": "path",
-          "required": true
-        },
-        {
-          "schema": {
-            "type": "string"
-          },
-          "name": "data_source_id",
-          "in": "path",
-          "required": true
-        }
-      ],
-      "post": {
-        "summary": "Upload WebGL",
-        "operationId": "post-containers-container_id-import-datasources-data_source_id-webgl",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UploadFileResponse"
-                },
-                "examples": {
-                  "example-1": {
-                    "value": {}
-                  }
-                }
-              }
-            }
-          }
-        },
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "file": {
-                    "type": "object"
-                  }
-                }
-              },
-              "examples": {
-                "example-1": {
-                  "value": {}
-                }
-              }
-            }
-          },
-          "description": "The user must upload 4 distinct files as part of the request body. "
-        },
-        "description": "Upload a webgl asset into DeepLynx. This route creates a tag, uploads the files in the request body, and associates the tag with these files. The newly created tag automatically has {\"webgl\": true} appended to its metadata.",
-        "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "query",
-            "name": "tag",
-            "description": "Tag name for the webgl files. All tags created through this route will automatically have {\"webgl\": true} appended to their metadata"
-          }
-        ]
-      }
-    },
-    "/containers/{container_id}/graphs/tags/{tag_id}": {
-      "parameters": [
-        {
-          "schema": {
-            "type": "string"
-          },
-          "name": "container_id",
-          "in": "path",
-          "required": true
-        },
-        {
-          "schema": {
-            "type": "string"
-          },
-          "name": "tag_id",
-          "in": "path",
-          "required": true
-        }
-      ],
-      "put": {
-        "summary": "Update Tag",
-        "operationId": "put-containers-container_id-graphs-tags-tag_id",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        },
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "tag_name": {
-                    "type": "string"
-                  },
-                  "metadata": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "description": "Update a tag. You can update a tag's name, or metadata"
       }
     }
   },

@@ -144,7 +144,7 @@ export default class EdgeMapper extends Mapper {
             ON CONFLICT(container_id,relationship_pair_id,data_source_id,created_at, origin_id, destination_id) DO UPDATE SET
                 properties = EXCLUDED.properties,
                 metadata = EXCLUDED.metadata
-            WHERE EXCLUDED.id = edges.id
+            WHERE EXCLUDED.id = edges.id AND excluded.properties IS DISTINCT FROM edges.properties
             RETURNING *`;
 
         const values = edges.map((e) => [
@@ -236,7 +236,7 @@ export default class EdgeMapper extends Mapper {
             LEFT JOIN metatype_relationships ON metatype_relationship_pairs.relationship_id = metatype_relationships.id
             WHERE edges.id = $1 ORDER BY edges.created_at ASC`,
             values: [edgeID],
-        }
+        };
     }
 
     private retrieveRawDataHistoryStatement(edgeID: string): QueryConfig {
@@ -247,7 +247,7 @@ export default class EdgeMapper extends Mapper {
             LEFT JOIN data_staging ON edges.data_staging_id = data_staging.id
             WHERE edges.id = $1 ORDER BY edges.created_at ASC`,
             values: [edgeID],
-        }
+        };
     }
 
     private retrieveByRelationshipStatement(origin: string, relationship: string, destination: string): QueryConfig {
