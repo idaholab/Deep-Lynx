@@ -5,7 +5,6 @@ import {plainToInstance} from 'class-transformer';
 import Result from '../../../../../common_classes/result';
 
 // Domain Objects
-import Import, {DataStaging} from '../../../../../domain_objects/data_warehouse/import/import';
 import File from '../../../../../domain_objects/data_warehouse/data/file';
 import Tag from '../../../../../domain_objects/data_warehouse/data/tag';
 
@@ -15,20 +14,14 @@ import {NextFunction, Request, Response} from 'express';
 // Repository
 import TagRepository from '../../../../../data_access_layer/repositories/data_warehouse/data/tag_repository';
 import FileRepository from '../../../../../data_access_layer/repositories/data_warehouse/data/file_repository';
-import DataStagingRepository from '../../../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
-const stagingRepo = new DataStagingRepository();
 const fileRepo = new FileRepository();
 const tagRepo = new TagRepository();
 
 // Utilities
 import {Readable} from 'stream';
 import {FileInfo} from 'busboy';
-import Logger from '../../../../../services/logger';
-import Config from '../../../../../services/config';
 const Busboy = require('busboy');
-const csv = require('csvtojson');
 const xmlToJson = require('xml-2-json-streaming');
-const xmlParser = xmlToJson();
 
 
 export default class WebGLFunctions {
@@ -36,7 +29,8 @@ export default class WebGLFunctions {
     public static createTag(req: Request, res: Response, next: NextFunction) {
 
         if(!req.query.tag) {
-            Result.Failure(`please provide a 'tag' in the query params. this should be a string or an array of strings`, 400).asResponse(res);
+            Result.Failure(`please pass a "tag" query parameter`, 400).asResponse(res);
+            return
         }
 
         let payload: Tag[] = []; 
