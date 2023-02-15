@@ -1,7 +1,7 @@
-import { BlobStorage, BlobUploadResponse } from './blob_storage';
+import {BlobStorage, BlobUploadResponse} from './blob_storage';
 import Result from '../../common_classes/result';
-import { Readable } from 'stream';
-import { BlobServiceClient, ContainerClient, RestError } from '@azure/storage-blob';
+import {Readable} from 'stream';
+import {BlobServiceClient, ContainerClient, RestError} from '@azure/storage-blob';
 import Logger from './../logger';
 import File from '../../domain_objects/data_warehouse/data/file';
 const short = require('short-uuid');
@@ -26,7 +26,7 @@ export default class AzureBlobImpl implements BlobStorage {
         } else {
             blobClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.file_name}`);
         }
-        
+
         const response = await blobClient.delete();
         if (response.errorCode) {
             Logger.error(`error deleting file in azure blob storage ${response.errorCode}`);
@@ -58,8 +58,8 @@ export default class AzureBlobImpl implements BlobStorage {
             const uploadResult = await blobClient.uploadStream(newStream, 8000, 5, {
                 blobHTTPHeaders: {
                     blobContentType: contentType,
-                    blobContentEncoding: encoding
-                }
+                    blobContentEncoding: encoding,
+                },
             });
 
             if (uploadResult._response.status !== 201) {
@@ -75,8 +75,8 @@ export default class AzureBlobImpl implements BlobStorage {
                     md5hash,
                     metadata: {},
                     adapter_name: this.name(),
-                    shortUUID
-                })
+                    short_uuid: shortUUID,
+                }),
             );
         }
 
