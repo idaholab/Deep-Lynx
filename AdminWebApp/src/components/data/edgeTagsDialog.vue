@@ -19,6 +19,7 @@
 
             <v-dialog
                 v-model="addTagDialog"
+                @click:outside="reset()"
                 width="50%"
             >
               <template v-slot:activator="{ on, attrs }">
@@ -41,11 +42,21 @@
                   <v-progress-linear indeterminate v-if="tagLoading"></v-progress-linear>
                   <v-select
                       :items="containerTags"
-                      @input="addTag"
+                      item-text="tag_name"
+                      return-object
                       :label="$t('edgeTags.selectTag')"
+                      v-model="selectedTag"
                   >
                   </v-select>
                 </v-card-text>
+
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn color="blue darken-1" text @click="reset()">{{$t("home.cancel")}}</v-btn>
+                  <v-btn color="red darken-1" text @click="addTag(selectedTag)">
+                    {{$t("home.save")}}
+                  </v-btn>
+                </v-card-actions>
               </v-card>
             </v-dialog>
 
@@ -86,6 +97,7 @@ export default class EdgeTagsDialog extends Vue {
   @Prop({required: true})
   readonly edge!: EdgeT
 
+  selectedTag: TagT | null = null
   tagLoading = false
   addTagDialog = false
   errorMessage = ''
@@ -95,12 +107,12 @@ export default class EdgeTagsDialog extends Vue {
 
   @Watch('edge', {immediate: true})
   onEdgeChange() {
-    this.loadedgeTags()
+    this.loadEdgeTags()
   }
 
 
   mounted() {
-    this.loadedgeTags()
+    this.loadEdgeTags()
     this.loadContainerTags()
   }
 
@@ -117,28 +129,27 @@ export default class EdgeTagsDialog extends Vue {
 
     this.$client.attachTagToEdge(this.edge.container_id, tag.id!, this.edge.id)
         .then(() => {
-          this.loadedgeTags()
+          this.loadEdgeTags()
+          this.$emit('tagAttached');
+          this.reset();
         })
         .catch(e => this.errorMessage = e)
         .finally(() => {
-          this.addTagDialog = false
           this.tagLoading = false
         })
 
-    console.log('Add tag');
   }
 
   removeTag(tag: TagT) {
     this.$client.detachTagFromEdge(this.edge.container_id, tag.id!, this.edge.id)
         .then(() => {
-          this.loadedgeTags()
+          this.loadEdgeTags()
         })
         .catch(e => this.errorMessage = e)
 
-    console.log('Remove tag');
   }
 
-  loadedgeTags() {
+  loadEdgeTags() {
     this.$client.listTagsForEdge(this.edge.container_id, this.edge.id)
         .then((tags) => {
           this.edgeTags = tags
@@ -152,6 +163,11 @@ export default class EdgeTagsDialog extends Vue {
           this.containerTags = tags
         })
         .catch(e => this.errorMessage = e)
+  }
+
+  reset() {
+    this.selectedTag = null;
+    this.addTagDialog = false;
   }
 
   copyID(id: string) {

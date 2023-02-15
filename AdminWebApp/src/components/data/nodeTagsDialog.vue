@@ -19,6 +19,7 @@
 
             <v-dialog
                 v-model="addTagDialog"
+                @click:outside="reset()"
                 width="50%"
             >
               <template v-slot:activator="{ on, attrs }">
@@ -41,11 +42,21 @@
                   <v-progress-linear indeterminate v-if="tagLoading"></v-progress-linear>
                   <v-select
                       :items="containerTags"
-                      @input="addTag"
+                      item-text="tag_name"
+                      return-object
                       :label="$t('nodeTags.selectTag')"
+                      v-model="selectedTag"
                   >
                   </v-select>
                 </v-card-text>
+
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn color="blue darken-1" text @click="reset()">{{$t("home.cancel")}}</v-btn>
+                  <v-btn color="red darken-1" text @click="addTag(selectedTag)">
+                    {{$t("home.save")}}
+                  </v-btn>
+                </v-card-actions>
               </v-card>
             </v-dialog>
 
@@ -86,6 +97,7 @@ export default class NodeTagsDialog extends Vue {
   @Prop({required: true})
   readonly node!: NodeT
 
+  selectedTag: TagT | null = null
   tagLoading = false
   addTagDialog = false
   errorMessage = ''
@@ -99,9 +111,9 @@ export default class NodeTagsDialog extends Vue {
   }
 
 
-  mounted() {
-    this.loadNodeTags()
-    this.loadContainerTags()
+  async mounted() {
+    await this.loadNodeTags()
+    await this.loadContainerTags()
   }
 
   headers() {
@@ -117,15 +129,15 @@ export default class NodeTagsDialog extends Vue {
 
     this.$client.attachTagToNode(this.node.container_id, tag.id!, this.node.id)
         .then(() => {
-          this.loadNodeTags()
+          this.loadNodeTags();
+          this.$emit('tagAttached');
+          this.reset();
         })
         .catch(e => this.errorMessage = e)
         .finally(() => {
-          this.addTagDialog = false
           this.tagLoading = false
         })
 
-    console.log('Add tag');
   }
 
   removeTag(tag: TagT) {
@@ -135,7 +147,6 @@ export default class NodeTagsDialog extends Vue {
         })
         .catch(e => this.errorMessage = e)
 
-    console.log('Remove tag');
   }
 
   loadNodeTags() {
@@ -152,6 +163,11 @@ export default class NodeTagsDialog extends Vue {
           this.containerTags = tags
         })
         .catch(e => this.errorMessage = e)
+  }
+
+  reset() {
+    this.selectedTag = null;
+    this.addTagDialog = false;
   }
 
   copyID(id: string) {

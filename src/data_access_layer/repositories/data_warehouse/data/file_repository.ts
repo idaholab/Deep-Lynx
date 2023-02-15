@@ -74,25 +74,24 @@ export default class FileRepository extends Repository implements RepositoryInte
                 }),
             );
         } else {
-                // If the incoming file doesn't exist in the database, create a new one
-                const results = await this.#mapper.Create(user.id!, f);
-                if (results.isError) {
-                    return Promise.resolve(Result.Pass(results));
-                }
-                Object.assign(f, results.value);
-
-                this.#eventRepo.emit(
-                    new Event({
-                        containerID: f.container_id,
-                        dataSourceID: f.data_source_id,
-                        eventType: 'file_created',
-                        event: {fileID: f.id},
-                    }),
-                );
+            // If the incoming file doesn't exist in the database, create a new one
+            const results = await this.#mapper.Create(user.id!, f);
+            if (results.isError) {
+                return Promise.resolve(Result.Pass(results));
             }
-        return Promise.resolve(Result.Success(true)); 
+            Object.assign(f, results.value);
+
+            this.#eventRepo.emit(
+                new Event({
+                    containerID: f.container_id,
+                    dataSourceID: f.data_source_id,
+                    eventType: 'file_created',
+                    event: {fileID: f.id},
+                }),
+            );
+        }
+        return Promise.resolve(Result.Success(true));
     }
-        
 
     // creates a readable stream for downloading a file
     downloadFile(f: File): Promise<Readable | undefined> {
@@ -107,13 +106,7 @@ export default class FileRepository extends Repository implements RepositoryInte
         a file record in storage. This should hopefully be obvious as the function
         signature requires a Readable stream
      */
-    async uploadFile(
-        containerID: string,
-        user: User,
-        filename: string,
-        stream: Readable,
-        dataSourceID?: string,
-    ): Promise<Result<File>> {
+    async uploadFile(containerID: string, user: User, filename: string, stream: Readable, dataSourceID?: string): Promise<Result<File>> {
         const provider = BlobStorageProvider();
 
         if (!provider) return Promise.resolve(Result.Failure('no storage provider set'));
@@ -140,20 +133,13 @@ export default class FileRepository extends Repository implements RepositoryInte
         return Promise.resolve(Result.Success(file));
     }
 
-    async updateFile(
-        fileID: string,
-        containerID: string,
-        dataSourceID: string,
-        user: User,
-        filename: string,
-        stream: Readable,
-    ): Promise<Result<File>> {
+    async updateFile(fileID: string, containerID: string, user: User, filename: string, stream: Readable, dataSourceID?: string): Promise<Result<File>> {
         const provider = BlobStorageProvider();
 
         if (!provider) return Promise.resolve(Result.Failure('no storage provider set'));
 
         // run the actual file upload the storage provider
-        const result = await provider.uploadPipe(`containers/${containerID}/datasources/${dataSourceID}/`, filename, stream);
+        const result = await provider.uploadPipe(`containers/${containerID}/datasources/${dataSourceID ? dataSourceID : '0'}/`, filename, stream);
         if (result.isError) return Promise.resolve(Result.Pass(result));
 
         const file = new File({

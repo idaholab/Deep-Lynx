@@ -28,7 +28,6 @@ export default class TagRepository extends Repository implements RepositoryInter
     }
 
     async create(tag: Tag, user: User, transaction?: PoolClient): Promise<Result<Tag>> {
-
         const saved = await this.save(tag, user, transaction);
         if (saved.isError) return Promise.resolve(Result.Pass(saved));
 
@@ -50,7 +49,6 @@ export default class TagRepository extends Repository implements RepositoryInter
     }
 
     async update(tag: Tag, user: User, transaction?: PoolClient): Promise<Result<Tag>> {
-
         const saved = await this.save(tag, user, transaction);
         if (saved.isError) return Promise.resolve(Result.Pass(saved));
 
@@ -80,7 +78,7 @@ export default class TagRepository extends Repository implements RepositoryInter
 
         // If the incoming tag has an id, find the existing tag and update it
         if (tag.id) {
-            const original = await this.findByID(tag.id!);
+            const original = await this.findByID(tag.id);
             if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
 
             Object.assign(original.value, tag);
@@ -90,18 +88,16 @@ export default class TagRepository extends Repository implements RepositoryInter
                 if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
                 return Promise.resolve(Result.Pass(results));
             }
-
         } else {
             // If the tag already exists in this container, pass
             const original = await this.retrieve(tag.tag_name!);
             if (original.isError) {
                 return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
-            }
-            else if (original.value) {
+            } else if (original.value) {
                 Object.assign(tag, original.value);
                 return Promise.resolve(Result.Pass(original));
             }
-        
+
             // If the incoming tag doesn't exist in the database, create a new one
             const results = await this.#mapper.Create(user.id!, tag);
             if (results.isError) {
@@ -109,7 +105,6 @@ export default class TagRepository extends Repository implements RepositoryInter
                 return Promise.resolve(Result.Pass(results));
             }
             Object.assign(tag, results.value);
-
         }
 
         if (internalTransaction) {
@@ -149,18 +144,10 @@ export default class TagRepository extends Repository implements RepositoryInter
             transaction,
             resultClass: Tag,
         });
-        console.log(results);
 
         if (results.isError) return Promise.resolve(Result.Pass(results));
 
         return Promise.resolve(Result.Success(results.value));
-    }
-
-    async listFilesWithAnyTag(): Promise<Result<File[]>> {
-        return this.#mapper.FilesWithAnyTag();
-
-        // join the tables, then list with where clause in front
-        // see schema.ts line 1086 and nearby
     }
 
     async listTagsForNode(node: Node): Promise<Result<Tag[]>> {
@@ -185,6 +172,34 @@ export default class TagRepository extends Repository implements RepositoryInter
 
     async listEdgesWithTag(tag: Tag): Promise<Result<Edge[]>> {
         return this.#mapper.EdgesWithTag(tag.id!);
+    }
+
+    async listWebglFilesAndTags(containerID: string): Promise<Result<any>> {
+        return this.#mapper.WebglFilesAndTags(containerID);
+    }
+
+    async detachTagFromNode(tag: Tag, node: Node): Promise<Result<boolean>> {
+        if (!node.id) {
+            return Promise.resolve(Result.Failure('node must have id'));
+        }
+
+        return this.#mapper.DetachTagFromNode(tag.id!, node.id);
+    }
+
+    async detachTagFromEdge(tag: Tag, edge: Edge): Promise<Result<boolean>> {
+        if (!edge.id) {
+            return Promise.resolve(Result.Failure('edge must have id'));
+        }
+
+        return this.#mapper.DetachTagFromEdge(tag.id!, edge.id);
+    }
+
+    async detachTagFromFile(tag: Tag, file: File): Promise<Result<boolean>> {
+        if (!file.id) {
+            return Promise.resolve(Result.Failure('file must have id'));
+        }
+
+        return this.#mapper.DetachTagFromFile(tag.id!, file.id);
     }
 
     containerID(operator: string, value: any) {

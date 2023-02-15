@@ -31,45 +31,47 @@ export default class TagFunctions {
         }
 
         payload.forEach((tag: Tag) => {
-            tagRepo.create(tag, req.currentUser!)
-            .then((result) => {
-                if (result.isError) {
-                    Result.Error(result.error?.error).asResponse(res);
-                    return;
-                }
-    
-                Result.Success(payload).asResponse(res);
-            })
-            .catch((err) => {
-                Result.Error(err).asResponse(res);
-            })
-            .finally(() => next());
-        })
-    
+            tagRepo
+                .create(tag, req.currentUser!)
+                .then((result) => {
+                    if (result.isError) {
+                        Result.Error(result.error?.error).asResponse(res);
+                        return;
+                    }
+
+                    Result.Success(payload).asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        });
     }
 
     public static updateTag(req: Request, res: Response, next: NextFunction) {
-
         if (req.tag && req.container) {
+            const payload: Tag = plainToInstance(Tag, {...req.body, id: req.tag.id!, container_id: req.container.id!} as object);
 
-            let payload: Tag = plainToInstance(Tag, {...req.body, id: req.tag.id!, container_id: req.container.id!} as object);
+            tagRepo
+                .update(payload, req.currentUser!)
+                .then((result) => {
+                    if (result.isError) {
+                        Result.Error(result.error?.error).asResponse(res);
+                        return;
+                    }
 
-            tagRepo.update(payload, req.currentUser!)
-            .then((result) => {
-                if (result.isError) {
-                    Result.Error(result.error?.error).asResponse(res);
-                    return;
-                }
-    
-                Result.Success(result).asResponse(res);
-            })
-            .catch((err) => {
-                Result.Error(err).asResponse(res);
-            })
-            .finally(() => next());
+                    Result.Success(result).asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`container or tag not found`, 404).asResponse(res);
+            next();
         }
     }
-    
+
     public static attachTagToNode(req: Request, res: Response, next: NextFunction) {
         if (req.tag && req.node) {
             tagRepo
@@ -81,6 +83,9 @@ export default class TagFunctions {
                     Result.Error(err).asResponse(res);
                 })
                 .finally(() => next());
+        } else {
+            Result.Failure(`tag or node not found`, 404).asResponse(res);
+            next();
         }
     }
 
@@ -95,6 +100,9 @@ export default class TagFunctions {
                     Result.Error(err).asResponse(res);
                 })
                 .finally(() => next());
+        } else {
+            Result.Failure(`tag or edge not found`, 404).asResponse(res);
+            next();
         }
     }
 
@@ -109,6 +117,28 @@ export default class TagFunctions {
                     Result.Error(err).asResponse(res);
                 })
                 .finally(() => next());
+        } else {
+            Result.Failure(`tag or file not found`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    public static listTags(req: Request, res: Response, next: NextFunction) {
+        if (req.container) {
+            new TagRepository()
+                .where()
+                .containerID('eq', req.container.id!)
+                .list()
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`container not found`, 404).asResponse(res);
+            next();
         }
     }
 
@@ -140,6 +170,9 @@ export default class TagFunctions {
                     Result.Error(err).asResponse(res);
                 })
                 .finally(() => next());
+        } else {
+            Result.Failure(`node not found`, 404).asResponse(res);
+            next();
         }
     }
 
@@ -154,6 +187,9 @@ export default class TagFunctions {
                     Result.Error(err).asResponse(res);
                 })
                 .finally(() => next());
+        } else {
+            Result.Failure(`file not found`, 404).asResponse(res);
+            next();
         }
     }
 
@@ -168,6 +204,9 @@ export default class TagFunctions {
                     Result.Error(err).asResponse(res);
                 })
                 .finally(() => next());
+        } else {
+            Result.Failure(`edge not found`, 404).asResponse(res);
+            next();
         }
     }
 
@@ -182,6 +221,60 @@ export default class TagFunctions {
                     Result.Error(err).asResponse(res);
                 })
                 .finally(() => next());
+        } else {
+            Result.Failure(`tag not found`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    public static detachTagFromNode(req: Request, res: Response, next: NextFunction) {
+        if (req.tag && req.node) {
+            tagRepo
+                .detachTagFromNode(req.tag, req.node)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`tag or node not found`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    public static detachTagFromEdge(req: Request, res: Response, next: NextFunction) {
+        if (req.tag && req.edge) {
+            tagRepo
+                .detachTagFromEdge(req.tag, req.edge)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`tag or edge not found`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    public static detachTagFromFile(req: Request, res: Response, next: NextFunction) {
+        if (req.tag && req.file) {
+            tagRepo
+                .detachTagFromFile(req.tag, req.file)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`tag or file not found`, 404).asResponse(res);
+            next();
         }
     }
 
@@ -196,6 +289,9 @@ export default class TagFunctions {
                     Result.Error(err).asResponse(res);
                 })
                 .finally(() => next());
+        } else {
+            Result.Failure(`tag not found`, 404).asResponse(res);
+            next();
         }
     }
 
@@ -210,6 +306,9 @@ export default class TagFunctions {
                     Result.Error(err).asResponse(res);
                 })
                 .finally(() => next());
+        } else {
+            Result.Failure(`tag not found`, 404).asResponse(res);
+            next();
         }
     }
 }

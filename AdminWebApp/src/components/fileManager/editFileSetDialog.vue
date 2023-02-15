@@ -31,7 +31,7 @@
                   :label="$t('fileManager.newFile')"
                   @change="changeFile"
                   v-model="fileToUpload"
-                  :rules="[v => v ? v.length > 0 || $t('fileManager.filesRequired') : '']"
+                  :rules="[v => !!v || $t('fileManager.filesRequired')]"
               ></v-file-input>
 
             </v-form>
@@ -65,7 +65,7 @@ export default class EditFileSetDialog extends Vue {
   readonly containerID!: string;
 
   @Prop({required: true})
-  readonly file!: FileT;
+  readonly file!: any;
 
   @Prop({required: false, default: true})
   readonly icon!: boolean
@@ -83,9 +83,13 @@ export default class EditFileSetDialog extends Vue {
     // @ts-ignore
     if(!this.$refs.form!.validate()) return;
 
-    console.log('Update file');
-    console.log(this.file);
-    this.clearNewFileSet();
+    this.$client.updateWebGLFiles(this.containerID, this.file.file_id!, [this.fileToUpload!])
+        .then(() => {
+          this.$emit('fileUpdated');
+          this.clearNewFileSet();
+        })
+        .catch(e => this.errorMessage = e)
+
   }
 
   clearNewFileSet() {

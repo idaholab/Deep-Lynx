@@ -655,6 +655,10 @@ export class Client {
         });
     }
 
+    deleteFile(containerID: string, dataSourceID: string, fileID: string): Promise<boolean> {
+        return this.delete(`/containers/${containerID}/import/datasources/${dataSourceID}/files/${fileID}`);
+    }
+
     attachFileToNode(containerID: string, nodeID: string, fileID: string): Promise<boolean> {
         return this.put(`/containers/${containerID}/graphs/nodes/${nodeID}/files/${fileID}`);
     }
@@ -1113,8 +1117,12 @@ export class Client {
         return this.delete(`/containers/${containerID}/ontology/versions/${versionID}`);
     }
 
-    createTagForFile(containerID: string, tags: TagT[]): Promise<boolean> {
+    createTag(containerID: string, tags: TagT[]): Promise<boolean> {
         return this.post(`/containers/${containerID}/graphs/tags`, tags);
+    }
+
+    updateTag(containerID: string, tagID: string, tag: TagT): Promise<boolean> {
+        return this.put(`/containers/${containerID}/graphs/tags/${tagID}`, tag);
     }
 
     listFilesWithAnyTag(containerID: string): Promise<any> {
@@ -1126,7 +1134,6 @@ export class Client {
     }
 
     listTagsForContainer(containerID: string): Promise<TagT[]> {
-        // TODO: Implement
         return this.get(`/containers/${containerID}/graphs/tags`);
     }
 
@@ -1139,7 +1146,6 @@ export class Client {
     }
 
     detachTagFromNode(containerID: string, tagID: string, nodeID: string): Promise<boolean> {
-        // TODO: Implement
         return this.delete(`/containers/${containerID}/graphs/tags/${tagID}/nodes/${nodeID}`);
     }
 
@@ -1152,13 +1158,26 @@ export class Client {
     }
 
     detachTagFromEdge(containerID: string, tagID: string, edgeID: string): Promise<boolean> {
-        // TODO: Implement
         return this.delete(`/containers/${containerID}/graphs/tags/${tagID}/edges/${edgeID}`);
     }
 
-    createWebGLTagsAndFiles(containerID: string): Promise<boolean> {
-        // TODO: Implement
-        return this.post(`/containers/${containerID}/import/datasources/:sourceID/webgl`, {});
+    createWebGLTagsAndFiles(containerID: string, files: File[], tagName: string): Promise<boolean> {
+        const query: {[key: string]: any} = {};
+        query.tag = tagName;
+
+        return this.postFiles(`/containers/${containerID}/graphs/webgl`, files, query);
+    }
+
+    listWebGLFilesAndTags(containerID: string): Promise<any> {
+        return this.get(`/containers/${containerID}/graphs/webgl`);
+    }
+
+    updateWebGLFiles(containerID: string, fileID: string, files: File[]): Promise<boolean> {
+        return this.putFiles(`/containers/${containerID}/graphs/webgl/files/${fileID}`, files);
+    }
+
+    deleteWebGLFile(containerID: string, fileID: string): Promise<boolean> {
+        return this.delete(`/containers/${containerID}/graphs/webgl/files/${fileID}`);
     }
 
     private async get<T>(uri: string, queryParams?: {[key: string]: any}): Promise<T> {
@@ -1507,6 +1526,42 @@ export class Client {
         });
     }
 
+    private async postFiles(uri: string, files: File[], queryParams?: {[key: string]: any}): Promise<boolean> {
+        const config: AxiosRequestConfig = {};
+        config.headers = {'Access-Control-Allow-Origin': '*', 'Content-Type': 'multipart/form-data'};
+        config.validateStatus = () => {
+            return true;
+        };
+
+        if (this.config?.auth_method === 'token') {
+            config.headers = {Authorization: `Bearer ${RetrieveJWT()}`};
+        }
+
+        if (this.config?.auth_method === 'basic') {
+            config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials;
+        }
+
+        const formData = new FormData();
+        for (const file of files) {
+            formData.append(file.name, file);
+        }
+
+        let url: string;
+
+        if (queryParams) {
+            url = buildURL(this.config?.rootURL!, {path: uri, queryParams: queryParams!});
+        } else {
+            url = buildURL(this.config?.rootURL!, {path: uri});
+        }
+        const resp: AxiosResponse = await axios.post(url, formData, config);
+
+        return new Promise<boolean>((resolve, reject) => {
+            if (resp.status < 200 || resp.status > 299) reject(resp.data.error);
+
+            resolve(true);
+        });
+    }
+
     private async put<T>(uri: string, data?: any): Promise<T> {
         const config: AxiosRequestConfig = {};
         config.headers = {'Access-Control-Allow-Origin': '*'};
@@ -1557,6 +1612,42 @@ export class Client {
         }
 
         const resp: AxiosResponse = await axios.put(url, data, config);
+
+        return new Promise<boolean>((resolve, reject) => {
+            if (resp.status < 200 || resp.status > 299) reject(resp.data.error);
+
+            resolve(true);
+        });
+    }
+
+    private async putFiles(uri: string, files: File[], queryParams?: {[key: string]: any}): Promise<boolean> {
+        const config: AxiosRequestConfig = {};
+        config.headers = {'Access-Control-Allow-Origin': '*', 'Content-Type': 'multipart/form-data'};
+        config.validateStatus = () => {
+            return true;
+        };
+
+        if (this.config?.auth_method === 'token') {
+            config.headers = {Authorization: `Bearer ${RetrieveJWT()}`};
+        }
+
+        if (this.config?.auth_method === 'basic') {
+            config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials;
+        }
+
+        const formData = new FormData();
+        for (const file of files) {
+            formData.append(file.name, file);
+        }
+
+        let url: string;
+
+        if (queryParams) {
+            url = buildURL(this.config?.rootURL!, {path: uri, queryParams: queryParams!});
+        } else {
+            url = buildURL(this.config?.rootURL!, {path: uri});
+        }
+        const resp: AxiosResponse = await axios.put(url, formData, config);
 
         return new Promise<boolean>((resolve, reject) => {
             if (resp.status < 200 || resp.status > 299) reject(resp.data.error);

@@ -49,7 +49,8 @@
             color="blue darken-1"
             text
             @click="createFileSet" >
-          {{$t("home.create")}}
+          <span v-if="!filesLoading">{{$t("home.create")}}</span>
+          <v-progress-circular indeterminate v-if="filesLoading"></v-progress-circular>
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -58,9 +59,6 @@
 
 <script lang="ts">
 import {Component, Prop, Vue} from "vue-property-decorator"
-import {
-  ContainerT
-} from "@/api/types";
 
 @Component
 export default class CreateFileSetDialog extends Vue {
@@ -71,13 +69,8 @@ export default class CreateFileSetDialog extends Vue {
   dialog= false
   valid = true
   tagName = ""
-  container: ContainerT | undefined = undefined;
   filesToUpload: File[] | null = null
-
-
-  beforeMount() {
-    this.container = this.$store.getters.activeContainer;
-  }
+  filesLoading = false
 
   addFiles(files: File[]) {
     this.filesToUpload = files;
@@ -87,17 +80,25 @@ export default class CreateFileSetDialog extends Vue {
     // @ts-ignore
     if(!this.$refs.form!.validate()) return;
 
-    console.log('Create file set')
-    this.clearNewFileSet();
-  }
+    this.filesLoading = true;
 
+    this.$client.createWebGLTagsAndFiles(this.containerID, this.filesToUpload!, this.tagName)
+        .then(() => {
+          this.$emit('fileSetCreated');
+          this.clearNewFileSet();
+        })
+        .catch(e => this.errorMessage = e)
+        .finally(() => {
+          this.filesLoading = false;
+        })
+
+  }
 
   clearNewFileSet() {
     this.tagName = "";
     this.addFiles([]);
     this.dialog = false;
   }
-
 
 }
 </script>

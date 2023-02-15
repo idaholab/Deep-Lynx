@@ -32,7 +32,7 @@
         <v-btn color="blue darken-1" text @click="reset()">{{$t("home.cancel")}}</v-btn>
         <v-btn color="red darken-1" text @click="deleteFileSet()">
           <v-progress-circular v-if="deleteLoading" indeterminate></v-progress-circular>
-          {{$t("home.delete")}}
+          <span v-if="!deleteLoading">{{$t("home.delete")}}</span>
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -42,7 +42,6 @@
 
 <script lang="ts">
 import {Component, Prop, Vue} from 'vue-property-decorator'
-import {FileT} from "@/api/types";
 
 @Component
 export default class DeleteFileSetDialog extends Vue {
@@ -50,7 +49,7 @@ export default class DeleteFileSetDialog extends Vue {
   containerID!: string
 
   @Prop({required: true})
-  file!: FileT
+  file!: any
 
   @Prop({required: false, default: "none"})
   readonly icon!: "trash" | "none"
@@ -66,21 +65,20 @@ export default class DeleteFileSetDialog extends Vue {
 
   deleteFileSet() {
     this.deleteLoading = true
-    // TODO: Update
-    this.$client.deleteDataSources(
+
+    this.$client.deleteWebGLFile(
         this.containerID,
-        this.file!.id!,
-        {forceDelete: true})
-    .then(() => {
-      this.reset()
-      this.$emit('fileSetDeleted')
-    })
-    .catch(e => this.errorMessage = e)
+        this.file!.file_id!)
+        .then(() => {
+          this.reset()
+          this.$emit('fileDeleted')
+        })
+        .catch(e => this.errorMessage = e)
+        .finally(() => this.deleteLoading = false)
   }
 
   reset() {
     this.dialog = false
-    this.deleteLoading = false
   }
 }
 </script>

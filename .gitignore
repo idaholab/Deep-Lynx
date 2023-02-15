@@ -26,3 +26,5 @@ profile-logs
 /NodeLibraries/dl-fast-load/index.node
 /RedisLoader/target/
 /RedisLoader/RedisLoader.iml
+/AdminWebApp/src/**/*.js
+/AdminWebApp/src/**/*.js.map

@@ -130,9 +130,8 @@ export default class FileManager extends Vue {
 
   refreshFileSets() {
     this.fileSetsLoading = true
-    this.$client.listFilesWithAnyTag(this.containerID)
+    this.$client.listWebGLFilesAndTags(this.containerID)
         .then(fileSets => {
-          console.log(fileSets);
           this.fileSets = fileSets
         })
         .catch(e => this.errorMessage = e)
@@ -140,10 +139,7 @@ export default class FileManager extends Vue {
   }
 
   open3DViewer(selectedTag: any) {
-    console.log(selectedTag);
-  }
-
-  editTag(selectedTag: any) {
+    // TODO: Implement
     console.log(selectedTag);
   }
 

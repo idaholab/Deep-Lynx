@@ -14,6 +14,7 @@
         <span class="headline text-h3">{{$t("fileManager.updateTag")}}</span>
       </v-card-title>
       <v-card-text>
+        <error-banner :message="errorMessage"></error-banner>
         <v-row>
           <v-col :cols="12">
 
@@ -65,6 +66,7 @@ export default class EditTagDialog extends Vue {
 
   dialog= false
   valid = true
+  errorMessage = ""
 
   get displayIcon() {
     return this.icon
@@ -74,15 +76,18 @@ export default class EditTagDialog extends Vue {
     // @ts-ignore
     if(!this.$refs.form!.validate()) return;
 
-    console.log('Update tag')
-    this.clearTag();
+    this.$client.updateTag(this.containerID, this.tag.id!, this.tag)
+        .then(() => {
+          this.$emit('tagUpdated');
+          this.clearTag();
+        })
+        .catch(e => this.errorMessage = e)
+
   }
 
   clearTag() {
-    console.log(this.tag.tag_name)
     this.dialog = false;
   }
-
 
 }
 </script>
