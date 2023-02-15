@@ -202,7 +202,8 @@ export default class NodeMapper extends Mapper {
             data_staging_id,
             metadata,
             created_by,
-            modified_by) VALUES %L RETURNING *`;
+            modified_by,
+            created_at) VALUES %L RETURNING *`;
 
         const values = nodes.map((n) => [
             n.id,
@@ -218,6 +219,7 @@ export default class NodeMapper extends Mapper {
             JSON.stringify(n.metadata),
             userID,
             userID,
+            new Date().toISOString(),
         ]);
 
         return format(text, values);

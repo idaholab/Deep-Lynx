@@ -270,8 +270,42 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         const edges: Edge[] = [];
 
         // if we already have id's or original id's set, then return a new instance of the edge
-        if ((e.origin_id && e.destination_id) || (e.origin_original_id && e.destination_original_id)) {
+        if (e.origin_id && e.destination_id) {
             edges.push(plainToInstance(Edge, {...instanceToPlain(e)}));
+            return Promise.resolve(Result.Success(edges));
+        }
+
+        if (e.origin_original_id && e.destination_original_id) {
+            const originNodes = await new NodeRepository()
+                .where()
+                .containerID('eq', e.container_id)
+                .and()
+                .dataSourceID('eq', e.origin_data_source_id)
+                .and()
+                .originalDataID('eq', e.origin_original_id)
+                .list(false);
+            if (originNodes.isError) return Promise.resolve(Result.Pass(originNodes));
+
+            const destNodes = await new NodeRepository()
+                .where()
+                .containerID('eq', e.container_id)
+                .and()
+                .dataSourceID('eq', e.destination_data_source_id)
+                .and()
+                .originalDataID('eq', e.destination_original_id)
+                .list(false);
+            if (destNodes.isError) return Promise.resolve(Result.Pass(destNodes));
+
+            originNodes.value.forEach((origin) => {
+                destNodes.value.forEach((dest) => {
+                    const newEdge: Edge = plainToInstance(Edge, {...instanceToPlain(e)});
+                    newEdge.origin_id = origin.id;
+                    newEdge.destination_id = dest.id;
+
+                    edges.push(newEdge);
+                });
+            });
+
             return Promise.resolve(Result.Success(edges));
         }
 

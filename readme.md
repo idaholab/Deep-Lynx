@@ -21,7 +21,7 @@ Leveraging this rich set of integrations allows for projects to efficiently cons
 
 `DeepLynx` is documented in the following ways
 
-1. [Wiki](https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/Home)
+1. [Wiki](https://github.com/idaholab/Deep-Lynx/wiki/Home)
 2. API level documentation in the form of an OpenAPI (Swagger) collection - found in the `API Documentation` folder
 
 ## **Installation and Running Deep Lynx**
@@ -58,25 +58,52 @@ _________
 
 You must follow these steps in the exact order given. Failure to do so will cause Deep Lynx to either fail to launch, or launch with problems.
 
-1. NodeJS must be installed. You can find the download for your platform here: https://nodejs.org/en/download/ **note** - Newer versions of Node may be incompatible with some of the following commands. The most recent version tested that works fully is 16.13.0 - the latest LTS version.
+1. NodeJS must be installed. You can find the download for your platform here: https://nodejs.org/en/download/ **note** - Newer versions of Node may be incompatible with some of the following commands. The most recent version tested that works fully is 16.13.0 - the latest LTS version.  
 
 2. Clone the DeepLynx [repository](https://gitlab.software.inl.gov/b650/Deep-Lynx/-/tree/master).
-3. Run `cargo clean && npm install` in the NodeLibraries/dl-fast-load directory - this preps the dl-fast-load rust module for installation
-3. Run `npm upgrade && npm ci` in your local DeepLynx directory.
-4. Copy and rename `.env-sample` to `.env`.
-5. Update `.env` file. See the `readme` or comments in the file itself for details. 
-6. **optional** - If you would like to use Docker rather than a dedicated PostgreSQL database, please follow these steps:
-   - Ensure Docker is installed. You can find the download here: https://www.docker.com/products/docker-desktop.
-   - Run `npm run docker:postgres:build` to create a docker image containing a Postgres data source.
-   - Mac users may need to create the directory to mount to the docker container at `/private/var/lib/docker/basedata`. If this directory does not exist, please create it (you may need to use `sudo` as in `sudo mkdir /private/var/lib/docker/basedata`).
-   - Verify that image is properly created. See below.
-   - Run `npm run docker:postgres:run` to run the created docker image (For Mac users, there is an alternative command `npm run mac:docker:postgres:run`).
-   - **Alternatively** you may use `npm run docker:timescale:run` to run a Postgres Docker image with the TimescaleDB extension already installed - to use TimescaleDB change the environment variable `TIMESCALEDB_ENABLED` to be `true`
-7. Run `npm run build` to build the internal modules and bundled administration GUI. **Note** You must re-run this command  if you make changes to the administration GUI. Changes to the source code of Deep Lynx itself will be captured if you run the application with the `npm run watch` command
-8. Run `npm run watch` or `npm run start` to start the application. See the `readme` for additional details and available commands.  
 
+3. Change directories with `cd ./NodeLibraries/dl-fast-load` and run `cargo clean && npm install` - this preps the dl-fast-load rust module for installation
 
-**Note:** DeepLynx ships with a Vue single page application which serves as the primary UI for the DeepLynx system. You can run this [separately](https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/Administration-Web-App-Installation) (and it's recommended to do so if you're developing it) 
+4. Return to the root DeepLynx directory with `cd ../../` and run `npm upgrade && npm ci`.
+
+5. Copy and rename `.env-sample` to `.env`.
+
+6. Update `.env` file. See the `readme` or comments in the file itself for details. 
+
+7. To build the database using docker, follow step **a**. To use a dedicated PostgreSQL database, follow step **b**. Then continue to step 8.   
+
+- 7a) Building the database using Docker:  
+     - Ensure Docker is installed. You can find the download here: https://www.docker.com/products/docker-desktop.  
+     - Run `npm run docker:postgres:build` to create a docker image containing a Postgres data source.  
+     - Mac users may need to create the directory to mount to the docker container at `/private/var/lib/docker/basedata`. If this directory does not exist, please create it (you may need to use `sudo` as in `sudo mkdir /private/var/lib/docker/basedata`).  
+     - Verify that image is properly created. See the screenshot below from Docker Desktop.
+![image](uploads/e1d906d0399b1e4f890bf61035e5b64c/image.png)
+     - Run `npm run docker:postgres:run` to run the created docker image (For Mac users, there is an alternative command `npm run mac:docker:postgres:run`).  
+     - **Alternatively** you may use `npm run docker:timescale:run` (`npm run mac:docker:timescale:run` for Mac)to run a Postgres Docker image with the TimescaleDB extension already installed - to use TimescaleDB change the `.env` environment variable `TIMESCALEDB_ENABLED` to be `true`
+
+- 7b) Building the database using a dedicated PostgreSQL database:  
+     - Ensure PostgreSQL is installed. You can find the download here: https://www.postgresql.org/download/. Please see [this page](DeepLynx-Requirements) for the latest requirements on PostgreSQL version.  
+     - Run pgAdmin and create a new database. The database name should match whatever value is provided in the `CORE_DB_CONNECTION_STRING` of the `.env` file. The default value is `deep_lynx`.  
+     - Ensure a user has been created that also matches the `CORE_DB_CONNECTION_STRING` and that the user's password has been set appropriately. The default username is `postgres` and the default password is `deeplynxcore`.  
+
+8. Run `npm run build` to build the internal modules and bundled administration GUI. **Note** You must re-run this command  if you make changes to the administration GUI.
+![image](uploads/72791227158a46ba389346566f745ccb/image.png)
+
+10. Run `npm run watch` or `npm run start` to start the application. See the `readme` for additional details and available commands. **This command starts a process that only ends when a user terminates with Cntrl+C or Cntrl+D - you will see a constant feed of logs from this terminal once you have started Deep Lynx. This is normal.** Changes to the source code of Deep Lynx will be captured if you run the application with the `npm run watch` command.
+![image](uploads/c04ddc5cfea2b77ffe47287d8c213700/image.png)
+
+**Note:** DeepLynx ships with a Vue single page application which serves as the primary UI for the DeepLynx system. You can run this [separately](Administration-Web-App-Installation) (and it's recommended to do so if you're developing it).
+
+**The bundled admin web GUI can be accessed at `{{your base URL}}` - default is `localhost:8090`**
+
+### **Enabling TimescaleDB**
+
+DeepLynx ships with the capability to utilize a Postgres plugin called TimescaleDB. We use this for the storage of time-series data as well as a potential target for raw data retention. This is a powerful tool and you must have it enabled in order to store time-series data on nodes.
+
+1. Change the `TIMESCALEDB_ENABLED` environment variable to read `true`
+2. Restart the application.
+
+**Note:** Once you enable TimescaleDB you **cannot** disable it. Please make sure you absolutely need this extension of DeepLynx before taking steps to enable.
 
 **The bundled admin web GUI can be accessed at `{{your base URL}}` - default is `localhost:8090`**
  
