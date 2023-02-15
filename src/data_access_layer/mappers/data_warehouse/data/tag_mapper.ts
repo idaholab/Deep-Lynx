@@ -17,7 +17,6 @@ const format = require('pg-format');
 export default class TagMapper extends Mapper {
     public resultClass = Tag;
     public static tableName = 'tags';
-    public static viewName = 'current_tags';
 
     private static instance: TagMapper;
 
@@ -130,6 +129,22 @@ export default class TagMapper extends Mapper {
         });
     }
 
+    public async WebglFilesAndTags(containerID: string): Promise<Result<any>> {
+        return super.rows<any>(this.webglFilesAndTags(containerID));
+    }
+
+    public async DetachTagFromNode(tagID: string, nodeID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.detachTagFromNodeStatement(tagID, nodeID));
+    }
+
+    public async DetachTagFromEdge(tagID: string, edgeID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.detachTagFromEdgeStatement(tagID, edgeID));
+    }
+
+    public async DetachTagFromFile(tagID: string, fileID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.detachTagFromFileStatement(tagID, fileID));
+    }
+
     // Statements
 
     private createStatement(userID: string, ...tags: Tag[]): string {
@@ -139,12 +154,7 @@ export default class TagMapper extends Mapper {
             metadata,
             created_by) VALUES %L 
             RETURNING *`;
-        const values = tags.map((tag) => [
-            tag.tag_name,
-            tag.container_id,
-            JSON.stringify(tag.metadata),
-            userID,
-        ])
+        const values = tags.map((tag) => [tag.tag_name, tag.container_id, JSON.stringify(tag.metadata), userID]);
 
         return format(text, values);
     }
@@ -179,14 +189,7 @@ export default class TagMapper extends Mapper {
             WHERE EXCLUDED.id = tags.id
             RETURNING *`;
 
-        const values = tags.map((t) => [
-            t.id,
-            t.tag_name,
-            t.container_id,
-            JSON.stringify(t.metadata),
-            userID,
-            userID,
-        ]);
+        const values = tags.map((t) => [t.id, t.tag_name, t.container_id, JSON.stringify(t.metadata), userID, userID]);
 
         return format(text, values);
     }
@@ -238,56 +241,103 @@ export default class TagMapper extends Mapper {
     private tagNodeStatement(tagID: string, nodeID: string): QueryConfig {
         return {
             text: `INSERT INTO node_tags(tag_id, node_id) VALUES ($1, $2) ON CONFLICT(tag_id, node_id) DO NOTHING`,
-            values: [tagID, nodeID]
-        }
+            values: [tagID, nodeID],
+        };
     }
 
     private tagEdgeStatement(tagID: string, edgeID: string): QueryConfig {
         return {
             text: `INSERT INTO edge_tags(tag_id, edge_id) VALUES ($1, $2) ON CONFLICT(tag_id, edge_id) DO NOTHING`,
-            values: [tagID, edgeID]
-        }
+            values: [tagID, edgeID],
+        };
     }
 
     private tagsForNode(nodeID: string): QueryConfig {
         return {
             text: `SELECT tags.* FROM node_tags LEFT JOIN tags ON tags.id = node_tags.tag_id WHERE node_id = $1`,
             values: [nodeID],
-        }
+        };
     }
 
     private tagsForFile(fileID: string): QueryConfig {
         return {
             text: `SELECT tags.* FROM file_tags LEFT JOIN tags ON tags.id = file_tags.tag_id WHERE file_id = $1`,
             values: [fileID],
-        }
+        };
     }
 
     private tagsForEdge(edgeID: string): QueryConfig {
         return {
             text: `SELECT tags.* FROM edge_tags LEFT JOIN tags ON tags.id = edge_tags.tag_id WHERE edge_id = $1`,
             values: [edgeID],
-        }
+        };
     }
 
     private nodesWithTag(tagID: string): QueryConfig {
         return {
             text: `SELECT nodes.* FROM nodes LEFT JOIN node_tags ON nodes.id = node_tags.node_id WHERE tag_id = $1`,
             values: [tagID],
-        }
+        };
     }
 
     private filesWithTag(tagID: string): QueryConfig {
         return {
-            text: `SELECT DISTINCT ON (file_name) files.* FROM files LEFT JOIN file_tags ON files.id = file_tags.file_id WHERE tag_id = $1  ORDER BY file_name, created_at DESC;`,
+            text: `SELECT DISTINCT ON (file_name) 
+                    files.* FROM files
+                    LEFT JOIN file_tags
+                    ON files.id = file_tags.file_id
+                    WHERE tag_id = $1
+                    ORDER BY file_name, created_at DESC;`,
             values: [tagID],
-        }
+        };
     }
 
     private edgesWithTag(tagID: string): QueryConfig {
         return {
             text: `SELECT edges.* FROM edges LEFT JOIN edge_tags ON edges.id = edge_tags.edge_id WHERE tag_id = $1`,
             values: [tagID],
-        }
+        };
+    }
+
+    private webglFilesAndTags(containerID: string): QueryConfig {
+        return {
+            text: `SELECT DISTINCT
+                   ON (files.id) files.id AS file_id,
+                       files.file_name,
+                       files.file_size,
+                       files.modified_at AS file_modified_at,
+                       files.created_at AS file_created_at,
+                       tags.*
+                   FROM files
+                   INNER JOIN file_tags
+                   ON files.id = file_tags.file_id
+                   INNER JOIN tags
+                   ON tags.id = file_tags.tag_id
+                   WHERE tags.metadata->>'webgl' = 'true'
+                   AND files.container_id = $1
+                   ORDER BY file_id, file_modified_at DESC;`,
+            values: [containerID],
+        };
+    }
+
+    private detachTagFromNodeStatement(tagID: string, nodeID: string): QueryConfig {
+        return {
+            text: `DELETE FROM node_tags WHERE tag_id = $1 AND node_id = $2`,
+            values: [tagID, nodeID],
+        };
+    }
+
+    private detachTagFromEdgeStatement(tagID: string, edgeID: string): QueryConfig {
+        return {
+            text: `DELETE FROM edge_tags WHERE tag_id = $1 AND edge_id = $2`,
+            values: [tagID, edgeID],
+        };
+    }
+
+    private detachTagFromFileStatement(tagID: string, fileID: string): QueryConfig {
+        return {
+            text: `DELETE FROM file_tags WHERE tag_id = $1 AND file_id = $2`,
+            values: [tagID, fileID],
+        };
     }
 }

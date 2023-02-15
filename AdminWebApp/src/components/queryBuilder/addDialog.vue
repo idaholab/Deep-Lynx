@@ -16,9 +16,9 @@
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title class="grey lighten-2">
         <span class="headline text-h3">{{$t('queryBuilder.selectFilterType')}}</span>
-      </v-card-title>   
+      </v-card-title>
       <v-card-text>
-        <v-row>  
+        <v-row>
           <v-col>
             <v-select
               :items="options()"
@@ -34,7 +34,7 @@
 
 <script lang="ts">
 
-import {Component, Vue, Prop} from "vue-property-decorator";
+import {Component, Vue} from "vue-property-decorator";
 
 @Component
 export default class AddDialog extends Vue {

@@ -1,5 +1,5 @@
 // Class Validators
-import {IsObject, IsOptional, IsString, ValidateIf} from 'class-validator';
+import {IsObject, IsOptional, IsString} from 'class-validator';
 
 // Common Classes
 import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_domain_class';
@@ -22,19 +22,6 @@ export default class Tag extends BaseDomainClass {
     @IsString()
     container_id?: string;
 
-    @ValidateIf((o) => typeof o.composite_original_id !== 'undefined' && o.composite_original_id !== null)
-    @IsString()
-    @IsOptional()
-    data_source_id?: string;
-
-    @IsString()
-    @IsOptional()
-    import_data_id?: string;
-
-    @IsString()
-    @IsOptional()
-    data_staging_id?: string;
-
     @IsObject()
     @IsOptional()
     metadata: object = {};
@@ -44,9 +31,6 @@ export default class Tag extends BaseDomainClass {
         id?: string;
         tag_name: string;
         container_id: Container | string;
-        data_source_id?: string;
-        import_data_id?: string;
-        data_staging_id?: string;
         metadata?: object;
         created_at?: Date;
     }) {
@@ -56,9 +40,6 @@ export default class Tag extends BaseDomainClass {
             if(input.id) this.id = input.id;
             this.tag_name = input.tag_name;
             input.container_id instanceof Container ? (this.container_id = input.container_id.id) : (this.container_id = input.container_id);
-            if (input.data_source_id) this.data_source_id = input.data_source_id;
-            if (input.import_data_id) this.import_data_id = input.import_data_id;
-            if (input.data_staging_id) this.data_staging_id = input.data_staging_id;
             if (input.metadata) this.metadata = input.metadata;
             if (input.created_at) this.created_at = input.created_at;
         }

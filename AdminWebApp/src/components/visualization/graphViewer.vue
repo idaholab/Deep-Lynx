@@ -32,11 +32,11 @@
                   dark
                   fab
                   small
-                  v-bind="attrs" v-on="{...on, ...onTooltip}" 
+                  v-bind="attrs" v-on="{...on, ...onTooltip}"
                 >
                   <v-icon >{{info}}</v-icon>
                 </v-btn>
-            
+
               </template>
               <span>Help & Display</span>
             </v-tooltip>
@@ -63,7 +63,7 @@
                       label="Node Distance"
                       step=1
                     ></v-slider>
-                  
+
                   </v-list-item>
                 </template>
                 <span>Higher values move the nodes closer together</span>
@@ -90,8 +90,8 @@
                   <v-btn
                       @click="applyGraphForce"
                       :disabled="graph.nodes.length < 1"
-                      color="primary" 
-                      dark 
+                      color="primary"
+                      dark
                   >
                     Update Graph
                   </v-btn>
@@ -131,7 +131,7 @@
                       <v-btn
                           @click="updateGraphZoom"
                           :disabled="graph.nodes.length < 1"
-                          color="primary" 
+                          color="primary"
                           dark
                       >
                         Update Zoom
@@ -145,7 +145,7 @@
                       <v-btn
                           @click="resetGraphZoom"
                           :disabled="graph.nodes.length < 1"
-                          color="primary" 
+                          color="primary"
                           dark
                       >
                         Reset Zoom
@@ -200,15 +200,15 @@
                     <v-expansion-panel-header>
                       <div><span class="text-overline">{{$t('dataQuery.nodeProperties')}}:</span></div>
 
-                      <edit-node-dialog 
-                        :node="currentNodeInfo" 
-                        :dataSourceID="currentNodeInfo.data_source_id" 
+                      <edit-node-dialog
+                        :node="currentNodeInfo"
+                        :dataSourceID="currentNodeInfo.data_source_id"
                         :containerID="containerID"
-                        @nodeUpdated="nodeUpdated" 
+                        @nodeUpdated="nodeUpdated"
                         >
                       </edit-node-dialog>
                     </v-expansion-panel-header>
-                    
+
                     <v-expansion-panel-content>
                       <v-data-table
                           :items="Object.keys(currentNodeInfo.properties).map(k => {
@@ -223,7 +223,7 @@
                   <!-- Node History View -->
                   <v-expansion-panel>
                     <v-expansion-panel-header>
-                      <div><span class="text-overline">{{$t('dataQuery.nodeHistory')}}</span></div>
+                      <div><span class="text-overline">{{$t('dataQuery.nodeHistory')}}:</span></div>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
                       <v-list>
@@ -252,15 +252,6 @@
                       </v-list>
                     </v-expansion-panel-content>
                   </v-expansion-panel>
-                  <!-- Node Files -->
-                  <v-expansion-panel>
-                    <v-expansion-panel-header>
-                      <div><span class="text-overline">{{$t('dataQuery.nodeFiles')}}:</span></div>
-                    </v-expansion-panel-header>
-                    <v-expansion-panel-content>
-                      <node-files-dialog :icon="true" :node="currentNodeInfo"></node-files-dialog>
-                    </v-expansion-panel-content>
-                  </v-expansion-panel>
                   <!-- Timeseries -->
                   <v-expansion-panel>
                     <v-expansion-panel-header>
@@ -277,7 +268,7 @@
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
                       <v-container fluid>
-                        <json-viewer 
+                        <json-viewer
                           :value="currentNodeInfo.metadata_properties"
                           copyable
                           :maxDepth="4"
@@ -298,6 +289,24 @@
                           :maxDepth="4"
                         />
                       </v-container>
+                    </v-expansion-panel-content>
+                  </v-expansion-panel>
+                  <!-- Node Files -->
+                  <v-expansion-panel>
+                    <v-expansion-panel-header>
+                      <div><span class="text-overline">{{$t('dataQuery.nodeFiles')}}:</span></div>
+                    </v-expansion-panel-header>
+                    <v-expansion-panel-content>
+                      <node-files-dialog :icon="true" :node="currentNodeInfo"></node-files-dialog>
+                    </v-expansion-panel-content>
+                  </v-expansion-panel>
+                  <!-- Node Tags -->
+                  <v-expansion-panel>
+                    <v-expansion-panel-header>
+                      <div><span class="text-overline">{{$t('dataQuery.nodeTags')}}:</span></div>
+                    </v-expansion-panel-header>
+                    <v-expansion-panel-content>
+                      <node-tags-dialog :icon="true" :node="currentNodeInfo"></node-tags-dialog>
                     </v-expansion-panel-content>
                   </v-expansion-panel>
                 </v-expansion-panels>
@@ -329,8 +338,8 @@
                 <div><span class="text-overline">DataSource:</span> {{datasources[currentEdgeInfo.data_source_id]?.name}} ({{currentEdgeInfo.data_source_id}})</div>
                 <div><span class="text-overline">Created At:</span> {{currentEdgeInfo.created_at}}</div>
                 <div><span class="text-overline">Modified At:</span> {{currentEdgeInfo.modified_at}}</div>
-                <v-expansion-panels 
-                  multiple v-model="openPanels" 
+                <v-expansion-panels
+                  multiple v-model="openPanels"
                   v-if="currentEdgeInfo.properties !== null"
                 >
                   <!-- Properties -->
@@ -403,6 +412,15 @@
                           :maxDepth="4"
                         />
                       </v-container>
+                    </v-expansion-panel-content>
+                  </v-expansion-panel>
+                  <!-- Edge Tags -->
+                  <v-expansion-panel>
+                    <v-expansion-panel-header>
+                      <div><span class="text-overline">{{$t('dataQuery.nodeTags')}}:</span></div>
+                    </v-expansion-panel-header>
+                    <v-expansion-panel-content>
+                      <edge-tags-dialog :icon="true" :edge="currentEdgeInfo"></edge-tags-dialog>
                     </v-expansion-panel-content>
                   </v-expansion-panel>
                 </v-expansion-panels>
@@ -526,7 +544,7 @@
 
           <v-tooltip bottom>
             <template v-slot:activator="{ on: onTooltip }">
-              
+
               <v-btn
                 color="blue darken-2"
                 dark
@@ -593,7 +611,7 @@
           flat
           style="position: absolute; margin-left: -950px; margin-top: 560px;"
         >
-          <v-date-picker 
+          <v-date-picker
             v-if="!datePickerSet"
             v-model="pointInTimeString"
             :max="now.toISOString().split('T')[0]"
@@ -631,7 +649,7 @@
             style="margin-left: 45px"
           ></v-time-picker>
         </v-card>
-        
+
         <v-slider
           v-model="pointInTime"
           :max="now.getTime()"
@@ -731,7 +749,7 @@
       </v-navigation-drawer>
 
       <div ref="forcegraph" ></div>
-      
+
     </v-card>
     <!-- End Graph Component -->
 
@@ -900,8 +918,8 @@
                                   </div>
 
                                   <div v-if="item['data_type'] !== 'enumeration' && item['data_type'] !== 'boolean'">
-                                    
-                                    <v-text-field 
+
+                                    <v-text-field
                                         v-if="item['data_type'] === 'number'||item['data_type'] === 'float'"
                                         v-model="item['default_value']"
                                         type="number"
@@ -916,7 +934,7 @@
                                     ></v-text-field>
 
                                   </div>
-                                  
+
                               </template>
                             </v-data-table>
                         </v-col>
@@ -952,6 +970,8 @@ import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
 import CreateNodeCard from "@/components/data/createNodeCard.vue";
 import CreateEdgeDialog from "@/components/data/createEdgeDialog.vue";
 import EditNodeDialog from "@/components/data/editNodeDialog.vue";
+import NodeTagsDialog from "@/components/data/nodeTagsDialog.vue";
+import EdgeTagsDialog from "@/components/data/edgeTagsDialog.vue";
 import {ResultSet} from "@/components/queryBuilder/queryBuilder.vue";
 import {Component, Prop, Watch, Vue} from "vue-property-decorator";
 import {NodeT, DataSourceT, MetatypeRelationshipPairT, MetatypeRelationshipKeyT, UserT} from "@/api/types";
@@ -967,7 +987,9 @@ import { EdgeT, OntologyVersionT } from "../../api/types";
     CreateNodeCard,
     CreateEdgeDialog,
     SelectDataSource,
-    EditNodeDialog
+    EditNodeDialog,
+    NodeTagsDialog,
+    EdgeTagsDialog
   }})
 export default class GraphViewer extends Vue {
   @Prop()
@@ -1083,7 +1105,7 @@ export default class GraphViewer extends Vue {
     newGraphDepthRule: ((value: string) => {
       const pattern = /^\d+$/
       return pattern.test(value) || 'Invalid depth. Must be a number.'
-    }) 
+    })
   }
 
   now = new Date()
@@ -1111,7 +1133,7 @@ export default class GraphViewer extends Vue {
     this.$nextTick(() => {
       this.loadResults();
     });
-    
+
   }
 
   filterOnGroupItem(index: number | null) {
@@ -1141,9 +1163,9 @@ export default class GraphViewer extends Vue {
 
       colorValues.forEach((value: string) => {
         if (this.colorGroup === 'data source') {
-          // retrieve corresponding data source id      
+          // retrieve corresponding data source id
           let datasourceID = ''
-          
+
           this.datasources.forEach((datasource: DataSourceT, key: string) => {
             if (datasource.name === value) {
               datasourceID = key
@@ -1572,7 +1594,7 @@ export default class GraphViewer extends Vue {
             if (this.edgeFlag && this.interimLink) {
 
               // grab metatype relationship pairs
-              
+
               // provide the origin metatype to use its corresponding ontology version if available
               const originMetatype = await this.$client.retrieveMetatype(this.containerID, this.interimLink.source.metatype_id);
 
@@ -1604,7 +1626,7 @@ export default class GraphViewer extends Vue {
             this.resetNodeSelect();
 
             this.selectedLink = link;
-            
+
             this.currentEdgeID = link.id;
             this.edgeDialog = true;
             this.$client.retrieveEdge(this.containerID, link.id).then((edge) => {
@@ -1662,7 +1684,7 @@ export default class GraphViewer extends Vue {
       }
 
       this.graphHeight = graphElem.clientHeight;
-      
+
       this.applyGraphForce()
 
       this.canvas.cooldownTime(this.graphRenderTime) // set to a small render time
@@ -1882,7 +1904,7 @@ export default class GraphViewer extends Vue {
                 name: node.metatype_name,
                 count: 0
               }
-            
+
             nodeColorsMap.set(node.color, colorEntry)
           }
 
@@ -1897,7 +1919,7 @@ export default class GraphViewer extends Vue {
                 name: node.metatype_name,
                 count: 0
               }
-            
+
             nodeColorsMap.set(node.color, colorEntry)
           }
         }
@@ -2051,7 +2073,7 @@ export default class GraphViewer extends Vue {
         this.currentNodeInfo.raw_data = nodeHistory[nodeHistory.length - 1]['raw_data_properties' as keyof object]
       }
     }
-    
+
     if (!update) {
       // remove the highlight from any previously selected node
       this.resetNodeSelectForID(data.id)
@@ -2279,7 +2301,7 @@ export default class GraphViewer extends Vue {
     if (label === '') {
       return
     }
-    
+
     // perform case-insensitive searches
     label = label.toLowerCase()
     this.loading = true
@@ -2328,7 +2350,7 @@ export default class GraphViewer extends Vue {
      this.$client.submitGraphQLQuery(this.containerID, { query: this.query }, {pointInTime: pointInTime, metadataEnabled: this.results.metadataEnabled})
         .then((results: any) => {
           if(results.errors) {
-            this.errorMessage = results.errors[0].message ? 
+            this.errorMessage = results.errors[0].message ?
               results.errors.map(function(result: any) { return result.message }).join(", ") : (results.errors as string[]).join(' ')
             return
           }

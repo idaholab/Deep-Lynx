@@ -33,9 +33,9 @@ const xmlToJson = require('xml-2-json-streaming');
 const xmlParser = xmlToJson();
 
 export default class FileFunctions {
-
     public static getFile(req: Request, res: Response, next: NextFunction) {
-        fileRepo.findByID(req.params.fileID)
+        fileRepo
+            .findByID(req.params.fileID)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
@@ -103,16 +103,7 @@ export default class FileFunctions {
                     );
                 }
             } else {
-                files.push(
-                    fileRepo.updateFile(
-                        req.params.fileID,
-                        req.params.containerID,
-                        req.params.sourceID,
-                        req.currentUser!,
-                        filename,
-                        file as Readable,
-                    ),
-                );
+                files.push(fileRepo.updateFile(req.params.fileID, req.params.containerID, req.currentUser!, filename, file as Readable, req.params.sourceID));
                 fileNames.push(filename);
             }
         });
@@ -390,7 +381,7 @@ export default class FileFunctions {
 
         return req.pipe(busboy);
     }
-    
+
     public static listFilesForNode(req: Request, res: Response, next: NextFunction) {
         if (req.node) {
             nodeRepo
@@ -492,5 +483,21 @@ export default class FileFunctions {
             next();
         }
     }
-    
+
+    public static deleteFile(req: Request, res: Response, next: NextFunction) {
+        if (req.file) {
+            fileRepo
+                .delete(req.file)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`file not found`, 404).asResponse(res);
+            next();
+        }
+    }
 }
