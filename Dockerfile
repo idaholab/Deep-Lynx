@@ -44,7 +44,7 @@ RUN npm run build:web-gl
 # catch any env file a user might have accidentally built into the container
 RUN rm -rf .env
 
-FROM node:18.14.0-alpine3.17 as production
+FROM node:lts as production
 
 WORKDIR /srv/core_api
 
