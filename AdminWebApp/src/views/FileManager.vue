@@ -138,7 +138,7 @@ export default class FileManager extends Vue {
         .finally(() => this.fileSetsLoading = false)
   }
 
-  open3DViewer(selectedTag: any) {
+  open3DViewer() {
     // TODO: Implement
   }
 
