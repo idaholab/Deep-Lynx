@@ -607,9 +607,6 @@ export type TagT = {
     id?: string;
     tag_name?: string;
     container_id?: string;
-    data_source_id?: string;
-    import_data_id?: string;
-    data_staging_id?: string;
     metadata?: object;
 };
 
