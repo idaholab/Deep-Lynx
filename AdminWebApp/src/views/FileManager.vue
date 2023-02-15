@@ -140,7 +140,6 @@ export default class FileManager extends Vue {
 
   open3DViewer(selectedTag: any) {
     // TODO: Implement
-    console.log(selectedTag);
   }
 
   copyID(id: string) {
