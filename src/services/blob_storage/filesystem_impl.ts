@@ -1,6 +1,6 @@
-import { BlobStorage, BlobUploadResponse } from './blob_storage';
+import {BlobStorage, BlobUploadResponse} from './blob_storage';
 import Result from '../../common_classes/result';
-import { Readable } from 'stream';
+import {Readable} from 'stream';
 import * as fs from 'fs';
 import Logger from './../logger';
 import File from '../../domain_objects/data_warehouse/data/file';
@@ -43,7 +43,7 @@ export default class Filesystem implements BlobStorage {
         filename: string,
         stream: Readable | null,
         contentType?: string,
-        encoding?: string
+        encoding?: string,
     ): Promise<Result<BlobUploadResponse>> {
         if (!this._directory) {
             if (stream) {
@@ -60,10 +60,10 @@ export default class Filesystem implements BlobStorage {
         if (this._isWindows) filepath = filepath.replace(new RegExp('/', 'g'), `\\`);
 
         if (!fs.existsSync(`${this._directory}${filepath}`)) {
-            fs.mkdirSync(`${this._directory}${filepath}`, { recursive: true });
+            fs.mkdirSync(`${this._directory}${filepath}`, {recursive: true});
         }
 
-        const writeStream = fs.createWriteStream(`${this._directory}${filepath}${filename}${shortUUID}`, { flags: 'w' });
+        const writeStream = fs.createWriteStream(`${this._directory}${filepath}${filename}${shortUUID}`, {flags: 'w'});
 
         stream?.on('error', (err: Error) => {
             Logger.error(`error saving file to filesystem ${err}`);
@@ -88,8 +88,8 @@ export default class Filesystem implements BlobStorage {
                 md5hash,
                 metadata: {},
                 adapter_name: this.name(),
-                shortUUID
-            } as BlobUploadResponse)
+                short_uuid: shortUUID,
+            } as BlobUploadResponse),
         );
     }
 
@@ -109,7 +109,7 @@ export default class Filesystem implements BlobStorage {
     constructor(directory: string, isWindows?: boolean) {
         if (!fs.existsSync(directory)) {
             try {
-                fs.mkdirSync(directory, { recursive: true });
+                fs.mkdirSync(directory, {recursive: true});
             } catch (err) {
                 Logger.error(`error creating directory ${err}`);
             }
