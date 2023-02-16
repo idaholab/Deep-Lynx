@@ -305,11 +305,8 @@ export default class DataStagingRepository extends Repository implements Reposit
     constructor() {
         super(DataStagingMapper.tableName);
 
-        this._query.SELECT = [
-            `SELECT ${this._tableAlias}.*, data_sources.container_id, data_sources.config AS data_source_config`,
-            `FROM data_staging ${this._tableAlias} 
-            LEFT JOIN data_sources ON data_sources.id = ${this._tableAlias}.data_source_id`,
-        ];
+        this._query.SELECT = [`${this._tableAlias}.*, data_sources.container_id, data_sources.config AS data_source_config`];
+        this._query.FROM = `FROM data_staging ${this._tableAlias} LEFT JOIN data_sources ON data_sources.id = ${this._tableAlias}.data_source_id`;
     }
 
     dataSourceID(operator: string, value: any) {
@@ -336,11 +333,8 @@ export default class DataStagingRepository extends Repository implements Reposit
     async count(transaction?: PoolClient): Promise<Result<number>> {
         const results = await super.count(transaction);
 
-        this._query.SELECT = [
-            `SELECT ${this._tableAlias}.*, data_sources.container_id, data_sources.config AS data_source_config`,
-            `FROM data_staging ${this._tableAlias} 
-            LEFT JOIN data_sources ON data_sources.id = ${this._tableAlias}.data_source_id`,
-        ];
+        this._query.SELECT = [`${this._tableAlias}.*`, `data_sources.container_id`, `data_sources.config AS data_source_config`];
+        this._query.FROM = `FROM data_staging ${this._tableAlias} LEFT JOIN data_sources ON data_sources.id = ${this._tableAlias}.data_source_id`;
 
         return Promise.resolve(Result.Pass(results));
     }
@@ -359,11 +353,8 @@ export default class DataStagingRepository extends Repository implements Reposit
             resultClass: DataStaging,
         });
 
-        this._query.SELECT = [
-            `SELECT ${this._tableAlias}.*, data_sources.container_id, data_sources.config AS data_source_config`,
-            `FROM data_staging ${this._tableAlias} 
-            LEFT JOIN data_sources ON data_sources.id = ${this._tableAlias}.data_source_id`,
-        ];
+        this._query.SELECT = [`${this._tableAlias}.*`, `data_sources.container_id`, `data_sources.config AS data_source_config`];
+        this._query.FROM = `FROM data_staging ${this._tableAlias} LEFT JOIN data_sources ON data_sources.id = ${this._tableAlias}.data_source_id`;
 
         return Promise.resolve(Result.Pass(results));
     }

@@ -190,11 +190,6 @@ export default class FileRepository extends Repository implements RepositoryInte
         return this;
     }
 
-    short_uuid(operator: string, value: any) {
-        super.query('short_uuid', operator, value);
-        return this;
-    }
-
     count(): Promise<Result<number>> {
         return super.count();
     }

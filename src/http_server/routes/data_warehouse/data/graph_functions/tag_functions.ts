@@ -144,8 +144,8 @@ export default class TagFunctions {
 
     public static listFilesWithAnyTag(req: Request, res: Response, next: NextFunction) {
         new TagRepository()
-            .join('file_tags', {conditions: {origin_col: 'id', destination_col: 'tag_id'}, join_type: 'INNER'})
-            .join('files', {conditions: {origin_col: 'file_id', destination_col: 'id'}, join_type: 'INNER'}, 'file_tags')
+            .join('file_tags', {origin_col: 'id', destination_col: 'tag_id'}, {join_type: 'INNER'})
+            .join('files', {origin_col: 'file_id', destination_col: 'id'}, {join_type: 'INNER', origin: 'file_tags'}, )
             .addFields({id: 'file_id', created_at: 'file_created_at', modified_at: 'file_modified_at', file_name: 'file_name', file_size: 'file_size'}, 'files')
             .where()
             .containerID('eq', req.container!.id!)

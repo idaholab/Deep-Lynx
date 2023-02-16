@@ -43,15 +43,15 @@ export default class EdgeFunctions {
                         .groupBy('id', 'edges'));
 
                 repo = edgeRepo
-                    .join('edges', {conditions: {origin_col: 'id', destination_col: 'id'}, join_type: 'RIGHT'})
-                    .join(sub, {
-                        conditions: [
+                    .join('edges', 
+                        {origin_col: 'id', destination_col: 'id'}, 
+                        {join_type: 'RIGHT'})
+                    .join(sub, 
+                        [
                             {origin_col: 'id', destination_col: 'id'},
                             {origin_col: 'created_at', destination_col: 'created_at'}
                         ],
-                        destination_alias: 'sub',
-                        join_type: 'INNER'
-                    }, 'edges')
+                        {destination_alias: 'sub', join_type: 'INNER', origin: 'edges'})
                     .where().containerID('eq', req.container.id!)
                     .and( new EdgeRepository()
                         .origin_node_id('in', payload.node_ids)
@@ -71,7 +71,7 @@ export default class EdgeFunctions {
 
             if (String(req.query.includeRawData).toLowerCase() === 'true') {
                 repo = repo
-                .join('data_staging', {conditions: {origin_col:'data_staging_id', destination_col:'id'}})
+                .join('data_staging', {origin_col:'data_staging_id', destination_col:'id'})
                 .addFields({'data': 'raw_data_properties'}, repo._aliasMap.get('data_staging'));
             }
 
@@ -160,7 +160,7 @@ export default class EdgeFunctions {
 
         if (String(req.query.includeRawData).toLowerCase() === 'true') {
             repository = repository
-            .join('data_staging', {conditions: {origin_col:'data_staging_id', destination_col:'id'}})
+            .join('data_staging', {origin_col:'data_staging_id', destination_col:'id'})
             .addFields({'data': 'raw_data_properties'}, repository._aliasMap.get('data_staging'))
         }
 

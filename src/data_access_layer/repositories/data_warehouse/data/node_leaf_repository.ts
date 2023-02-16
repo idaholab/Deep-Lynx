@@ -80,6 +80,7 @@ export default class NodeLeafRepository extends Repository {
         // reset the query and values
         this._query = {
             SELECT: nodeLeafQuery,
+            FROM: '',
             VALUES: resetValues
         }
 
@@ -102,6 +103,7 @@ export default class NodeLeafRepository extends Repository {
         // reset the query and values
         this._query = {
             SELECT: nodeLeafQuery,
+            FROM: '',
             VALUES: resetValues
         }
 

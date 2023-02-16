@@ -427,7 +427,7 @@ describe('An Edge Repository', async () => {
 
         results = await edgeRepo
             .where().containerID('eq', containerID)
-            .join('data_staging', {conditions: {origin_col: 'data_staging_id', destination_col:'id'}})
+            .join('data_staging', {origin_col: 'data_staging_id', destination_col:'id'})
             .addFields({'data': 'raw_data_properties'}, edgeRepo._aliasMap.get('data_staging'))
             .list();
         expect(results.value.length).eq(2);
@@ -459,7 +459,7 @@ describe('An Edge Repository', async () => {
                 .origin_node_id('in', [nodes[0].id])
                 .or()
                 .destination_node_id('in', [nodes[0].id]))
-            .join('data_staging', {conditions: {origin_col: 'data_staging_id', destination_col:'id'}})
+            .join('data_staging', {origin_col: 'data_staging_id', destination_col:'id'})
             .addFields({'data': 'raw_data_properties'}, edgeRepo._aliasMap.get('data_staging'))
             .list();
         expect(results.value.length).eq(2);

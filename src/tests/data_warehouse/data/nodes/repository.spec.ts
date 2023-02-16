@@ -407,7 +407,7 @@ describe('A Node Repository', async () => {
 
         // list nodes with and without raw data
         let results = await nodeRepo.where().containerID('eq', containerID).list();
-        expect(results.value.length).eq(4);
+        expect(results.value.length).eq(2);
         results.value.forEach((node) => {
             // field is not present
             expect(node['raw_data_properties' as keyof object]).undefined;
@@ -416,10 +416,10 @@ describe('A Node Repository', async () => {
         results = await nodeRepo
             .where()
             .containerID('eq', containerID)
-            .join('data_staging', {conditions: {origin_col: 'data_staging_id', destination_col: 'id'}})
+            .join('data_staging', {origin_col: 'data_staging_id', destination_col: 'id'})
             .addFields({data: 'raw_data_properties'}, nodeRepo._aliasMap.get('data_staging'))
             .list();
-        expect(results.value.length).eq(4);
+        expect(results.value.length).eq(2);
         results.value.forEach((node) => {
             // field is present
             expect(node['raw_data_properties' as keyof object]).not.undefined;
@@ -440,7 +440,7 @@ describe('A Node Repository', async () => {
             .containerID('eq', containerID)
             .and()
             .metatypeID('eq', metatype.id)
-            .join('data_staging', {conditions: {origin_col: 'data_staging_id', destination_col: 'id'}})
+            .join('data_staging', {origin_col: 'data_staging_id', destination_col: 'id'})
             .addFields({data: 'raw_data_properties'}, nodeRepo._aliasMap.get('data_staging'))
             .list();
         results.value.forEach((node) => {

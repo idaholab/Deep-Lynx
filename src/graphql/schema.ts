@@ -1083,16 +1083,14 @@ export default class GraphQLRunner {
                         .groupBy('id', 'nodes'));
 
                 repo = nodeRepo
-                    .join('nodes', {conditions: {origin_col: 'id', destination_col: 'id'}, join_type: 'RIGHT'})
-                    .join(sub, {
-                        conditions: [
+                    .join('nodes', {origin_col: 'id', destination_col: 'id'}, {join_type: 'RIGHT'})
+                    .join(sub,
+                        [
                             {origin_col: 'id', destination_col: 'id'},
                             {origin_col: 'created_at', destination_col: 'created_at'}
                         ],
-                        destination_alias: 'sub',
-                        join_type: 'INNER'
-                    }, 'nodes')
-                    .join('metatypes', {conditions: {origin_col: 'metatype_id', destination_col: 'id'}})
+                        {destination_alias: 'sub', join_type: 'INNER', origin: 'nodes'})
+                    .join('metatypes', {origin_col: 'metatype_id', destination_col: 'id'})
                     .where().containerID('eq', containerID).and().metatypeUUID('eq', metatype.uuid);
 
             } else {
@@ -1167,11 +1165,11 @@ export default class GraphQLRunner {
                     // apply conditions only if historical is specified
                     if (prop.historical) {
                         joinTable = 'nodes' //override table that we are joining with
-                        repo = repo.join('nodes', {conditions: {origin_col: 'id', destination_col: 'id'}})
+                        repo = repo.join('nodes', {origin_col: 'id', destination_col: 'id'})
                     }
                     // join to data staging to get raw data
                     repo = repo
-                    .join('data_staging', {conditions: {origin_col: 'data_staging_id', destination_col: 'id'}}, joinTable)
+                    .join('data_staging', {origin_col: 'data_staging_id', destination_col: 'id'}, {origin: joinTable})
                     repo = repo.and().queryJsonb(
                         prop.key, 'data',
                         prop.operator, prop.value,
@@ -1293,19 +1291,19 @@ export default class GraphQLRunner {
                     .select('id', 'sub_nodes')
                     .select('jsonb_agg(data) AS history', 'raw_data')
                     .from('nodes', 'sub_nodes')
-                    .join(
-                        'data_staging', {
-                        conditions: {origin_col: 'data_staging_id', destination_col: 'id'},
-                        destination_alias: 'raw_data'
-                    })
+                    .join('data_staging', 
+                        {origin_col: 'data_staging_id', destination_col: 'id'},
+                        {destination_alias: 'raw_data'})
                     .groupBy('id', 'sub_nodes')
                 )
 
                 // join to subquery
                 repo = repo
-                .join('data_staging', {conditions: {destination_col: 'id', origin_col: 'data_staging_id'}})
+                .join('data_staging', {destination_col: 'id', origin_col: 'data_staging_id'})
                 .addFields('data', 'data_staging')
-                .join(history, {conditions: {origin_col: 'id', destination_col: 'id'}, destination_alias: 'raw_data_history'})
+                .join(history, 
+                    {origin_col: 'id', destination_col: 'id'},
+                    {destination_alias: 'raw_data_history'})
                 .addFields('history', 'raw_data_history')
             }
             
@@ -1483,16 +1481,14 @@ export default class GraphQLRunner {
                         .groupBy('id', 'nodes'));
 
                 repo = nodeRepo
-                    .join('nodes', {conditions: {origin_col: 'id', destination_col: 'id'}, join_type: 'RIGHT'})
-                    .join(sub, {
-                        conditions: [
+                    .join('nodes', {origin_col: 'id', destination_col: 'id'}, {join_type: 'RIGHT'})
+                    .join(sub, 
+                        [
                             {origin_col: 'id', destination_col: 'id'},
                             {origin_col: 'created_at', destination_col: 'created_at'}
                         ],
-                        destination_alias: 'sub',
-                        join_type: 'INNER'
-                    }, 'nodes')
-                    .join('metatypes', {conditions: {origin_col: 'metatype_id', destination_col: 'id'}})
+                        {destination_alias: 'sub', join_type: 'INNER', origin: 'nodes'})
+                    .join('metatypes', {origin_col: 'metatype_id', destination_col: 'id'})
                     .where().containerID('eq', containerID)
 
             } else {
@@ -1588,11 +1584,11 @@ export default class GraphQLRunner {
                     // apply conditions only if historical is specified
                     if (prop.historical) {
                         joinTable = 'nodes' //override table that we are joining with
-                        repo = repo.join('nodes', {conditions: {origin_col: 'id', destination_col: 'id'}})
+                        repo = repo.join('nodes', {origin_col: 'id', destination_col: 'id'})
                     }
                     // join to data staging to get raw data
                     repo = repo
-                    .join('data_staging', {conditions: {origin_col: 'data_staging_id', destination_col: 'id'}}, joinTable)
+                    .join('data_staging', {origin_col: 'data_staging_id', destination_col: 'id'}, {origin: joinTable})
                     repo = repo.and().queryJsonb(
                         prop.key, 'data',
                         prop.operator, prop.value,
@@ -1626,17 +1622,19 @@ export default class GraphQLRunner {
                     .select('jsonb_agg(data) AS history', 'raw_data')
                     .from('nodes', 'sub_nodes')
                     .join(
-                        'data_staging', {
-                        conditions: {origin_col: 'data_staging_id', destination_col: 'id'},
-                        destination_alias: 'raw_data'
-                    })
+                        'data_staging',
+                        {origin_col: 'data_staging_id', destination_col: 'id'},
+                        {destination_alias: 'raw_data'}
+                    )
                     .groupBy('id', 'sub_nodes')
                 )
 
                 repo = repo
-                .join('data_staging', {conditions: {destination_col: 'id', origin_col: 'data_staging_id'}})
+                .join('data_staging', {destination_col: 'id', origin_col: 'data_staging_id'})
                 .addFields('data', 'data_staging')
-                .join(history, {conditions: {origin_col: 'id', destination_col: 'id'}, destination_alias: 'raw_data_history'})
+                .join(history, 
+                    {origin_col: 'id', destination_col: 'id'}, 
+                    {destination_alias: 'raw_data_history'})
                 .addFields('history', 'raw_data_history')
             }
 
@@ -1955,11 +1953,11 @@ export default class GraphQLRunner {
                     // apply conditions only if historical is specified
                     if (prop.historical) {
                         joinTable = 'edges' //override table that we are joining with
-                        repo = repo.join('edges', {conditions: {origin_col: 'id', destination_col: 'id'}})
+                        repo = repo.join('edges', {origin_col: 'id', destination_col: 'id'})
                     }
                     // join to data staging to get raw data
                     repo = repo
-                    .join('data_staging', {conditions: {origin_col: 'data_staging_id', destination_col: 'id'}}, joinTable)
+                    .join('data_staging', {origin_col: 'data_staging_id', destination_col: 'id'}, {origin: joinTable})
                     repo = repo.and().queryJsonb(
                         prop.key, 'data',
                         prop.operator, prop.value,
@@ -2019,17 +2017,19 @@ export default class GraphQLRunner {
                     .select('jsonb_agg(data) AS history', 'raw_data')
                     .from('edges', 'sub_edges')
                     .join(
-                        'data_staging', {
-                        conditions: {origin_col: 'data_staging_id', destination_col: 'id'},
-                        destination_alias: 'raw_data'
-                    })
+                        'data_staging',
+                        {origin_col: 'data_staging_id', destination_col: 'id'},
+                        {destination_alias: 'raw_data'}
+                    )
                     .groupBy('id', 'sub_edges')
                 )
 
                 repo = repo
-                .join('data_staging', {conditions: {destination_col: 'id', origin_col: 'data_staging_id'}})
+                .join('data_staging', {destination_col: 'id', origin_col: 'data_staging_id'})
                 .addFields('data', 'data_staging')
-                .join(history, {conditions: {origin_col: 'id', destination_col: 'id'}, destination_alias: 'raw_data_history'})
+                .join(history, 
+                    {origin_col: 'id', destination_col: 'id'},
+                    {destination_alias: 'raw_data_history'})
                 .addFields('history', 'raw_data_history')
             }
 

@@ -301,15 +301,16 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         super(MetatypeRelationshipPairMapper.tableName);
         // in order to select the composite fields we must redo the initial query
         // to accept LEFT JOINs
-        this._query.SELECT = [
-            `SELECT ${this._tableAlias}.*, origin.name as origin_metatype_name , 
-                    destination.name AS destination_metatype_name, 
-                    relationships.name AS relationship_name`,
+        this._query.SELECT = [`${this._tableAlias}.*, origin.name as origin_metatype_name`, 
+                    `destination.name AS destination_metatype_name`, 
+                    `relationships.name AS relationship_name`
+        ];
+        this._query.FROM = [
             `FROM ${MetatypeRelationshipPairMapper.tableName} ${this._tableAlias}`,
             `LEFT JOIN metatypes origin ON ${this._tableAlias}.origin_metatype_id = origin.id`,
             `LEFT JOIN metatypes destination ON ${this._tableAlias}.destination_metatype_id = destination.id`,
             `LEFT JOIN metatype_relationships relationships ON ${this._tableAlias}.relationship_id = relationships.id`,
-        ];
+        ].join(' ');
     }
 
     id(operator: string, value: any) {
@@ -385,16 +386,17 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         const results = await super.count();
 
         // reset the query
-        this._query.SELECT = [
-            `SELECT ${this._tableAlias}.*, 
-                    origin.name as origin_metatype_name , 
-                    destination.name AS destination_metatype_name, 
-                    relationships.name AS relationship_name`,
+        this._query.SELECT = [`${this._tableAlias}.*`, 
+                    `origin.name as origin_metatype_name`, 
+                    `destination.name AS destination_metatype_name`, 
+                    `relationships.name AS relationship_name`,
+        ];
+        this._query.FROM = [
             `FROM ${MetatypeRelationshipPairMapper.tableName} ${this._tableAlias}`,
             `LEFT JOIN metatypes origin ON ${this._tableAlias}.origin_metatype_id = origin.id`,
             `LEFT JOIN metatypes destination ON ${this._tableAlias}.destination_metatype_id = destination.id`,
             `LEFT JOIN metatype_relationships relationships ON ${this._tableAlias}.relationship_id = relationships.id`,
-        ];
+        ].join(' ');
 
         if (results.isError) return Promise.resolve(Result.Pass(results));
 
@@ -407,16 +409,17 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
             resultClass: MetatypeRelationshipPair,
         });
         // reset the query
-        this._query.SELECT = [
-            `SELECT ${this._tableAlias}.*, 
-                    origin.name as origin_metatype_name , 
-                    destination.name AS destination_metatype_name, 
-                    relationships.name AS relationship_name`,
+        this._query.SELECT = [`${this._tableAlias}.*`, 
+                    `origin.name as origin_metatype_name`, 
+                    `destination.name AS destination_metatype_name`, 
+                    `relationships.name AS relationship_name`
+        ];
+        this._query.FROM = [
             `FROM ${MetatypeRelationshipPairMapper.tableName} ${this._tableAlias}`,
             `LEFT JOIN metatypes origin ON ${this._tableAlias}.origin_metatype_id = origin.id`,
             `LEFT JOIN metatypes destination ON ${this._tableAlias}.destination_metatype_id = destination.id`,
             `LEFT JOIN metatype_relationships relationships ON ${this._tableAlias}.relationship_id = relationships.id`,
-        ];
+        ].join(' ');
 
         if (results.isError) return Promise.resolve(Result.Pass(results));
 

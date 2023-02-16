@@ -690,7 +690,7 @@ describe('A Data Type Mapping can', async () => {
         const inserted = await NodeMapper.Instance.BulkCreateOrUpdateByCompositeID(user.id!, results.value as Node[]);
         expect(inserted.isError).false;
 
-        return NodeMapper.Instance.Delete(inserted.value[0].id!);
+        return Promise.resolve();
     });
 
     // generally testing that our root array can indeed go more than 2 layers deep
@@ -865,9 +865,7 @@ describe('A Data Type Mapping can', async () => {
         const maintenanceEdgeInserted = await EdgeMapper.Instance.BulkCreate('test suite', maintenanceEdgeResult.value as Edge[]);
         expect(maintenanceEdgeInserted.isError).false;
 
-        await NodeMapper.Instance.Delete(maintenanceInserted.value[0].id!);
-        await NodeMapper.Instance.Delete(inserted.value[0].id!);
-        return NodeMapper.Instance.Delete(inserted.value[1].id!);
+        return Promise.resolve();
     });
 
     it('can generate a car timeseries entry', async () => {
