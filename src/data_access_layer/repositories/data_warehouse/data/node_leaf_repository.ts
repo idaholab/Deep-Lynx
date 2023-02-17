@@ -17,9 +17,12 @@ export default class NodeLeafRepository extends Repository {
         super('nodeleafs');
         // in order to add filters to the base node leaf query we must set it
         // as the raw query here
+        this._noSelectRoot();
         this._query.SELECT = nodeLeafQuery;
+        this._query.FROM = '';
         this._query.VALUES = [id, container_id, depth];
         this._query.WHERE = [];
+        this._tableAlias = 'nodeleafs'
     }
 
     // properties for nth layer node query:
@@ -78,11 +81,12 @@ export default class NodeLeafRepository extends Repository {
         });
 
         // reset the query and values
-        this._query = {
-            SELECT: nodeLeafQuery,
-            FROM: '',
-            VALUES: resetValues
-        }
+        this._noSelectRoot();
+        this._query.SELECT = nodeLeafQuery;
+        this._query.FROM = '';
+        this._query.VALUES = ['', '', ''];
+        this._query.WHERE = [];
+        this._tableAlias = 'nodeleafs'
 
         if (results.isError) {
             return Promise.resolve(Result.Pass(results));
@@ -101,11 +105,12 @@ export default class NodeLeafRepository extends Repository {
         });
 
         // reset the query and values
-        this._query = {
-            SELECT: nodeLeafQuery,
-            FROM: '',
-            VALUES: resetValues
-        }
+        this._noSelectRoot();
+        this._query.SELECT = nodeLeafQuery;
+        this._query.FROM = '';
+        this._query.VALUES = ['', '', ''];
+        this._query.WHERE = [];
+        this._tableAlias = 'nodeleafs'
 
         if (results.isError) {
             return Promise.resolve(Result.Pass(results));
