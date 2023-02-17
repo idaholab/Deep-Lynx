@@ -1486,7 +1486,6 @@ export default class GraphQLRunner {
                         .groupBy('id', 'nodes'));
 
                 repo = nodeRepo
-                    .join('nodes', {origin_col: 'id', destination_col: 'id'}, {join_type: 'RIGHT'})
                     .join(sub,
                         [
                             {origin_col: 'id', destination_col: 'id'},

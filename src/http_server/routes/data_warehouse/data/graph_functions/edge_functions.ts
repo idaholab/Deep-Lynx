@@ -46,7 +46,6 @@ export default class EdgeFunctions {
                 );
 
                 repo = edgeRepo
-                    .join('edges', {origin_col: 'id', destination_col: 'id'}, {join_type: 'RIGHT'})
                     .join(
                         sub,
                         [
