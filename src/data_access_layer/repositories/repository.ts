@@ -39,15 +39,15 @@ export class Repository {
     public _tableAlias: string;
 
     public _query: {
-        SELECT: string[];
-        FROM: string;
-        DISTINCT?: string[];
-        JOINS?: string[];
-        WHERE?: string[];
-        GROUPBY?: string[];
-        OPTIONS?: string[];
-        ORDERBY?: string[];
-        VALUES: any[];
+        SELECT: string[]; // select-list
+        FROM: string; // base table(s) to pull from
+        DISTINCT?: string[]; // distinct columns
+        JOINS?: string[]; // table(s) to join to
+        WHERE?: string[]; // query conditions
+        GROUPBY?: string[]; // grouping for distinct/aggregates
+        ORDERBY?: string[]; // sorting columns (add to options)
+        OPTIONS?: string[]; // orderby, limit, offset, etc
+        VALUES: any[]; // values to sub in for $# (for backwards compatibility)
     } = {SELECT: [], FROM: '', VALUES: []};
 
     public _aliasMap = new Map<string, string>();
@@ -68,7 +68,31 @@ export class Repository {
             }
         }
 
-        this._query.SELECT = [format(`%s.*`, this._tableAlias)]
+        this._query.SELECT = [format(`%s.*`, this._tableAlias)];
+        this._query.FROM = format(`FROM %s %s`, this._tableName, this._tableAlias);
+
+        if (options && options.distinct_on) {
+            this._selectRoot = format(`SELECT DISTINCT ON (%s.%s)`, this._tableAlias, options.distinct_on);
+        } else if (options && options.distinct) {
+            this._selectRoot = 'SELECT DISTINCT';
+        } else {
+            this._selectRoot = 'SELECT';
+        }
+    }
+
+    reset(tableName: string, options?: ConstructorOptions) {
+        this._tableName = tableName;
+        this._tableAlias = '';
+
+        if (this._tableName !== '') {
+            if (this._aliasMap.has(this._tableName)) {
+                this._tableAlias = this._aliasMap.get(this._tableName)!;
+            } else {
+                this._tableAlias = this._setAlias(this._tableName);
+            }
+        }
+
+        this._query.SELECT = [format(`%s.*`, this._tableAlias)];
         this._query.FROM = format(`FROM %s %s`, this._tableName, this._tableAlias);
 
         if (options && options.distinct_on) {
@@ -93,7 +117,7 @@ export class Repository {
         // assign default table if none specified
         let table = '';
         if (tableName) {
-            table = this._aliasMap.has(tableName) ? this._aliasMap.get(tableName)!: tableName;
+            table = this._aliasMap.has(tableName) ? this._aliasMap.get(tableName)! : tableName;
         } else {
             table = this._tableAlias;
         }
@@ -139,7 +163,7 @@ export class Repository {
         } else if (Array.isArray(fields)) {
             fields.forEach((field) => {
                 field = this._qualifyField(field, table);
-                this._query.SELECT?.push(format(`%s`, field));
+                this._query.SELECT.push(format(`%s`, field));
             });
         } else {
             Object.entries(fields).forEach((entry) => {
@@ -155,7 +179,7 @@ export class Repository {
 
     distinctOn(fields: string | string[], tableName?: string) {
         if (!this._query.DISTINCT) {
-            this._query.DISTINCT = []
+            this._query.DISTINCT = [];
         }
 
         let table = '';
@@ -188,12 +212,12 @@ export class Repository {
         let overrideSelect = false;
 
         if (this._query.SELECT.length === 1 && this._query.SELECT[0] === `${this._tableAlias}.*`) {
-            overrideSelect = true
+            overrideSelect = true;
         }
 
         // reassign table alias now that select has been safely checked
         if (tableAlias) {
-            this._tableAlias = tableAlias
+            this._tableAlias = tableAlias;
             this._aliasMap.set(this._tableName, tableAlias);
         } else if (this._aliasMap.has(this._tableName)) {
             this._tableAlias = this._aliasMap.get(this._tableName)!;
@@ -218,7 +242,7 @@ export class Repository {
         }
 
         const join_type = options && options.join_type ? options.join_type : 'LEFT';
-        const origin = options && options.origin ? options.origin : this._tableName
+        const origin = options && options.origin ? options.origin : this._tableName;
 
         let destination_alias: string;
         if (options && options.destination_alias) {
@@ -281,13 +305,25 @@ export class Repository {
     // possible that there will be a need for parentheses immediately after the where keyword.
     // In this case a query can be passed in, much like in the AND or OR clauses.
     where(repo?: Repository) {
+        // check if there is already a where clause;
+        // if there is wrap existing statements and add AND
+        let whereStatement = 'WHERE';
+        if (this._query.WHERE) {
+            const existing = this._query.WHERE.slice(1).join(' ');
+            // save the existing where clause to be inserted later
+            whereStatement = format('WHERE (%s) AND', existing);
+            // we can now clear the existing where clause
+            this._query.WHERE = [];
+        }
+
+        // if nested repo supplied, wrap statement in parentheses
         if (repo?._query.WHERE) {
             let query = repo._query.WHERE.join(' ');
             // replacing any table aliases from new repo with the alias found in this repo
             query = query.replace(new RegExp(repo._tableAlias, 'g'), this._tableAlias);
-            this._query.WHERE = [format(`WHERE ( %s )`, query)];
+            this._query.WHERE = [format(`%s ( %s )`, whereStatement, query)];
         } else {
-            this._query.WHERE = ['WHERE'];
+            this._query.WHERE = [format(`%s`, whereStatement)];
         }
         return this;
     }
@@ -336,7 +372,7 @@ export class Repository {
             repo._query.FROM,
             repo._query.JOINS?.join(' '),
             repo._query.WHERE?.join(' '),
-            repo._query.OPTIONS?.join(' ')
+            repo._query.OPTIONS?.join(' '),
         ].join(' ');
         return format(`( %s )`, query);
     }
@@ -708,14 +744,15 @@ export class Repository {
             } else if (queryOptions.tableName) {
                 table = queryOptions.tableName;
             } else {
-                table = this._tableAlias
+                table = this._tableAlias;
             }
 
             if (table !== '') {
                 // if there is a list of order by columns, qualify each with table name
                 const sortByParts = queryOptions.sortBy.split(',');
                 sortByParts.forEach((part) => {
-                    if (part.includes('.')) { // skip pre-qualified columns
+                    if (part.includes('.')) {
+                        // skip pre-qualified columns
                         // sort desc if specified
                         const desc = queryOptions.sortDesc === true ? 'DESC' : 'ASC';
                         this._query.ORDERBY?.push(`%s %s`, part, desc);
@@ -740,8 +777,8 @@ export class Repository {
         }
 
         // allow a user to specify a column to select distinct on
-        if (this._query.DISTINCT && !count) {
-            this._selectRoot = format(`SELECT DISTINCT ON (%s)`, this._query.DISTINCT.join(', '))
+        if (this._query.DISTINCT && this._query.DISTINCT.length > 0 && !count) {
+            this._selectRoot = format(`SELECT DISTINCT ON (%s)`, this._query.DISTINCT.join(', '));
         } else if (queryOptions && queryOptions?.distinct && !count) {
             this._selectRoot = 'SELECT DISTINCT';
         }
@@ -753,11 +790,12 @@ export class Repository {
     count(transaction?: PoolClient, queryOptions?: QueryOptions): Promise<Result<number>> {
         const storage = new Mapper();
 
-        // modify the original query to be count
-        this._query.SELECT = [`COUNT(*)`];
-
         // set query options and skip distinct
         this.options(queryOptions, true);
+
+        // modify the original query to be SELECT COUNT(*)
+        this._selectRoot = 'SELECT';
+        this._query.SELECT = [`COUNT(*)`];
 
         const text = [
             this._selectRoot,
@@ -765,7 +803,7 @@ export class Repository {
             this._query.FROM,
             this._query.JOINS?.join(' '),
             this._query.WHERE?.join(' '),
-            this._query.OPTIONS?.join(' ')
+            this._query.OPTIONS?.join(' '),
         ].join(' ');
 
         const query = {text, values: this._query.VALUES};
@@ -794,7 +832,7 @@ export class Repository {
             this._query.FROM,
             this._query.JOINS?.join(' '),
             this._query.WHERE?.join(' '),
-            this._query.OPTIONS?.join(' ')
+            this._query.OPTIONS?.join(' '),
         ].join(' ');
 
         const query = {text, values: this._query.VALUES};
@@ -823,7 +861,7 @@ export class Repository {
             this._query.FROM,
             this._query.JOINS?.join(' '),
             this._query.WHERE?.join(' '),
-            this._query.OPTIONS?.join(' ')
+            this._query.OPTIONS?.join(' '),
         ].join(' ');
 
         const query = {text, values: this._query.VALUES};
@@ -852,7 +890,7 @@ export class Repository {
             this._query.FROM,
             this._query.JOINS?.join(' '),
             this._query.WHERE?.join(' '),
-            this._query.OPTIONS?.join(' ')
+            this._query.OPTIONS?.join(' '),
         ].join(' ');
 
         const query = {text, values: this._query.VALUES};
@@ -969,7 +1007,7 @@ export class Repository {
         if (field.includes('.')) {
             // if column is already qualified in dot notation,
             // qualifying it again will cause an error
-            qualifiedField = field
+            qualifiedField = field;
         } else if (field.includes('(')) {
             // if parentheses detected, assume this is an aggregate function
             // and qualify the column within parentheses
@@ -979,9 +1017,8 @@ export class Repository {
             qualifiedField = format(`%s.%s`, table, field);
         }
 
-        return qualifiedField
+        return qualifiedField;
     }
-
 }
 
 export type QueryOptions = {

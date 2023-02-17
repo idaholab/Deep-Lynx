@@ -17,7 +17,7 @@ import {
     GraphQLNonNull, graphql,
 } from 'graphql';
 import MetatypeRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_repository';
-import Result, { ErrorUnauthorized } from '../common_classes/result';
+import Result from '../common_classes/result';
 import GraphQLJSON from 'graphql-type-json';
 import Metatype from '../domain_objects/data_warehouse/ontology/metatype';
 import MetatypeRelationship from '../domain_objects/data_warehouse/ontology/metatype_relationship';
@@ -38,6 +38,7 @@ import gql from "graphql-tag";
 import MetatypeRelationshipPair from "../domain_objects/data_warehouse/ontology/metatype_relationship_pair";
 import {isMainThread, Worker} from "worker_threads";
 import OntologyVersion from '../domain_objects/data_warehouse/ontology/versioning/ontology_version';
+import {Repository} from "../data_access_layer/repositories/repository";
 
 // GraphQLSchemaGenerator takes a container and generates a valid GraphQL schema for all contained metatypes. This will
 // allow users to query and filter data based on node type, the various properties that type might have, and other bits
@@ -1069,32 +1070,36 @@ export default class GraphQLRunner {
             if (resolverOptions?.pointInTime) {
                 // filter on provided pointInTime
                 const sub = nodeRepo.subquery(
-                    new NodeRepository()
+                    new Repository('nodes')
                         .select(['id', 'MAX(created_at) AS created_at'], 'sub_nodes')
                         .from('nodes', 'sub_nodes')
                         .where()
                         .query('created_at', '<', new Date(resolverOptions.pointInTime), {dataType: 'date'})
                         .and()
                         .query('container_id', 'eq', containerID)
-                        .and(new NodeRepository()
+                        .and(new Repository('nodes')
                             .query('deleted_at', '>', new Date(resolverOptions.pointInTime), {dataType: 'date'})
                             .or()
                             .query('deleted_at', 'is null'))
                         .groupBy('id', 'nodes'));
 
                 repo = nodeRepo
-                    .join('nodes', {origin_col: 'id', destination_col: 'id'}, {join_type: 'RIGHT'})
-                    .join(sub,
-                        [
-                            {origin_col: 'id', destination_col: 'id'},
-                            {origin_col: 'created_at', destination_col: 'created_at'}
-                        ],
-                        {destination_alias: 'sub', join_type: 'INNER', origin: 'nodes'})
+                    .join(sub, [
+                        {origin_col: 'id', destination_col: 'id'},
+                        {origin_col: 'created_at', destination_col: 'created_at'}
+                    ], {destination_alias: 'sub', join_type: 'INNER'})
                     .join('metatypes', {origin_col: 'metatype_id', destination_col: 'id'})
-                    .where().containerID('eq', containerID).and().metatypeUUID('eq', metatype.uuid);
+                    .addFields({name: 'metatype_name', uuid: 'metatype_uuid'}, 'metatypes')
+                    .where()
+                    .containerID('eq', containerID)
+                    .and()
+                    .metatypeUUID('eq', metatype.uuid);
 
             } else {
-                repo = nodeRepo.where().containerID('eq', containerID).and().metatypeUUID('eq', metatype.uuid);
+                repo = nodeRepo.where()
+                    .containerID('eq', containerID)
+                    .and()
+                    .metatypeUUID('eq', metatype.uuid);
             }
 
             // you might notice that metatype_id and metatype_name are missing as filters - these are not
@@ -1160,16 +1165,16 @@ export default class GraphQLRunner {
 
             // only do this if metadata is enabled
             if (resolverOptions?.metadataEnabled && input.raw_data_properties && Array.isArray(input.raw_data_properties)) {
-                let joinTable: string | undefined = undefined;
+                let joinTable: string | undefined;
                 input.raw_data_properties.forEach((prop) => {
                     // apply conditions only if historical is specified
                     if (prop.historical) {
-                        joinTable = 'nodes' //override table that we are joining with
+                        joinTable = 'nodes' // override table that we are joining with
                         repo = repo.join('nodes', {origin_col: 'id', destination_col: 'id'})
                     }
                     // join to data staging to get raw data
                     repo = repo
-                    .join('data_staging', {origin_col: 'data_staging_id', destination_col: 'id'}, {origin: joinTable})
+                        .join('data_staging', {origin_col: 'data_staging_id', destination_col: 'id'}, {origin: joinTable})
                     repo = repo.and().queryJsonb(
                         prop.key, 'data',
                         prop.operator, prop.value,
@@ -1287,26 +1292,26 @@ export default class GraphQLRunner {
             if (resolverOptions?.metadataEnabled) {
                 // subquery for historical raw data
                 const history = repo.subquery(
-                    new NodeRepository()
-                    .select('id', 'sub_nodes')
-                    .select('jsonb_agg(data) AS history', 'raw_data')
-                    .from('nodes', 'sub_nodes')
-                    .join('data_staging', 
-                        {origin_col: 'data_staging_id', destination_col: 'id'},
-                        {destination_alias: 'raw_data'})
-                    .groupBy('id', 'sub_nodes')
+                    new Repository('nodes')
+                        .select('id', 'sub_nodes')
+                        .select('jsonb_agg(data) AS history', 'raw_data')
+                        .from('nodes', 'sub_nodes')
+                        .join('data_staging',
+                            {origin_col: 'data_staging_id', destination_col: 'id'},
+                            {destination_alias: 'raw_data'})
+                        .groupBy('id', 'sub_nodes')
                 )
 
                 // join to subquery
                 repo = repo
-                .join('data_staging', {destination_col: 'id', origin_col: 'data_staging_id'})
-                .addFields('data', 'data_staging')
-                .join(history, 
-                    {origin_col: 'id', destination_col: 'id'},
-                    {destination_alias: 'raw_data_history'})
-                .addFields('history', 'raw_data_history')
+                    .join('data_staging', {destination_col: 'id', origin_col: 'data_staging_id'})
+                    .addFields('data', 'data_staging')
+                    .join(history,
+                        {origin_col: 'id', destination_col: 'id'},
+                        {destination_alias: 'raw_data_history'})
+                    .addFields('history', 'raw_data_history')
             }
-            
+
             // wrapping the end resolver in a promise ensures that we don't return prior to all results being
             // fetched
             if(resolverOptions && resolverOptions.returnFile) {
@@ -1467,14 +1472,14 @@ export default class GraphQLRunner {
             if (resolverOptions?.pointInTime) {
                 // filter on provided pointInTime
                 const sub = nodeRepo.subquery(
-                    new NodeRepository()
+                    new Repository('nodes')
                         .select(['id', 'MAX(created_at) AS created_at'], 'sub_nodes')
                         .from('nodes', 'sub_nodes')
                         .where()
                         .query('created_at', '<', new Date(resolverOptions.pointInTime), {dataType: 'date'})
                         .and()
                         .query('container_id', 'eq', containerID)
-                        .and(new NodeRepository()
+                        .and(new Repository('nodes')
                             .query('deleted_at', '>', new Date(resolverOptions.pointInTime), {dataType: 'date'})
                             .or()
                             .query('deleted_at', 'is null'))
@@ -1482,7 +1487,7 @@ export default class GraphQLRunner {
 
                 repo = nodeRepo
                     .join('nodes', {origin_col: 'id', destination_col: 'id'}, {join_type: 'RIGHT'})
-                    .join(sub, 
+                    .join(sub,
                         [
                             {origin_col: 'id', destination_col: 'id'},
                             {origin_col: 'created_at', destination_col: 'created_at'}
@@ -1579,16 +1584,16 @@ export default class GraphQLRunner {
             }
 
             if (resolverOptions?.metadataEnabled && input.raw_data_properties && Array.isArray(input.raw_data_properties)) {
-                let joinTable: string | undefined = undefined;
+                let joinTable: string | undefined;
                 input.raw_data_properties.forEach((prop) => {
                     // apply conditions only if historical is specified
                     if (prop.historical) {
-                        joinTable = 'nodes' //override table that we are joining with
+                        joinTable = 'nodes' // override table that we are joining with
                         repo = repo.join('nodes', {origin_col: 'id', destination_col: 'id'})
                     }
                     // join to data staging to get raw data
                     repo = repo
-                    .join('data_staging', {origin_col: 'data_staging_id', destination_col: 'id'}, {origin: joinTable})
+                        .join('data_staging', {origin_col: 'data_staging_id', destination_col: 'id'}, {origin: joinTable})
                     repo = repo.and().queryJsonb(
                         prop.key, 'data',
                         prop.operator, prop.value,
@@ -1617,25 +1622,25 @@ export default class GraphQLRunner {
             if (resolverOptions?.metadataEnabled) {
                 // subquery for historical raw data
                 const history = repo.subquery(
-                    new NodeRepository()
-                    .select('id', 'sub_nodes')
-                    .select('jsonb_agg(data) AS history', 'raw_data')
-                    .from('nodes', 'sub_nodes')
-                    .join(
-                        'data_staging',
-                        {origin_col: 'data_staging_id', destination_col: 'id'},
-                        {destination_alias: 'raw_data'}
-                    )
-                    .groupBy('id', 'sub_nodes')
+                    new Repository('nodes')
+                        .select('id', 'sub_nodes')
+                        .select('jsonb_agg(data) AS history', 'raw_data')
+                        .from('nodes', 'sub_nodes')
+                        .join(
+                            'data_staging',
+                            {origin_col: 'data_staging_id', destination_col: 'id'},
+                            {destination_alias: 'raw_data'}
+                        )
+                        .groupBy('id', 'sub_nodes')
                 )
 
                 repo = repo
-                .join('data_staging', {destination_col: 'id', origin_col: 'data_staging_id'})
-                .addFields('data', 'data_staging')
-                .join(history, 
-                    {origin_col: 'id', destination_col: 'id'}, 
-                    {destination_alias: 'raw_data_history'})
-                .addFields('history', 'raw_data_history')
+                    .join('data_staging', {destination_col: 'id', origin_col: 'data_staging_id'})
+                    .addFields('data', 'data_staging')
+                    .join(history,
+                        {origin_col: 'id', destination_col: 'id'},
+                        {destination_alias: 'raw_data_history'})
+                    .addFields('history', 'raw_data_history')
             }
 
             // wrapping the end resolver in a promise ensures that we don't return prior to all results being
@@ -1948,16 +1953,16 @@ export default class GraphQLRunner {
             }
 
             if (options?.metadataEnabled && input.raw_data_properties && Array.isArray(input.raw_data_properties)) {
-                let joinTable: string | undefined = undefined;
+                let joinTable: string | undefined;
                 input.raw_data_properties.forEach((prop) => {
                     // apply conditions only if historical is specified
                     if (prop.historical) {
-                        joinTable = 'edges' //override table that we are joining with
+                        joinTable = 'edges' // override table that we are joining with
                         repo = repo.join('edges', {origin_col: 'id', destination_col: 'id'})
                     }
                     // join to data staging to get raw data
                     repo = repo
-                    .join('data_staging', {origin_col: 'data_staging_id', destination_col: 'id'}, {origin: joinTable})
+                        .join('data_staging', {origin_col: 'data_staging_id', destination_col: 'id'}, {origin: joinTable})
                     repo = repo.and().queryJsonb(
                         prop.key, 'data',
                         prop.operator, prop.value,
@@ -2012,25 +2017,25 @@ export default class GraphQLRunner {
             if (options?.metadataEnabled) {
                 // subquery for historical raw data
                 const history = repo.subquery(
-                    new EdgeRepository()
-                    .select('id', 'sub_edges')
-                    .select('jsonb_agg(data) AS history', 'raw_data')
-                    .from('edges', 'sub_edges')
-                    .join(
-                        'data_staging',
-                        {origin_col: 'data_staging_id', destination_col: 'id'},
-                        {destination_alias: 'raw_data'}
-                    )
-                    .groupBy('id', 'sub_edges')
+                    new Repository('nodes')
+                        .select('id', 'sub_edges')
+                        .select('jsonb_agg(data) AS history', 'raw_data')
+                        .from('edges', 'sub_edges')
+                        .join(
+                            'data_staging',
+                            {origin_col: 'data_staging_id', destination_col: 'id'},
+                            {destination_alias: 'raw_data'}
+                        )
+                        .groupBy('id', 'sub_edges')
                 )
 
                 repo = repo
-                .join('data_staging', {destination_col: 'id', origin_col: 'data_staging_id'})
-                .addFields('data', 'data_staging')
-                .join(history, 
-                    {origin_col: 'id', destination_col: 'id'},
-                    {destination_alias: 'raw_data_history'})
-                .addFields('history', 'raw_data_history')
+                    .join('data_staging', {destination_col: 'id', origin_col: 'data_staging_id'})
+                    .addFields('data', 'data_staging')
+                    .join(history,
+                        {origin_col: 'id', destination_col: 'id'},
+                        {destination_alias: 'raw_data_history'})
+                    .addFields('history', 'raw_data_history')
             }
 
             if(options && options.returnFile) {

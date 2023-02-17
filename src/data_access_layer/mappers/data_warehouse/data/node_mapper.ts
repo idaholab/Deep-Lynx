@@ -227,7 +227,14 @@ export default class NodeMapper extends Mapper {
 
     private retrieveStatement(nodeID: string): QueryConfig {
         return {
-            text: `SELECT * FROM current_nodes WHERE id = $1`,
+            text: `SELECT DISTINCT ON (nodes.id) nodes.*, 
+                    metatypes.name AS metatype_name,
+                    metatypes.uuid AS metatype_uuid
+                FROM nodes
+                    LEFT JOIN metatypes ON metatypes.id = nodes.metatype_id
+                WHERE nodes.deleted_at IS NULL
+                AND nodes.id = $1
+                ORDER BY nodes.id, nodes.created_at DESC`,
             values: [nodeID],
         };
     }
@@ -255,7 +262,15 @@ export default class NodeMapper extends Mapper {
 
     private domainRetrieveStatement(nodeID: string, containerID: string): QueryConfig {
         return {
-            text: `SELECT * FROM current_nodes WHERE id = $1 AND container_id = $2`,
+            text: `SELECT DISTINCT ON (nodes.id) nodes.*, 
+                    metatypes.name AS metatype_name,
+                    metatypes.uuid AS metatype_uuid
+                FROM nodes
+                    LEFT JOIN metatypes ON metatypes.id = nodes.metatype_id
+                WHERE nodes.deleted_at IS NULL
+                AND nodes.id = $1
+                AND nodes.container_id = $2
+                ORDER BY nodes.id, nodes.created_at DESC`,
             values: [nodeID, containerID],
         };
     }
@@ -264,7 +279,16 @@ export default class NodeMapper extends Mapper {
     // piece of data by original id
     private retrieveByCompositeOriginalIDStatement(dataSourceID: string, metatypeID: string, originalID: string): QueryConfig {
         return {
-            text: `SELECT * FROM current_nodes WHERE original_data_id = $1 AND data_source_id = $2 AND metatype_id = $3`,
+            text: `SELECT DISTINCT ON (nodes.id) nodes.*, 
+                    metatypes.name AS metatype_name,
+                    metatypes.uuid AS metatype_uuid
+                FROM nodes
+                    LEFT JOIN metatypes ON metatypes.id = nodes.metatype_id
+                WHERE nodes.deleted_at IS NULL
+                AND nodes.original_data_id = $1
+                AND nodes.data_source_id = $2
+                AND nodes.metatype_id = $3
+                ORDER BY nodes.id, nodes.created_at DESC`,
             values: [originalID, dataSourceID, metatypeID],
         };
     }
