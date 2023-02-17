@@ -135,7 +135,7 @@ export default class NodeLeaf extends BaseDomainClass {
     }
 }
 
-export const nodeLeafQuery = [`SELECT nodeleafs.*`, `FROM
+export const nodeLeafQuery = [`SELECT nodeleafs.* FROM
 (WITH RECURSIVE search_graph(
     origin_id, origin_metatype_id, origin_metatype_name, origin_properties, origin_data_source,
     origin_metadata, origin_created_by, origin_created_at, origin_modified_by, origin_modified_at,

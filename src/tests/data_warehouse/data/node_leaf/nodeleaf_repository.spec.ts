@@ -30,226 +30,224 @@ describe('A NodeLeaf Repository', async () => {
     let nodes: Node[] = [];
     let dataSourceID = '';
 
-    // skip these until nodeleaf is fixed
+    before(async function () {
+        if (process.env.CORE_DB_CONNECTION_STRING === '') {
+            Logger.debug('skipping node leaf tests, no mapper layer');
+            this.skip();
+        }
+        await PostgresAdapter.Instance.init();
+        const mapper = ContainerMapper.Instance;
+        const mMapper = MetatypeMapper.Instance;
+        const mKeyMapper = MetatypeKeyMapper.Instance;
+        const nMapper = NodeMapper.Instance;
+        const mrMapper = MetatypeRelationshipMapper.Instance;
+        const mrKeyMapper = MetatypeRelationshipKeyMapper.Instance;
+        const pairMapper = MetatypeRelationshipPairMapper.Instance;
+        const eMapper = EdgeMapper.Instance;
 
-    // before(async function () {
-    //     if (process.env.CORE_DB_CONNECTION_STRING === '') {
-    //         Logger.debug('skipping node leaf tests, no mapper layer');
-    //         this.skip();
-    //     }
-    //     await PostgresAdapter.Instance.init();
-    //     const mapper = ContainerMapper.Instance;
-    //     const mMapper = MetatypeMapper.Instance;
-    //     const mKeyMapper = MetatypeKeyMapper.Instance;
-    //     const nMapper = NodeMapper.Instance;
-    //     const mrMapper = MetatypeRelationshipMapper.Instance;
-    //     const mrKeyMapper = MetatypeRelationshipKeyMapper.Instance;
-    //     const pairMapper = MetatypeRelationshipPairMapper.Instance;
-    //     const eMapper = EdgeMapper.Instance;
+        const container = await mapper.Create(
+            'test suite',
+            new Container({
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric(),
+            }),
+        );
 
-    //     const container = await mapper.Create(
-    //         'test suite',
-    //         new Container({
-    //             name: faker.name.findName(),
-    //             description: faker.random.alphaNumeric(),
-    //         }),
-    //     );
+        expect(container.isError).false;
+        expect(container.value.id).not.null;
+        containerID = container.value.id!;
 
-    //     expect(container.isError).false;
-    //     expect(container.value.id).not.null;
-    //     containerID = container.value.id!;
+        const userResult = await UserMapper.Instance.Create(
+            'test suite',
+            new User({
+                identity_provider_id: faker.random.uuid(),
+                identity_provider: 'username_password',
+                admin: false,
+                display_name: faker.name.findName(),
+                email: faker.internet.email(),
+                roles: ['superuser'],
+            }),
+        );
 
-    //     const userResult = await UserMapper.Instance.Create(
-    //         'test suite',
-    //         new User({
-    //             identity_provider_id: faker.random.uuid(),
-    //             identity_provider: 'username_password',
-    //             admin: false,
-    //             display_name: faker.name.findName(),
-    //             email: faker.internet.email(),
-    //             roles: ['superuser'],
-    //         }),
-    //     );
+        expect(userResult.isError).false;
+        expect(userResult.value).not.empty;
+        user = userResult.value;
 
-    //     expect(userResult.isError).false;
-    //     expect(userResult.value).not.empty;
-    //     user = userResult.value;
+        const ds = await DataSourceMapper.Instance.Create(
+            'test suite',
+            new DataSourceRecord({
+                container_id: containerID,
+                name: 'Test Data Source',
+                active: false,
+                adapter_type: 'standard',
+                data_format: 'json',
+            }),
+        );
 
-    //     const ds = await DataSourceMapper.Instance.Create(
-    //         'test suite',
-    //         new DataSourceRecord({
-    //             container_id: containerID,
-    //             name: 'Test Data Source',
-    //             active: false,
-    //             adapter_type: 'standard',
-    //             data_format: 'json',
-    //         }),
-    //     );
+        expect(ds.isError).false;
+        expect(ds.value).not.empty;
+        dataSourceID = ds.value.id!;
 
-    //     expect(ds.isError).false;
-    //     expect(ds.value).not.empty;
-    //     dataSourceID = ds.value.id!;
+        const metatypes = await mMapper.BulkCreate('test suite', [
+            new Metatype({
+                container_id: containerID,
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric(),
+            }),
+            new Metatype({
+                container_id: containerID,
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric(),
+            }),
+            new Metatype({
+                container_id: containerID,
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric(),
+            }),
+        ]);
 
-    //     const metatypes = await mMapper.BulkCreate('test suite', [
-    //         new Metatype({
-    //             container_id: containerID,
-    //             name: faker.name.findName(),
-    //             description: faker.random.alphaNumeric(),
-    //         }),
-    //         new Metatype({
-    //             container_id: containerID,
-    //             name: faker.name.findName(),
-    //             description: faker.random.alphaNumeric(),
-    //         }),
-    //         new Metatype({
-    //             container_id: containerID,
-    //             name: faker.name.findName(),
-    //             description: faker.random.alphaNumeric(),
-    //         }),
-    //     ]);
+        expect(metatypes.isError).false;
+        expect(metatypes.value).not.empty;
 
-    //     expect(metatypes.isError).false;
-    //     expect(metatypes.value).not.empty;
+        metatypes.value.forEach(async(mt) => {
+            const testKeys = [...test_keys];
+            testKeys.forEach((key) => (key.metatype_id = mt.id));
+            const keys = await mKeyMapper.BulkCreate('test suite', testKeys);
+            expect(keys.isError).false;
+        });
 
-    //     metatypes.value.forEach(async(mt) => {
-    //         const testKeys = [...test_keys];
-    //         testKeys.forEach((key) => (key.metatype_id = mt.id));
-    //         const keys = await mKeyMapper.BulkCreate('test suite', testKeys);
-    //         expect(keys.isError).false;
-    //     });
+        const nodeList = [
+            new Node({
+                container_id: containerID,
+                metatype: metatypes.value[0].id!,
+                properties: payload,
+                data_source_id: dataSourceID,
+                original_data_id: faker.name.findName(),
+            }),
+            new Node({
+                container_id: containerID,
+                metatype: metatypes.value[1].id!,
+                properties: payload,
+                data_source_id: dataSourceID,
+                original_data_id: faker.name.findName(),
+            }),
+            new Node({
+                container_id: containerID,
+                metatype: metatypes.value[2].id!,
+                properties: payload,
+                data_source_id: dataSourceID,
+                original_data_id: faker.name.findName(),
+            }),
+        ];
 
-    //     const nodeList = [
-    //         new Node({
-    //             container_id: containerID,
-    //             metatype: metatypes.value[0].id!,
-    //             properties: payload,
-    //             data_source_id: dataSourceID,
-    //             original_data_id: faker.name.findName(),
-    //         }),
-    //         new Node({
-    //             container_id: containerID,
-    //             metatype: metatypes.value[1].id!,
-    //             properties: payload,
-    //             data_source_id: dataSourceID,
-    //             original_data_id: faker.name.findName(),
-    //         }),
-    //         new Node({
-    //             container_id: containerID,
-    //             metatype: metatypes.value[2].id!,
-    //             properties: payload,
-    //             data_source_id: dataSourceID,
-    //             original_data_id: faker.name.findName(),
-    //         }),
-    //     ];
+        const saveNodes = await nMapper.BulkCreateOrUpdateByCompositeID('test suite', nodeList);
+        expect(saveNodes.isError, metatypes.error?.error).false;
 
-    //     const saveNodes = await nMapper.BulkCreateOrUpdateByCompositeID('test suite', nodeList);
-    //     expect(saveNodes.isError, metatypes.error?.error).false;
+        nodes = saveNodes.value;
 
-    //     nodes = saveNodes.value;
+        const relationshipList = [
+            new MetatypeRelationship({
+                container_id: containerID,
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric(),
+            }),
+            new MetatypeRelationship({
+                container_id: containerID,
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric(),
+            }),
+        ];
 
-    //     const relationshipList = [
-    //         new MetatypeRelationship({
-    //             container_id: containerID,
-    //             name: faker.name.findName(),
-    //             description: faker.random.alphaNumeric(),
-    //         }),
-    //         new MetatypeRelationship({
-    //             container_id: containerID,
-    //             name: faker.name.findName(),
-    //             description: faker.random.alphaNumeric(),
-    //         }),
-    //     ];
+        const relationships = await mrMapper.BulkCreate('test suite', relationshipList);
 
-    //     const relationships = await mrMapper.BulkCreate('test suite', relationshipList);
+        expect(relationships.isError).false;
+        expect(relationships.value).not.empty;
 
-    //     expect(relationships.isError).false;
-    //     expect(relationships.value).not.empty;
+        const relTestKeys1 = [...test_rel_keys];
+        relTestKeys1.forEach((key) => (key.metatype_relationship_id = relationships.value[0].id!));
+        const rKeys1 = await mrKeyMapper.BulkCreate('test suite', relTestKeys1);
+        expect(rKeys1.isError).false;
 
-    //     const relTestKeys1 = [...test_rel_keys];
-    //     relTestKeys1.forEach((key) => (key.metatype_relationship_id = relationships.value[0].id!));
-    //     const rKeys1 = await mrKeyMapper.BulkCreate('test suite', relTestKeys1);
-    //     expect(rKeys1.isError).false;
+        const relTestKeys2 = [...test_rel_keys];
+        relTestKeys2.forEach((key) => (key.metatype_relationship_id = relationships.value[1].id!));
+        const rKeys2 = await mrKeyMapper.BulkCreate('test suite', relTestKeys2);
+        expect(rKeys2.isError).false;
 
-    //     const relTestKeys2 = [...test_rel_keys];
-    //     relTestKeys2.forEach((key) => (key.metatype_relationship_id = relationships.value[1].id!));
-    //     const rKeys2 = await mrKeyMapper.BulkCreate('test suite', relTestKeys2);
-    //     expect(rKeys2.isError).false;
+        const relPairs = [
+            new MetatypeRelationshipPair({
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric(),
+                origin_metatype: metatypes.value[0].id!,
+                destination_metatype: metatypes.value[1].id!,
+                relationship: relationships.value[0].id!,
+                relationship_type: 'many:many',
+                container_id: containerID,
+            }),
+            new MetatypeRelationshipPair({
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric(),
+                origin_metatype: metatypes.value[1].id!,
+                destination_metatype: metatypes.value[2].id!,
+                relationship: relationships.value[1].id!,
+                relationship_type: 'many:many',
+                container_id: containerID,
+            }),
+        ]
 
-    //     const relPairs = [
-    //         new MetatypeRelationshipPair({
-    //             name: faker.name.findName(),
-    //             description: faker.random.alphaNumeric(),
-    //             origin_metatype: metatypes.value[0].id!,
-    //             destination_metatype: metatypes.value[1].id!,
-    //             relationship: relationships.value[0].id!,
-    //             relationship_type: 'many:many',
-    //             container_id: containerID,
-    //         }),
-    //         new MetatypeRelationshipPair({
-    //             name: faker.name.findName(),
-    //             description: faker.random.alphaNumeric(),
-    //             origin_metatype: metatypes.value[1].id!,
-    //             destination_metatype: metatypes.value[2].id!,
-    //             relationship: relationships.value[1].id!,
-    //             relationship_type: 'many:many',
-    //             container_id: containerID,
-    //         }),
-    //     ]
+        const pairResults = await pairMapper.BulkCreate('test suite', relPairs);
 
-    //     const pairResults = await pairMapper.BulkCreate('test suite', relPairs);
+        expect(pairResults.isError).false;
+        const pair1 = pairResults.value[0];
+        const pair2 = pairResults.value[1];
 
-    //     expect(pairResults.isError).false;
-    //     const pair1 = pairResults.value[0];
-    //     const pair2 = pairResults.value[1];
+        const edgeList = [
+            new Edge({
+                container_id: containerID,
+                metatype_relationship_pair: pair1.id!,
+                properties: payload,
+                origin_id: nodes[0].id,
+                destination_id: nodes[1].id,
+            }),
+            new Edge({
+                container_id: containerID,
+                metatype_relationship_pair: pair2.id!,
+                properties: payload,
+                origin_id: nodes[1].id,
+                destination_id: nodes[2].id,
+            })
+        ]
 
-    //     const edgeList = [
-    //         new Edge({
-    //             container_id: containerID,
-    //             metatype_relationship_pair: pair1.id!,
-    //             properties: payload,
-    //             origin_id: nodes[0].id,
-    //             destination_id: nodes[1].id,
-    //         }),
-    //         new Edge({
-    //             container_id: containerID,
-    //             metatype_relationship_pair: pair2.id!,
-    //             properties: payload,
-    //             origin_id: nodes[1].id,
-    //             destination_id: nodes[2].id,
-    //         })
-    //     ]
+        const edgeResults = await eMapper.BulkCreate('test suite', edgeList);
+        expect (edgeResults.isError).false;
 
-    //     const edgeResults = await eMapper.BulkCreate('test suite', edgeList);
-    //     expect (edgeResults.isError).false;
+        return Promise.resolve();
+    });
 
-    //     return Promise.resolve();
-    // });
+    after(async () => {
+        await UserMapper.Instance.Delete(user.id!);
+        await DataSourceMapper.Instance.Delete(dataSourceID);
+        await ContainerMapper.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
+    });
 
-    // after(async () => {
-    //     await UserMapper.Instance.Delete(user.id!);
-    //     await DataSourceMapper.Instance.Delete(dataSourceID);
-    //     await ContainerMapper.Instance.Delete(containerID);
-    //     return PostgresAdapter.Instance.close();
-    // });
+    it('can retrieve data', async () => {
+        const repo = new NodeLeafRepository(nodes[0].id!, containerID, '2');
+        const results = await repo.list({sortBy: "depth"});
+        expect(results.isError).false;
+        expect(results.value.length).eq(2);
 
-    // it('can retrieve data', async () => {
-    //     const repo = new NodeLeafRepository(nodes[0].id!, containerID, '2');
-    //     const results = await repo.list({sortBy: "depth"});
-    //     expect(results.isError).false;
-    //     expect(results.value.length).eq(2);
+        const nodeLeaf1 = results.value[0];
+        expect(nodeLeaf1.origin_id).eq(nodes[0].id);
+        expect(nodeLeaf1.destination_id).eq(nodes[1].id);
+        expect(nodeLeaf1.depth).eq(1);
 
-    //     const nodeLeaf1 = results.value[0];
-    //     expect(nodeLeaf1.origin_id).eq(nodes[0].id);
-    //     expect(nodeLeaf1.destination_id).eq(nodes[1].id);
-    //     expect(nodeLeaf1.depth).eq(1);
+        const nodeLeaf2 = results.value[1];
+        expect(nodeLeaf2.origin_id).eq(nodes[1].id);
+        expect(nodeLeaf2.destination_id).eq(nodes[2].id);
+        expect(nodeLeaf2.depth).eq(2);
 
-    //     const nodeLeaf2 = results.value[1];
-    //     expect(nodeLeaf2.origin_id).eq(nodes[1].id);
-    //     expect(nodeLeaf2.destination_id).eq(nodes[2].id);
-    //     expect(nodeLeaf2.depth).eq(2);
-
-    //     return Promise.resolve();
-    // });
+        return Promise.resolve();
+    });
 });
 
 const test_keys: MetatypeKey[] = [
