@@ -831,7 +831,7 @@ describe('The updated repository layer', async () => {
         expect(qualifier).eq(mtRepo._tableAlias);
 
         let results = await query.list();
-        expect(results.isError).false;
+        expect(results.isError, JSON.stringify(results.error)).false;
         expect(results.value.length).eq(4);
 
         return Promise.resolve();
@@ -848,7 +848,7 @@ describe('The updated repository layer', async () => {
         expect(queryPart2).eq(mrRepo._tableAlias);
 
         let results = await query.list();
-        expect(results.isError).false;
+        expect(results.isError, JSON.stringify(results.error)).false;
         expect(results.value.length).eq(3);
         results.value.forEach((rel) => {
             expect(rel.description).not.null;
@@ -1021,7 +1021,7 @@ describe('The updated repository layer', async () => {
         expect(queryString?.match(alias || [])?.length).eq(5);
 
         let results = await query.list();
-        expect(results.isError).false;
+        expect(results.isError, JSON.stringify(results.error)).false;
         expect(results.value.length).eq(44);
         results.value.forEach((node) => {
             const song = node.properties;
@@ -1049,7 +1049,7 @@ describe('The updated repository layer', async () => {
         expect(queryString?.match(alias || [])?.length).eq(5);
 
         results = await query.list();
-        expect(results.isError).false;
+        expect(results.isError, JSON.stringify(results.error)).false;
         expect(results.value.length).eq(44);
         results.value.forEach((node) => {
             const song = node.properties;
@@ -1077,7 +1077,7 @@ describe('The updated repository layer', async () => {
         expect(queryString?.match(alias || [])?.length).eq(5);
 
         results = await query.list();
-        expect(results.isError).false;
+        expect(results.isError, JSON.stringify(results.error)).false;
         expect(results.value.length).eq(44);
         results.value.forEach((node) => {
             const song = node.properties;
@@ -1101,25 +1101,13 @@ describe('The updated repository layer', async () => {
         const query = nodeRepo
             .where()
             .containerID('eq', containerID)
-            .join(edgeRepo._tableName, {
-                conditions: {
-                    origin_col: 'id',
-                    destination_col: 'origin_id',
-                },
-                join_type: 'INNER',
-            })
+            .join(edgeRepo._tableName,
+                {origin_col: 'id', destination_col: 'origin_id'},
+                {join_type: 'INNER'})
             .join(
                 nodeRepo2._tableName,
-                {
-                    conditions: {
-                        origin_col: 'destination_id',
-                        destination_col: 'id',
-                        operator: '<>',
-                    },
-                    destination_alias: 'dest',
-                },
-                edgeRepo._tableName,
-            );
+                {origin_col: 'destination_id', destination_col: 'id', operator: '<>',},
+                {destination_alias: 'dest', origin: edgeRepo._tableName});
         expect(query._query.JOINS).not.undefined;
         let check = new RegExp(`INNER JOIN ${edgeRepo._tableName} .* ON .*id = .*origin_id`);
         expect(query._query.JOINS![0]).match(check);
@@ -1127,7 +1115,7 @@ describe('The updated repository layer', async () => {
         expect(query._query.JOINS![1]).match(check);
 
         const results = await query.list();
-        expect(results.isError).false;
+        expect(results.isError, JSON.stringify(results.error)).false;
         return Promise.resolve();
     });
 
@@ -1139,26 +1127,22 @@ describe('The updated repository layer', async () => {
         const query = nodeRepo
             .where()
             .containerID('eq', containerID)
-            .join(edgeRepo._tableName, {
-                conditions: {
-                    origin_col: 'id',
-                    destination_col: 'origin_id',
-                },
-                join_type: 'INNER',
-            })
+            .join(edgeRepo._tableName,
+                {origin_col: 'id', destination_col: 'origin_id'},
+                {join_type: 'INNER'})
             .addFields({id: 'edge_id', properties: 'edge_properties'}, edgeRepo._tableName)
             .addFields('metatype_relationship_name', edgeRepo._tableName)
             .addFields(['origin_id', 'destination_id'], edgeRepo._tableName);
         expect(query._query.JOINS).not.undefined;
         const edgeAlias = nodeRepo._aliasMap.get(edgeRepo._tableName);
-        expect(query._query.SELECT).includes(`, ${edgeAlias}.id AS edge_id`);
-        expect(query._query.SELECT).includes(`, ${edgeAlias}.properties AS edge_properties`);
-        expect(query._query.SELECT).includes(`, ${edgeAlias}.metatype_relationship_name`);
-        expect(query._query.SELECT).includes(`, ${edgeAlias}.origin_id`);
-        expect(query._query.SELECT).includes(`, ${edgeAlias}.destination_id`);
+        expect(query._query.SELECT).includes(`${edgeAlias}.id AS edge_id`);
+        expect(query._query.SELECT).includes(`${edgeAlias}.properties AS edge_properties`);
+        expect(query._query.SELECT).includes(`${edgeAlias}.metatype_relationship_name`);
+        expect(query._query.SELECT).includes(`${edgeAlias}.origin_id`);
+        expect(query._query.SELECT).includes(`${edgeAlias}.destination_id`);
 
         const results = await query.list();
-        expect(results.isError).false;
+        expect(results.isError, JSON.stringify(results.error)).false;
         results.value.forEach((result) => {
             expect(result['edge_id' as keyof object]).not.undefined;
             expect(result['edge_properties' as keyof object]).not.undefined;
@@ -1184,13 +1168,9 @@ describe('The updated repository layer', async () => {
         const query = nodeRepo
             .where()
             .containerID('eq', containerID)
-            .join(edgeRepo._tableName, {
-                conditions: {
-                    origin_col: 'id',
-                    destination_col: 'origin_id',
-                },
-                join_type: 'INNER',
-            })
+            .join(edgeRepo._tableName, 
+                {origin_col: 'id', destination_col: 'origin_id'},
+                {join_type: 'INNER'})
             .addFields({id: 'edge_id', properties: 'edge_properties'}, edgeRepo._tableName)
             .where()
             .containerID('eq', containerID)
@@ -1202,14 +1182,14 @@ describe('The updated repository layer', async () => {
         const edgeAlias = nodeRepo._aliasMap.get(edgeRepo._tableName);
         const nodeAlias = nodeRepo._tableAlias;
         const where = query._query.WHERE;
-        expect(query._query.SELECT).includes(`, ${edgeAlias}.id AS edge_id`);
-        expect(query._query.SELECT).includes(`, ${edgeAlias}.properties AS edge_properties`);
+        expect(query._query.SELECT).includes(`${edgeAlias}.id AS edge_id`);
+        expect(query._query.SELECT).includes(`${edgeAlias}.properties AS edge_properties`);
         expect(where).includes(`${nodeAlias}.container_id = '${containerID}'`);
         expect(where![3]).contains(`${nodeAlias}.properties`);
         expect(where![6]).contains(`${edgeAlias}.id`);
 
         const results = await query.list();
-        expect(results.isError).false;
+        expect(results.isError, JSON.stringify(results.error)).false;
         expect(results.value.length).lessThan(10);
         results.value.forEach((node) => {
             expect(node.properties['genre' as keyof object]).oneOf(genres);
@@ -1224,13 +1204,19 @@ describe('The updated repository layer', async () => {
         // metatype relationship repository fully qualifies all its columns
         const repo = new MetatypeRelationshipPairRepository();
 
-        const query = repo.where().containerID('eq', containerID).and().name('like', '%performs%').and().query('destination.name', 'eq', 'Song');
+        const query = repo
+            .where()
+            .containerID('eq', containerID)
+            .and()
+            .name('like', '%performs%')
+            .and()
+            .query('destination.name', 'eq', 'Song');
         const where = query._query.WHERE;
         expect(where![3]).contains('metatype_relationship_pairs.name');
         expect(where![5]).contains('destination.name');
 
         const results = await query.list();
-        expect(results.isError).false;
+        expect(results.isError, JSON.stringify(results.error)).false;
         expect(results.value.length).eq(1);
         expect(results.value[0].name).eq('band performs song');
         expect(results.value[0].relationship_type).eq('many:many');
@@ -1245,22 +1231,19 @@ describe('The updated repository layer', async () => {
         const query = nodeRepo
             .where()
             .containerID('eq', containerID)
-            .join(edgeRepo._tableName, {
-                conditions: {
-                    origin_col: 'id',
-                    destination_col: 'origin_id',
-                },
-                join_type: 'INNER',
-            })
+            .join(edgeRepo._tableName,
+                {origin_col: 'id', destination_col: 'origin_id'},
+                {join_type: 'INNER'})
             .addFields({"properties #>> '{genre}'": 'genre'})
             .where()
             .containerID('eq', containerID)
             .and()
             .property('genre', 'in', genres);
-        // hijack the query to use count * (count only returns one row, we're expecting 4)
-        query._query.SELECT[0] = 'SELECT COUNT(*)';
+        // hijack the query to use count * (count function only returns one row, but we're expecting 4)
+        query._query.SELECT[0] = 'COUNT(*)';
+
         const results = await query.list(false, {groupBy: `properties #>> '{genre}'`});
-        expect(results.isError).false;
+        expect(results.isError, JSON.stringify(results.error)).false;
         let totalCount = 0;
         results.value.forEach((result) => {
             totalCount += parseInt(result['count' as keyof object]);
@@ -1273,31 +1256,25 @@ describe('The updated repository layer', async () => {
     });
 
     it('can group by in various formats', async () => {
-        const nodeRepo = new NodeRepository();
+        const metatypeRepo = new MetatypeRepository();
 
-        const results = await nodeRepo
-            .join('edges', {conditions: {origin_col: 'id', destination_col: 'origin_id'}, destination_alias: 'outgoing'})
-            .addFields({'COUNT(outgoing.id)': 'outgoing_edge_count'})
-            .groupBy('id') // testing singular field
-            .groupBy(`${nodeRepo._tableAlias}.container_id`) // testing qualified field
-            .groupBy('metatype_id', nodeRepo._tableAlias) // testing field with table alias
-            .groupBy('properties', 'current_nodes') // testing table alias retrieval
-            .groupBy(['data_source_id', 'import_data_id', 'data_staging_id']) // testing list
-            .groupBy(['type_mapping_transformation_id', 'original_data_id'], nodeRepo._tableAlias) // testing list with alias
-            .groupBy(['metadata', 'created_at', 'modified_at', 'deleted_at', 'metadata_properties'], 'current_nodes') // testing list with alias retrieval
+        const results = await metatypeRepo
+            .select(['id', 'container_id', 'name', 'description', 'uuid'])
+            .join('current_nodes', {origin_col: 'id', destination_col: 'metatype_id'}, {destination_alias: 'n'})
+            .addFields({'COUNT(id)': 'node_count'}, 'n')
+            .groupBy(`${metatypeRepo._tableAlias}.container_id`) // test with a qualified column
+            .groupBy('name', metatypeRepo._tableAlias) // test with a table arg
+            .groupBy(['description', 'uuid']) // test with no table arg and a list
             .where()
             .containerID('eq', containerID)
-            .list(false, {
-                groupBy: 'created_by,modified_by,metatype_name,metatype_uuid', // testing queryOption in list function
-                sortBy: 'outgoing_edge_count',
-                sortDesc: true,
-                limit: 5,
-            }); // sort by highest count first
+            .sortBy('COUNT(id)', 'n', true)
+            .list(false, {groupBy: 'id', limit: 3}); // test grouping in list function
         expect(results.isError, JSON.stringify(results.error)).false;
-        expect(results.value.length).eq(5);
-        // verify a few edge counts
-        expect(results.value[0]['outgoing_edge_count' as keyof object]).eq('7');
-        expect(results.value[4]['outgoing_edge_count' as keyof object]).eq('5');
+        expect(results.value.length).eq(3);
+        // test to see our results match what they're supposed to
+        expect(results.value[0]['node_count' as keyof object]).eq('50');
+        expect(results.value[1]['node_count' as keyof object]).eq('16');
+        expect(results.value[2]['node_count' as keyof object]).eq('6');
 
         return Promise.resolve();
     });
@@ -1331,12 +1308,11 @@ describe('The updated repository layer', async () => {
         let query = nodeRepo
             .where()
             .containerID('eq', containerID)
-            .join(stagingRepo._tableName, {
-                conditions: {
+            .join(stagingRepo._tableName,
+                {
                     origin_col: 'data_staging_id',
                     destination_col: 'id',
-                },
-            })
+                })
             .addFields('data', stagingRepo._tableName);
         expect(query._query.JOINS).not.undefined;
         let check = new RegExp(`.* JOIN ${stagingRepo._tableName} .* ON .*data_staging_id = .*id`);
@@ -1344,22 +1320,17 @@ describe('The updated repository layer', async () => {
         expect(query._query.JOINS![0]).match(check);
 
         // second join (duplicate)
-        query = query.join(stagingRepo._tableName, {
-            conditions: {
-                origin_col: 'data_staging_id',
-                destination_col: 'id',
-            },
-        });
+        query = query.join(stagingRepo._tableName, {origin_col: 'data_staging_id', destination_col: 'id',});
         // this second (duplicate) join shouldn't have been added
         expect(query._query.JOINS?.length).eq(1);
 
         // testing a non-duplicate join
-        query = query.join(edgeRepo._tableName, {
-            conditions: {
+        query = query.join(edgeRepo._tableName,
+            {
                 origin_col: 'id',
                 destination_col: 'origin_id',
             },
-        });
+        );
         // this join should have been added as it isn't a duplicate
         expect(query._query.JOINS?.length).eq(2);
         // ensure that the join added was the right one
@@ -1367,13 +1338,9 @@ describe('The updated repository layer', async () => {
         expect(query._query.JOINS![1]).match(check);
 
         // testing a duplicate join with an alternate alias
-        query = query.join(stagingRepo._tableName, {
-            conditions: {
-                origin_col: 'data_staging_id',
-                destination_col: 'id',
-            },
-            destination_alias: 'new_alias',
-        });
+        query = query.join(stagingRepo._tableName,
+            {origin_col: 'data_staging_id', destination_col: 'id'},
+            {destination_alias: 'new_alias'});
         // this join should have been added as it has a unique alias
         expect(query._query.JOINS?.length).eq(3);
         // ensure that the join added was the right one
@@ -1381,7 +1348,7 @@ describe('The updated repository layer', async () => {
         expect(query._query.JOINS![2]).match(check);
 
         const results = await query.list();
-        expect(results.isError).false;
+        expect(results.isError, JSON.stringify(results.error)).false;
         return Promise.resolve();
     });
 
@@ -1400,48 +1367,41 @@ describe('The updated repository layer', async () => {
                 .and()
                 .query('container_id', 'eq', containerID)
                 .and(new NodeRepository().query('deleted_at', '>', date, {dataType: 'date'}).or().query('deleted_at', 'is null'))
-                .groupBy('id', 'nodes'),
+                .groupBy('id', 'sub_nodes'),
         );
 
         let query = nodeRepo
-            .join('nodes', {conditions: {origin_col: 'id', destination_col: 'id'}, join_type: 'RIGHT'})
+            .join('nodes', 
+                {origin_col: 'id', destination_col: 'id'}, 
+                {join_type: 'RIGHT'})
             .join(
                 sub,
-                {
-                    conditions: [
-                        {origin_col: 'id', destination_col: 'id'},
-                        {origin_col: 'created_at', destination_col: 'created_at'},
-                    ],
-                    destination_alias: 'sub',
-                    join_type: 'INNER',
-                },
-                'nodes',
-            )
-            .join('metatypes', {conditions: {origin_col: 'metatype_id', destination_col: 'id'}});
+                [
+                    {origin_col: 'id', destination_col: 'id'},
+                    {origin_col: 'created_at', destination_col: 'created_at'},
+                ],
+                {destination_alias: 'sub', join_type: 'INNER', origin: 'nodes'})
+            .join('metatypes', {origin_col: 'metatype_id', destination_col: 'id'});
         let results = await query.list();
-        expect(results.isError).false;
+        expect(results.isError, JSON.stringify(results.error)).false;
         expect(results.value.length).eq(75);
 
         // now add a filter to ensure that repository chaining still works
         query = nodeRepo
-            .join('nodes', {conditions: {origin_col: 'id', destination_col: 'id'}, join_type: 'RIGHT'})
-            .join(
-                sub,
-                {
-                    conditions: [
-                        {origin_col: 'id', destination_col: 'id'},
-                        {origin_col: 'created_at', destination_col: 'created_at'},
-                    ],
-                    destination_alias: 'sub',
-                    join_type: 'INNER',
-                },
-                'nodes',
-            )
-            .join('metatypes', {conditions: {origin_col: 'metatype_id', destination_col: 'id'}})
+            .join('nodes', 
+                {origin_col: 'id', destination_col: 'id'}, 
+                {join_type: 'RIGHT'})
+            .join(sub,
+                [
+                    {origin_col: 'id', destination_col: 'id'},
+                    {origin_col: 'created_at', destination_col: 'created_at'},
+                ],
+                {destination_alias: 'sub', join_type: 'INNER', origin: 'nodes'})
+            .join('metatypes', {origin_col: 'metatype_id', destination_col: 'id'})
             .where()
             .query('name', 'eq', 'Musician', {tableName: 'metatypes'});
         results = await query.list();
-        expect(results.isError).false;
+        expect(results.isError, JSON.stringify(results.error)).false;
         expect(results.value.length).eq(16);
     });
 });

@@ -725,16 +725,24 @@ export default class TypeMappingRepository extends Repository implements Reposit
 
         // in order to search based on the name of resulting metatype/metatype relationships
         // we must create a series of joins
-        this._query.SELECT = [
-            `SELECT DISTINCT ON (${this._tableAlias}.id) ${this._tableAlias}.*, 
-                metatypes.name as resulting_metatype_name, 
-                metatype_relationships.name as resulting_metatype_relationship_name`,
+
+        // select distinct on id
+        this._query.DISTINCT = [`${this._tableAlias}.id`]
+
+        // select these fields
+        this._query.SELECT = [`${this._tableAlias}.*`,
+            `metatypes.name AS resulting_metatype_name`,
+            `metatype_relationships.name AS resulting_metatype_relationship_name`,
+        ];
+
+        // select from this group of tables
+        this._query.FROM = [
             `FROM type_mappings ${this._tableAlias}`,
             `LEFT JOIN type_mapping_transformations ON ${this._tableAlias}.id = type_mapping_transformations.type_mapping_id`,
             'LEFT JOIN metatypes ON type_mapping_transformations.metatype_id = metatypes.id',
             'LEFT JOIN metatype_relationship_pairs on type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id',
             'LEFT JOIN metatype_relationships ON metatype_relationship_pairs.relationship_id = metatype_relationships.id ',
-        ];
+        ].join(' ');
     }
 
     id(operator: string, value: any) {
@@ -769,17 +777,26 @@ export default class TypeMappingRepository extends Repository implements Reposit
 
     async count(): Promise<Result<number>> {
         const results = await super.count();
+
         // reset the query
-        this._query.SELECT = [
-            `SELECT DISTINCT ON (${this._tableAlias}.id) ${this._tableAlias}.*, 
-                metatypes.name as resulting_metatype_name, 
-                metatype_relationships.name as resulting_metatype_relationship_name`,
+        
+        // select distinct on id
+        this._query.DISTINCT = [`${this._tableAlias}.id`]
+
+        // select these fields
+        this._query.SELECT = [`${this._tableAlias}.*`,
+            `metatypes.name AS resulting_metatype_name`,
+            `metatype_relationships.name AS resulting_metatype_relationship_name`,
+        ];
+
+        // select from this group of tables
+        this._query.FROM = [
             `FROM type_mappings ${this._tableAlias}`,
             `LEFT JOIN type_mapping_transformations ON ${this._tableAlias}.id = type_mapping_transformations.type_mapping_id`,
             'LEFT JOIN metatypes ON type_mapping_transformations.metatype_id = metatypes.id',
             'LEFT JOIN metatype_relationship_pairs on type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id',
             'LEFT JOIN metatype_relationships ON metatype_relationship_pairs.relationship_id = metatype_relationships.id ',
-        ];
+        ].join(' ');
 
         return Promise.resolve(Result.Success(results.value));
     }
@@ -790,16 +807,24 @@ export default class TypeMappingRepository extends Repository implements Reposit
             resultClass: TypeMapping,
         });
         // reset the query
-        this._query.SELECT = [
-            `SELECT DISTINCT ON (${this._tableAlias}.id) ${this._tableAlias}.*, 
-                metatypes.name as resulting_metatype_name, 
-                metatype_relationships.name as resulting_metatype_relationship_name`,
+
+        // select distinct on id
+        this._query.DISTINCT = [`${this._tableAlias}.id`]
+
+        // select these fields
+        this._query.SELECT = [`${this._tableAlias}.*`,
+            `metatypes.name AS resulting_metatype_name`,
+            `metatype_relationships.name AS resulting_metatype_relationship_name`,
+        ];
+
+        // select from this group of tables
+        this._query.FROM = [
             `FROM type_mappings ${this._tableAlias}`,
             `LEFT JOIN type_mapping_transformations ON ${this._tableAlias}.id = type_mapping_transformations.type_mapping_id`,
             'LEFT JOIN metatypes ON type_mapping_transformations.metatype_id = metatypes.id',
             'LEFT JOIN metatype_relationship_pairs on type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id',
             'LEFT JOIN metatype_relationships ON metatype_relationship_pairs.relationship_id = metatype_relationships.id ',
-        ];
+        ].join(' ');
 
         if (results.isError) return Promise.resolve(Result.Pass(results));
 

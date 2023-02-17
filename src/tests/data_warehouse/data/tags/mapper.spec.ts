@@ -3,7 +3,6 @@ import Tag from '../../../../domain_objects/data_warehouse/data/tag';
 import Container from '../../../../domain_objects/data_warehouse/ontology/container';
 import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
 import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
-import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
 import MetatypeRelationship from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship';
 import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
 import File from '../../../../domain_objects/data_warehouse/data/file';
@@ -34,8 +33,8 @@ import EdgeMapper from '../../../../data_access_layer/mappers/data_warehouse/dat
 
 describe('TagMapper', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
-    let dataSourceID: string = '';
     let tagID: string = '';
+    let tagName: string = '';
 
     const cMapper = ContainerStorage.Instance;
     const dsMapper = DataSourceMapper.Instance;
@@ -76,21 +75,20 @@ describe('TagMapper', async () => {
 
         expect(dataSource.isError).false;
         expect(dataSource.value).not.empty;
-        dataSourceID = dataSource.value.id!;
 
         // Create the Tag
         const tag = await tMapper.Create(
             'test suite',
             new Tag({
                 tag_name: faker.name.findName(),
-                container_id: containerID!,
-                data_source_id: dataSourceID!,
+                container_id: containerID,
             }),
         );
 
         expect(tag.isError).false;
         expect(tag.value.id).not.null;
         tagID = tag.value.id!;
+        tagName = tag.value.tag_name!;
 
         return Promise.resolve();
     });
@@ -105,8 +103,7 @@ describe('TagMapper', async () => {
             'test suite',
             new Tag({
                 tag_name: faker.name.findName(),
-                container_id: containerID!,
-                data_source_id: dataSourceID!,
+                container_id: containerID,
             }),
         );
 
@@ -115,6 +112,24 @@ describe('TagMapper', async () => {
 
         return Promise.resolve();
     });
+
+    it('can update a tag', async () => {
+        const tag = await tMapper.Update(
+            'test suite',
+            new Tag({
+                id: tagID,
+                tag_name: faker.name.findName(),
+                container_id: containerID,
+            }),
+        );
+
+        expect(tag.isError).false;
+        expect(tag.value.id).equal(tagID);
+        expect(tag.value.tag_name).not.equal(tagName);
+
+        return Promise.resolve();
+    });
+
 
     it('can tag a node', async () => {
         const tMapper = TagMapper.Instance;
@@ -138,7 +153,7 @@ describe('TagMapper', async () => {
         const node = await nMapper.CreateOrUpdateByCompositeID(
             'test suite',
             new Node({
-                container_id: containerID!,
+                container_id: containerID,
                 metatype: metatype.value,
                 properties: {},
             }),
@@ -147,7 +162,7 @@ describe('TagMapper', async () => {
         expect(node.isError, metatype.error?.error).false;
 
         // Tag the node
-        const tagNode = await tMapper.TagNode(tagID!, node.value.id!);
+        const tagNode = await tMapper.TagNode(tagID, node.value.id!);
 
         expect(tagNode.value).true;
 
@@ -173,7 +188,7 @@ describe('TagMapper', async () => {
         expect(file.value).not.empty;
 
         // Tag the file
-        const tagFile = await tMapper.TagFile(tagID!, file.value.id!);
+        const tagFile = await tMapper.TagFile(tagID, file.value.id!);
 
         expect(tagFile.value).true;
 
@@ -204,7 +219,7 @@ describe('TagMapper', async () => {
         const node_a = await nMapper.CreateOrUpdateByCompositeID(
             'test suite',
             new Node({
-                container_id: containerID!,
+                container_id: containerID,
                 metatype: metatype.value,
                 properties: {
                     node: 'a',

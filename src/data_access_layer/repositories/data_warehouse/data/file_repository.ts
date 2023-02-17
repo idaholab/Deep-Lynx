@@ -40,7 +40,7 @@ export default class FileRepository extends Repository implements RepositoryInte
     }
 
     findByID(id: string): Promise<Result<File>> {
-        return this.#mapper.Retrieve(id);
+        return this.#mapper.RetrieveByID(id);
     }
 
     findByIDAndContainer(id: string, containerID: string): Promise<Result<File>> {
@@ -53,8 +53,8 @@ export default class FileRepository extends Repository implements RepositoryInte
             return Promise.resolve(Result.Failure(`file does not pass validation ${errors.join(',')}`));
         }
 
+        // If the incoming file has an id, find the existing file and update it
         if (f.id) {
-            // to allow partial updates we must first fetch the original object
             const original = await this.findByID(f.id);
             if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
 
@@ -74,10 +74,12 @@ export default class FileRepository extends Repository implements RepositoryInte
                 }),
             );
         } else {
-            const created = await this.#mapper.Create(user.id!, f);
-            if (created.isError) return Promise.resolve(Result.Pass(created));
-
-            Object.assign(f, created.value);
+            // If the incoming file doesn't exist in the database, create a new one
+            const results = await this.#mapper.Create(user.id!, f);
+            if (results.isError) {
+                return Promise.resolve(Result.Pass(results));
+            }
+            Object.assign(f, results.value);
 
             this.#eventRepo.emit(
                 new Event({
@@ -88,7 +90,6 @@ export default class FileRepository extends Repository implements RepositoryInte
                 }),
             );
         }
-
         return Promise.resolve(Result.Success(true));
     }
 
@@ -105,13 +106,7 @@ export default class FileRepository extends Repository implements RepositoryInte
         a file record in storage. This should hopefully be obvious as the function
         signature requires a Readable stream
      */
-    async uploadFile(
-        containerID: string,
-        user: User,
-        filename: string,
-        stream: Readable,
-        dataSourceID?: string,
-    ): Promise<Result<File>> {
+    async uploadFile(containerID: string, user: User, filename: string, stream: Readable, dataSourceID?: string): Promise<Result<File>> {
         const provider = BlobStorageProvider();
 
         if (!provider) return Promise.resolve(Result.Failure('no storage provider set'));
@@ -138,20 +133,13 @@ export default class FileRepository extends Repository implements RepositoryInte
         return Promise.resolve(Result.Success(file));
     }
 
-    async updateFile(
-        fileID: string,
-        containerID: string,
-        dataSourceID: string,
-        user: User,
-        filename: string,
-        stream: Readable,
-    ): Promise<Result<File>> {
+    async updateFile(fileID: string, containerID: string, user: User, filename: string, stream: Readable, dataSourceID?: string): Promise<Result<File>> {
         const provider = BlobStorageProvider();
 
         if (!provider) return Promise.resolve(Result.Failure('no storage provider set'));
 
         // run the actual file upload the storage provider
-        const result = await provider.uploadPipe(`containers/${containerID}/datasources/${dataSourceID}/`, filename, stream);
+        const result = await provider.uploadPipe(`containers/${containerID}/datasources/${dataSourceID ? dataSourceID : '0'}/`, filename, stream);
         if (result.isError) return Promise.resolve(Result.Pass(result));
 
         const file = new File({
@@ -199,11 +187,6 @@ export default class FileRepository extends Repository implements RepositoryInte
 
     file_name(operator: string, value: any) {
         super.query('file_name', operator, value);
-        return this;
-    }
-
-    short_uuid(operator: string, value: any) {
-        super.query('short_uuid', operator, value);
         return this;
     }
 

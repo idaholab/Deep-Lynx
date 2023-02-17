@@ -61,14 +61,17 @@ export default class TimeseriesEntryRepository extends Repository {
         const tableAlias = (this._aliasMap.has(this._tableName)) ? (this._aliasMap.get(this._tableName)) : (this._tableName);
 
         if (additionalColumns && additionalColumns.length > 0) {
-            text = `SELECT ${additionalColumns.join(',')}, histogram(%s, %L::numeric, %L::numeric, %L::integer) FROM ${this._tableName} as ${tableAlias}`;
+            text = `SELECT ${additionalColumns.join(',')}, histogram(%s, %L::numeric, %L::numeric, %L::integer)`;
             values = [column, min, max, nbuckets];
         } else {
-            text = `SELECT histogram(%s, %L::numeric, %L::numeric, %L::integer) FROM ${this._tableName} as ${tableAlias}`;
+            text = `SELECT histogram(%s, %L::numeric, %L::numeric, %L::integer)`;
             values = [column, min, max, nbuckets];
         }
 
+        // override any potential SELECT DISTINCT to avoid errors
+        this._noSelectRoot();
         this._query.SELECT = [format(text, ...values)];
+        this._query.FROM = format(`FROM %s %s`, this._tableName, tableAlias)
 
         if (this.#groupBy && additionalColumns) {
             this.#groupBy.push(...additionalColumns);

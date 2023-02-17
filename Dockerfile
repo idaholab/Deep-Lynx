@@ -1,4 +1,4 @@
-FROM cimg/rust:1.65.0-node as build
+FROM cimg/rust:1.67.0-node as build
 
 USER root
 RUN sudo apt-get update
@@ -44,8 +44,7 @@ RUN npm run build:web-gl
 # catch any env file a user might have accidentally built into the container
 RUN rm -rf .env
 
-FROM node:18.14.0-buster-slim as production
-RUN apt-get update
+FROM node:18.14.0-alpine3.17 as production
 
 WORKDIR /srv/core_api
 

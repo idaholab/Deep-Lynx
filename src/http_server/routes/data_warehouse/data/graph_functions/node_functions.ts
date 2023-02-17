@@ -38,7 +38,7 @@ export default class NodeFunctions {
 
             if (String(req.query.includeRawData).toLowerCase() === 'true') {
                 repo = repo
-                .join('data_staging', {conditions: {origin_col:'data_staging_id', destination_col:'id'}})
+                .join('data_staging', {origin_col:'data_staging_id', destination_col:'id'})
                 .addFields({'data': 'raw_data_properties'}, repo._aliasMap.get('data_staging'))
             }
 
@@ -132,7 +132,7 @@ export default class NodeFunctions {
                 .metatypeID('eq', req.metatype.id);
             if (String(req.query.includeRawData).toLowerCase() === 'true') {
                 repo = repo
-                .join('data_staging', {conditions: {origin_col:'data_staging_id', destination_col:'id'}})
+                .join('data_staging', {origin_col:'data_staging_id', destination_col:'id'})
                 .addFields({'data': 'raw_data_properties'}, repo._aliasMap.get('data_staging'))
             }
             repo.list(String(req.query.loadMetatypes).toLowerCase() === 'true', {

@@ -194,7 +194,8 @@ export default class EdgeMapper extends Mapper {
             data_staging_id,
             metadata,
             created_by,
-            modified_by) VALUES %L RETURNING *`;
+            modified_by,
+            created_at) VALUES %L RETURNING *`;
 
         const values = edges.map((e) => [
             e.id,
@@ -217,6 +218,7 @@ export default class EdgeMapper extends Mapper {
             JSON.stringify(e.metadata),
             userID,
             userID,
+            e.created_at ? e.created_at : new Date(),
         ]);
 
         return format(text, values);

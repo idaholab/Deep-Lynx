@@ -275,9 +275,14 @@ export default class DataSourceRepository extends Repository implements Reposito
     async listTimeseries(dataSourceID: string, options?: QueryOptions, transaction?: PoolClient): Promise<Result<any[]>> {
         // we have to hijack the top of the query to point to the proper table
         if (options?.distinct) {
-            this._query.SELECT = [`SELECT DISTINCT y_${dataSourceID}.*`, `FROM y_${dataSourceID}`];
+            // clear the base select and override with custom values
+            this._noSelectRoot();
+            this._query.SELECT = [`SELECT DISTINCT y_${dataSourceID}.*`]
+            this._query.FROM = `FROM y_${dataSourceID}`;
         } else {
-            this._query.SELECT = [`SELECT y_${dataSourceID}.*`, `FROM y_${dataSourceID}`];
+            this._noSelectRoot();
+            this._query.SELECT = [`SELECT y_${dataSourceID}.*`]
+            this._query.FROM = `FROM y_${dataSourceID}`;
         }
 
         if (options && options.groupBy && this.#groupBy) {
@@ -296,10 +301,16 @@ export default class DataSourceRepository extends Repository implements Reposito
     async listTimeseriesToFile(dataSourceID: string, fileOptions: FileOptions, options?: QueryOptions, transaction?: PoolClient): Promise<Result<File>> {
         // we have to hijack the top of the query to point to the proper table
         if (options?.distinct) {
-            this._query.SELECT = [`SELECT DISTINCT y_${dataSourceID}.*`, `FROM y_${dataSourceID}`];
+            // clear the base select and override with custom values
+            this._noSelectRoot();
+            this._query.SELECT = [`SELECT DISTINCT y_${dataSourceID}.*`]
+            this._query.FROM = `FROM y_${dataSourceID}`;
         } else {
-            this._query.SELECT = [`SELECT y_${dataSourceID}.*`, `FROM y_${dataSourceID}`];
+            this._noSelectRoot();
+            this._query.SELECT = [`SELECT y_${dataSourceID}.*`]
+            this._query.FROM = `FROM y_${dataSourceID}`;
         }
+
         if (options && options.groupBy && this.#groupBy) {
             options.groupBy = [options.groupBy, ...this.#groupBy].join(',');
         } else if (options && this.#groupBy) {

@@ -43,8 +43,8 @@
         </v-row>
         <v-row>
           <v-col :cols="12">
-            <select-data-source-types 
-              :values="container.config.enabled_data_sources" 
+            <select-data-source-types
+              :values="container.config.enabled_data_sources"
               @selected="setDataSources"
             />
           </v-col>
@@ -97,12 +97,11 @@ import SelectDataSourceTypes from "@/components/dataSources/selectDataSourceType
 import CreateConfiguredSourceDialog from '@/components/dataSources/createConfiguredSourceDialog.vue';
 import DeleteConfiguredSourceDialog from '@/components/dataSources/deleteConfiguredSourceDialog.vue';
 import EditConfiguredSourceDialog from '@/components/dataSources/editConfiguredSourceDialog.vue';
-import {v4 as uuidv4} from 'uuid';
 
 @Component({components: {
-  DeleteContainerDialog, 
-  SelectDataSourceTypes, 
-  CreateConfiguredSourceDialog, 
+  DeleteContainerDialog,
+  SelectDataSourceTypes,
+  CreateConfiguredSourceDialog,
   DeleteConfiguredSourceDialog,
   EditConfiguredSourceDialog
 }})

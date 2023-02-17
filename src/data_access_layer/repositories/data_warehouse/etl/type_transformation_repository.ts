@@ -372,23 +372,27 @@ export default class TypeTransformationRepository extends Repository implements 
 
     constructor() {
         super(TypeTransformationMapper.tableName);
-        this._query.SELECT = [
-            `SELECT ${this._tableAlias}.*,
-                         metatypes.name as metatype_name,
-                         m2.name as tab_metatype_name,
-                         metatype_relationship_pairs.name as metatype_relationship_pair_name,
-                         metatypes.ontology_version as metatype_ontology_version,
-                         metatype_relationship_pairs.ontology_version as metatype_relationship_pair_ontology_version,
-                         mapping.container_id AS container_id,
-                         mapping.shape_hash as shape_hash,
-                         mapping.data_source_id as data_source_id`,
+        //
+        // override the fields to select
+        this._query.SELECT = [`${this._tableAlias}.*`,
+                         `metatypes.name as metatype_name`,
+                         `m2.name as tab_metatype_name`,
+                         `metatype_relationship_pairs.name as metatype_relationship_pair_name`,
+                         `metatypes.ontology_version as metatype_ontology_version`,
+                         `metatype_relationship_pairs.ontology_version as metatype_relationship_pair_ontology_version`,
+                         `mapping.container_id AS container_id`,
+                         `mapping.shape_hash as shape_hash`,
+                         `mapping.data_source_id as data_source_id`,
+        ];
+        // override the tables to select from
+        this._query.FROM = [
             `FROM ${TypeTransformationMapper.tableName} ${this._tableAlias}`,
             `LEFT JOIN type_mappings as mapping ON ${this._tableAlias}.type_mapping_id = mapping.id`,
             `LEFT JOIN metatypes ON ${this._tableAlias}.metatype_id = metatypes.id`,
             `LEFT JOIN metatypes m2 on ${this._tableAlias}.tab_metatype_id = m2.id`,
             `LEFT JOIN metatype_relationship_pairs 
                                ON ${this._tableAlias}.metatype_relationship_pair_id = metatype_relationship_pairs.id`
-        ];
+        ].join(' ');
     }
 
     typeMappingID(operator: string, value: any) {
@@ -406,23 +410,24 @@ export default class TypeTransformationRepository extends Repository implements 
             resultClass: TypeTransformation
         })
 
-        this._query.SELECT = [
-            `SELECT ${this._tableAlias}.*,
-                         metatypes.name as metatype_name,
-                         m2.name as tab_metatype_name,
-                         metatype_relationship_pairs.name as metatype_relationship_pair_name,
-                         metatypes.ontology_version as metatype_ontology_version,
-                         metatype_relationship_pairs.ontology_version as metatype_relationship_pair_ontology_version,
-                         mapping.container_id AS container_id,
-                         mapping.shape_hash as shape_hash,
-                         mapping.data_source_id as data_source_id`,
+        this._query.SELECT = [`${this._tableAlias}.*`,
+                         `metatypes.name as metatype_name`,
+                         `m2.name as tab_metatype_name`,
+                         `metatype_relationship_pairs.name as metatype_relationship_pair_name`,
+                         `metatypes.ontology_version as metatype_ontology_version`,
+                         `metatype_relationship_pairs.ontology_version as metatype_relationship_pair_ontology_version`,
+                         `mapping.container_id AS container_id`,
+                         `mapping.shape_hash as shape_hash`,
+                         `mapping.data_source_id as data_source_id`
+        ];
+        this._query.FROM = [
             `FROM ${TypeTransformationMapper.tableName}`,
             `LEFT JOIN type_mappings as mapping ON ${this._tableAlias}.type_mapping_id = mapping.id`,
             `LEFT JOIN metatypes ON ${this._tableAlias}.metatype_id = metatypes.id`,
             `LEFT JOIN metatypes m2 ON ${this._tableAlias}.tab_metatype_id = m2.id`,
             `LEFT JOIN metatype_relationship_pairs 
                                ON ${this._tableAlias}.metatype_relationship_pair_id = metatype_relationship_pairs.id`
-        ];
+        ].join(' ');
 
         return Promise.resolve(results)
     }
