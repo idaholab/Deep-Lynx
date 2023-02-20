@@ -69,8 +69,7 @@ export default class ImportRepository extends Repository implements RepositoryIn
         super(ImportMapper.tableName);
 
         // in order to select the composite fields we must redo the initial query
-        this._query.SELECT = [
-            `SELECT ${this._tableAlias}.*,
+        this._query.SELECT = [`${this._tableAlias}.*,
             SUM(CASE WHEN (data_staging.errors IS NOT NULL 
                 AND data_staging.errors != '{}') 
                 AND data_staging.import_id = ${this._tableAlias}.id 
