@@ -372,7 +372,7 @@ export default class OAuthRoutes {
     }
 
     private static saml(req: Request, res: Response, next: NextFunction) {
-        passport.authenticate('saml', {keepSessionInfo: true}, (err, user, info) => {
+        passport.authenticate('saml', {keepSessionInfo: true}, (err: any, user: any, info: any) => {
             if (err) {
                 res.redirect(buildUrl('/oauth', {queryParams: {error: `${err}`}}));
                 return;
