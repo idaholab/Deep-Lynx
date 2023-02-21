@@ -115,6 +115,7 @@ export default class LargeObject implements BlobStorage {
 
                                 stream.on('end', () => {
                                     void client.query('COMMIT');
+                                    void client.release();
                                 });
 
                                 resolve(stream);

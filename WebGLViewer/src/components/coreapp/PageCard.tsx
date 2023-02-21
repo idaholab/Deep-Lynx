@@ -15,7 +15,7 @@ export default function PageCard(props: any) {
     <Card
       sx={{
         margin: '36px 40px',
-        backgroundColor: COLORS.colorCardGray,
+        backgroundColor: COLORS.colorDarkgray,
         backgroundImage: 'none',
         boxShadow: 'none',
       }}
