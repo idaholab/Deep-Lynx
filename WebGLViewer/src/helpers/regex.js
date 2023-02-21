@@ -50,8 +50,6 @@ function regex(arr) {
     }
   }
 
-  console.log(results);
-
   return results;
 }
 
