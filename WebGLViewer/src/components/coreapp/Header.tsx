@@ -1,5 +1,10 @@
 import * as React from 'react';
 import { styled, useTheme } from '@mui/material/styles';
+import { useAppSelector, useAppDispatch } from '../../../app/hooks/hooks';
+import classNames from 'classnames';
+
+import { appStateActions } from '../../../app/store/index';
+
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -57,30 +62,20 @@ const AppBar = styled(MuiAppBar, {
   }),
 }));
 
-
-const DrawerHeader = styled('div')(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  padding: theme.spacing(0, 1),
-  // necessary for content to be below app bar
-  ...theme.mixins.toolbar,
-  justifyContent: 'flex-end',
-}));
-
 export default function Header(props: any) {
   const { children } = props;
 
   const theme = useTheme();
-  const [openLeft, setOpenLeft] = React.useState(true);
-  const [openRight, setOpenRight] = React.useState(false);
+  const dispatch = useAppDispatch();
 
-  const handleDrawerOpenLeftState = () => {
-    setOpenLeft(state => !state);
+  type openDrawerLeftState = boolean;
+  const openDrawerLeftState: openDrawerLeftState = useAppSelector((state: any) => state.appState.openDrawerLeft);
+  const handleToggleOpenDrawerLeft = () => {
+    dispatch(appStateActions.toggleDrawerLeft());
   };
 
-  const handleDrawerOpenRightState = () => {
-    setOpenRight(state => !state);
-  };
+  type openDrawerRightState = boolean;
+  const openDrawerRightState: openDrawerRightState = useAppSelector((state: any) => state.appState.openDrawerRight);
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -89,12 +84,12 @@ export default function Header(props: any) {
         <Paper square={true} elevation={3} sx={{ width: '100%', height: '64px', backgroundColor: COLORS.colorSecondary }} ></Paper>
       </Box>
       <Box>
-        <AppBar position="fixed" elevation={0} open={openLeft} color={"secondary"}>
+        <AppBar position="fixed" elevation={0} open={openDrawerLeftState} color={"secondary"}>
           <Toolbar>
             <IconButton
               color="inherit"
               aria-label="open drawer"
-              onClick={handleDrawerOpenLeftState}
+              onClick={handleToggleOpenDrawerLeft}
               edge="start"
               sx={{ mr: 2, }}
             >
@@ -103,16 +98,6 @@ export default function Header(props: any) {
             <Typography variant="h6" noWrap component="div">
               WebGL Viewer
             </Typography>
-            <a
-              aria-label="open drawer"
-              onClick={handleDrawerOpenRightState}
-              style={{
-                cursor: 'pointer',
-                marginLeft: 'auto'
-              }}
-            >
-              Temp Right Drawer Trigger
-            </a>
           </Toolbar>
         </AppBar>
       </Box>
@@ -128,18 +113,27 @@ export default function Header(props: any) {
         }}
         variant="persistent"
         anchor="left"
-        open={openLeft}
+        open={openDrawerLeftState}
       >
-        
-        <Paper square={true} elevation={3} sx={{ width: '102%', height: '64px', backgroundColor: COLORS.colorSecondary, }}>
-          <Toolbar sx={{ padding: 0 }}>
-            <img alt="Deep Lynx Logo" width="100" src="/assets/lynx-white.png" style={{ marginLeft: '-8px' }} />
-          </Toolbar>
-        </Paper>
-    
+        <Box sx={{ width: '100%', overflow: 'hidden', paddingBottom: '12px', marginBottom: '-10px' }}>
+          <Paper square={true} elevation={3} sx={{ width: '102%', height: '64px', backgroundColor: COLORS.colorSecondary, }}>
+            <Toolbar sx={{ padding: 0 }}>
+              <img alt="Deep Lynx Logo" width="100" src="/viewer/assets/lynx-white.png" style={{ marginLeft: '-8px' }} />
+            </Toolbar>
+          </Paper>
+        </Box>
         <SideBarLeft />
       </Drawer>
-      <Main open={openLeft} sx={{ flexGrow: 1, marginTop: '64px', zIndex: '0' }}>
+      <Main
+        open={openDrawerLeftState}
+        sx={{ flexGrow: 1, marginTop: '64px', padding: '0px', zIndex: '0' }}
+        className={classNames(
+          'main-container-sizing',
+          {
+            'main-container-sizing-with-drawer': openDrawerLeftState === true,
+          },
+        )}
+      >
         {children}
         <Drawer
           sx={{
@@ -153,7 +147,7 @@ export default function Header(props: any) {
           }}
           variant="persistent"
           anchor="right"
-          open={openRight}
+          open={openDrawerRightState}
         >
           <SideBarRight/>
         </Drawer>

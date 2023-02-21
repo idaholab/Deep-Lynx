@@ -4,11 +4,8 @@ import PageCard from '../components/coreapp/PageCard'
 
 function LayoutSettings() {
   return (
-    <>
-      <PageCard title="Application Settings">
-
-      </PageCard>
-    </>
+    <PageCard title="Application Settings">
+    </PageCard>
   )
 }
 

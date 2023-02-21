@@ -1,4 +1,6 @@
 import * as React from 'react';
+import { useAppSelector, useAppDispatch } from '../../../app/hooks/hooks';
+
 import Box from '@mui/material/Box';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -11,28 +13,10 @@ import Divider from '@mui/material/Divider';
 import COLORS from '../../styles/variables';
 
 export default function ControlledAccordions() {
-  // type panels = any[] | any;
-  type panelsDefault = Object[];
   const [expanded, setExpanded] = React.useState<string | false>(false);
 
-  const panelsDefault = [
-    {
-      title: 'General Settings',
-      data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-    },
-    {
-      title: 'Users',
-      data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-    },
-    {
-      title: 'Advanced Settings',
-      data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-    },
-    {
-      title: 'Personal Data',
-      data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-    }
-  ];
+  type selectedAssetObject = any;
+  const selectedAssetObject: selectedAssetObject = useAppSelector((state: any) => state.appState.selectedAssetObject);
 
   const handleChange =
     (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
@@ -41,7 +25,7 @@ export default function ControlledAccordions() {
 
   return (
     <>
-      {panelsDefault.map((object: any, index) => (
+      {selectedAssetObject.metadata.map((object: any, index: any) => (
         <Accordion
           key={index}
           expanded={expanded === `panel${index+1}`}
