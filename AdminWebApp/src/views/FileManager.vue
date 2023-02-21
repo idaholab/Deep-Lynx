@@ -38,7 +38,7 @@
           </edit-tag-dialog>
 
           <v-btn
-              @click='open3DViewer(items[0])'
+              @click='open3DViewer(items)'
               style="float: right"
           >
             {{$t('fileManager.fileManager3DViewer')}}
@@ -95,6 +95,7 @@ import {mdiFileDocumentMultiple} from "@mdi/js";
 import ReprocessDataSourceDialog from "@/components/dataImport/reprocessDataSourceDialog.vue";
 import EditFileSetDialog from "@/components/fileManager/editFileSetDialog.vue";
 import EditTagDialog from "@/components/fileManager/editTagDialog.vue";
+import Config from "../config";
 
 @Component({components:{
     CreateFileSetDialog,
@@ -138,8 +139,9 @@ export default class FileManager extends Vue {
         .finally(() => this.fileSetsLoading = false)
   }
 
-  open3DViewer() {
-    // TODO: Implement
+  open3DViewer(selectedTag: any) {
+    localStorage.setItem("webgl", JSON.stringify(selectedTag));
+    window.open(`${Config.deepLynxApiUri}/viewer`, "_blank");
   }
 
   copyID(id: string) {
