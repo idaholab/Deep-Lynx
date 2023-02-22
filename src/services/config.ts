@@ -2,6 +2,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import NodeRSA from 'node-rsa';
+import crypto from 'crypto';
 
 /*
  Config is a singleton class representing the application's configuration and
@@ -246,12 +247,21 @@ export class Config {
         // generate and save a key if we didn't start with one
         if (!this._encryption_key_path) {
             if (!fs.existsSync('./private-key.pem')) {
-                const key = new NodeRSA({b: 512});
-                const buffer = key.exportKey('pkcs1-private-pem');
-                fs.writeFileSync('./private-key.pem', buffer);
-            } else {
-                this._encryption_key_path = './private-key.pem';
+                const {privateKey, publicKey} = crypto.generateKeyPairSync('rsa', {
+                    modulusLength: 2048,
+                    publicKeyEncoding: {
+                        type: 'spki',
+                        format: 'pem',
+                    },
+                    privateKeyEncoding: {
+                        type: 'pkcs8',
+                        format: 'pem',
+                    },
+                });
+                fs.writeFileSync('./private-key.pem', privateKey);
+                fs.writeFileSync('./public-key.pem', publicKey);
             }
+            this._encryption_key_path = './private-key.pem';
         }
     }
 
