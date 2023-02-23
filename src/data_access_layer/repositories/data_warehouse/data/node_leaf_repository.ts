@@ -22,7 +22,7 @@ export default class NodeLeafRepository extends Repository {
         this._query.FROM = '';
         this._query.VALUES = [id, container_id, depth];
         this._query.WHERE = [];
-        this._tableAlias = 'nodeleafs'
+        this._tableAlias = 'nodeleafs';
     }
 
     // properties for nth layer node query:

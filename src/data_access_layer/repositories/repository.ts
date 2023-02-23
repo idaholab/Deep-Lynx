@@ -333,13 +333,17 @@ export class Repository {
     // changed to return AND ( x ). If chaining with further conditions, another and() or or()
     // is necessary.
     and(repo?: Repository) {
+        // check if there is a where clause yet;
+        // if there is not, use WHERE instead of AND
+        const conjunction = (this._query.WHERE?.length === 0) ? 'WHERE' : 'AND';
+
         if (repo?._query.WHERE) {
             let query = repo._query.WHERE.join(' ');
             // replacing any table aliases from new repo with the alias found in this repo
             query = query.replace(new RegExp(repo._tableAlias, 'g'), this._tableAlias);
-            this._query.WHERE?.push(format(`AND ( %s )`, query));
+            this._query.WHERE?.push(format(`%s ( %s )`, conjunction, query));
         } else {
-            this._query.WHERE?.push('AND');
+            this._query.WHERE?.push(format('%s', conjunction));
         }
         return this;
     }
@@ -349,13 +353,17 @@ export class Repository {
     // changed to return OR ( x ). If chaining with further conditions, another and() or or()
     // is necessary.
     or(repo?: Repository) {
+        // check if there is a where clause yet;
+        // if there is not, use WHERE instead of OR
+        const conjunction = (this._query.WHERE?.length === 0) ? 'WHERE' : 'OR';
+
         if (repo?._query.WHERE) {
             let query = repo._query.WHERE.join(' ');
             // replacing any table aliases from new repo with the alias found in this repo
             query = query.replace(new RegExp(repo._tableAlias, 'g'), this._tableAlias);
-            this._query.WHERE?.push(format(`OR ( %s )`, query));
+            this._query.WHERE?.push(format(`%s ( %s )`, conjunction, query));
         } else {
-            this._query.WHERE?.push('OR');
+            this._query.WHERE?.push(format('%s', conjunction));
         }
         return this;
     }
