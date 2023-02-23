@@ -32,6 +32,7 @@ import DataSourceRepository, {DataSourceFactory} from '../../../data_access_laye
 import fs from 'fs';
 import DataStagingRepository from '../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import { Repository } from '../../../data_access_layer/repositories/repository';
+import NodeLeafRepository from '../../../data_access_layer/repositories/data_warehouse/data/node_leaf_repository';
 
 describe('The updated repository layer', async () => {
     let containerID: string;
@@ -1383,6 +1384,53 @@ describe('The updated repository layer', async () => {
         results = await query.list();
         expect(results.isError, JSON.stringify(results.error)).false;
         expect(results.value.length).eq(16);
+    });
+
+    it('does not qualify a null table', async () => {
+        let repo = new EdgeRepository(true);
+
+        repo = repo.select('origin_id')
+            .addFields({'COUNT(*)': 'outgoing_edges'})
+            .where()
+            .containerID('eq', containerID)
+            .groupBy('origin_id', null)
+            .sortBy('outgoing_edges', null, true)
+            .options({});
+        const orderby = repo._query.ORDERBY![0];
+        const groupby = repo._query.GROUPBY![0];
+        expect(orderby).eq('outgoing_edges DESC');
+        expect(groupby).eq('origin_id');
+        
+        const results = await repo.list();
+        expect(results.isError, JSON.stringify(results.error)).false;
+        expect(results.value[0]['outgoing_edges' as keyof object]).eq('7');
+    });
+
+    it('can sort in multiple formats', async () => {
+        let repo = new NodeLeafRepository(nodes[20].id!, containerID, '10');
+
+        repo = repo
+            .sortBy('origin_metatype_id')
+            .sortBy('origin_metatype_uuid', null)
+            .sortBy('origin_metatype_name', 'fake_alias')
+            .options({})
+        const orderby = repo._query.ORDERBY!;
+        expect(orderby[0]).eq('nodeleafs.origin_metatype_id ASC');
+        expect(orderby[1]).eq('origin_metatype_uuid ASC');
+        expect(orderby[2]).eq('fake_alias.origin_metatype_name ASC');
+        repo._query.ORDERBY?.pop();
+        expect(orderby[2]).undefined;
+
+        repo = repo.options({
+            sortBy: 'destination_metatype_id,destination_id', 
+            sortDesc: true
+        });
+        expect(orderby[2]).eq('nodeleafs.destination_metatype_id DESC');
+        expect(orderby[3]).eq('nodeleafs.destination_id DESC')
+
+        const results = await repo.list();
+        expect(results.value[0].depth).eq(8)
+        expect(results.value[0].path?.length).eq(8);
     });
 });
 

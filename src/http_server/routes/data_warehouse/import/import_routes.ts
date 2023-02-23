@@ -147,6 +147,7 @@ export default class ImportRoutes {
                 .list({
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,
+                    tableName: null,
                     sortBy: req.query.sortBy,
                     sortDesc: req.query.sortDesc ? String(req.query.sortDesc).toLowerCase() === 'true' : undefined,
                 } as QueryOptions)

@@ -647,13 +647,15 @@ export class Repository {
     }
 
     // function to enhance grouping capabilities beyond the simple mechanic of the queryOptions groupby
-    groupBy(fields: string | string[], tableName?: string) {
+    groupBy(fields: string | string[], tableName?: string | null) {
         if (!this._query.GROUPBY) {
             this._query.GROUPBY = [];
         }
 
         let table = '';
-        if (tableName) {
+        if (tableName === null) {
+            table = ''; // supply null to avoid qualifying the table at all
+        } else if (tableName) {
             table = this._aliasMap.has(tableName) ? this._aliasMap.get(tableName)! : tableName;
         } else {
             table = this._tableAlias;
@@ -672,13 +674,15 @@ export class Repository {
         return this;
     }
 
-    sortBy(fields: string | string[], tableName?: string, sortDesc?: boolean) {
+    sortBy(fields: string | string[], tableName?: string | null, sortDesc?: boolean) {
         if (!this._query.ORDERBY) {
             this._query.ORDERBY = [];
         }
 
         let table = '';
-        if (tableName) {
+        if (tableName === null) {
+            table = ''; // supply null to avoid qualifying the table at all
+        } else if (tableName) {
             table = this._aliasMap.has(tableName) ? this._aliasMap.get(tableName)! : tableName;
         } else {
             table = this._tableAlias;
@@ -713,7 +717,10 @@ export class Repository {
 
             // qualify groupby with table name to avoid errors
             let table: string;
-            if (queryOptions.tableName && this._aliasMap.has(queryOptions.tableName)) {
+            // specifically do not use any table alias if null
+            if (queryOptions.tableName === null) {
+                table = '';
+            } else if (queryOptions.tableName && this._aliasMap.has(queryOptions.tableName)) {
                 table = this._aliasMap.get(queryOptions.tableName)!;
             } else if (queryOptions.tableName) {
                 table = queryOptions.tableName;
@@ -725,12 +732,7 @@ export class Repository {
                 // if there is a list of groupBy columns, qualify each with table name
                 const groupByParts = queryOptions.groupBy.split(',');
                 groupByParts.forEach((part) => {
-                    if (part.includes('.')) {
-                        // skip pre-qualified columns
-                        this._query.GROUPBY?.push(part);
-                    } else {
-                        this._query.GROUPBY?.push(format(`%s.%s`, table, part));
-                    }
+                    this._query.GROUPBY?.push(this._qualifyField(part, table));
                 });
             }
         }
@@ -747,7 +749,10 @@ export class Repository {
 
             // qualify order by with table name to avoid errors
             let table: string;
-            if (queryOptions.tableName && this._aliasMap.has(queryOptions.tableName)) {
+            // specifically do not use any table alias if null
+            if (queryOptions.tableName === null) {
+                table = '';
+            } else if (queryOptions.tableName && this._aliasMap.has(queryOptions.tableName)) {
                 table = this._aliasMap.get(queryOptions.tableName)!;
             } else if (queryOptions.tableName) {
                 table = queryOptions.tableName;
@@ -755,21 +760,12 @@ export class Repository {
                 table = this._tableAlias;
             }
 
-            if (table !== '') {
-                // if there is a list of order by columns, qualify each with table name
-                const sortByParts = queryOptions.sortBy.split(',');
-                sortByParts.forEach((part) => {
-                    if (part.includes('.')) {
-                        // skip pre-qualified columns
-                        // sort desc if specified
-                        const desc = queryOptions.sortDesc === true ? 'DESC' : 'ASC';
-                        this._query.ORDERBY?.push(`%s %s`, part, desc);
-                    } else {
-                        const desc = queryOptions.sortDesc === true ? 'DESC' : 'ASC';
-                        this._query.ORDERBY?.push(format(`%s.%s %s`, table, part, desc));
-                    }
-                });
-            }
+            // if there is a list of order by columns, qualify each with table name
+            const sortByParts = queryOptions.sortBy.split(',');
+            sortByParts.forEach((part) => {
+                const desc = queryOptions.sortDesc === true ? 'DESC' : 'ASC';
+                this._query.ORDERBY?.push(format(`%s %s`, this._qualifyField(part, table), desc));
+            });
         }
 
         if (this._query.ORDERBY) {
@@ -1012,7 +1008,7 @@ export class Repository {
     private _qualifyField(field: string, table: string): string {
         let qualifiedField;
 
-        if (field.includes('.')) {
+        if (field.includes('.') || table === '') {
             // if column is already qualified in dot notation,
             // qualifying it again will cause an error
             qualifiedField = field;
@@ -1040,7 +1036,7 @@ export type QueryOptions = {
     // used to specify distinction
     distinct_on?: {table: string; column: string} | undefined;
     // used to qualify groupBy column
-    tableName?: string | undefined;
+    tableName?: string | null | undefined;
     // load from a materialized view if one is present
     loadFromView?: boolean;
 };
