@@ -388,12 +388,10 @@ describe('An Edge Repository', async () => {
         return edgeRepo.delete(edges[0]);
     });
 
-
     it('can query raw data on edges', async () => {
         // TODO: implement this test
         return Promise.resolve();
     });
-
 });
 
 const payload: {[key: string]: any} = {

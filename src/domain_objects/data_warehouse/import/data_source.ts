@@ -36,6 +36,7 @@ export class ReceiveDataOptions {
     websocket?: WebSocket;
     has_files?: boolean = false; // dictates that this piece of data has files attached
     errorCallback?: (error: any) => void;
+    fast_load?: boolean = false; // dictates whether to use the csv fast load module on the timeseries source
 }
 
 /*
@@ -448,7 +449,7 @@ export default class DataSourceRecord extends BaseDomainClass {
                 {value: HttpDataSourceConfig, name: 'http'},
                 {value: AvevaDataSourceConfig, name: 'aveva'},
                 {value: TimeseriesDataSourceConfig, name: 'timeseries'},
-                {value: P6DataSourceConfig, name: 'p6'}
+                {value: P6DataSourceConfig, name: 'p6'},
             ],
         },
     })
@@ -460,7 +461,13 @@ export default class DataSourceRecord extends BaseDomainClass {
         name: string;
         adapter_type: string;
         active?: boolean;
-        config?: StandardDataSourceConfig | HttpDataSourceConfig | JazzDataSourceConfig | AvevaDataSourceConfig | TimeseriesDataSourceConfig | P6DataSourceConfig;
+        config?:
+            | StandardDataSourceConfig
+            | HttpDataSourceConfig
+            | JazzDataSourceConfig
+            | AvevaDataSourceConfig
+            | TimeseriesDataSourceConfig
+            | P6DataSourceConfig;
         data_format?: string;
         status?: 'ready' | 'polling' | 'error';
         status_message?: string;

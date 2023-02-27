@@ -733,6 +733,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
         const data = response.data!.graph;
         expect(data.length).eq(17);
 
+
         for (const nL of data) {
             expect(nL.depth).not.undefined;
             expect(nL.depth).gt(0);
@@ -769,6 +770,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
         expect(response.data).not.undefined;
         const data = response.data!.graph;
         expect(data.length).eq(11);
+
 
         for (const nL of data) {
             expect(nL.depth).not.undefined;
@@ -810,6 +812,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
         expect(response.data).not.undefined;
         const data = response.data!.graph;
         expect(data.length).eq(11);
+
 
         for (const nL of data) {
             expect(nL.depth).not.undefined;
@@ -929,6 +932,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
         const data = response.data!.graph;
         expect(data.length).eq(11);
 
+
         for (const nL of data) {
             expect(nL.depth).not.undefined;
             expect(nL.depth).gt(0);
@@ -967,6 +971,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
         expect(response.data).not.undefined;
         const data = response.data!.graph;
         expect(data.length).eq(8);
+
 
         for (const nL of data) {
             expect(nL.depth).not.undefined;
@@ -1010,6 +1015,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
         expect(response.data).not.undefined;
         const data = response.data!.graph;
         expect(data.length).eq(8);
+
 
         for (const nL of data) {
             expect(nL.depth).not.undefined;

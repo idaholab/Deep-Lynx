@@ -728,13 +728,11 @@ export class Repository {
                 table = this._tableAlias;
             }
 
-            if (table !== '') {
-                // if there is a list of groupBy columns, qualify each with table name
-                const groupByParts = queryOptions.groupBy.split(',');
-                groupByParts.forEach((part) => {
-                    this._query.GROUPBY?.push(this._qualifyField(part, table));
-                });
-            }
+            // if there is a list of groupBy columns, qualify each with table name
+            const groupByParts = queryOptions.groupBy.split(',');
+            groupByParts.forEach((part) => {
+                this._query.GROUPBY?.push(this._qualifyField(part, table));
+            });
         }
 
         // separate all groupby fields with a comma and push to main query
