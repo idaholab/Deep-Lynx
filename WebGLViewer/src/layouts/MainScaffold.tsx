@@ -31,8 +31,8 @@ import MenuIcon from '@mui/icons-material/Menu';
 
 // Custom Components
 import Header from '../components/coreapp/Header';
-import SideBarLeft from '../components/coreapp/SideBarLeft';
-import SideBarRight from '../components/coreapp/SideBarRight';
+import DrawerLeft from '../components/coreapp/DrawerLeft';
+import DrawerRight from '../components/coreapp/DrawerRight';
 
 // Styles
 // @ts-ignore
@@ -53,7 +53,7 @@ export default function MainScaffold(props: any) {
   return (
     <Box sx={{ display: 'flex' }}>
       <Header />
-      <SideBarLeft />
+      <DrawerLeft />
       <Box
         sx={{ flexGrow: 1, marginTop: '64px', padding: '0px', zIndex: '0' }}
         className={classNames(
@@ -64,7 +64,7 @@ export default function MainScaffold(props: any) {
         )}
       >
         {children}
-        <SideBarRight/>
+        <DrawerRight/>
       </Box>
     </Box>
   );

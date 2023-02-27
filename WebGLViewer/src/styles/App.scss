@@ -84,10 +84,10 @@ Button {
   transition: all 400ms;
 }
 
-.sidebar-sizing {
+.drawer-left-sizing {
   flex: 1 0 100%;  
 
-  &.sidebar-sizing-asset-selected {
+  &.drawer-left-sizing-asset-selected {
     flex: 1 0 50%;
   }
 }

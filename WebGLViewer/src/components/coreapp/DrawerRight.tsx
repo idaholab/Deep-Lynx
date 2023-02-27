@@ -13,7 +13,7 @@ import {
   Typography
 } from "@mui/material";
 
-export default function SideBarRight(props: any) {
+export default function DrawerRight(props: any) {
   const { children } = props;
 
   const theme = useTheme();

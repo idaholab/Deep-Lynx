@@ -70,7 +70,7 @@ const SearchBar = ({setSearchQuery}: any) => (
   </FormControl>
 );
 
-export default function SideBarLeft(props: any) {
+export default function DrawerLeft(props: any) {
   const { children } = props;
 
   const theme = useTheme();
@@ -143,9 +143,9 @@ export default function SideBarLeft(props: any) {
         <Box
           sx={{ display: 'flex', flexDirection: 'column', padding: '16px 0px 0', overflowX: 'hidden', }}
           className={classNames(
-            'sidebar-sizing',
+            'drawer-left-sizing',
             {
-              'sidebar-sizing-asset-selected': Object.keys(selectedAssetObject).length !== 0,
+              'drawer-left-sizing-asset-selected': Object.keys(selectedAssetObject).length !== 0,
             },
           )}
         >
