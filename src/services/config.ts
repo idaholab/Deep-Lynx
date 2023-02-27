@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as crypto from 'crypto';
 
+
 /*
  Config is a singleton class representing the application's configuration and
  environment at time of original construction. If at all possible, all properties

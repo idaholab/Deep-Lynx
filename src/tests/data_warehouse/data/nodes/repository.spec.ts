@@ -366,11 +366,11 @@ describe('A Node Repository', async () => {
         return nodeRepo.delete(mixed[1]);
     }).timeout(30000);
 
-
     it('can query raw data on nodes', async () => {
         // TODO: implement this test
         return Promise.resolve();
     });
+
 });
 
 const payload: {[key: string]: any} = {
