@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useEffect } from 'react';
 import { Box, CssBaseline } from '@mui/material';
 import { useTheme, ThemeProvider, createTheme } from '@mui/material/styles';
-import { useAppSelector, useAppDispatch } from '../app/hooks';
+import { useAppSelector, useAppDispatch } from '../app/hooks/hooks';
 
 // @ts-ignore
 import COLORS from './styles/variables';
@@ -70,6 +70,7 @@ const getDesignTokens = (mode: PaletteMode) => ({
 });
 
 function App() {
+
   const theme = useTheme();
 
   theme.typography.h1 = {
@@ -124,12 +125,10 @@ function App() {
     <div className="App">
       <CssBaseline>
         <Header>
-          <main>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              {/* <Route path="/settings" element={<Settings />} /> */}
-            </Routes>
-          </main>
+          <Routes>
+            <Route path="/viewer" element={<Dashboard />} />
+            {/* <Route path="/settings" element={<Settings />} /> */}
+          </Routes>
         </Header>
       </CssBaseline>
     </div>

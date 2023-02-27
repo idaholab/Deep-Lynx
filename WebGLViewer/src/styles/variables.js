@@ -12,6 +12,7 @@ const COLORS = {
   colorLightgray3: '#c4c4c4',
   colorDarkgray: '#AFAFAF',
   colorDarkgray2: '#888888',
+  colorListSelectGray: '#BfBFBF'
 };
 
 export default COLORS;

@@ -1,8 +1,8 @@
 /* tslint:disable:variable-name */
 import * as path from 'path';
 import * as fs from 'fs';
-import NodeRSA from 'node-rsa';
-import crypto from 'crypto';
+import * as crypto from 'crypto';
+
 
 /*
  Config is a singleton class representing the application's configuration and

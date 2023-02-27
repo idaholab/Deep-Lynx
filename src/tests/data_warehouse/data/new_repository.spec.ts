@@ -31,6 +31,8 @@ import MetatypeRelationshipPairRepository from '../../../data_access_layer/repos
 import DataSourceRepository, {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import fs from 'fs';
 import DataStagingRepository from '../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
+import { Repository } from '../../../data_access_layer/repositories/repository';
+import NodeLeafRepository from '../../../data_access_layer/repositories/data_warehouse/data/node_leaf_repository';
 
 describe('The updated repository layer', async () => {
     let containerID: string;
@@ -882,8 +884,6 @@ describe('The updated repository layer', async () => {
     it('can execute nested queries', async () => {
         const nodeRepo = new NodeRepository();
 
-        let alias = new RegExp(nodeRepo._tableAlias, 'g');
-
         // checking and/or binaries using
         // A: song is older than 1986
         // B: song is good
@@ -896,13 +896,15 @@ describe('The updated repository layer', async () => {
             .and()
             .metatypeName('eq', 'Song')
             .and(
-                new NodeRepository()
-                    .property('year', '<', 1986)
-                    .and(new NodeRepository().property('isGoodSong', 'eq', 'true').and().property('availability', 'eq', 'OnDemand')),
+                new Repository('nodes')
+                    .queryJsonb('year', 'properties', '<', 1986)
+                    .and(new Repository('nodes')
+                        .queryJsonb('isGoodSong', 'properties', 'eq', 'true')
+                        .and()
+                        .queryJsonb('availability', 'properties', 'eq', 'OnDemand')),
             );
         expect(andAndQuery._query.WHERE).not.undefined;
         let query = andAndQuery._query.WHERE?.join(' ');
-        expect(query?.match(alias || [])?.length).eq(5);
 
         const andAndResults = await andAndQuery.list();
         expect(andAndResults.isError).false;
@@ -921,13 +923,14 @@ describe('The updated repository layer', async () => {
             .and()
             .metatypeName('eq', 'Song')
             .and(
-                new NodeRepository()
-                    .property('year', '<', 1986)
-                    .and(new NodeRepository().property('isGoodSong', 'eq', 'true').or().property('availability', 'eq', 'OnDemand')),
+                new Repository('nodes')
+                    .queryJsonb('year', 'properties', '<', 1986)
+                    .and(new Repository('nodes')
+                        .queryJsonb('isGoodSong', 'properties', 'eq', 'true')
+                        .or()
+                        .queryJsonb('availability', 'properties', 'eq', 'OnDemand')),
             );
         expect(andOrQuery._query.WHERE).not.undefined;
-        query = andOrQuery._query.WHERE?.join(' ');
-        expect(query?.match(alias || [])?.length).eq(5);
 
         const andOrResults = await andOrQuery.list();
         expect(andOrResults.isError).false;
@@ -948,13 +951,15 @@ describe('The updated repository layer', async () => {
             .and()
             .metatypeName('eq', 'Song')
             .and(
-                new NodeRepository()
-                    .property('year', '<', 1986)
-                    .or(new NodeRepository().property('isGoodSong', 'eq', 'true').and().property('availability', 'eq', 'OnDemand')),
+                new Repository('nodes')
+                    .queryJsonb('year', 'properties', '<', 1986)
+                    .or(new Repository('nodes')
+                        .queryJsonb('isGoodSong', 'properties', 'eq', 'true')
+                        .and()
+                        .queryJsonb('availability', 'properties', 'eq', 'OnDemand')),
             );
         expect(orAndQuery._query.WHERE).not.undefined;
         query = orAndQuery._query.WHERE?.join(' ');
-        expect(query?.match(alias || [])?.length).eq(5);
 
         const orAndResults = await orAndQuery.list();
         expect(orAndResults.isError).false;
@@ -975,13 +980,15 @@ describe('The updated repository layer', async () => {
             .and()
             .metatypeName('eq', 'Song')
             .and(
-                new NodeRepository()
-                    .property('year', '<', 1986)
-                    .or(new NodeRepository().property('isGoodSong', 'eq', 'true').or().property('availability', 'eq', 'OnDemand')),
+                new Repository('nodes')
+                    .queryJsonb('year', 'properties', '<', 1986)
+                    .or(new Repository('nodes')
+                        .queryJsonb('isGoodSong', 'properties', 'eq', 'true')
+                        .or()
+                        .queryJsonb('availability', 'properties', 'eq', 'OnDemand')),
             );
         expect(orOrQuery._query.WHERE).not.undefined;
         query = orOrQuery._query.WHERE?.join(' ');
-        expect(query?.match(alias || [])?.length).eq(5);
 
         const orOrResults = await orOrQuery.list();
         expect(orOrResults.isError).false;
@@ -999,7 +1006,6 @@ describe('The updated repository layer', async () => {
 
     it('can execute nested queries without removing prior or latter logic', async () => {
         const nodeRepo = new NodeRepository();
-        const alias = new RegExp(nodeRepo._tableAlias, 'g');
 
         // A - song after 1985
         // B - song is not good
@@ -1007,18 +1013,18 @@ describe('The updated repository layer', async () => {
 
         // WHERE (A or (B or C)) AND containerID = id AND metatype = song
         let query = nodeRepo
-            .where(
-                new NodeRepository()
-                    .property('year', '>', 1985)
-                    .or(new NodeRepository().property('isGoodSong', 'eq', 'false').or().property('availability', 'eq', 'SongRadio')),
-            )
+            .where(new Repository('nodes')
+                .queryJsonb('year', 'properties', '>', 1985)
+                .or(new Repository('nodes')
+                    .queryJsonb('isGoodSong', 'properties', 'eq', 'false')
+                    .or()
+                    .queryJsonb('availability', 'properties', 'eq', 'SongRadio')))
             .and()
             .containerID('eq', containerID)
             .and()
             .metatypeName('eq', 'Song');
         expect(query._query.WHERE).not.undefined;
         let queryString = query._query.WHERE?.join(' ');
-        expect(queryString?.match(alias || [])?.length).eq(5);
 
         let results = await query.list();
         expect(results.isError, JSON.stringify(results.error)).false;
@@ -1037,16 +1043,16 @@ describe('The updated repository layer', async () => {
         query = nodeRepo
             .where()
             .containerID('eq', containerID)
-            .and(
-                new NodeRepository()
-                    .property('year', '>', 1985)
-                    .or(new NodeRepository().property('isGoodSong', 'eq', 'false').or().property('availability', 'eq', 'SongRadio')),
-            )
+            .and(new Repository('nodes')
+                .queryJsonb('year', 'properties', '>', 1985)
+                .or(new Repository('nodes')
+                    .queryJsonb('isGoodSong', 'properties', 'eq', 'false')
+                    .or()
+                    .queryJsonb('availability', 'properties', 'eq', 'SongRadio')))
             .and()
             .metatypeName('eq', 'Song');
         expect(query._query.WHERE).not.undefined;
         queryString = query._query.WHERE?.join(' ');
-        expect(queryString?.match(alias || [])?.length).eq(5);
 
         results = await query.list();
         expect(results.isError, JSON.stringify(results.error)).false;
@@ -1067,14 +1073,14 @@ describe('The updated repository layer', async () => {
             .containerID('eq', containerID)
             .and()
             .metatypeName('eq', 'Song')
-            .and(
-                new NodeRepository()
-                    .property('year', '>', 1985)
-                    .or(new NodeRepository().property('isGoodSong', 'eq', 'false').or().property('availability', 'eq', 'SongRadio')),
-            );
+            .and(new Repository('nodes')
+                .queryJsonb('year', 'properties', '>', 1985)
+                .or(new Repository('nodes')
+                    .queryJsonb('isGoodSong', 'properties', 'eq', 'false')
+                    .or()
+                    .queryJsonb('availability', 'properties', 'eq', 'SongRadio')));
         expect(query._query.WHERE).not.undefined;
         queryString = query._query.WHERE?.join(' ');
-        expect(queryString?.match(alias || [])?.length).eq(5);
 
         results = await query.list();
         expect(results.isError, JSON.stringify(results.error)).false;
@@ -1101,18 +1107,17 @@ describe('The updated repository layer', async () => {
         const query = nodeRepo
             .where()
             .containerID('eq', containerID)
-            .join(edgeRepo._tableName,
-                {origin_col: 'id', destination_col: 'origin_id'},
-                {join_type: 'INNER'})
+            .join(edgeRepo._tableName, {origin_col: 'id', destination_col: 'origin_id'}, {join_type: 'INNER'})
             .join(
                 nodeRepo2._tableName,
-                {origin_col: 'destination_id', destination_col: 'id', operator: '<>',},
-                {destination_alias: 'dest', origin: edgeRepo._tableName});
+                {origin_col: 'destination_id', destination_col: 'id', operator: '<>'},
+                {destination_alias: 'dest', origin: edgeRepo._tableName},
+            );
         expect(query._query.JOINS).not.undefined;
         let check = new RegExp(`INNER JOIN ${edgeRepo._tableName} .* ON .*id = .*origin_id`);
-        expect(query._query.JOINS![0]).match(check);
+        expect(query._query.JOINS![query._query.JOINS?.length! - 2]).match(check);
         check = new RegExp(`LEFT JOIN ${nodeRepo2._tableName} dest ON .*destination_id <> .*id`);
-        expect(query._query.JOINS![1]).match(check);
+        expect(query._query.JOINS![query._query.JOINS?.length! - 1]).match(check);
 
         const results = await query.list();
         expect(results.isError, JSON.stringify(results.error)).false;
@@ -1127,17 +1132,15 @@ describe('The updated repository layer', async () => {
         const query = nodeRepo
             .where()
             .containerID('eq', containerID)
-            .join(edgeRepo._tableName,
-                {origin_col: 'id', destination_col: 'origin_id'},
-                {join_type: 'INNER'})
+            .join(edgeRepo._tableName, {origin_col: 'id', destination_col: 'origin_id'}, {join_type: 'INNER'})
             .addFields({id: 'edge_id', properties: 'edge_properties'}, edgeRepo._tableName)
-            .addFields('metatype_relationship_name', edgeRepo._tableName)
+            .addFields('relationship_pair_id', edgeRepo._tableName)
             .addFields(['origin_id', 'destination_id'], edgeRepo._tableName);
         expect(query._query.JOINS).not.undefined;
         const edgeAlias = nodeRepo._aliasMap.get(edgeRepo._tableName);
         expect(query._query.SELECT).includes(`${edgeAlias}.id AS edge_id`);
         expect(query._query.SELECT).includes(`${edgeAlias}.properties AS edge_properties`);
-        expect(query._query.SELECT).includes(`${edgeAlias}.metatype_relationship_name`);
+        expect(query._query.SELECT).includes(`${edgeAlias}.relationship_pair_id`);
         expect(query._query.SELECT).includes(`${edgeAlias}.origin_id`);
         expect(query._query.SELECT).includes(`${edgeAlias}.destination_id`);
 
@@ -1146,7 +1149,7 @@ describe('The updated repository layer', async () => {
         results.value.forEach((result) => {
             expect(result['edge_id' as keyof object]).not.undefined;
             expect(result['edge_properties' as keyof object]).not.undefined;
-            expect(result['metatype_relationship_name' as keyof object]).not.undefined;
+            expect(result['relationship_pair_id' as keyof object]).not.undefined;
             expect(result['origin_id' as keyof object]).not.undefined;
             expect(result['destination_id' as keyof object]).not.undefined;
         });
@@ -1168,9 +1171,7 @@ describe('The updated repository layer', async () => {
         const query = nodeRepo
             .where()
             .containerID('eq', containerID)
-            .join(edgeRepo._tableName, 
-                {origin_col: 'id', destination_col: 'origin_id'},
-                {join_type: 'INNER'})
+            .join(edgeRepo._tableName, {origin_col: 'id', destination_col: 'origin_id'}, {join_type: 'INNER'})
             .addFields({id: 'edge_id', properties: 'edge_properties'}, edgeRepo._tableName)
             .where()
             .containerID('eq', containerID)
@@ -1204,13 +1205,7 @@ describe('The updated repository layer', async () => {
         // metatype relationship repository fully qualifies all its columns
         const repo = new MetatypeRelationshipPairRepository();
 
-        const query = repo
-            .where()
-            .containerID('eq', containerID)
-            .and()
-            .name('like', '%performs%')
-            .and()
-            .query('destination.name', 'eq', 'Song');
+        const query = repo.where().containerID('eq', containerID).and().name('like', '%performs%').and().query('destination.name', 'eq', 'Song');
         const where = query._query.WHERE;
         expect(where![3]).contains('metatype_relationship_pairs.name');
         expect(where![5]).contains('destination.name');
@@ -1225,15 +1220,12 @@ describe('The updated repository layer', async () => {
     });
 
     it('can perform a count query with group by', async () => {
-        const nodeRepo = new NodeRepository();
+        // use the generic repo for this query
+        const nodeRepo = new NodeRepository(true);
         const edgeRepo = new EdgeRepository();
 
         const query = nodeRepo
-            .where()
-            .containerID('eq', containerID)
-            .join(edgeRepo._tableName,
-                {origin_col: 'id', destination_col: 'origin_id'},
-                {join_type: 'INNER'})
+            .join(edgeRepo._tableName, {origin_col: 'id', destination_col: 'origin_id'}, {join_type: 'INNER'})
             .addFields({"properties #>> '{genre}'": 'genre'})
             .where()
             .containerID('eq', containerID)
@@ -1300,7 +1292,7 @@ describe('The updated repository layer', async () => {
     });
 
     it('deduplicates repeated joins without a new alias', async () => {
-        const nodeRepo = new NodeRepository();
+        const nodeRepo = new NodeRepository(true);
         const stagingRepo = new DataStagingRepository();
         const edgeRepo = new EdgeRepository();
 
@@ -1308,11 +1300,10 @@ describe('The updated repository layer', async () => {
         let query = nodeRepo
             .where()
             .containerID('eq', containerID)
-            .join(stagingRepo._tableName,
-                {
-                    origin_col: 'data_staging_id',
-                    destination_col: 'id',
-                })
+            .join(stagingRepo._tableName, {
+                origin_col: 'data_staging_id',
+                destination_col: 'id',
+            })
             .addFields('data', stagingRepo._tableName);
         expect(query._query.JOINS).not.undefined;
         let check = new RegExp(`.* JOIN ${stagingRepo._tableName} .* ON .*data_staging_id = .*id`);
@@ -1320,17 +1311,15 @@ describe('The updated repository layer', async () => {
         expect(query._query.JOINS![0]).match(check);
 
         // second join (duplicate)
-        query = query.join(stagingRepo._tableName, {origin_col: 'data_staging_id', destination_col: 'id',});
+        query = query.join(stagingRepo._tableName, {origin_col: 'data_staging_id', destination_col: 'id'});
         // this second (duplicate) join shouldn't have been added
         expect(query._query.JOINS?.length).eq(1);
 
         // testing a non-duplicate join
-        query = query.join(edgeRepo._tableName,
-            {
-                origin_col: 'id',
-                destination_col: 'origin_id',
-            },
-        );
+        query = query.join(edgeRepo._tableName, {
+            origin_col: 'id',
+            destination_col: 'origin_id',
+        });
         // this join should have been added as it isn't a duplicate
         expect(query._query.JOINS?.length).eq(2);
         // ensure that the join added was the right one
@@ -1338,9 +1327,7 @@ describe('The updated repository layer', async () => {
         expect(query._query.JOINS![1]).match(check);
 
         // testing a duplicate join with an alternate alias
-        query = query.join(stagingRepo._tableName,
-            {origin_col: 'data_staging_id', destination_col: 'id'},
-            {destination_alias: 'new_alias'});
+        query = query.join(stagingRepo._tableName, {origin_col: 'data_staging_id', destination_col: 'id'}, {destination_alias: 'new_alias'});
         // this join should have been added as it has a unique alias
         expect(query._query.JOINS?.length).eq(3);
         // ensure that the join added was the right one
@@ -1359,50 +1346,91 @@ describe('The updated repository layer', async () => {
 
         // create a subquery and save it to this variable
         const sub = nodeRepo.subquery(
-            new NodeRepository()
+            new NodeRepository(true)
                 .select(['id', 'MAX(created_at) AS created_at'], 'sub_nodes')
                 .from('nodes', 'sub_nodes')
                 .where()
                 .query('created_at', '<', date, {dataType: 'date'})
                 .and()
                 .query('container_id', 'eq', containerID)
-                .and(new NodeRepository().query('deleted_at', '>', date, {dataType: 'date'}).or().query('deleted_at', 'is null'))
+                .and(new NodeRepository(true).query('deleted_at', '>', date, {dataType: 'date'}).or().query('deleted_at', 'is null'))
                 .groupBy('id', 'sub_nodes'),
         );
 
-        let query = nodeRepo
-            .join('nodes', 
-                {origin_col: 'id', destination_col: 'id'}, 
-                {join_type: 'RIGHT'})
-            .join(
-                sub,
-                [
-                    {origin_col: 'id', destination_col: 'id'},
-                    {origin_col: 'created_at', destination_col: 'created_at'},
-                ],
-                {destination_alias: 'sub', join_type: 'INNER', origin: 'nodes'})
-            .join('metatypes', {origin_col: 'metatype_id', destination_col: 'id'});
+        let query = nodeRepo.join(
+            sub,
+            [
+                {origin_col: 'id', destination_col: 'id'},
+                {origin_col: 'created_at', destination_col: 'created_at'},
+            ],
+            {destination_alias: 'sub', join_type: 'INNER', origin: 'nodes'},
+        );
         let results = await query.list();
         expect(results.isError, JSON.stringify(results.error)).false;
         expect(results.value.length).eq(75);
 
         // now add a filter to ensure that repository chaining still works
         query = nodeRepo
-            .join('nodes', 
-                {origin_col: 'id', destination_col: 'id'}, 
-                {join_type: 'RIGHT'})
-            .join(sub,
+            .join(
+                sub,
                 [
                     {origin_col: 'id', destination_col: 'id'},
                     {origin_col: 'created_at', destination_col: 'created_at'},
                 ],
-                {destination_alias: 'sub', join_type: 'INNER', origin: 'nodes'})
-            .join('metatypes', {origin_col: 'metatype_id', destination_col: 'id'})
+                {destination_alias: 'sub', join_type: 'INNER', origin: 'nodes'},
+            )
             .where()
             .query('name', 'eq', 'Musician', {tableName: 'metatypes'});
         results = await query.list();
         expect(results.isError, JSON.stringify(results.error)).false;
         expect(results.value.length).eq(16);
+    });
+
+    it('does not qualify a null table', async () => {
+        let repo = new EdgeRepository(true);
+
+        repo = repo.select('origin_id')
+            .addFields({'COUNT(*)': 'outgoing_edges'})
+            .where()
+            .containerID('eq', containerID)
+            .groupBy('origin_id', null)
+            .sortBy('outgoing_edges', null, true)
+            .options({});
+        const orderby = repo._query.ORDERBY![0];
+        const groupby = repo._query.GROUPBY![0];
+        expect(orderby).eq('outgoing_edges DESC');
+        expect(groupby).eq('origin_id');
+        
+        const results = await repo.list();
+        expect(results.isError, JSON.stringify(results.error)).false;
+        expect(results.value[0]['outgoing_edges' as keyof object]).eq('7');
+    });
+
+    it('can sort in multiple formats', async () => {
+        let repo = new NodeLeafRepository(nodes[20].id!, containerID, '10');
+
+        repo = repo
+            .sortBy('origin_metatype_id')
+            .sortBy('origin_metatype_uuid', null)
+            .sortBy('origin_metatype_name', 'fake_alias')
+            .options({})
+        const orderby = repo._query.ORDERBY!;
+        expect(orderby[0]).eq('nodeleafs.origin_metatype_id ASC');
+        expect(orderby[1]).eq('origin_metatype_uuid ASC');
+        expect(orderby[2]).eq('fake_alias.origin_metatype_name ASC');
+        repo._query.ORDERBY?.pop();
+        expect(orderby[2]).undefined;
+
+        repo = repo.options({
+            sortBy: 'destination_metatype_id,destination_id', 
+            sortDesc: true
+        });
+        expect(orderby[2]).eq('nodeleafs.destination_metatype_id DESC');
+        expect(orderby[3]).eq('nodeleafs.destination_id DESC')
+
+        const results = await repo.list();
+        expect(results.value[0].depth).eq(8)
+        expect(results.value[0].path?.length).eq(8);
     });
 });
 

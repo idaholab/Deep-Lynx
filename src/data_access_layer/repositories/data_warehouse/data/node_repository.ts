@@ -24,9 +24,13 @@ export default class NodeRepository extends Repository implements RepositoryInte
     #mapper: NodeMapper = NodeMapper.Instance;
     #fileMapper: FileMapper = FileMapper.Instance;
     #metatypeRepo: MetatypeRepository = new MetatypeRepository();
+    useView = false;
 
-    constructor() {
-        super(NodeMapper.viewName);
+    // generic option allows us to skip view-like setup
+    constructor(useView = false) {
+        super(useView ? NodeMapper.viewName : NodeMapper.tableName);
+        this.useView = useView;
+        this.reset();
     }
 
     delete(n: Node): Promise<Result<boolean>> {
@@ -411,7 +415,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
     }
 
     metatypeName(operator: string, value: any) {
-        super.query('metatype_name', operator, value);
+        super.query('name', operator, value, this.useView ? undefined : {tableName: 'metatypes'});
         return this;
     }
 
@@ -451,7 +455,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
     }
 
     metatypeUUID(operator: string, value: any) {
-        super.query('metatype_uuid', operator, value);
+        super.query('uuid', operator, value, this.useView ? undefined : {tableName: 'metatypes'});
         return this;
     }
 
@@ -488,6 +492,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
             );
         }
 
+        this.reset();
         return Promise.resolve(Result.Success(results.value));
     }
 
@@ -501,7 +506,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
         });
     }
 
-    listAllToFile(fileOptions: FileOptions, queryOptions?: QueryOptions, transaction?: PoolClient): Promise<Result<File>> {
+    async listAllToFile(fileOptions: FileOptions, queryOptions?: QueryOptions, transaction?: PoolClient): Promise<Result<File>> {
         if (fileOptions.file_type === 'parquet' && !fileOptions.parquet_schema) {
             fileOptions.parquet_schema = {
                 id: {type: 'INT64'},
@@ -524,6 +529,25 @@ export default class NodeRepository extends Repository implements RepositoryInte
             };
         }
 
-        return super.findAllToFile(fileOptions, queryOptions, {transaction});
+        const results = await super.findAllToFile(fileOptions, queryOptions, {transaction});
+
+        this.reset();
+        return Promise.resolve(Result.Success(results.value));
+    }
+
+    reset() {
+        super.reset(this.useView ? NodeMapper.viewName : NodeMapper.tableName);
+        if (!this.useView) {
+            this.distinctOn('id')
+                .addFields({name: 'metatype_name', uuid: 'metatype_uuid'}, 'm')
+                .join('metatypes', {origin_col: 'metatype_id', destination_col: 'id'}, {destination_alias: 'm'})
+                .where()
+                .query('deleted_at', 'is null')
+                .sortBy('id')
+                .sortBy('created_at', undefined, true);
+
+            // combine all select-fields into one string in case of COUNT(*) replacement
+            this._query.SELECT = [this._query.SELECT.join(', ')];
+        }
     }
 }

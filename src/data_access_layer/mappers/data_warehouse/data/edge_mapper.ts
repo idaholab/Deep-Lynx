@@ -226,7 +226,28 @@ export default class EdgeMapper extends Mapper {
 
     private retrieveStatement(id: string): QueryConfig {
         return {
-            text: `SELECT * FROM current_edges WHERE id = $1`,
+            text: `SELECT DISTINCT ON (edges.origin_id, edges.destination_id, 
+                            edges.data_source_id, edges.relationship_pair_id)
+                        edges.*,
+                        origin.uuid AS origin_metatype_uuid,
+                        destination.uuid AS destination_metatype_uuid,
+                        mpr.relationship_id,
+                        metatype_relationships.name AS metatype_relationship_name,
+                        metatype_relationships.uuid AS metatype_relationship_uuid,
+                        mpr.uuid AS metatype_relationship_pair_uuid
+                    FROM edges
+                    INNER JOIN metatype_relationship_pairs mpr
+                        ON edges.relationship_pair_id = mpr.id
+                    LEFT JOIN metatype_relationships 
+                        ON mpr.relationship_id = metatype_relationships.id
+                    LEFT JOIN metatypes origin 
+                        ON mpr.origin_metatype_id = origin.id
+                    LEFT JOIN metatypes destination 
+                        ON mpr.destination_metatype_id = destination.id
+                    WHERE edges.deleted_at IS NULL
+                    AND edges.id = $1
+                    ORDER BY edges.origin_id, edges.destination_id, edges.data_source_id, 
+                        edges.relationship_pair_id, edges.id, edges.created_at DESC`,
             values: [id],
         };
     }
@@ -254,15 +275,31 @@ export default class EdgeMapper extends Mapper {
 
     private retrieveByRelationshipStatement(origin: string, relationship: string, destination: string): QueryConfig {
         return {
-            text: `SELECT origin.name, e.*
-            FROM current_edges e
-            INNER JOIN metatype_relationship_pairs mpr ON mpr.id = e.relationship_pair_id
-            LEFT JOIN metatypes origin ON mpr.origin_metatype_id = origin.id
-            LEFT JOIN metatypes destination ON mpr.destination_metatype_id = destination.id
-            LEFT JOIN metatype_relationships relationship ON mpr.relationship_id = relationship.id
-            WHERE origin.name = $1
-            AND relationship.name = $2
-            AND destination.name = $3`,
+            text: `SELECT DISTINCT ON (edges.origin_id, edges.destination_id, 
+                            edges.data_source_id, edges.relationship_pair_id)
+                        origin.name AS origin_metatype_name,
+                        edges.*,
+                        origin.uuid AS origin_metatype_uuid,
+                        destination.uuid AS destination_metatype_uuid,
+                        pairs.relationship_id,
+                        relationships.name AS metatype_relationship_name,
+                        relationships.uuid AS metatype_relationship_uuid,
+                        pairs.uuid AS metatype_relationship_pair_uuid
+                    FROM edges
+                    INNER JOIN metatype_relationship_pairs pairs
+                        ON edges.relationship_pair_id = pairs.id
+                    LEFT JOIN metatype_relationships relationships
+                        ON pairs.relationship_id = relationships.id
+                    LEFT JOIN metatypes origin 
+                        ON pairs.origin_metatype_id = origin.id
+                    LEFT JOIN metatypes destination 
+                        ON pairs.destination_metatype_id = destination.id
+                    WHERE edges.deleted_at IS NULL
+                        AND origin.name = $1
+                        AND relationships.name = $2
+                        AND destination.name = $3
+                    ORDER BY edges.origin_id, edges.destination_id, edges.data_source_id, 
+                        edges.relationship_pair_id, edges.id, edges.created_at DESC`,
             values: [origin, relationship, destination],
         };
     }

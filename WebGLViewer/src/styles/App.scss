@@ -13,6 +13,11 @@
   -webkit-text-size-adjust: 100%;
 }
 
+body {
+  overflow: overlay;
+}
+
+
 .material-symbols-rounded {
   color: #fff;
   font-variation-settings:
@@ -59,4 +64,30 @@
 
 Button {
   text-transform: capitalize !important;
+}
+
+.main-container-sizing {
+  height: calc(100vh - 64px);
+  width: calc(100vw);
+  overflow: hidden;
+  transition: all .3s;
+
+  &.main-container-sizing-with-drawer {
+    width: calc(100vw - 365px);
+    transition: all .3s;
+  }
+}
+
+.webgl-canvas {
+  width: 100% !important;
+  height: 100% !important;
+  transition: all .3s;
+}
+
+.sidebar-sizing {
+  flex: 1 0 100%;  
+
+  &.sidebar-sizing-asset-selected {
+    flex: 1 0 50%;
+  }
 }

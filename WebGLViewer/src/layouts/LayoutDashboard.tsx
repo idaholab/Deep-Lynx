@@ -1,5 +1,7 @@
 import * as React from 'react';
-import { useAppSelector } from '../../app/hooks';
+import { useAppSelector } from '../../app/hooks/hooks';
+
+import WebGL from '../components/display/WebGL';
 
 // Load transitions
 import Fade from '@mui/material/Fade';
@@ -12,17 +14,7 @@ import { Grid, Box } from '@mui/material';
 function LayoutDashboard() {
 
   return (
-    <Box sx={{ padding: '30px' }}>
-      <Grid container spacing={3}>
-        <Grid item xs={12} lg={3} style={{ display: 'flex', flexDirection: 'column' }}>
-
-        </Grid>
-        <Grid item xs={12} lg={9} style={{ display: 'flex' }}>
-
-        </Grid>
-
-      </Grid>
-    </Box>
+    <WebGL></WebGL>
   );
 }
 

@@ -13,10 +13,10 @@ import {NextFunction, Request, Response} from 'express';
 
 // Repository
 import EdgeRepository from '../../../../../data_access_layer/repositories/data_warehouse/data/edge_repository';
+import {Repository} from '../../../../../data_access_layer/repositories/repository';
 const edgeRepo = new EdgeRepository();
 
 export default class EdgeFunctions {
-    
     public static retrieveEdges(req: Request, res: Response, next: NextFunction) {
         // fresh instance of the repo to avoid filter issues
         if (req.container) {
@@ -29,50 +29,45 @@ export default class EdgeFunctions {
             if (req.query.pointInTime !== undefined) {
                 // filter on provided pointInTime
                 const sub = edgeRepo.subquery(
-                    new EdgeRepository()
+                    new EdgeRepository(true)
                         .select(['id', 'MAX(created_at) AS created_at'], 'sub_edges')
                         .from('edges', 'sub_edges')
                         .where()
                         .query('created_at', '<', new Date(req.query.pointInTime as string), {dataType: 'date'})
                         .and()
                         .query('container_id', 'eq', req.container.id!)
-                        .and(new EdgeRepository()
-                            .query('deleted_at', '>', new Date(req.query.pointInTime as string), {dataType: 'date'})
-                            .or()
-                            .query('deleted_at', 'is null'))
-                        .groupBy('id', 'edges'));
+                        .and(
+                            new Repository('edges')
+                                .query('deleted_at', '>', new Date(req.query.pointInTime as string), {dataType: 'date'})
+                                .or()
+                                .query('deleted_at', 'is null'),
+                        )
+                        .groupBy('id', 'edges'),
+                );
 
                 repo = edgeRepo
-                    .join('edges', 
-                        {origin_col: 'id', destination_col: 'id'}, 
-                        {join_type: 'RIGHT'})
-                    .join(sub, 
+                    .join(
+                        sub,
                         [
                             {origin_col: 'id', destination_col: 'id'},
-                            {origin_col: 'created_at', destination_col: 'created_at'}
+                            {origin_col: 'created_at', destination_col: 'created_at'},
                         ],
-                        {destination_alias: 'sub', join_type: 'INNER', origin: 'edges'})
-                    .where().containerID('eq', req.container.id!)
-                    .and( new EdgeRepository()
-                        .origin_node_id('in', payload.node_ids)
-                        .or()
-                        .destination_node_id('in', payload.node_ids)
-                    );
+                        {destination_alias: 'sub', join_type: 'INNER', origin: 'edges'},
+                    )
+                    .where()
+                    .containerID('eq', req.container.id!)
+                    .and(new EdgeRepository(true).origin_node_id('in', payload.node_ids).or().destination_node_id('in', payload.node_ids));
             } else {
                 repo = edgeRepo
                     .where()
                     .containerID('eq', req.container.id!)
-                    .and( new EdgeRepository()
-                        .origin_node_id('in', payload.node_ids)
-                        .or()
-                        .destination_node_id('in', payload.node_ids)
-                    );
+                    .and(new EdgeRepository(true).origin_node_id('in', payload.node_ids).or().destination_node_id('in', payload.node_ids));
             }
 
             if (String(req.query.includeRawData).toLowerCase() === 'true') {
                 repo = repo
-                .join('data_staging', {origin_col:'data_staging_id', destination_col:'id'})
-                .addFields({'data': 'raw_data_properties'}, repo._aliasMap.get('data_staging'));
+                    .join('data_staging', {origin_col: 'data_staging_id', destination_col: 'id'})
+                    .addFields({data: 'raw_data_properties'}, repo._aliasMap.get('data_staging'));
             }
 
             if (req.query.count !== undefined && String(req.query.count).toLowerCase() === 'true') {
@@ -111,8 +106,9 @@ export default class EdgeFunctions {
     public static retrieveEdge(req: Request, res: Response, next: NextFunction) {
         // first check if the edge history is desired, otherwise load the single current edge
         if (String(req.query.history).toLowerCase() === 'true' && req.container) {
-            const includeRawData = (String(req.query.includeRawData).toLowerCase() === 'true') ? true : false
-            edgeRepo.findEdgeHistoryByID(req.params.edgeID, includeRawData)
+            const includeRawData = String(req.query.includeRawData).toLowerCase() === 'true' ? true : false;
+            edgeRepo
+                .findEdgeHistoryByID(req.params.edgeID, includeRawData)
                 .then((result) => {
                     if (result.isError && result.error) {
                         result.asResponse(res);
@@ -160,8 +156,8 @@ export default class EdgeFunctions {
 
         if (String(req.query.includeRawData).toLowerCase() === 'true') {
             repository = repository
-            .join('data_staging', {origin_col:'data_staging_id', destination_col:'id'})
-            .addFields({'data': 'raw_data_properties'}, repository._aliasMap.get('data_staging'))
+                .join('data_staging', {origin_col: 'data_staging_id', destination_col: 'id'})
+                .addFields({data: 'raw_data_properties'}, repository._aliasMap.get('data_staging'));
         }
 
         if (req.query.count !== undefined && String(req.query.count).toLowerCase() === 'true') {
@@ -247,5 +243,4 @@ export default class EdgeFunctions {
             next();
         }
     }
-    
 }

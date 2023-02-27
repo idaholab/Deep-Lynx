@@ -6,14 +6,12 @@ import {User} from '../../../../domain_objects/access_management/user';
 import Logger from '../../../../services/logger';
 import Edge from '../../../../domain_objects/data_warehouse/data/edge';
 import EdgeMapper from '../../../mappers/data_warehouse/data/edge_mapper';
-import Node from '../../../../domain_objects/data_warehouse/data/node';
 import MetatypeRelationshipPairRepository from '../ontology/metatype_relationship_pair_repository';
 import NodeRepository from './node_repository';
 import File, {EdgeFile} from '../../../../domain_objects/data_warehouse/data/file';
 import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
 import QueryStream from 'pg-query-stream';
 import {EdgeConnectionParameter} from '../../../../domain_objects/data_warehouse/etl/type_transformation';
-import {valueCompare} from '../../../../services/utilities';
 import {instanceToPlain, plainToInstance} from 'class-transformer';
 
 /*
@@ -28,9 +26,13 @@ export default class EdgeRepository extends Repository implements RepositoryInte
     #fileMapper: FileMapper = FileMapper.Instance;
     #nodeRepo: NodeRepository = new NodeRepository();
     #pairRepo: MetatypeRelationshipPairRepository = new MetatypeRelationshipPairRepository();
+    useView = false;
 
-    constructor() {
-        super(EdgeMapper.viewName);
+    // generic option allows us to skip view-like setup
+    constructor(useView = false) {
+        super(useView ? EdgeMapper.viewName : EdgeMapper.tableName);
+        this.useView = useView;
+        this.reset();
     }
 
     delete(e: Edge): Promise<Result<boolean>> {
@@ -102,7 +104,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         if (e.id) {
             // to allow partial updates we must first fetch the original object
             const original = await this.findByID(e.id);
-            if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
+            if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${JSON.stringify(original.error)}`));
 
             Object.assign(original.value, e);
 
@@ -433,7 +435,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
     }
 
     relationshipName(operator: string, value: any) {
-        super.query('metatype_relationship_name', operator, value);
+        super.query('name', operator, value, this.useView ? undefined : {tableName: 'metatype_relationships'});
         return this;
     }
 
@@ -473,17 +475,17 @@ export default class EdgeRepository extends Repository implements RepositoryInte
     }
 
     metatypeRelationshipUUID(operator: string, value: any) {
-        super.query('metatype_relationship_uuid', operator, value);
+        super.query('uuid', operator, value, this.useView ? undefined : {tableName: 'metatype_relationships'});
         return this;
     }
 
     originMetatypeUUID(operator: string, value: any) {
-        super.query('origin_metatype_uuid', operator, value);
+        super.query('uuid', operator, value, this.useView ? undefined : {tableAlias: 'origin'});
         return this;
     }
 
     destinationMetatypeUUID(operator: string, value: any) {
-        super.query('destination_metatype_uuid', operator, value);
+        super.query('uuid', operator, value, this.useView ? undefined : {tableAlias: 'destination'});
         return this;
     }
 
@@ -520,6 +522,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
             );
         }
 
+        this.reset();
         return Promise.resolve(Result.Success(results.value));
     }
 
@@ -531,7 +534,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         });
     }
 
-    listAllToFile(fileOptions: FileOptions, queryOptions?: QueryOptions, transaction?: PoolClient): Promise<Result<File>> {
+    async listAllToFile(fileOptions: FileOptions, queryOptions?: QueryOptions, transaction?: PoolClient): Promise<Result<File>> {
         if (fileOptions.file_type === 'parquet' && !fileOptions.parquet_schema) {
             fileOptions.parquet_schema = {
                 id: {type: 'INT64'},
@@ -554,6 +557,48 @@ export default class EdgeRepository extends Repository implements RepositoryInte
             };
         }
 
-        return super.findAllToFile(fileOptions, queryOptions, {transaction});
+        const results = await super.findAllToFile(fileOptions, queryOptions, {transaction});
+
+        this.reset();
+        return Promise.resolve(Result.Success(results.value));
+    }
+
+    reset() {
+        super.reset(this.useView ? EdgeMapper.viewName : EdgeMapper.tableName);
+        if (!this.useView) {
+            // use the repo functions to recreate the current_edges view
+            this.distinctOn(['origin_id', 'destination_id', 'data_source_id', 'relationship_pair_id'])
+                .addFields({uuid: 'origin_metatype_uuid'}, 'origin')
+                .addFields({uuid: 'destination_metatype_uuid'}, 'destination')
+                .addFields(
+                    {
+                        relationship_id: 'relationship_id',
+                        uuid: 'metatype_relationship_pair_uuid',
+                    },
+                    'pairs',
+                )
+                .addFields(
+                    {
+                        name: 'metatype_relationship_name',
+                        uuid: 'metatype_relationship_uuid',
+                    },
+                    'relationships',
+                )
+                .join(
+                    'metatype_relationship_pairs',
+                    {origin_col: 'relationship_pair_id', destination_col: 'id'},
+                    {destination_alias: 'pairs', join_type: 'INNER'},
+                )
+                .join('metatype_relationships', {origin_col: 'relationship_id', destination_col: 'id'}, {origin: 'pairs', destination_alias: 'relationships'})
+                .join('metatypes', {origin_col: 'origin_metatype_id', destination_col: 'id'}, {origin: 'pairs', destination_alias: 'origin'})
+                .join('metatypes', {origin_col: 'destination_metatype_id', destination_col: 'id'}, {origin: 'pairs', destination_alias: 'destination'})
+                .where()
+                .query('deleted_at', 'is null')
+                .sortBy(['origin_id', 'destination_id', 'data_source_id', 'relationship_pair_id'])
+                .sortBy('created_at', undefined, true);
+
+            // combine all select-fields into one string in case of COUNT(*) replacement
+            this._query.SELECT = [this._query.SELECT.join(', ')];
+        }
     }
 }
