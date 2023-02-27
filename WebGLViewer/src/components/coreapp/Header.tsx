@@ -1,26 +1,34 @@
+// React
 import * as React from 'react';
-import { styled, useTheme } from '@mui/material/styles';
-import { useAppSelector, useAppDispatch } from '../../../app/hooks/hooks';
+
+// Hooks
+import { useAppSelector, useAppDispatch } from '../../../app/hooks/reduxTypescriptHooks';
+
+// Import packages
 import classNames from 'classnames';
 
+// Import Redux actions
 import { appStateActions } from '../../../app/store/index';
 
-import Box from '@mui/material/Box';
-import Drawer from '@mui/material/Drawer';
-import CssBaseline from '@mui/material/CssBaseline';
-import MuiAppBar, { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import MenuIcon from '@mui/icons-material/Menu';
-import Paper from '@mui/material/Paper';
+// MUI Styles
+import { styled, useTheme } from '@mui/material/styles';
 
-import SideBarLeft from './SideBarLeft';
-import SideBarRight from './SideBarRight';
+// MUI Components
+import {
+  Box,
+  IconButton,
+  Paper,
+  Toolbar,
+  Typography
+} from '@mui/material';
+import MuiAppBar, { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
+
+// MUI Icons
+import MenuIcon from '@mui/icons-material/Menu';
+
+// Styles
 // @ts-ignore
 import COLORS from '../../styles/variables';
-
-const drawerWidth = 365;
 
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })<{
   open?: boolean;
@@ -31,7 +39,7 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })<{
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
-  marginLeft: `-${drawerWidth}px`,
+  marginLeft: `-${useAppSelector((state: any) => state.appState.openDrawerLeftWidth)}px`,
   ...(open && {
     transition: theme.transitions.create('margin', {
       easing: theme.transitions.easing.easeOut,
@@ -48,14 +56,14 @@ interface AppBarProps extends MuiAppBarProps {
 const AppBar = styled(MuiAppBar, {
   shouldForwardProp: (prop) => prop !== 'open',
 })<AppBarProps>(({ theme, open }) => ({
-  transition: theme.transitions.create(['margin', 'width'], {
+  transition: theme.transitions.create(['margin-left', 'width'], {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
   ...(open && {
-    width: `calc(100% - ${drawerWidth}px)`,
-    marginLeft: `${drawerWidth}px`,
-    transition: theme.transitions.create(['margin', 'width'], {
+    width: `calc(100% - ${useAppSelector((state: any) => state.appState.openDrawerLeftWidth)}px)`,
+    marginLeft: `${useAppSelector((state: any) => state.appState.openDrawerLeftWidth)}px`,
+    transition: theme.transitions.create(['margin-left', 'width'], {
       easing: theme.transitions.easing.easeOut,
       duration: theme.transitions.duration.enteringScreen,
     }),
@@ -74,12 +82,14 @@ export default function Header(props: any) {
     dispatch(appStateActions.toggleDrawerLeft());
   };
 
+  type openDrawerLeftWidth = number;
+  const openDrawerLeftWidth: openDrawerLeftWidth = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);
+
   type openDrawerRightState = boolean;
   const openDrawerRightState: openDrawerRightState = useAppSelector((state: any) => state.appState.openDrawerRight);
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      <CssBaseline />
+    <>
       <Box sx={{ width: '100%', height: '64px', position: 'fixed', backgroundColor: COLORS.colorSecondary, zIndex: 1 }}>
         <Paper square={true} elevation={3} sx={{ width: '100%', height: '64px', backgroundColor: COLORS.colorSecondary }} ></Paper>
       </Box>
@@ -101,57 +111,6 @@ export default function Header(props: any) {
           </Toolbar>
         </AppBar>
       </Box>
-      <Drawer
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
-            width: drawerWidth,
-            boxSizing: 'border-box',
-            background: COLORS.colorLightgray,
-          },
-        }}
-        variant="persistent"
-        anchor="left"
-        open={openDrawerLeftState}
-      >
-        <Box sx={{ width: '100%', overflow: 'hidden', paddingBottom: '12px', marginBottom: '-10px' }}>
-          <Paper square={true} elevation={3} sx={{ width: '102%', height: '64px', backgroundColor: COLORS.colorSecondary, }}>
-            <Toolbar sx={{ padding: 0 }}>
-              <img alt="Deep Lynx Logo" width="100" src="/viewer/assets/lynx-white.png" style={{ marginLeft: '-8px' }} />
-            </Toolbar>
-          </Paper>
-        </Box>
-        <SideBarLeft />
-      </Drawer>
-      <Main
-        open={openDrawerLeftState}
-        sx={{ flexGrow: 1, marginTop: '64px', padding: '0px', zIndex: '0' }}
-        className={classNames(
-          'main-container-sizing',
-          {
-            'main-container-sizing-with-drawer': openDrawerLeftState === true,
-          },
-        )}
-      >
-        {children}
-        <Drawer
-          sx={{
-            width: drawerWidth,
-            flexShrink: 0,
-            '& .MuiDrawer-paper': {
-              width: drawerWidth,
-              boxSizing: 'border-box',
-              marginTop: '64px',
-            },
-          }}
-          variant="persistent"
-          anchor="right"
-          open={openDrawerRightState}
-        >
-          <SideBarRight/>
-        </Drawer>
-      </Main>
-    </Box>
+    </>
   );
 }

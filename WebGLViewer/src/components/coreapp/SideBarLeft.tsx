@@ -1,38 +1,47 @@
+// React
 import * as React from 'react';
+
+// Hooks
 import { useState } from 'react';
-import { styled, useTheme } from '@mui/material/styles';
-import { useAppSelector, useAppDispatch } from '../../../app/hooks/hooks';
+import { useAppSelector, useAppDispatch } from '../../../app/hooks/reduxTypescriptHooks';
+
+// Import Packages
 import classNames from 'classnames';
 
-// Import Redux actions
+// Import Redux Actions
 import { appStateActions } from '../../../app/store/index';
 
-// Import MUI components
+// MUI Styles
+import { useTheme } from '@mui/material/styles';
+
+// MUI Components
 import {
   Box,
   Button,
+  Drawer,
   FormControl,
   List,
   ListItem,
   ListItemText,
   ListItemButton,
   OutlinedInput,
+  Paper,
   Stack,
+  Toolbar,
   Tooltip,
   Typography
 } from '@mui/material';
 
-// Import Icons
+// MUI Icons
 import InfoIcon from '@mui/icons-material/Info';
 
-// Import custom components
+// Custom Components
 import MetadataPanels from '../display/MetadataPanels';
 
 // Import styles
 import '../../styles/App.scss';
 // @ts-ignore
 import COLORS from '../../styles/variables';
-
 
 const filterData = (query: any, data: any) => {
   if (!query) {
@@ -61,12 +70,18 @@ const SearchBar = ({setSearchQuery}: any) => (
   </FormControl>
 );
 
-export default function PersistentDrawerLeft(props: any) {
+export default function SideBarLeft(props: any) {
   const { children } = props;
 
   const theme = useTheme();
 
   const dispatch = useAppDispatch();
+
+  type openDrawerLeftState = boolean;
+  const openDrawerLeftState: openDrawerLeftState = useAppSelector((state: any) => state.appState.openDrawerLeft);
+
+  type openDrawerLeftWidth = number;
+  const openDrawerLeftWidth: openDrawerLeftWidth = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);
 
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -101,286 +116,310 @@ export default function PersistentDrawerLeft(props: any) {
   }
 
   return (
-    <Box sx={{ display: 'flex', height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
-      <Box
-        sx={{ display: 'flex', flexDirection: 'column', padding: '16px 0px 0', overflowX: 'hidden', }}
-        className={classNames(
-          'sidebar-sizing',
-          {
-            'sidebar-sizing-asset-selected': Object.keys(selectedAssetObject).length !== 0,
-          },
-        )}
-      >
-
-        {/* <Box sx={{ flex: '1, 1, auto', display: 'flex', flexDirection: 'row', alignItems: 'center', marginBottom: '12px' }}>
-          <Typography
-            variant="h3"
-            sx={{
-              alignItems: 'center',
-              padding: '0 0 0 16px'
-            }}
-          >
-            Assets
-          </Typography>
-          <Tooltip title="View scene asset/object information. Select and Highlight objects. Show on Graph. View Data.">
-            <InfoIcon sx={{ fill: COLORS.colorDarkgray2, marginLeft: '10px', marginRight: '10px', height: '15px', width: '15px' }} />
-          </Tooltip>
-          <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-        </Box>
-        <Box sx={{ display: 'flex', flexDirection: 'row', fontSize: '14px', padding: '0px 10px 6px' }}>
-          <Box sx={{ borderRight: `1px solid ${COLORS.colorDarkgray2}`, paddingRight: '6px', marginRight: '6px' }}>
-            Id
-          </Box>
-          <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            Title
-          </Box>
-        </Box> */}
-        <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0', borderTop: `1px solid ${COLORS.colorDarkgray}` }}>
-          {/* <List dense sx={{ paddingTop: '0' }}>
-            {dataFiltered.map((object: any, index: number) => (
-              <ListItem
-                key={object.id}
-                disablePadding
-                sx={{ borderBottom: `1px solid ${COLORS.colorDarkgray}` }}
-                secondaryAction={
-                  <Stack spacing={.5} direction="row">
-                    <Button
-                      variant="contained"
-                      size="small"
-                      sx={{
-                        height: '25px',
-                        width: '25px',
-                        padding: '4px',
-                        minWidth: '25px',
-                        '& span': {
-                          fontSize: '18px'
-                        }
-                      }}
-                      onClick={() => {
-                        handleSelectAssetOnScene(object.title)
-                      }}
-                    >
-                      <span className="material-symbols-rounded">
-                        ads_click
-                      </span>
-                    </Button>
-                    <Button
-                      variant="contained"
-                      size="small"
-                      sx={{
-                        height: '25px',
-                        width: '25px',
-                        padding: '4px',
-                        minWidth: '25px',
-                        '& span': {
-                          fontSize: '18px'
-                        }
-                      }}
-                      onClick={() => {
-                        handleHighlightAssetOnScene(object.title)
-                      }}
-                    >
-                      <span className="material-symbols-rounded">
-                        highlight
-                      </span>
-                    </Button>
-                    <Button
-                      variant="contained"
-                      size="small"
-                      sx={{
-                        height: '25px',
-                        width: '25px',
-                        padding: '4px',
-                        minWidth: '25px',
-                        '& span': {
-                          fontSize: '16px'
-                        }
-                      }}
-                      onClick={() => {
-                        handleShowAssetOnGraph(object)
-                      }}
-                    >
-                      <span className="material-symbols-rounded">
-                        hub
-                      </span>
-                    </Button>
-                    <Button
-                      variant="contained"
-                      size="small"
-                      sx={{
-                        height: '25px',
-                        width: '25px',
-                        padding: '4px',
-                        minWidth: '25px',
-                        '& span': {
-                          fontSize: '18px'
-                        }
-                      }}
-                      onClick={() => {
-                        handleToggleDataView(object)
-                      }}
-                    >
-                      <span className="material-symbols-rounded">
-                        show_chart
-                      </span>
-                    </Button>
-                  </Stack>
-                }
-              >
-                <ListItemButton
-                  onClick={() => handleSelectAssetObject(object, `listItem${index+1}`)}
-                  selected={selected === `listItem${index+1}`}
-                  sx={{
-                    '&.Mui-selected': {
-                      backgroundColor: `${COLORS.colorListSelectGray} !important`
-                    },
-                    '&.Mui-focusVisible': {
-                      backgroundColor: `${COLORS.colorListSelectGray} !important`
-                    },
-                    '&:hover': {
-                      backgroundColor: `${COLORS.colorListSelectGray} !important`
-                    }
-                  }}
-                >
-                  <ListItemText>
-                    <Box sx={{ display: 'flex', flexDirection: 'row' }}>
-                      <Box sx={{ borderRight: `1px solid ${COLORS.colorDarkgray2}`, paddingRight: '6px', marginRight: '6px' }}>
-                        { object.id }
-                      </Box>
-                      <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        { object.title }
-                      </Box>
-                    </Box>
-                  </ListItemText>
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List> */}
-        </Box>
+    <Drawer
+      sx={{
+        width: openDrawerLeftWidth,
+        flexShrink: 0,
+        '& .MuiDrawer-paper': {
+          width: openDrawerLeftWidth,
+          boxSizing: 'border-box',
+          background: COLORS.colorLightgray,
+        },
+      }}
+      variant="persistent"
+      anchor="left"
+      open={openDrawerLeftState}
+    >
+      <Box sx={{ width: '100%', overflow: 'hidden', paddingBottom: '12px', marginBottom: '-10px' }}>
+        <Paper square={true} elevation={3} sx={{ width: '102%', height: '64px', backgroundColor: COLORS.colorSecondary, }}>
+          <Toolbar sx={{ padding: 0 }}>
+            <img alt="Deep Lynx Logo" width="100" src="/assets/lynx-white.png" style={{ marginLeft: '-8px' }} />
+          </Toolbar>
+        </Paper>
       </Box>
-      {Object.keys(selectedAssetObject).length !== 0 && 
+
+
+      <Box sx={{ display: 'flex', height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
         <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            flex: '0 50%',
-            borderTop: `1px solid ${COLORS.colorDarkgray}`,
-            padding: '16px 0px 0px 16px',
-            backgroundColor: COLORS.colorLightgray3,
-            overflow: 'hidden'
-          }}
+          sx={{ display: 'flex', flexDirection: 'column', padding: '16px 0px 0', overflowX: 'hidden', }}
+          className={classNames(
+            'sidebar-sizing',
+            {
+              'sidebar-sizing-asset-selected': Object.keys(selectedAssetObject).length !== 0,
+            },
+          )}
         >
-          <Box sx={{  }}>
+
+          {/* <Box sx={{ flex: '1, 1, auto', display: 'flex', flexDirection: 'row', alignItems: 'center', marginBottom: '12px' }}>
             <Typography
               variant="h3"
-              sx={{  }}
+              sx={{
+                alignItems: 'center',
+                padding: '0 0 0 16px'
+              }}
             >
-              Asset Information
+              Assets
             </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'row' }}>
-              <Typography sx={{ borderRight: `1px solid ${COLORS.colorDarkgray2}`, paddingRight: '5px', marginRight: '5px' }}>
-                { selectedAssetObject.id }
-              </Typography>
-              <Typography>
-                { selectedAssetObject.title }
-              </Typography>
+            <Tooltip title="View scene asset/object information. Select and Highlight objects. Show on Graph. View Data.">
+              <InfoIcon sx={{ fill: COLORS.colorDarkgray2, marginLeft: '10px', marginRight: '10px', height: '15px', width: '15px' }} />
+            </Tooltip>
+            <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+          </Box>
+          <Box sx={{ display: 'flex', flexDirection: 'row', fontSize: '14px', padding: '0px 10px 6px' }}>
+            <Box sx={{ borderRight: `1px solid ${COLORS.colorDarkgray2}`, paddingRight: '6px', marginRight: '6px' }}>
+              Id
             </Box>
-            <Box sx={{ marginTop: '8px', marginBottom: '16px' }}>
-              <Stack sx={{ marginBottom: '8px' }} spacing={.5} direction="row">
-                <Button
-                  variant="contained"
-                  size="small"
-                  sx={{
-                    height: '25px',
-                    padding: '4px 8px 4px 4px',
-                    minWidth: '25px',
-                    color: 'white',
-                    '& span': {
-                      fontSize: '16px'
-                    }
-                  }}
-                  onClick={() => {
-                    handleSelectAssetOnScene(selectedAssetObject.title)
-                  }}
-                >
-                  <span className="material-symbols-rounded" style={{ marginRight: '5px' }}>
-                    ads_click
-                  </span>
-                  Select on Scene
-                </Button>
-                <Button
-                  variant="contained"
-                  size="small"
-                  sx={{
-                    height: '25px',
-                    padding: '4px 8px 4px 4px',
-                    minWidth: '25px',
-                    color: 'white',
-                    '& span': {
-                      fontSize: '16px'
-                    }
-                  }}
-                  onClick={() => {
-                    handleHighlightAssetOnScene(selectedAssetObject.title)
-                  }}
-                >
-                  <span className="material-symbols-rounded" style={{ marginRight: '5px' }}>
-                    highlight
-                  </span>
-                  Highlight on Scene
-                </Button>
-              </Stack>
-              <Stack spacing={.5} direction="row">
-                <Button
-                  variant="contained"
-                  size="small"
-                  sx={{
-                    height: '25px',
-                    padding: '4px 8px 4px 4px',
-                    minWidth: '25px',
-                    color: 'white',
-                    '& span': {
-                      fontSize: '16px'
-                    }
-                  }}
-                  onClick={() => {
-                    handleShowAssetOnGraph(selectedAssetObject)
-                  }}
-                >
-                  <span className="material-symbols-rounded" style={{ marginRight: '5px' }}>
-                    hub
-                  </span>
-                  Show on Graph
-                </Button>
-                <Button
-                  variant="contained"
-                  size="small"
-                  sx={{
-                    height: '25px',
-                    padding: '4px 8px 4px 4px',
-                    minWidth: '25px',
-                    color: 'white',
-                    '& span': {
-                      fontSize: '16px'
-                    }
-                  }}
-                  onClick={() => {
-                    handleHighlightAssetOnScene(selectedAssetObject)
-                  }}
-                >
-                  <span className="material-symbols-rounded" style={{ marginRight: '5px' }}>
-                    show_chart
-                  </span>
-                  Toggle Data View
-                </Button>
-              </Stack>
+            <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              Title
             </Box>
-          </Box>      
-          <Box sx={{ flex: 1, minHeight: 0, overflowY: 'scroll', padding: '0px 16px 20px 0px' }}>
-            <MetadataPanels />
+          </Box> */}
+          <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0', borderTop: `1px solid ${COLORS.colorDarkgray}` }}>
+            {/* <List dense sx={{ paddingTop: '0' }}>
+              {dataFiltered.map((object: any, index: number) => (
+                <ListItem
+                  key={object.id}
+                  disablePadding
+                  sx={{ borderBottom: `1px solid ${COLORS.colorDarkgray}` }}
+                  secondaryAction={
+                    <Stack spacing={.5} direction="row">
+                      <Button
+                        variant="contained"
+                        size="small"
+                        sx={{
+                          height: '25px',
+                          width: '25px',
+                          padding: '4px',
+                          minWidth: '25px',
+                          '& span': {
+                            fontSize: '18px'
+                          }
+                        }}
+                        onClick={() => {
+                          handleSelectAssetOnScene(object.title)
+                        }}
+                      >
+                        <span className="material-symbols-rounded">
+                          ads_click
+                        </span>
+                      </Button>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        sx={{
+                          height: '25px',
+                          width: '25px',
+                          padding: '4px',
+                          minWidth: '25px',
+                          '& span': {
+                            fontSize: '18px'
+                          }
+                        }}
+                        onClick={() => {
+                          handleHighlightAssetOnScene(object.title)
+                        }}
+                      >
+                        <span className="material-symbols-rounded">
+                          highlight
+                        </span>
+                      </Button>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        sx={{
+                          height: '25px',
+                          width: '25px',
+                          padding: '4px',
+                          minWidth: '25px',
+                          '& span': {
+                            fontSize: '16px'
+                          }
+                        }}
+                        onClick={() => {
+                          handleShowAssetOnGraph(object)
+                        }}
+                      >
+                        <span className="material-symbols-rounded">
+                          hub
+                        </span>
+                      </Button>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        sx={{
+                          height: '25px',
+                          width: '25px',
+                          padding: '4px',
+                          minWidth: '25px',
+                          '& span': {
+                            fontSize: '18px'
+                          }
+                        }}
+                        onClick={() => {
+                          handleToggleDataView(object)
+                        }}
+                      >
+                        <span className="material-symbols-rounded">
+                          show_chart
+                        </span>
+                      </Button>
+                    </Stack>
+                  }
+                >
+                  <ListItemButton
+                    onClick={() => handleSelectAssetObject(object, `listItem${index+1}`)}
+                    selected={selected === `listItem${index+1}`}
+                    sx={{
+                      '&.Mui-selected': {
+                        backgroundColor: `${COLORS.colorListSelectGray} !important`
+                      },
+                      '&.Mui-focusVisible': {
+                        backgroundColor: `${COLORS.colorListSelectGray} !important`
+                      },
+                      '&:hover': {
+                        backgroundColor: `${COLORS.colorListSelectGray} !important`
+                      }
+                    }}
+                  >
+                    <ListItemText>
+                      <Box sx={{ display: 'flex', flexDirection: 'row' }}>
+                        <Box sx={{ borderRight: `1px solid ${COLORS.colorDarkgray2}`, paddingRight: '6px', marginRight: '6px' }}>
+                          { object.id }
+                        </Box>
+                        <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          { object.title }
+                        </Box>
+                      </Box>
+                    </ListItemText>
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List> */}
           </Box>
         </Box>
-      }
-    </Box>
+        {Object.keys(selectedAssetObject).length !== 0 && 
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              flex: '0 50%',
+              borderTop: `1px solid ${COLORS.colorDarkgray}`,
+              padding: '16px 0px 0px 16px',
+              backgroundColor: COLORS.colorLightgray3,
+              overflow: 'hidden'
+            }}
+          >
+            <Box sx={{  }}>
+              <Typography
+                variant="h3"
+                sx={{  }}
+              >
+                Asset Information
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'row' }}>
+                <Typography sx={{ borderRight: `1px solid ${COLORS.colorDarkgray2}`, paddingRight: '5px', marginRight: '5px' }}>
+                  { selectedAssetObject.id }
+                </Typography>
+                <Typography>
+                  { selectedAssetObject.title }
+                </Typography>
+              </Box>
+              <Box sx={{ marginTop: '8px', marginBottom: '16px' }}>
+                <Stack sx={{ marginBottom: '8px' }} spacing={.5} direction="row">
+                  <Button
+                    variant="contained"
+                    size="small"
+                    sx={{
+                      height: '25px',
+                      padding: '4px 8px 4px 4px',
+                      minWidth: '25px',
+                      color: 'white',
+                      '& span': {
+                        fontSize: '16px'
+                      }
+                    }}
+                    onClick={() => {
+                      handleSelectAssetOnScene(selectedAssetObject.title)
+                    }}
+                  >
+                    <span className="material-symbols-rounded" style={{ marginRight: '5px' }}>
+                      ads_click
+                    </span>
+                    Select on Scene
+                  </Button>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    sx={{
+                      height: '25px',
+                      padding: '4px 8px 4px 4px',
+                      minWidth: '25px',
+                      color: 'white',
+                      '& span': {
+                        fontSize: '16px'
+                      }
+                    }}
+                    onClick={() => {
+                      handleHighlightAssetOnScene(selectedAssetObject.title)
+                    }}
+                  >
+                    <span className="material-symbols-rounded" style={{ marginRight: '5px' }}>
+                      highlight
+                    </span>
+                    Highlight on Scene
+                  </Button>
+                </Stack>
+                <Stack spacing={.5} direction="row">
+                  <Button
+                    variant="contained"
+                    size="small"
+                    sx={{
+                      height: '25px',
+                      padding: '4px 8px 4px 4px',
+                      minWidth: '25px',
+                      color: 'white',
+                      '& span': {
+                        fontSize: '16px'
+                      }
+                    }}
+                    onClick={() => {
+                      handleShowAssetOnGraph(selectedAssetObject)
+                    }}
+                  >
+                    <span className="material-symbols-rounded" style={{ marginRight: '5px' }}>
+                      hub
+                    </span>
+                    Show on Graph
+                  </Button>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    sx={{
+                      height: '25px',
+                      padding: '4px 8px 4px 4px',
+                      minWidth: '25px',
+                      color: 'white',
+                      '& span': {
+                        fontSize: '16px'
+                      }
+                    }}
+                    onClick={() => {
+                      handleHighlightAssetOnScene(selectedAssetObject)
+                    }}
+                  >
+                    <span className="material-symbols-rounded" style={{ marginRight: '5px' }}>
+                      show_chart
+                    </span>
+                    Toggle Data View
+                  </Button>
+                </Stack>
+              </Box>
+            </Box>      
+            <Box sx={{ flex: 1, minHeight: 0, overflowY: 'scroll', padding: '0px 16px 20px 0px' }}>
+              <MetadataPanels />
+            </Box>
+          </Box>
+        }
+      </Box>
+    </Drawer>
   )
 }
