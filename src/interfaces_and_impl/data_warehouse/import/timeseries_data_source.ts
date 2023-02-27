@@ -6,6 +6,8 @@ import {User} from '../../../domain_objects/access_management/user';
 import Result from '../../../common_classes/result';
 import Import, {DataStaging} from '../../../domain_objects/data_warehouse/import/import';
 const JSONStream = require('JSONStream');
+const fastLoad = require('dl-fast-load');
+import Config from '../../../services/config';
 
 import pLimit from 'p-limit';
 import ImportMapper from '../../../data_access_layer/mappers/data_warehouse/import/import_mapper';
@@ -22,6 +24,41 @@ export default class TimeseriesDataSourceImpl implements DataSource {
         // again we have to check for param existence because we might potentially be using class-transformer
         if (record) {
             this.DataSourceRecord = record;
+        }
+    }
+
+    async fastLoad(payloadStream: Readable, user: User, dataSourceImport: Import): Promise<Result<Import | DataStaging[] | boolean>> {
+        let loader = fastLoad.new({
+            connectionString: Config.core_db_connection_string as string,
+            dataSource: this.DataSourceRecord as object,
+            importID: dataSourceImport.id as string,
+        });
+
+        const pass = new PassThrough();
+
+        pass.on('data', (chunk) => {
+            fastLoad.read(loader, chunk);
+        });
+
+        pass.on('error', (e: any) => {
+            return Promise.resolve(Result.Failure(JSON.stringify(e)));
+        });
+
+        pass.on('finish', () => {
+            fastLoad.finish(loader);
+        });
+
+        payloadStream.pipe(pass);
+
+        let i = 0;
+        while (true) {
+            let retrieved = await ImportMapper.Instance.Retrieve(dataSourceImport.id!);
+            if ((!retrieved.isError && retrieved.value.status === 'completed') || i > 100) {
+                return Promise.resolve(retrieved);
+            }
+
+            await this.timer(100);
+            i++;
         }
     }
 
@@ -54,6 +91,10 @@ export default class TimeseriesDataSourceImpl implements DataSource {
 
         if (options?.websocket) {
             options.websocket.send(JSON.stringify(newImport.value));
+        }
+
+        if (options?.fast_load) {
+            return this.fastLoad(payloadStream, user, newImport.value);
         }
 
         // a buffer, once it's full we'll write these records to the database and wipe to start again
@@ -172,5 +213,11 @@ export default class TimeseriesDataSourceImpl implements DataSource {
 
     ToExport(): Promise<DataSourceRecord> {
         return Promise.resolve(this.DataSourceRecord!);
+    }
+
+    timer(ms: number): Promise<any> {
+        return new Promise((resolve) => {
+            setTimeout(() => resolve(true), ms);
+        });
     }
 }
