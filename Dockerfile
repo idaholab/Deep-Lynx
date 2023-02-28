@@ -5,7 +5,7 @@ WORKDIR /srv/core_api
 
 COPY . .
 ENV RUSTFLAGS="-C target-feature=-crt-static"
-WORKDIR /srv/core_api/NodeLibaries/dl-fast-load
+WORKDIR /srv/core_api/NodeLibraries/dl-fast-load
 RUN cargo build --release  --message-format=json-render-diagnostics  > build-output.txt
 
 
