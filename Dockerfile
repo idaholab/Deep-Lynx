@@ -1,13 +1,8 @@
-FROM rust:alpine3.17 as build-rust
-RUN mkdir /module
-WORKDIR /module
+FROM cimg/rust:1.67.0-node as build
 
-COPY NodeLibraries/dl-fast-load .
-ENV RUSTFLAGS="-C target-feature=-crt-static"
-RUN cargo build  > build-output.txt
-
-
-FROM node:18.14.1-alpine3.17 as production
+USER root
+RUN sudo apt-get update
+RUN sudo apt-get upgrade libtasn1-6
 
 # these settings are needed for the admin web gui build, these variables are all baked into the Vue application and thus
 # are available to any end user that wants to dig deep enough in the webpage - as such we don't feel it a security risk
@@ -28,19 +23,17 @@ ENV CORE_DB_CONNECTION_STRING=postgresql://postgres:root@timescaledb:5432/deep_l
 
 # Create the base directory and set the rust version to use default stable
 RUN mkdir /srv/core_api
+RUN rustup default stable
 
 WORKDIR /srv/core_api
 COPY package*.json ./
 
-RUN npm install npm@latest --location=global
 RUN npm update --location=global
-RUN npm install pm2 --location=global
+RUN npm install npm@latest --location=global
 RUN npm install cargo-cp-artifact --location=global
 
 # Bundle app source
 COPY . .
-RUN rm -rf /srv/core_api/NodeLibraries/dl-fast-load
-COPY --from=build-rust /module /srv/core_api/NodeLibraries/dl-fast-load
 
 RUN npm ci --include=dev
 RUN npm run build:docker
@@ -51,6 +44,15 @@ RUN npm run build:web-gl
 # catch any env file a user might have accidentally built into the container
 RUN rm -rf .env
 
+FROM cimg/node:lts as production
+
+WORKDIR /srv/core_api
+
+RUN npm install npm@latest --location=global
+RUN npm update --location=global
+RUN npm install pm2 --location=global
+
+COPY --from=build /srv/core_api /srv/core_api
 
 # Add docker-compose-wait tool ----------------------
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait
