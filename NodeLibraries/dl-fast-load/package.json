@@ -6,7 +6,7 @@
   "scripts": {
     "build": "cargo-cp-artifact -nc index.node -- cargo build --message-format=json-render-diagnostics",
     "build-debug": "npm run build --",
-    "build-release": "cargo-cp-artifact -a cdylib dl-fast-load lib/index.node -- cat build-output.txt",
+    "build-release": "cargo-cp-artifact -a cdylib dl-fast-load index.node -- cat build-output.txt",
     "install": "npm run build-release",
     "test": "cargo test"
   },
