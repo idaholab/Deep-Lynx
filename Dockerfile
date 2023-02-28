@@ -1,5 +1,5 @@
 FROM rust:alpine3.17 as build-rust
-RUN apk add musl-dev
+RUN apk add build-base musl-dev openssl-dev
 RUN mkdir /module
 WORKDIR /module
 
