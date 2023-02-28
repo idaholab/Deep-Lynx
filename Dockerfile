@@ -5,7 +5,7 @@ WORKDIR /module
 
 COPY NodeLibraries/dl-fast-load .
 ENV RUSTFLAGS="-C target-feature=-crt-static"
-RUN cargo build  > build-output.txt
+RUN cargo build --release  --message-format=json-render-diagnostics  > build-output.txt
 
 
 FROM node:18.14.1-alpine3.17 as production
