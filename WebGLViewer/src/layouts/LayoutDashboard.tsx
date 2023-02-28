@@ -1,15 +1,11 @@
+// React
 import * as React from 'react';
-import { useAppSelector } from '../../app/hooks/hooks';
 
+// Hooks
+import { useAppSelector } from '../../app/hooks/reduxTypescriptHooks';
+
+// Custom Components
 import WebGL from '../components/display/WebGL';
-
-// Load transitions
-import Fade from '@mui/material/Fade';
-
-// Load MUI components
-import { Grid, Box } from '@mui/material';
-
-// Load Custom Components
 
 function LayoutDashboard() {
 

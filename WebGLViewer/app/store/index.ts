@@ -3,7 +3,9 @@ import { webGLReducer } from './slices/webGLSlice';
 
 const initialState = {
   openDrawerLeft: true,
+  openDrawerLeftWidth: 365,
   openDrawerRight: false,
+  openDrawerRightWidth: 425,
   selectedAssetObject: {},
   selectAssetOnScene: '',
   highlightAssetOnScene: '',
@@ -54,6 +56,3 @@ export const appStateActions = appStateSlice.actions;
 export type RootState = ReturnType<typeof store.getState>
 // Inferred type: {posts: PostsState, comments: CommentsState, users: UsersState}
 export type AppDispatch = typeof store.dispatch
-
-
-export * from './thunks/fetchWebGL';

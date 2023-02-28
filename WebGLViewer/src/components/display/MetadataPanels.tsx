@@ -1,14 +1,23 @@
+// React
 import * as React from 'react';
-import { useAppSelector, useAppDispatch } from '../../../app/hooks/hooks';
 
-import Box from '@mui/material/Box';
-import Accordion from '@mui/material/Accordion';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import Typography from '@mui/material/Typography';
+// Hooks
+import { useAppSelector } from '../../../app/hooks/reduxTypescriptHooks';
+
+// MUI Components
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  Divider,
+  Typography
+} from "@mui/material";
+
+// MUI Icons
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import Divider from '@mui/material/Divider';
 
+// Styles
 // @ts-ignore
 import COLORS from '../../styles/variables';
 

@@ -1,5 +1,7 @@
+// React
 import * as React from 'react'
 
+// Custom Components
 import PageCard from '../components/coreapp/PageCard'
 
 function LayoutSettings() {

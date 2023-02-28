@@ -3,7 +3,7 @@ import React from "react";
 
 // Hooks
 import { useEffect, useState } from "react";
-import { useAppSelector } from '../../../app/hooks/hooks';
+import { useAppSelector } from '../../../app/hooks/reduxTypescriptHooks';
 
 // Styles
 import '../../styles/App.scss';
@@ -11,7 +11,7 @@ import '../../styles/App.scss';
 // Unity
 import { Unity, useUnityContext } from "react-unity-webgl";
 
-// Material
+// MUI Components
 import {
   Box,
   Button,

@@ -1,7 +1,14 @@
+// React
 import * as React from 'react';
 
-import { Card, CardContent, Typography } from '@mui/material';
+// MUI Components
+import {
+  Card,
+  CardContent,
+  Typography
+} from '@mui/material';
 
+// Styles
 import '../../styles/App.scss';
 // @ts-ignore
 import COLORS from '../../styles/variables';
