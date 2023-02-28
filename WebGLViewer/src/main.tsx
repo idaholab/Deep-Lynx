@@ -1,14 +1,20 @@
+// React
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-
-import { store } from '../app/store/index';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 
+// Import Store
+import { store } from '../app/store/index';
+
+// Import Fonts
 import '@fontsource/source-sans-pro';
 import '@fontsource/montserrat';
 
+// Custom Components
 import App from './App'
+
+// Styles
 import './styles/App.scss';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(

@@ -62,7 +62,7 @@ You must follow these steps in the exact order given. Failure to do so will caus
 
 2. Clone the DeepLynx [repository](https://gitlab.software.inl.gov/b650/Deep-Lynx/-/tree/master).
 
-3. Change directories with `cd ./NodeLibraries/dl-fast-load` and run `cargo clean && npm install` - this preps the dl-fast-load rust module for installation
+3. Change directories with `cd ./NodeLibraries/dl-fast-load` and run `cargo clean && cargo build --release  --message-format=json-render-diagnostics  > build-output.txt` - this preps the dl-fast-load rust module for installation
 
 4. Return to the root DeepLynx directory with `cd ../../` and run `npm upgrade && npm ci`.
 

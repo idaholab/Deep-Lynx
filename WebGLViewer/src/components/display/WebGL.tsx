@@ -4,16 +4,16 @@ import React from "react";
 // Hooks
 import { useEffect, useState } from "react";
 
-// Material
+// Helpers
+import regex from "../../../app/helpers/regex";
+
+// MUI Components
 import {
   Box,
 } from "@mui/material";
 
-// Components 
+// Custom Components 
 import UnityInstance from "./UnityInstance";
-
-// Helpers
-import regex from "../../helpers/regex";
 
 export default function WebGL() {
 

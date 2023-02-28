@@ -1,19 +1,34 @@
+// React
 import * as React from 'react';
-import { useEffect } from 'react';
-import { Box, CssBaseline } from '@mui/material';
-import { useTheme, ThemeProvider, createTheme } from '@mui/material/styles';
-import { useAppSelector, useAppDispatch } from '../app/hooks/hooks';
+import { Routes, Route } from 'react-router-dom';
 
+// Hooks
+import { useEffect } from 'react';
+import { useAppSelector, useAppDispatch } from '../app/hooks/reduxTypescriptHooks';
+
+// MUI Styles
+import {
+  useTheme,
+  ThemeProvider,
+  createTheme
+} from '@mui/material/styles';
+
+// MUI Components
+import {
+  Box,
+  CssBaseline,
+  PaletteMode
+} from '@mui/material';
+
+// Styles
 // @ts-ignore
 import COLORS from './styles/variables';
 import './styles/App.scss';
-import { Routes, Route } from 'react-router-dom';
 
-import Header from './components/coreapp/Header';
+// Custom Components
+import MainScaffold from './layouts/MainScaffold';
 import Dashboard from './pages/Dashboard';
 // import Settings from './pages/Settings';
-
-import { PaletteMode } from '@mui/material';
 
 const getDesignTokens = (mode: PaletteMode) => ({
   palette: {
@@ -124,12 +139,12 @@ function App() {
   return (
     <div className="App">
       <CssBaseline>
-        <Header>
+        <MainScaffold>
           <Routes>
             <Route path="/viewer" element={<Dashboard />} />
             {/* <Route path="/settings" element={<Settings />} /> */}
           </Routes>
-        </Header>
+        </MainScaffold>
       </CssBaseline>
     </div>
   );
