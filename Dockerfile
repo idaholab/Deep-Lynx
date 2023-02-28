@@ -39,6 +39,7 @@ RUN npm install cargo-cp-artifact --location=global
 
 # Bundle app source
 COPY . .
+RUN rm -rf /srv/core_api/NodeLibraries/dl-fast-load
 COPY --from=build-rust /module /srv/core_api/NodeLibraries/dl-fast-load
 
 RUN npm ci --include=dev
@@ -49,7 +50,6 @@ RUN rm -rf /srv/core_api/AdminWebApp/node_modules
 RUN npm run build:web-gl
 # catch any env file a user might have accidentally built into the container
 RUN rm -rf .env
-RUN rm -rf /srv/core_api/NodeLibraries/dl-fast-load
 
 
 # Add docker-compose-wait tool ----------------------
