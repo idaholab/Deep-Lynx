@@ -3,8 +3,8 @@ RUN mkdir /module
 WORKDIR /module
 
 COPY NodeLibraries/dl-fast-load .
-
-RUN cargo build > build-output.txt
+ENV RUSTFLAGS="-C target-feature=-crt-static"
+RUN cargo build  > build-output.txt
 
 
 FROM node:18.14.1-alpine3.17 as production
