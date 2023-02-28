@@ -45,7 +45,7 @@ RUN npm run build:web-gl
 RUN rm -rf .env
 
 FROM cimg/node:lts as production
-
+USER root
 WORKDIR /srv/core_api
 
 RUN npm install npm@latest --location=global
