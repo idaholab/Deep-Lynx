@@ -10,7 +10,7 @@ import TypeTransformationRepository from '../../../../data_access_layer/reposito
 import TypeMapping, {TypeMappingExportPayload, TypeMappingUpgradePayload} from '../../../../domain_objects/data_warehouse/etl/type_mapping';
 import {FileInfo} from 'busboy';
 import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
-import { none } from 'fp-ts/lib/Option';
+import {none} from 'fp-ts/lib/Option';
 
 const JSONStream = require('JSONStream');
 const Busboy = require('busboy');
@@ -428,9 +428,9 @@ export default class TypeMappingRoutes {
     private static importTypeMappings(req: Request, res: Response, next: NextFunction) {
         const user = req.currentUser!;
         const importResults: Promise<Result<TypeMapping>[]>[] = [];
-        let active : boolean;
+        let active: boolean;
 
-        if(req.query['isEnabled' as keyof object] === 'true') {
+        if (req.query['isEnabled' as keyof object] === 'true') {
             active = true;
         } else {
             active = false;
@@ -446,7 +446,7 @@ export default class TypeMappingRoutes {
         if (req.headers['content-type']?.includes('application/json')) {
             const repo = new TypeMappingRepository();
             const payload = plainToClass(TypeMapping, req.body);
-            
+
             repo.importToDataSource(req.dataSource.DataSourceRecord?.id!, user, active, ...payload)
                 .then((results) => {
                     res.status(201).json(results);
@@ -477,7 +477,7 @@ export default class TypeMappingRoutes {
                     Result.Failure(e).asResponse(res);
                     return;
                 });
-                
+
                 // once the file has been read, convert to mappings and then attempt the import
                 stream.on('end', () => {
                     const mappings = plainToClass(TypeMapping, objects);

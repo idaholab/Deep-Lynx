@@ -164,6 +164,9 @@ export default {
             chooseColumns: 'Choose Columns',
             render: 'Render Visualization',
             return: 'return',
+            startIndex: 'Start Index',
+            endIndex: 'End Index',
+            indexRange: 'Index Range',
         },
         dataQuery: {
             deleteNode: 'Delete Node',

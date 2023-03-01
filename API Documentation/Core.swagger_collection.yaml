@@ -840,7 +840,6 @@ paths:
                 properties:
                   value:
                     type: array
-                    uniqueItems: true
                     minItems: 1
                     items:
                       type: object
@@ -2250,6 +2249,21 @@ paths:
           in: query
           name: decrypted
           description: Return decrypted data sources. Requires read-write permissions on data.
+        - schema:
+            type: boolean
+          in: query
+          name: timeseries
+          description: Return timeseries data sources (true) or non-timeseries data sources (false)
+        - schema:
+            type: boolean
+          in: query
+          name: count
+          description: Return the count of data sources
+        - schema:
+            type: boolean
+          in: query
+          name: archived
+          description: Return data sources marked as archived
       responses:
         '200':
           description: ''
@@ -3338,28 +3352,6 @@ paths:
       responses:
         '200':
           description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                description: ''
-                minItems: 1
-                uniqueItems: true
-                items:
-                  type: object
-                  required:
-                    - '0'
-                  properties:
-                    '0':
-                      type: array
-                      uniqueItems: true
-                      items:
-                        properties: {}
-                x-examples:
-                  example-1:
-                    - - '70'
-                      - ontology
-                      - write
       tags:
         - Users
       description: Get service user permissions.
@@ -3746,26 +3738,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/ImportDataTypeMappingResponse'
       description: 'Import type mappings for a datasource. Accepts either a JSON body or actual JSON file. The payload should be an array of type mapping classes, previously generated using the export route.'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                type: object
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
       parameters:
         - schema:
             type: boolean
             default: false
           in: query
           name: isEnabled
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportDataTypeMappingsRequest'
+        description: ''
   '/containers/{container_id}/import/datasources/{data_source_id}/mappings/{mapping_id}/transformations':
     get:
       tags:
@@ -4641,7 +4625,6 @@ paths:
                 properties:
                   value:
                     type: array
-                    uniqueItems: true
                     minItems: 1
                     items:
                       required:
@@ -5312,7 +5295,6 @@ components:
       properties:
         value:
           type: array
-          uniqueItems: true
           minItems: 0
           items:
             $ref: '#/components/schemas/Container'
@@ -5338,7 +5320,6 @@ components:
       properties:
         value:
           type: array
-          uniqueItems: true
           minItems: 0
           items:
             $ref: '#/components/schemas/Container'
@@ -5364,7 +5345,6 @@ components:
       properties:
         value:
           type: array
-          uniqueItems: true
           minItems: 0
           items:
             $ref: '#/components/schemas/Container'
@@ -5412,7 +5392,6 @@ components:
       properties:
         value:
           type: array
-          uniqueItems: true
           minItems: 0
           items:
             $ref: '#/components/schemas/Container'
@@ -5806,7 +5785,6 @@ components:
         isError:
           type: boolean
     UploadFileResponse:
-      title: UploadFileResponse
       oneOf:
         - properties:
             value:
@@ -5814,10 +5792,17 @@ components:
             isError:
               type: boolean
         - properties:
-            value:
-              $ref: '#/components/schemas/FileInfo'
             isError:
               type: boolean
+            value:
+              type: array
+              items:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/FileInfo'
+                  isError:
+                    type: boolean
       type: object
     GetFileInfoResponse:
       title: GetFileInfoResponse
@@ -7391,7 +7376,6 @@ components:
         - created_by
         - reference
     FileInfo:
-      description: ''
       type: object
       x-examples:
         example-1:
@@ -7446,6 +7430,9 @@ components:
         md5hash:
           type: string
           nullable: true
+        short_uuid:
+          type: string
+          nullable: true
       required:
         - id
         - file_name
@@ -7454,6 +7441,7 @@ components:
         - created_at
         - created_by
         - container_id
+      title: ''
     DataSourceImport:
       description: ''
       type: object
@@ -8589,13 +8577,11 @@ components:
           type: boolean
         permissions:
           type: array
-          uniqueItems: true
           minItems: 1
           items:
             properties: {}
         roles:
           type: array
-          uniqueItems: true
           minItems: 1
           items:
             properties: {}
@@ -8622,7 +8608,6 @@ components:
           minLength: 1
         keys:
           type: array
-          uniqueItems: true
           minItems: 1
           items:
             required:
@@ -8696,4 +8681,19 @@ components:
           type: string
       required:
         - display_name
+    ImportDataTypeMappingsRequest:
+      title: ImportDataTypeMappingsRequest
+      oneOf:
+        - properties:
+            value:
+              type: array
+              items:
+                type: object
+        - properties:
+            file:
+              type: string
+              format: binary
+              required:
+                - file
+      type: object
   responses: {}

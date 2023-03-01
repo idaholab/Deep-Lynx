@@ -28,31 +28,43 @@
         <v-spacer></v-spacer>
       </v-toolbar>
 
-      <v-expansion-panels v-model="openPanels" >
-        <v-expansion-panel>
-          <v-expansion-panel-header><p class="text-overline" style="margin-bottom: 0px"><strong>{{$t('timeseries.searchTimeRange')}}:</strong> {{this.startDate}} {{this.startTime}} - {{this.endDate}} {{this.endTime}}</p></v-expansion-panel-header>
+      <v-row>
+        <v-col :cols="5" style="padding-left: 24px;">
 
-          <v-expansion-panel-content>
-            <v-row>
-              <v-col :cols="6">
+          <p v-if="timeseriesFlag" class="text-overline" style="margin-bottom: 0px"><strong>{{$t('timeseries.searchTimeRange')}}:</strong> {{this.startDate}} {{this.startTime}} - {{this.endDate}} {{this.endTime}}</p>
+          <p v-else class="text-overline" style="margin-bottom: 0px"><strong>{{$t('timeseries.indexRange')}}:</strong> {{this.startIndex}} - {{this.endIndex}}</p>
+
+          <v-switch
+              hide-details
+              class="d-flex justify-center"
+              v-model="timeseriesFlag"
+              :label="(timeseriesFlag ? 'Timeseries' : 'Index')"
+              style="padding-bottom: 12px;"
+          ></v-switch>
+
+          <div v-if="timeseriesFlag">
+            <v-row >
+              <v-col :cols="12">
                 <h2>{{$t('timeseries.start')}}:</h2>
                 <v-date-picker
                     :value="startDate"
                     @input="setStartDate"
-                    style="padding-right: 30px"></v-date-picker>
+                    class="pr-4"></v-date-picker>
                 <v-time-picker
                     v-model="startTime"
                     @input="setStartTime"
                 ></v-time-picker>
               </v-col>
+            </v-row>
 
-              <v-col :cols="6">
+            <v-row>
+              <v-col :cols="12">
                 <h2>{{$t('timeseries.end')}}:</h2>
                 <v-date-picker
                     :value="endDate"
                     :min="startDate"
                     @input="setEndDate"
-                    style="padding-right: 30px"></v-date-picker>
+                    class="pr-4"></v-date-picker>
                 <v-time-picker
                     :value="endTime"
                     :min="(endDate === startDate) ? startTime : undefined"
@@ -60,30 +72,53 @@
                 ></v-time-picker>
               </v-col>
             </v-row>
+          </div>
+
+          <v-row  v-else>
+            <v-col :cols="6">
+              <v-text-field
+                  v-model="startIndex"
+                  :rules="[rules.required, rules.number]"
+                  :label="$t('timeseries.startIndex')"
+              ></v-text-field>
+            </v-col>
+            <v-col :cols="6">
+              <v-text-field
+                  v-model="endIndex"
+                  :rules="[rules.required, rules.number]"
+                  :label="$t('timeseries.endIndex')"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+
             <v-row>
               <v-col>
                 <v-btn color="primary" @click="runSearch">{{$t('timeseries.runSearch')}}</v-btn>
               </v-col>
             </v-row>
-          </v-expansion-panel-content>
-        </v-expansion-panel>
-      </v-expansion-panels>
 
-      <v-data-table
-          v-if="transformation || dataSource"
-          :headers="headers"
-          :items="results"
-          :items-per-page="1000"
-          :footer-props="{
-                'items-per-page-options':[1000,5000,10000]
-              }"
-      >
+        </v-col>
 
-        <template v-slot:[tablePrimaryTimestampName]="{item}">
-          {{new Date(parseInt(item[primaryTimestampName], 10)).toUTCString()}}
-        </template>
+        <v-col :cols="7">
 
-      </v-data-table>
+          <div id="timeseriesPlot"></div>
+            <v-data-table
+                v-if="transformation || dataSource"
+                :headers="headers"
+                :items="results"
+                :items-per-page="1000"
+                :footer-props="{
+                  'items-per-page-options':[1000,5000,10000]
+                }"
+            >
+
+              <template v-if="timeseriesFlag" v-slot:[tablePrimaryTimestampName]="{item}">
+                {{new Date(item[primaryTimestampName]).toUTCString()}}
+              </template>
+
+            </v-data-table>
+        </v-col>
+      </v-row>
 
     </v-card>
   </v-dialog>
@@ -93,6 +128,7 @@
 import {Component, Prop, Vue, Watch} from "vue-property-decorator";
 import {DataSourceT, NodeT, TimeseriesDataSourceConfig, TypeMappingTransformationT} from "@/api/types";
 import LineChart from "@/components/charts/lineChart.vue";
+import Plotly from "plotly.js-dist-min";
 
 @Component({components: {LineChart}})
 export default class NodeTimeseriesDialog extends Vue {
@@ -131,6 +167,16 @@ export default class NodeTimeseriesDialog extends Vue {
   charts = ['line']
   selectedChart = ''
   selectedColumns: string[] = []
+  timeseriesFlag = true
+  startIndex = 0
+  endIndex = 1000
+  rules = {
+    required: (value: any) => !!value || 'Required',
+    number: (value: any) => {
+      const pattern = /^[0-9]+$/
+      return pattern.test(value) || 'Not a number'
+    }
+  }
 
   get tablePrimaryTimestampName(): string {
     return `item.${this.primaryTimestampName}`
@@ -162,6 +208,36 @@ export default class NodeTimeseriesDialog extends Vue {
   transformationChange() {
     this.load()
     this.loadNode()
+  }
+
+  @Watch('results')
+  resultsChange() {
+    const plotData = []
+
+    // determine columns to create lines for, as there could be multiple valid columns
+    const primaryColumn = (this.dataSource?.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)?.column_name
+
+    const numberColumns = (this.dataSource?.config as TimeseriesDataSourceConfig).columns.filter(c => {
+      if (c.column_name !== primaryColumn && (c.type?.toLowerCase().includes('float') || c.type?.toLowerCase().includes('number'))) {
+        return c
+      }
+    })
+
+    for (const column of numberColumns) {
+      const singlePlot: {x: number[], y: number[], mode: string} =
+          { x: [], y: [], mode: 'lines' };
+
+      for (const entry of this.results) {
+        singlePlot.x.push(entry[primaryColumn!])
+        singlePlot.y.push(entry[column.column_name!])
+      }
+
+      plotData.push(singlePlot)
+    }
+
+    Plotly.newPlot("timeseriesPlot",
+        plotData,
+        {}, {})
   }
 
   mounted() {
@@ -283,19 +359,35 @@ export default class NodeTimeseriesDialog extends Vue {
   }
 
   buildQuery() {
-    return {
-      query: `
-{
-  ${this.dataSource?.name ? this.$utils.stringToValidPropertyName(this.dataSource?.name!) : 'y_' + this.dataSourceID}
-  (_record: {
-      sortBy: "${(this.dataSource?.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)?.column_name}",sortDesc: false}
-      ${(this.dataSource?.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)?.column_name}: {
-      operator: "between", value: ["${this.startDate} ${this.startTime}", "${this.endDate} ${this.endTime}"]
-      }){
-      ${(this.dataSource?.config as TimeseriesDataSourceConfig).columns.map(c => c.column_name).join(' ')}
+    if (this.timeseriesFlag) {
+      return {
+        query: `
+  {
+    ${this.dataSource?.name ? this.$utils.stringToValidPropertyName(this.dataSource?.name!) : 'y_' + this.dataSourceID}
+    (_record: {
+        sortBy: "${(this.dataSource?.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)?.column_name}",sortDesc: false}
+        ${(this.dataSource?.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)?.column_name}: {
+        operator: "between", value: ["${this.startDate} ${this.startTime}", "${this.endDate} ${this.endTime}"]
+        }){
+        ${(this.dataSource?.config as TimeseriesDataSourceConfig).columns.map(c => c.column_name).join(' ')}
+    }
   }
-}
-      `
+        `
+      }
+    } else {
+      return {
+        query: `
+  {
+    ${this.dataSource?.name ? this.$utils.stringToValidPropertyName(this.dataSource?.name!) : 'y_' + this.dataSourceID}
+    (_record: {}
+        ${(this.dataSource?.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)?.column_name}: {
+        operator: "between", value: ["${this.startIndex}", "${this.endIndex}"]
+        }){
+        ${(this.dataSource?.config as TimeseriesDataSourceConfig).columns.map(c => c.column_name).join(' ')}
+    }
+  }
+        `
+      }
     }
   }
 }

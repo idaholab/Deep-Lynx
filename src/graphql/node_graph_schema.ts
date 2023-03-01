@@ -833,10 +833,11 @@ export default class NodeGraphQLSchemaGenerator {
                                 offset: input._record?.page ? input._record.limit * input._record.page : undefined,
                                 sortBy: input._record?.sortBy ? input._record.sortBy : undefined,
                                 sortDesc: input._record?.sortDesc ? input._record.sortDesc : undefined,
+                                tableName: `y_${source.DataSourceRecord?.id}`
                             })
                             .then((results) => {
                                 if (results.isError) {
-                                    Logger.error(`unable to list time series data${results.error?.error}`);
+                                    Logger.error(`unable to list time series data ${results.error?.error}`);
                                     resolve([]);
                                 }
 
