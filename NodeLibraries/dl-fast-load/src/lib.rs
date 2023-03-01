@@ -148,19 +148,13 @@ impl Manager {
                 println!("Time elapsed in writing rows is: {:?}", start.elapsed());
                 println!("Marking import as complete");
 
-                let pool = match PgPoolOptions::new()
-                    .max_connections(5)
-                    .connect(connection_string.borrow())
-                    .await  {
-                    Ok(p) => {p}
-                    Err(e) => {
-                        panic!("unable to open new postgres connection {:?}", e)
-                    }
-                };
+                let options = PgConnectOptions::from_str(connection_string.as_str()).unwrap();
+                let mut pool = options.extra_float_digits(None).connect().await.unwrap();
+
 
                 match sqlx::query("UPDATE imports SET status = 'completed' WHERE id = $1::bigint")
                     .bind(import_id)
-                    .execute(&pool).await {
+                    .execute(&mut pool).await {
                     Ok(_) => {
                         println!("Import marked as completed successfully")
                     }
