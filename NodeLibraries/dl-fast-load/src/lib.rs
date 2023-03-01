@@ -4,11 +4,13 @@ use chrono::{NaiveDateTime};
 use neon::prelude::*;
 use neon::types::buffer::TypedArray;
 use once_cell::sync::OnceCell;
-use sqlx::postgres::{PgPoolOptions};
+use sqlx::postgres::{PgConnectOptions, PgPoolOptions};
 use std::borrow::Borrow;
 use std::io::{BufReader, Read};
+use std::str::FromStr;
 use std::sync::{mpsc, Arc, Mutex};
 use std::time::Instant;
+use sqlx::ConnectOptions;
 use tokio::runtime::Runtime;
 
 // Return a global tokio runtime or create one if it doesn't exist.
@@ -97,16 +99,13 @@ impl Manager {
         let (tx, rx) = mpsc::channel::<ManagerMessage>();
 
         rt.spawn(async move {
-            let pool = PgPoolOptions::new()
-                .max_connections(5)
-                .connect(connection_string.borrow())
-                .await;
+            let options = PgConnectOptions::from_str(connection_string.as_str()).unwrap();
+            let mut pool = options.extra_float_digits(Some(1)).connect().await.unwrap();
 
             let (mut tx1, mut rx1) = tokio::sync::mpsc::channel::<ManagerMessage>(2048);
             rt.spawn(async move {
                 let start = Instant::now();
                 let mut copier = pool
-                    .unwrap()
                     .copy_in_raw(
                         format!(
                             "COPY {} FROM STDIN WITH (DELIMITER '|', FORMAT csv)",
