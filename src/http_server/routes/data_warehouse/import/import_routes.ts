@@ -219,7 +219,7 @@ export default class ImportRoutes {
                     } else if (mimeType === 'text/csv' || mimeType === 'application/vnd.ms-excel') {
                         importPromises.push(
                             req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
-                                fast_load: req.query.fastLoad ? String(req.query.sortDesc).toLowerCase() === 'true' : undefined,
+                                fast_load: req.query.fastLoad ? String(req.query.fastLoad).toLowerCase() === 'true' : undefined,
                                 transformStream: csv({
                                     downstreamFormat: 'array', // this is necessary as the ReceiveData expects an array of json, not single objects
                                 }),
