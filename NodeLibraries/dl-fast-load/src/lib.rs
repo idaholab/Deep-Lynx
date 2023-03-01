@@ -100,7 +100,7 @@ impl Manager {
 
         rt.spawn(async move {
             let options = PgConnectOptions::from_str(connection_string.as_str()).unwrap();
-            let mut pool = options.extra_float_digits(Some(1)).connect().await.unwrap();
+            let mut pool = options.extra_float_digits(None).connect().await.unwrap();
 
             let (mut tx1, mut rx1) = tokio::sync::mpsc::channel::<ManagerMessage>(2048);
             rt.spawn(async move {
