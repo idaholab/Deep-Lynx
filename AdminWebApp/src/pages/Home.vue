@@ -409,40 +409,40 @@
       <!-- Else: Dashboard Landing Page -->
       <v-container fluid v-else>
         <v-row>
+          <!-- DeepLynx Admin Statistics (only include if admin and exists) -->
+          <v-col :cols="12" :md="6" :lg="6" v-if="$auth.IsAdmin() && stats.statistics.migrations">
+            <v-card class="d-flex flex-column height-full">
+              <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('home.migrations')}}</v-card-title>
+              <v-card-text>
+                <v-col :cols="12"><json-viewer :value="stats.statistics.migrations"></json-viewer></v-col>
+              </v-card-text>
+            </v-card>
+          </v-col>
 
-            <v-col :cols="12" :md="6" :lg="6" v-if="$auth.IsAdmin()">
-              <v-card class="d-flex flex-column height-full">
-                <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('home.migrations')}}</v-card-title>
-                <v-card-text>
-                  <v-col :cols="12"><json-viewer :value="stats.statistics.migrations"></json-viewer></v-col>
-                </v-card-text>
-              </v-card>
-            </v-col>
-
-            <v-col :cols="12" :md="6" :lg="6" v-if="$auth.IsAdmin()">
-              <v-card class="d-flex flex-column height-full">
-                <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('home.recordCounts')}}</v-card-title>
-                <v-card-text>
-                  <v-list disabled>
-                    <v-list-item-group
-                        color="primary"
+          <v-col :cols="12" :md="6" :lg="6" v-if="$auth.IsAdmin() && stats.statistics">
+            <v-card class="d-flex flex-column height-full">
+              <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('home.recordCounts')}}</v-card-title>
+              <v-card-text>
+                <v-list disabled>
+                  <v-list-item-group
+                      color="primary"
+                  >
+                    <v-list-item
+                        v-for="(item, i) in Object.keys(stats.statistics)"
+                        :key="i"
                     >
-                      <v-list-item
-                          v-for="(item, i) in Object.keys(stats.statistics)"
-                          :key="i"
-                      >
-                        <v-list-item-content v-if="item !== 'migrations'">
-                          <p>{{item}}</p>
-                          {{stats.statistics[item]}}
-                        </v-list-item-content>
-                      </v-list-item>
-                    </v-list-item-group>
-                  </v-list>
-                </v-card-text>
-              </v-card>
-            </v-col>
+                      <v-list-item-content v-if="item !== 'migrations'">
+                        <p>{{item}}</p>
+                        {{stats.statistics[item]}}
+                      </v-list-item-content>
+                    </v-list-item>
+                  </v-list-item-group>
+                </v-list>
+              </v-card-text>
+            </v-card>
+          </v-col>
 
-          <v-col :cols="12" :md="6" :lg="6" v-if="$auth.IsAdmin()">
+          <v-col :cols="12" :md="6" :lg="6" v-if="$auth.IsAdmin() && stats.long_running_transactions">
             <v-card class="d-flex flex-column height-full">
               <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('home.longRunningTransactions')}}</v-card-title>
               <v-data-table

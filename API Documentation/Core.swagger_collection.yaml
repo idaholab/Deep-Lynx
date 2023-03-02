@@ -979,48 +979,90 @@ paths:
         in: path
         required: true
   '/containers/{container_id}/graphs/nodes/{node_id}/timeseries':
-    parameters:
-      - schema:
-          type: string
-        name: container_id
-        in: path
-        required: true
-      - schema:
-          type: string
-        name: node_id
-        in: path
-        required: true
     post:
       summary: Timeseries Node Query
       operationId: TimeseriesNodeQuery
+      parameters:
+        - schema:
+            type: string
+          name: container_id
+          in: path
+          required: true
+        - schema:
+            type: string
+          name: node_id
+          in: path
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+          text/plain:
+            schema:
+              type: string
+              example: "{\r\n    TimeseriesSourceName {\r\n        timestamp\r\n        value\r\n    }\r\n}"
+          application/xml:
+            schema:
+              type: object
+              properties: {}
+        required: true
+        description: ''
       responses:
         '200':
-          description: OK
-      description: This is an endpoint that accepts a GraphQL query and returns the results of that query. Primarily used for working with time series data on nodes.
-      parameters: []
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+      description: This is an endpoint that accepts a GraphQL query and returns the results of that query. Primarily used for working with time series data that is attached to a specific node.
       tags:
         - Graph
         - TimeSeries
   '/containers/{container_id}/import/datasources/{data_source_id}/data':
-    parameters:
-      - schema:
-          type: string
-        name: container_id
-        in: path
-        required: true
-      - schema:
-          type: string
-        name: data_source_id
-        in: path
-        required: true
     post:
       summary: Timeseries Data Source Query
       operationId: TimeseriesDataSourceQuery
+      parameters:
+        - schema:
+            type: string
+          name: container_id
+          in: path
+          required: true
+        - schema:
+            type: string
+          name: data_source_id
+          in: path
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+          text/plain:
+            schema:
+              type: string
+              example: "{\r\n    Timeseries {\r\n        timestamp\r\n        value\r\n    }\r\n}"
+          application/xml:
+            schema:
+              type: object
+              properties: {}
+        required: true
+        description: ''
       responses:
         '200':
-          description: OK
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
       description: This is an endpoint that accepts a GraphQL query and returns the results of that query. Primarily used for working with time series data without requiring attachment to a node.
-      parameters: []
       tags:
         - Graph
         - TimeSeries
