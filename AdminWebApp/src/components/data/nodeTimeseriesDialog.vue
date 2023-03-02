@@ -9,8 +9,9 @@
       <v-icon v-if="icon" small class="mr-2" v-on="on">mdi-eye</v-icon>
     </template>
 
-    <v-card>
+    <v-card id="dialog">
       <error-banner :message="errorMessage"></error-banner>
+      <success-banner :message="successMessage"></success-banner>
       <v-toolbar
           dark
           color="warning"
@@ -20,7 +21,7 @@
         <v-btn
             icon
             dark
-            @click="dialog = false"
+            @click="closeDialog"
         >
           <v-icon>mdi-close</v-icon>
         </v-btn>
@@ -110,6 +111,8 @@
                 :footer-props="{
                   'items-per-page-options':[1000,5000,10000]
                 }"
+                fixed-header
+                :height="tableHeight"
             >
 
               <template v-if="timeseriesFlag" v-slot:[tablePrimaryTimestampName]="{item}">
@@ -152,9 +155,9 @@ export default class NodeTimeseriesDialog extends Vue {
 
   dialog = false
   errorMessage = ''
+  successMessage = ''
   transformation: TypeMappingTransformationT | null = null
   dataSource: DataSourceT | null = null
-  openPanels = 0
   initialStart: Date = new Date(Date.now() - 1000 * 60 * 60)
   initialEnd: Date = new Date()
   endDate = ''
@@ -163,10 +166,6 @@ export default class NodeTimeseriesDialog extends Vue {
   startTime = ''
   node: NodeT | null = null
   results: any[] = []
-  renderVisualization = false
-  charts = ['line']
-  selectedChart = ''
-  selectedColumns: string[] = []
   timeseriesFlag = true
   startIndex = 0
   endIndex = 1000
@@ -177,6 +176,8 @@ export default class NodeTimeseriesDialog extends Vue {
       return pattern.test(value) || 'Not a number'
     }
   }
+  defaultPlotLimit = 1000
+  tableHeight = 500
 
   get tablePrimaryTimestampName(): string {
     return `item.${this.primaryTimestampName}`
@@ -210,8 +211,18 @@ export default class NodeTimeseriesDialog extends Vue {
     this.loadNode()
   }
 
+  @Watch('dataSourceID')
+  dataSourceChange() {
+    this.load()
+    this.loadNode()
+  }
+
   @Watch('results')
   resultsChange() {
+    if (this.results.length === 0) {
+      return
+    }
+
     const plotData = []
 
     // determine columns to create lines for, as there could be multiple valid columns
@@ -224,20 +235,28 @@ export default class NodeTimeseriesDialog extends Vue {
     })
 
     for (const column of numberColumns) {
-      const singlePlot: {x: number[], y: number[], mode: string} =
-          { x: [], y: [], mode: 'lines' };
+      const singlePlot: {x: number[], y: number[], mode: string, name: string} =
+          { x: [], y: [], mode: 'lines', name: column.column_name! };
 
-      for (const entry of this.results) {
-        singlePlot.x.push(entry[primaryColumn!])
-        singlePlot.y.push(entry[column.column_name!])
+      for (let i = 0; (i < this.results.length && i < this.defaultPlotLimit); i++) {
+        singlePlot.x.push(this.results[i][primaryColumn!])
+        singlePlot.y.push(this.results[i][column.column_name!])
       }
 
       plotData.push(singlePlot)
     }
 
-    Plotly.newPlot("timeseriesPlot",
+    if (this.results.length > this.defaultPlotLimit) {
+      this.successMessage = `Default chart results have been truncated to ${this.defaultPlotLimit} results.`
+    }
+
+    const plotlyDiv = document.getElementById('timeseriesPlot')
+
+    Plotly.react(plotlyDiv!,
         plotData,
-        {}, {})
+        {showlegend: true}, {responsive: true})
+
+    this.determineHeight()
   }
 
   mounted() {
@@ -297,9 +316,6 @@ export default class NodeTimeseriesDialog extends Vue {
   }
 
   runSearch() {
-    this.openPanels = 2
-    this.renderVisualization = false
-
     if(this.legacy) {
     this.$client.submitNodeGraphQLQuery(this.containerID, this.nodeID,  this.buildQueryLegacy())
         .then((results) => {
@@ -323,6 +339,12 @@ export default class NodeTimeseriesDialog extends Vue {
         })
         .catch((e) => this.errorMessage = e)
     }
+  }
+
+  determineHeight() {
+    const timeseriesDialog = document.getElementById('dialog') as HTMLElement;
+    const plot = document.getElementById('timeseriesPlot') as HTMLElement;
+    this.tableHeight = timeseriesDialog.clientHeight - plot.clientHeight - 160 // account for dialog header
   }
 
   setEndDate(value: any) {
@@ -389,6 +411,11 @@ export default class NodeTimeseriesDialog extends Vue {
         `
       }
     }
+  }
+
+  closeDialog() {
+    this.dialog = false
+    this.$emit('timeseriesDialogClose')
   }
 }
 </script>

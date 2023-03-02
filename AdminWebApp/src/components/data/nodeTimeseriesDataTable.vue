@@ -11,7 +11,7 @@
         </template>
 
         <template v-slot:item.actions="{ item }">
-          <node-timeseries-dialog :nodeID="nodeID" :containerID="containerID" :dataSourceID="item.value[1]" :legacy="item.value[0]"></node-timeseries-dialog>
+          <node-timeseries-dialog :nodeID="nodeID" :containerID="containerID" :dataSourceID="item.value[1]" :legacy="item.value[0]"  @timeseriesDialogClose="incrementKey" :key="key"></node-timeseries-dialog>
         </template>
       </v-data-table>
     </v-col>
@@ -34,11 +34,17 @@ export default class NodeTimeseriesDataTable extends Vue {
   // the tuple here is [legacy, id]
   timeseriesTables: object[] = []
 
+  key = 0
+
   headers() {
     return [
       {text: this.$t('timeseries.name'), value: 'name'},
       {text: this.$t('timeseries.actions'), value: 'actions', sortable: false},
     ]
+  }
+
+  incrementKey() {
+    this.key += 1
   }
 
   mounted(){
