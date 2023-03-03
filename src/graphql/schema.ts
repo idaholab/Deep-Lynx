@@ -1297,7 +1297,7 @@ export default class GraphQLRunner {
                 const history = repo.subquery(
                     new Repository('nodes')
                         .select('id', 'sub_nodes')
-                        .select('jsonb_agg(data) AS history', 'raw_data')
+                        .addFields('jsonb_agg(data) AS history', 'raw_data')
                         .from('nodes', 'sub_nodes')
                         .join('data_staging',
                             {origin_col: 'data_staging_id', destination_col: 'id'},
@@ -1626,7 +1626,7 @@ export default class GraphQLRunner {
                 const history = repo.subquery(
                     new Repository('nodes')
                         .select('id', 'sub_nodes')
-                        .select('jsonb_agg(data) AS history', 'raw_data')
+                        .addFields('jsonb_agg(data) AS history', 'raw_data')
                         .from('nodes', 'sub_nodes')
                         .join(
                             'data_staging',
@@ -2021,7 +2021,7 @@ export default class GraphQLRunner {
                 const history = repo.subquery(
                     new Repository('nodes')
                         .select('id', 'sub_edges')
-                        .select('jsonb_agg(data) AS history', 'raw_data')
+                        .addFields('jsonb_agg(data) AS history', 'raw_data')
                         .from('edges', 'sub_edges')
                         .join(
                             'data_staging',
