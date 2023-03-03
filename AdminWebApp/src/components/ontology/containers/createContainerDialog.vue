@@ -132,7 +132,20 @@ export default class CreateContainerDialog extends Vue {
           .catch(e => {
             this.loading = false
             this.dialog = false
-            this.$emit("error", `Container created successfully but unable to load ontology from OWL file or OWL file URL. Navigate to your container and attempt to upload the ontology again, or delete the newly created container and use this dialog again. Error: : ${e}` )
+
+            if (typeof(e) === "object") {
+              if (e.detail) {
+                if (e.detail.toLowerCase().includes('already exists')) {
+                  this.$emit("error", `Container creation unsuccessful. A container with this name has already been created by the current user.`)
+                } else {
+                  this.$emit("error", `Container creation unsuccessful. ${e.detail}`)
+                }
+              } else {
+                this.$emit("error", `Container creation unsuccessful. Please see the logs for additional detail.`)
+              }
+            } else {
+              this.$emit("error", `Container created successfully but unable to load ontology from OWL file or OWL file URL. Navigate to your container and attempt to upload the ontology again, or delete the newly created container and use this dialog again. Error: ${e}` )
+            }
           })
     } else {
       this.$client.createContainer(this.newContainer)
@@ -147,7 +160,17 @@ export default class CreateContainerDialog extends Vue {
           })
           .catch(e => {
             this.loading = false
-            this.errorMessage = e
+
+            if (typeof(e) === 'string' && e.includes('{')) {
+              const eObj = JSON.parse(e)
+              if (eObj.error && eObj.error.detail) {
+                this.errorMessage = eObj.error.detail
+              } else {
+                this.errorMessage = e
+              }
+            } else {
+              this.errorMessage = e
+            }
           })
     }
   }
