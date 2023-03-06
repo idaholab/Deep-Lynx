@@ -324,7 +324,9 @@ export default class NodeTimeseriesDialog extends Vue {
             return
           }
 
-          this.results = results.data[this.transformation?.name ? this.$utils.stringToValidPropertyName(this.transformation?.name) + "_legacy" : 'z_'+this.transformation?.id + "_legacy"]
+          let data = results.data[this.transformation?.name ? this.$utils.stringToValidPropertyName(this.transformation?.name) + "_legacy" : 'z_'+this.transformation?.id + "_legacy"]
+          if (!Array.isArray(data)) data = [data]
+          this.results = data
         })
         .catch((e) => this.errorMessage = e)
     } else {
@@ -335,7 +337,9 @@ export default class NodeTimeseriesDialog extends Vue {
             return
           }
 
-          this.results = results.data[this.dataSource?.name ? this.$utils.stringToValidPropertyName(this.dataSource?.name): 'y_'+this.dataSource?.id]
+          let data = results.data[this.dataSource?.name ? this.$utils.stringToValidPropertyName(this.dataSource?.name): 'y_'+this.dataSource?.id]
+          if (!Array.isArray(data)) data = [data]
+          this.results = data
         })
         .catch((e) => this.errorMessage = e)
     }
