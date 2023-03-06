@@ -59,6 +59,7 @@
         </template>
 
         <template v-slot:[`item.actions`]="{ item }">
+          <image-viewer v-if="isImage(item.file_name)" :file="item" :icon="true"></image-viewer>
           <v-icon
               small
               @click="removeFile(item)"
@@ -78,8 +79,9 @@ import {Component, Prop, Vue, Watch} from "vue-property-decorator";
 import {FileT, NodeT} from "@/api/types";
 import {mdiFileDocumentMultiple} from "@mdi/js";
 import IfcViewer from "@/components/general/ifcViewer.vue";
+import ImageViewer from "@/components/visualization/imageViewer.vue";
 
-@Component({components: {IfcViewer}})
+@Component({components: {IfcViewer, ImageViewer}})
 export default class NodeFilesDialog extends Vue {
   @Prop({required: true})
   readonly node!: NodeT
@@ -139,6 +141,12 @@ export default class NodeFilesDialog extends Vue {
           this.files = files
         })
         .catch(e => this.errorMessage = e)
+  }
+
+  isImage(fileName: string): boolean {
+    const extensions = ['jpg', 'jpeg', 'apng', 'png', 'webp', 'avif', 'gif', 'svg', 'bmp', 'ico', 'cur'];
+
+    return extensions.some(ext => fileName.includes(ext));
   }
 
   copyID(id: string) {
