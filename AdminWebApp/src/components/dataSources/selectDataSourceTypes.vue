@@ -29,7 +29,7 @@ export default class SelectDataSourceTypes extends Vue {
   @Prop({required: false, default: false})
   multiple!: boolean
 
-  @Prop({required: false, default: []})
+  @Prop({required: false, default: () => []})
   values?: string[]
 
   errorMessage = ""
