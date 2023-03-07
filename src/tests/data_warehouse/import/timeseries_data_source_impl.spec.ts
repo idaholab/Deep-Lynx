@@ -483,11 +483,13 @@ describe('A Standard DataSource Implementation can', async () => {
 
         let stream = await DataSourceMapper.Instance.CopyFromHypertable(source?.DataSourceRecord!);
         const out = fs.createWriteStream('./out.csv', {flags: 'w'});
+
+        stream.value.on('end', () => {
+            expect(fs.statSync('./out.csv').size > 0);
+            fs.unlinkSync('./out.csv');
+        });
         await stream.value.pipe(out);
 
-        expect(fs.statSync('./out.csv').size > 0);
-
-        fs.unlinkSync('./out.csv');
         fs.unlinkSync('./test-timeseries-data.csv');
         fs.unlinkSync('./test-timeseries-data.json');
         return sourceRepo.delete(source!);
