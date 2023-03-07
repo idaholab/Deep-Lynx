@@ -262,7 +262,7 @@
                     </v-expansion-panel-content>
                   </v-expansion-panel>
                   <!-- Metadata Properties -->
-                  <v-expansion-panel v-if="results.metadataEnabled && currentNodeInfo.metadata_properties !== null">
+                  <v-expansion-panel v-if="currentNodeInfo.metadata_properties !== null">
                     <v-expansion-panel-header>
                       <div><span class="text-overline">{{$t('dataQuery.metadataProperties')}}:</span></div>
                     </v-expansion-panel-header>
@@ -277,7 +277,7 @@
                     </v-expansion-panel-content>
                   </v-expansion-panel>
                   <!-- Raw Data -->
-                  <v-expansion-panel v-if="results.metadataEnabled && currentNodeInfo.raw_data && currentNodeInfo.raw_data !== null">
+                  <v-expansion-panel v-if="results.rawMetadataEnabled && currentNodeInfo.raw_data && currentNodeInfo.raw_data !== null">
                     <v-expansion-panel-header>
                       <div><span class="text-overline">{{$t('dataQuery.rawData')}}:</span></div>
                     </v-expansion-panel-header>
@@ -387,7 +387,7 @@
                     </v-expansion-panel-content>
                   </v-expansion-panel>
                   <!-- Metadata Properties -->
-                  <v-expansion-panel v-if="results.metadataEnabled && currentEdgeInfo.metadata_properties !== null">
+                  <v-expansion-panel v-if="currentEdgeInfo.metadata_properties !== null">
                     <v-expansion-panel-header>
                       <div><span class="text-overline">{{$t('dataQuery.metadataProperties')}}:</span></div>
                     </v-expansion-panel-header>
@@ -400,7 +400,7 @@
                     </v-expansion-panel-content>
                   </v-expansion-panel>
                   <!-- Raw Data -->
-                  <v-expansion-panel v-if="results.metadataEnabled && currentEdgeInfo.raw_data && currentEdgeInfo.raw_data !== null">
+                  <v-expansion-panel v-if="results.rawMetadataEnabled && currentEdgeInfo.raw_data && currentEdgeInfo.raw_data !== null">
                     <v-expansion-panel-header>
                       <div><span class="text-overline">{{$t('dataQuery.rawData')}}:</span></div>
                     </v-expansion-panel-header>
@@ -1831,21 +1831,17 @@ export default class GraphViewer extends Vue {
             properties: historicalNode.properties,
             created_at: historicalNode.created_at,
             modified_at: historicalNode.modified_at,
-            history: history
+            history: history,
+            metadata_properties: historicalNode ? historicalNode.metadataProperties : node.metadata_properties
           }
 
-          if (this.results.metadataEnabled) {
-            this.currentNodeInfo.metadata_properties = historicalNode ? historicalNode.metadata_properties : node.metadata_properties
+          if (this.results.rawMetadataEnabled) {
             this.currentNodeInfo.raw_data = history[history.length - 1]['raw_data_properties' as keyof object]
           }
 
         } else {
           this.selectedNodeHistory = history[0].created_at
-
-          if (this.results.metadataEnabled) {
-            // metadata will not load unless a history version is selected; ensure something is always loaded
-            this.currentNodeInfo.metadata_properties = node.metadata_properties
-          }
+          this.currentNodeInfo.metadata_properties = node.metadata_properties
         }
 
         // minimize the legend
@@ -2062,11 +2058,11 @@ export default class GraphViewer extends Vue {
       properties: data.properties,
       created_at: this.$utils.formatISODate(data.created_at),
       modified_at: this.$utils.formatISODate(data.modified_at),
-      history: nodeHistory
+      history: nodeHistory,
+      metadata_properties: data.metadata_properties
     }
 
-    if (this.results.metadataEnabled) {
-      this.currentNodeInfo.metadata_properties = data.metadata_properties
+    if (this.results.rawMetadataEnabled) {
       if (index) {
         this.currentNodeInfo.raw_data = nodeHistory[index]['raw_data_properties' as keyof object]
       } else {
@@ -2103,11 +2099,11 @@ export default class GraphViewer extends Vue {
       properties: data.properties,
       created_at: this.$utils.formatISODate(data.created_at),
       modified_at: this.$utils.formatISODate(data.modified_at),
-      history: edgeHistory
+      history: edgeHistory,
+      metadata_properties: data.metadata_properties
     }
 
-    if (this.results.metadataEnabled) {
-      this.currentEdgeInfo.metadata_properties = data.metadata_properties
+    if (this.results.rawMetadataEnabled) {
       if (index) {
         this.currentEdgeInfo.raw_data = edgeHistory[index]['raw_data_properties' as keyof object]
       } else {
@@ -2347,7 +2343,7 @@ export default class GraphViewer extends Vue {
 
 
     // Add the current pointInTime to the query, resubmit, and redo graph results
-     this.$client.submitGraphQLQuery(this.containerID, { query: this.query }, {pointInTime: pointInTime, metadataEnabled: this.results.metadataEnabled})
+     this.$client.submitGraphQLQuery(this.containerID, { query: this.query }, {pointInTime: pointInTime, rawMetadataEnabled: this.results.rawMetadataEnabled})
         .then((results: any) => {
           if(results.errors) {
             this.errorMessage = results.errors[0].message ?

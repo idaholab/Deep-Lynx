@@ -396,7 +396,7 @@ paths:
             type: boolean
             default: false
           in: query
-          name: metadataEnabled
+          name: rawMetadataEnabled
         - schema:
             type: string
           in: query
@@ -2515,6 +2515,115 @@ paths:
               schema:
                 $ref: '#/components/schemas/Generic200Response'
       deprecated: false
+  '/containers/{container_id}/import/datasources/{data_source_id}/download':
+    get:
+      tags:
+        - Data Sources
+      summary: Download Timeseries Data Source
+      description: Download a Timeseries Data Source by ID. Output is a CSV file.
+      operationId: DownloadDataSource
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDataSourceResponse'
+      deprecated: false
+    put:
+      tags:
+        - Data Sources
+      summary: Set Data Source Configuration
+      description: Updates a data source's configuration in storage. Note that this request body's structure must match that of the data source's adapter type.
+      operationId: SetDataSourceConfiguration
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDataSourceConfig'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateDataSourceResponse'
+      deprecated: false
+      x-codegen-request-body-name: Body
+    delete:
+      tags:
+        - Data Sources
+      summary: Archive Data Source
+      description: 'Archive a data source, with options to permanently remove it (and associated data).'
+      operationId: ArchiveDataSource
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - schema:
+            type: string
+          in: query
+          name: archive
+          description: Set to true to archive the data source.
+        - schema:
+            type: string
+          in: query
+          name: forceDelete
+          description: Set to true to force deletion of the data source.
+        - schema:
+            type: string
+          in: query
+          name: removeData
+          description: Set to true to remove data associated with the data source.
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200Response'
+      deprecated: false
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: data_source_id
+        in: path
+        required: true
   '/containers/{container_id}/export/datatargets/{data_target_id}':
     get:
       summary: Retrieve Data Target

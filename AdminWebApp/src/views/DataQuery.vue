@@ -121,7 +121,7 @@
                             </v-expansion-panel-content>
                           </v-expansion-panel>
                         <!-- Metadata Properties -->
-                          <v-expansion-panel v-if="item.metadata_properties && results?.metadataEnabled">
+                          <v-expansion-panel v-if="item.metadata_properties">
                             <v-expansion-panel-header>
                               <div><span class="text-overline">{{$t('dataQuery.metadataProperties')}}:</span></div>
                             </v-expansion-panel-header>
@@ -130,7 +130,7 @@
                             </v-expansion-panel-content>
                           </v-expansion-panel>
                         <!-- Raw Data -->
-                          <v-expansion-panel v-if="item.raw_data_history && results?.metadataEnabled">
+                          <v-expansion-panel v-if="item.raw_data_history && results?.rawMetadataEnabled">
                             <v-expansion-panel-header>
                               <div><span class="text-overline">{{$t('dataQuery.rawData')}}:</span></div>
                             </v-expansion-panel-header>

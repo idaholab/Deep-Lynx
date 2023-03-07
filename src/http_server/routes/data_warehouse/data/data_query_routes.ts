@@ -26,7 +26,7 @@ export default class DataQueryRoutes {
             }
         }
 
-        const metadataEnabled = (req.query.metadataEnabled === 'true')
+        const rawMetadataEnabled = (req.query.rawMetadataEnabled === 'true')
 
         runner
             .RunQuery(
@@ -37,7 +37,7 @@ export default class DataQueryRoutes {
                     returnFile: String(req.query.returnFile).toLowerCase() === 'true',
                     returnFileType: String(req.query.returnFileType).toLowerCase(),
                     pointInTime: req.query.pointInTime as string,
-                    metadataEnabled: metadataEnabled,
+                    rawMetadataEnabled: rawMetadataEnabled,
                     query: req.body.query,
                 },
             )
