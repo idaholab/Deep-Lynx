@@ -3,7 +3,7 @@ import {authInContainer, authRequest} from '../../../middleware';
 import ContainerImport, {ContainerImportT} from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_import';
 import ContainerRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
 import {plainToClass} from 'class-transformer';
-import Container, {ContainerExport} from '../../../../domain_objects/data_warehouse/ontology/container';
+import Container, {ContainerExport, ContainerConfig} from '../../../../domain_objects/data_warehouse/ontology/container';
 import Result from '../../../../common_classes/result';
 import {FileInfo} from 'busboy';
 import FileRepository from '../../../../data_access_layer/repositories/data_warehouse/data/file_repository';
@@ -53,6 +53,17 @@ export default class ContainerRoutes {
         } else {
             toCreate = [plainToClass(Container, req.body as object)];
         }
+
+        // set default config if not set in request
+        toCreate.forEach(container => {
+            if (!container.config) {
+                container.config = new ContainerConfig({
+                    data_versioning_enabled: true,
+                    ontology_versioning_enabled: false,
+                    enabled_data_sources: ["standard", "http", "timeseries"]
+                });
+            }
+        });
 
         repository
             .bulkSave(req.currentUser!, toCreate)
