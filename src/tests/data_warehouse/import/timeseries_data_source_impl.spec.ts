@@ -19,6 +19,7 @@ import ImportRepository from '../../../data_access_layer/repositories/data_wareh
 import Import from '../../../domain_objects/data_warehouse/import/import';
 import {DataSource} from '../../../interfaces_and_impl/data_warehouse/import/data_source';
 import ImportMapper from '../../../data_access_layer/mappers/data_warehouse/import/import_mapper';
+import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
 
 const promiseExec = promisify(exec);
 const csv = require('csvtojson');
@@ -396,6 +397,101 @@ describe('A Standard DataSource Implementation can', async () => {
         fs.unlinkSync('./test-timeseries-data.json');
         return sourceRepo.delete(source!);
     });
+
+    it('can copy from hypertable to a stream', async () => {
+        // build the data source first
+        const sourceRepo = new DataSourceRepository();
+
+        let source = new DataSourceFactory().fromDataSourceRecord(
+            new DataSourceRecord({
+                container_id: containerID,
+                name: 'Test Data Source',
+                active: false,
+                adapter_type: 'timeseries',
+                config: new TimeseriesDataSourceConfig({
+                    columns: [
+                        {
+                            column_name: 'primary_timestamp',
+                            property_name: 'Timestamp',
+                            is_primary_timestamp: true,
+                            type: 'date',
+                            date_conversion_format_string: 'YYYY-MM-DD HH:MI:SS',
+                        },
+                        {
+                            column_name: 'temperature',
+                            property_name: 'Temperature (K)',
+                            is_primary_timestamp: false,
+                            type: 'number',
+                        },
+                        {
+                            column_name: 'velocity_i',
+                            property_name: 'Velocity[i] (m/s)',
+                            is_primary_timestamp: false,
+                            type: 'number',
+                        },
+                        {
+                            column_name: 'velocity_j',
+                            property_name: 'Velocity[j] (m/s)',
+                            is_primary_timestamp: false,
+                            type: 'number',
+                        },
+                        {
+                            column_name: 'x',
+                            property_name: 'X (m)',
+                            is_primary_timestamp: false,
+                            type: 'number',
+                        },
+                        {
+                            column_name: 'y',
+                            property_name: 'Y (m)',
+                            is_primary_timestamp: false,
+                            type: 'number',
+                        },
+                        {
+                            column_name: 'z',
+                            property_name: 'Z (m)',
+                            is_primary_timestamp: false,
+                            type: 'number',
+                        },
+                    ] as TimeseriesColumn[],
+                }),
+            }),
+        );
+
+        let results = await sourceRepo.save(source!, user);
+        expect(results.isError, results.error?.error).false;
+        expect(source!.DataSourceRecord?.id).not.undefined;
+
+        // write the json test data out to a temporary file
+        fs.writeFileSync('./test-timeseries-data.json', sampleJSON);
+
+        // now we create an import through the datasource
+
+        let received = await source!.ReceiveData(fs.createReadStream('./test-timeseries-data.json'), user);
+        expect(received.isError, received.error?.error).false;
+
+        // now let's try csv files
+        fs.writeFileSync('./test-timeseries-data.csv', sampleCSV);
+
+        received = await source!.ReceiveData(fs.createReadStream('./test-timeseries-data.csv'), user, {
+            transformStream: csv({
+                downstreamFormat: 'array', // needed because downstream expects an array of json, not single objects
+            }),
+            bufferSize: 1,
+        });
+        expect(received.isError, received.error?.error).false;
+
+        let stream = await DataSourceMapper.Instance.CopyFromHypertable(source?.DataSourceRecord!);
+        var out = fs.createWriteStream('./out.csv');
+        await stream.value.pipe(out);
+
+        expect(fs.statSync('./out.csv').size > 0);
+
+        fs.unlinkSync('./out.csv');
+        fs.unlinkSync('./test-timeseries-data.csv');
+        fs.unlinkSync('./test-timeseries-data.json');
+        return sourceRepo.delete(source!);
+    }).timeout(10000);
 
     it('can ingest data to a hypertable using dl-fast-load', async (done) => {
         if (process.env.TEST_FAST_LOAD !== 'true') {

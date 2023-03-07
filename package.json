@@ -157,6 +157,7 @@
         "passport-saml": "^3.1.2",
         "pg": "^8.8.0",
         "pg-connection-string": "^2.5.0",
+        "pg-copy-streams": "^6.0.4",
         "pg-format": "^1.0.4",
         "pg-large-object": "^2.0.0",
         "pg-query-stream": "^4.2.1",

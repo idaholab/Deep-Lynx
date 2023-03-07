@@ -10,9 +10,11 @@ import QueryStream from 'pg-query-stream';
 import {plainToClass} from 'class-transformer';
 import {DataStaging} from '../../../../domain_objects/data_warehouse/import/import';
 import Config from '../../../../services/config';
+import {ReadStream} from 'fs';
 
 const format = require('pg-format');
 const devnull = require('dev-null');
+const copyTo = require('pg-copy-streams').to;
 
 /*
     DataSourceMapper extends the Postgres database Mapper class and allows
@@ -124,6 +126,22 @@ export default class DataSourceMapper extends Mapper {
     // to make the connection between table name and property name included in the data source config
     public InsertIntoHypertable(source: DataSourceRecord, records: any[]): Promise<Result<boolean>> {
         return super.runStatement(this.insertIntoHypertableStatement(source, records));
+    }
+
+    public async CopyFromHypertable(source: DataSourceRecord, startTime?: string, endTime?: string): Promise<Result<ReadStream>> {
+        return new Promise((resolve) => {
+            PostgresAdapter.Instance.Pool.connect((err: Error, client: PoolClient, done: any) => {
+                if (err) {
+                    return resolve(Result.Failure('unable to secure postgres client'));
+                }
+
+                const stream = client.query(copyTo(this.hypertableCopyToStatement(source, startTime, endTime)));
+                stream.on('error', done);
+                stream.on('end', done);
+
+                return resolve(Result.Success(stream));
+            });
+        });
     }
 
     // Reprocess takes a data source and will remove all previous data ingested by it, then attempt
@@ -430,6 +448,29 @@ export default class DataSourceMapper extends Mapper {
         const values = ['y_' + sourceID];
 
         return format(text, values);
+    }
+
+    private hypertableCopyToStatement(source: DataSourceRecord, startTime?: string, endTime?: string): string {
+        const config = source.config as TimeseriesDataSourceConfig;
+
+        if (!startTime || !endTime) {
+            return `COPY (SELECT * FROM y_${source.id}) TO STDOUT`;
+        }
+
+        const primaryTimestampColumn = config.columns.find((c) => c.is_primary_timestamp);
+        const formatString = 'YYYY-MM-DD HH24:MI:SS.US';
+
+        if (primaryTimestampColumn?.type === 'date') {
+            return `COPY (SELECT * FROM y_${source.id} WHERE ${format(primaryTimestampColumn?.column_name)} BETWEEN ${format(
+                'to_timestamp("%s", %L)',
+                startTime,
+                formatString,
+            )} AND ${format('to_timestamp("%s", %L)', endTime, formatString)}) TO STDOUT`;
+        }
+
+        return `COPY (SELECT * FROM y_${source.id} WHERE ${format(primaryTimestampColumn?.column_name)} BETWEEN '${format(startTime)}' AND '${format(
+            endTime,
+        )}') TO STDOUT`;
     }
 
     // this will break an array of objects into a json string and insert it into the statement
