@@ -487,7 +487,7 @@ describe('A Standard DataSource Implementation can', async () => {
 
         expect(fs.statSync('./out.csv').size > 0);
 
-        //fs.unlinkSync('./out.csv');
+        fs.unlinkSync('./out.csv');
         fs.unlinkSync('./test-timeseries-data.csv');
         fs.unlinkSync('./test-timeseries-data.json');
         return sourceRepo.delete(source!);
