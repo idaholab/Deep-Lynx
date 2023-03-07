@@ -482,7 +482,7 @@ describe('A Standard DataSource Implementation can', async () => {
         expect(received.isError, received.error?.error).false;
 
         let stream = await DataSourceMapper.Instance.CopyFromHypertable(source?.DataSourceRecord!);
-        var out = fs.createWriteStream('./out.csv');
+        const out = fs.createWriteStream('./out.csv', {flags: 'w'});
         await stream.value.pipe(out);
 
         expect(fs.statSync('./out.csv').size > 0);
