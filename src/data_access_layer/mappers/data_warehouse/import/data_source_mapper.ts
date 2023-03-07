@@ -454,7 +454,7 @@ export default class DataSourceMapper extends Mapper {
         const config = source.config as TimeseriesDataSourceConfig;
 
         if (!startTime || !endTime) {
-            return `COPY (SELECT * FROM y_${source.id}) TO STDOUT`;
+            return `COPY (SELECT * FROM y_${source.id}) TO STDOUT WITH (FORMAT CSV, HEADER)`;
         }
 
         const primaryTimestampColumn = config.columns.find((c) => c.is_primary_timestamp);
@@ -465,12 +465,12 @@ export default class DataSourceMapper extends Mapper {
                 'to_timestamp("%s", %L)',
                 startTime,
                 formatString,
-            )} AND ${format('to_timestamp("%s", %L)', endTime, formatString)}) TO STDOUT`;
+            )} AND ${format('to_timestamp("%s", %L)', endTime, formatString)}) TO STDOUT WITH (FORMAT CSV, HEADER)`;
         }
 
         return `COPY (SELECT * FROM y_${source.id} WHERE ${format(primaryTimestampColumn?.column_name)} BETWEEN '${format(startTime)}' AND '${format(
             endTime,
-        )}') TO STDOUT`;
+        )}') TO STDOUT WITH (FORMAT CSV, HEADER)`;
     }
 
     // this will break an array of objects into a json string and insert it into the statement
