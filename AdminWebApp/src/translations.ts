@@ -1395,6 +1395,7 @@ export default {
             clickToAdd: 'Click to add filter',
             clickToAddProperty: 'Click to add Property filter',
             runQuery: 'Run Query',
+            includeRawMetadata: 'Include Raw Metadata in Query (may impact performance)',
             selectFilterType: 'Select Filter Type',
             MetatypeFilter: 'Filter by Metatype',
             IDFilter: 'Filter by ID(s)',

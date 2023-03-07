@@ -41,8 +41,8 @@
                 <v-col :cols="12" align="center">
                   <v-card style="margin-top: 10px" class="pa-4">
                     <v-checkbox
-                      v-model="metadataEnabled"
-                      label="Include Metadata in Query (may impact performance)"
+                      v-model="rawMetadataEnabled"
+                      :label="$t('queryBuilder.includeRawMetadata')"
                       :disabled="results !== null"
                     ></v-checkbox>
                   </v-card>
@@ -145,8 +145,8 @@
                 </v-col>
                 <v-spacer />
                 <v-checkbox class="mr-5"
-                  v-model="metadataEnabled"
-                  label="Include Metadata in Query (may impact performance)"
+                  v-model="rawMetadataEnabled"
+                  :label="$t('queryBuilder.includeRaw')"
                 ></v-checkbox>
                 <v-btn @click="submitRawQuery" style="margin-top: 15px; margin-right: 15px">
                   <v-progress-circular indeterminate v-if="loading"></v-progress-circular>
@@ -225,7 +225,7 @@ export default class QueryBuilder extends Vue {
   limit = 100
   limitOptions = [100, 500, 1000, 10000]
   info = mdiInformation
-  metadataEnabled = false
+  rawMetadataEnabled = false
 
   codeMirror: CodeMirror.EditorFromTextArea | null = null
 
@@ -482,7 +482,7 @@ relationshipSampleQuery =
       }
 
       this.loading = true
-      this.$client.submitGraphQLQuery(this.containerID, { query: `${this.codeMirror?.getValue()}` }, {metadataEnabled: this.metadataEnabled})
+      this.$client.submitGraphQLQuery(this.containerID, { query: `${this.codeMirror?.getValue()}` }, {rawMetadataEnabled: this.rawMetadataEnabled})
         .then((queryResult: any) => {
           if(queryResult.errors) {
             this.errorMessage = queryResult.errors.map((error: any) => error.message as string).join(' ')
@@ -492,7 +492,7 @@ relationshipSampleQuery =
 
           this.rawQueryResult = queryResult
           this.loading = false
-          this.metadataEnabled = false
+          this.rawMetadataEnabled = false
         })
         .catch((err: string) => {
           this.errorMessage = 'There is a problem with the GraphQL query or server error. Please see the result tab.'
@@ -526,7 +526,7 @@ relationshipSampleQuery =
   }
 
   resetQuery() {
-    this.metadataEnabled = false
+    this.rawMetadataEnabled = false
     this.queryParts = []
     this.query = null
     this.results = null
@@ -552,7 +552,7 @@ relationshipSampleQuery =
     const query = this.buildQuery()
     this.query = query.query
 
-    this.$client.submitGraphQLQuery(this.containerID, query, {metadataEnabled: this.metadataEnabled})
+    this.$client.submitGraphQLQuery(this.containerID, query, {rawMetadataEnabled: this.rawMetadataEnabled})
         .then((results: any) => {
           if(results.errors) {
             this.errorMessage = results.errors[0].message ? 
@@ -567,7 +567,7 @@ relationshipSampleQuery =
             ran: new Date()
           })
 
-          this.results = {id, queryParts: this.queryParts, query: query.query, nodes: results.data.nodes, metadataEnabled: this.metadataEnabled}
+          this.results = {id, queryParts: this.queryParts, query: query.query, nodes: results.data.nodes, rawMetadataEnabled: this.rawMetadataEnabled}
           this.$emit('results', this.results)
         })
         .catch(e => {
@@ -579,7 +579,7 @@ relationshipSampleQuery =
 
   setResult(result: ResultSet) {
     this.results = result
-    this.results.metadataEnabled = this.metadataEnabled
+    this.results.rawMetadataEnabled = this.rawMetadataEnabled
     this.queryParts = result.queryParts
     this.query = result.query || null
     this.activeTab = 'queryBuilder'
@@ -695,9 +695,9 @@ relationshipSampleQuery =
         created_at
         modified_at
         properties
-        ${this.metadataEnabled ? 'metadata_properties' : ''}
-        ${this.metadataEnabled ? 'raw_data_properties' : ''}
-        ${this.metadataEnabled ? 'raw_data_history' : ''}
+        metadata_properties
+        ${this.rawMetadataEnabled ? 'raw_data_properties' : ''}
+        ${this.rawMetadataEnabled ? 'raw_data_history' : ''}
 }
 }`
     }
@@ -722,7 +722,7 @@ export type ResultSet = {
   query?: string;
   nodes: NodeT[];
   ran?: Date;
-  metadataEnabled?: boolean;
+  rawMetadataEnabled?: boolean;
 }
 </script>
 

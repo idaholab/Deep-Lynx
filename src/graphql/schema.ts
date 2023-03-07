@@ -372,6 +372,7 @@ export default class GraphQLRunner {
                 modified_at: {type: GraphQLString},
                 modified_by: {type: GraphQLString},
                 metadata: {type: GraphQLJSON},
+                metadata_properties: {type: GraphQLJSON},
                 properties: {type: GraphQLJSON},
                 count: {type: GraphQLInt},
                 page: {type: GraphQLInt},
@@ -536,10 +537,10 @@ export default class GraphQLRunner {
                                 const output: {[key: string]: {[key: string]: GraphQLNamedType | GraphQLList<any>}} = {};
                                 output._record = {type: recordInfo};
                                 output._relationship = {type: relationshipInfo};
-                                if (options.metadataEnabled) {
+                                output.metadata_properties = {type: GraphQLJSON};
+                                if (options.rawMetadataEnabled) {
                                     output.raw_data_properties = {type: GraphQLJSON};
                                     output.raw_data_history = {type: GraphQLJSON};
-                                    output.metadata_properties = {type: GraphQLJSON};
                                 }
                                 output._file = {type: fileInfo};
 
@@ -761,10 +762,10 @@ export default class GraphQLRunner {
                         fields: () => {
                             const output: {[key: string]: {[key: string]: GraphQLNamedType | GraphQLList<any>}} = {};
                             output._record = {type: edgeRecordInfo};
-                            if (options.metadataEnabled) {
+                            output.metadata_properties = {type: GraphQLJSON};
+                            if (options.rawMetadataEnabled) {
                                 output.raw_data_properties = {type: GraphQLJSON};
                                 output.raw_data_history = {type: GraphQLJSON};
-                                output.metadata_properties = {type: GraphQLJSON};
                             }
 
                             relationship.keys?.forEach((relationshipKey) => {
@@ -1042,15 +1043,15 @@ export default class GraphQLRunner {
                         value: {type: new GraphQLList(GraphQLJSON)}
                     }
                 })},
+                metadata_properties: {type: metadataInputType},
                 limit: {type: GraphQLInt, defaultValue: 10000},
                 page: {type: GraphQLInt, defaultValue: 1},
             },
-            type: (options.returnFile) ? fileInfo : (options.metadataEnabled ? new GraphQLList(recordInfoWithRawData) : new GraphQLList(recordInfo)),
+            type: (options.returnFile) ? fileInfo : (options.rawMetadataEnabled ? new GraphQLList(recordInfoWithRawData) : new GraphQLList(recordInfo)),
             resolve: this.resolverForNodes(containerID, options) as any
         };
 
-        if (options.metadataEnabled) {
-            fields.nodes.args.metadata_properties = {type: metadataInputType}
+        if (options.rawMetadataEnabled) {
             fields.nodes.args.raw_data_properties = {type: rawDataInputType}
         }
 
@@ -1167,9 +1168,10 @@ export default class GraphQLRunner {
             }
 
             // only do this if metadata is enabled
-            if (resolverOptions?.metadataEnabled && input.raw_data_properties && Array.isArray(input.raw_data_properties)) {
+            if (resolverOptions?.rawMetadataEnabled && input.raw_data_properties && Array.isArray(input.raw_data_properties)) {
                 let joinTable: string | undefined;
                 input.raw_data_properties.forEach((prop) => {
+                    // TODO: find a way to check array for historical and only perform joins once
                     // apply conditions only if historical is specified
                     if (prop.historical) {
                         joinTable = 'nodes' // override table that we are joining with
@@ -1188,8 +1190,7 @@ export default class GraphQLRunner {
                 })
             }
 
-            // only do this if metadata is enabled
-            if (resolverOptions?.metadataEnabled && input.metadata_properties && Array.isArray(input.metadata_properties)) {
+            if (input.metadata_properties && Array.isArray(input.metadata_properties)) {
                 input.metadata_properties.forEach((prop) => {
                     repo = repo.and().queryJsonb(
                         prop.key, 'metadata_properties',
@@ -1247,10 +1248,10 @@ export default class GraphQLRunner {
                     deleted_at: {type: 'TIMESTAMP_MILLIS', optional: true},
                 }
             }
-            if (resolverOptions?.metadataEnabled) {
+            parquet_schema.metadata_properties = {type: 'JSON', optional: true};
+            if (resolverOptions?.rawMetadataEnabled) {
                 parquet_schema.raw_data_properties = {type: 'JSON'}
                 parquet_schema.raw_data_history = {type: 'JSON'}
-                parquet_schema.metadata_properties = {type: 'JSON'}
             }
 
             // we must map out what the graphql refers to a metatype's keys are vs. what they actually are so
@@ -1292,7 +1293,7 @@ export default class GraphQLRunner {
             }
 
             // complete any metadata joins only as needed
-            if (resolverOptions?.metadataEnabled) {
+            if (resolverOptions?.rawMetadataEnabled) {
                 // subquery for historical raw data
                 const history = repo.subquery(
                     new Repository('nodes')
@@ -1325,7 +1326,7 @@ export default class GraphQLRunner {
                 const transform = new Transform({objectMode: true, transform: (chunk: object, _: any, done: (o: any, a: any) => any ) => {
                     const node = plainToClass(Node, chunk)
 
-                    if (resolverOptions.metadataEnabled) {
+                    if (resolverOptions.rawMetadataEnabled) {
                         done(null, {
                             _deep_lynx_id: node.id,
                             ...node.properties,
@@ -1342,7 +1343,7 @@ export default class GraphQLRunner {
                                 created_by: node.created_by,
                                 modified_at: node.modified_at?.toISOString(),
                                 modified_by: node.modified_by,
-                                deleted_at: node.deleted_at
+                                deleted_at: node.deleted_at,
                             },
                             metadata_properties: node.metadata_properties,
                             raw_data_properties: node['data' as keyof object],
@@ -1365,8 +1366,9 @@ export default class GraphQLRunner {
                                 created_by: node.created_by,
                                 modified_at: node.modified_at?.toISOString(),
                                 modified_by: node.modified_by,
-                                deleted_at: node.deleted_at
-                            }
+                                deleted_at: node.deleted_at,
+                            },
+                            metadata_properties: node.metadata_properties,
                         });
                     }
                 }})
@@ -1443,11 +1445,11 @@ export default class GraphQLRunner {
                                         created_by: node.created_by,
                                         modified_at: node.modified_at?.toISOString(),
                                         modified_by: node.modified_by,
-                                    }
+                                    },
+                                    metadata_properties: node.metadata_properties,
                                 }
 
-                                if (resolverOptions?.metadataEnabled) {
-                                    toPush.metadata_properties = node.metadata_properties,
+                                if (resolverOptions?.rawMetadataEnabled) {
                                     toPush.raw_data_properties = node['data' as keyof object],
                                     toPush.raw_data_history = node['history' as keyof object]
                                 };
@@ -1585,7 +1587,7 @@ export default class GraphQLRunner {
                 })
             }
 
-            if (resolverOptions?.metadataEnabled && input.raw_data_properties && Array.isArray(input.raw_data_properties)) {
+            if (resolverOptions?.rawMetadataEnabled && input.raw_data_properties && Array.isArray(input.raw_data_properties)) {
                 let joinTable: string | undefined;
                 input.raw_data_properties.forEach((prop) => {
                     // apply conditions only if historical is specified
@@ -1621,7 +1623,7 @@ export default class GraphQLRunner {
             }
 
             // complete any metadata joins only as needed
-            if (resolverOptions?.metadataEnabled) {
+            if (resolverOptions?.rawMetadataEnabled) {
                 // subquery for historical raw data
                 const history = repo.subquery(
                     new Repository('nodes')
@@ -1655,7 +1657,7 @@ export default class GraphQLRunner {
                 const transform = new Transform({objectMode: true, transform: (chunk: object, _: any, done: (o: any, a: any) => any ) => {
                     const node = plainToClass(Node, chunk)
 
-                    if (resolverOptions.metadataEnabled) {
+                    if (resolverOptions.rawMetadataEnabled) {
                         done(null, {
                             id: node.id,
                             data_source_id: node.data_source_id,
@@ -1689,6 +1691,7 @@ export default class GraphQLRunner {
                             modified_at: node.modified_at?.toISOString(),
                             modified_by: node.modified_by,
                             properties: node.properties,
+                            metadata_properties: node.metadata_properties,
                         })
                     }
                 }})
@@ -1761,11 +1764,11 @@ export default class GraphQLRunner {
                                     created_by: node.created_by,
                                     modified_at: node.modified_at?.toISOString(),
                                     modified_by: node.modified_by,
-                                    properties: node.properties
+                                    properties: node.properties,
+                                    metadata_properties: node.metadata_properties,
                                 }
 
-                                if (resolverOptions?.metadataEnabled) {
-                                    toPush.metadata_properties = node.metadata_properties,
+                                if (resolverOptions?.rawMetadataEnabled) {
                                     toPush.raw_data_properties = node['data' as keyof object],
                                     toPush.raw_data_history = node['history' as keyof object]
                                 }
@@ -1954,7 +1957,7 @@ export default class GraphQLRunner {
                 }
             }
 
-            if (options?.metadataEnabled && input.raw_data_properties && Array.isArray(input.raw_data_properties)) {
+            if (options?.rawMetadataEnabled && input.raw_data_properties && Array.isArray(input.raw_data_properties)) {
                 let joinTable: string | undefined;
                 input.raw_data_properties.forEach((prop) => {
                     // apply conditions only if historical is specified
@@ -1975,7 +1978,7 @@ export default class GraphQLRunner {
                 })
             }
 
-            if (options?.metadataEnabled && input.metadata_properties && Array.isArray(input.metadata_properties)) {
+            if (input.metadata_properties && Array.isArray(input.metadata_properties)) {
                 input.metadata_properties.forEach((prop) => {
                     repo = repo.and().queryJsonb(
                         prop.key, 'metadata_properties',
@@ -2016,7 +2019,7 @@ export default class GraphQLRunner {
             });
 
             // complete any metadata joins only as needed
-            if (options?.metadataEnabled) {
+            if (options?.rawMetadataEnabled) {
                 // subquery for historical raw data
                 const history = repo.subquery(
                     new Repository('nodes')
@@ -2048,7 +2051,7 @@ export default class GraphQLRunner {
                 const transform = new Transform({objectMode: true, transform: (chunk: object, _: any, done: (o: any, a: any) => any ) => {
                     const edge = plainToClass(Edge, chunk)
 
-                    if (options.metadataEnabled) {
+                    if (options.rawMetadataEnabled) {
                         done(null, {
                             ...edge.properties,
                             _record: {
@@ -2095,7 +2098,8 @@ export default class GraphQLRunner {
                                 created_by: edge.created_by,
                                 modified_at: edge.modified_at?.toISOString(),
                                 modified_by: edge.modified_by,
-                            }
+                            },
+                            metadata_properties: edge.metadata_properties,
                         });
                     }
                 }})
@@ -2168,11 +2172,11 @@ export default class GraphQLRunner {
                                         created_by: edge.created_by,
                                         modified_at: edge.modified_at?.toISOString(),
                                         modified_by: edge.modified_by,
-                                    }
+                                    },
+                                    metadata_properties: edge.metadata_properties,
                                 }
 
-                                if (options?.metadataEnabled) {
-                                    toPush.metadata_properties = edge.metadata_properties,
+                                if (options?.rawMetadataEnabled) {
                                     toPush.raw_data_properties = edge['data' as keyof object],
                                     toPush.raw_data_history = edge['history' as keyof object]
                                 }
@@ -2540,5 +2544,5 @@ export type ResolverOptions = {
     relationships?: string[] // relationship names to search
     fullSchema?: boolean;
     pointInTime?: string; // timestamp for use in retrieving historical data and ontology versions
-    metadataEnabled?: boolean;
+    rawMetadataEnabled?: boolean;
 }

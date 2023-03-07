@@ -47,7 +47,7 @@ export type Config = {
 
 export type GraphQLOptions = {
     pointInTime?: string;
-    metadataEnabled?: boolean;
+    rawMetadataEnabled?: boolean;
 };
 
 // We provide both a a constructor and a singleton type instance for consumption. The
@@ -73,7 +73,7 @@ export class Client {
 
         const queryParams: {[key: string]: any} = {};
         if (options?.pointInTime) queryParams.pointInTime = options.pointInTime;
-        if (options?.metadataEnabled) queryParams.metadataEnabled = options.metadataEnabled;
+        if (options?.rawMetadataEnabled) queryParams.rawMetadataEnabled = options.rawMetadataEnabled;
 
         return this.postRawReturn<any>(`/containers/${containerID}/data`, query, queryParams);
     }

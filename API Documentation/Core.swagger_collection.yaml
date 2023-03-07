@@ -396,7 +396,7 @@ paths:
             type: boolean
             default: false
           in: query
-          name: metadataEnabled
+          name: rawMetadataEnabled
         - schema:
             type: string
           in: query
