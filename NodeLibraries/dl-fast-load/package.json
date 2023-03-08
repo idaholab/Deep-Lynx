@@ -6,13 +6,21 @@
   "scripts": {
     "build": "cargo-cp-artifact -nc index.node -- cargo build --message-format=json-render-diagnostics",
     "build-debug": "npm run build --",
-    "build-release": "cargo-cp-artifact -a cdylib dl-fast-load index.node -- cat build-output.txt",
+    "build-release": "cross-os copy",
     "install": "npm run build-release",
     "test": "cargo test"
+  },
+  "cross-os": {
+    "copy": {
+      "darwin": "cargo-cp-artifact -a cdylib dl-fast-load index.node -- cat build-output.txt",
+      "win32": "cargo-cp-artifact -a cdylib dl-fast-load index.node -- type build-output.txt",
+      "linux": "cargo-cp-artifact -a cdylib dl-fast-load index.node -- cat build-output.txt"
+    }
   },
   "author": "John Darrington",
   "license": "MIT",
   "devDependencies": {
-    "cargo-cp-artifact": "^0.1"
+    "cargo-cp-artifact": "^0.1.8",
+    "cross-os": "^1.5.0"
   }
 }
