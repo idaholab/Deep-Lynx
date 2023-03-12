@@ -8,6 +8,7 @@ import {QueryOptions} from '../../../../data_access_layer/repositories/repositor
 import DataStagingRepository from '../../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import Authorization from '../../../../domain_objects/access_management/authorization/authorization';
 import DataSourceMapper from '../../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
+import FileRepository from '../../../../data_access_layer/repositories/data_warehouse/data/file_repository';
 
 const dataSourceRepo = new DataSourceRepository();
 const dataSourceFactory = new DataSourceFactory();
@@ -137,8 +138,16 @@ export default class DataSourceRoutes {
                         return;
                     }
 
-                    res.attachment(`${req.dataSource?.DataSourceRecord?.name} output.csv`);
-                    stream.value.pipe(res);
+                    const fileRepo = new FileRepository();
+                    fileRepo
+                        .uploadFile(req.container?.id!, req.currentUser!, `${req.dataSource?.DataSourceRecord?.name}-${new Date().toISOString()}`, stream.value)
+                        .then((file) => {
+                            file.asResponse(res);
+                            return;
+                        })
+                        .catch((err) => {
+                            Result.Error(err).asResponse(res);
+                        });
                 })
                 .catch((err) => {
                     Result.Error(err).asResponse(res);
