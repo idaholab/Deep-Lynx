@@ -126,11 +126,12 @@ export default class DataSourceRoutes {
             const mapper = DataSourceMapper.Instance;
 
             mapper
-                .CopyFromHypertable(
-                    req.dataSource?.DataSourceRecord!,
-                    req.query.startTime ? (req.query.startTime as string) : undefined,
-                    req.query.endTime ? (req.query.endTime as string) : undefined,
-                )
+                .CopyFromHypertable(req.dataSource?.DataSourceRecord!, {
+                    startTime: req.query.startTime ? (req.query.startTime as string) : undefined,
+                    endTime: req.query.endTime ? (req.query.endTime as string) : undefined,
+                    secondaryIndexName: req.query.secondaryIndexName ? (req.query.secondaryIndexName as string) : undefined,
+                    secondaryIndexStartValue: req.query.secondaryIndexStartValue ? (req.query.secondaryIndexStartValue as string) : undefined,
+                })
                 .then((stream) => {
                     if (stream.isError) {
                         stream.asResponse(res);
