@@ -453,7 +453,7 @@ export default class DataSourceMapper extends Mapper {
     private hypertableCopyToStatement(source: DataSourceRecord, options?: copyTableOptions): string {
         const config = source.config as TimeseriesDataSourceConfig;
 
-        if (!options || !options.startTime || !options.endTime) {
+        if (!options || !options.startTimeOrIndex || !options.endTime) {
             if (options && options.secondaryIndexName && options.secondaryIndexStartValue) {
                 return `COPY (SELECT * FROM y_${source.id} WHERE ${format(
                     '%I > %L',
@@ -472,9 +472,9 @@ export default class DataSourceMapper extends Mapper {
             if (options && options.secondaryIndexName && options.secondaryIndexStartValue) {
                 return `COPY (SELECT * FROM y_${source.id} WHERE ${format(primaryTimestampColumn?.column_name)} BETWEEN ${format(
                     'to_timestamp("%s", %L)',
-                    options.startTime,
+                    options.startTimeOrIndex,
                     formatString,
-                )} AND ${format('to_timestamp("%s", %L)', options.endTime, formatString)} AND ${format(
+                )} AND ${options.endTime ? format('to_timestamp("%s", %L)', options.endTime, formatString) : format('NOW()')} AND ${format(
                     '%I > %L',
                     options.secondaryIndexName,
                     options.secondaryIndexStartValue,
@@ -482,23 +482,23 @@ export default class DataSourceMapper extends Mapper {
             } else {
                 return `COPY (SELECT * FROM y_${source.id} WHERE ${format(primaryTimestampColumn?.column_name)} BETWEEN ${format(
                     'to_timestamp("%s", %L)',
-                    options.startTime,
+                    options.startTimeOrIndex,
                     formatString,
-                )} AND ${format('to_timestamp("%s", %L)', options.endTime, formatString)}) TO STDOUT WITH (FORMAT CSV, HEADER)`;
+                )} AND ${
+                    options.endTime ? format('to_timestamp("%s", %L)', options.endTime, formatString) : format('NOW()')
+                }) TO STDOUT WITH (FORMAT CSV, HEADER)`;
             }
         }
 
         if (options && options.secondaryIndexName && options.secondaryIndexStartValue) {
-            return `COPY (SELECT * FROM y_${source.id} WHERE ${format(primaryTimestampColumn?.column_name)} BETWEEN '${format(
-                options.startTime,
-            )}' AND '${format(options.endTime)}' AND ${format(
+            return `COPY (SELECT * FROM y_${source.id} WHERE ${format(primaryTimestampColumn?.column_name)} >'${format(options.startTimeOrIndex)}' AND ${format(
                 '%I > %L',
                 options.secondaryIndexName,
                 options.secondaryIndexStartValue,
             )}) TO STDOUT WITH (FORMAT CSV, HEADER)`;
         } else {
-            return `COPY (SELECT * FROM y_${source.id} WHERE ${format(primaryTimestampColumn?.column_name)} BETWEEN '${format(
-                options.startTime,
+            return `COPY (SELECT * FROM y_${source.id} WHERE ${format(primaryTimestampColumn?.column_name)} > '${format(
+                options.startTimeOrIndex,
             )}' AND '${format(options.endTime)}') TO STDOUT WITH (FORMAT CSV, HEADER)`;
         }
     }
@@ -619,8 +619,8 @@ export default class DataSourceMapper extends Mapper {
 }
 
 type copyTableOptions = {
-    startTime?: string;
-    endTime?: string;
+    startTimeOrIndex?: string;
+    endTime?: string; // only applicable when start is a time
     // we make a lot of assumptions with the secondary index, such as it's a number field and that it increments
     secondaryIndexName?: string;
     secondaryIndexStartValue?: string;
