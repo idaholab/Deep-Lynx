@@ -61,7 +61,7 @@ const getDesignTokens = (mode: PaletteMode) => ({
   typography: {
     fontFamily: [
       'Source Sans Pro',
-      'serif',
+      'sans-serif',
     ].join(','),
   },
   components: {
@@ -91,7 +91,7 @@ function App() {
   theme.typography.h1 = {
     fontFamily: [
       'Montserrat',
-      'serif',
+      'sans-serif',
     ].join(','),
     fontSize: '1rem',
   };
@@ -99,7 +99,7 @@ function App() {
   theme.typography.h2 = {
     fontFamily: [
       'Montserrat',
-      'serif',
+      'sans-serif',
     ].join(','),
     fontSize: '1.5rem',
   };
@@ -107,7 +107,7 @@ function App() {
   theme.typography.h3 = {
     fontFamily: [
       'Montserrat',
-      'serif',
+      'sans-serif',
     ].join(','),
     fontSize: '1.25rem',
   };
@@ -115,7 +115,7 @@ function App() {
   theme.typography.h4 = {
     fontFamily: [
       'Montserrat',
-      'serif',
+      'sans-serif',
     ].join(','),
     fontSize: '1rem',
   };
@@ -123,7 +123,7 @@ function App() {
   theme.typography.h5 = {
     fontFamily: [
       'Montserrat',
-      'serif',
+      'sans-serif',
     ].join(','),
     fontSize: '1rem',
   };
@@ -131,7 +131,7 @@ function App() {
   theme.typography.h6 = {
     fontFamily: [
       'Montserrat',
-      'serif',
+      'sans-serif',
     ].join(','),
     fontSize: '1rem',
   };

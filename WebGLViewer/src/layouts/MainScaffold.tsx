@@ -53,7 +53,6 @@ export default function MainScaffold(props: any) {
   return (
     <Box sx={{ display: 'flex' }}>
       <Header />
-      <DrawerLeft />
       <Box
         sx={{ flexGrow: 1, marginTop: '64px', padding: '0px', zIndex: '0' }}
         className={classNames(
@@ -63,6 +62,7 @@ export default function MainScaffold(props: any) {
           },
         )}
       >
+        <DrawerLeft />
         {children}
         <DrawerRight/>
       </Box>

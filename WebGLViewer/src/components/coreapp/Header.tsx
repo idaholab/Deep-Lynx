@@ -30,25 +30,6 @@ import MenuIcon from '@mui/icons-material/Menu';
 // @ts-ignore
 import COLORS from '../../styles/variables';
 
-const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })<{
-  open?: boolean;
-}>(({ theme, open }) => ({
-  flexGrow: 1,
-  padding: theme.spacing(3),
-  transition: theme.transitions.create('margin', {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.leavingScreen,
-  }),
-  marginLeft: `-${useAppSelector((state: any) => state.appState.openDrawerLeftWidth)}px`,
-  ...(open && {
-    transition: theme.transitions.create('margin', {
-      easing: theme.transitions.easing.easeOut,
-      duration: theme.transitions.duration.enteringScreen,
-    }),
-    marginLeft: 0,
-  }),
-}));
-
 interface AppBarProps extends MuiAppBarProps {
   open?: boolean;
 }
@@ -60,14 +41,14 @@ const AppBar = styled(MuiAppBar, {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
-  ...(open && {
-    width: `calc(100% - ${useAppSelector((state: any) => state.appState.openDrawerLeftWidth)}px)`,
-    marginLeft: `${useAppSelector((state: any) => state.appState.openDrawerLeftWidth)}px`,
-    transition: theme.transitions.create(['margin-left', 'width'], {
-      easing: theme.transitions.easing.easeOut,
-      duration: theme.transitions.duration.enteringScreen,
-    }),
-  }),
+  // ...(open && {
+  //   width: `calc(100% - ${useAppSelector((state: any) => state.appState.openDrawerLeftWidth)}px)`,
+  //   marginLeft: `${useAppSelector((state: any) => state.appState.openDrawerLeftWidth)}px`,
+  //   transition: theme.transitions.create(['margin-left', 'width'], {
+  //     easing: theme.transitions.easing.easeOut,
+  //     duration: theme.transitions.duration.enteringScreen,
+  //   }),
+  // }),
 }));
 
 export default function Header(props: any) {
@@ -96,15 +77,7 @@ export default function Header(props: any) {
       <Box>
         <AppBar position="fixed" elevation={0} open={openDrawerLeftState} color={"secondary"}>
           <Toolbar>
-            <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              onClick={handleToggleOpenDrawerLeft}
-              edge="start"
-              sx={{ mr: 2, }}
-            >
-              <MenuIcon />
-            </IconButton>
+            <img alt="Deep Lynx Logo" width="100" src="/assets/lynx-white.png" style={{ marginLeft: '-8px', marginRight: '20px' }} />
             <Typography variant="h6" noWrap component="div">
               WebGL Viewer
             </Typography>
