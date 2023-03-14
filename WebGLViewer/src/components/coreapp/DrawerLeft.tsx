@@ -211,7 +211,7 @@ export default function DrawerLeft(props: any) {
         </Box>
         <Box sx={{ display: 'flex', height: '100%', flex: '1 0', backgroundColor: COLORS.colorLightgray }}>
           <Fade in={!assetObjectIsSelected} unmountOnExit>
-            <DrawerContentsNodeList />
+              <DrawerContentsNodeList />
           </Fade>
           <Fade in={assetObjectIsSelected} unmountOnExit>
             <>
