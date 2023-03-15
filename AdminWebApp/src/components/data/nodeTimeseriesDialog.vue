@@ -45,6 +45,7 @@
                 class="d-flex justify-center mt-0 mb-3 pt-0"
                 v-model="timeseriesFlag"
                 :label="(timeseriesFlag ? 'Timeseries' : 'Index')"
+                :disabled="streamActive"
             ></v-switch>
 
             <v-form
@@ -59,7 +60,7 @@
                 </div>
 
                 <div class="d-block">
-                  <label for="endDate" style="padding-right: 11px">End: </label><input type="text" placeholder="Select Date.." id="endDate" style="width: 240px">
+                  <label for="endDate" style="padding-right: 11px">End: </label><input type="text" placeholder="Select Date.." id="endDate">
                 </div>
               </div>
 
@@ -87,9 +88,52 @@
                   :label="$t('timeseries.resultLimit')"
                   hint="Enter 0 for unlimited results (may impact performance)"
               ></v-text-field>
+
+              <v-row>
+                <v-col :cols="runType !== '--' && !timeseriesFlag ? 6 : 8">
+                  <v-select
+                      v-model="runType"
+                      :items="runTypes"
+                      hint="Replay or Live Stream"
+                      persistent-hint
+                  >
+                  </v-select>
+                </v-col>
+
+                <v-col v-if="runType !== '--' && !timeseriesFlag" :cols="3">
+                  <v-text-field
+                      v-model="replayRecordSize"
+                      type="number"
+                      :rules="[rules.number]"
+                      label="Records per"
+                  ></v-text-field>
+                </v-col>
+
+                <v-col :cols="runType !== '--' && !timeseriesFlag ? 3 : 4">
+                  <v-text-field
+                      v-if="runType !== '--'"
+                      v-model="replayStreamInterval"
+                      type="number"
+                      :rules="[rules.number]"
+                      label="Interval"
+                      suffix="s"
+                  ></v-text-field>
+                </v-col>
+              </v-row>
             </v-form>
 
-            <v-btn color="primary" class="mt-3" @click="runSearch">{{$t('timeseries.runSearch')}}</v-btn>
+            <v-card-actions class="mt-2">
+              <v-btn v-if="!streamActive" color="primary" @click="submitSearch">{{$t('timeseries.runSearch')}}</v-btn>
+              <v-btn v-else color="primary" @click="streamActive = false">Stop Stream</v-btn>
+
+              <v-spacer></v-spacer>
+              <v-progress-linear v-if="streamActive && runType !== 'Live Stream'" :value="streamEntireProgress" color="primary" class="mx-4" height="25" style="max-width: 150px">
+                <template v-slot:default="{ value }">
+                  <strong>{{ Math.ceil(value) }}%</strong>
+                </template>
+              </v-progress-linear>
+              <v-progress-circular v-if="streamActive" :value="streamProgress" color="primary"></v-progress-circular>
+            </v-card-actions>
           </v-card>
         </v-col>
 
@@ -123,7 +167,7 @@
         </v-col>
 
         <v-col :cols="6">
-          <v-card class="pa-4 mr-3">
+          <v-card class="pa-4 mr-3"  style="height: 100%">
 
             <v-data-table
                 v-if="selectedDataSources.length > 0"
@@ -168,7 +212,7 @@
 
           <div id="timeseriesPlot"></div>
           <v-btn
-              color="#2ba8e0"
+              color="primary"
               dark
               v-show="Object.keys(this.results).length > 0"
               class="mx-3"
@@ -283,6 +327,15 @@ export default class NodeTimeseriesDialog extends Vue {
   createAnnotation = false
   annotationX: Datum = ''
   annotationY: Datum = ''
+  runTypes = ['--', 'Replay', 'Live Stream']
+  runType = '--'
+  replayStreamInterval = 10
+  streamActive = false
+  streamProgress = 0
+  streamInterval: any = {}
+  streamSeconds = 0
+  streamEntireProgress = 0
+  replayRecordSize = 100
 
   get tablePrimaryTimestampName(): string {
     return `item.${this.primaryTimestampName}`
@@ -320,6 +373,27 @@ export default class NodeTimeseriesDialog extends Vue {
   dataSourceChange() {
     this.load()
     this.loadNode()
+  }
+
+  @Watch('streamActive')
+  streamActiveChange() {
+    if (this.streamActive) {
+      // progress should increase every second by 1/n where n is the interval in seconds between updates
+      const increment = 100 / this.replayStreamInterval
+
+      this.streamInterval = setInterval(() => {
+        if (this.streamProgress >= 100) {
+          this.streamSeconds += this.replayStreamInterval
+          return (this.streamProgress = increment)
+        }
+        this.streamProgress += increment
+      }, 1000)
+    } else {
+      clearInterval(this.streamInterval)
+      this.streamProgress = 0
+      this.streamEntireProgress = 0
+      this.streamSeconds = 0
+    }
   }
 
   async updatePlot(styleUpdate = false) {
@@ -547,6 +621,7 @@ export default class NodeTimeseriesDialog extends Vue {
       dateFormat: "Z",
       enableTime: true,
       enableSeconds: true,
+      allowInput: true,
     }) as flatpickr.Instance;
 
     (startPickr as flatpickr.Instance).config.onChange.push((selectedDates, dateStr) => { this.startDate = dateStr } );
@@ -555,9 +630,10 @@ export default class NodeTimeseriesDialog extends Vue {
     const endPickr = flatpickr('#endDate', {
       altInput: true,
       altFormat: "F j, y h:i:S K",
-      dateFormat: "Y-m-d",
+      dateFormat: "Z",
       enableTime: true,
       enableSeconds: true,
+      allowInput: true,
     });
 
     (endPickr as flatpickr.Instance).config.onChange.push((selectedDates, dateStr) => { this.endDate = dateStr } );
@@ -637,13 +713,160 @@ export default class NodeTimeseriesDialog extends Vue {
     }
   }
 
-  runSearch() {
+  async submitSearch() {
     // @ts-ignore
     if (!this.$refs.searchForm!.validate()) return;
+
+    if (new Date(this.endDate) <= new Date(this.startDate)) {
+      this.errorMessage = 'Please enter an end date that is greater than the start date'
+      return
+    }
 
     // clear the results object
     this.results = {}
 
+    if (this.runType === '--') {
+      void this.runSearch()
+    } else if (this.runType === 'Replay') {
+      this.streamActive = true
+
+      // determine interval chunks
+      if (this.timeseriesFlag) {
+        const seconds = Math.floor((new Date(this.endDate).getTime() / 1000) - (new Date(this.startDate).getTime() / 1000))
+
+        let count = 0
+        const intervals = seconds / this.replayStreamInterval
+
+        const timeseriesData = await this.queryTimeseriesData()
+
+        const timeout = setInterval(() => {
+          if (!this.streamActive) clearInterval(timeout)
+
+          const intervalStart = new Date(this.startDate).getTime() + (this.replayStreamInterval * 1000)  * count // seconds for start interval
+          const intervalEnd = intervalStart + this.replayStreamInterval * 1000 // seconds for end interval
+          const intervalStartDate = new Date(intervalStart)
+          const intervalEndDate = new Date(intervalEnd)
+
+          // loop through each dataSource and add the records that fall within the time/index to results
+          for (const [dataSourceName, records] of Object.entries(timeseriesData)) {
+            // determine the primary timestamp key for this data source and use to determine which entries fall within the current range
+            const dataSource = this.selectedDataSources.find(d => d.name === dataSourceName)
+            if (!dataSource) return
+
+            const primaryTimestampColumn = (dataSource.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)?.column_name
+            if (!primaryTimestampColumn) return
+
+            if (!this.results[dataSourceName]) this.results[dataSourceName] = [] // init the results array for this data source if it does not exist
+
+            let dataStartIndex = 0 // to be used for search as little of the data as possible in each iteration
+
+            for (dataStartIndex; dataStartIndex < (records as any).length; dataStartIndex++) {
+              const entry = (records as any)[dataStartIndex]
+              if (entry[primaryTimestampColumn] && new Date(entry[primaryTimestampColumn]) > intervalStartDate && new Date(entry[primaryTimestampColumn]) < intervalEndDate) {
+                this.results[dataSourceName].push(entry)
+              }
+            }
+          }
+
+          count += 1
+          this.updatePlot()
+
+          // check if we should stop the loop
+          if (!this.streamActive || count > intervals) {
+            clearInterval(timeout)
+            this.streamActive = false
+          } else {
+            this.streamEntireProgress = (count / intervals) * 100
+          }
+        }, this.replayStreamInterval * 1000)
+
+      } else {
+        let recordCount = 0
+
+        const timeseriesData = await this.queryTimeseriesData()
+
+        const timeout = setInterval(() => {
+          if (!this.streamActive) clearInterval(timeout)
+
+          recordCount += this.replayRecordSize
+
+          // loop through each dataSource and add the records that fall within the time/index to results
+          for (const [dataSourceName, records] of Object.entries(timeseriesData)) {
+            // determine the primary timestamp key for this data source and use to determine which entries fall within the current range
+            const dataSource = this.selectedDataSources.find(d => d.name === dataSourceName)
+            if (!dataSource) return
+
+            const primaryTimestampColumn = (dataSource.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)?.column_name
+            if (!primaryTimestampColumn) return
+
+            if (!this.results[dataSourceName]) this.results[dataSourceName] = [] // init the results array for this data source if it does not exist
+
+            let dataStartIndex = recordCount - this.replayRecordSize // to be used for search as little of the data as possible in each iteration
+
+            for (dataStartIndex; dataStartIndex < (records as any).length; dataStartIndex++) {
+              const entry = (records as any)[dataStartIndex]
+              if (entry[primaryTimestampColumn] && entry[primaryTimestampColumn] >= this.startIndex && entry[primaryTimestampColumn] <= recordCount) {
+                this.results[dataSourceName].push(entry)
+              }
+            }
+          }
+
+          this.updatePlot()
+
+          // check if we should stop the loop
+          if (!this.streamActive || recordCount > this.endIndex) {
+            clearInterval(timeout)
+            this.streamActive = false
+          } else {
+            this.streamEntireProgress = (recordCount / this.endIndex) * 100
+          }
+        }, this.replayStreamInterval * 1000)
+      }
+
+    } else if (this.runType === 'Live Stream') {
+      this.streamActive = true
+
+      void this.runSearch()
+
+      let count = 1
+      const firstEndDate = new Date(this.endDate)
+
+      const timeout = setInterval(() => {
+        if (!this.streamActive) clearInterval(timeout)
+
+        // increment end date or end index and rerun search
+        if (this.timeseriesFlag) {
+          // start with provided end date plus one iteration and then add time for each future iteration
+          this.endDate = new Date(firstEndDate.getTime() + (this.replayStreamInterval * 1000)  * count).toISOString()
+        } else {
+          this.endIndex += this.replayRecordSize
+        }
+
+        void this.runSearch()
+
+        count += 1
+
+      }, this.replayStreamInterval * 1000)
+    }
+  }
+
+  async queryTimeseriesData() {
+    const dataToReturn: any = {}
+    for(const dataSource of this.selectedDataSources) {
+      const results = await this.$client.submitDataSourceGraphQLQuery(this.containerID, dataSource.id!,  this.buildQuery(dataSource))
+      if(results.errors) {
+        this.errorMessage = (results.errors as string[]).join(' ')
+        return
+      }
+
+      let data = results.data.Timeseries
+      if (!Array.isArray(data)) data = [data]
+      dataToReturn[dataSource.name] = data
+    }
+    return dataToReturn
+  }
+
+  async runSearch() {
     if(this.legacy) {
     this.$client.submitNodeGraphQLQuery(this.containerID, this.nodeID,  this.buildQueryLegacy())
         .then((results) => {
@@ -658,23 +881,8 @@ export default class NodeTimeseriesDialog extends Vue {
         })
         .catch((e) => this.errorMessage = e)
     } else {
-      this.selectedDataSources.forEach((dataSource) => {
-        this.$client.submitDataSourceGraphQLQuery(this.containerID, dataSource.id!,  this.buildQuery(dataSource))
-            .then((results) => {
-              if(results.errors) {
-                this.errorMessage = (results.errors as string[]).join(' ')
-                return
-              }
-
-              let data = results.data.Timeseries
-              if (!Array.isArray(data)) data = [data]
-              this.results[dataSource.name] = data
-
-              this.updatePlot()
-            })
-            .catch((e) => this.errorMessage = e)
-
-      })
+      this.results = await this.queryTimeseriesData()
+      void this.updatePlot()
     }
   }
 
