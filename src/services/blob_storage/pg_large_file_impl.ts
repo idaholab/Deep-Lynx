@@ -24,7 +24,10 @@ export default class LargeObject implements BlobStorage {
                                 .then(() => {
                                     client
                                         .query('COMMIT')
-                                        .then(() => resolve(Result.Success(true)))
+                                        .then(() => {
+                                            client.release();
+                                            resolve(Result.Success(true));
+                                        })
                                         .catch((e) => reject(e));
                                 })
                                 .catch((e) => reject(e));
