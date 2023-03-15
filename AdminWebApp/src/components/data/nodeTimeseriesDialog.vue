@@ -66,7 +66,7 @@
 
               <v-text-field
                   v-show="!timeseriesFlag"
-                  v-model="startIndex"
+                  v-model.number="startIndex"
                   type="number"
                   :rules="[rules.number]"
                   :label="$t('timeseries.startIndex')"
@@ -74,7 +74,7 @@
 
               <v-text-field
                   v-show="!timeseriesFlag"
-                  v-model="endIndex"
+                  v-model.number="endIndex"
                   type="number"
                   :rules="[rules.number]"
                   :label="$t('timeseries.endIndex')"
@@ -82,7 +82,7 @@
 
               <v-text-field
                   class="pt-5"
-                  v-model="defaultPlotLimit"
+                  v-model.number="defaultPlotLimit"
                   type="number"
                   :rules="[rules.required, rules.positiveNumber, rules.number]"
                   :label="$t('timeseries.resultLimit')"
@@ -102,7 +102,7 @@
 
                 <v-col v-if="runType !== '--' && !timeseriesFlag" :cols="3">
                   <v-text-field
-                      v-model="replayRecordSize"
+                      v-model.number="replayRecordSize"
                       type="number"
                       :rules="[rules.number]"
                       label="Records per"
@@ -112,7 +112,7 @@
                 <v-col :cols="runType !== '--' && !timeseriesFlag ? 3 : 4">
                   <v-text-field
                       v-if="runType !== '--'"
-                      v-model="replayStreamInterval"
+                      v-model.number="replayStreamInterval"
                       type="number"
                       :rules="[rules.number]"
                       label="Interval"
@@ -948,6 +948,7 @@ export default class NodeTimeseriesDialog extends Vue {
   }
 
   closeDialog() {
+    this.streamActive = false
     this.dialog = false
     this.$emit('timeseriesDialogClose')
   }
