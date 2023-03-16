@@ -167,6 +167,10 @@ export default {
             startIndex: 'Start Index',
             endIndex: 'End Index',
             indexRange: 'Index Range',
+            columnName: 'Column Name',
+            dataSource: 'Data Source',
+            type: 'Type',
+            resultLimit: 'Result Limit',
         },
         dataQuery: {
             deleteNode: 'Delete Node',
