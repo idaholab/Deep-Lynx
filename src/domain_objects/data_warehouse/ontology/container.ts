@@ -264,6 +264,8 @@ export class ContainerPermissionSet extends NakedDomainClass {
     async writePermissions(userID: string, containerID: string): Promise<Result<boolean>> {
         const e = await Authorization.enforcer();
 
+        await e.loadPolicy();
+
         await e.removePolicy(userID, containerID, 'containers', 'read');
         await e.removePolicy(userID, containerID, 'containers', 'write');
         await e.removePolicy(userID, containerID, 'ontology', 'read');
