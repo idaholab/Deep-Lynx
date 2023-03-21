@@ -74,7 +74,7 @@
 
                 this.$emit('importUploaded')
             })
-            .catch(e => this.errorMessage = e.error)
+            .catch(e => {e.error ? this.errorMessage = e.error : this.errorMessage = e})
             .finally(() => this.loading = false)
       }
     }

@@ -128,14 +128,14 @@ export default class DataSourceMapper extends Mapper {
         return super.runStatement(this.insertIntoHypertableStatement(source, records));
     }
 
-    public async CopyFromHypertable(source: DataSourceRecord, startTime?: string, endTime?: string): Promise<Result<ReadStream>> {
+    public async CopyFromHypertable(source: DataSourceRecord, options?: copyTableOptions): Promise<Result<ReadStream>> {
         return new Promise((resolve) => {
             PostgresAdapter.Instance.Pool.connect((err: Error, client: PoolClient, done: any) => {
                 if (err) {
                     return resolve(Result.Failure('unable to secure postgres client'));
                 }
 
-                const stream = client.query(copyTo(this.hypertableCopyToStatement(source, startTime, endTime)));
+                const stream = client.query(copyTo(this.hypertableCopyToStatement(source, options)));
                 stream.on('error', done);
                 stream.on('end', done);
 
@@ -450,27 +450,57 @@ export default class DataSourceMapper extends Mapper {
         return format(text, values);
     }
 
-    private hypertableCopyToStatement(source: DataSourceRecord, startTime?: string, endTime?: string): string {
+    private hypertableCopyToStatement(source: DataSourceRecord, options?: copyTableOptions): string {
         const config = source.config as TimeseriesDataSourceConfig;
 
-        if (!startTime || !endTime) {
-            return `COPY (SELECT * FROM y_${source.id}) TO STDOUT WITH (FORMAT CSV, HEADER)`;
+        if (!options || !options.startTimeOrIndex || !options.endTime) {
+            if (options && options.secondaryIndexName && options.secondaryIndexStartValue) {
+                return `COPY (SELECT * FROM y_${source.id} WHERE ${format(
+                    '%I > %L',
+                    options.secondaryIndexName,
+                    options.secondaryIndexStartValue,
+                )}) TO STDOUT WITH (FORMAT CSV, HEADER)`;
+            } else {
+                return `COPY (SELECT * FROM y_${source.id}) TO STDOUT WITH (FORMAT CSV, HEADER)`;
+            }
         }
 
         const primaryTimestampColumn = config.columns.find((c) => c.is_primary_timestamp);
         const formatString = 'YYYY-MM-DD HH24:MI:SS.US';
 
         if (primaryTimestampColumn?.type === 'date') {
-            return `COPY (SELECT * FROM y_${source.id} WHERE ${format(primaryTimestampColumn?.column_name)} BETWEEN ${format(
-                'to_timestamp("%s", %L)',
-                startTime,
-                formatString,
-            )} AND ${format('to_timestamp("%s", %L)', endTime, formatString)}) TO STDOUT WITH (FORMAT CSV, HEADER)`;
+            if (options && options.secondaryIndexName && options.secondaryIndexStartValue) {
+                return `COPY (SELECT * FROM y_${source.id} WHERE ${format(primaryTimestampColumn?.column_name)} BETWEEN ${format(
+                    'to_timestamp("%s", %L)',
+                    options.startTimeOrIndex,
+                    formatString,
+                )} AND ${options.endTime ? format('to_timestamp("%s", %L)', options.endTime, formatString) : format('NOW()')} AND ${format(
+                    '%I > %L',
+                    options.secondaryIndexName,
+                    options.secondaryIndexStartValue,
+                )}) TO STDOUT WITH (FORMAT CSV, HEADER)`;
+            } else {
+                return `COPY (SELECT * FROM y_${source.id} WHERE ${format(primaryTimestampColumn?.column_name)} BETWEEN ${format(
+                    'to_timestamp("%s", %L)',
+                    options.startTimeOrIndex,
+                    formatString,
+                )} AND ${
+                    options.endTime ? format('to_timestamp("%s", %L)', options.endTime, formatString) : format('NOW()')
+                }) TO STDOUT WITH (FORMAT CSV, HEADER)`;
+            }
         }
 
-        return `COPY (SELECT * FROM y_${source.id} WHERE ${format(primaryTimestampColumn?.column_name)} BETWEEN '${format(startTime)}' AND '${format(
-            endTime,
-        )}') TO STDOUT WITH (FORMAT CSV, HEADER)`;
+        if (options && options.secondaryIndexName && options.secondaryIndexStartValue) {
+            return `COPY (SELECT * FROM y_${source.id} WHERE ${format(primaryTimestampColumn?.column_name)} >'${format(options.startTimeOrIndex)}' AND ${format(
+                '%I > %L',
+                options.secondaryIndexName,
+                options.secondaryIndexStartValue,
+            )}) TO STDOUT WITH (FORMAT CSV, HEADER)`;
+        } else {
+            return `COPY (SELECT * FROM y_${source.id} WHERE ${format(primaryTimestampColumn?.column_name)} > '${format(
+                options.startTimeOrIndex,
+            )}' AND '${format(options.endTime)}') TO STDOUT WITH (FORMAT CSV, HEADER)`;
+        }
     }
 
     // this will break an array of objects into a json string and insert it into the statement
@@ -587,3 +617,11 @@ export default class DataSourceMapper extends Mapper {
         return format(statements.join(' '), values);
     }
 }
+
+type copyTableOptions = {
+    startTimeOrIndex?: string;
+    endTime?: string; // only applicable when start is a time
+    // we make a lot of assumptions with the secondary index, such as it's a number field and that it increments
+    secondaryIndexName?: string;
+    secondaryIndexStartValue?: string;
+};

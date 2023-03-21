@@ -219,6 +219,14 @@ export default class FileFunctions {
                             return;
                         }
 
+                        if (req.query.deleteAfter && String(req.query.deleteAfter).toLowerCase() === 'true') {
+                            res.on('finish', () => {
+                                fileRepo.delete(file.value).catch((e) => {
+                                    Logger.error(`unable to delete file after downloading ${e.message}`);
+                                });
+                            });
+                        }
+
                         stream.pipe(res);
                     })
                     .catch((err) => {

@@ -59,15 +59,30 @@
         </template>
 
         <template v-slot:[`item.actions`]="{ item }">
-          <image-viewer v-if="isImage(item.file_name)" :file="item" :icon="true"></image-viewer>
-          <v-icon
-              small
-              @click="removeFile(item)"
-          >
-            mdi-delete
-          </v-icon>
-          <!-- not the world's best if statement for catching IFC files, but will work in 99% of the cases -->
-          <ifc-viewer v-if="item.file_name.includes('.ifc')" :file="item" :icon="true"></ifc-viewer>
+          <v-flex style="display: flex; height: 100%; align-items: center">
+            <v-icon
+                small
+                @click="downloadFile(item)"
+                class="mr-2"
+            >
+              mdi-download
+            </v-icon>
+
+            <v-icon
+                small
+                @click="removeFile(item)"
+                class="mx-2"
+            >
+              mdi-delete
+            </v-icon>
+            <!-- not the world's best if statement for catching IFC files, but will work in 99% of the cases -->
+            <ifc-viewer v-if="item.file_name.includes('.ifc')" :file="item" :icon="true"></ifc-viewer>
+
+            <div @click="viewImage(item)" style="display: flex; height: 100%">
+              <img :id="item.file_name" v-if="isImage(item.file_name)" v-observe-visibility="generateThumbnail(item)" :src="imageURL(item)" style="max-height: 50px; max-width: 150px" :alt="item.file_name">
+            </div>
+
+          </v-flex>
         </template>
       </v-data-table>
     </v-col>
@@ -77,11 +92,16 @@
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from "vue-property-decorator";
 import {FileT, NodeT} from "@/api/types";
+import Config from "@/config";
 import {mdiFileDocumentMultiple} from "@mdi/js";
 import IfcViewer from "@/components/general/ifcViewer.vue";
-import ImageViewer from "@/components/visualization/imageViewer.vue";
+import 'viewerjs/dist/viewer.css';
+import Viewer from 'viewerjs';
+import {AxiosBasicCredentials, AxiosRequestConfig, AxiosResponse, default as axios} from "axios";
+import {RetrieveJWT} from "@/auth/authentication_service";
+import buildURL from "build-url";
 
-@Component({components: {IfcViewer, ImageViewer}})
+@Component({components: {IfcViewer}})
 export default class NodeFilesDialog extends Vue {
   @Prop({required: true})
   readonly node!: NodeT
@@ -92,15 +112,48 @@ export default class NodeFilesDialog extends Vue {
   errorMessage = ''
   files: FileT[] = []
   copy = mdiFileDocumentMultiple
+  imageViewers: Map<string, Viewer> = new Map()
 
   @Watch('node', {immediate: true})
   onNodeChange() {
     this.loadFiles()
   }
 
-
   mounted() {
     this.loadFiles()
+  }
+
+  generateThumbnail(file: FileT) {
+    const imageElm = document.getElementById(file.file_name)
+    if (imageElm === null) return
+
+    const viewer = new Viewer(imageElm, {
+      viewed() {
+        viewer.zoomTo(1);
+      },
+      toolbar: {
+        zoomIn: 1,
+        zoomOut: 1,
+        oneToOne: 1,
+        reset: 1,
+        prev: 0,
+        play: {
+          show: 0,
+        },
+        next: 0,
+        rotateLeft: 1,
+        rotateRight: 1,
+        flipHorizontal: 1,
+        flipVertical: 1,
+      },
+      navbar: false
+    });
+    this.imageViewers.set(file.id, viewer)
+  }
+
+  viewImage(file: FileT) {
+    const viewer = this.imageViewers.get(file.id)
+    if (viewer) viewer.show(true);
   }
 
   headers() {
@@ -143,10 +196,49 @@ export default class NodeFilesDialog extends Vue {
         .catch(e => this.errorMessage = e)
   }
 
+  downloadFile(file: FileT) {
+    const config: AxiosRequestConfig = {}
+    config.responseType = "blob"
+    config.headers = {"Access-Control-Allow-Origin": "*"}
+
+    if(Config?.deepLynxApiAuth === "token") {
+      config.headers = {"Authorization": `Bearer ${RetrieveJWT()}`}
+    }
+
+    if(Config?.deepLynxApiAuth === "basic") {
+      config.auth = {username: Config.deepLynxApiAuthBasicUser, password: Config.deepLynxApiAuthBasicPass} as AxiosBasicCredentials
+    }
+
+    const url = buildURL(Config?.deepLynxApiUri!, {path: `/containers/${file.container_id}/files/${file.id}/download`})
+
+    axios.get(url, config)
+        .then((response: AxiosResponse) => {
+          if (response.status > 299 || response.status < 200) {
+            this.errorMessage = `Unable to download file`
+          } else {
+            const fetchedURL = window.URL.createObjectURL(new Blob([response.data]))
+            const link = document.createElement('a')
+
+            link.href = fetchedURL
+            link.setAttribute('download', file.file_name)
+            document.body.append(link)
+            link.click()
+          }
+        })
+  }
+
   isImage(fileName: string): boolean {
     const extensions = ['jpg', 'jpeg', 'apng', 'png', 'webp', 'avif', 'gif', 'svg', 'bmp', 'ico', 'cur'];
 
     return extensions.some(ext => fileName.includes(ext));
+  }
+
+  imageURL(file: FileT): string {
+    const token = localStorage.getItem('user.token');
+
+    const imageUrl = new URL(`${Config.deepLynxApiUri}/containers/${file.container_id}/files/${file.id}/download`);
+    imageUrl.searchParams.append("auth_token", token!);
+    return imageUrl.toString()
   }
 
   copyID(id: string) {

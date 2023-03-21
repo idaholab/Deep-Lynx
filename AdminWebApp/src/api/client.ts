@@ -86,6 +86,14 @@ export class Client {
         return this.postRawReturn<any>(`/containers/${containerID}/graphs/nodes/${nodeID}/timeseries`, query);
     }
 
+    submitDataSourceGraphQLQuery(containerID: string, dataSourceID: string, query: any): Promise<any> {
+        if (query.query) {
+            query.query = query.query.replace(/\n/g, '');
+        }
+
+        return this.postRawReturn<any>(`/containers/${containerID}/import/datasources/${dataSourceID}/data`, query);
+    }
+
     listContainers(): Promise<ContainerT[]> {
         return this.get<ContainerT[]>('/containers');
     }

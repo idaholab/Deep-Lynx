@@ -690,14 +690,14 @@
                   <h4 class="text-h4">
                     {{ $t('dataMapping.metatypePropertyMapping') }}
                     <small class="mx-2">
-                      <span v-if="!rootArray">{{ graphProperties.length }} / {{ payloadKeys.length }} properties selected</span>
-                      <span v-if="rootArray">{{ graphProperties.length }} / {{ payloadKeys.length }} properties selected ({{ payloadSelectedArrayKeys.length }} array properties available)</span>
+                      <span v-if="!rootArray">{{ propertyMapping.filter(k => (k.metatype_key_id || k.metatype_relationship_key_id)).length }} / {{ payloadKeys.length }} properties selected</span>
+                      <span v-if="rootArray">{{ propertyMapping.filter(k => (k.metatype_key_id || k.metatype_relationship_key_id)).length }} / {{ payloadKeys.length }} properties selected ({{ payloadSelectedArrayKeys.length }} array properties available)</span>
                     </small>
                     <info-tooltip :message="$t('dataMapping.PropertyMappingHelp')"></info-tooltip>
                   </h4>
                   <v-spacer></v-spacer>
                   <v-btn
-                      @click="autoPopulateMetatypeKeys()"
+                      @click.native.stop="autoPopulateMetatypeKeys()"
                       class="ml-auto mr-4"
                       style="flex: 0 1 auto;"
                   >
@@ -712,7 +712,7 @@
                     <info-tooltip :message="$t('dataMapping.PropertyMappingHelp')"></info-tooltip>
                   </h4>
                   <v-btn
-                      @click="autoPopulateRelationshipKeys()"
+                      @click.native.stop="autoPopulateRelationshipKeys()"
                       class="mr-4"
                       style="flex: 0 1 auto;"
                   >
@@ -1286,7 +1286,6 @@ export default class TransformationDialog extends Vue {
   payloadArrayKeys: any = []
   rootArray: any = null
   metadataKeys: string[] = []
-  graphProperties: { [key: string]: any }[] = []
 
   operators = [
     {text: "==", value: "==", requiresValue: true},
@@ -1463,7 +1462,6 @@ export default class TransformationDialog extends Vue {
     this.selectedMetatypeKeys = []
     this.propertyMapping = []
     this.metadataKeys = []
-    this.graphProperties = []
   }
 
   editReset() {
@@ -1479,7 +1477,6 @@ export default class TransformationDialog extends Vue {
             if (Array.isArray(this.transformation?.keys)) this.propertyMapping = this.transformation?.keys as Array<{ [key: string]: any }>
             if(this.propertyMapping) {
               this.metadataKeys = this.propertyMapping.filter(k => k.is_metadata_key === true).map(k => k.key) as Array<string>
-              this.graphProperties = this.propertyMapping.filter(k => (k.metatype_key_id || k.metatype_relationship_key_id)) as Array<{[key: string]: any}>
             }
           })
           .catch(e => this.errorMessage = e)
@@ -1504,7 +1501,6 @@ export default class TransformationDialog extends Vue {
             if (Array.isArray(this.transformation?.keys)) this.propertyMapping = this.transformation?.keys as Array<{ [key: string]: any }>
             if(this.propertyMapping) {
               this.metadataKeys = this.propertyMapping.filter(k => k.is_metadata_key === true).map(k => k.key) as Array<string>
-              this.graphProperties = this.propertyMapping.filter(k => (k.metatype_key_id || k.metatype_relationship_key_id)) as Array<{[key: string]: any}>
             }
           })
           .catch(e => this.errorMessage = e)
@@ -1813,7 +1809,7 @@ export default class TransformationDialog extends Vue {
 
         const metatypeKey = this.selectedMetatypeKeys.find(metatypeKey => metatypeKey.property_name === rootKey)
 
-        if (metatypeKey) {
+        if (metatypeKey && !this.propertyMapping.some(m => (m.key === payloadKey && m.metatype_key_id === metatypeKey.id))) {
           this.propertyMapping.push({
             id: uuidv4(),
             key: payloadKey,
@@ -1833,7 +1829,7 @@ export default class TransformationDialog extends Vue {
 
         const relationship = this.selectedMetatypeRelationshipPairKeys.find(relationshipKey => relationshipKey.property_name === rootKey)
 
-        if (relationship) {
+        if (relationship && !this.propertyMapping.some(m => (m.key === payloadKey && m.metatype_relationship_key_id === relationship.id))) {
           this.propertyMapping.push({
             id: uuidv4(),
             key: payloadKey,
