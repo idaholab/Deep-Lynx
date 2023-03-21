@@ -124,7 +124,7 @@
 
             <v-card-actions class="mt-2">
               <v-btn v-if="!streamActive" color="primary" @click="submitSearch">{{$t('timeseries.runSearch')}}</v-btn>
-              <v-btn v-else color="primary" @click="streamActive = false">Stop Stream</v-btn>
+              <v-btn v-else color="primary" @click="clearIntervals">Stop Stream</v-btn>
 
               <v-spacer></v-spacer>
               <v-progress-linear v-if="streamActive && runType !== 'Live Stream'" :value="streamEntireProgress" color="primary" class="mx-4" height="25" style="max-width: 150px">
@@ -210,6 +210,8 @@
       <v-row>
         <v-col :cols="12">
 
+          <v-card class="pa-4 mx-3">
+
           <div id="timeseriesPlot"></div>
           <v-btn
               color="primary"
@@ -223,6 +225,17 @@
             </v-icon>
             <v-icon v-else>
               mdi-arrow-up-drop-circle
+            </v-icon>
+          </v-btn>
+          <v-btn
+              color="primary"
+              dark
+              v-show="Object.keys(this.results).length > 0"
+              class="mx-3"
+              @click="downloadCSV"
+          >
+            <v-icon>
+              mdi-download
             </v-icon>
           </v-btn>
           <div v-show="!showChart">
@@ -248,8 +261,7 @@
             </v-data-table>
           </div>
 
-          <v-card v-if="Object.keys(results).length === 0" class="pa-4 mx-3">
-            <span>No Results</span>
+            <span v-if="Object.keys(results).length === 0">No Results</span>
           </v-card>
 
         </v-col>
@@ -264,6 +276,7 @@ import {Component, Prop, Vue, Watch} from "vue-property-decorator";
 import {DataSourceT, NodeT, TimeseriesDataSourceConfig, TypeMappingTransformationT} from "@/api/types";
 import TimeseriesAnnotationDialog from "@/components/data/timeseriesAnnotationDialog.vue";
 import Plotly, {Datum} from "plotly.js-dist-min";
+import { json2csv } from 'json-2-csv';
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 require("flatpickr/dist/themes/material_blue.css");
@@ -333,6 +346,9 @@ export default class NodeTimeseriesDialog extends Vue {
   streamActive = false
   streamProgress = 0
   streamInterval: any = {}
+  timeseriesReplayInterval: any = {}
+  indexReplayInterval: any = {}
+  liveStreamInterval: any = {}
   streamSeconds = 0
   streamEntireProgress = 0
   replayRecordSize = 100
@@ -398,10 +414,10 @@ export default class NodeTimeseriesDialog extends Vue {
 
   async updatePlot(styleUpdate = false) {
     const plotlyDiv = document.getElementById('timeseriesPlot')
+    // remove chart to force proper refresh
+    Plotly.purge(plotlyDiv!)
 
     if (Object.keys(this.results).length === 0) {
-      // remove chart if present
-      Plotly.purge(plotlyDiv!)
       return
     }
 
@@ -739,8 +755,8 @@ export default class NodeTimeseriesDialog extends Vue {
 
         const timeseriesData = await this.queryTimeseriesData()
 
-        const timeout = setInterval(() => {
-          if (!this.streamActive) clearInterval(timeout)
+        this.timeseriesReplayInterval = setInterval(() => {
+          if (!this.streamActive) clearInterval(this.timeseriesReplayInterval)
 
           const intervalStart = new Date(this.startDate).getTime() + (this.replayStreamInterval * 1000)  * count // seconds for start interval
           const intervalEnd = intervalStart + this.replayStreamInterval * 1000 // seconds for end interval
@@ -773,7 +789,7 @@ export default class NodeTimeseriesDialog extends Vue {
 
           // check if we should stop the loop
           if (!this.streamActive || count > intervals) {
-            clearInterval(timeout)
+            clearInterval(this.timeseriesReplayInterval)
             this.streamActive = false
           } else {
             this.streamEntireProgress = (count / intervals) * 100
@@ -785,8 +801,8 @@ export default class NodeTimeseriesDialog extends Vue {
 
         const timeseriesData = await this.queryTimeseriesData()
 
-        const timeout = setInterval(() => {
-          if (!this.streamActive) clearInterval(timeout)
+        this.indexReplayInterval = setInterval(() => {
+          if (!this.streamActive) clearInterval(this.indexReplayInterval)
 
           recordCount += this.replayRecordSize
 
@@ -815,7 +831,7 @@ export default class NodeTimeseriesDialog extends Vue {
 
           // check if we should stop the loop
           if (!this.streamActive || recordCount > this.endIndex) {
-            clearInterval(timeout)
+            clearInterval(this.indexReplayInterval)
             this.streamActive = false
           } else {
             this.streamEntireProgress = (recordCount / this.endIndex) * 100
@@ -831,8 +847,8 @@ export default class NodeTimeseriesDialog extends Vue {
       let count = 1
       const firstEndDate = new Date(this.endDate)
 
-      const timeout = setInterval(() => {
-        if (!this.streamActive) clearInterval(timeout)
+      this.liveStreamInterval = setInterval(() => {
+        if (!this.streamActive) clearInterval(this.liveStreamInterval)
 
         // increment end date or end index and rerun search
         if (this.timeseriesFlag) {
@@ -947,8 +963,43 @@ export default class NodeTimeseriesDialog extends Vue {
 
   }
 
-  closeDialog() {
+  downloadCSV() {
+    for (const [dataSourceName, records] of Object.entries(this.results)) {
+      const data = (records as object[]).map((r: any) => {
+        delete r.datasource
+        return r
+      })
+      json2csv(data)
+        .then(csv => {
+          this.performDownload(csv, dataSourceName)
+        })
+        .catch(e => this.errorMessage = e)
+    }
+  }
+
+  async performDownload(data: string, name = 'download') {
+    const blob = new Blob([data], { type: 'text/csv' });
+
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+
+    link.href = url
+    link.setAttribute('download', `${name}.csv`)
+    document.body.append(link)
+    link.click()
+    link.remove()
+  }
+
+  clearIntervals() {
     this.streamActive = false
+    clearInterval(this.streamInterval)
+    clearInterval(this.timeseriesReplayInterval)
+    clearInterval(this.indexReplayInterval)
+    clearInterval(this.liveStreamInterval)
+  }
+
+  closeDialog() {
+    this.clearIntervals()
     this.dialog = false
     this.$emit('timeseriesDialogClose')
   }
