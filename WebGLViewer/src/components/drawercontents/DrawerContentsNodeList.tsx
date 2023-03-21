@@ -15,7 +15,6 @@ import { appStateActions } from '../../../app/store/index';
 import { useTheme } from '@mui/material/styles';
 
 // MUI Components
-// MUI Components
 import {
   Box,
   Button,
@@ -24,16 +23,27 @@ import {
   ListItem,
   ListItemText,
   ListItemButton,
+  MenuItem,
   OutlinedInput,
-  Stack,
   Tooltip,
   Typography
 } from '@mui/material';
+import Menu, { MenuProps } from '@mui/material/Menu';
+import EditIcon from '@mui/icons-material/Edit';
+import Divider from '@mui/material/Divider';
+import ArchiveIcon from '@mui/icons-material/Archive';
+import FileCopyIcon from '@mui/icons-material/FileCopy';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 // MUI Icons
 import InfoIcon from '@mui/icons-material/Info';
+import HubIcon from '@mui/icons-material/Hub';
+import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
+import HighlightIcon from '@mui/icons-material/Highlight';
 
 // Styles
+import { styled, alpha } from '@mui/material/styles';
 import '../../styles/App.scss';
 // @ts-ignore
 import COLORS from '../../styles/variables';
@@ -65,6 +75,46 @@ const SearchBar = ({setSearchQuery}: any) => (
   </FormControl>
 );
 
+const StyledMenu = styled((props: MenuProps) => (
+  <Menu
+    elevation={0}
+    anchorOrigin={{
+      vertical: 'bottom',
+      horizontal: 'right',
+    }}
+    transformOrigin={{
+      vertical: 'top',
+      horizontal: 'right',
+    }}
+    {...props}
+  />
+))(({ theme }) => ({
+  '& .MuiPaper-root': {
+    borderRadius: 6,
+    marginTop: theme.spacing(1),
+    minWidth: 180,
+    color:
+      theme.palette.mode === 'light' ? 'rgb(55, 65, 81)' : theme.palette.grey[300],
+    boxShadow:
+      'rgb(255, 255, 255) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.05) 0px 4px 6px -2px',
+    '& .MuiMenu-list': {
+      padding: '4px 0',
+    },
+    '& .MuiMenuItem-root': {
+      '& .MuiSvgIcon-root': {
+        fontSize: 18,
+        color: theme.palette.text.secondary,
+        marginRight: theme.spacing(1.5),
+      },
+      '&:active': {
+        backgroundColor: alpha(
+          theme.palette.primary.main,
+          theme.palette.action.selectedOpacity,
+        ),
+      },
+    },
+  },
+}));
 
 export default function DrawerContentsNodeList(props: any) {
   const { children } = props;
@@ -119,6 +169,16 @@ export default function DrawerContentsNodeList(props: any) {
     dispatch(appStateActions.toggleDrawerRight())
   }
 
+  // Menu
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
   return (
     <Box
       sx={{ display: 'flex', flexDirection: 'column', padding: '16px 0px 0', overflowX: 'hidden', }}
@@ -138,7 +198,7 @@ export default function DrawerContentsNodeList(props: any) {
             padding: '0 0 0 16px'
           }}
         >
-          Assets
+          Nodes
         </Typography>
         <Tooltip title="View scene asset/object information. Select and Highlight objects. Show on Graph. View Data.">
           <InfoIcon sx={{ fill: COLORS.colorDarkgray2, marginLeft: '10px', marginRight: '10px', height: '15px', width: '15px' }} />
@@ -161,88 +221,152 @@ export default function DrawerContentsNodeList(props: any) {
               disablePadding
               sx={{ borderBottom: `1px solid ${COLORS.colorDarkgray}` }}
               secondaryAction={
-                <Stack spacing={.5} direction="row">
-                  <Button
-                    variant="contained"
-                    size="small"
-                    sx={{
-                      height: '25px',
-                      width: '25px',
-                      padding: '4px',
-                      minWidth: '25px',
-                      '& span': {
-                        fontSize: '18px'
-                      }
-                    }}
-                    onClick={() => {
-                      handleSelectAssetOnScene(object.title)
-                    }}
-                  >
-                    <span className="material-symbols-rounded">
-                      ads_click
-                    </span>
-                  </Button>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    sx={{
-                      height: '25px',
-                      width: '25px',
-                      padding: '4px',
-                      minWidth: '25px',
-                      '& span': {
-                        fontSize: '18px'
-                      }
-                    }}
-                    onClick={() => {
-                      handleHighlightAssetOnScene(object.title)
-                    }}
-                  >
-                    <span className="material-symbols-rounded">
-                      highlight
-                    </span>
-                  </Button>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    sx={{
-                      height: '25px',
-                      width: '25px',
-                      padding: '4px',
-                      minWidth: '25px',
-                      '& span': {
-                        fontSize: '16px'
-                      }
-                    }}
-                    onClick={() => {
-                      handleShowAssetOnGraph(object)
-                    }}
-                  >
-                    <span className="material-symbols-rounded">
-                      hub
-                    </span>
-                  </Button>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    sx={{
-                      height: '25px',
-                      width: '25px',
-                      padding: '4px',
-                      minWidth: '25px',
-                      '& span': {
-                        fontSize: '18px'
-                      }
-                    }}
-                    onClick={() => {
-                      handleToggleDataView(object)
-                    }}
-                  >
-                    <span className="material-symbols-rounded">
-                      show_chart
-                    </span>
-                  </Button>
-                </Stack>
+                <>
+                <Button
+                  id="demo-customized-button"
+                  aria-controls={open ? 'demo-customized-menu' : undefined}
+                  aria-haspopup="true"
+                  aria-expanded={open ? 'true' : undefined}
+                  variant="contained"
+                  disableElevation
+                  onClick={handleClick}
+                  endIcon={<KeyboardArrowDownIcon />}
+                  size="small"
+                  sx={{
+                    color: 'white',
+                    padding: '0px 8px',
+                    marginLeft: 'auto',
+                    '& span': {
+                      fontSize: '12px'
+                    }
+                  }}
+                >
+                  <Typography>Actions</Typography>
+                </Button>
+                <StyledMenu
+                  id="demo-customized-menu"
+                  MenuListProps={{
+                    'aria-labelledby': 'demo-customized-button',
+                  }}
+                  anchorEl={anchorEl}
+                  open={open}
+                  onClose={handleClose}
+                >
+                  {/* <MenuItem onClick={handleShowAssetOnGraph(object)} disableRipple> */}
+                  <MenuItem disableRipple>
+                    <HubIcon />
+                    Show On Graph
+                  </MenuItem>
+                  <Divider sx={{ my: 0.5 }} />
+                  {/* <MenuItem onClick={handleSelectAssetOnScene(object.title)} disableRipple> */}
+                  <MenuItem disableRipple>
+                    <RadioButtonCheckedIcon />
+                    Select On Scene
+                  </MenuItem>
+                  {/* <MenuItem onClick={handleHighlightAssetOnScene(object.title)} disableRipple> */}
+                  <MenuItem disableRipple>
+                    <HighlightIcon />
+                    Highlight On Scene
+                  </MenuItem>
+                </StyledMenu>
+                </>
+                // <Button
+                //   variant="contained"
+                //   size="small"
+                //   sx={{
+                //     color: 'white',
+                //     padding: '0px 8px',
+                //     marginLeft: 'auto',
+                //     '& span': {
+                //       fontSize: '12px'
+                //     }
+                //   }}
+                //   onClick={() => {}}
+                // >
+                //   <Typography>Actions</Typography>
+                // </Button>
+                // <Stack spacing={.5} direction="row">
+                //   <Button
+                //     variant="contained"
+                //     size="small"
+                //     sx={{
+                //       height: '25px',
+                //       width: '25px',
+                //       padding: '4px',
+                //       minWidth: '25px',
+                //       '& span': {
+                //         fontSize: '18px'
+                //       }
+                //     }}
+                //     onClick={() => {
+                //       handleSelectAssetOnScene(object.title)
+                //     }}
+                //   >
+                //     <span className="material-symbols-rounded">
+                //       ads_click
+                //     </span>
+                //   </Button>
+                //   <Button
+                //     variant="contained"
+                //     size="small"
+                //     sx={{
+                //       height: '25px',
+                //       width: '25px',
+                //       padding: '4px',
+                //       minWidth: '25px',
+                //       '& span': {
+                //         fontSize: '18px'
+                //       }
+                //     }}
+                //     onClick={() => {
+                //       handleHighlightAssetOnScene(object.title)
+                //     }}
+                //   >
+                //     <span className="material-symbols-rounded">
+                //       highlight
+                //     </span>
+                //   </Button>
+                //   <Button
+                //     variant="contained"
+                //     size="small"
+                //     sx={{
+                //       height: '25px',
+                //       width: '25px',
+                //       padding: '4px',
+                //       minWidth: '25px',
+                //       '& span': {
+                //         fontSize: '16px'
+                //       }
+                //     }}
+                //     onClick={() => {
+                //       handleShowAssetOnGraph(object)
+                //     }}
+                //   >
+                //     <span className="material-symbols-rounded">
+                //       hub
+                //     </span>
+                //   </Button>
+                //   <Button
+                //     variant="contained"
+                //     size="small"
+                //     sx={{
+                //       height: '25px',
+                //       width: '25px',
+                //       padding: '4px',
+                //       minWidth: '25px',
+                //       '& span': {
+                //         fontSize: '18px'
+                //       }
+                //     }}
+                //     onClick={() => {
+                //       handleToggleDataView(object)
+                //     }}
+                //   >
+                //     <span className="material-symbols-rounded">
+                //       show_chart
+                //     </span>
+                //   </Button>
+                // </Stack>
               }
             >
               <ListItemButton

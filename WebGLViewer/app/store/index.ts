@@ -7,13 +7,38 @@ const initialState = {
   openDrawerRight: false,
   openDrawerRightWidth: 425,
   selectedAssetObject: {},
+  selectedSceneObject: {},
   selectAssetOnScene: '',
   highlightAssetOnScene: '',
   dataViewObject: {},
   tempData: [
     {
-      id: 0,
+      id: 34633,
       title: '1-1',
+      details: {
+        type: 'Structure',
+        datasource: '(2)',
+        createdAt: '2023-03-01 14:39:34',
+        modifiedAt: '2023-03-01 14:39:34'
+      },
+      history: [
+        {
+          time: '2023-03-01 14:39:34',
+          details: 'dataQuery.createdBy: Adam Pluth'
+        },
+        {
+          time: '2023-03-01 14:31:22',
+          details: 'dataQuery.otherEvent'
+        },
+        {
+          time: '2023-03-01 14:28:17',
+          details: 'dataQuery.otherEvent'
+        },
+        {
+          time: '2023-03-01 14:24:08 ',
+          details: 'dataQuery.otherEvent'
+        },
+      ],
       metadata: [
         {
           title: 'General Settings',
@@ -34,8 +59,32 @@ const initialState = {
       ]
     },
     {
-      id: 1,
+      id: 22345,
       title: '2-1',
+      details: {
+        type: 'Structure',
+        datasource: '(2)',
+        createdAt: '2023-03-01 14:39:34',
+        modifiedAt: '2023-03-01 14:39:34'
+      },
+      history: [
+        {
+          time: '2023-03-01 14:39:34',
+          details: 'dataQuery.createdBy: Adam Pluth'
+        },
+        {
+          time: '2023-03-01 14:31:22',
+          details: 'dataQuery.otherEvent'
+        },
+        {
+          time: '2023-03-01 14:28:17',
+          details: 'dataQuery.otherEvent'
+        },
+        {
+          time: '2023-03-01 14:24:08 ',
+          details: 'dataQuery.otherEvent'
+        },
+      ],
       metadata: [
         {
           title: 'General Settings',
@@ -52,8 +101,32 @@ const initialState = {
       ]
     },
     {
-      id: 2,
+      id: 23425,
       title: '2-2',
+      details: {
+        type: 'Structure',
+        datasource: '(2)',
+        createdAt: '2023-03-01 14:39:34',
+        modifiedAt: '2023-03-01 14:39:34'
+      },
+      history: [
+        {
+          time: '2023-03-01 14:39:34',
+          details: 'dataQuery.createdBy: Adam Pluth'
+        },
+        {
+          time: '2023-03-01 14:31:22',
+          details: 'dataQuery.otherEvent'
+        },
+        {
+          time: '2023-03-01 14:28:17',
+          details: 'dataQuery.otherEvent'
+        },
+        {
+          time: '2023-03-01 14:24:08 ',
+          details: 'dataQuery.otherEvent'
+        },
+      ],
       metadata: [
         {
           title: 'General Settings',
@@ -73,184 +146,13 @@ const initialState = {
         }
       ]
     },
-    {
-      id: 3,
-      title: '3-1-1',
-      metadata: [
-        {
-          title: 'General Settings',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-        {
-          title: 'Users',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-        {
-          title: 'Advanced Settings',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-      ]
-    },
-    {
-      id: 4,
-      title: '3-1-2',
-      metadata: [
-        {
-          title: 'General Settings',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-        {
-          title: 'Users',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-        {
-          title: 'Advanced Settings',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-        {
-          title: 'Personal Data',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        }
-      ]
-    },
-    {
-      id: 5,
-      title: '3-1-3',
-      metadata: [
-        {
-          title: 'General Settings',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-        {
-          title: 'Users',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-        {
-          title: 'Advanced Settings',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-      ]
-    },
-    {
-      id: 6,
-      title: '3-2',
-      metadata: [
-        {
-          title: 'General Settings',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-        {
-          title: 'Users',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-        {
-          title: 'Advanced Settings',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-        {
-          title: 'Personal Data',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        }
-      ]
-    },
-    {
-      id: 7,
-      title: '4-1',
-      metadata: [
-        {
-          title: 'General Settings',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-        {
-          title: 'Users',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-        {
-          title: 'Advanced Settings',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-      ]
-    },
-    {
-      id: 8,
-      title: '7-1',
-      metadata: [
-        {
-          title: 'General Settings',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-        {
-          title: 'Users',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-        {
-          title: 'Advanced Settings',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-        {
-          title: 'Personal Data',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        }
-      ]
-    },
-    {
-      id: 9,
-      title: '7-2',
-      metadata: [
-        {
-          title: 'General Settings',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-        {
-          title: 'Users',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-        {
-          title: 'Advanced Settings',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-      ]
-    },
-    {
-      id: 10,
-      title: 'AE-1',
-      metadata: [
-        {
-          title: 'General Settings',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-        {
-          title: 'Users',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-        {
-          title: 'Advanced Settings',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-        {
-          title: 'Personal Data',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        }
-      ]
-    },
-    {
-      id: 11,
-      title: 'AE-2',
-      metadata: [
-        {
-          title: 'General Settings',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-        {
-          title: 'Users',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-        {
-          title: 'Advanced Settings',
-          data: 'Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget maximus est, id dignissim quam.'
-        },
-      ]
-    }
+  ],
+  tempSceneData: [
+    'Scene 1',
+    'Scene 2',
+    'Scene 3',
+    'Scene 4',
+    'Scene 5'
   ]
 };
 
@@ -258,6 +160,7 @@ const appStateSlice = createSlice({
   name: 'appState',
   initialState,
   reducers: {
+    // App functions
     toggleDrawerLeft: (state) => {
       const store = state;
       store.openDrawerLeft = !store.openDrawerLeft;
@@ -270,6 +173,8 @@ const appStateSlice = createSlice({
       const store = state;
       store.openDrawerRight = !store.openDrawerRight;
     },
+
+    // Asset functions
     selectAssetObject: (state, action) => {
       const store = state;
       store.selectedAssetObject = action.payload;
@@ -286,6 +191,13 @@ const appStateSlice = createSlice({
       const store = state;
       store.dataViewObject = action.payload;
     },
+
+    // Scene functions
+    selectSceneObject: (state, action) => {
+      const store = state;
+      store.selectedSceneObject = action.payload;
+    },
+
   },
 });
 

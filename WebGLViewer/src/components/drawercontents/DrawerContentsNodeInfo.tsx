@@ -15,16 +15,9 @@ import { appStateActions } from '../../../app/store/index';
 import { useTheme } from '@mui/material/styles';
 
 // MUI Components
-// MUI Components
 import {
   Box,
   Button,
-  FormControl,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemButton,
-  OutlinedInput,
   Stack,
   Tooltip,
   Typography
@@ -32,13 +25,18 @@ import {
 
 // MUI Icons
 import InfoIcon from '@mui/icons-material/Info';
+import CloseIcon from '@mui/icons-material/Close';
+
+// Custom Components 
+import NodeInfoMainTabs from '../drawercontents/NodeInfoMainTabs';
+import ButtonIconText from '../elements/ButtonIconText';
 
 // Styles
 import '../../styles/App.scss';
 // @ts-ignore
 import COLORS from '../../styles/variables';
 
-export default function DrawerContentsNodeInfo(props: any) {
+const DrawerContentsNodeInfo: React.FC = (props: any) => {
   const { children } = props;
 
   const theme = useTheme();
@@ -80,6 +78,11 @@ export default function DrawerContentsNodeInfo(props: any) {
     dispatch(appStateActions.toggleDrawerRight())
   }
 
+  const handleDeselectAssetObject = () => {
+    dispatch(appStateActions.selectAssetObject({}));
+    setSelected('');
+  };
+
   return (
     <Box
       sx={{ display: 'flex', flexDirection: 'column', padding: '16px 0px 0', overflowX: 'hidden', }}
@@ -103,7 +106,39 @@ export default function DrawerContentsNodeInfo(props: any) {
         <Tooltip title="View node information">
           <InfoIcon sx={{ fill: COLORS.colorDarkgray2, marginLeft: '10px', marginRight: '10px', height: '15px', width: '15px' }} />
         </Tooltip>
+        <Button
+          variant="contained"
+          size="small"
+          color="error"
+          sx={{
+            marginLeft: 'auto',
+            marginRight: '12px',
+            color: 'white',
+            padding: '4px 12px 4px 8px',
+            '& span': {
+              fontSize: '16px'
+            }
+          }}
+          onClick={() => {
+            handleDeselectAssetObject()
+          }}
+        >
+          <CloseIcon sx={{ fontSize: '20px', paddingTop: '2px'}} /><span>Back to list</span>
+        </Button>
+      </Box>
+      <Box sx={{ display: 'flex', padding: '0 16px' }}>
+        <Typography sx={{ marginRight: '8px' }}>Actions:</Typography>
+        <Stack spacing={1} direction="row">
+          <ButtonIconText type="hub" handleClick={() => {console.log('yay!')}} text="Show On Graph" />
+          <ButtonIconText type="select" handleClick={() => {console.log('yay!')}} text="Select On Scene" />
+          <ButtonIconText type="highlight" handleClick={() => {console.log('yay!')}} text="Highlight On Scene" />
+        </Stack>
+      </Box>
+      <Box sx={{ padding: '16px', display: 'flex', flex: '1 1 100%', flexDirection: 'column'}}>
+        <NodeInfoMainTabs data={selectedAssetObject} />
       </Box>
     </Box>
   );
 }
+
+export default DrawerContentsNodeInfo;

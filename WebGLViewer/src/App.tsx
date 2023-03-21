@@ -6,6 +6,10 @@ import { Routes, Route } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../app/hooks/reduxTypescriptHooks';
 
+// Import Packages
+import "@fontsource/source-sans-pro/400.css"; // Weight 400.
+import "@fontsource/source-sans-pro/600.css"; // Weight 600.
+
 // MUI Styles
 import {
   useTheme,
@@ -39,10 +43,6 @@ const getDesignTokens = (mode: PaletteMode) => ({
     secondary: {
       main: COLORS.colorSecondary,
     },
-    // background: {
-    //   default: 'rgb(18, 18, 18)',
-    //   paper: 'rgb(18, 18, 18)',
-    // },
     text: {
       ...(mode === 'light'
         ? {
@@ -142,7 +142,6 @@ function App() {
         <MainScaffold>
           <Routes>
             <Route path="/viewer" element={<Dashboard />} />
-            {/* <Route path="/settings" element={<Settings />} /> */}
           </Routes>
         </MainScaffold>
       </CssBaseline>

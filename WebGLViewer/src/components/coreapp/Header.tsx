@@ -41,14 +41,6 @@ const AppBar = styled(MuiAppBar, {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
-  // ...(open && {
-  //   width: `calc(100% - ${useAppSelector((state: any) => state.appState.openDrawerLeftWidth)}px)`,
-  //   marginLeft: `${useAppSelector((state: any) => state.appState.openDrawerLeftWidth)}px`,
-  //   transition: theme.transitions.create(['margin-left', 'width'], {
-  //     easing: theme.transitions.easing.easeOut,
-  //     duration: theme.transitions.duration.enteringScreen,
-  //   }),
-  // }),
 }));
 
 export default function Header(props: any) {
@@ -59,9 +51,6 @@ export default function Header(props: any) {
 
   type openDrawerLeftState = boolean;
   const openDrawerLeftState: openDrawerLeftState = useAppSelector((state: any) => state.appState.openDrawerLeft);
-  const handleToggleOpenDrawerLeft = () => {
-    dispatch(appStateActions.toggleDrawerLeft());
-  };
 
   type openDrawerLeftWidth = number;
   const openDrawerLeftWidth: openDrawerLeftWidth = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);

@@ -8,6 +8,7 @@ import { useAppSelector, useAppDispatch } from '../../../app/hooks/reduxTypescri
 
 // Import Packages
 import classNames from 'classnames';
+import { v4 as uuidv4 } from 'uuid';
 
 // Import Redux Actions
 import { appStateActions } from '../../../app/store/index';
@@ -21,7 +22,6 @@ import {
   Button,
   Divider,
   Drawer,
-  Fade,
   FormControl,
   IconButton,
   List,
@@ -39,28 +39,30 @@ import {
 import MuiDrawer from '@mui/material/Drawer';
 import MuiAppBar, { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
 
+// MUI Transitions
+import Fade from '@mui/material/Fade';
+
 // MUI Icons
 import MenuIcon from '@mui/icons-material/Menu';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
-import TuneIcon from '@mui/icons-material/Tune';
 import CategoryIcon from '@mui/icons-material/Category';
 import ImageIcon from '@mui/icons-material/Image';
 import SettingsIcon from '@mui/icons-material/Settings';
-import InfoIcon from '@mui/icons-material/Info';
-import CloseIcon from '@mui/icons-material/Close';
 
 // Custom Components
 import DrawerContentsNodeList from '../drawercontents/DrawerContentsNodeList';
 import DrawerContentsNodeInfo from '../drawercontents/DrawerContentsNodeInfo';
+import DrawerContentsSceneList from '../drawercontents/DrawerContentsSceneList';
+import DrawerContentsSettings from '../drawercontents/DrawerContentsSettings';
 
 // Styles
 import '../../styles/App.scss';
 // @ts-ignore
 import COLORS from '../../../src/styles/variables';
 
-
-export default function DrawerLeft(props: any) {
+const DrawerLeft = (props: any) => {
   const { children } = props;
+  const [selected, setSelected] = useState('nodeList');
 
   const theme = useTheme();
   const dispatch = useAppDispatch();
@@ -68,39 +70,46 @@ export default function DrawerLeft(props: any) {
   type openDrawerLeftState = boolean;
   const openDrawerLeftState: openDrawerLeftState = useAppSelector((state: any) => state.appState.openDrawerLeft);
 
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const [selected, setSelected] = React.useState<string | false>(false);
-
   const handleToggleOpenDrawerLeft = () => {
     dispatch(appStateActions.toggleDrawerLeft());
   };
 
   type selectedAssetObject = any;
   const selectedAssetObject: selectedAssetObject = useAppSelector((state: any) => state.appState.selectedAssetObject);
-  const handleSelectAssetObject = (obj: any, selectedItem: string) => {
-    dispatch(appStateActions.selectAssetObject(obj));
-    setSelected(selectedItem);
-  };
 
-  const handleDeselectAssetObject = () => {
-    dispatch(appStateActions.selectAssetObject({}));
-    setSelected('');
+  const handleSelectMenuLink = (selectedLink: string) => {
+    setSelected(selectedLink);
+    console.log(selectedLink)
   };
 
   type openDrawerLeftWidth = number;
   const openDrawerLeftWidth: openDrawerLeftWidth = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);
 
+  const [assetObjectIsSelected, setAssetObjectIsSelected] = React.useState(false);
 
-  let assetObjectIsSelected;
   if (Object.keys(selectedAssetObject).length === 0){
-    assetObjectIsSelected = true;
-  } else {
-    assetObjectIsSelected = false;
     dispatch(appStateActions.setDrawerLeftWidth(430));
   }
 
-  console.log(assetObjectIsSelected)
+  const menuItemMatchesComponent = (pane: string) => selected === pane;
+
+  const menuLinkList = [
+    {
+      title: 'Nodes',
+      icon: CategoryIcon,
+      pane: 'nodeList'
+    },
+    {
+      title: 'Scenes',
+      icon: ImageIcon,
+      pane: 'sceneList'
+    },
+    {
+      title: 'Settings',
+      icon: SettingsIcon,
+      pane: 'settings'
+    },
+  ]
 
   return (
     <Drawer variant="permanent" open={openDrawerLeftState}
@@ -125,13 +134,23 @@ export default function DrawerLeft(props: any) {
     >
       <Box sx={{ display: 'flex', height: '100%', marginTop: '64px', alignItems: 'stretch' }}>
         <Box sx={{ display: 'flex', height: '100%', backgroundColor: COLORS.colorLightgray3 }}>
-          <List>
-            <ListItem key="Math.random()" disablePadding>
+          <List sx={{ p: 0 }}>
+            {/* Hamburger menu icon to open and close Drawer */}
+            <ListItem key={uuidv4()} disablePadding>
               <ListItemButton
                 sx={{
-                  minHeight: 48,
-                  justifyContent: openDrawerLeftState ? 'initial' : 'center',
+                  minHeight: 64,
                   px: 2.5,
+                  backgroundColor: '#E3B180',
+                  '&.Mui-selected': {
+                    backgroundColor: `${COLORS.colorSecondary} !important`
+                  },
+                  '&.Mui-focusVisible': {
+                    backgroundColor: `${COLORS.colorSecondary} !important`
+                  },
+                  '&:hover': {
+                    backgroundColor: `${COLORS.colorSecondary} !important`
+                  }
                 }}
                 onClick={handleToggleOpenDrawerLeft}
               >
@@ -146,98 +165,62 @@ export default function DrawerLeft(props: any) {
                 </ListItemIcon>
               </ListItemButton>
             </ListItem>
-            <ListItem component={Link} to="/" key="Math.random()" disablePadding>
-              <ListItemButton
-                sx={{
-                  minHeight: 48,
-                  justifyContent: openDrawerLeftState ? 'initial' : 'center',
-                  px: 2.5,
-                }}
-              >
-                <ListItemIcon
-                  sx={{
-                    minWidth: 0,
-                    mr: 'auto',
-                    justifyContent: 'center',
-                  }}
-                >
 
-                  <CategoryIcon />
-                </ListItemIcon>
-                {/* <ListItemText primary="Dashboard" sx={{ opacity: openDrawerLeftState ? 1 : 0, color: COLORS.colorSecondary }} /> */}
-              </ListItemButton>
-            </ListItem>
-
-            <ListItem component={Link} to="/" key="Math.random()" disablePadding>
-              <ListItemButton
-                sx={{
-                  minHeight: 48,
-                  justifyContent: openDrawerLeftState ? 'initial' : 'center',
-                  px: 2.5,
-                }}
-              >
-                <ListItemIcon
-                  sx={{
-                    minWidth: 0,
-                    mr: 'auto',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <ImageIcon />
-                </ListItemIcon>
-              </ListItemButton>
-            </ListItem>
-
-            <ListItem component={Link} to="/settings" key="Math.random()" disablePadding>
-              <ListItemButton
-                sx={{
-                  minHeight: 48,
-                  justifyContent: openDrawerLeftState ? 'initial' : 'center',
-                  px: 2.5,
-                }}
-              >
-                <ListItemIcon
-                  sx={{
-                    minWidth: 0,
-                    mr: 'auto',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <SettingsIcon />
-                </ListItemIcon>
-              </ListItemButton>
-            </ListItem>
+            {/* Drawer Menu link list */}
+            {menuLinkList.map((menuLinkItem, index) => {
+              const MenuLinkItemIcon = menuLinkItem.icon;
+              return (
+                <ListItem key={uuidv4()} disablePadding>
+                  <ListItemButton
+                    sx={{
+                      minHeight: 64,
+                      px: 2.5,
+                      '&.Mui-selected': {
+                        backgroundColor: `${COLORS.colorListSelectDarkGray} !important`
+                      },
+                      '&.Mui-focusVisible': {
+                        backgroundColor: `${COLORS.colorListSelectDarkGray} !important`
+                      },
+                      '&:hover': {
+                        backgroundColor: `${COLORS.colorListSelectDarkGray} !important`
+                      }
+                    }}
+                    selected={menuItemMatchesComponent(menuLinkItem.pane)}
+                    onClick={() => handleSelectMenuLink(menuLinkItem.pane)}
+                  >
+                    <ListItemIcon
+                      sx={{
+                        minWidth: 0,
+                        mr: 'auto',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <MenuLinkItemIcon />
+                    </ListItemIcon>
+                    {/* <ListItemText primary="Dashboard" sx={{ opacity: openDrawerLeftState ? 1 : 0, color: COLORS.colorSecondary }} /> */}
+                  </ListItemButton>
+                </ListItem>
+              )
+            })}
           </List>
         </Box>
         <Box sx={{ display: 'flex', height: '100%', flex: '1 0', backgroundColor: COLORS.colorLightgray }}>
-          <Fade in={!assetObjectIsSelected} unmountOnExit>
-              <DrawerContentsNodeList />
-          </Fade>
-          <Fade in={assetObjectIsSelected} unmountOnExit>
+          {selected === 'nodeList' && 
             <>
-              <Button
-                variant="contained"
-                size="small"
-                sx={{
-                  position: 'absolute',
-                  top: '84px',
-                  right: '20px',
-                  zIndex: '2',
-                  '& span': {
-                    fontSize: '18px'
-                  }
-                }}
-                onClick={() => {
-                  handleDeselectAssetObject()
-                }}
-              >
-                <CloseIcon /><span>Back to list</span>
-              </Button>
-              <DrawerContentsNodeInfo />
+              {(Object.keys(selectedAssetObject).length === 0) && <DrawerContentsNodeList />}
+              {(Object.keys(selectedAssetObject).length !== 0) && <DrawerContentsNodeInfo />}
             </>
-          </Fade>
+          }
+          {selected === 'sceneList' && 
+              <DrawerContentsSceneList />
+          }
+          {selected === 'settings' && 
+            <DrawerContentsSettings />
+          }
         </Box>
       </Box>
     </Drawer>
   );
 }
+
+export default DrawerLeft;
