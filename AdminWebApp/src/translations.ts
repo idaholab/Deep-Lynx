@@ -235,7 +235,7 @@ export default {
         nodeFiles: {
             id: 'ID',
             fileName: 'File Name',
-            fileSize: 'Size',
+            fileSize: 'Size (KB)',
             actions: 'Actions',
             copyID: 'Click to Copy ID',
             attachedFiles: 'Attached Files',
