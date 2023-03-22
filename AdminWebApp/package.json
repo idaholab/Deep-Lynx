@@ -46,7 +46,7 @@
     "ssri": "^8.0.1",
     "three": "^0.132.2",
     "three-mesh-bvh": "^0.4.3",
-    "tslib": "^2.0.3",
+    "tslib": "^2.5.0",
     "uuid": "^8.3.2",
     "vue": "^2.6.12",
     "vue-class-component": "^7.2.6",
