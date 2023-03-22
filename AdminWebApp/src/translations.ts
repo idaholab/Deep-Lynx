@@ -1436,6 +1436,8 @@ export default {
             updateFile: 'Update File',
             newFile: 'New File',
             updateTag: 'Update Tag',
+            viewFile: 'View',
+            close: 'Close',
         },
     },
     es: {

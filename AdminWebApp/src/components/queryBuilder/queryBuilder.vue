@@ -695,7 +695,6 @@ relationshipSampleQuery =
         created_at
         modified_at
         properties
-        metadata_properties
         ${this.rawMetadataEnabled ? 'raw_data_properties' : ''}
         ${this.rawMetadataEnabled ? 'raw_data_history' : ''}
 }
