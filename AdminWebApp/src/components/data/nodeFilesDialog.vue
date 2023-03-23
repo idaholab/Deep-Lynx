@@ -61,7 +61,8 @@
         <template v-slot:[`item.actions`]="{ item }">
           <v-flex style="display: flex; height: 100%; align-items: center">
             <ViewMediaFileDialog v-if="isVideo(item.file_name)">
-              <VideoPlayer :options="videoOptions" />
+              <!-- <VideoPlayer :options="videoOptions"  /> -->
+              <VideoPlayer :options="viewVideo(item)" />
             </ViewMediaFileDialog>
             <v-icon
                 small
@@ -119,16 +120,7 @@ export default class NodeFilesDialog extends Vue {
   copy = mdiFileDocumentMultiple
   imageViewers: Map<string, Viewer> = new Map()
 
-  videoOptions = {
-    autoplay: true,
-    controls: true,
-    sources: [
-      {
-        src: '',
-        type: 'video/mp4'
-      }
-    ]
-  }
+  videoOptions = {}
 
   @Watch('node', {immediate: true})
   onNodeChange() {
@@ -173,9 +165,26 @@ export default class NodeFilesDialog extends Vue {
   }
 
   viewVideo(file: FileT) {
-    console.log(this.videoOptions.sources[0].src)
-    this.videoOptions.sources[0].src = this.fileURL(file);
-    console.log(this.videoOptions.sources[0].src)
+    const filepath = this.fileURL(file)
+    console.log(filepath)
+    return {
+      autoplay: true,
+      controls: true,
+      fluid: true,
+      controlBar: {
+        skipButtons: {
+          forward: 5
+        }
+      },
+      preload: 'auto',
+      responsive: true,
+      sources: [
+        {
+          src: filepath,
+          type: 'video/mp4'
+        }
+      ]
+    }
   }
 
   headers() {
