@@ -170,6 +170,7 @@ export default {
             columnName: 'Column Name',
             dataSource: 'Data Source',
             type: 'Type',
+            trace: 'Trace',
             resultLimit: 'Result Limit',
         },
         dataQuery: {
@@ -236,6 +237,7 @@ export default {
             id: 'ID',
             fileName: 'File Name',
             fileSize: 'Size (KB)',
+            lastModified: 'Last Modified',
             actions: 'Actions',
             copyID: 'Click to Copy ID',
             attachedFiles: 'Attached Files',
