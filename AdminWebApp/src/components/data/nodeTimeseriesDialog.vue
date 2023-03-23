@@ -816,6 +816,9 @@ export default class NodeTimeseriesDialog extends Vue {
           if (column.is_primary_timestamp) {
             columnNameEntry.x = true
             this.selectedXColumn = columnNameEntry.uniqueName
+
+            // set timeseriesFlag based upon primary timestamp type
+            column.type !== 'date' ? this.timeseriesFlag = false : this.timeseriesFlag = true
           }
 
           if (!column.is_primary_timestamp && (column.type?.toLowerCase().includes('float') || column.type?.toLowerCase().includes('number'))) {
