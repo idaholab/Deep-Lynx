@@ -43,24 +43,9 @@ export default function DrawerContentsSettings(props: any) {
 
   return (
     <Box
-      sx={{ display: 'flex', flexDirection: 'column', padding: '16px 0px 0', overflowX: 'hidden', }}
+      sx={{ display: 'flex', flexDirection: 'column', overflowX: 'hidden', }}
     >
-
-      <Box sx={{ flex: '1, 1, auto', display: 'flex', flexDirection: 'row', alignItems: 'center', marginBottom: '12px' }}>
-        <Typography
-          variant="h3"
-          sx={{
-            alignItems: 'center',
-            padding: '0 0 0 16px'
-          }}
-        >
-          Settings
-        </Typography>
-        <Tooltip title="View scene asset/object information. Select and Highlight objects. Show on Graph. View Data.">
-          <InfoIcon sx={{ fill: COLORS.colorDarkgray2, marginLeft: '10px', marginRight: '10px', height: '15px', width: '15px' }} />
-        </Tooltip>
-      </Box>
-      <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '16px' }}>
+      <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0 16px 16px' }}>
         Settings go here
       </Box>
     </Box>

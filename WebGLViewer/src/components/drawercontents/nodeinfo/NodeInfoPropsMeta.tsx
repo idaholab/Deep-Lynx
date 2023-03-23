@@ -26,42 +26,22 @@ type Props = {
 const NodeInfoPropsMeta: React.FC<Props> = ({
   data
 }) => {
+  const convertDataToArray = (obj: any) => {
+    if (obj !== null) {
+      const array = Object.keys(obj).map((key) => [key.toString(), obj[key]]);
+      return array
+    } else {
+      return []
+    }
+  }
 
   const PropertiesTableHeaders = [
-    {title: 'Id', alignment: 'left'},
     {title: 'Name', alignment: 'left'},
     {title: 'Value', alignment: 'left'},
     {title: 'Actions', alignment: 'center'},
   ];
 
-  // const tableData = data;
-  const PropertiesTableRowData = [
-    {
-      id: 1,
-      name: 'id',
-      value: 'st7',
-    },
-    {
-      id: 2,
-      name: 'name',
-      value: 'shack',
-    },
-    {
-      id: 3,
-      name: 'fruits',
-      value: 'pear',
-    },
-    {
-      id: 4,
-      name: 'vegetables',
-      value: 'carrot',
-    },
-    {
-      id: 5,
-      name: 'grains',
-      value: 'wheat',
-    },
-  ];
+  const PropertiesTableRowData = convertDataToArray(data.properties);
 
   const PropertiesTableRowActions = [
     {type: 'edit',},
@@ -69,40 +49,12 @@ const NodeInfoPropsMeta: React.FC<Props> = ({
   ];
 
   const MetadataTableHeaders = [
-    {title: 'Id', alignment: 'left'},
     {title: 'Name', alignment: 'left'},
     {title: 'Value', alignment: 'left'},
     {title: 'Actions', alignment: 'center'},
   ];
 
-  // const tableData = data;
-  const MetadataTableRowData = [
-    {
-      id: 1,
-      name: 'id',
-      value: 'st7',
-    },
-    {
-      id: 2,
-      name: 'name',
-      value: 'shack',
-    },
-    {
-      id: 3,
-      name: 'fruits',
-      value: 'pear',
-    },
-    {
-      id: 4,
-      name: 'vegetables',
-      value: 'carrot',
-    },
-    {
-      id: 5,
-      name: 'grains',
-      value: 'wheat',
-    },
-  ];
+  const MetadataTableRowData = convertDataToArray(data.metadata_properties);
 
   const MetadataTableRowActions = [
     {type: 'view',},
@@ -114,13 +66,13 @@ const NodeInfoPropsMeta: React.FC<Props> = ({
       <InfoHeader>
         Properties
       </InfoHeader>
-      <ButtonIconText type="add" handleClick={() => {console.log('yay!')}} text="Add Property" />
+      {/* <ButtonIconText type="add" handleClick={() => {console.log('yay!')}} text="Add Property" color="primary" /> */}
       <DataTableBasic tableHeaders={PropertiesTableHeaders} tableRowData={PropertiesTableRowData} tableRowActions={PropertiesTableRowActions} />
 
       <InfoHeader>
         Metadata
       </InfoHeader>
-      <ButtonIconText type="add" handleClick={() => {console.log('yay!')}} text="Add Metadata" />
+      {/* <ButtonIconText type="add" handleClick={() => {console.log('yay!')}} text="Add Metadata" color="primary"/> */}
       <DataTableBasic tableHeaders={MetadataTableHeaders} tableRowData={MetadataTableRowData} tableRowActions={MetadataTableRowActions}  />
     </>
   );

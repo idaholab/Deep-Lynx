@@ -141,7 +141,8 @@ export default class FileManager extends Vue {
 
   open3DViewer(selectedTag: any) {
     localStorage.setItem("webgl", JSON.stringify(selectedTag));
-    window.open(`${Config.deepLynxApiUri}/viewer`, "_blank");
+    window.open(`http://localhost:5173`, "_blank");
+    // window.open(`${Config.deepLynxApiUri}/viewer`, "_blank");
   }
 
   copyID(id: string) {

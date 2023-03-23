@@ -78,8 +78,8 @@ const NodeInfoTimeSeries: React.FC<Props> = ({
       <InfoHeader>
         Data
       </InfoHeader>
-      <ButtonIconText type="attach" handleClick={() => {console.log('yay!')}} text="Add New Data" />
-      <DataTableBasic tableHeaders={tableHeaders} tableRowData={tableRowData} tableRowActions={tableRowActions}  />
+      {/* <ButtonIconText type="attach" handleClick={() => {console.log('yay!')}} text="Add New Data" color="primary" /> */}
+      <DataTableBasic tableHeaders={tableHeaders} tableRowData={tableRowData} tableRowActions={tableRowActions} />
       <InfoHeader>
         Visualized Timeseries
       </InfoHeader>

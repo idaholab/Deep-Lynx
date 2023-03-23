@@ -2,12 +2,13 @@ import { createSlice, configureStore } from '@reduxjs/toolkit';
 import { webGLReducer } from './slices/webGLSlice';
 
 const initialState = {
-  openDrawerLeft: true,
-  openDrawerLeftWidth: 430,
+  openDrawerLeft: false,
+  openDrawerLeftWidth: 64,
   openDrawerRight: false,
   openDrawerRightWidth: 425,
   selectedAssetObject: {},
   selectedSceneObject: {},
+  selectedWebGLFileSetId: null,
   selectAssetOnScene: '',
   highlightAssetOnScene: '',
   dataViewObject: {},
@@ -198,6 +199,11 @@ const appStateSlice = createSlice({
       store.selectedSceneObject = action.payload;
     },
 
+    // WebGL File Set Functions
+    setWebGLFileSetId: (state, action) => {
+      const store = state;
+      store.selectedWebGLFileSetId = action.payload;
+    },
   },
 });
 

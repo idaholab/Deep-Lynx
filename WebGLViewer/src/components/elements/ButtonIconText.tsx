@@ -24,13 +24,15 @@ import COLORS from '../../styles/variables';
 type Props = {
   text: string,
   type: string,
-  handleClick: any
+  handleClick: any,
+  color: "error" | "inherit" | "primary" | "secondary" | "success" | "info" | "warning" | undefined
 };
 
 const ButtonIconText: React.FC<Props> = ({
   text,
   type,
-  handleClick
+  handleClick,
+  color
 }) => {
 
   return (
@@ -38,6 +40,7 @@ const ButtonIconText: React.FC<Props> = ({
       <Button
         variant="contained"
         size="small"
+        color={color}
         sx={{
           color: 'white',
           padding: '2px 12px 2px 8px',

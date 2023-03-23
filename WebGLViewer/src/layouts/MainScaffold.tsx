@@ -33,6 +33,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import Header from '../components/coreapp/Header';
 import DrawerLeft from '../components/coreapp/DrawerLeft';
 import DrawerRight from '../components/coreapp/DrawerRight';
+import LayoutDashboard from '../layouts/LayoutDashboard';
 
 // Styles
 // @ts-ignore
@@ -55,15 +56,9 @@ export default function MainScaffold(props: any) {
       <Header />
       <Box
         sx={{ flexGrow: 1, marginTop: '64px', padding: '0px', zIndex: '0' }}
-        className={classNames(
-          'main-container-sizing',
-          {
-            'main-container-sizing-with-drawer': openDrawerLeftState === true,
-          },
-        )}
       >
         <DrawerLeft />
-        {children}
+        <LayoutDashboard />
         <DrawerRight/>
       </Box>
     </Box>

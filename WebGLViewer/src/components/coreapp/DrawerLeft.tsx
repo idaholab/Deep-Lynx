@@ -1,52 +1,39 @@
 // React
 import * as React from 'react';
-import { Link } from 'react-router-dom';
 
 // Hooks
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../../../app/hooks/reduxTypescriptHooks';
 
 // Import Packages
-import classNames from 'classnames';
 import { v4 as uuidv4 } from 'uuid';
+import axios from 'axios';
 
 // Import Redux Actions
 import { appStateActions } from '../../../app/store/index';
-
-// MUI Styles
-import { styled, useTheme, Theme, CSSObject } from '@mui/material/styles';
 
 // MUI Components
 import {
   Box,
   Button,
-  Divider,
   Drawer,
   FormControl,
-  IconButton,
   List,
   ListItem,
   ListItemIcon,
-  ListItemText,
   ListItemButton,
   OutlinedInput,
-  Paper,
-  Stack,
-  Toolbar,
   Tooltip,
-  Typography
+  Typography,
 } from '@mui/material';
-import MuiDrawer from '@mui/material/Drawer';
-import MuiAppBar, { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
 
-// MUI Transitions
-import Fade from '@mui/material/Fade';
 
 // MUI Icons
 import MenuIcon from '@mui/icons-material/Menu';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import CategoryIcon from '@mui/icons-material/Category';
 import ImageIcon from '@mui/icons-material/Image';
+import InfoIcon from '@mui/icons-material/Info';
 import SettingsIcon from '@mui/icons-material/Settings';
 
 // Custom Components
@@ -54,45 +41,105 @@ import DrawerContentsNodeList from '../drawercontents/DrawerContentsNodeList';
 import DrawerContentsNodeInfo from '../drawercontents/DrawerContentsNodeInfo';
 import DrawerContentsSceneList from '../drawercontents/DrawerContentsSceneList';
 import DrawerContentsSettings from '../drawercontents/DrawerContentsSettings';
+import ButtonIconText from '../elements/ButtonIconText';
 
 // Styles
 import '../../styles/App.scss';
 // @ts-ignore
 import COLORS from '../../../src/styles/variables';
 
-const DrawerLeft = (props: any) => {
-  const { children } = props;
+const queryFilterData = (query: any, data: any) => {
+  if (!query) {
+    return data;
+  } else {
+    return data.filter((d: any) => d.title.toString().toLowerCase().includes(query.toString().toLowerCase()));
+  }
+};
+
+const SearchBar = ({setSearchQuery}: any) => (
+  <FormControl fullWidth variant="outlined" size="small">
+    <OutlinedInput
+      id="search-bar"
+      className="text"
+      onInput={(event: React.ChangeEvent<HTMLInputElement>) => {
+        const target = event.target as HTMLInputElement;
+        if (target) setSearchQuery(target.value);
+      }}
+      aria-describedby="outlined-search-assets"
+      inputProps={{
+        'aria-label': 'search assets',
+      }}
+      placeholder="Search..."
+      
+    />
+  </FormControl>
+);
+
+type Props = {};
+
+const DrawerLeft: React.FC<Props> = ({}) => {
+
   const [selected, setSelected] = useState('nodeList');
 
-  const theme = useTheme();
+  const [searchQuery, setSearchQuery] = useState("");
+
   const dispatch = useAppDispatch();
+
+  type tempSceneData = Array<{ [key: string]: any; }>;
+  const tempSceneData = useAppSelector((state: any) => state.appState.tempSceneData);
+
+  const [nodes, setNodes] = useState(Array<{ [key: string]: any; }>);
+  const [scenes, setScenes] = useState(tempSceneData);
+  // const [scenes, setScenes] = useState(Array<{ [key: string]: any; }>);
+
+  const [filteredData, setFilteredData] = useState()
+  useEffect(() => {
+    async function getNodes() {
+      const files = JSON.parse(localStorage.getItem('node')!);
+      const token = "bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGl0eV9wcm92aWRlciI6InNhbWxfYWRmcyIsImRpc3BsYXlfbmFtZSI6Ik5hdGhhbiBMLiBXb29kcnVmZiIsImVtYWlsIjoiTmF0aGFuLldvb2RydWZmQGlubC5nb3YiLCJhZG1pbiI6ZmFsc2UsImFjdGl2ZSI6dHJ1ZSwicmVzZXRfcmVxdWlyZWQiOmZhbHNlLCJlbWFpbF92YWxpZCI6ZmFsc2UsInR5cGUiOiJ1c2VyIiwicGVybWlzc2lvbnMiOltdLCJyb2xlcyI6W10sInVzZXJfaWQiOiIxOSIsImtleSI6Ik16SXlNVFJoTm1JdE9EYzNNaTAwWWpjMExXRmxaRFF0TkdOaE16VmlOR0l6TVdaaiIsInNlY3JldCI6IiQyYSQxMCRJREg5WXpGM2RmeXVpNDA2ZVFVSWhPU3Y1djQ2czNMaTlGTERJVlc4a2NpeERnZThNclpiMiIsIm5vdGUiOiJBZGFtIiwiaWQiOiIxOSIsImlkZW50aXR5X3Byb3ZpZGVyX2lkIjoiTmF0aGFuLldvb2RydWZmQGlubC5nb3YiLCJjcmVhdGVkX2F0IjoiMjAyMi0wOC0xOFQwNjowMDowMC4wMDBaIiwibW9kaWZpZWRfYXQiOiIyMDIyLTA4LTE4VDA2OjAwOjAwLjAwMFoiLCJjcmVhdGVkX2J5Ijoic2FtbC1hZGZzIGxvZ2luIiwibW9kaWZpZWRfYnkiOiJzYW1sLWFkZnMgbG9naW4iLCJyZXNldF90b2tlbl9pc3N1ZWQiOm51bGwsImlhdCI6MTY3ODkxMzA5OCwiZXhwIjoxNzEwNDcwNjk4fQ.6ex5ftZOQlOEkCev-G54qPE2waN3HZeDsMpK4ssPa_fEamUhd7-qt56OcM87VUSMNEDRYVPw74WF9PhyBUf2n4EslunCUZLYYpW1RdrQViDcbi6zHPlfMe0KrRwTsu4YobAVEMvEYkpA_wW0u0O4YfemEZdrqORYxMONHfmqCC_tA4FODi5hrv9ln3xH3DpmUaVXlvRzzFvPH5bE-jKV_gdmeunkFyfVuE1wuUx7I0jF6ZpUj1u09bikdvTo-FmchkRRGyYKKsbu5H3DZsr7JoT_tAnS_Z5O9MBeHu8uqciAc2esElkq3t_cpxi5yLriIx5mSEI6b7Fb6UEClVP5XA";
+
+      await axios.get ( "https://deeplynx.azuredev.inl.gov/containers/111/graphs/nodes",
+        {
+          headers: {
+            Authorization: token
+          }
+        }).then (
+          (response: any) => {
+            console.log(response.data)
+            setNodes(queryFilterData(searchQuery, response.data.value))
+          }
+        )
+    }
+
+    getNodes();
+  }, []);
 
   type openDrawerLeftState = boolean;
   const openDrawerLeftState: openDrawerLeftState = useAppSelector((state: any) => state.appState.openDrawerLeft);
 
-  const handleToggleOpenDrawerLeft = () => {
-    dispatch(appStateActions.toggleDrawerLeft());
-  };
-
-  type selectedAssetObject = any;
-  const selectedAssetObject: selectedAssetObject = useAppSelector((state: any) => state.appState.selectedAssetObject);
-
-  const handleSelectMenuLink = (selectedLink: string) => {
-    setSelected(selectedLink);
-    console.log(selectedLink)
-  };
-
   type openDrawerLeftWidth = number;
   const openDrawerLeftWidth: openDrawerLeftWidth = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);
 
-  const [assetObjectIsSelected, setAssetObjectIsSelected] = React.useState(false);
+  const handleToggleOpenDrawerLeft = () => {
+    dispatch(appStateActions.toggleDrawerLeft());
+    if (openDrawerLeftWidth === 64) {
+      dispatch(appStateActions.setDrawerLeftWidth(430));
+    } else if (openDrawerLeftWidth === 430 || openDrawerLeftWidth === 800) {
+      dispatch(appStateActions.setDrawerLeftWidth(64));
+      dispatch(appStateActions.selectAssetObject({}));
+    }
+  };
 
-  if (Object.keys(selectedAssetObject).length === 0){
+  // Selected Asset Object
+  type selectedAssetObject = any;
+  const selectedAssetObject: selectedAssetObject = useAppSelector((state: any) => state.appState.selectedAssetObject);
+
+  const handleDeselectAssetObject = () => {
+    dispatch(appStateActions.selectAssetObject({}));
     dispatch(appStateActions.setDrawerLeftWidth(430));
-  }
+  };
 
-  const menuItemMatchesComponent = (pane: string) => selected === pane;
-
+  // Menu links and menu link selection
   const menuLinkList = [
     {
       title: 'Nodes',
@@ -110,6 +157,13 @@ const DrawerLeft = (props: any) => {
       pane: 'settings'
     },
   ]
+
+  const handleSelectMenuLink = (selectedLink: string) => {
+    setSelected(selectedLink);
+  };
+
+  // Component display switching
+  const menuItemMatchesComponent = (pane: string) => selected === pane;
 
   return (
     <Drawer variant="permanent" open={openDrawerLeftState}
@@ -204,15 +258,66 @@ const DrawerLeft = (props: any) => {
             })}
           </List>
         </Box>
-        <Box sx={{ display: 'flex', height: '100%', flex: '1 0', backgroundColor: COLORS.colorLightgray }}>
+        <Box sx={{ display: 'flex', height: '100%', flex: '1 0', flexDirection: 'column', overflowX: 'hidden', backgroundColor: COLORS.colorLightgray }}>
+          <Box sx={{ flex: '1, 1, auto', display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '16px' }}>
+            <Typography
+              variant="h3"
+              sx={{
+                alignItems: 'center',
+                padding: '5px 0px'
+              }}
+            >
+              {selected === 'nodeList' && (Object.keys(selectedAssetObject).length === 0) ? 'Nodes'
+                : selected === 'sceneList' ? 'Scenes'
+                : selected === 'settings' ? 'Settings'
+                : `Node ${selectedAssetObject.id}`
+              }
+              {(Object.keys(selectedAssetObject).length !== 0) && 
+                <span
+                  style={{
+                    marginLeft: '8px',
+                    paddingLeft: '8px',
+                    borderLeft: `1px solid ${COLORS.colorDarkgray2}`
+                  }}
+                >
+                  { selectedAssetObject.properties.Name }
+                </span>
+              }
+            </Typography>
+            <Tooltip title={
+              selected === 'nodeList' ? 'View scene asset/object information. Select and Highlight objects. Show on Graph. View Data.'
+              : selected === 'sceneList' ? 'View and change Scenes'
+              : selected === 'settings' ? 'View and edit Settings'
+              : null
+            }>
+              <InfoIcon
+                sx={{
+                  fill: COLORS.colorDarkgray2,
+                  marginLeft: '10px',
+                  marginRight: '10px',
+                  height: '15px',
+                  width: '15px'
+                }}
+              />
+            </Tooltip>
+            {(selected === 'nodeList' && (Object.keys(selectedAssetObject).length === 0)) &&
+              <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+            }
+            {(selected === 'nodeList' && (Object.keys(selectedAssetObject).length !== 0)) &&
+              // <Box sx={{ flex: '1, 1, auto', display: 'flex', flexDirection: 'row', alignItems: 'center', margin: '12px 0px 12px auto' }}>
+              <Box sx={{ position: 'absolute', right: '0px', paddingRight: '16px' }}>
+                <ButtonIconText text='Back To List' handleClick={() => handleDeselectAssetObject()} type="close" color="error" />
+              </Box>
+            }
+          </Box>
           {selected === 'nodeList' && 
             <>
-              {(Object.keys(selectedAssetObject).length === 0) && <DrawerContentsNodeList />}
+              {(Object.keys(selectedAssetObject).length === 0) && <DrawerContentsNodeList data={nodes} />}
               {(Object.keys(selectedAssetObject).length !== 0) && <DrawerContentsNodeInfo />}
             </>
           }
           {selected === 'sceneList' && 
-              <DrawerContentsSceneList />
+            <DrawerContentsSceneList data={scenes} />
           }
           {selected === 'settings' && 
             <DrawerContentsSettings />

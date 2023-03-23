@@ -2,11 +2,15 @@
 import * as React from 'react';
 
 // Hooks
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../../../app/hooks/reduxTypescriptHooks';
+
+// Helpers
+import regex from "../../../app/helpers/regex";
 
 // Import Packages
 import classNames from 'classnames';
+import axios from 'axios';
 
 // Import Redux Actions
 import { appStateActions } from '../../../app/store/index';
@@ -36,8 +40,9 @@ import '../../styles/App.scss';
 // @ts-ignore
 import COLORS from '../../styles/variables';
 
-const DrawerContentsNodeInfo: React.FC = (props: any) => {
-  const { children } = props;
+type Props = {};
+
+const DrawerContentsNodeInfo: React.FC<Props> = ({}) => {
 
   const theme = useTheme();
   const dispatch = useAppDispatch();
@@ -48,14 +53,8 @@ const DrawerContentsNodeInfo: React.FC = (props: any) => {
   type openDrawerLeftWidth = number;
   const openDrawerLeftWidth: openDrawerLeftWidth = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);
 
-  const [selected, setSelected] = React.useState<string | false>(false);
-
   type selectedAssetObject = any;
   const selectedAssetObject: selectedAssetObject = useAppSelector((state: any) => state.appState.selectedAssetObject);
-  const handleSelectAssetObject = (obj: any, selectedItem: string) => {
-    dispatch(appStateActions.selectAssetObject(obj));
-    setSelected(selectedItem);
-  };
 
   type selectAssetOnScene = string;
   const selectAssetOnScene: selectAssetOnScene = useAppSelector((state: any) => state.appState.selectAssetOnScene);
@@ -78,66 +77,22 @@ const DrawerContentsNodeInfo: React.FC = (props: any) => {
     dispatch(appStateActions.toggleDrawerRight())
   }
 
-  const handleDeselectAssetObject = () => {
-    dispatch(appStateActions.selectAssetObject({}));
-    setSelected('');
-  };
+  console.log(selectedAssetObject.properties)
 
   return (
-    <Box
-      sx={{ display: 'flex', flexDirection: 'column', padding: '16px 0px 0', overflowX: 'hidden', }}
-      className={classNames(
-        'drawer-left-sizing',
-        {
-          'drawer-left-sizing-asset-selected': Object.keys(selectedAssetObject).length !== 0,
-        },
-      )}
-    >
-      <Box sx={{ flex: '1, 1, auto', display: 'flex', flexDirection: 'row', alignItems: 'center', marginBottom: '12px' }}>
-        <Typography
-          variant="h3"
-          sx={{
-            alignItems: 'center',
-            padding: '0 0 0 16px'
-          }}
-        >
-          Node Attributes
-        </Typography>
-        <Tooltip title="View node information">
-          <InfoIcon sx={{ fill: COLORS.colorDarkgray2, marginLeft: '10px', marginRight: '10px', height: '15px', width: '15px' }} />
-        </Tooltip>
-        <Button
-          variant="contained"
-          size="small"
-          color="error"
-          sx={{
-            marginLeft: 'auto',
-            marginRight: '12px',
-            color: 'white',
-            padding: '4px 12px 4px 8px',
-            '& span': {
-              fontSize: '16px'
-            }
-          }}
-          onClick={() => {
-            handleDeselectAssetObject()
-          }}
-        >
-          <CloseIcon sx={{ fontSize: '20px', paddingTop: '2px'}} /><span>Back to list</span>
-        </Button>
-      </Box>
+    <>
       <Box sx={{ display: 'flex', padding: '0 16px' }}>
         <Typography sx={{ marginRight: '8px' }}>Actions:</Typography>
         <Stack spacing={1} direction="row">
-          <ButtonIconText type="hub" handleClick={() => {console.log('yay!')}} text="Show On Graph" />
-          <ButtonIconText type="select" handleClick={() => {console.log('yay!')}} text="Select On Scene" />
-          <ButtonIconText type="highlight" handleClick={() => {console.log('yay!')}} text="Highlight On Scene" />
+          <ButtonIconText type="hub" handleClick={() => {console.log('yay!')}} text="Show On Graph" color="primary" />
+          <ButtonIconText type="select" handleClick={() => {console.log('yay!')}} text="Select On Scene" color="primary" />
+          <ButtonIconText type="highlight" handleClick={() => {console.log('yay!')}} text="Highlight On Scene" color="primary" />
         </Stack>
       </Box>
       <Box sx={{ padding: '16px', display: 'flex', flex: '1 1 100%', flexDirection: 'column'}}>
         <NodeInfoMainTabs data={selectedAssetObject} />
       </Box>
-    </Box>
+    </>
   );
 }
 

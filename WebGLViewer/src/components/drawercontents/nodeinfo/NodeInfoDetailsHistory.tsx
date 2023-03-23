@@ -25,7 +25,7 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
   data
 }) => {
 
-  const nodeDetails = {id: data.id, ...data.details}
+  const nodeDetails = {id: data.id, metatype_name: data.metatype_name, data_source_id: data.data_source_id, created_at: data.created_at, modified_at: data.modified_at,}
   const nodeHistory = data.history;
 
   return (
@@ -38,8 +38,9 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
           {Object.entries(nodeDetails).map(([key, value]) => {
             // Capitalize first letter of key
             key = key.charAt(0).toUpperCase() + key.slice(1);
-            // Create spaces at captials
-            key = key.replace(/([A-Z])/g, ' $1').trim();
+
+            // Create spaces and capitals at underscores
+            key = key.replace(/(?:_| |\b)(\w)/g, function($1){return $1.toUpperCase().replace('_',' ');});
             return (
               <Grid item xs={6} lg={4} key={key}>
                 <Typography
@@ -50,7 +51,13 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
                   { key }
                 </Typography>
                 {/* @ts-ignore */}
-                <Typography>{ value.toString() }</Typography>
+                {value !== null 
+                  ? (
+                    <Typography>{ value.toString() }</Typography>
+                  ) : (
+                    <Typography>N/A</Typography>
+                  )
+                }      
               </Grid>
             )
           })}
@@ -60,7 +67,7 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
           History
         </InfoHeader>
 
-        <Timeline data={nodeHistory} />
+        {/* <Timeline data={nodeHistory} /> */}
       </Box>
 
     </>

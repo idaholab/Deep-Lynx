@@ -65,7 +65,7 @@ function UnityInstance(props: any) {
   const style = { width: 200 };
 
   return (
-    <Box sx={{ height: '100%', width: '100%', position: 'relative' }}>
+    <Box sx={{ position: 'relative' }}>
       { unityProvider ?
         <Unity
           className="webgl-canvas"

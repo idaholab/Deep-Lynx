@@ -65,10 +65,15 @@ const SearchBar = ({setSearchQuery}: any) => (
 );
 
 
-export default function DrawerContentsNodeList(props: any) {
-  const { children } = props;
+type Props = {
+  data: any
+};
 
-  const theme = useTheme();
+const DrawerContentsSceneList: React.FC<Props> = ({
+  data
+}) => {
+
+  const sceneList = data;
   const dispatch = useAppDispatch();
 
   type openDrawerLeftState = boolean;
@@ -93,34 +98,10 @@ export default function DrawerContentsNodeList(props: any) {
   };
 
   return (
-    <Box
-      sx={{ display: 'flex', flexDirection: 'column', padding: '16px 0px 0', overflowX: 'hidden', }}
-      className={classNames(
-        'drawer-left-sizing',
-        {
-          'drawer-left-sizing-asset-selected': Object.keys(selectedSceneObject).length !== 0,
-        },
-      )}
-    >
-
-      <Box sx={{ flex: '1, 1, auto', display: 'flex', flexDirection: 'row', alignItems: 'center', marginBottom: '12px' }}>
-        <Typography
-          variant="h3"
-          sx={{
-            alignItems: 'center',
-            padding: '0 0 0 16px'
-          }}
-        >
-          Scenes
-        </Typography>
-        <Tooltip title="View scene asset/object information. Select and Highlight objects. Show on Graph. View Data.">
-          <InfoIcon sx={{ fill: COLORS.colorDarkgray2, marginLeft: '10px', marginRight: '10px', height: '15px', width: '15px' }} />
-        </Tooltip>
-        <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-      </Box>
+    <>
       <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0', borderTop: `1px solid ${COLORS.colorDarkgray}` }}>
         <List dense sx={{ paddingTop: '0' }}>
-          {dataFiltered.map((item: any, index: number) => (
+          {sceneList.map((item: any, index: number) => (
             <ListItem
               key={index}
               disablePadding
@@ -153,6 +134,8 @@ export default function DrawerContentsNodeList(props: any) {
           ))}
         </List>
       </Box>
-    </Box>
+    </>
   );
 }
+
+export default DrawerContentsSceneList;
