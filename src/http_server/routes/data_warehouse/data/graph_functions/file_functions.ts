@@ -7,6 +7,7 @@ import File from '../../../../../domain_objects/data_warehouse/data/file';
 
 // Express
 import {NextFunction, Request, Response} from 'express';
+import parseRange, {Ranges} from 'range-parser';
 
 // Mappers
 import FileDataStorage from '../../../../../data_access_layer/mappers/data_warehouse/data/file_mapper';
@@ -210,7 +211,14 @@ export default class FileFunctions {
                     return;
                 }
 
+                if (file.value.file_size) {
+                    res.set({
+                        'Content-Length': file.value.file_size > 0 ? file.value.file_size * 1000 : 0,
+                        'Accept-Ranges': 'bytes',
+                    });
+                }
                 res.attachment(file.value.file_name);
+
                 fileRepo
                     .downloadFile(file.value)
                     .then((stream) => {
