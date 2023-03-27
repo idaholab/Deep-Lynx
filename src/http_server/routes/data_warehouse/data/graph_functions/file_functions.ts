@@ -7,10 +7,6 @@ import File from '../../../../../domain_objects/data_warehouse/data/file';
 
 // Express
 import {NextFunction, Request, Response} from 'express';
-import parseRange, {Ranges} from 'range-parser';
-
-// Mappers
-import FileDataStorage from '../../../../../data_access_layer/mappers/data_warehouse/data/file_mapper';
 
 // Repository
 import NodeRepository from '../../../../../data_access_layer/repositories/data_warehouse/data/node_repository';
