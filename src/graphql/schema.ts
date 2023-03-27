@@ -887,6 +887,7 @@ export default class GraphQLRunner {
             node_type: {type: nodeInputType},
             edge_type: {type: edgeInputType},
             depth: {type: new GraphQLNonNull(GraphQLString)}, // depth must be specified
+            use_original_id: {type: GraphQLBoolean},
         };
 
         const graphType = new GraphQLList(
@@ -2280,7 +2281,7 @@ export default class GraphQLRunner {
 
     resolverForGraph(containerID: string, options?: ResolverOptions): (_: any, {input}: {input: any}) => any {
         return async (_, input: {[key: string]: any}) => {
-            let repo = new NodeLeafRepository(input.root_node, containerID, input.depth);
+            let repo = new NodeLeafRepository(input.root_node, containerID, input.depth, input.use_original_id);
 
             if (input.edge_type) {
                 if (input.edge_type.name) {

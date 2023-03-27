@@ -248,6 +248,24 @@ describe('A NodeLeaf Repository', async () => {
 
         return Promise.resolve();
     });
+
+    it('can retrieve data by original id', async () => {
+        const repo = new NodeLeafRepository(nodes[0].original_data_id!, containerID, '2', true);
+        const results = await repo.list({sortBy: "depth"});
+        expect(results.isError).false;
+        expect(results.value.length).eq(2);
+
+        const nodeLeaf1 = results.value[0];
+        expect(nodeLeaf1.origin_id).eq(nodes[0].id);
+        expect(nodeLeaf1.destination_id).eq(nodes[1].id);
+        expect(nodeLeaf1.depth).eq(1);
+
+        const nodeLeaf2 = results.value[1];
+        expect(nodeLeaf2.origin_id).eq(nodes[1].id);
+        expect(nodeLeaf2.destination_id).eq(nodes[2].id);
+        expect(nodeLeaf2.depth).eq(2);
+        return Promise.resolve();
+    });
 });
 
 const test_keys: MetatypeKey[] = [

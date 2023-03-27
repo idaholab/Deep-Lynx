@@ -2,6 +2,9 @@ import {BaseDomainClass} from '../../../common_classes/base_domain_class';
 import {Type} from 'class-transformer';
 import {EdgeMetadata} from './edge';
 import {NodeMetadata} from './node';
+import { QueryConfig } from 'pg';
+
+const format = require('pg-format');
 
 /*
     The NodeLeaf object represents a tree-like record object which consists of
@@ -101,7 +104,18 @@ export default class NodeLeaf extends BaseDomainClass {
     }
 }
 
-export const nodeLeafQuery = [`SELECT nodeleafs.* FROM
+export function getNodeLeafQuery(nodeID: string, containerID: string, depth: string, use_original_id?: boolean) {
+	// if use original id is specified, center the graph based on 
+	// original data id instead of auto-assigned DeepLynx id
+	const root_node = (use_original_id && use_original_id === true)
+		? format(`o.original_data_id = ('%s')::text`, nodeID)
+		: format(`o.id = %s`, nodeID);
+
+	// container ID is used twice in the query, so it's mentioned twice in the params list
+	return format(nodeLeafQuery, root_node, containerID, containerID, depth);
+}
+
+const nodeLeafQuery = `SELECT nodeleafs.* FROM
 (WITH RECURSIVE search_graph(
 	origin_id, origin_data_source, origin_metadata, origin_metadata_properties, origin_properties,
 	origin_created_by, origin_created_at, origin_modified_by, origin_modified_at, origin_metatype_id, 
@@ -129,7 +143,7 @@ export const nodeLeafQuery = [`SELECT nodeleafs.* FROM
 	FROM edges e
 		LEFT JOIN nodes o ON o.id IN (e.origin_id, e.destination_id)
 		LEFT JOIN nodes d ON d.id IN (e.origin_id, e.destination_id) AND o.id != d.id
-	WHERE e.deleted_at IS NULL AND e.container_id = $2 AND o.id = $1
+	WHERE e.deleted_at IS NULL AND %s AND e.container_id = %s
 	ORDER BY e.origin_id, e.destination_id, e.relationship_pair_id, 
 	 	e.data_source_id, e.created_at DESC)
 UNION
@@ -156,7 +170,7 @@ UNION
 		LEFT JOIN nodes d ON d.id 
 	 		IN (e.origin_id, e.destination_id)
 			AND g.destination_id != d.id
-	WHERE e.container_id = $2 AND depth < $3 AND d.id <> ALL(path)
+	WHERE e.container_id = %s AND depth < %s AND d.id <> ALL(path)
 	ORDER BY e.origin_id, e.destination_id, e.relationship_pair_id, 
 	 	e.data_source_id, e.created_at DESC)
 ) SELECT 
@@ -178,4 +192,4 @@ FROM search_graph g
 	LEFT JOIN metatypes dmeta ON dmeta.id = g.destination_metatype_id
 	LEFT JOIN metatype_relationship_pairs p ON g.relationship_pair_id = p.id
 	LEFT JOIN metatype_relationships r ON p.relationship_id = r.id
-ORDER BY depth, path, g.destination_id) nodeleafs`];
+ORDER BY depth, path, g.destination_id) nodeleafs`;

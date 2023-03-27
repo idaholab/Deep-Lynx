@@ -1,5 +1,5 @@
 import {FileOptions, QueryOptions, Repository} from '../../repository';
-import NodeLeaf, {nodeLeafQuery} from '../../../../domain_objects/data_warehouse/data/node_leaf';
+import NodeLeaf, {getNodeLeafQuery} from '../../../../domain_objects/data_warehouse/data/node_leaf';
 import Result from '../../../../common_classes/result';
 import {PoolClient} from 'pg';
 import File from '../../../../domain_objects/data_warehouse/data/file';
@@ -13,16 +13,21 @@ import File from '../../../../domain_objects/data_warehouse/data/file';
 */
 
 export default class NodeLeafRepository extends Repository {
-    constructor(id: string, container_id: string, depth: string) {
+    // we need to save query inputs for when the query resets
+    // since this is more complicated than your standard SELECT * query
+    queryInputs: {id: string, container_id: string, depth: string, use_original_id?: boolean};
+
+    constructor(id: string, container_id: string, depth: string, use_original_id?: boolean) {
         super('nodeleafs');
         // in order to add filters to the base node leaf query we must set it
         // as the raw query here
         this._noSelectRoot();
-        this._query.SELECT = nodeLeafQuery;
+        this._query.SELECT = [getNodeLeafQuery(id, container_id, depth, use_original_id)];
         this._query.FROM = '';
-        this._query.VALUES = [id, container_id, depth];
         this._query.WHERE = [];
         this._tableAlias = 'nodeleafs';
+        // store query inputs
+        this.queryInputs = {id, container_id, depth, use_original_id};
     }
 
     // properties for nth layer node query:
@@ -72,9 +77,6 @@ export default class NodeLeafRepository extends Repository {
     }
 
     async list(queryOptions?: QueryOptions, transaction?: PoolClient): Promise<Result<NodeLeaf[]>> {
-        // store the first three values for re-initialization after list function is complete
-        const resetValues = this._query.VALUES.slice(0, 3);
-
         const results = await super.findAll<NodeLeaf>(queryOptions, {
             transaction,
             resultClass: NodeLeaf,
@@ -82,9 +84,10 @@ export default class NodeLeafRepository extends Repository {
 
         // reset the query and values
         this._noSelectRoot();
-        this._query.SELECT = nodeLeafQuery;
+        this._query.SELECT = [getNodeLeafQuery(
+            this.queryInputs.id, this.queryInputs.container_id, this.queryInputs.depth, this.queryInputs.use_original_id
+        )];
         this._query.FROM = '';
-        this._query.VALUES = ['', '', ''];
         this._query.WHERE = [];
         this._tableAlias = 'nodeleafs'
 
@@ -96,9 +99,6 @@ export default class NodeLeafRepository extends Repository {
     }
 
     async listAllToFile(fileOptions: FileOptions, queryOptions?: QueryOptions, transaction?: PoolClient): Promise<Result<File>> {
-        // store the first three values for re-initialization after list function is complete
-        const resetValues = this._query.VALUES.slice(0, 3);
-
         const results = await super.findAllToFile(fileOptions, queryOptions, {
             transaction,
             resultClass: NodeLeaf,
@@ -106,9 +106,10 @@ export default class NodeLeafRepository extends Repository {
 
         // reset the query and values
         this._noSelectRoot();
-        this._query.SELECT = nodeLeafQuery;
+        this._query.SELECT = [getNodeLeafQuery(
+            this.queryInputs.id, this.queryInputs.container_id, this.queryInputs.depth, this.queryInputs.use_original_id
+        )];
         this._query.FROM = '';
-        this._query.VALUES = ['', '', ''];
         this._query.WHERE = [];
         this._tableAlias = 'nodeleafs'
 
