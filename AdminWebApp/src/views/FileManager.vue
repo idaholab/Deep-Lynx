@@ -28,7 +28,7 @@
           >
             <v-icon>{{ isOpen ? 'mdi-minus' : 'mdi-plus' }}</v-icon>
           </v-btn>
-          {{ items[0].tag_name }}
+          {{ items[0].tag_name }} ({{ items[0].id }})
 
           <edit-tag-dialog
               :containerID="items[0].container_id"
