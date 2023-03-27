@@ -402,7 +402,16 @@
       <v-container fluid v-if="currentMainComponent && currentMainComponent !== ''">
         <!-- we provide both containerID and container as some of the components require either/or or both -->
         <transition name="fade" mode="out-in">
-          <component v-bind:is="currentMainComponent" :containerID="containerID" :container="container" :argument="argument"></component>
+          <component
+            :is="currentMainComponent"
+            :containerID="containerID"
+            :container="container"
+            :argument="argument"
+            :class="{
+              'main-content-component-constrained':(currentMainComponent !== 'DataQuery'),
+              'main-content-component-unconstrained':(currentMainComponent === 'DataQuery')
+            }"
+          />
         </transition>
       </v-container>
 
@@ -940,9 +949,16 @@ export default class Home extends Vue {
 
 <style lang="scss" scoped>
 #main-content-container {
-  max-width: 2000px;
   padding: 30px !important;
+}
+
+.main-content-component-constrained {
+  max-width: 2000px;
   margin: auto;
+}
+
+.main-content-component-unconstrained {
+  width: 100%;
 }
 
 .fade {
