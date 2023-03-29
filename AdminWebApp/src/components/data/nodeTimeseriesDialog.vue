@@ -173,6 +173,12 @@
             >
             </v-select>
 
+            <exploratory-data-analysis-dialog
+                v-if="Object.keys(this.results).length > 0"
+                :selectedDataSources="selectedDataSources"
+                :results="results"
+            ></exploratory-data-analysis-dialog>
+
           </v-card>
         </v-col>
 
@@ -183,7 +189,7 @@
                 v-if="selectedDataSources.length > 0"
                 :headers="columnHeaders"
                 :items="selectedColumns"
-                :items-per-page="20"
+                :items-per-page="10"
                 :footer-props="{
                 'items-per-page-options':[10,20,50]
               }"
@@ -253,54 +259,54 @@
 
           <v-card class="pa-4 mx-3">
 
-          <div id="timeseriesPlot"></div>
-          <v-btn
-              color="primary"
-              dark
-              v-show="Object.keys(this.results).length > 0"
-              class="mx-3"
-              @click="showChart = !showChart"
-          >
-            <v-icon v-if="showChart">
-              mdi-table
-            </v-icon>
-            <v-icon v-else>
-              mdi-arrow-up-drop-circle
-            </v-icon>
-          </v-btn>
-          <v-btn
-              color="primary"
-              dark
-              v-show="Object.keys(this.results).length > 0"
-              class="mx-3"
-              @click="downloadCSV"
-          >
-            <v-icon>
-              mdi-download
-            </v-icon>
-          </v-btn>
-          <div v-show="!showChart">
-            <v-data-table
-                v-if="transformation || dataSource"
-                :headers="headers"
-                :items="tableResults"
-                group-by="datasource"
-                show-group-by
-                :items-per-page="1000"
-                :footer-props="{
-                'items-per-page-options':[1000,5000,10000]
-              }"
-                class="mx-3 elevation-2"
-                fixed-header
-                :height="tableHeight"
+            <div id="timeseriesPlot"></div>
+            <v-btn
+                color="primary"
+                dark
+                v-show="Object.keys(this.results).length > 0"
+                class="mx-3"
+                @click="showChart = !showChart"
             >
+              <v-icon v-if="showChart">
+                mdi-table
+              </v-icon>
+              <v-icon v-else>
+                mdi-arrow-up-drop-circle
+              </v-icon>
+            </v-btn>
+            <v-btn
+                color="primary"
+                dark
+                v-show="Object.keys(this.results).length > 0"
+                class="mx-3"
+                @click="downloadCSV"
+            >
+              <v-icon>
+                mdi-download
+              </v-icon>
+            </v-btn>
+            <div v-show="!showChart">
+              <v-data-table
+                  v-if="transformation || dataSource"
+                  :headers="headers"
+                  :items="tableResults"
+                  group-by="datasource"
+                  show-group-by
+                  :items-per-page="1000"
+                  :footer-props="{
+                  'items-per-page-options':[1000,5000,10000]
+                }"
+                  class="mx-3 elevation-2"
+                  fixed-header
+                  :height="tableHeight"
+              >
 
-              <template v-if="timeseriesFlag" v-slot:[tablePrimaryTimestampName]="{item}">
-                {{new Date(item[primaryTimestampName]).toUTCString()}}
-              </template>
+                <template v-if="timeseriesFlag" v-slot:[tablePrimaryTimestampName]="{item}">
+                  {{new Date(item[primaryTimestampName]).toUTCString()}}
+                </template>
 
-            </v-data-table>
-          </div>
+              </v-data-table>
+            </div>
 
             <span v-if="Object.keys(results).length === 0">No Results</span>
           </v-card>
@@ -320,9 +326,10 @@ import Plotly, {Datum} from "plotly.js-dist-min";
 import { json2csv } from 'json-2-csv';
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
+import ExploratoryDataAnalysisDialog from "@/components/data/exploratoryDataAnalysisDialog.vue";
 require("flatpickr/dist/themes/material_blue.css");
 
-@Component({components: {TimeseriesAnnotationDialog}})
+@Component({components: {ExploratoryDataAnalysisDialog, TimeseriesAnnotationDialog}})
 export default class NodeTimeseriesDialog extends Vue {
   @Prop({required: true})
   readonly nodeID!: string
