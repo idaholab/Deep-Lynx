@@ -939,6 +939,7 @@ export default class GraphQLRunner {
                     destination_modified_by: {type: GraphQLString},
                     destination_modified_at: {type: GraphQLString},
                     // graph metadata
+                    edge_direction: {type: GraphQLString},
                     depth: {type: GraphQLInt},
                     path: {type: GraphQLList(GraphQLString)},
                 },
