@@ -1,8 +1,12 @@
+// React
 import * as React from 'react';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
+
+// MUI Components
+import {
+  Box,
+  Tab,
+  Tabs
+} from '@mui/material';
 
 // Custom Components 
 import NodeInfoDetailsHistory from '../drawercontents/nodeinfo/NodeInfoDetailsHistory';
@@ -64,7 +68,6 @@ const NodeInfoMainTabs: React.FC<Props> = ({
       component: NodeInfoTags
     },
   ]
-  console.log(data)
 
   return (
     <Box sx={{ width: '100%', height: '100%' }}>

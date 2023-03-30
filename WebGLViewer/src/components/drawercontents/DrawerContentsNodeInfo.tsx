@@ -56,37 +56,26 @@ const DrawerContentsNodeInfo: React.FC<Props> = ({}) => {
   type selectedAssetObject = any;
   const selectedAssetObject: selectedAssetObject = useAppSelector((state: any) => state.appState.selectedAssetObject);
 
-  type selectAssetOnScene = string;
-  const selectAssetOnScene: selectAssetOnScene = useAppSelector((state: any) => state.appState.selectAssetOnScene);
-  const handleSelectAssetOnScene = (payload: string) => {
-    dispatch(appStateActions.selectAssetOnScene(payload))
+  const handleSelectAssetOnScene = (payload: any) => {
+    dispatch(appStateActions.selectAssetOnScene(payload.properties.Name))
   };
 
-  type highlightAssetOnScene = string;
-  const highlightAssetOnScene: highlightAssetOnScene = useAppSelector((state: any) => state.appState.highlightAssetOnScene);
-  const handleHighlightAssetOnScene = (payload: string) => {
-    dispatch(appStateActions.highlightAssetOnScene(payload))
+  const handleHighlightAssetOnScene = (payload: any) => {
+    dispatch(appStateActions.highlightAssetOnScene(payload.properties.Name))
   };
 
-  const handleShowAssetOnGraph = (payload: string) => {
+  const handleShowAssetOnGraph = (payload: any) => {
     console.log('Action to \"Show On Graph\" clicked!')
   }
-
-  const handleToggleDataView = (payload: string) => {
-    dispatch(appStateActions.setDataViewObject(payload));
-    dispatch(appStateActions.toggleDrawerRight())
-  }
-
-  console.log(selectedAssetObject.properties)
 
   return (
     <>
       <Box sx={{ display: 'flex', padding: '0 16px' }}>
         <Typography sx={{ marginRight: '8px' }}>Actions:</Typography>
         <Stack spacing={1} direction="row">
-          <ButtonIconText type="hub" handleClick={() => {console.log('yay!')}} text="Show On Graph" color="primary" />
-          <ButtonIconText type="select" handleClick={() => {console.log('yay!')}} text="Select On Scene" color="primary" />
-          <ButtonIconText type="highlight" handleClick={() => {console.log('yay!')}} text="Highlight On Scene" color="primary" />
+          <ButtonIconText type="hub" handleClick={() => handleShowAssetOnGraph(selectedAssetObject)} text="Show On Graph" color="primary" />
+          <ButtonIconText type="select" handleClick={() => handleSelectAssetOnScene(selectedAssetObject)} text="Select On Scene" color="primary" />
+          <ButtonIconText type="highlight" handleClick={() => handleHighlightAssetOnScene(selectedAssetObject)} text="Highlight On Scene" color="primary" />
         </Stack>
       </Box>
       <Box sx={{ padding: '16px', display: 'flex', flex: '1 1 100%', flexDirection: 'column'}}>

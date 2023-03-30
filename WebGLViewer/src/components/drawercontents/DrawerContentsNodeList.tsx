@@ -104,8 +104,6 @@ const DrawerContentsNodeList: React.FC<Props> = ({
 
   const [selected, setSelected] = React.useState<string | false>(false);
 
-  type selectedAssetObject = any;
-  const selectedAssetObject: selectedAssetObject = useAppSelector((state: any) => state.appState.selectedAssetObject);
   const handleSelectAssetObject = (obj: any, numPixels: number, selectedItem: string) => {
     console.log("obj", obj)
     dispatch(appStateActions.selectAssetObject(obj));
@@ -113,15 +111,10 @@ const DrawerContentsNodeList: React.FC<Props> = ({
     setSelected(selectedItem);
   };
 
-  type selectAssetOnScene = any;
-  const selectAssetOnScene: selectAssetOnScene = useAppSelector((state: any) => state.appState.selectAssetOnScene);
   const handleSelectAssetOnScene = (payload: any) => {
-    console.log(payload)
-    // dispatch(appStateActions.selectAssetOnScene(payload.properties.Name))
+    dispatch(appStateActions.selectAssetOnScene(payload.properties.Name))
   };
 
-  type highlightAssetOnScene = any;
-  const highlightAssetOnScene: highlightAssetOnScene = useAppSelector((state: any) => state.appState.highlightAssetOnScene);
   const handleHighlightAssetOnScene = (payload: any) => {
     dispatch(appStateActions.highlightAssetOnScene(payload.properties.Name))
   };
