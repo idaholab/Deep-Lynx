@@ -158,6 +158,11 @@ const DrawerLeft: React.FC<Props> = ({}) => {
 
   const handleSelectMenuLink = (selectedLink: string) => {
     setSelected(selectedLink);
+    if (openDrawerLeftState === false) {
+      dispatch(appStateActions.toggleDrawerLeft());
+    }
+    dispatch(appStateActions.setDrawerLeftWidth(430));
+    dispatch(appStateActions.selectAssetObject({}));
   };
 
   // Component display switching
