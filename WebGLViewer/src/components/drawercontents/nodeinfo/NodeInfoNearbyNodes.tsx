@@ -37,6 +37,7 @@ const NodeInfoNearbyNodes: React.FC<Props> = ({
     {title: 'Id', alignment: 'left'},
     {title: 'Name', alignment: 'left'},
     {title: 'Relationship', alignment: 'left'},
+    {title: 'Direction', alignment: 'left'},
     {title: 'Actions', alignment: 'center'},
   ];
 
@@ -67,7 +68,7 @@ const NodeInfoNearbyNodes: React.FC<Props> = ({
                     id: obj.destination_id,
                     name: obj.destination_properties.name,
                     relationship: obj.relationship_name,
-                    // direction: obj.edge_direction
+                    direction: obj.edge_direction
                   })
                 )
               })
