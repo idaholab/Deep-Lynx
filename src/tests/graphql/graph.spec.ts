@@ -678,6 +678,43 @@ describe('Using a new GraphQL Query on graph return we', async () => {
         }
     });
 
+    it('can query n layers deep given an original node ID', async () => {
+        const response = await graphql({
+            schema,
+            source: `{
+                graph(
+                    root_node: "${songs[0].original_data_id}"
+                    depth: "5"
+                    use_original_id: true
+                ){
+                    depth
+                    origin_id
+                    origin_properties
+                    origin_metatype_name
+                    relationship_name
+                    edge_properties
+                    destination_id
+                    destination_properties
+                    destination_metatype_name
+                }
+            }`,
+        });
+        expect(response.errors).undefined;
+        expect(response.data).not.undefined;
+        const data = response.data!.graph;
+        expect(data.length).eq(17);
+
+        for (const nL of data) {
+            expect(nL.depth).not.undefined;
+            expect(nL.depth).gt(0);
+            expect(nL.depth).lte(5);
+            expect(nL.origin_properties.name).not.undefined;
+            expect(nL.edge_properties.color).eq('red');
+            expect(nL.destination_properties.name).not.undefined;
+            expect(nL.edge_data_source).undefined;
+        }
+    });
+
     it('can save a query n layers deep given a root node to file', async () => {
         const schemaGenerator = new GraphQLRunner();
 

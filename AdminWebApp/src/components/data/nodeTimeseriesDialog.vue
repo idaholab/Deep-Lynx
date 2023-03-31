@@ -12,7 +12,7 @@
       <v-icon v-if="icon" small class="mr-2" v-on="on">mdi-eye</v-icon>
     </template>
 
-    <timeseries-annotation-dialog :dialog="createAnnotation" :x="annotationX" :y="annotationY" @createAnnotation="createPlotlyAnnotation"></timeseries-annotation-dialog>
+    <timeseries-annotation-dialog :dialog="createAnnotation" :x="annotationX" :y="annotationY" :z="annotationZ" @createAnnotation="createPlotlyAnnotation"></timeseries-annotation-dialog>
 
     <v-card id="dialog">
       <error-banner :message="errorMessage"></error-banner>
@@ -150,6 +150,16 @@
             </v-select>
 
             <v-select
+                v-if="chartType === 'heatmap'"
+                v-model="colorScale"
+                :items="colorScales"
+                hint="Color Scale"
+                persistent-hint
+                @change="updatePlot(true)"
+            >
+            </v-select>
+
+            <v-select
                 v-model="selectedDataSources"
                 :items="dataSources"
                 item-text="name"
@@ -163,6 +173,12 @@
             >
             </v-select>
 
+            <exploratory-data-analysis-dialog
+                v-if="Object.keys(this.results).length > 0"
+                :selectedDataSources="selectedDataSources"
+                :results="results"
+            ></exploratory-data-analysis-dialog>
+
           </v-card>
         </v-col>
 
@@ -171,9 +187,9 @@
 
             <v-data-table
                 v-if="selectedDataSources.length > 0"
-                :headers="columnHeaders()"
+                :headers="columnHeaders"
                 :items="selectedColumns"
-                :items-per-page="20"
+                :items-per-page="10"
                 :footer-props="{
                 'items-per-page-options':[10,20,50]
               }"
@@ -184,8 +200,16 @@
                 <span v-else>Z</span>
               </template>
               <template v-slot:item.x="{ item }">
-                <v-radio-group v-model="selectedXColumn" @change="columnXChange(item.uniqueName)">
-                <v-radio v-model="item.uniqueName"/>
+                <v-simple-checkbox
+                    v-if="chartType === 'scatter 3D'"
+                    v-model="item.x"
+                ></v-simple-checkbox>
+                <v-radio-group
+                    v-else
+                    v-model="selectedXColumn"
+                    @change="columnXChange(item.uniqueName)"
+                >
+                  <v-radio v-model="item.uniqueName"/>
                 </v-radio-group>
               </template>
               <template v-slot:item.y="{ item }">
@@ -201,6 +225,29 @@
                 >
                 </v-simple-checkbox>
               </template>
+
+              <!-- Trace select for 3D scatter plots -->
+              <template v-slot:item.trace="{ item }">
+                <v-select
+                    v-model="item.trace"
+                    :items="userTraces"
+                    multiple
+                    chips
+                    deletable-chips
+                >
+                  <template v-slot:prepend-item>
+                    <v-btn
+                      @click="addTrace"
+                      color="primary"
+                      class="mx-3 elevation-0"
+                      style="width: calc(100% - 24px)"
+                    >
+                      Add Trace
+                    </v-btn>
+                    <v-divider class="mt-2"></v-divider>
+                  </template>
+                </v-select>
+              </template>
             </v-data-table>
 
           </v-card>
@@ -212,54 +259,54 @@
 
           <v-card class="pa-4 mx-3">
 
-          <div id="timeseriesPlot"></div>
-          <v-btn
-              color="primary"
-              dark
-              v-show="Object.keys(this.results).length > 0"
-              class="mx-3"
-              @click="showChart = !showChart"
-          >
-            <v-icon v-if="showChart">
-              mdi-table
-            </v-icon>
-            <v-icon v-else>
-              mdi-arrow-up-drop-circle
-            </v-icon>
-          </v-btn>
-          <v-btn
-              color="primary"
-              dark
-              v-show="Object.keys(this.results).length > 0"
-              class="mx-3"
-              @click="downloadCSV"
-          >
-            <v-icon>
-              mdi-download
-            </v-icon>
-          </v-btn>
-          <div v-show="!showChart">
-            <v-data-table
-                v-if="transformation || dataSource"
-                :headers="headers"
-                :items="tableResults"
-                group-by="datasource"
-                show-group-by
-                :items-per-page="1000"
-                :footer-props="{
-                'items-per-page-options':[1000,5000,10000]
-              }"
-                class="mx-3 elevation-2"
-                fixed-header
-                :height="tableHeight"
+            <div id="timeseriesPlot"></div>
+            <v-btn
+                color="primary"
+                dark
+                v-show="Object.keys(this.results).length > 0"
+                class="mx-3"
+                @click="showChart = !showChart"
             >
+              <v-icon v-if="showChart">
+                mdi-table
+              </v-icon>
+              <v-icon v-else>
+                mdi-arrow-up-drop-circle
+              </v-icon>
+            </v-btn>
+            <v-btn
+                color="primary"
+                dark
+                v-show="Object.keys(this.results).length > 0"
+                class="mx-3"
+                @click="downloadCSV"
+            >
+              <v-icon>
+                mdi-download
+              </v-icon>
+            </v-btn>
+            <div v-show="!showChart">
+              <v-data-table
+                  v-if="transformation || dataSource"
+                  :headers="headers"
+                  :items="tableResults"
+                  group-by="datasource"
+                  show-group-by
+                  :items-per-page="1000"
+                  :footer-props="{
+                  'items-per-page-options':[1000,5000,10000]
+                }"
+                  class="mx-3 elevation-2"
+                  fixed-header
+                  :height="tableHeight"
+              >
 
-              <template v-if="timeseriesFlag" v-slot:[tablePrimaryTimestampName]="{item}">
-                {{new Date(item[primaryTimestampName]).toUTCString()}}
-              </template>
+                <template v-if="timeseriesFlag" v-slot:[tablePrimaryTimestampName]="{item}">
+                  {{new Date(item[primaryTimestampName]).toUTCString()}}
+                </template>
 
-            </v-data-table>
-          </div>
+              </v-data-table>
+            </div>
 
             <span v-if="Object.keys(results).length === 0">No Results</span>
           </v-card>
@@ -279,9 +326,10 @@ import Plotly, {Datum} from "plotly.js-dist-min";
 import { json2csv } from 'json-2-csv';
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
+import ExploratoryDataAnalysisDialog from "@/components/data/exploratoryDataAnalysisDialog.vue";
 require("flatpickr/dist/themes/material_blue.css");
 
-@Component({components: {TimeseriesAnnotationDialog}})
+@Component({components: {ExploratoryDataAnalysisDialog, TimeseriesAnnotationDialog}})
 export default class NodeTimeseriesDialog extends Vue {
   @Prop({required: true})
   readonly nodeID!: string
@@ -331,15 +379,19 @@ export default class NodeTimeseriesDialog extends Vue {
   tableHeight = 500
   showChart = true
   chartType = 'line'
-  chartTypes = ['line', 'markers', 'line and markers', 'bar', 'bubble']
+  chartTypes = ['line', 'markers', 'line and markers', 'bar', 'bubble', 'heatmap', 'scatter 3D']
+  colorScale = 'RdBu'
+  colorScales = ['RdBu', 'YlOrRd', 'YlGnBu', 'Jet', 'Portland']
   selectedDataSources: DataSourceT[] = []
   dataSources: DataSourceT[] = []
   selectedColumns: any[] = []
   selectedXColumn = ''
+  userTraces = ['1']
   validSearch = true
   createAnnotation = false
   annotationX: Datum = ''
   annotationY: Datum = ''
+  annotationZ: Datum = null
   runTypes = ['--', 'Replay', 'Live Stream']
   runType = '--'
   replayStreamInterval = 10
@@ -443,6 +495,9 @@ export default class NodeTimeseriesDialog extends Vue {
         return d
       }))
 
+      // determine max amount of results to loop through
+      const resultLength = Number(this.defaultPlotLimit) !== 0 ? Math.min(dataSourceResults.length, Number(this.defaultPlotLimit)) : dataSourceResults.length
+
       if (this.chartType === 'line' || this.chartType === 'markers' || this.chartType === 'line and markers') {
         let mode = 'line'
         if (this.chartType === 'line and markers') {
@@ -455,16 +510,9 @@ export default class NodeTimeseriesDialog extends Vue {
           const singlePlot: {x: number[], y: number[], mode: string, name: string} =
               { x: [], y: [], mode: mode, name: column.uniqueName };
 
-          if (Number(this.defaultPlotLimit) !== 0) {
-            for (let i = 0; (i < dataSourceResults.length && i < Number(this.defaultPlotLimit)); i++) {
-              singlePlot.x.push(dataSourceResults[i][dataSourcePrimaryTimestamp!])
-              singlePlot.y.push(dataSourceResults[i][column.name])
-            }
-          } else {
-            for (let i = 0; i < dataSourceResults.length; i++) {
-              singlePlot.x.push(dataSourceResults[i][dataSourcePrimaryTimestamp!])
-              singlePlot.y.push(dataSourceResults[i][column.name])
-            }
+          for (let i = 0; i < resultLength; i++) {
+            singlePlot.x.push(dataSourceResults[i][dataSourcePrimaryTimestamp!])
+            singlePlot.y.push(dataSourceResults[i][column.name])
           }
 
           plotData.push(singlePlot)
@@ -474,16 +522,9 @@ export default class NodeTimeseriesDialog extends Vue {
           const singlePlot: {x: number[], y: number[], type: Plotly.PlotType, name: string} =
               { x: [], y: [], type: 'bar', name: column.uniqueName };
 
-          if (Number(this.defaultPlotLimit) !== 0) {
-            for (let i = 0; (i < dataSourceResults.length && i < Number(this.defaultPlotLimit)); i++) {
-              singlePlot.x.push(dataSourceResults[i][dataSourcePrimaryTimestamp!])
-              singlePlot.y.push(dataSourceResults[i][column.name])
-            }
-          } else {
-            for (let i = 0; i < dataSourceResults.length; i++) {
-              singlePlot.x.push(dataSourceResults[i][dataSourcePrimaryTimestamp!])
-              singlePlot.y.push(dataSourceResults[i][column.name])
-            }
+          for (let i = 0; i < resultLength; i++) {
+            singlePlot.x.push(dataSourceResults[i][dataSourcePrimaryTimestamp!])
+            singlePlot.y.push(dataSourceResults[i][column.name])
           }
 
           plotData.push(singlePlot)
@@ -497,22 +538,59 @@ export default class NodeTimeseriesDialog extends Vue {
           const singlePlot: {x: number[], y: number[], mode: string, marker: any, name: string} =
               { x: [], y: [], mode: 'markers', marker: { size: [] }, name: column.uniqueName };
 
-          if (Number(this.defaultPlotLimit) !== 0) {
-            for (let i = 0; (i < dataSourceResults.length && i < Number(this.defaultPlotLimit)); i++) {
-              singlePlot.x.push(dataSourceResults[i][dataSourcePrimaryTimestamp!])
-              singlePlot.y.push(dataSourceResults[i][column.name])
-              singlePlot.marker.size.push(dataSourceResults[i][sizeColumn.name])
-            }
-          } else {
-            for (let i = 0; i < dataSourceResults.length; i++) {
-              singlePlot.x.push(dataSourceResults[i][dataSourcePrimaryTimestamp!])
-              singlePlot.y.push(dataSourceResults[i][column.name])
-              singlePlot.marker.size.push(dataSourceResults[i][sizeColumn.name])
-            }
+          for (let i = 0; i < resultLength; i++) {
+            singlePlot.x.push(dataSourceResults[i][dataSourcePrimaryTimestamp!])
+            singlePlot.y.push(dataSourceResults[i][column.name])
+            singlePlot.marker.size.push(dataSourceResults[i][sizeColumn.name])
           }
 
           plotData.push(singlePlot)
         }
+      } else if (this.chartType === 'heatmap') {
+        // current support for basic heat map utilizing z exclusively
+
+        const plot: {z: number[][], type: Plotly.PlotType, colorscale: Plotly.ColorScale} =
+            { z: [], type: 'heatmap', colorscale: this.colorScale };
+
+        for (const column of zColumns) {
+          // each column specified is a new row in the heat map
+          const z = []
+
+          for (let i = 0; i < resultLength; i++) {
+            z.push(dataSourceResults[i][column.name])
+          }
+
+          plot.z.push(z)
+        }
+
+        plotData.push(plot)
+      } else if (this.chartType === 'scatter 3D') {
+        // create a plot (trace) for each valid user-specified set of traces
+
+        for (const trace of this.userTraces) {
+          const traceColumns = dataSourceColumns.filter(c => c.trace.includes(trace))
+          const xColumn = traceColumns.filter(c => c.x)
+          const yColumn = traceColumns.filter(c => c.y)
+          const zColumn = traceColumns.filter(c => c.z)
+
+          if (xColumn.length === 0 || yColumn.length === 0 || zColumn.length === 0) return
+
+          const xColumnName = xColumn[0].name
+          const yColumnName = yColumn[0].name
+          const zColumnName = zColumn[0].name
+
+          const plot: {x: number[], y: number[], z: number[], type: Plotly.PlotType, name: string} =
+              { x: [], y: [], z: [], type: 'scatter3d', name: trace };
+
+          for (let i = 0; i < resultLength; i++) {
+            plot.x.push(dataSourceResults[i][xColumnName])
+            plot.y.push(dataSourceResults[i][yColumnName])
+            plot.z.push(dataSourceResults[i][zColumnName])
+          }
+
+          plotData.push(plot)
+        }
+
       }
     })
 
@@ -545,6 +623,7 @@ export default class NodeTimeseriesDialog extends Vue {
       this.createAnnotation = true
       this.annotationX = data.points[0].x
       this.annotationY = data.points[0].y
+      this.annotationZ = (data.points[0] as any).z? (data.points[0] as any).z : null
     });
 
   }
@@ -562,20 +641,37 @@ export default class NodeTimeseriesDialog extends Vue {
     if (annotation.direction === 'below') y = 40
 
     if (!currentLayout.annotations) currentLayout.annotations = []
+    // scene.annotations used for 3D annotations
+    if (!currentLayout.scene.annotations) currentLayout.scene.annotations = []
 
-    currentLayout.annotations.push(
-      {
-        x: annotation.x,
-        y: annotation.y,
-        xref: 'x',
-        yref: 'y',
-        text: annotation.annotation,
-        showarrow: true,
-        arrowhead: 2,
-        ax: 0,
-        ay: y
-      }
-    )
+    if (annotation.z) {
+      currentLayout.scene.annotations.push(
+          {
+            x: annotation.x,
+            y: annotation.y,
+            z: annotation.z,
+            text: annotation.annotation,
+            showarrow: true,
+            arrowhead: 2,
+            ax: 0,
+            ay: y
+          }
+      )
+    } else {
+      currentLayout.annotations.push(
+          {
+            x: annotation.x,
+            y: annotation.y,
+            xref: 'x',
+            yref: 'y',
+            text: annotation.annotation,
+            showarrow: true,
+            arrowhead: 2,
+            ax: 0,
+            ay: y
+          }
+      )
+    }
 
     void Plotly.update(plotlyDiv, {}, currentLayout);
   }
@@ -679,15 +775,32 @@ export default class NodeTimeseriesDialog extends Vue {
     }
   }
 
-  columnHeaders() {
-    return [
+  get columnHeaders() {
+    const columnNames = [
       { text: this.$t('timeseries.columnName'), value: 'name', sortable: false},
       { text: this.$t('timeseries.dataSource'), value: 'dataSource', sortable: false},
       { text: this.$t('timeseries.type'), value: 'type', sortable: false},
       { text: 'X', value: 'x', sortable: false},
-      { text: 'Y', value: 'y', sortable: false},
-      { text: 'Z', value: 'z', sortable: false},
     ]
+
+    const yColumn = { text: 'Y', value: 'y', sortable: false}
+    const zColumn = { text: 'Z', value: 'z', sortable: false}
+    const traceColumn = { text: this.$t('timeseries.trace'), value: 'trace', sortable: false}
+
+    if (this.chartType === 'line' || this.chartType === 'markers' || this.chartType === 'line and markers' || this.chartType === 'bar') {
+      columnNames.push(yColumn)
+    } else if (this.chartType === 'bubble') {
+      columnNames.push(yColumn)
+      columnNames.push(zColumn)
+    } else if (this.chartType === 'heatmap') {
+      columnNames.push(zColumn)
+    } else if (this.chartType === 'scatter 3D') {
+      columnNames.push(yColumn)
+      columnNames.push(zColumn)
+      columnNames.push(traceColumn)
+    }
+
+    return columnNames
   }
 
   adjustColumnNames() {
@@ -702,7 +815,7 @@ export default class NodeTimeseriesDialog extends Vue {
       const columns = (dataSource.config as TimeseriesDataSourceConfig).columns
 
       for (const column of columns) {
-        const columnNameEntry = {name: column.column_name, dataSource: dataSource.name, uniqueName: `${dataSource.name}_${column.column_name}`, type: column.type, x: false, y: false, z: false}
+        const columnNameEntry = {name: column.column_name, dataSource: dataSource.name, uniqueName: `${dataSource.name}_${column.column_name}`, type: column.type, x: false, y: false, z: false, trace: []}
 
         // set the primary timestamp of a single selected datasource to be the default x
         // set float and number type columns to have y selected by default
@@ -710,6 +823,9 @@ export default class NodeTimeseriesDialog extends Vue {
           if (column.is_primary_timestamp) {
             columnNameEntry.x = true
             this.selectedXColumn = columnNameEntry.uniqueName
+
+            // set timeseriesFlag based upon primary timestamp type
+            column.type !== 'date' ? this.timeseriesFlag = false : this.timeseriesFlag = true
           }
 
           if (!column.is_primary_timestamp && (column.type?.toLowerCase().includes('float') || column.type?.toLowerCase().includes('number'))) {
@@ -872,7 +988,7 @@ export default class NodeTimeseriesDialog extends Vue {
       const results = await this.$client.submitDataSourceGraphQLQuery(this.containerID, dataSource.id!,  this.buildQuery(dataSource))
       if(results.errors) {
         this.errorMessage = (results.errors as string[]).join(' ')
-        return
+        return {}
       }
 
       let data = results.data.Timeseries
@@ -920,7 +1036,8 @@ export default class NodeTimeseriesDialog extends Vue {
   }
 
   buildQuery(dataSource: DataSourceT) {
-    const dataSourcePrimaryTimestamp = (dataSource.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)?.column_name
+    const dataSourcePrimaryTimestamp = (dataSource.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)
+    const primaryTimestampColumn = dataSourcePrimaryTimestamp?.column_name
     const dataSourceColumns = this.selectedColumns.filter(c => c.dataSource === dataSource.name)
 
     if (this.timeseriesFlag) {
@@ -929,38 +1046,69 @@ export default class NodeTimeseriesDialog extends Vue {
       {
         Timeseries(_record: {
           limit: ${this.defaultPlotLimit},
-          sortBy: "${dataSourcePrimaryTimestamp}",
+          sortBy: "${primaryTimestampColumn}",
           sortDesc: false }
-          ${dataSourcePrimaryTimestamp}: {
+          ${primaryTimestampColumn}: {
             operator: "between", value: ["${this.startDate}", "${this.endDate}"]
           }
         )
         {
-        ${dataSourceColumns.filter(c => c.x || c.y || c.z || c.uniqueName === `${dataSource.name}_${dataSourcePrimaryTimestamp}`).map(c => c.name).join(' ')}
+        ${dataSourceColumns.filter(c => c.x || c.y || c.z || c.uniqueName === `${dataSource.name}_${primaryTimestampColumn}`).map(c => c.name).join(' ')}
         }
       }
         `
       }
     } else {
-      return {
-        query: `
+      // if the primary timestamp is a number, any raw values must be ints
+      // if the primary timestamp is number64, raw values must be passed as strings
+      if (dataSourcePrimaryTimestamp?.type === 'number'){
+        return {
+          query: `
       {
         Timeseries(_record: {
           limit: ${this.defaultPlotLimit},
-          sortBy: "${dataSourcePrimaryTimestamp}",
+          sortBy: "${primaryTimestampColumn}",
           sortDesc: false }
-          ${dataSourcePrimaryTimestamp}: {
+          ${primaryTimestampColumn}: {
+            operator: "between", value: [${this.startIndex}, ${this.endIndex}]
+          }
+        )
+        {
+        ${dataSourceColumns.filter(c => c.x || c.y || c.z || c.uniqueName === `${dataSource.name}_${primaryTimestampColumn}`).map(c => c.name).join(' ')}
+        }
+      }
+        `
+        }
+      } else if (dataSourcePrimaryTimestamp?.type === 'number64') {
+        return {
+          query: `
+      {
+        Timeseries(_record: {
+          limit: ${this.defaultPlotLimit},
+          sortBy: "${primaryTimestampColumn}",
+          sortDesc: false }
+          ${primaryTimestampColumn}: {
             operator: "between", value: ["${this.startIndex}", "${this.endIndex}"]
           }
         )
         {
-        ${dataSourceColumns.filter(c => c.x || c.y || c.z || c.uniqueName === `${dataSource.name}_${dataSourcePrimaryTimestamp}`).map(c => c.name).join(' ')}
+        ${dataSourceColumns.filter(c => c.x || c.y || c.z || c.uniqueName === `${dataSource.name}_${primaryTimestampColumn}`).map(c => c.name).join(' ')}
         }
       }
         `
+        }
+      } else {
+        this.errorMessage = 'Unrecognized primary timestamp type'
+        return ''
       }
+
     }
 
+  }
+
+  addTrace() {
+    const length = this.userTraces.length
+    this.userTraces.push(`${length + 1}`)
   }
 
   downloadCSV() {

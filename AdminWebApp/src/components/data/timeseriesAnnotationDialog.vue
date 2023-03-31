@@ -24,6 +24,13 @@
             label="Y"
         ></v-text-field>
         <v-text-field
+            v-if="z"
+            v-model="z"
+            :rules="[v => !!v || 'Required']"
+            disabled
+            label="Z"
+        ></v-text-field>
+        <v-text-field
             v-model="annotation"
             :rules="[v => !!v || 'Required']"
             label="Annotation"
@@ -66,6 +73,9 @@ export default class TimeseriesAnnotationDialog extends Vue {
   @Prop({required: true})
   readonly y!: Datum
 
+  @Prop({required: false, default: null})
+  readonly z!: Datum
+
   @Prop({required: true})
   dialog = false
   annotation = ''
@@ -77,11 +87,22 @@ export default class TimeseriesAnnotationDialog extends Vue {
     // @ts-ignore
     if (!this.$refs.form!.validate()) return;
 
-    const annotation = {
-      x: this.x,
-      y: this.y,
-      annotation: this.annotation,
-      direction: this.direction
+    let annotation = {}
+    if (this.z) {
+      annotation = {
+        x: this.x,
+        y: this.y,
+        z: this.z,
+        annotation: this.annotation,
+        direction: this.direction
+      }
+    } else {
+      annotation = {
+        x: this.x,
+        y: this.y,
+        annotation: this.annotation,
+        direction: this.direction
+      }
     }
     this.$emit('createAnnotation', annotation)
   }

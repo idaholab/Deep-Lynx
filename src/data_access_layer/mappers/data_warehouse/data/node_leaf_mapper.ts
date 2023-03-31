@@ -1,7 +1,7 @@
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
 import Result from '../../../../common_classes/result';
-import NodeLeaf, {nodeLeafQuery} from '../../../../domain_objects/data_warehouse/data/node_leaf';
+import NodeLeaf, {getNodeLeafQuery} from '../../../../domain_objects/data_warehouse/data/node_leaf';
 
 /*
     NodeLeafMapper extends the Postgres database Mapper class and allows the
@@ -32,18 +32,16 @@ export default class NodeLeafMapper extends Mapper {
     // and filtering of NodeLeaf objects and likely won't be used for CRUD operations
     // other than reads.
 
-    public async RetrieveNthNodes(id: string, container_id: string, depth: string, transaction?: PoolClient): Promise<Result<NodeLeaf[]>> {
-        return super.rows(this.retrieveNthNodesStatement(id, container_id, depth), {
+    public async RetrieveNthNodes(
+        id: string, 
+        container_id: string, 
+        depth: string, 
+        transaction?: PoolClient, 
+        use_original_id?: boolean
+    ): Promise<Result<NodeLeaf[]>> {
+        return super.rows(getNodeLeafQuery(id, container_id, depth, use_original_id), {
             transaction,
             resultClass: this.resultClass,
         });
-    }
-
-    // query-building function: returns a list of node-edge-node pairs (NodeLeafs)
-    private retrieveNthNodesStatement(nodeID: string, container_id: string, depth: string): QueryConfig {
-        return {
-            text: nodeLeafQuery.join(' '),
-            values: [nodeID, container_id, depth],
-        };
     }
 }

@@ -58,6 +58,10 @@
           </v-tooltip>
         </template>
 
+        <template v-slot:[`item.modified_at`]="{ item }">
+          <span>{{new Date(item.modified_at).toLocaleString()}}</span>
+        </template>
+
         <template v-slot:[`item.actions`]="{ item }">
           <v-flex style="display: flex; height: 100%; align-items: center">
             <v-icon
@@ -161,6 +165,7 @@ export default class NodeFilesDialog extends Vue {
       {text: this.$t('nodeFiles.id'), value: 'id', sortable: false},
       {text: this.$t('nodeFiles.fileName'), value: 'file_name'},
       {text: this.$t('nodeFiles.fileSize'), value: 'file_size'},
+      {text: this.$t('nodeFiles.lastModified'), value: 'modified_at'},
       {text: this.$t('nodeFiles.actions'), value: 'actions', sortable: false}
     ]
   }

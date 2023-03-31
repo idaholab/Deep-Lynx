@@ -146,6 +146,10 @@ export type FileT = {
     adapter_file_path: string;
     adapter: 'filesystem' | 'azure_blob' | 'mock';
     metadata: object;
+    created_at: string;
+    modified_at: string;
+    created_by: string;
+    modified_by: string;
 };
 
 export type NodeT = {
