@@ -14,10 +14,6 @@ import {
 } from "@mui/material";
 
 export default function DrawerRight(props: any) {
-  const { children } = props;
-
-  const theme = useTheme();
-
   type openDrawerRightState = boolean;
   const openDrawerRightState: openDrawerRightState = useAppSelector((state: any) => state.appState.openDrawerRight);
 

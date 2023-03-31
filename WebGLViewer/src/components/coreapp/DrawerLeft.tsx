@@ -90,7 +90,6 @@ const DrawerLeft: React.FC<Props> = ({}) => {
 
   const [nodes, setNodes] = useState(Array<{ [key: string]: any; }>);
   const [scenes, setScenes] = useState(tempSceneData);
-  // const [scenes, setScenes] = useState(Array<{ [key: string]: any; }>);
 
   const [filteredData, setFilteredData] = useState()
   useEffect(() => {
@@ -105,7 +104,6 @@ const DrawerLeft: React.FC<Props> = ({}) => {
           }
         }).then (
           (response: any) => {
-            console.log(response.data)
             setNodes(queryFilterData(searchQuery, response.data.value))
           }
         )
@@ -167,7 +165,10 @@ const DrawerLeft: React.FC<Props> = ({}) => {
 
   return (
     <Drawer variant="permanent" open={openDrawerLeftState}
-      sx={{ 
+      sx={{
+        '& > .MuiDrawer-paper': {
+          border: 'none'
+        },
         ...(openDrawerLeftState === true && {
           transition: 'width .4s',
           width: openDrawerLeftWidth,
@@ -251,7 +252,6 @@ const DrawerLeft: React.FC<Props> = ({}) => {
                     >
                       <MenuLinkItemIcon />
                     </ListItemIcon>
-                    {/* <ListItemText primary="Dashboard" sx={{ opacity: openDrawerLeftState ? 1 : 0, color: COLORS.colorSecondary }} /> */}
                   </ListItemButton>
                 </ListItem>
               )

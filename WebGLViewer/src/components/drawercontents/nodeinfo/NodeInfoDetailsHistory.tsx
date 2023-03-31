@@ -17,8 +17,6 @@ import {
 
 // Styles
 import '../../../styles/App.scss';
-// @ts-ignore
-import COLORS from '../../../styles/variables';
 
 // Custom Components 
 import InfoHeader from '../../elements/InfoHeader';
@@ -35,7 +33,6 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
 
   const [nodeDetails, setNodeDetails] = useState(()=> {
     const isValidDate = (datetime: any) => {
-      console.log(datetime)
       if (datetime !== null) {
         return (
           `
@@ -46,7 +43,6 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
       } else {
         return 'N/A'
       }
-
     }
     let nodeDetailsList = {
       id: data.id,

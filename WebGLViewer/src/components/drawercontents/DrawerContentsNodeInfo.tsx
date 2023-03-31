@@ -2,15 +2,7 @@
 import * as React from 'react';
 
 // Hooks
-import { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../../../app/hooks/reduxTypescriptHooks';
-
-// Helpers
-import regex from "../../../app/helpers/regex";
-
-// Import Packages
-import classNames from 'classnames';
-import axios from 'axios';
 
 // Import Redux Actions
 import { appStateActions } from '../../../app/store/index';
@@ -21,15 +13,9 @@ import { useTheme } from '@mui/material/styles';
 // MUI Components
 import {
   Box,
-  Button,
   Stack,
-  Tooltip,
   Typography
 } from '@mui/material';
-
-// MUI Icons
-import InfoIcon from '@mui/icons-material/Info';
-import CloseIcon from '@mui/icons-material/Close';
 
 // Custom Components 
 import NodeInfoMainTabs from '../drawercontents/NodeInfoMainTabs';
@@ -37,14 +23,10 @@ import ButtonIconText from '../elements/ButtonIconText';
 
 // Styles
 import '../../styles/App.scss';
-// @ts-ignore
-import COLORS from '../../styles/variables';
 
 type Props = {};
 
 const DrawerContentsNodeInfo: React.FC<Props> = ({}) => {
-
-  const theme = useTheme();
   const dispatch = useAppDispatch();
 
   type openDrawerLeftState = boolean;

@@ -2,10 +2,6 @@
 import * as React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
-// Hooks
-import { useEffect } from 'react';
-import { useAppSelector, useAppDispatch } from '../app/hooks/reduxTypescriptHooks';
-
 // Import Packages
 import "@fontsource/source-sans-pro/400.css"; // Weight 400.
 import "@fontsource/source-sans-pro/600.css"; // Weight 600.
@@ -30,9 +26,7 @@ import COLORS from './styles/variables';
 import './styles/App.scss';
 
 // Custom Components
-import MainScaffold from './layouts/MainScaffold';
 import Dashboard from './pages/Dashboard';
-// import Settings from './pages/Settings';
 
 const getDesignTokens = (mode: PaletteMode) => ({
   palette: {
@@ -139,11 +133,10 @@ function App() {
   return (
     <div className="App">
       <CssBaseline>
-        <MainScaffold>
-          <Routes>
-            <Route path="/viewer" element={<Dashboard />} />
-          </Routes>
-        </MainScaffold>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/viewer" element={<Dashboard />} />
+        </Routes>
       </CssBaseline>
     </div>
   );

@@ -3,7 +3,6 @@ import * as React from 'react';
 
 // MUI Components
 import {
-  Box,
   Button,
   Typography
 } from '@mui/material';
@@ -18,8 +17,6 @@ import HighlightIcon from '@mui/icons-material/Highlight';
 
 // Styles
 import '../../styles/App.scss';
-// @ts-ignore
-import COLORS from '../../styles/variables';
 
 type Props = {
   text: string,

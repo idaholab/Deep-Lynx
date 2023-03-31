@@ -2,39 +2,16 @@
 import * as React from 'react';
 
 // Hooks
-import { useState } from 'react';
-import { useAppSelector, useAppDispatch } from '../../../app/hooks/reduxTypescriptHooks';
-
-// Import Packages
-import classNames from 'classnames';
-
-// Import Redux Actions
-import { appStateActions } from '../../../app/store/index';
-
-// MUI Styles
-import { useTheme } from '@mui/material/styles';
+import { useAppSelector } from '../../../app/hooks/reduxTypescriptHooks';
 
 // MUI Components
 import {
   Box,
-  Tooltip,
-  Typography
 } from '@mui/material';
 
-// MUI Icons
-import InfoIcon from '@mui/icons-material/Info';
+type Props = {};
 
-// Styles
-import '../../styles/App.scss';
-// @ts-ignore
-import COLORS from '../../styles/variables';
-
-export default function DrawerContentsSettings(props: any) {
-  const { children } = props;
-
-  const theme = useTheme();
-  const dispatch = useAppDispatch();
-
+const DrawerContentsSettings: React.FC<Props> = ({}) => {
   type openDrawerLeftState = boolean;
   const openDrawerLeftState: openDrawerLeftState = useAppSelector((state: any) => state.appState.openDrawerLeft);
 
@@ -51,3 +28,5 @@ export default function DrawerContentsSettings(props: any) {
     </Box>
   );
 }
+
+export default DrawerContentsSettings;

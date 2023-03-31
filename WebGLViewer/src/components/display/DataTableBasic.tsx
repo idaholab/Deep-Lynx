@@ -10,7 +10,6 @@ import {
   TableHead,
   TablePagination,
   TableRow,
-  Paper,
 } from '@mui/material';
 
 // MUI Icons

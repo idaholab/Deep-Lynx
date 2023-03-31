@@ -1,10 +1,10 @@
 import * as React from 'react';
 
-import LayoutDashboard from '../layouts/LayoutDashboard';
+import MainScaffold from '../layouts/MainScaffold';
 
 function Dashboard() {
   return (
-    <LayoutDashboard />
+    <MainScaffold />
   );
 }
 

@@ -16,12 +16,6 @@ import NodeInfoNearbyNodes from '../drawercontents/nodeinfo/NodeInfoNearbyNodes'
 import NodeInfoFiles from '../drawercontents/nodeinfo/NodeInfoFiles';
 import NodeInfoTags from '../drawercontents/nodeinfo/NodeInfoTags';
 
-interface TabPanelProps {
-  index: number;
-  value: number;
-  data: any
-}
-
 function a11yProps(index: number) {
   return {
     id: `simple-tab-${index}`,

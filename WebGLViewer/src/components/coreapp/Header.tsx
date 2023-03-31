@@ -15,8 +15,6 @@ import {
 import COLORS from '../../styles/variables';
 
 export default function Header(props: any) {
-  const { children } = props;
-
   return (
     <>
       <Box sx={{ width: '100%', height: '64px', position: 'fixed', backgroundColor: COLORS.colorSecondary, zIndex: 1 }}>

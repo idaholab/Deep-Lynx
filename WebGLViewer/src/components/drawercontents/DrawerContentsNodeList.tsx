@@ -2,38 +2,26 @@
 import * as React from 'react';
 
 // Hooks
-import { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../../../app/hooks/reduxTypescriptHooks';
-
-// Import Packages
-import classNames from 'classnames';
-import axios from 'axios';
 
 // Import Redux Actions
 import { appStateActions } from '../../../app/store/index';
-
-// MUI Styles
-import { useTheme } from '@mui/material/styles';
 
 // MUI Components
 import {
   Box,
   Button,
-  FormControl,
   List,
   ListItem,
   ListItemText,
   ListItemButton,
   MenuItem,
-  OutlinedInput,
-  Typography
 } from '@mui/material';
 import Menu, { MenuProps } from '@mui/material/Menu';
 import Divider from '@mui/material/Divider';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 // MUI Icons
-import InfoIcon from '@mui/icons-material/Info';
 import HubIcon from '@mui/icons-material/Hub';
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
 import HighlightIcon from '@mui/icons-material/Highlight';
@@ -105,17 +93,18 @@ const DrawerContentsNodeList: React.FC<Props> = ({
   const [selected, setSelected] = React.useState<string | false>(false);
 
   const handleSelectAssetObject = (obj: any, numPixels: number, selectedItem: string) => {
-    console.log("obj", obj)
     dispatch(appStateActions.selectAssetObject(obj));
     dispatch(appStateActions.setDrawerLeftWidth(numPixels));
     setSelected(selectedItem);
   };
 
   const handleSelectAssetOnScene = (payload: any) => {
+    handleClose()
     dispatch(appStateActions.selectAssetOnScene(payload.properties.Name))
   };
 
   const handleHighlightAssetOnScene = (payload: any) => {
+    handleClose()
     dispatch(appStateActions.highlightAssetOnScene(payload.properties.Name))
   };
 
@@ -125,11 +114,14 @@ const DrawerContentsNodeList: React.FC<Props> = ({
   }
 
   // Menu
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  // const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [anchorEl, setAnchorEl] = React.useState<any>(null);
   const open = Boolean(anchorEl);
-  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
+
+  const handleClick = (index: number, event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl({ [index]: event.currentTarget });
   };
+
   const handleClose = () => {
     setAnchorEl(null);
   };
@@ -155,32 +147,42 @@ const DrawerContentsNodeList: React.FC<Props> = ({
                 <>
                 <Button
                   id="customized-button"
+                  className={`menu-button-${index}`}
                   aria-controls={open ? 'customized-menu' : undefined}
                   aria-haspopup="true"
                   aria-expanded={open ? 'true' : undefined}
                   variant="contained"
                   disableElevation
-                  onClick={handleClick}
+                  onClick={(e) => handleClick(index, e)}
                   endIcon={<KeyboardArrowDownIcon />}
                   size="small"
                   sx={{
                     color: 'white',
-                    padding: '0px 8px',
-                    marginLeft: 'auto',
+                    padding: '0px 4px 0 8px',
                     '& span': {
-                      fontSize: '12px'
+                      fontSize: '14px',
+                      marginBottom: '1px',
+                      '&:first-of-type': {
+                        marginRight: '-6px'
+                      },
                     }
                   }}
                 >
-                  <Typography>Actions</Typography>
+                  <span>Actions</span>
                 </Button>
                 <StyledMenu
                   id="customized-menu"
                   MenuListProps={{
                     'aria-labelledby': 'customized-button',
                   }}
-                  anchorEl={anchorEl}
-                  open={open}
+                  anchorEl={
+                    // Check to see if the anchor is set.
+                    anchorEl && anchorEl[index]
+                  }
+                  open={
+                    // Check to see if the anchor is set.
+                    Boolean(anchorEl && anchorEl[index])
+                  }
                   onClose={handleClose}
                 >
                   <MenuItem onClick={() => handleSelectAssetOnScene(object)} disableRipple>
