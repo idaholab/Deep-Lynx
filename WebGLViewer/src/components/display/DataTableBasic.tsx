@@ -93,6 +93,7 @@ const DataTableBasic: React.FC<Props> = ({
                 return (
                   <TableCell
                     sx={{ fontWeight: 'bold'}}
+                    width={tableHeader.optionalWidth}
                     align={tableHeader.alignment}
                     key={index}
                   >

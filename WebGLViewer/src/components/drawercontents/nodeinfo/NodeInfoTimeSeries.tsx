@@ -28,11 +28,11 @@ const NodeInfoTimeSeries: React.FC<Props> = ({
 }) => {
 
   const tableHeaders = [
-    {title: 'Id', alignment: 'left'},
-    {title: 'Name', alignment: 'left'},
-    {title: 'Timestamp', alignment: 'left'},
-    {title: 'Entries', alignment: 'left'},
-    {title: 'Actions', alignment: 'center'}
+    {title: 'Id', optionalWidth: '50px', alignment: 'left'},
+    {title: 'Name', optionalWidth: '', alignment: 'left'},
+    {title: 'Timestamp', optionalWidth: '', alignment: 'left'},
+    {title: 'Entries', optionalWidth: '', alignment: 'left'},
+    // {title: 'Actions', alignment: 'center'}
   ];
 
   // const tableData = data;
@@ -67,10 +67,10 @@ const NodeInfoTimeSeries: React.FC<Props> = ({
     }
   ];
 
-  const tableRowActions = [
-    {type: 'view',},
-    {type: 'edit',},
-    {type: 'delete',}
+  const tableRowActions: any = [
+    // {type: 'view',},
+    // {type: 'edit',},
+    // {type: 'delete',}
   ];
 
   return (

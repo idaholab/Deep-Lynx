@@ -59,15 +59,15 @@ const NodeInfoFiles: React.FC<Props> = ({
   }, []);
 
   const tableHeaders = [
-    {title: 'Id', alignment: 'left'},
-    {title: 'Filename', alignment: 'left'},
-    {title: 'Size', alignment: 'left'},
-    {title: 'Actions', alignment: 'center'}
+    {title: 'Id', optionalWidth: '50px', alignment: 'left'},
+    {title: 'Filename', optionalWidth: 'calc(100% - 150px)',  alignment: 'left'},
+    {title: 'Size (kb)', optionalWidth: '100px', alignment: 'left'},
+    // {title: 'Actions', alignment: 'center'}
   ];
 
-  const tableRowActions = [
-    {type: 'view',},
-    {type: 'delete',}
+  const tableRowActions: any = [
+    // {type: 'view',},
+    // {type: 'delete',}
   ];
 
   return (

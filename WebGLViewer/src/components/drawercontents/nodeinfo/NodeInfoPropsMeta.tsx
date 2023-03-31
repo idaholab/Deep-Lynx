@@ -36,29 +36,29 @@ const NodeInfoPropsMeta: React.FC<Props> = ({
   }
 
   const PropertiesTableHeaders = [
-    {title: 'Name', alignment: 'left'},
-    {title: 'Value', alignment: 'left'},
-    {title: 'Actions', alignment: 'center'},
+    {title: 'Name', optionalWidth: '300px', alignment: 'left'},
+    {title: 'Value', optionalWidth: '', alignment: 'left'},
+    // {title: 'Actions', alignment: 'center'},
   ];
 
   const PropertiesTableRowData = convertDataToArray(data.properties);
 
-  const PropertiesTableRowActions = [
-    {type: 'edit',},
-    {type: 'delete',}
+  const PropertiesTableRowActions: any = [
+    // {type: 'edit',},
+    // {type: 'delete',}
   ];
 
   const MetadataTableHeaders = [
-    {title: 'Name', alignment: 'left'},
-    {title: 'Value', alignment: 'left'},
-    {title: 'Actions', alignment: 'center'},
+    {title: 'Name', optionalWidth: '300px', alignment: 'left'},
+    {title: 'Value', optionalWidth: '', alignment: 'left'},
+    // {title: 'Actions', alignment: 'center'},
   ];
 
   const MetadataTableRowData = convertDataToArray(data.metadata_properties);
 
-  const MetadataTableRowActions = [
-    {type: 'view',},
-    {type: 'delete',}
+  const MetadataTableRowActions: any = [
+    // {type: 'view',},
+    // {type: 'delete',}
   ];
 
   return (

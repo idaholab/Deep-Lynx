@@ -35,8 +35,8 @@ const NodeInfoTags: React.FC<Props> = ({
   const [tagList, setTagList] = useState(Array<{ [key: string]: any; }>);
 
   const tableHeaders = [
-    {title: 'Name', alignment: 'left'},
-    {title: 'Actions', alignment: 'center'},
+    {title: 'Name', optionalWidth: '', alignment: 'left'},
+    // {title: 'Actions', alignment: 'center'},
   ];
 
   type webGLFileSetId = Array<{ [key: string]: any; }>;
@@ -76,8 +76,8 @@ const NodeInfoTags: React.FC<Props> = ({
   }, []);
   const tableRowData = tagList;
 
-  const tableRowActions = [
-    {type: 'delete'}
+  const tableRowActions: any = [
+    // {type: 'delete'}
   ];
 
   return (

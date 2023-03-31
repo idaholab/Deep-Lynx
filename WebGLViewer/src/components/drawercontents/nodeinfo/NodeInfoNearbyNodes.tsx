@@ -3,20 +3,13 @@ import * as React from 'react';
 
 // Hooks
 import { useState, useEffect } from 'react';
-import { useAppSelector, useAppDispatch } from '../../../../app/hooks/reduxTypescriptHooks';
 
 // Import Packages
 import axios from 'axios';
 
-// MUI Components
-import {
-  Button
-} from '@mui/material';
 
 // Styles
 import '../../../styles/App.scss';
-// @ts-ignore
-import COLORS from '../../../styles/variables';
 
 // Custom Components 
 import InfoHeader from '../../elements/InfoHeader';
@@ -33,15 +26,12 @@ const NodeInfoNearbyNodes: React.FC<Props> = ({
   const [tableRowData, setTableRowData] = useState([]);
 
   const tableHeaders = [
-    {title: 'Id', alignment: 'left'},
-    {title: 'Name', alignment: 'left'},
-    {title: 'Relationship', alignment: 'left'},
-    {title: 'Direction', alignment: 'left'},
-    {title: 'Actions', alignment: 'center'},
+    {title: 'Id', optionalWidth: '50px', alignment: 'left'},
+    {title: 'Name', optionalWidth: '', alignment: 'left'},
+    {title: 'Relationship', optionalWidth: '', alignment: 'left'},
+    {title: 'Direction', optionalWidth: '', alignment: 'left'},
+    // {title: 'Actions', optionalWidth: '', alignment: 'center'},
   ];
-
-  type webGLFileSetId = Array<{ [key: string]: any; }>;
-  const webGLFileSetId = useAppSelector((state: any) => state.appState.selectedWebGLFileSetId);
 
   useEffect(() => {
     async function getNearbyNodes() {
@@ -81,8 +71,8 @@ const NodeInfoNearbyNodes: React.FC<Props> = ({
     getNearbyNodes();
   }, []);
 
-  const tableRowActions = [
-    {type: 'delete'}
+  const tableRowActions: any = [
+    // {type: 'delete'}
   ];
 
   return (
