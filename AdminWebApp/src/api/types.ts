@@ -614,6 +614,15 @@ export type TagT = {
     metadata?: object;
 };
 
+export type TimeseriesRange = {
+    start: string;
+    end: string;
+};
+
+export type TimeseriesRowCount = {
+    approximate_row_count: number;
+};
+
 // DefaultAvevaDataSourceConfig are sane defaults found through trial and error with the Aveva Deep Lynx Adapter
 // while we could include this on the createDataSourceDialog component, it's so large that it clutters
 // that component - better to pull it out and maintain it here so the connection to Deep Lynx is clear.

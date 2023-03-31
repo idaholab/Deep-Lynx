@@ -18,6 +18,34 @@
 
     <v-card class="pa-4" v-observe-visibility="performAnalysis">
 
+      <v-card class="pa-4 mb-4 d-flex justify-center">
+        <v-row>
+          <v-col :cols="12" class="d-flex justify-center">
+            <span>Data Source Shapes</span>
+          </v-col>
+
+          <v-col :cols="12" class="d-flex">
+            <v-card
+                v-for="(dataSource, index) in selectedDataSources"
+                :key="index"
+                class="mr-4 mb-4"
+                :color="colorArray[index % 10]"
+                style="max-width: fit-content"
+            >
+              <v-card-title class="pt-0">
+                <span class="headline text-h4">{{ dataSource.name }} ({{ dataSource.id }})</span>
+              </v-card-title>
+              <v-card-subtitle v-if="dataSourceShapes.get(dataSource.id)">
+                <span class="headline text-subtitle-1">{{ dataSourceShapes.get(dataSource.id).count }} rows</span><br/>
+                <span class="headline text-subtitle-1">
+                  {{ dataSourceShapes.get(dataSource.id).start }} - {{ dataSourceShapes.get(dataSource.id).end }}
+                </span>
+              </v-card-subtitle>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-card>
+
       <v-card class="pa-4">
         <div id="boxPlot"></div>
       </v-card>
@@ -28,9 +56,15 @@
         <span v-if="!correlationMatrixFlag">Results Length Varies, Cannot Show Correlation Matrix</span>
       </v-card>
 
+      <v-row class="mx-0 mt-4">
+        <v-card v-for="(list, index) in Array.from(columnToDataMap)" :key="index" class="pa-4 mr-4 mb-4">
+          <div :id="list[0]"></div>
+        </v-card>
+      </v-row>
+
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="$emit('createAnnotation')">{{$t('home.cancel')}}</v-btn>
+        <v-btn color="blue darken-1" text @click="dialog = false">{{$t('home.cancel')}}</v-btn>
       </v-card-actions>
     </v-card>
 
@@ -45,6 +79,13 @@ import Plotly from "plotly.js-dist-min";
 const calculateCorrelation = require("calculate-correlation");
 import {schemeCategory10} from "d3-scale-chromatic"
 
+type column = {
+  data: number[],
+  dataSource: string,
+  type: string,
+  name: string
+}
+
 @Component
 export default class ExploratoryDataAnalysisDialog extends Vue {
   @Prop({required: true})
@@ -53,8 +94,13 @@ export default class ExploratoryDataAnalysisDialog extends Vue {
   @Prop({required: true})
   readonly results: any
 
+  @Prop({required: true})
+  readonly dataSourceShapes!: Map<string, any>
+
   dialog = false
   correlationMatrixFlag = true
+  columnToDataMap: Map<string, column> = new Map()
+  colorArray = schemeCategory10
 
   async performAnalysis() {
     const plotlyBox = document.getElementById('boxPlot')
@@ -65,8 +111,6 @@ export default class ExploratoryDataAnalysisDialog extends Vue {
 
     const boxPlotData: Plotly.Data[] = []
 
-    // used for storing data by column in one array
-    const columnToDataMap: Map<string, number[]> = new Map()
     let dataSourceResultsLength = 0
 
     this.selectedDataSources.forEach((dataSource, index) => {
@@ -87,12 +131,24 @@ export default class ExploratoryDataAnalysisDialog extends Vue {
         const y = []
 
         for (let i = 0; i < dataSourceResults.length; i++) {
-          y.push(dataSourceResults[i][column.column_name!])
-
+          // ensure we are pushing a number type if applicable
+          if (column.type?.includes('float') || column.type?.includes('number')) {
+            y.push(Number(dataSourceResults[i][column.column_name!]))
+          } else {
+            y.push(dataSourceResults[i][column.column_name!])
+          }
         }
+
         const uniqueColumnName = `${dataSource.name}_${column.column_name}`
 
-        columnToDataMap.set(uniqueColumnName, y)
+        this.columnToDataMap.set(uniqueColumnName, {
+          data: y,
+          dataSource: dataSource.name,
+          type: column.type || 'string',
+          name: column.column_name || ''
+        })
+        // forceUpdate to assign IDs to divs for histogram plots
+        this.$forceUpdate()
 
         // create box plot
         if (!column.column_name || column.is_primary_timestamp) continue
@@ -129,15 +185,16 @@ export default class ExploratoryDataAnalysisDialog extends Vue {
       title: 'Box Plot',
     }
 
-    await Plotly.react(plotlyBox!,
+    if (plotlyBox) await Plotly.react(plotlyBox,
         boxPlotData, boxLayout,
-        {responsive: true, editable: true})
+        {responsive: true})
 
-    if (this.correlationMatrixFlag) await this.createCorrelationPlot(columnToDataMap)
+    if (this.correlationMatrixFlag) await this.createCorrelationPlot()
 
+    await this.createHistograms()
   }
 
-  async createCorrelationPlot(columnToDataMap: Map<string, number[]>) {
+  async createCorrelationPlot() {
     const correlationPlotData: Plotly.Data[] = []
 
     const singleCorrelationPlot: {
@@ -154,29 +211,31 @@ export default class ExploratoryDataAnalysisDialog extends Vue {
       colorscale: 'Bluered'
     };
 
-    let correlationColumns: any = this.selectedDataSources.map((dataSource: DataSourceT) => {
-      return (dataSource.config as TimeseriesDataSourceConfig).columns.map(c => `${dataSource.name}_${c.column_name}`)
-    })
-    correlationColumns = correlationColumns.flat(1)
+    this.columnToDataMap.forEach((value, key, map) => {
+      singleCorrelationPlot.x.push(key)
+      singleCorrelationPlot.y.push(key)
 
-    for (let i = 0; i < correlationColumns.length; i++) {
-      const column = correlationColumns[i]
-      singleCorrelationPlot.x.push(column)
-      singleCorrelationPlot.y.push(column)
+      const z: number[] = []
 
-      const z = []
-      for (let j = 0; j < correlationColumns.length; j++) {
+      this.columnToDataMap.forEach((comparisonVal, comparisonKey) => {
         // check if the column being compared is self and set to 1 if so
-        if (i === j) {
+        if (key === comparisonKey) {
           z.push(1)
+        } else if (!value.type.includes('float') && !value.type.includes('number')) {
+          z.push(NaN)
+        } else if (!comparisonVal.type.includes('float') && !comparisonVal.type.includes('number')) {
+          z.push(NaN)
         } else {
-          // calculate correlation between column and each innerColumn
-          z.push(+calculateCorrelation(columnToDataMap.get(column), columnToDataMap.get(correlationColumns[j])).toFixed(2))
+          // if both columns are numbers, calculate correlation between columns
+          z.push(+calculateCorrelation(
+              value.data,
+              comparisonVal.data).toFixed(2)
+          )
         }
-      }
+      })
 
       singleCorrelationPlot.z.push(z)
-    }
+    })
     correlationPlotData.push(singleCorrelationPlot)
 
     const correlationLayout: Partial<Plotly.Layout> = {
@@ -210,10 +269,46 @@ export default class ExploratoryDataAnalysisDialog extends Vue {
     }
 
     const plotlyCorrelation = document.getElementById('correlationPlot')
-    await Plotly.react(plotlyCorrelation!,
+    if (plotlyCorrelation) await Plotly.react(plotlyCorrelation,
         correlationPlotData, correlationLayout,
-        {responsive: true, editable: true}
+        {responsive: true}
     )
+  }
+
+  createHistograms() {
+    this.columnToDataMap.forEach(async (value, key) => {
+      const plotlyHistogram = document.getElementById(key)
+      Plotly.purge(plotlyHistogram!)
+
+      const index = this.selectedDataSources.findIndex(d => d.name === value.dataSource)
+
+      const data: Plotly.Data[] = [{
+        x: value.data,
+        type: 'histogram',
+        marker: {
+          color: schemeCategory10[index % 10]
+        }
+      }]
+
+      const layout: Partial<Plotly.Layout> = {
+        showlegend: false,
+        title: key,
+        width: 200,
+        margin: {
+          b: 15,
+          l: 10,
+          r: 10,
+          t: 25
+        }
+      }
+
+      if (plotlyHistogram) await Plotly.react(plotlyHistogram,
+          data, layout,
+          {responsive: true}
+      )
+    })
+
+    this.$forceUpdate()
   }
 
 }

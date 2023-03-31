@@ -417,7 +417,7 @@
 
       <!-- Else: Dashboard Landing Page -->
       <v-container fluid v-else>
-        <v-row>
+        <v-row v-if="$auth.IsAdmin() && stats !== null">
           <!-- DeepLynx Admin Statistics (only include if admin and exists) -->
           <v-col :cols="12" :md="6" :lg="6" v-if="$auth.IsAdmin() && stats.statistics.migrations">
             <v-card class="d-flex flex-column height-full">

@@ -30,6 +30,8 @@ import {
     ServiceUserPermissionSetT,
     FullStatistics,
     TagT,
+    TimeseriesRange,
+    TimeseriesRowCount,
 } from '@/api/types';
 import {RetrieveJWT} from '@/auth/authentication_service';
 import {UserT} from '@/auth/types';
@@ -759,6 +761,14 @@ export class Client {
 
     listTimeseriesTables(containerID: string, nodeID: string): Promise<Map<string, [boolean, string]>> {
         return this.get<Map<string, [boolean, string]>>(`/containers/${containerID}/graphs/nodes/${nodeID}/timeseries`);
+    }
+
+    retrieveTimeseriesRowCount(containerID: string, dataSourceID: string): Promise<TimeseriesRowCount> {
+        return this.get<TimeseriesRowCount>(`/containers/${containerID}/import/datasources/${dataSourceID}/timeseries/count`);
+    }
+
+    retrieveTimeseriesRange(containerID: string, dataSourceID: string): Promise<TimeseriesRange> {
+        return this.get<TimeseriesRange>(`/containers/${containerID}/import/datasources/${dataSourceID}/timeseries/range`);
     }
 
     retrieveNode(containerID: string, nodeID: string): Promise<NodeT> {

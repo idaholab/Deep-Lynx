@@ -177,6 +177,7 @@
                 v-if="Object.keys(this.results).length > 0"
                 :selectedDataSources="selectedDataSources"
                 :results="results"
+                :dataSourceShapes="dataSourceShapes"
             ></exploratory-data-analysis-dialog>
 
           </v-card>
@@ -404,6 +405,7 @@ export default class NodeTimeseriesDialog extends Vue {
   streamSeconds = 0
   streamEntireProgress = 0
   replayRecordSize = 100
+  dataSourceShapes: Map<string, any> = new Map()
 
   get tablePrimaryTimestampName(): string {
     return `item.${this.primaryTimestampName}`
@@ -640,11 +642,11 @@ export default class NodeTimeseriesDialog extends Vue {
     let y = -40
     if (annotation.direction === 'below') y = 40
 
-    if (!currentLayout.annotations) currentLayout.annotations = []
-    // scene.annotations used for 3D annotations
-    if (!currentLayout.scene.annotations) currentLayout.scene.annotations = []
-
     if (annotation.z) {
+      // scene.annotations used for 3D annotations
+      if (!currentLayout.scene) currentLayout.scene = {}
+      if (!currentLayout.scene.annotations) currentLayout.scene.annotations = []
+
       currentLayout.scene.annotations.push(
           {
             x: annotation.x,
@@ -658,6 +660,8 @@ export default class NodeTimeseriesDialog extends Vue {
           }
       )
     } else {
+      if (!currentLayout.annotations) currentLayout.annotations = []
+
       currentLayout.annotations.push(
           {
             x: annotation.x,
@@ -810,6 +814,8 @@ export default class NodeTimeseriesDialog extends Vue {
     // save off current version of selectedColumns to keep state of any columns that will carry over in new selection
     const previousColumns = this.selectedColumns
     this.selectedColumns = []
+
+    this.determineDataSourceShape()
 
     for (const dataSource of this.selectedDataSources) {
       const columns = (dataSource.config as TimeseriesDataSourceConfig).columns
@@ -1136,6 +1142,29 @@ export default class NodeTimeseriesDialog extends Vue {
     document.body.append(link)
     link.click()
     link.remove()
+  }
+
+  determineDataSourceShape() {
+    this.selectedDataSources.forEach(async (dataSource: DataSourceT) => {
+      const count = await this.$client.retrieveTimeseriesRowCount(this.containerID, dataSource.id!)
+
+      const range = await this.$client.retrieveTimeseriesRange(this.containerID, dataSource.id!)
+
+      this.dataSourceShapes.set(dataSource.id!, {
+        count: count.approximate_row_count,
+        start: range.start,
+        end: range.end
+      })
+
+      // set start and end times/index if main data source
+      if (this.selectedDataSources.length === 1 && this.timeseriesFlag) {
+        this.startDate = range.start
+        this.endDate = range.end
+      } else if (this.selectedDataSources.length === 1 && !this.timeseriesFlag) {
+        this.startIndex = Number(range.start)
+        this.endIndex = Number(range.end)
+      }
+    })
   }
 
   clearIntervals() {
