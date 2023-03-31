@@ -6,7 +6,6 @@ import { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../../../../app/hooks/reduxTypescriptHooks';
 
 // Import Packages
-import Plot from 'react-plotly.js';
 import axios from 'axios';
 
 // MUI Components
@@ -61,7 +60,6 @@ const NodeInfoNearbyNodes: React.FC<Props> = ({
             setTableRowData(() => {
               let nearbyNodes: any = [];
               let receivedData = response.data.value;
-              console.log(receivedData)
               receivedData.map((obj: any) => {
                 return (
                   nearbyNodes.push({

@@ -1,6 +1,9 @@
 // React
 import * as React from 'react';
 
+// Import Packages
+import { DateTime } from 'luxon';
+
 // MUI Components
 import {
   Timeline,
@@ -23,11 +26,11 @@ const BasicTimeline: React.FC<Props> = ({
   data
 }) => {
 
-  const history = data;
+  const nodeHistory = data;
 
   return (
     <Timeline>
-      {history.map((historyItem, index) => {
+      {nodeHistory.map((nodeHistoryItem, index) => {
         return (
           <TimelineItem key={index}
             sx={{
@@ -37,17 +40,35 @@ const BasicTimeline: React.FC<Props> = ({
               '&:last-of-type': {
                 minHeight: 'unset'
               }
-            }}>
-              <TimelineSeparator>
-                <TimelineDot
-                  sx={{
-                    backgroundColor: COLORS.colorPrimary
-                  }}
-                />
-                {index !== history.length - 1 && <TimelineConnector />}
-              </TimelineSeparator>
-            <TimelineContent>{ historyItem.time }</TimelineContent>
-            <TimelineContent>{ historyItem.details }</TimelineContent>
+            }}
+          >
+            <TimelineSeparator>
+              <TimelineDot
+                sx={{
+                  backgroundColor: COLORS.colorPrimary
+                }}
+              />
+              {index !== history.length - 1 && <TimelineConnector />}
+            </TimelineSeparator>
+            <TimelineContent
+              sx={{ fontWeight: 'bold'}}>
+              {index === 0 ?
+                `
+                ${DateTime.fromISO(nodeHistoryItem.created_at).toLocaleString(DateTime.DATE_SHORT)}, 
+                ${DateTime.fromISO(nodeHistoryItem.created_at).toLocaleString(DateTime.TIME_WITH_SHORT_OFFSET)}
+                `
+                :
+                `
+                ${DateTime.fromISO(nodeHistoryItem.modified_at).toLocaleString(DateTime.DATE_SHORT)}, 
+                ${DateTime.fromISO(nodeHistoryItem.modified_at).toLocaleString(DateTime.TIME_WITH_SHORT_OFFSET)}
+                `
+              }
+            </TimelineContent>
+            <TimelineContent>
+              {index === 0 ?
+                'Node created by:'
+                : 'Node modified by:'
+              } { nodeHistoryItem.modified_by }</TimelineContent>
           </TimelineItem>
         )
       })}
