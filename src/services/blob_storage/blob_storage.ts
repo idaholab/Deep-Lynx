@@ -5,6 +5,7 @@ import AzureBlobImpl from './azure_blob_impl';
 import Filesystem from './filesystem_impl';
 import LargeObject from './pg_large_file_impl';
 import File from '../../domain_objects/data_warehouse/data/file';
+import MinioBlobImpl from './minio_impl';
 
 /*
     BlobStorage is an interface that Deep Lynx uses to accept and store user uploads.
@@ -42,6 +43,16 @@ export default function BlobStorageProvider(adapterName?: string): BlobStorage |
 
         case 'largeobject': {
             return new LargeObject();
+        }
+
+        case 'minio': {
+            return new MinioBlobImpl({
+                endPoint: Config.minio_endpoint,
+                port: Config.minio_port,
+                useSSL: Config.minio_ssl,
+                accessKey: Config.minio_access_key,
+                secretKey: Config.minio_secret_key,
+            });
         }
     }
 

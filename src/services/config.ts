@@ -3,7 +3,6 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as crypto from 'crypto';
 
-
 /*
  Config is a singleton class representing the application's configuration and
  environment at time of original construction. If at all possible, all properties
@@ -115,6 +114,13 @@ export class Config {
 
     private readonly _limit_default: number;
     private readonly _cache_graphql: boolean;
+
+    private readonly _minio_endpoint: string;
+    private readonly _minio_port: number;
+    private readonly _minio_ssl: boolean = true;
+    private readonly _minio_access_key: string;
+    private readonly _minio_secret_key: string;
+    private readonly _minio_bucket_name: string;
 
     private readonly _cors_origins: string[] | string;
     private readonly _tz: string;
@@ -243,6 +249,13 @@ export class Config {
         this._cache_graphql = process.env.CACHE_GRAPHQL === 'true';
         this._cors_origins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : '*';
         this._log_jobs = process.env.LOG_JOBS === 'true';
+
+        this._minio_endpoint = process.env.MINIO_ENDPOINT || 'localhost';
+        this._minio_ssl = process.env.MINIO_SSL === 'true';
+        this._minio_port = process.env.MINIO_PORT ? parseInt(process.env.MINIO_PORT, 10) : 9000;
+        this._minio_access_key = process.env.MINIO_ACCESS_KEY || '';
+        this._minio_secret_key = process.env.MINIO_SECRET_KEY || '';
+        this._minio_bucket_name = process.env.MINIO_BUCKET_NAME || 'deeplynx';
 
         // generate and save a key if we didn't start with one
         if (!this._encryption_key_path) {
@@ -595,6 +608,30 @@ export class Config {
 
     get log_db(): boolean {
         return this._log_db;
+    }
+
+    get minio_endpoint(): string {
+        return this._minio_endpoint;
+    }
+
+    get minio_port(): number {
+        return this._minio_port;
+    }
+
+    get minio_ssl(): boolean {
+        return this._minio_ssl;
+    }
+
+    get minio_access_key(): string {
+        return this._minio_access_key;
+    }
+
+    get minio_secret_key(): string {
+        return this._minio_secret_key;
+    }
+
+    get minio_bucket_name(): string {
+        return this._minio_bucket_name;
     }
 
     public static Instance(): Config {
