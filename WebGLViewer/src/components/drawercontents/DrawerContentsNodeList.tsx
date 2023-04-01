@@ -100,12 +100,12 @@ const DrawerContentsNodeList: React.FC<Props> = ({
 
   const handleSelectAssetOnScene = (payload: any) => {
     handleClose()
-    dispatch(appStateActions.selectAssetOnScene(payload.properties.Name))
+    dispatch(appStateActions.selectAssetOnScene(payload.properties.name))
   };
 
   const handleHighlightAssetOnScene = (payload: any) => {
     handleClose()
-    dispatch(appStateActions.highlightAssetOnScene(payload.properties.Name))
+    dispatch(appStateActions.highlightAssetOnScene(payload.properties.name))
   };
 
   const handleShowAssetOnGraph = (payload: any) => {
@@ -220,10 +220,10 @@ const DrawerContentsNodeList: React.FC<Props> = ({
                 <ListItemText>
                   <Box sx={{ display: 'flex', flexDirection: 'row' }}>
                     <Box sx={{ borderRight: `1px solid ${COLORS.colorDarkgray2}`, paddingRight: '6px', marginRight: '6px' }}>
-                      { object.id }
+                      { object.properties.id }
                     </Box>
                     <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      { object.properties?.Name }
+                      { object.properties?.name }
                     </Box>
                   </Box>
                 </ListItemText>

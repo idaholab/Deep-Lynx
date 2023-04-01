@@ -39,11 +39,11 @@ const DrawerContentsNodeInfo: React.FC<Props> = ({}) => {
   const selectedAssetObject: selectedAssetObject = useAppSelector((state: any) => state.appState.selectedAssetObject);
 
   const handleSelectAssetOnScene = (payload: any) => {
-    dispatch(appStateActions.selectAssetOnScene(payload.properties.Name))
+    dispatch(appStateActions.selectAssetOnScene(payload.properties.name))
   };
 
   const handleHighlightAssetOnScene = (payload: any) => {
-    dispatch(appStateActions.highlightAssetOnScene(payload.properties.Name))
+    dispatch(appStateActions.highlightAssetOnScene(payload.properties.name))
   };
 
   const handleShowAssetOnGraph = (payload: any) => {
