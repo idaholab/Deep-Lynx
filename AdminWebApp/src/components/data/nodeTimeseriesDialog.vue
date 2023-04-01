@@ -990,7 +990,11 @@ export default class NodeTimeseriesDialog extends Vue {
 
   async queryTimeseriesData() {
     const dataToReturn: any = {}
+
     for(const dataSource of this.selectedDataSources) {
+      // don't query on data sources that we know are empty
+      if (Number(this.dataSourceShapes.get(dataSource.id!).count) === 0) continue
+
       const results = await this.$client.submitDataSourceGraphQLQuery(this.containerID, dataSource.id!,  this.buildQuery(dataSource))
       if(results.errors) {
         this.errorMessage = (results.errors as string[]).join(' ')
@@ -1151,7 +1155,7 @@ export default class NodeTimeseriesDialog extends Vue {
       const range = await this.$client.retrieveTimeseriesRange(this.containerID, dataSource.id!)
 
       this.dataSourceShapes.set(dataSource.id!, {
-        count: count.approximate_row_count,
+        count: count.count,
         start: range.start,
         end: range.end
       })

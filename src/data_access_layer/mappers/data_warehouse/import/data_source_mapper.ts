@@ -132,6 +132,9 @@ export default class DataSourceMapper extends Mapper {
 
     public async retrieveTimeseriesRange(primaryTimestamp: string, tableName: string): Promise<Result<TimeseriesRange>> {
         const first = await super.retrieve<any>(this.getHypertableFirst(primaryTimestamp, tableName));
+        // if there is an error because the table is empty, return NaN string for start and end
+        if (first.isError && first.error.errorCode === 404) return Result.Success<TimeseriesRange>({start: 'NaN', end: 'NaN'});
+
         if (first.isError) return Promise.resolve(Result.Pass(first));
 
         const last = await super.retrieve<any>(this.getHypertableLast(primaryTimestamp, tableName));
@@ -362,7 +365,11 @@ export default class DataSourceMapper extends Mapper {
     }
 
     private getHypertableRowCount(tableName: string): QueryConfig {
-        return format(`SELECT * FROM approximate_row_count('%s')`, tableName);
+        if (Config.timescaledb_enabled) {
+            return format(`SELECT * FROM approximate_row_count('%s') AS count`, tableName);
+        } else {
+            return format(`SELECT COUNT(*) FROM %I)`, tableName);
+        }
     }
 
     private getHypertableFirst(primaryTimestamp: string, tableName: string): QueryConfig {

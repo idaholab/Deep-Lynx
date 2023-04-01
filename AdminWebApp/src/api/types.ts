@@ -620,7 +620,7 @@ export type TimeseriesRange = {
 };
 
 export type TimeseriesRowCount = {
-    approximate_row_count: number;
+    count: number;
 };
 
 // DefaultAvevaDataSourceConfig are sane defaults found through trial and error with the Aveva Deep Lynx Adapter
