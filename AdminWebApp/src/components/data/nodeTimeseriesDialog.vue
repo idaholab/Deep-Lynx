@@ -177,6 +177,7 @@
                 v-if="Object.keys(this.results).length > 0"
                 :selectedDataSources="selectedDataSources"
                 :results="results"
+                :dataSourceShapes="dataSourceShapes"
             ></exploratory-data-analysis-dialog>
 
           </v-card>
@@ -194,6 +195,7 @@
                 'items-per-page-options':[10,20,50]
               }"
                 fixed-header
+                dense
             >
               <template v-slot:header.z>
                 <span v-if="chartType === 'bubble'">Size</span>
@@ -329,6 +331,17 @@ import "flatpickr/dist/flatpickr.min.css";
 import ExploratoryDataAnalysisDialog from "@/components/data/exploratoryDataAnalysisDialog.vue";
 require("flatpickr/dist/themes/material_blue.css");
 
+type selectedColumn = {
+  name: string,
+  dataSource: string,
+  uniqueName: string,
+  type: string,
+  x: boolean,
+  y: boolean,
+  z: boolean,
+  trace?: any
+}
+
 @Component({components: {ExploratoryDataAnalysisDialog, TimeseriesAnnotationDialog}})
 export default class NodeTimeseriesDialog extends Vue {
   @Prop({required: true})
@@ -384,7 +397,7 @@ export default class NodeTimeseriesDialog extends Vue {
   colorScales = ['RdBu', 'YlOrRd', 'YlGnBu', 'Jet', 'Portland']
   selectedDataSources: DataSourceT[] = []
   dataSources: DataSourceT[] = []
-  selectedColumns: any[] = []
+  selectedColumns: selectedColumn[] = []
   selectedXColumn = ''
   userTraces = ['1']
   validSearch = true
@@ -397,13 +410,14 @@ export default class NodeTimeseriesDialog extends Vue {
   replayStreamInterval = 10
   streamActive = false
   streamProgress = 0
-  streamInterval: any = {}
-  timeseriesReplayInterval: any = {}
-  indexReplayInterval: any = {}
-  liveStreamInterval: any = {}
+  streamInterval?: number
+  timeseriesReplayInterval?: number
+  indexReplayInterval?: number
+  liveStreamInterval?: number
   streamSeconds = 0
   streamEntireProgress = 0
   replayRecordSize = 100
+  dataSourceShapes: Map<string, any> = new Map()
 
   get tablePrimaryTimestampName(): string {
     return `item.${this.primaryTimestampName}`
@@ -532,7 +546,7 @@ export default class NodeTimeseriesDialog extends Vue {
       } else if (this.chartType === 'bubble') {
         // set z columns to the size array for bubble charts
         const sizeColumn = zColumns[0]
-        if (sizeColumn === undefined) return
+        if (!sizeColumn) return
 
         for (const column of yColumns) {
           const singlePlot: {x: number[], y: number[], mode: string, marker: any, name: string} =
@@ -602,7 +616,7 @@ export default class NodeTimeseriesDialog extends Vue {
       },
     }
 
-    if (styleUpdate) {
+    if (styleUpdate || this.runType !== '--') {
       const currentLayout = (plotlyDiv as any).layout
       if (currentLayout && currentLayout.annotations) {
         layout.annotations = currentLayout.annotations
@@ -626,6 +640,8 @@ export default class NodeTimeseriesDialog extends Vue {
       this.annotationZ = (data.points[0] as any).z? (data.points[0] as any).z : null
     });
 
+    plotlyDiv!.lastElementChild!.scrollIntoView({behavior: 'auto'});
+
   }
 
   async createPlotlyAnnotation(annotation: any) {
@@ -640,11 +656,11 @@ export default class NodeTimeseriesDialog extends Vue {
     let y = -40
     if (annotation.direction === 'below') y = 40
 
-    if (!currentLayout.annotations) currentLayout.annotations = []
-    // scene.annotations used for 3D annotations
-    if (!currentLayout.scene.annotations) currentLayout.scene.annotations = []
-
     if (annotation.z) {
+      // scene.annotations used for 3D annotations
+      if (!currentLayout.scene) currentLayout.scene = {}
+      if (!currentLayout.scene.annotations) currentLayout.scene.annotations = []
+
       currentLayout.scene.annotations.push(
           {
             x: annotation.x,
@@ -658,6 +674,8 @@ export default class NodeTimeseriesDialog extends Vue {
           }
       )
     } else {
+      if (!currentLayout.annotations) currentLayout.annotations = []
+
       currentLayout.annotations.push(
           {
             x: annotation.x,
@@ -811,11 +829,22 @@ export default class NodeTimeseriesDialog extends Vue {
     const previousColumns = this.selectedColumns
     this.selectedColumns = []
 
+    this.determineDataSourceShape()
+
     for (const dataSource of this.selectedDataSources) {
       const columns = (dataSource.config as TimeseriesDataSourceConfig).columns
 
       for (const column of columns) {
-        const columnNameEntry = {name: column.column_name, dataSource: dataSource.name, uniqueName: `${dataSource.name}_${column.column_name}`, type: column.type, x: false, y: false, z: false, trace: []}
+        const columnNameEntry: selectedColumn = {
+          name: column.column_name!,
+          dataSource: dataSource.name,
+          uniqueName: `${dataSource.name}_${column.column_name}`,
+          type: column.type!,
+          x: false,
+          y: false,
+          z: false,
+          trace: []
+        }
 
         // set the primary timestamp of a single selected datasource to be the default x
         // set float and number type columns to have y selected by default
@@ -834,7 +863,8 @@ export default class NodeTimeseriesDialog extends Vue {
         }
 
         const previousColumn = previousColumns.find(c => c.uniqueName === columnNameEntry.uniqueName)
-        if (!previousColumn) {
+        // keep previous columns if found and the column is not now the x column
+        if (!previousColumn || columnNameEntry.x) {
           this.selectedColumns.push(columnNameEntry)
         } else {
           this.selectedColumns.push(previousColumn)
@@ -848,6 +878,8 @@ export default class NodeTimeseriesDialog extends Vue {
   async submitSearch() {
     // @ts-ignore
     if (!this.$refs.searchForm!.validate()) return;
+
+    this.errorMessage = ''
 
     if (new Date(this.endDate) <= new Date(this.startDate)) {
       this.errorMessage = 'Please enter an end date that is greater than the start date'
@@ -984,10 +1016,46 @@ export default class NodeTimeseriesDialog extends Vue {
 
   async queryTimeseriesData() {
     const dataToReturn: any = {}
+
+    const xColumn = this.selectedColumns.find(c => c.x)
+    if (!xColumn) {
+      this.errorMessage = 'Please select an x column'
+      return {}
+    }
+    // number and number64 are compatible
+    const xColumnType = xColumn.type.includes('number') ? 'number' : xColumn.type
+
+
     for(const dataSource of this.selectedDataSources) {
+      // don't query on data sources that we know are empty
+      if (Number(this.dataSourceShapes.get(dataSource.id!).count) === 0) continue
+
+      // don't query on data sources that don't have columns selected
+      let dataSourceSelected = false
+      for (const column of this.selectedColumns) {
+        if (column.dataSource === dataSource.name && (column.x || column.y || column.z)) dataSourceSelected = true
+      }
+
+      if (!dataSourceSelected) continue
+
+      // don't query on data sources that have a differing primary timestamp type
+      const dataSourcePrimaryColumn = (dataSource.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)
+      if (!dataSourcePrimaryColumn) continue
+      // number and number64 are compatible
+      const dataSourceType = dataSourcePrimaryColumn.type!.includes('number') ? 'number' : dataSourcePrimaryColumn.type
+
+      if (xColumnType !== dataSourceType) {
+        this.errorMessage = `Some data could not be displayed due to incompatible primary timestamp types. Type selected: ${xColumnType}`
+        continue
+      }
+
       const results = await this.$client.submitDataSourceGraphQLQuery(this.containerID, dataSource.id!,  this.buildQuery(dataSource))
       if(results.errors) {
-        this.errorMessage = (results.errors as string[]).join(' ')
+        if (Array.isArray(results.errors) && results.errors.length > 0 && results.errors[0].message) {
+          this.errorMessage = results.errors.map((e: any) => `${e.message} `)
+        } else {
+          this.errorMessage = (results.errors as string[]).join(' ')
+        }
         return {}
       }
 
@@ -1136,6 +1204,29 @@ export default class NodeTimeseriesDialog extends Vue {
     document.body.append(link)
     link.click()
     link.remove()
+  }
+
+  determineDataSourceShape() {
+    this.selectedDataSources.forEach(async (dataSource: DataSourceT) => {
+      const count = await this.$client.retrieveTimeseriesRowCount(this.containerID, dataSource.id!)
+
+      const range = await this.$client.retrieveTimeseriesRange(this.containerID, dataSource.id!)
+
+      this.dataSourceShapes.set(dataSource.id!, {
+        count: count.count,
+        start: range.start,
+        end: range.end
+      })
+
+      // set start and end times/index if main data source
+      if (this.selectedDataSources.length === 1 && this.timeseriesFlag) {
+        this.startDate = range.start
+        this.endDate = range.end
+      } else if (this.selectedDataSources.length === 1 && !this.timeseriesFlag) {
+        this.startIndex = Number(range.start)
+        this.endIndex = Number(range.end)
+      }
+    })
   }
 
   clearIntervals() {

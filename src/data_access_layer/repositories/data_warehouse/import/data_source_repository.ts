@@ -1,6 +1,6 @@
 import RepositoryInterface, {DeleteOptions, FileOptions, QueryOptions, Repository} from '../../repository';
 import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
-import DataSourceMapper from '../../../mappers/data_warehouse/import/data_source_mapper';
+import DataSourceMapper, {TimeseriesRange} from '../../../mappers/data_warehouse/import/data_source_mapper';
 import HttpDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/http_data_source_impl';
 import StandardDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/standard_data_source_impl';
 import Result from '../../../../common_classes/result';
@@ -78,13 +78,11 @@ export default class DataSourceRepository extends Repository implements Reposito
 
         if (toSave.id) {
             // check for unique source name within container scope
-            const sources = await new DataSourceRepository()
-                .where().containerID('eq', toSave.container_id)
-                .and().id('neq', toSave.id).list();
+            const sources = await new DataSourceRepository().where().containerID('eq', toSave.container_id).and().id('neq', toSave.id).list();
             if (sources.isError) return Promise.resolve(Result.Failure(`unable to list data sources for container ${sources.error}`));
 
             // to allow partial updates we must first fetch the original object
-            const original = await this.findByID(toSave.id!);
+            const original = await this.findByID(toSave.id);
             if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
 
             const originalToSave = await original.value.ToSave();
@@ -277,11 +275,11 @@ export default class DataSourceRepository extends Repository implements Reposito
         if (options?.distinct) {
             // clear the base select and override with custom values
             this._noSelectRoot();
-            this._query.SELECT = [`SELECT DISTINCT y_${dataSourceID}.*`]
+            this._query.SELECT = [`SELECT DISTINCT y_${dataSourceID}.*`];
             this._query.FROM = `FROM y_${dataSourceID}`;
         } else {
             this._noSelectRoot();
-            this._query.SELECT = [`SELECT y_${dataSourceID}.*`]
+            this._query.SELECT = [`SELECT y_${dataSourceID}.*`];
             this._query.FROM = `FROM y_${dataSourceID}`;
         }
 
@@ -303,11 +301,11 @@ export default class DataSourceRepository extends Repository implements Reposito
         if (options?.distinct) {
             // clear the base select and override with custom values
             this._noSelectRoot();
-            this._query.SELECT = [`SELECT DISTINCT y_${dataSourceID}.*`]
+            this._query.SELECT = [`SELECT DISTINCT y_${dataSourceID}.*`];
             this._query.FROM = `FROM y_${dataSourceID}`;
         } else {
             this._noSelectRoot();
-            this._query.SELECT = [`SELECT y_${dataSourceID}.*`]
+            this._query.SELECT = [`SELECT y_${dataSourceID}.*`];
             this._query.FROM = `FROM y_${dataSourceID}`;
         }
 
@@ -322,6 +320,14 @@ export default class DataSourceRepository extends Repository implements Reposito
         return super.findAllToFile(fileOptions, options, {
             transaction,
         });
+    }
+
+    async retrieveTimeseriesRowCount(tableName: string): Promise<Result<number>> {
+        return this.#mapper.retrieveTimeseriesRowCount(tableName);
+    }
+
+    async retrieveTimeseriesRange(primaryTimestamp: string, tableName: string): Promise<Result<TimeseriesRange>> {
+        return this.#mapper.retrieveTimeseriesRange(primaryTimestamp, tableName);
     }
 }
 

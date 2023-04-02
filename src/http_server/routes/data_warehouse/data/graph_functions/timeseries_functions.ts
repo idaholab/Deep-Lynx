@@ -14,9 +14,10 @@ const nodeRepo = new NodeRepository();
 // Schema
 import NodeGraphQLSchemaGenerator from '../../../../../graphql/node_graph_schema';
 import DataSourceGraphQLSchemaGenerator from '../../../../../graphql/timeseries_schema';
+import DataSourceRepository from '../../../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
+import {TimeseriesDataSourceConfig} from '../../../../../domain_objects/data_warehouse/import/data_source';
 
 export default class TimeseriesFunctions {
-
     public static queryTimeseriesData(req: Request, res: Response, next: NextFunction) {
         const generator = new NodeGraphQLSchemaGenerator();
 
@@ -87,5 +88,57 @@ export default class TimeseriesFunctions {
             .catch((e) => {
                 Result.Error(e).asResponse(res);
             });
+    }
+
+    public static retrieveTimeseriesRowCount(req: Request, res: Response, next: NextFunction) {
+        if (req.container && req.dataSource && req.dataSource.DataSourceRecord && req.dataSource.DataSourceRecord.adapter_type === 'timeseries') {
+            const repo = new DataSourceRepository();
+
+            repo.retrieveTimeseriesRowCount(`y_${req.dataSource.DataSourceRecord.id}`)
+                .then((result) => {
+                    if (result.isError) {
+                        result.asResponse(res);
+                        return;
+                    }
+
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`Unable to find Data Source or Data Source type is not timeseries`).asResponse(res);
+            next();
+        }
+    }
+
+    public static retrieveTimeseriesRange(req: Request, res: Response, next: NextFunction) {
+        if (req.container && req.dataSource && req.dataSource.DataSourceRecord && req.dataSource.DataSourceRecord.adapter_type === 'timeseries') {
+            const repo = new DataSourceRepository();
+
+            const primaryTimestampColumn = (req.dataSource.DataSourceRecord.config as TimeseriesDataSourceConfig).columns.find((c) => c.is_primary_timestamp);
+            if (primaryTimestampColumn === undefined || primaryTimestampColumn.column_name === undefined) {
+                Result.Failure(`Could not find a primary timestamp for this datasource`).asResponse(res);
+                next();
+            }
+
+            repo.retrieveTimeseriesRange(primaryTimestampColumn!.column_name!, `y_${req.dataSource.DataSourceRecord.id}`)
+                .then((result) => {
+                    if (result.isError) {
+                        result.asResponse(res);
+                        return;
+                    }
+
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`Unable to find Data Source or Data Source type is not timeseries`).asResponse(res);
+            next();
+        }
     }
 }
