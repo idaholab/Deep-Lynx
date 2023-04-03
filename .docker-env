@@ -77,3 +77,7 @@ RSA_CLIENT_ID=
 
 # Email for the authorized HPC user to access tasks
 HPC_EMAIL=
+
+# Redirect for adapter authorizations
+# P6
+P6_REDIRECT_ADDRESS=http://localhost:8181

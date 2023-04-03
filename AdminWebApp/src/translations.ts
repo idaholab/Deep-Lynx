@@ -86,13 +86,13 @@ export default {
             welcomeCardText:
                 'Deep Lynx is a unique data warehouse designed to provide easy collaboration on large projects. Deep Lynx allows users to define an ontology and then store data under it. Find more information on our wiki below.',
             welcomeCardLinkText: 'Wiki',
-            welcomeCardLink: 'https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/home',
+            welcomeCardLink: 'https://github.com/idaholab/Deep-Lynx/wiki/',
             ontologyCardTitle: 'Ontology',
             ontologyCardText:
                 'An ontology is an essential part of Deep Lynx. It is a collection of classes, their properties, and their relationships to other classes. Learn how to manage your ontology in our wiki, or experiment as you will.',
             ontologyCardLinkText1: 'Loading an Ontology',
             ontologyCardLinkText2: 'Manage Ontology',
-            ontologyCardLink1: 'https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/Creating-an-Ontology',
+            ontologyCardLink1: 'https://github.com/idaholab/Deep-Lynx/wiki/creating-an-ontology',
             setupDataSourceCardTitle: 'Data Sources',
             setupDataSourceCardText:
                 'Data Sources allow Deep Lynx to retrieve or be sent data from outside sources. Managing Data Sources is essential to successful usage of Deep Lynx. Manage your Data Sources by clicking below.',
@@ -136,6 +136,7 @@ export default {
             acknowledge: 'Acknowledge Alert',
             generatingOntology: 'Generating Ontology',
             containerAdminAcknowledge: 'Only Container Administrators can dismiss alerts. Please contact your administrator to remove this alert.',
+            authorize: 'Authorize',
         },
         apiKeys: {
             note: 'Note',
@@ -725,7 +726,7 @@ export default {
             timeseriesDescription:
                 'This data source is built specifically for timeseries data. Users must design a timeseries data table and set attachment parameters prior to successful creation. Users upload timeseries data directly to this source, bypassing the standard type mapping system. You can find more information and help ',
             here: 'here',
-            tableDesignHelpLink: 'https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/Timeseries-Data-Sources',
+            tableDesignHelpLink: 'https://github.com/idaholab/Deep-Lynx/wiki/Timeseries-Data-Sources',
             newDataSource: 'New Data Source',
             formTitle: 'Create New Data Source',
             name: 'Name',
@@ -1234,7 +1235,7 @@ export default {
             optional: 'optional',
             owlFile: '.owl File',
             importHelp: 'Need Help? Details on creating or updating a container via an ontology file can be found on our',
-            importWikiLink: 'https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/Creating-an-Ontology#importing-an-ontology',
+            importWikiLink: 'https://github.com/idaholab/Deep-Lynx/wiki/Creating-an-Ontology#importing-an-ontology',
             ontologyVersioningEnabled: 'Ontology Versioning Enabled',
             rawRetentionEnabled: 'Raw Data Preservation Enabled',
             ontologyVersioningHelp: 'Toggle whether or not this container will maintain historical versions of the ontology.',
@@ -1250,7 +1251,7 @@ export default {
             acceptInviteLong: 'Accept Invitation to a Container',
             needHelp: 'Need Help? Learn more on our',
             wiki: 'Wiki.',
-            wikiLink: 'https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/home',
+            wikiLink: 'https://github.com/idaholab/Deep-Lynx/wiki/',
         },
         users: {
             createdAt: 'Created At',

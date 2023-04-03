@@ -1,7 +1,7 @@
 <template>
   <v-dialog v-model="dialog" max-width="80%" @click:outside="errorMessage = ''; clearNewAdapter()">
     <template v-slot:activator="{ on }">
-      <v-btn color="primary" dark class="mt-2" v-on="on">{{$t("createDataSource.newDataSource")}}</v-btn>
+      <v-btn color="primary" dark class="mt-2" v-on="on" @click="refreshSourceAuth">{{$t("createDataSource.newDataSource")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
@@ -338,7 +338,7 @@
               </div>
 
               <div v-if="newDataSource.adapter_type === 'p6'">
-                <v-select v-if="newDataSource.adapter_type === 'p6' && container.config.configured_data_sources.length > 0"
+                <v-select v-if="newDataSource.adapter_type === 'p6' && container.config.configured_data_sources && container?.config.configured_data_sources.length > 0"
                   :items="p6configOptions()"
                   @input="selectP6config"
                   :label="$t('createDataSource.customP6config')"
@@ -391,7 +391,7 @@
 
               <div v-if="newDataSource.adapter_type === 'timeseries'">
                 <p><b>{{$t('createDataSource.description')}}</b></p>
-                <p>{{$t('createDataSource.timeseriesDescription')}} <a :href="$t('dataMapping.tableDesignHelpLink')" target="_blank">{{$t('dataMapping.here')}}.</a></p>
+                <p>{{$t('createDataSource.timeseriesDescription')}} <a href="https://github.com/idaholab/Deep-Lynx/wiki/Timeseries-Data-Sources" target="_blank">{{$t('dataMapping.here')}}.</a></p>
 
                 <h4>{{$t('dataMapping.tableDesign')}}<info-tooltip :message="$t('dataMapping.tableDesignHelp')"></info-tooltip></h4>
                 <v-data-table
@@ -459,7 +459,7 @@
                             :label="$t('createDataSource.chunkInterval')"
                             v-model="timeseriesConfig.chunk_interval"
                         >
-                          <template slot="append-outer"><a href="https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/Timeseries-Data-Sources#table-design" target="_blank">{{$t('createDataSource.chunkIntervalHelp')}}</a></template>
+                          <template slot="append-outer"><a href="https://github.com/idaholab/Deep-Lynx/wiki/Timeseries-Data-Sources#table-design" target="_blank">{{$t('createDataSource.chunkIntervalHelp')}}</a></template>
                         </v-text-field>
                       </v-col>
 
@@ -574,14 +574,12 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="blue darken-1" text @click="clearNewAdapter" >{{$t("home.cancel")}}</v-btn>
-        <v-btn
-            v-if="newDataSource.adapter_type === 'timeseries'"
-            color="blue darken-1"
-            text
-            :disabled="timeseriesConfig.columns.length === 0"
-            @click="createDataSource" >
-          {{$t("home.create")}}
-        </v-btn>
+        <v-btn v-if="newDataSource.adapter_type === 'timeseries'"
+          color="blue darken-1"
+          text
+          :disabled="timeseriesConfig.columns.length === 0"
+          @click="createDataSource"
+        >{{$t("home.create")}}</v-btn>
         <v-btn v-else color="blue darken-1" text @click="createDataSource" >{{$t("home.create")}}</v-btn>
       </v-card-actions>
     </v-card>
@@ -606,6 +604,7 @@ import {
   TimeseriesDataSourceConfig,
 } from "@/api/types";
 import NodeAttachmentParameterDialog from "@/components/dataSources/nodeAttachmentParameterDialog.vue";
+import Config from '@/config';
 
 @Component({components:{NodeAttachmentParameterDialog}})
 export default class CreateDataSourceDialog extends Vue {
@@ -632,6 +631,7 @@ export default class CreateDataSourceDialog extends Vue {
     projectID: false,
   }
   hideP6pass = true
+  authorized: string[] = []
 
   newDataSource: DataSourceT = {
     name: "",
@@ -810,6 +810,28 @@ export default class CreateDataSourceDialog extends Vue {
         .catch(e => this.errorMessage = e)
   }
 
+  authorizeDataSource(type: string) {
+    // add temporary auth before redirect.
+    this.authorized.push(type)
+    window.open(`${Config.p6RedirectAddress}/redirect/${this.containerID}`, "_blank");
+  }
+
+  checkSourceAuth(type: string) {
+    return this.authorized.includes(type);
+  }
+
+  async refreshSourceAuth(type?: string) {
+    // clear existing permissions
+    this.authorized = [];
+
+    // check for permissions in the DB
+    const keys = await this.$client.listServiceKeysForContainer(this.containerID);
+
+    // p6
+    if (keys.some(kp => kp.note === 'p6_adapter_auth')) {
+      this.authorized.push('p6');
+    }
+  }
 
   clearNewAdapter() {
     this.dialog = false
@@ -832,6 +854,7 @@ export default class CreateDataSourceDialog extends Vue {
     this.avevaConfig = DefaultAvevaDataSourceConfig()
     this.p6Config = DefaultP6DataSourceConfig()
     this.timeseriesConfig = DefaultTimeseriesDataSourceConfig()
+    this.authorized = [];
   }
 
   validColumnName(index: any, value: any) {

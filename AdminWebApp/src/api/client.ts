@@ -421,8 +421,18 @@ export class Client {
         return this.delete(`/users/keys/${keyID}`);
     }
 
-    listKeyPairsForServiceUser(containerID: string, serviceUserID: string): Promise<KeyPairT[]> {
-        return this.get<KeyPairT[]>(`/containers/${containerID}/service-users/${serviceUserID}/keys`);
+    listKeyPairsForServiceUser(containerID: string, serviceUserID: string, note?: string): Promise<KeyPairT[]> {
+        const query: {[key: string]: any} = {};
+        if (note) query.note = note;
+
+        return this.get<KeyPairT[]>(`/containers/${containerID}/service-users/${serviceUserID}/keys`, query);
+    }
+
+    listServiceKeysForContainer(containerID: string, note?: string) {
+        const query: {[key: string]: any} = {};
+        if (note) query.note = note;
+
+        return this.get<KeyPairT[]>(`/containers/${containerID}/service-users/keys`)
     }
 
     generateKeyPairForServiceUser(containerID: string, serviceUserID: string, note?: string): Promise<KeyPairT> {

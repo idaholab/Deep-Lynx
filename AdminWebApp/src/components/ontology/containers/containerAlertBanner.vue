@@ -3,7 +3,17 @@
     <div v-for="alert in alerts" :key="alert.id">
       <v-alert :type="alert.type">
         <p>{{alert.message}}</p>
-        <v-btn :color="alert.type" @click="acknowledgeAlert(alert.id)" v-if="$auth.Auth('containers','write', containerID)">{{$t('containerAlert.acknowledge')}}</v-btn>
+        <div v-if="$auth.Auth('containers','write', containerID)">
+          <v-btn v-if="alert.message.includes('Authorize')"
+            :color="alert.type"
+            @click="authorizeContainer(alert.id)"
+          >{{$t('containerAlert.authorize')}}</v-btn>
+          <v-btn v-else
+            :color="alert.type" 
+            @click="acknowledgeAlert(alert.id)" 
+          >{{$t('containerAlert.acknowledge')}}</v-btn>
+        </div>
+        
         <p v-else>{{$t('containerAlert.containerAdminAcknowledge')}}</p>
       </v-alert>
     </div>
@@ -21,6 +31,7 @@
 import {Component, Prop, Vue} from 'vue-property-decorator'
 import {ContainerAlertT, OntologyVersionT} from "@/api/types";
 import pWaitFor from "p-wait-for";
+import Config from '@/config';
 
 @Component
 export default class ContainerAlertBanner extends Vue {
@@ -52,6 +63,11 @@ export default class ContainerAlertBanner extends Vue {
         .then(() => {
           this.loadAlerts()
         })
+  }
+
+  authorizeContainer(alert_id: string) {
+    window.open(`${Config.p6RedirectAddress}/redirect/${this.containerID}`, "_blank");
+    this.acknowledgeAlert(alert_id);
   }
 
   // returns true if there are generating ontologies

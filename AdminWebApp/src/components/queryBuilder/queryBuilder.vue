@@ -505,7 +505,7 @@ relationshipSampleQuery =
   }
 
   helpLink() {
-    return 'https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/Querying-Data-With-GraphQL'
+    return 'https://github.com/idaholab/Deep-Lynx/wiki/Querying-Data-With-GraphQL'
   }
 
   addQueryPart(componentName: string) {
