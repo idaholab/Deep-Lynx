@@ -42,13 +42,19 @@ const BasicTimeline: React.FC<Props> = ({
               }
             }}
           >
-            <TimelineSeparator>
+            <TimelineSeparator
+              sx={{
+                '& .MuiTimelineConnector:last-of-type': {
+                  display: 'none'
+                }
+              }}
+            >
               <TimelineDot
                 sx={{
                   backgroundColor: COLORS.colorPrimary
                 }}
               />
-              {index !== history.length - 1 && <TimelineConnector />}
+              <TimelineConnector />
             </TimelineSeparator>
             <TimelineContent
               sx={{ fontWeight: 'bold'}}>
@@ -68,7 +74,8 @@ const BasicTimeline: React.FC<Props> = ({
               {index === 0 ?
                 'Node created by:'
                 : 'Node modified by:'
-              } { nodeHistoryItem.modified_by }</TimelineContent>
+              } { nodeHistoryItem.modified_by }
+            </TimelineContent>
           </TimelineItem>
         )
       })}

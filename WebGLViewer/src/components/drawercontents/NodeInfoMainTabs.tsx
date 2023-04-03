@@ -38,7 +38,7 @@ const NodeInfoMainTabs: React.FC<Props> = ({
 
   const tabInfo = [
     {
-      title: 'Node Information',
+      title: 'Information',
       component: NodeInfoDetailsHistory
     },
     {
@@ -68,6 +68,7 @@ const NodeInfoMainTabs: React.FC<Props> = ({
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs
           sx={{
+            minHeight: '36px',
             '& .MuiTabs-indicator': {
               display: 'none'
             }
@@ -78,12 +79,15 @@ const NodeInfoMainTabs: React.FC<Props> = ({
             return (
               <Tab
                 sx={{
+                  minHeight: '36px',
                   border: '1px solid #e9e9e9',
-                  '&:not(:first-of-type)': {
-                    marginLeft: -1,
+                  '&:first-of-type': {
+                    borderLeft: 'none'
                   },
+                  padding: '4px 12px',
                   background: '#f7f7f7',
                   opacity: 1,
+                  lineHeight: 0.85,
                   '&.Mui-selected': {
                     borderBottomWidth: 0,
                     background: '#ffffff',
@@ -92,8 +96,10 @@ const NodeInfoMainTabs: React.FC<Props> = ({
                     },
                   },
                   '& $wrapper': {
-                    opacity: 0.5,
+                    opacity: 0.4,
                   },
+                  fontSize: '16px',
+                  minWidth: '60px'
                 }} 
                 label={obj.title} {...a11yProps(index)} key={obj.title}
               />

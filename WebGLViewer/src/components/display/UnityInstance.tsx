@@ -62,6 +62,8 @@ function UnityInstance(props: any) {
     sendMessage("Main Camera", "Reset");
   };
 
+  const style = { width: 200 };
+
   return (
     <Box sx={{ position: 'relative' }}>
       { unityProvider ?
