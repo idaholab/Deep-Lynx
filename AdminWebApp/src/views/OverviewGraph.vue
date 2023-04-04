@@ -14,13 +14,9 @@
 import {Component, Prop, Vue, Watch} from "vue-property-decorator";
 import ForceGraph, {ForceGraphInstance} from 'force-graph';
 import {forceX, forceY, forceManyBody} from 'd3-force';
-import {ContainerT, DataSourceT} from "@/api/types";
+import {ContainerT, DataSourceT, TypeMappingT} from "@/api/types";
 import buildURL from "build-url";
 import Config from "@/config";
-
-type ContainerNode = {
-  type: string
-}
 
 @Component({})
 export default class OverviewGraph extends Vue {
@@ -31,20 +27,18 @@ export default class OverviewGraph extends Vue {
   canvas: ForceGraphInstance | null = null;
   forceX = forceX()
   forceY = forceY()
-
   graph: any | null = {
     nodes: [],
     links: []
   }
-
   linkCoords: Map<string, any> = new Map()
   loading = false
-  colorGroup = 'type'
   nodeTextMargin = 6
   errorMessage = ''
   edgeID = 0
   normalFontSize = 5
   smallFontSize = 4
+  largeFontSize = 6
 
   @Watch('container', {immediate: true})
   graphUpdate() {
@@ -53,7 +47,6 @@ export default class OverviewGraph extends Vue {
     this.$nextTick(() => {
       this.createContainerGraph();
     });
-
   }
 
   async createContainerGraph() {
@@ -73,6 +66,9 @@ export default class OverviewGraph extends Vue {
       const uniqueID = `${nodeType}_${dataSource.id}`
       const latestImport = await this.getDataSourceImportTime(dataSource.id!)
 
+      const typeMappings = await this.getDataSourceTypeMappings(dataSource.id!)
+      const typeMappingNode = await this.createTypeMappingNode(typeMappings, dataSource.id!)
+
       this.graph.nodes.push({
         uniqueID,
         nodeType,
@@ -80,15 +76,43 @@ export default class OverviewGraph extends Vue {
         ...dataSource
       })
 
-      if (latestImport !== 'Never') {
+      // add typeMappingNode and relationships
+      if (typeMappingNode !== null) {
+        this.graph.nodes.push(typeMappingNode)
+
+        // data source to type mapping relationship
         this.graph.links.push({
           source: uniqueID,
-          target: this.container.id,
+          target: typeMappingNode.uniqueID,
           name: '',
           id: this.edgeID,
         })
         this.edgeID += 1
+
+        // optional type mapping to container relationship
+        if (latestImport !== 'Never') {
+          this.graph.links.push({
+            source: typeMappingNode.uniqueID,
+            target: this.container.id,
+            name: '',
+            id: this.edgeID,
+          })
+          this.edgeID += 1
+        }
+
+      } else {
+        // create relationship directly from data source to container or none at all
+        if (latestImport !== 'Never') {
+          this.graph.links.push({
+            source: uniqueID,
+            target: this.container.id,
+            name: '',
+            id: this.edgeID,
+          })
+          this.edgeID += 1
+        }
       }
+
     }
 
     for (const dataSource of timeseriesDataSources) {
@@ -116,8 +140,10 @@ export default class OverviewGraph extends Vue {
       }
     }
 
+    this.drawGraph()
+  }
 
-    // TODO: Put in separate function
+  drawGraph() {
     const graphElem = this.$refs.forcegraph as HTMLElement;
 
     if (graphElem) {
@@ -175,9 +201,6 @@ export default class OverviewGraph extends Vue {
 
           })
           .nodeCanvasObjectMode(node => node ? 'after' : 'after')
-          .onNodeClick((node: any) => {
-            console.log(node)
-          })
           .nodeAutoColorBy((node: any) => {
             return `${node.nodeType}`
           })
@@ -187,24 +210,21 @@ export default class OverviewGraph extends Vue {
           .linkDirectionalArrowLength(7)
           .linkDirectionalArrowRelPos(0.5)
           .linkLabel((link: any) => `${link.name}`)
-          .linkWidth(5)
+          .linkWidth(4)
           .linkCanvasObjectMode(() => 'after')
 
       this.applyGraphForce()
 
-      this.canvas.cooldownTime(1000) // set to a small render time
+      this.canvas.cooldownTime(2000) // set to a small render time
       this.canvas.onEngineStop(() => {
-        if (this.graph.nodes.length < 4) {
+        // center and move to preset zoom for small graphs
+        if (this.graph.nodes.length < 5) {
           this.canvas?.centerAt(this.graph.nodes[0].x, this.graph.nodes[0].y, 500)
           this.canvas?.zoom(5, 500)
           this.loading = false
         } else {
           this.canvas!.zoomToFit(500, 70, () => {
-            // this.canvas?.enableZoomInteraction(false)
-            // this.canvas?.enablePanInteraction(false)
-            // this.canvas?.enablePointerInteraction(false)
             this.loading = false
-            // this.canvas?.pauseAnimation()
             return true
           })
         }
@@ -216,7 +236,7 @@ export default class OverviewGraph extends Vue {
         const y = event.clientY - rect.top;
 
         // check if click event is sufficiently close to any defined link
-        this.linkCoords.forEach((linkValue, linkKey) => {
+        this.linkCoords.forEach((linkValue) => {
           if(x > (linkValue.x - 50) && x <= (linkValue.x + 50) &&
               y > (linkValue.y - 7) && y < (linkValue.y + 7)) {
             window.open(linkValue.link)
@@ -228,7 +248,7 @@ export default class OverviewGraph extends Vue {
 
   applyGraphForce() {
     const manyBody = forceManyBody()
-    manyBody.strength(-200)
+    manyBody.strength(-250)
 
     this.canvas!.graphData(this.graph) // this call is necessary to force the canvas to reheat
 
@@ -241,9 +261,8 @@ export default class OverviewGraph extends Vue {
   determineNodeContent(node: any, defaultFontSize: number): any[] {
     if (node.nodeType === 'Container') {
       return [
-        {label: 'DeepLynx', fontSize: this.smallFontSize},
-        {label: `${node.name} (${node.id})`, fontSize: defaultFontSize},
-        {label: '', fontSize: 1},
+        {label: 'DeepLynx', fontSize: defaultFontSize},
+        {label: `${node.name} (${node.id})`, fontSize: this.largeFontSize},
         {label: 'View Data', fontSize: this.smallFontSize, link: buildURL(Config.appUrl, {path: `/containers/${this.container?.id!}/data-query`})},
         {label: '3D Models', fontSize: this.smallFontSize, link: buildURL(Config.appUrl, {path: `/containers/${this.container?.id!}/file-manager`})},
         {label: 'Ontology', fontSize: this.smallFontSize, link: buildURL(Config.appUrl, {path: `/containers/${this.container?.id!}/metatypes`})}
@@ -263,6 +282,19 @@ export default class OverviewGraph extends Vue {
         {label: `Latest: ${node.latestImport}`, fontSize: this.smallFontSize},
         {label: `Rows: ${node.rowCount}`, fontSize: this.smallFontSize},
       ]
+    }  else if (node.nodeType === 'TypeMapping') {
+      const mappingText = node.count === 1 ? 'Mapping' : 'Mappings'
+      let text = [
+        {label: `${node.count} ${mappingText}`, fontSize: defaultFontSize, link: buildURL(Config.appUrl, {path: `/containers/${this.container?.id!}/data-mapping/${node.dataSourceID}`})},
+        {label: '', fontSize: this.smallFontSize},
+      ]
+      if (node.needsTransformations) text.push({label: 'Needs Transformations', fontSize: this.smallFontSize})
+      text = text.concat([
+          {label: `${node.metatypes.length} metatypes`, fontSize: this.smallFontSize},
+          {label: `${node.relationshipPairs.length} relationships`, fontSize: this.smallFontSize}
+      ])
+
+      return text
     } else {
       return ['']
     }
@@ -290,6 +322,68 @@ export default class OverviewGraph extends Vue {
     }
 
     return latestImportTime.toLocaleString()
+  }
+
+  async getDataSourceTypeMappings(id: string): Promise<TypeMappingT[]> {
+    let typeMappings = await this.$client.listTypeMappings(this.container.id, id, {limit: 2000, offset: 0})
+
+    const transformations = []
+    for(const mapping of typeMappings) {
+      transformations.push(await this.$client.retrieveTransformations(this.container.id, id!, mapping.id))
+    }
+
+    for(const transformation of transformations) {
+      transformation.map(t => {
+        typeMappings = typeMappings.map(mapping => {
+          if(!mapping.transformations) mapping.transformations = []
+
+          if(mapping.id === t.type_mapping_id) {
+            mapping.transformations.push(t)
+          }
+
+          return mapping
+        })
+      })
+    }
+
+    return typeMappings
+  }
+
+  async createTypeMappingNode(typeMappings: TypeMappingT[], id: string): Promise<any> {
+    if (typeMappings.length > 0) {
+
+      const metatypes = []
+      const relationshipPairs = []
+
+      // determine count and metatypes and relationships being created by these type mappings
+      for (const mapping of typeMappings) {
+        if (!mapping || !mapping.transformations) continue
+        for (const transformation of mapping.transformations) {
+          if (transformation.metatype_name) {
+            metatypes.push(transformation.metatype_name)
+          }
+
+          if (transformation.metatype_relationship_pair_name) {
+            relationshipPairs.push(transformation.metatype_relationship_pair_name)
+          }
+        }
+      }
+
+      // provide flag indicating data sources that have type mappings needing attention
+      const blankMappingCount = await this.$client.countTypeMappings(this.container.id, id, true)
+
+      return {
+        uniqueID: `${typeMappings[0].id}_TypeMapping`,
+        nodeType: 'TypeMapping',
+        dataSourceID: id,
+        count: typeMappings.length,
+        needsTransformations: blankMappingCount === 0,
+        metatypes,
+        relationshipPairs,
+      }
+    } else {
+      return null
+    }
   }
 
   async getTimeseriesRowCount(id: string): Promise<number> {
