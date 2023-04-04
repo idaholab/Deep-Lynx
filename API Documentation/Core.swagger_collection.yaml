@@ -5447,6 +5447,53 @@ paths:
           in: query
           name: note
           description: note with which keypair was created
+  '/containers/{container_id}/graphs/nodes/edges':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+    post:
+      summary: List Edges for Node IDs
+      tags:
+        - Graph
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListEdgesForNodeIDsResponse'
+      operationId: ListEdgesForNodeIDs
+      description: Takes an array of node IDs and returns the given edges for those nodes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                node_ids:
+                  type: array
+                  items:
+                    type: string
+              x-examples:
+                Example 1:
+                  node_ids:
+                    - '1'
+                    - '2'
+                    - '3'
+                    - '4'
+                    - '5'
+            examples:
+              Example 1:
+                value:
+                  node_ids:
+                    - '1'
+                    - '2'
+                    - '3'
+                    - '4'
+                    - '5'
 components:
   securitySchemes:
     BearerAuth:
@@ -5641,6 +5688,16 @@ components:
           type: boolean
     ListEdgesResponse:
       title: ListEdgesResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/Edge'
+        isError:
+          type: boolean
+    ListEdgesForNodeIDsResponse:
+      title: ListEdgesForNodeIDsResponse
       type: object
       properties:
         value:
