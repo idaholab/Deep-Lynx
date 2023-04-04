@@ -78,6 +78,7 @@ export default class FileFunctions {
                             importID: req.query.importID as string | undefined,
                             returnStagingRecords: true,
                             bufferSize: Config.data_source_receive_buffer,
+                            has_files: true
                         }),
                     );
                 } else if (mimeType === 'text/csv') {
@@ -89,6 +90,7 @@ export default class FileFunctions {
                                 downstreamFormat: 'array', // this is necessary as the ReceiveData expects an array of json, not single objects
                             }),
                             bufferSize: Config.data_source_receive_buffer,
+                            has_files: true
                         }),
                     );
                 } else if (mimeType === 'text/xml' || mimeType === 'application/xml') {
@@ -99,6 +101,7 @@ export default class FileFunctions {
                             returnStagingRecords: true,
                             transformStream: xmlStream,
                             bufferSize: Config.data_source_receive_buffer,
+                            has_files: true
                         }),
                     );
                 }
