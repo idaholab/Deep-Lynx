@@ -417,6 +417,8 @@
 
       <!-- Else: Dashboard Landing Page -->
       <v-container fluid v-else>
+        <overview-graph :container="container"></overview-graph>
+
         <v-row v-if="$auth.IsAdmin() && stats !== null">
           <!-- DeepLynx Admin Statistics (only include if admin and exists) -->
           <v-col :cols="12" :md="6" :lg="6" v-if="$auth.IsAdmin() && stats.statistics.migrations">
@@ -619,6 +621,7 @@ import ServiceUsers from "@/views/ServiceUsers.vue";
 import ContainerExport from "@/views/ContainerExport.vue";
 import ContainerImport from "@/views/ContainerImport.vue";
 import FileManager from "@/views/FileManager.vue";
+import OverviewGraph from "@/views/OverviewGraph.vue";
 
 @Component({components: {
     ContainerSelect,
@@ -645,7 +648,8 @@ import FileManager from "@/views/FileManager.vue";
     ServiceUsers,
     ContainerExport,
     ContainerImport,
-    FileManager
+    FileManager,
+    OverviewGraph
   }})
 export default class Home extends Vue {
   @Prop(String) readonly containerID: string | undefined
