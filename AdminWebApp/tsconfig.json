@@ -12,7 +12,6 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "baseUrl": ".",
-    "allowJs": true,
     "types": [
       "webpack-env",
       "vuetify"

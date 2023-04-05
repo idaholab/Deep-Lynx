@@ -166,7 +166,6 @@ export default class NodeFilesDialog extends Vue {
 
   viewVideo(file: FileT) {
     const filepath = this.fileURL(file)
-    console.log(filepath)
     return {
       autoplay: true,
       controls: true,
