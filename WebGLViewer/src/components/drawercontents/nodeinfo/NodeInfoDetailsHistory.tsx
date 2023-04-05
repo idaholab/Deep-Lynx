@@ -35,7 +35,7 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
 
   const [nodeDetails, setNodeDetails] = useState(()=> {
     const isValidDate = (datetime: any) => {
-      if (datetime !== null) {
+      if (DateTime.fromISO(datetime).isValid === true) {
         return (
           `
           ${DateTime.fromISO(datetime).toLocaleString(DateTime.DATE_SHORT)}, 
@@ -64,10 +64,9 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
 
   useEffect(() => {
     async function getNodeHistory() {
-      const token = "bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGl0eV9wcm92aWRlciI6InNhbWxfYWRmcyIsImRpc3BsYXlfbmFtZSI6IkFkYW0uUGx1dGhAaW5sLmdvdiIsImVtYWlsIjoiQWRhbS5QbHV0aEBpbmwuZ292IiwiYWRtaW4iOmZhbHNlLCJhY3RpdmUiOnRydWUsInJlc2V0X3JlcXVpcmVkIjpmYWxzZSwiZW1haWxfdmFsaWQiOmZhbHNlLCJ0eXBlIjoidXNlciIsInBlcm1pc3Npb25zIjpbXSwicm9sZXMiOltdLCJ1c2VyX2lkIjoiNDIiLCJrZXkiOiJORGhsTldGa09ERXRObUUwT1MwME1EYzVMV0UwTVRBdE16Y3lOV05pTm1JeE1tUTAiLCJzZWNyZXQiOiIkMmEkMTAkYWdQTVVjRlNNOFlCUTNHTmNkblhVZXNyZ0dRaWF6ckVIRUlzTVZtcEtOb1lLaGF5NkRhaFMiLCJub3RlIjoiV2ViIEdMIFZpZXdlciIsImlkIjoiNDIiLCJpZGVudGl0eV9wcm92aWRlcl9pZCI6IkFkYW0uUGx1dGhAaW5sLmdvdiIsImNyZWF0ZWRfYXQiOiIyMDIzLTAzLTE1VDA2OjAwOjAwLjAwMFoiLCJtb2RpZmllZF9hdCI6IjIwMjMtMDMtMTVUMDY6MDA6MDAuMDAwWiIsImNyZWF0ZWRfYnkiOiJzYW1sLWFkZnMgbG9naW4iLCJtb2RpZmllZF9ieSI6InNhbWwtYWRmcyBsb2dpbiIsInJlc2V0X3Rva2VuX2lzc3VlZCI6bnVsbCwiaWF0IjoxNjgwNTUwNDkxLCJleHAiOjE2ODMxNDI0OTF9.Z7aAilgXj6wYzVoMRLIfy-flewG3D-WUUi11nZGtVnuVOSXeQryD_-tQNEMRaHuJzS5qsZUaEzece2xoeUHEzm9E506wQIbFBqv6EOPYqTeY8GnlwB83YEtUlKWnmDJ8wR3xwtW8TUPcvbydpiJsrEDGtFdSwaWE-EGySFGJg7snA3aBh7u_Nvt8jzuPXUzOK54Srb7ZaKo-x_h29CBYM_HM0MCLq7HEV2pAiI_c-t4-B-Wgt7MGibTtetmLr5T81ry3lpodeGoI62n3g2bdhALmUPIW_krQGRn-TaHyMgAhFdeZwk1IEvlBS3rf4fld8tDNFKWYHE-0fQ0FexB4qQ";
-      // const token = localStorage.getItem('user.token');
+      const token = localStorage.getItem('user.token');
 
-      await axios.get( `https://deeplynx.azuredev.inl.gov/containers/${containerId}/graphs/nodes/${nodeId}/`,
+      await axios.get( `${location.origin}/containers/${containerId}/graphs/nodes/${nodeId}/`,
         {
           params: { history: 'true' },
           headers: {
@@ -110,13 +109,13 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
                 >
                   { key }
                 </Typography>
-                {/* {value !== null
+                {value !== null
                   ? (
                     <Typography>{ value.toString() }</Typography>
                   ) : (
                     <Typography>N/A</Typography>
                   )
-                }       */}
+                }      
               </Grid>
             )
           })}

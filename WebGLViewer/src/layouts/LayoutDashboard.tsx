@@ -23,7 +23,6 @@ function LayoutDashboard() {
   type openDrawerLeftWidth = number;
   const openDrawerLeftWidth: openDrawerLeftWidth = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);
 
-  console.log(openDrawerLeftWidth)
   return (
     <Box sx={{ position: 'absolute', right: 0}} className={classNames(
       'main-container-sizing',
