@@ -220,7 +220,7 @@ const DrawerContentsNodeList: React.FC<Props> = ({
                 <ListItemText>
                   <Box sx={{ display: 'flex', flexDirection: 'row' }}>
                     <Box sx={{ borderRight: `1px solid ${COLORS.colorDarkgray2}`, paddingRight: '6px', marginRight: '6px' }}>
-                      { object.properties.id }
+                      { object.id }
                     </Box>
                     <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       { object.properties?.name }

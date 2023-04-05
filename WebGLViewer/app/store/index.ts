@@ -12,7 +12,7 @@ const initialState = {
   selectAssetOnScene: '',
   highlightAssetOnScene: '',
   dataViewObject: {},
-  containerId: 2,
+  containerId: 118,
   tempSceneData: [
     'Scene 1',
     'Scene 2',

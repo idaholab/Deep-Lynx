@@ -47,7 +47,7 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
       }
     }
     let nodeDetailsList = {
-      id: data.properties.id,
+      id: data.id,
       metatype_name: data.metatype_name,
       data_source_id: data.data_source_id,
       created_at: isValidDate(nodeData.created_at),
@@ -64,10 +64,10 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
 
   useEffect(() => {
     async function getNodeHistory() {
-      // const token = "bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGl0eV9wcm92aWRlciI6InNhbWxfYWRmcyIsImRpc3BsYXlfbmFtZSI6Ik5hdGhhbiBMLiBXb29kcnVmZiIsImVtYWlsIjoiTmF0aGFuLldvb2RydWZmQGlubC5nb3YiLCJhZG1pbiI6ZmFsc2UsImFjdGl2ZSI6dHJ1ZSwicmVzZXRfcmVxdWlyZWQiOmZhbHNlLCJlbWFpbF92YWxpZCI6ZmFsc2UsInR5cGUiOiJ1c2VyIiwicGVybWlzc2lvbnMiOltdLCJyb2xlcyI6W10sInVzZXJfaWQiOiIxOSIsImtleSI6Ik16SXlNVFJoTm1JdE9EYzNNaTAwWWpjMExXRmxaRFF0TkdOaE16VmlOR0l6TVdaaiIsInNlY3JldCI6IiQyYSQxMCRJREg5WXpGM2RmeXVpNDA2ZVFVSWhPU3Y1djQ2czNMaTlGTERJVlc4a2NpeERnZThNclpiMiIsIm5vdGUiOiJBZGFtIiwiaWQiOiIxOSIsImlkZW50aXR5X3Byb3ZpZGVyX2lkIjoiTmF0aGFuLldvb2RydWZmQGlubC5nb3YiLCJjcmVhdGVkX2F0IjoiMjAyMi0wOC0xOFQwNjowMDowMC4wMDBaIiwibW9kaWZpZWRfYXQiOiIyMDIyLTA4LTE4VDA2OjAwOjAwLjAwMFoiLCJjcmVhdGVkX2J5Ijoic2FtbC1hZGZzIGxvZ2luIiwibW9kaWZpZWRfYnkiOiJzYW1sLWFkZnMgbG9naW4iLCJyZXNldF90b2tlbl9pc3N1ZWQiOm51bGwsImlhdCI6MTY3ODkxMzA5OCwiZXhwIjoxNzEwNDcwNjk4fQ.6ex5ftZOQlOEkCev-G54qPE2waN3HZeDsMpK4ssPa_fEamUhd7-qt56OcM87VUSMNEDRYVPw74WF9PhyBUf2n4EslunCUZLYYpW1RdrQViDcbi6zHPlfMe0KrRwTsu4YobAVEMvEYkpA_wW0u0O4YfemEZdrqORYxMONHfmqCC_tA4FODi5hrv9ln3xH3DpmUaVXlvRzzFvPH5bE-jKV_gdmeunkFyfVuE1wuUx7I0jF6ZpUj1u09bikdvTo-FmchkRRGyYKKsbu5H3DZsr7JoT_tAnS_Z5O9MBeHu8uqciAc2esElkq3t_cpxi5yLriIx5mSEI6b7Fb6UEClVP5XA";
-      const token = localStorage.getItem('user.token');
-      
-      await axios.get( `${location.origin}/containers/${containerId}/graphs/nodes/${nodeId}/`,
+      const token = "bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGl0eV9wcm92aWRlciI6InNhbWxfYWRmcyIsImRpc3BsYXlfbmFtZSI6IkFkYW0uUGx1dGhAaW5sLmdvdiIsImVtYWlsIjoiQWRhbS5QbHV0aEBpbmwuZ292IiwiYWRtaW4iOmZhbHNlLCJhY3RpdmUiOnRydWUsInJlc2V0X3JlcXVpcmVkIjpmYWxzZSwiZW1haWxfdmFsaWQiOmZhbHNlLCJ0eXBlIjoidXNlciIsInBlcm1pc3Npb25zIjpbXSwicm9sZXMiOltdLCJ1c2VyX2lkIjoiNDIiLCJrZXkiOiJORGhsTldGa09ERXRObUUwT1MwME1EYzVMV0UwTVRBdE16Y3lOV05pTm1JeE1tUTAiLCJzZWNyZXQiOiIkMmEkMTAkYWdQTVVjRlNNOFlCUTNHTmNkblhVZXNyZ0dRaWF6ckVIRUlzTVZtcEtOb1lLaGF5NkRhaFMiLCJub3RlIjoiV2ViIEdMIFZpZXdlciIsImlkIjoiNDIiLCJpZGVudGl0eV9wcm92aWRlcl9pZCI6IkFkYW0uUGx1dGhAaW5sLmdvdiIsImNyZWF0ZWRfYXQiOiIyMDIzLTAzLTE1VDA2OjAwOjAwLjAwMFoiLCJtb2RpZmllZF9hdCI6IjIwMjMtMDMtMTVUMDY6MDA6MDAuMDAwWiIsImNyZWF0ZWRfYnkiOiJzYW1sLWFkZnMgbG9naW4iLCJtb2RpZmllZF9ieSI6InNhbWwtYWRmcyBsb2dpbiIsInJlc2V0X3Rva2VuX2lzc3VlZCI6bnVsbCwiaWF0IjoxNjgwNTUwNDkxLCJleHAiOjE2ODMxNDI0OTF9.Z7aAilgXj6wYzVoMRLIfy-flewG3D-WUUi11nZGtVnuVOSXeQryD_-tQNEMRaHuJzS5qsZUaEzece2xoeUHEzm9E506wQIbFBqv6EOPYqTeY8GnlwB83YEtUlKWnmDJ8wR3xwtW8TUPcvbydpiJsrEDGtFdSwaWE-EGySFGJg7snA3aBh7u_Nvt8jzuPXUzOK54Srb7ZaKo-x_h29CBYM_HM0MCLq7HEV2pAiI_c-t4-B-Wgt7MGibTtetmLr5T81ry3lpodeGoI62n3g2bdhALmUPIW_krQGRn-TaHyMgAhFdeZwk1IEvlBS3rf4fld8tDNFKWYHE-0fQ0FexB4qQ";
+      // const token = localStorage.getItem('user.token');
+
+      await axios.get( `https://deeplynx.azuredev.inl.gov/containers/${containerId}/graphs/nodes/${nodeId}/`,
         {
           params: { history: 'true' },
           headers: {
@@ -110,13 +110,13 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
                 >
                   { key }
                 </Typography>
-                {value !== null
+                {/* {value !== null
                   ? (
                     <Typography>{ value.toString() }</Typography>
                   ) : (
                     <Typography>N/A</Typography>
                   )
-                }      
+                }       */}
               </Grid>
             )
           })}

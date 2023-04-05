@@ -30,16 +30,16 @@ export default function WebGL() {
       const token = localStorage.getItem('user.token');
       const webgl = regex(files);
 
-      let loaderUrl = new URL(`http://localhost:8090/containers/${webgl.loader.container}/files/${webgl.loader.id}/download`);
+      let loaderUrl = new URL(`${location.origin}/containers/${webgl.loader.container}/files/${webgl.loader.id}/download`);
       loaderUrl.searchParams.append("auth_token", token!);
 
-      let dataUrl = new URL(`http://localhost:8090/containers/${webgl.data.container}/files/${webgl.data.id}/download`);
+      let dataUrl = new URL(`${location.origin}/containers/${webgl.data.container}/files/${webgl.data.id}/download`);
       dataUrl.searchParams.append("auth_token", token!);
 
-      let frameworkUrl = new URL(`http://localhost:8090/containers/${webgl.framework.container}/files/${webgl.framework.id}/download`);
+      let frameworkUrl = new URL(`${location.origin}/containers/${webgl.framework.container}/files/${webgl.framework.id}/download`);
       frameworkUrl.searchParams.append("auth_token", token!);
 
-      let codeUrl = new URL(`http://localhost:8090/containers/${webgl.wasm.container}/files/${webgl.wasm.id}/download`);
+      let codeUrl = new URL(`${location.origin}/containers/${webgl.wasm.container}/files/${webgl.wasm.id}/download`);
       codeUrl.searchParams.append("auth_token", token!);
 
       setLoaderUrl(loaderUrl);
