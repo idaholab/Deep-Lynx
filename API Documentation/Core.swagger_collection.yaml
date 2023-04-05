@@ -384,7 +384,7 @@ paths:
       tags:
         - Data Query
       summary: Query Data
-      description: 'Query data from your container using GraphQL. You can learn more here - https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/Querying-Data-With-GraphQL'
+      description: 'Query data from your container using GraphQL. You can learn more here - https://github.com/idaholab/Deep-Lynx/wiki/Querying-Data-With-GraphQL'
       operationId: DataQuery
       parameters:
         - name: container_id
@@ -3527,6 +3527,12 @@ paths:
       description: 'Lists a service user''s api/secret keypairs. This lists only the key, not the secret.'
       tags:
         - Users
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: note
+          description: search for keys created with a specific note
     post:
       summary: Create Service User KeyPair
       operationId: CreateServiceUserKeyPair
@@ -5420,6 +5426,74 @@ paths:
         '200':
           description: OK
       description: Deletes a WebGL file.
+  '/containers/{container_id}/service-users/keys':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+    get:
+      summary: List Service User Keys for Container
+      tags:
+        - Users
+        - Authentication
+      responses: {}
+      operationId: list-service-keys-for-container
+      description: Used to list all service-user keys in a container. Useful for obtaining keys in a container with a certain note to verify an application has ben authorized for a container.
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: note
+          description: note with which keypair was created
+  '/containers/{container_id}/graphs/nodes/edges':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+    post:
+      summary: List Edges for Node IDs
+      tags:
+        - Graph
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListEdgesForNodeIDsResponse'
+      operationId: ListEdgesForNodeIDs
+      description: Takes an array of node IDs and returns the given edges for those nodes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                node_ids:
+                  type: array
+                  items:
+                    type: string
+              x-examples:
+                Example 1:
+                  node_ids:
+                    - '1'
+                    - '2'
+                    - '3'
+                    - '4'
+                    - '5'
+            examples:
+              Example 1:
+                value:
+                  node_ids:
+                    - '1'
+                    - '2'
+                    - '3'
+                    - '4'
+                    - '5'
 components:
   securitySchemes:
     BearerAuth:
@@ -5614,6 +5688,16 @@ components:
           type: boolean
     ListEdgesResponse:
       title: ListEdgesResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/Edge'
+        isError:
+          type: boolean
+    ListEdgesForNodeIDsResponse:
+      title: ListEdgesForNodeIDsResponse
       type: object
       properties:
         value:

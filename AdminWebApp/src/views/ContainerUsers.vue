@@ -5,7 +5,6 @@
     <v-data-table
       :headers="headers"
       :items="users"
-      sort-by="calories"
       class="elevation-1"
     >
 
@@ -18,7 +17,9 @@
       </template>
       <template v-slot:[`item.role`]="{ item }">
         <div v-if="$store.getters.activeContainer.created_by === item.id">Owner</div>
-        <div v-else>{{retrieveUserRole(item)}} {{item.role}}</div>
+        <div v-else>
+          {{item.role}}
+        </div>
       </template>
 
       <template v-slot:[`item.actions`]="{ item }">
@@ -99,7 +100,7 @@
 
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="editDialog = false">{{$t("containerUsers.close")}}</v-btn>
+          <v-btn color="blue darken-1" text @click="editDialog = false; refreshUsers()">{{$t("containerUsers.close")}}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -150,7 +151,17 @@
     refreshUsers() {
       this.$client.listUsersInContainer(this.containerID)
         .then(users => {
-          this.users = users
+          users.forEach((u, i) => {
+            this.$client.retrieveUserRoles(this.containerID, u.id)
+              .then(roles => {
+                if(roles.length > 0) {
+                  users[i].role = roles[0]
+                }
+                this.$forceUpdate()
+              })
+              .catch(e => this.errorMessage = e)
+          });
+          this.users = users;
         })
         .catch(e => this.errorMessage = e)
     }
@@ -164,20 +175,6 @@
         identity_provider: "username_password"
       }
     }
-
-    retrieveUserRole(user: UserT) {
-        this.$client.retrieveUserRoles(this.containerID, user.id)
-            .then(roles => {
-              if(roles.length > 0) {
-                user.role = roles[0]
-              }
-
-              // needed in order to get the user object to update with the roles
-              this.$forceUpdate()
-            })
-            .catch(e => this.errorMessage = e)
-    }
-
 
     retrieveUserRoles(user: UserT) {
       if(this.toEdit) {
@@ -196,6 +193,7 @@
         this.editDialog = true
         this.toEdit = user
         this.retrieveUserRoles(user)
+        this.refreshUsers()
     }
 
     deleteUser(user: UserT) {
@@ -238,6 +236,7 @@
     clear() {
       this.toEdit = null
       this.selectedRole = ""
+      this.refreshUsers()
     }
   }
 </script>

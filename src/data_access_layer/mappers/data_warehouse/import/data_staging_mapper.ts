@@ -145,8 +145,9 @@ export default class DataStagingMapper extends Mapper {
                          data_source_id,
                          import_id,
                          data,
-                         shape_hash) VALUES %L RETURNING *`;
-        const values = data.map((d) => [d.data_source_id, d.import_id, JSON.stringify(d.data), d.shape_hash]);
+                         shape_hash,
+                         file_attached) VALUES %L RETURNING *`;
+        const values = data.map((d) => [d.data_source_id, d.import_id, JSON.stringify(d.data), d.shape_hash, d.file_attached]);
 
         return format(text, values);
     }

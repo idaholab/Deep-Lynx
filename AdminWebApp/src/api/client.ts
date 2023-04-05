@@ -30,6 +30,8 @@ import {
     ServiceUserPermissionSetT,
     FullStatistics,
     TagT,
+    TimeseriesRange,
+    TimeseriesRowCount,
 } from '@/api/types';
 import {RetrieveJWT} from '@/auth/authentication_service';
 import {UserT} from '@/auth/types';
@@ -419,8 +421,18 @@ export class Client {
         return this.delete(`/users/keys/${keyID}`);
     }
 
-    listKeyPairsForServiceUser(containerID: string, serviceUserID: string): Promise<KeyPairT[]> {
-        return this.get<KeyPairT[]>(`/containers/${containerID}/service-users/${serviceUserID}/keys`);
+    listKeyPairsForServiceUser(containerID: string, serviceUserID: string, note?: string): Promise<KeyPairT[]> {
+        const query: {[key: string]: any} = {};
+        if (note) query.note = note;
+
+        return this.get<KeyPairT[]>(`/containers/${containerID}/service-users/${serviceUserID}/keys`, query);
+    }
+
+    listServiceKeysForContainer(containerID: string, note?: string) {
+        const query: {[key: string]: any} = {};
+        if (note) query.note = note;
+
+        return this.get<KeyPairT[]>(`/containers/${containerID}/service-users/keys`)
     }
 
     generateKeyPairForServiceUser(containerID: string, serviceUserID: string, note?: string): Promise<KeyPairT> {
@@ -679,9 +691,10 @@ export class Client {
         return this.get<FileT[]>(`/containers/${containerID}/graphs/nodes/${nodeID}/files`);
     }
 
-    listEdgesForNodeIDs(containerID: string, nodeIDS: string[], pointInTime?: string): Promise<EdgeT[]> {
+    listEdgesForNodeIDs(containerID: string, nodeIDS: string[], options: {[key: string]: any}): Promise<EdgeT[]> {
         const query: {[key: string]: any} = {};
-        if (pointInTime) query.pointInTime = pointInTime;
+        if (options.pointInTime) query.pointInTime = options.pointInTime;
+        if (options.limit) query.limit = options.limit;
 
         return this.post<EdgeT[]>(`/containers/${containerID}/graphs/nodes/edges`, {node_ids: nodeIDS}, query);
     }
@@ -759,6 +772,14 @@ export class Client {
 
     listTimeseriesTables(containerID: string, nodeID: string): Promise<Map<string, [boolean, string]>> {
         return this.get<Map<string, [boolean, string]>>(`/containers/${containerID}/graphs/nodes/${nodeID}/timeseries`);
+    }
+
+    retrieveTimeseriesRowCount(containerID: string, dataSourceID: string): Promise<TimeseriesRowCount> {
+        return this.get<TimeseriesRowCount>(`/containers/${containerID}/import/datasources/${dataSourceID}/timeseries/count`);
+    }
+
+    retrieveTimeseriesRange(containerID: string, dataSourceID: string): Promise<TimeseriesRange> {
+        return this.get<TimeseriesRange>(`/containers/${containerID}/import/datasources/${dataSourceID}/timeseries/range`);
     }
 
     retrieveNode(containerID: string, nodeID: string): Promise<NodeT> {

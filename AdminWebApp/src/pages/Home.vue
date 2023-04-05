@@ -402,13 +402,22 @@
       <v-container fluid v-if="currentMainComponent && currentMainComponent !== ''">
         <!-- we provide both containerID and container as some of the components require either/or or both -->
         <transition name="fade" mode="out-in">
-          <component v-bind:is="currentMainComponent" :containerID="containerID" :container="container" :argument="argument"></component>
+          <component
+            :is="currentMainComponent"
+            :containerID="containerID"
+            :container="container"
+            :argument="argument"
+            :class="{
+              'main-content-component-constrained':(currentMainComponent !== 'DataQuery'),
+              'main-content-component-unconstrained':(currentMainComponent === 'DataQuery')
+            }"
+          />
         </transition>
       </v-container>
 
       <!-- Else: Dashboard Landing Page -->
       <v-container fluid v-else>
-        <v-row>
+        <v-row v-if="$auth.IsAdmin() && stats !== null">
           <!-- DeepLynx Admin Statistics (only include if admin and exists) -->
           <v-col :cols="12" :md="6" :lg="6" v-if="$auth.IsAdmin() && stats.statistics.migrations">
             <v-card class="d-flex flex-column height-full">
@@ -940,9 +949,16 @@ export default class Home extends Vue {
 
 <style lang="scss" scoped>
 #main-content-container {
-  max-width: 2000px;
   padding: 30px !important;
+}
+
+.main-content-component-constrained {
+  max-width: 2000px;
   margin: auto;
+}
+
+.main-content-component-unconstrained {
+  width: 100%;
 }
 
 .fade {

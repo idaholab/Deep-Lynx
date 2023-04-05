@@ -2,6 +2,9 @@ import {BaseDomainClass} from '../../../common_classes/base_domain_class';
 import {Type} from 'class-transformer';
 import {EdgeMetadata} from './edge';
 import {NodeMetadata} from './node';
+import { QueryConfig } from 'pg';
+
+const format = require('pg-format');
 
 /*
     The NodeLeaf object represents a tree-like record object which consists of
@@ -89,6 +92,10 @@ export default class NodeLeaf extends BaseDomainClass {
 
     destination_metatype_uuid?: string;
 
+	// cardinality of edge. if 'outgoing', origin_id is true origin.
+	// if 'incoming', destination_id is true origin in edge.
+	edge_direction?: string;
+
     // level of depth
     depth?: string;
 
@@ -101,7 +108,18 @@ export default class NodeLeaf extends BaseDomainClass {
     }
 }
 
-export const nodeLeafQuery = [`SELECT nodeleafs.* FROM
+export function getNodeLeafQuery(nodeID: string, containerID: string, depth: string, use_original_id?: boolean) {
+	// if use original id is specified, center the graph based on 
+	// original data id instead of auto-assigned DeepLynx id
+	const root_node = (use_original_id && use_original_id === true)
+		? format(`o.original_data_id = ('%s')::text`, nodeID)
+		: format(`o.id = %s`, nodeID);
+
+	// container ID is used twice in the query, so it's mentioned twice in the params list
+	return format(nodeLeafQuery, root_node, containerID, containerID, depth);
+}
+
+const nodeLeafQuery = `SELECT nodeleafs.* FROM
 (WITH RECURSIVE search_graph(
 	origin_id, origin_data_source, origin_metadata, origin_metadata_properties, origin_properties,
 	origin_created_by, origin_created_at, origin_modified_by, origin_modified_at, origin_metatype_id, 
@@ -109,7 +127,7 @@ export const nodeLeafQuery = [`SELECT nodeleafs.* FROM
 	edge_created_by, edge_created_at, edge_modified_by, edge_modified_at, relationship_pair_id, 
 	destination_id, destination_data_source, destination_metadata, destination_metadata_properties, 
 	destination_properties, destination_created_by, destination_created_at, destination_modified_by,
-	destination_modified_at, destination_metatype_id, depth, path
+	destination_modified_at, destination_metatype_id, edge_direction, depth, path
 ) AS (
 	(SELECT DISTINCT ON (e.origin_id, e.destination_id, e.relationship_pair_id, e.data_source_id)
 	 	o.id AS origin_id, o.data_source_id AS origin_data_source, o.metadata AS origin_metadata, 
@@ -125,13 +143,14 @@ export const nodeLeafQuery = [`SELECT nodeleafs.* FROM
 		d.properties AS destination_properties, d.created_by AS destination_created_by, 
 		d.created_at AS destination_created_at, d.modified_by AS destination_modified_by, 
 		d.modified_at AS destination_modified_at, d.metatype_id AS destination_metatype_id, 
+		CASE WHEN o.id = e.origin_id THEN 'outgoing' ELSE 'incoming' END AS edge_direction,
 		1 AS depth, ARRAY[o.id] AS path
 	FROM edges e
 		LEFT JOIN nodes o ON o.id IN (e.origin_id, e.destination_id)
 		LEFT JOIN nodes d ON d.id IN (e.origin_id, e.destination_id) AND o.id != d.id
-	WHERE e.deleted_at IS NULL AND e.container_id = $2 AND o.id = $1
+	WHERE e.deleted_at IS NULL AND %s AND e.container_id = %s
 	ORDER BY e.origin_id, e.destination_id, e.relationship_pair_id, 
-	 	e.data_source_id, e.created_at DESC)
+	 	e.data_source_id, e.created_at DESC, o.created_at DESC, d.created_at DESC)
 UNION
 	(SELECT DISTINCT ON (e.origin_id, e.destination_id, e.relationship_pair_id, e.data_source_id)
 		g.destination_id AS origin_id, g.destination_data_source AS origin_data_source, 
@@ -148,6 +167,7 @@ UNION
 		d.properties AS destination_properties, d.created_by AS destination_created_by, 
 		d.created_at AS destination_created_at, d.modified_by AS destination_modified_by, 
 		d.modified_at AS destination_modified_at, d.metatype_id AS destination_metatype_id, 
+		CASE WHEN g.destination_id = e.origin_id THEN 'outgoing' ELSE 'incoming' END AS edge_direction,
 		depth + 1 AS depth, path || g.destination_id AS path
 	FROM edges e
 		INNER JOIN search_graph g ON g.destination_id 
@@ -156,9 +176,9 @@ UNION
 		LEFT JOIN nodes d ON d.id 
 	 		IN (e.origin_id, e.destination_id)
 			AND g.destination_id != d.id
-	WHERE e.container_id = $2 AND depth < $3 AND d.id <> ALL(path)
+	WHERE e.container_id = %s AND depth < %s AND d.id <> ALL(path)
 	ORDER BY e.origin_id, e.destination_id, e.relationship_pair_id, 
-	 	e.data_source_id, e.created_at DESC)
+	 	e.data_source_id, e.created_at DESC, g.destination_created_at DESC, d.created_at DESC)
 ) SELECT 
 	g.origin_id, origin_data_source, origin_metadata, origin_metadata_properties, 
 	origin_properties, origin_created_by, origin_created_at, origin_modified_by, 
@@ -172,10 +192,10 @@ UNION
 	destination_metadata_properties, destination_properties, destination_created_by, 
 	destination_created_at, destination_modified_by, destination_modified_at, 
 	g.destination_metatype_id, dmeta.name AS destination_metatype_name,
-	dmeta.uuid AS destination_metatype_uuid, depth, path
+	dmeta.uuid AS destination_metatype_uuid, depth, path, edge_direction
 FROM search_graph g
 	LEFT JOIN metatypes ometa ON ometa.id = g.origin_metatype_id
 	LEFT JOIN metatypes dmeta ON dmeta.id = g.destination_metatype_id
 	LEFT JOIN metatype_relationship_pairs p ON g.relationship_pair_id = p.id
 	LEFT JOIN metatype_relationships r ON p.relationship_id = r.id
-ORDER BY depth, path, g.destination_id) nodeleafs`];
+ORDER BY depth, path, g.destination_id) nodeleafs`;
