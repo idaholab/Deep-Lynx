@@ -173,7 +173,7 @@
               <v-list-item-subtitle>{{$t("home.dataMappingDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
-               <v-list-item
+          <v-list-item
             two-line
             link
             v-if="$auth.Auth('data', 'write', containerID) && dataEditorEnabled"
@@ -196,6 +196,19 @@
             <v-list-item-content>
               <v-list-item-title>{{$t("home.dataExport")}}-<small>{{$t("home.beta")}}</small></v-list-item-title>
               <v-list-item-subtitle>{{$t("home.dataExportDescription")}}</v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
+          <v-list-item
+            two-line 
+            link
+            v-if="$auth.Auth('data', 'write', containerID)"
+            @click="setActiveComponent('event-actions')"
+            :input-value="currentMainComponent === 'EventSystem'"
+            :ripple="{class:'list-ripple'}"
+          >
+            <v-list-item-content>
+              <v-list-item-title>{{$t("home.eventAction")}}</v-list-item-title>
+              <v-list-item-subtitle>{{$t("home.eventActionDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
           <v-list-item
@@ -604,6 +617,7 @@ import DataQuery from "@/views/DataQuery.vue"
 import DataSources from "@/views/DataSources.vue"
 import DataEditor from "@/views/DataEditor.vue"
 import DataMapping from "@/views/DataMapping.vue"
+import EventSystem from "@/views/EventSystem.vue"
 import Settings from "@/views/Settings.vue"
 import Users from "@/views/Users.vue"
 import ContainerUsers from "@/views/ContainerUsers.vue"
@@ -639,6 +653,7 @@ import OverviewGraph from "@/views/OverviewGraph.vue";
     DataSources,
     DataEditor,
     DataMapping,
+    EventSystem,
     Settings,
     ContainerUsers,
     Users,
@@ -914,6 +929,13 @@ export default class Home extends Vue {
         this.currentMainComponent = "ContainerImport"
         this.componentName = this.$t('home.containerImport')
         this.$router.replace(`/containers/${this.containerID}/container-import`)
+        break;
+      }
+
+      case "event-actions": {
+        this.currentMainComponent = "EventSystem";
+        this.componentName = this.$t('home.eventAction')
+        this.$router.replace(`/containers/${this.containerID}/event-actions`)
         break;
       }
 
