@@ -1,6 +1,6 @@
 import Result from '../../../common_classes/result';
 import Mapper from '../mapper';
-import {PoolClient, QueryConfig} from 'pg';
+import {PoolClient, Query, QueryConfig} from 'pg';
 import {KeyPair, User} from '../../../domain_objects/access_management/user';
 
 const format = require('pg-format');
@@ -78,6 +78,14 @@ export default class KeyPairMapper extends Mapper {
         }
     }
 
+    public async ServiceKeysForContainer(containerID: string, note?: string): Promise<Result<KeyPair[]>> {
+        if (note) {
+            return super.rows(this.serviceKeysForContainerByNoteStatement(containerID, note), {resultClass: this.resultClass});
+        } else {
+            return super.rows(this.serviceKeysForContainerStatement(containerID), {resultClass: this.resultClass});
+        }
+    }
+
     public DeleteForUser(key: string, userID: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteForUserStatement(key, userID));
     }
@@ -129,6 +137,29 @@ export default class KeyPairMapper extends Mapper {
         return {
             text: `SELECT key, user_id, note FROM keypairs WHERE user_id = $1 AND note = $2`,
             values: [userID, note]
+        }
+    }
+
+    private serviceKeysForContainerStatement(containerID: string): QueryConfig {
+        return {
+            text: `SELECT k.key, k.user_id, k.note
+            FROM keypairs k
+            RIGHT JOIN container_service_users cu
+            ON k.user_id = cu.user_id
+            WHERE cu.container_id = $1;`,
+            values: [containerID]
+        }
+    }
+    
+    private serviceKeysForContainerByNoteStatement(containerID: string, note: string): QueryConfig {
+        return {
+            text: `SELECT k.key, k.user_id, k.note
+            FROM keypairs k
+            RIGHT JOIN container_service_users cu
+            ON k.user_id = cu.user_id
+            WHERE cu.container_id = $1
+            AND k.note = $2;`,
+            values: [containerID, note]
         }
     }
 

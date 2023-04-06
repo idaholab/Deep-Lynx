@@ -505,7 +505,7 @@ relationshipSampleQuery =
   }
 
   helpLink() {
-    return 'https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/Querying-Data-With-GraphQL'
+    return 'https://github.com/idaholab/Deep-Lynx/wiki/Querying-Data-With-GraphQL'
   }
 
   addQueryPart(componentName: string) {
@@ -567,7 +567,14 @@ relationshipSampleQuery =
             ran: new Date()
           })
 
-          this.results = {id, queryParts: this.queryParts, query: query.query, nodes: results.data.nodes, rawMetadataEnabled: this.rawMetadataEnabled}
+          this.results = {
+            id, 
+            queryParts: this.queryParts, 
+            query: query.query, 
+            nodes: results.data.nodes, 
+            rawMetadataEnabled: this.rawMetadataEnabled, 
+            limit: this.limit
+          }
           this.$emit('results', this.results)
         })
         .catch(e => {
@@ -723,6 +730,7 @@ export type ResultSet = {
   nodes: NodeT[];
   ran?: Date;
   rawMetadataEnabled?: boolean;
+  limit?: number;
 }
 </script>
 

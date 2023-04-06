@@ -51,6 +51,18 @@ export default class GraphRoutes {
             authInContainer('read', 'data'),
             TimeseriesFunctions.queryTimeseriesDataSource,
         );
+        app.get(
+            '/containers/:containerID/import/datasources/:sourceID/timeseries/count',
+            ...middleware,
+            authInContainer('read', 'data'),
+            TimeseriesFunctions.retrieveTimeseriesRowCount,
+        );
+        app.get(
+            '/containers/:containerID/import/datasources/:sourceID/timeseries/range',
+            ...middleware,
+            authInContainer('read', 'data'),
+            TimeseriesFunctions.retrieveTimeseriesRange,
+        );
 
         // File Routes
         app.post('/containers/:containerID/import/datasources/:sourceID/files', ...middleware, authInContainer('write', 'data'), FileFunctions.uploadFile);

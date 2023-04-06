@@ -84,6 +84,12 @@ export default class UserRoutes {
             authInContainer('write', 'users'),
             this.deleteKeyPairForServiceUser,
         );
+        app.get(
+            '/containers/:containerID/service-users/keys',
+            ...middleware,
+            authInContainer('read', 'users'),
+            this.listServiceKeysForContainer,
+        );
     }
 
     private static retrieveUser(req: Request, res: Response, next: NextFunction) {
@@ -464,7 +470,25 @@ export default class UserRoutes {
 
     private static listKeyPairsForServiceUser(req: Request, res: Response, next: NextFunction) {
         if (req.serviceUser) {
-            KeyPairMapper.Instance.KeysForUser(req.serviceUser.id!)
+            let note = req.query.note ? req.query.note as string : undefined;
+            KeyPairMapper.Instance.KeysForUser(req.serviceUser.id!, note)
+                .then((results) => {
+                    results.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Failure(err, 404).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure('unauthorized', 401).asResponse(res);
+            next();
+        }
+    }
+
+    private static listServiceKeysForContainer(req: Request, res: Response, next: NextFunction) {
+        if (req.container) {
+            let note = req.query.note ? req.query.note as string : undefined;
+            KeyPairMapper.Instance.ServiceKeysForContainer(req.container.id!, note)
                 .then((results) => {
                     results.asResponse(res);
                 })

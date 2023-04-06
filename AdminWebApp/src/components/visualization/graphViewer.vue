@@ -1249,7 +1249,12 @@ export default class GraphViewer extends Vue {
     if (nodeIDs.length > 0) {
       this.blankGraphFlag = false
 
-      edges = await this.$client.listEdgesForNodeIDs(this.containerID, nodeIDs, new Date(this.pointInTime).toISOString())
+      const query = {
+        pointInTime: new Date(this.pointInTime).toISOString(),
+        limit: this.results.limit && this.results.limit > 10000 ? this.results.limit : 10000 // if greater than 10000, override default
+      }
+
+      edges = await this.$client.listEdgesForNodeIDs(this.containerID, nodeIDs, query)
 
       if (edges) {
         edges.forEach((edge: any) => {

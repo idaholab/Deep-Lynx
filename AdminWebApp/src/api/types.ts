@@ -146,6 +146,10 @@ export type FileT = {
     adapter_file_path: string;
     adapter: 'filesystem' | 'azure_blob' | 'mock';
     metadata: object;
+    created_at: string;
+    modified_at: string;
+    created_by: string;
+    modified_by: string;
 };
 
 export type NodeT = {
@@ -327,6 +331,35 @@ export type P6DataSourceConfig = {
     value_nodes?: string[];
     data_retention_days?: number;
     raw_retention_enabled?: boolean;
+};
+
+export type EventActionT = {
+    id?: string;
+    container_id?: string;
+    data_source_id?: string;
+    event_type: string | undefined;
+    action_type: string | undefined;
+    destination?: string;
+    destination_data_source_id?: string;
+    action_config?: object;
+    active?: boolean;
+    archived?: boolean;
+    created_at?: string;
+    modified_at?: string;
+    delete_at?: string;
+    created_by?: string;
+    modified_by?: string;
+};
+
+export type EventActionStatusT = {
+    id?: string;
+    event_action_id: string | undefined;
+    status?: string;
+    status_message?: string;
+    created_at?: string;
+    modified_at?: string;
+    modified_by?: string;
+    event?: string;
 };
 
 export type ImportT = {
@@ -608,6 +641,15 @@ export type TagT = {
     tag_name?: string;
     container_id?: string;
     metadata?: object;
+};
+
+export type TimeseriesRange = {
+    start: string;
+    end: string;
+};
+
+export type TimeseriesRowCount = {
+    count: number;
 };
 
 // DefaultAvevaDataSourceConfig are sane defaults found through trial and error with the Aveva Deep Lynx Adapter
