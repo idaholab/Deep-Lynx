@@ -65,12 +65,13 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
   useEffect(() => {
     async function getNodeHistory() {
       const token = localStorage.getItem('user.token');
+      const containerId = localStorage.getItem('container');
 
       await axios.get( `${location.origin}/containers/${containerId}/graphs/nodes/${nodeId}/`,
         {
           params: { history: 'true' },
           headers: {
-            Authorization: token
+            Authorization: `bearer ${token}`
           }
         }).then (
           (response: any) => {

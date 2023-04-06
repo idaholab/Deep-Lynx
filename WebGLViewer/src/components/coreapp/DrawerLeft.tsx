@@ -79,34 +79,26 @@ type Props = {};
 
 const DrawerLeft: React.FC<Props> = ({}) => {
 
-  const [selected, setSelected] = useState('nodeList');
-
-  const [searchQuery, setSearchQuery] = useState("");
-
   const dispatch = useAppDispatch();
 
-  type tempSceneData = Array<{ [key: string]: any; }>;
-  const tempSceneData = useAppSelector((state: any) => state.appState.tempSceneData);
-
-  type containerId = Array<{ [key: string]: any; }>;
-  const containerId = useAppSelector((state: any) => state.appState.containerId);
-
+  const [selected, setSelected] = useState('nodeList');
+  const [searchQuery, setSearchQuery] = useState("");
   const [nodes, setNodes] = useState(Array<{ [key: string]: any; }>);
-  const [scenes, setScenes] = useState(tempSceneData);
-
-  const [filteredData, setFilteredData] = useState()
+  const [filteredData, setFilteredData] = useState();
 
   useEffect(() => {
     async function getNodes() {
       const token = localStorage.getItem('user.token');
+      const containerId = localStorage.getItem('container');
 
       await axios.get ( `${location.origin}/containers/${containerId}/graphs/nodes`,
         {
           headers: {
-            Authorization: token
+            Authorization: `bearer ${token}`
           }
         }).then (
           (response: any) => {
+            console.log(response.data);
             setNodes(queryFilterData(searchQuery, response.data.value))
           }
         )
@@ -325,7 +317,7 @@ const DrawerLeft: React.FC<Props> = ({}) => {
             </>
           }
           {selected === 'sceneList' && 
-            <DrawerContentsSceneList data={scenes} />
+            <DrawerContentsSceneList />
           }
           {selected === 'settings' && 
             <DrawerContentsSettings />

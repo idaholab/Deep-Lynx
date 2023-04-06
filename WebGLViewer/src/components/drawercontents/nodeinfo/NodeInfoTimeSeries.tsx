@@ -33,8 +33,7 @@ const NodeInfoTimeSeries: React.FC<Props> = ({
 }) => {
   const nodeId = data.id
 
-  type containerId = Array<{ [key: string]: any; }>;
-  const containerId = useAppSelector((state: any) => state.appState.containerId);
+  const containerId = localStorage.getItem('container');
 
   const [tableRowData, setTableRowData] = useState(Array<{ [key: string]: any; }>);
 
@@ -60,7 +59,7 @@ const NodeInfoTimeSeries: React.FC<Props> = ({
         const response = await axios.get(`${location.origin}/containers/${containerId}/graphs/nodes/${nodeId}/timeseries`,   
         {
           headers: {
-            Authorization: token
+            Authorization: `bearer ${token}`
           }
         });
 
@@ -72,20 +71,20 @@ const NodeInfoTimeSeries: React.FC<Props> = ({
 
         for (const property in firstResponse) {
           // Second Axios API Call
-          const secondResponse = await axios.get(`https://deeplynx.azuredev.inl.gov/containers/${containerId}/import/datasources/${firstResponse[property][1]}/timeseries/count`,
+          const secondResponse = await axios.get(`${location.origin}/containers/${containerId}/import/datasources/${firstResponse[property][1]}/timeseries/count`,
           {
             headers: {
-              Authorization: token
+              Authorization: `bearer ${token}`
             }
           });
           
           count = secondResponse.data.value;
 
             // Third Axios API Call
-          const thirdResponse = await  axios.get(`https://deeplynx.azuredev.inl.gov/containers/${containerId}/import/datasources/${firstResponse[property][1]}/timeseries/range`,
+          const thirdResponse = await  axios.get(`${location.origin}/containers/${containerId}/import/datasources/${firstResponse[property][1]}/timeseries/range`,
             {
               headers: {
-                Authorization: token
+                Authorization: `bearer ${token}`
               }
             });
             

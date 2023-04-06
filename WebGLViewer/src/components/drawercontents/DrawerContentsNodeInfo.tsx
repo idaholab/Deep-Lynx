@@ -38,12 +38,15 @@ const DrawerContentsNodeInfo: React.FC<Props> = ({}) => {
   type selectedAssetObject = any;
   const selectedAssetObject: selectedAssetObject = useAppSelector((state: any) => state.appState.selectedAssetObject);
 
+  type highlightAssetObject = any;
+  const highlightAssetObject: highlightAssetObject = useAppSelector((state: any) => state.appState.highlightAssetObject);
+
   const handleSelectAssetOnScene = (payload: any) => {
-    dispatch(appStateActions.selectAssetOnScene(payload.properties.name))
+    dispatch(appStateActions.selectAssetOnScene(payload.properties.Name))
   };
 
   const handleHighlightAssetOnScene = (payload: any) => {
-    dispatch(appStateActions.highlightAssetOnScene(payload.properties.name))
+    dispatch(appStateActions.highlightAssetOnScene(payload.properties.Name))
   };
 
   const handleShowAssetOnGraph = (payload: any) => {

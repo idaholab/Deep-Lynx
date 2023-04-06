@@ -49,11 +49,12 @@ const NodeInfoTags: React.FC<Props> = ({
   useEffect(() => {
     async function getTagList() {
       const token = localStorage.getItem('user.token');
+      const containerId = localStorage.getItem('container');
 
-      await axios.get ( `${location.origin}/containers/${containerId}/graphs/tags${nodeId}`,
+      await axios.get ( `${location.origin}/containers/${containerId}/graphs/tags/nodes/${nodeId}`,
         {
           headers: {
-            Authorization: token
+            Authorization: `bearer ${token}`
           }
         }).then (
           (response: any) => {

@@ -52,16 +52,14 @@ const SearchBar = ({setSearchQuery}: any) => (
 );
 
 
-type Props = {
-  data: any
-};
+type Props = {};
 
-const DrawerContentsSceneList: React.FC<Props> = ({
-  data
-}) => {
+const DrawerContentsSceneList: React.FC<Props> = ({}) => {
 
-  const sceneList = data;
   const dispatch = useAppDispatch();
+
+  type sceneList = string[];
+  const sceneList : sceneList = useAppSelector((state: any) => state.appState.sceneList);
 
   type openDrawerLeftState = boolean;
   const openDrawerLeftState: openDrawerLeftState = useAppSelector((state: any) => state.appState.openDrawerLeft);
@@ -69,33 +67,29 @@ const DrawerContentsSceneList: React.FC<Props> = ({
   type openDrawerLeftWidth = number;
   const openDrawerLeftWidth: openDrawerLeftWidth = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);
 
-  type tempSceneData = Array<{ [key: string]: any; }>;
-  const tempSceneData = useAppSelector((state: any) => state.appState.tempSceneData);
-
   const [searchQuery, setSearchQuery] = useState("");
-  const dataFiltered = filterData(searchQuery, tempSceneData);
 
   const [selected, setSelected] = React.useState<string | false>(false);
 
   type selectedSceneObject = any;
   const selectedSceneObject: selectedSceneObject = useAppSelector((state: any) => state.appState.selectedSceneObject);
-  const handleSelectSceneObject = (obj: any, selectedItem: string) => {
-    dispatch(appStateActions.selectSceneObject(obj));
-    setSelected(selectedItem);
+  const handleSelectScene = (scene: string) => {
+    dispatch(appStateActions.selectSceneObject(scene));
+    setSelected(scene);
   };
 
   return (
     <>
       <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0', borderTop: `1px solid ${COLORS.colorDarkgray}` }}>
         <List dense sx={{ paddingTop: '0' }}>
-          {sceneList.map((item: any, index: number) => (
+          {sceneList.map((scene: string, index: number) => (
             <ListItem
               key={index}
               disablePadding
               sx={{ borderBottom: `1px solid ${COLORS.colorDarkgray}` }}
             >
               <ListItemButton
-                onClick={() => handleSelectSceneObject(item, `listItem${index+1}`)}
+                onClick={() => handleSelectScene(scene)}
                 selected={selected === `listItem${index+1}`}
                 sx={{
                   '&.Mui-selected': {
@@ -112,7 +106,11 @@ const DrawerContentsSceneList: React.FC<Props> = ({
                 <ListItemText>
                   <Box sx={{ display: 'flex', flexDirection: 'row' }}>
                     <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      { item }
+                      { 
+                        scene ? (
+                          scene.split("/").pop()
+                        ) : null
+                      }
                     </Box>
                   </Box>
                 </ListItemText>

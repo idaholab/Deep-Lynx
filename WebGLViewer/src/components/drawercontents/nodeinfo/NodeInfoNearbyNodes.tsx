@@ -40,11 +40,12 @@ const NodeInfoNearbyNodes: React.FC<Props> = ({
   useEffect(() => {
     async function getNearbyNodes() {
       const token = localStorage.getItem('user.token');
+      const containerId = localStorage.getItem('container');
 
       await axios.get ( `${location.origin}/containers/${containerId}/graphs/nodes/${nodeId}/graph?depth=1`,
         {
           headers: {
-            Authorization: token
+            Authorization: `bearer ${token}`
           }
         }).then (
           (response: any) => {

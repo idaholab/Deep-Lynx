@@ -31,11 +31,12 @@ const NodeInfoFiles: React.FC<Props> = ({
   useEffect(() => {
     async function getNodeFiles() {
       const token = localStorage.getItem('user.token');
+      const containerId = localStorage.getItem('container');
 
       await axios.get ( `${location.origin}/containers/${containerId}/graphs/nodes/${nodeId}/files`,   
         {
           headers: {
-            Authorization: token
+            Authorization: `bearer ${token}`
           }
         }).then (
           (response: any) => {

@@ -13,13 +13,8 @@ const initialState = {
   highlightAssetOnScene: '',
   dataViewObject: {},
   containerId: 118,
-  tempSceneData: [
-    'Scene 1',
-    'Scene 2',
-    'Scene 3',
-    'Scene 4',
-    'Scene 5'
-  ]
+  sceneList: [],
+  unityNodes: [],
 };
 
 const appStateSlice = createSlice({
@@ -42,6 +37,7 @@ const appStateSlice = createSlice({
 
     // Asset functions
     selectAssetObject: (state, action) => {
+      console.log(action.payload);
       const store = state;
       store.selectedAssetObject = action.payload;
     },
@@ -63,12 +59,22 @@ const appStateSlice = createSlice({
       const store = state;
       store.selectedSceneObject = action.payload;
     },
+    setSceneList: (state, action) => {
+      const store = state;
+      store.sceneList = action.payload;
+    },
 
     // WebGL File Set Functions
     setWebGLFileSetId: (state, action) => {
       const store = state;
       store.selectedWebGLFileSetId = action.payload;
     },
+
+    // Unity Data
+    setUnityNodes: (state, action) => {
+      const store = state;
+      store.unityNodes = action.payload;
+    }
   },
 });
 
