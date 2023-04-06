@@ -545,7 +545,7 @@
 import {Component, Prop, Vue} from "vue-property-decorator"
 import {
   DataSourceT,
-  HttpDataSourceConfig, MetatypeT, TimeseriesDataSourceConfig,
+  HttpDataSourceConfig, TimeseriesDataSourceConfig,
 } from "@/api/types";
 import NodeAttachmentParameterDialog from "@/components/dataSources/nodeAttachmentParameterDialog.vue";
 

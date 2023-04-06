@@ -211,7 +211,7 @@ export default class ExploratoryDataAnalysisDialog extends Vue {
       colorscale: 'Bluered'
     };
 
-    this.columnToDataMap.forEach((value, key, map) => {
+    this.columnToDataMap.forEach((value, key) => {
       singleCorrelationPlot.x.push(key)
       singleCorrelationPlot.y.push(key)
 

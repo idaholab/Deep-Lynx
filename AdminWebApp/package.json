@@ -50,6 +50,7 @@
     "three-mesh-bvh": "^0.4.3",
     "tslib": "^2.0.3",
     "uuid": "^8.3.2",
+    "video.js": "^8.0.4",
     "viewerjs": "^1.11.3",
     "vue": "^2.6.12",
     "vue-class-component": "^7.2.6",
