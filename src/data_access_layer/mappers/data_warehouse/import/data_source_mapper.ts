@@ -16,6 +16,11 @@ const format = require('pg-format');
 const devnull = require('dev-null');
 const copyTo = require('pg-copy-streams').to;
 
+export type TimeseriesRange = {
+    start: string;
+    end: string;
+};
+
 /*
     DataSourceMapper extends the Postgres database Mapper class and allows
     the user to map a data structure to and from the attached database. The mappers
@@ -119,6 +124,23 @@ export default class DataSourceMapper extends Mapper {
 
     public CreateHypertable(source: DataSourceRecord): Promise<Result<boolean>> {
         return super.runAsTransaction(...this.createHypertableStatement(source));
+    }
+
+    public retrieveTimeseriesRowCount(tableName: string): Promise<Result<number>> {
+        return super.retrieve<number>(this.getHypertableRowCount(tableName));
+    }
+
+    public async retrieveTimeseriesRange(primaryTimestamp: string, tableName: string): Promise<Result<TimeseriesRange>> {
+        const first = await super.retrieve<any>(this.getHypertableFirst(primaryTimestamp, tableName));
+        // if there is an error because the table is empty, return NaN string for start and end
+        if (first.isError && first.error.errorCode === 404) return Result.Success<TimeseriesRange>({start: 'NaN', end: 'NaN'});
+
+        if (first.isError) return Promise.resolve(Result.Pass(first));
+
+        const last = await super.retrieve<any>(this.getHypertableLast(primaryTimestamp, tableName));
+        if (last.isError) return Promise.resolve(Result.Pass(last));
+
+        return Result.Success<TimeseriesRange>({start: first.value[primaryTimestamp], end: last.value[primaryTimestamp]});
     }
 
     // InsertIntoHypertable takes an array of objects and inserts them into the supplied data source's hypertable if
@@ -340,6 +362,22 @@ export default class DataSourceMapper extends Mapper {
     // don't want to read the data in needlessly
     private listStagingForSourceStreaming(dataSourceID: string): string {
         return format(`SELECT data_staging.* FROM data_staging WHERE data_source_id = %L`, dataSourceID);
+    }
+
+    private getHypertableRowCount(tableName: string): QueryConfig {
+        if (Config.timescaledb_enabled) {
+            return format(`SELECT * FROM approximate_row_count('%s') AS count`, tableName);
+        } else {
+            return format(`SELECT COUNT(*) FROM %I)`, tableName);
+        }
+    }
+
+    private getHypertableFirst(primaryTimestamp: string, tableName: string): QueryConfig {
+        return format(`SELECT %I FROM %I ORDER BY %I ASC LIMIT 1`, primaryTimestamp, tableName, primaryTimestamp);
+    }
+
+    private getHypertableLast(primaryTimestamp: string, tableName: string): QueryConfig {
+        return format(`SELECT %I FROM %I ORDER BY %I DESC LIMIT 1`, primaryTimestamp, tableName, primaryTimestamp);
     }
 
     private createHypertableStatement(source: DataSourceRecord): QueryConfig[] {

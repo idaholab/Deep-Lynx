@@ -80,6 +80,11 @@ export default class EventActionRepository extends Repository implements Reposit
         return this;
     }
 
+    deletedAt(operator: string) {
+        super.query('deleted_at', operator);
+        return this;
+    }
+
     active(operator: string, value: any) {
         super.query('active', operator, value);
         return this;

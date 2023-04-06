@@ -13,7 +13,6 @@
         v-if="activeTab ==='datasources'"
         :headers="headers()"
         :items="dataSources"
-        sort-by="calories"
         :loading="dataSourcesLoading"
         class="elevation-1"
     >

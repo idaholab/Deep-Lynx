@@ -173,7 +173,7 @@
               <v-list-item-subtitle>{{$t("home.dataMappingDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
-               <v-list-item
+          <v-list-item
             two-line
             link
             v-if="$auth.Auth('data', 'write', containerID) && dataEditorEnabled"
@@ -196,6 +196,19 @@
             <v-list-item-content>
               <v-list-item-title>{{$t("home.dataExport")}}-<small>{{$t("home.beta")}}</small></v-list-item-title>
               <v-list-item-subtitle>{{$t("home.dataExportDescription")}}</v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
+          <v-list-item
+            two-line 
+            link
+            v-if="$auth.Auth('data', 'write', containerID)"
+            @click="setActiveComponent('event-actions')"
+            :input-value="currentMainComponent === 'EventSystem'"
+            :ripple="{class:'list-ripple'}"
+          >
+            <v-list-item-content>
+              <v-list-item-title>{{$t("home.eventAction")}}</v-list-item-title>
+              <v-list-item-subtitle>{{$t("home.eventActionDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
           <v-list-item
@@ -417,7 +430,9 @@
 
       <!-- Else: Dashboard Landing Page -->
       <v-container fluid v-else>
-        <v-row>
+        <overview-graph :container="container"></overview-graph>
+
+        <v-row v-if="$auth.IsAdmin() && stats !== null">
           <!-- DeepLynx Admin Statistics (only include if admin and exists) -->
           <v-col :cols="12" :md="6" :lg="6" v-if="$auth.IsAdmin() && stats.statistics.migrations">
             <v-card class="d-flex flex-column height-full">
@@ -602,6 +617,7 @@ import DataQuery from "@/views/DataQuery.vue"
 import DataSources from "@/views/DataSources.vue"
 import DataEditor from "@/views/DataEditor.vue"
 import DataMapping from "@/views/DataMapping.vue"
+import EventSystem from "@/views/EventSystem.vue"
 import Settings from "@/views/Settings.vue"
 import Users from "@/views/Users.vue"
 import ContainerUsers from "@/views/ContainerUsers.vue"
@@ -619,6 +635,7 @@ import ServiceUsers from "@/views/ServiceUsers.vue";
 import ContainerExport from "@/views/ContainerExport.vue";
 import ContainerImport from "@/views/ContainerImport.vue";
 import FileManager from "@/views/FileManager.vue";
+import OverviewGraph from "@/views/OverviewGraph.vue";
 
 @Component({components: {
     ContainerSelect,
@@ -636,6 +653,7 @@ import FileManager from "@/views/FileManager.vue";
     DataSources,
     DataEditor,
     DataMapping,
+    EventSystem,
     Settings,
     ContainerUsers,
     Users,
@@ -645,7 +663,8 @@ import FileManager from "@/views/FileManager.vue";
     ServiceUsers,
     ContainerExport,
     ContainerImport,
-    FileManager
+    FileManager,
+    OverviewGraph
   }})
 export default class Home extends Vue {
   @Prop(String) readonly containerID: string | undefined
@@ -910,6 +929,13 @@ export default class Home extends Vue {
         this.currentMainComponent = "ContainerImport"
         this.componentName = this.$t('home.containerImport')
         this.$router.replace(`/containers/${this.containerID}/container-import`)
+        break;
+      }
+
+      case "event-actions": {
+        this.currentMainComponent = "EventSystem";
+        this.componentName = this.$t('home.eventAction')
+        this.$router.replace(`/containers/${this.containerID}/event-actions`)
         break;
       }
 

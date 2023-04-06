@@ -43,6 +43,10 @@ export class Config {
         return process.env.VUE_APP_DATA_EDITOR_ENABLED === 'true';
     }
 
+    get p6RedirectAddress(): string {
+        return process.env.VUE_APP_P6_REDIRECT_ADDRESS || 'http://localhost:8181'
+    }
+
     public static Instance(): Config {
         if (!Config.instance) {
             Config.instance = new Config();

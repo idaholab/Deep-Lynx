@@ -24,6 +24,9 @@ export default class EventRoutes {
         app.get('/event_actions/:actionID', ...middleware, authInContainer('read', 'data'), this.retrieveEventAction);
         app.delete('/event_actions/:actionID', ...middleware, authInContainer('write', 'data'), this.deleteEventAction);
 
+        app.post('/event_actions/:actionID/active', ...middleware, authInContainer('write', 'data'), this.setActive);
+        app.delete('/event_actions/:actionID/active', ...middleware, authInContainer('write', 'data'), this.setInactive);
+
         app.get('/event_actions/:actionID/event_action_status', ...middleware, authInContainer('read', 'data'), this.listEventActionStatusForEventAction);
 
         app.put('/event_action_status/:statusID', ...middleware, authInContainer('write', 'data'), this.updateEventActionStatus);
@@ -47,7 +50,8 @@ export default class EventRoutes {
 
                 Result.Success(payload).asResponse(res);
             })
-            .catch((err) => Result.Error(err).asResponse(res))
+            .catch((err) => {
+                Result.Error(err).asResponse(res)})
             .finally(() => next());
     }
 
@@ -67,7 +71,8 @@ export default class EventRoutes {
 
                 Result.Success(payload).asResponse(res);
             })
-            .catch((err: any) => Result.Failure(err, 499).asResponse(res))
+            .catch((err: any) => {
+                Result.Failure(err, 500).asResponse(res)})
             .finally(() => next());
     }
 
@@ -113,8 +118,17 @@ export default class EventRoutes {
     }
 
     private static listEventActions(req: Request, res: Response, next: NextFunction) {
-        actionRepo
-            .list()
+        let repo = new EventActionRepository();
+
+        if (String(req.query.deleted).toLowerCase() !== 'true') {
+            repo = repo.where().deletedAt('is null');
+        }
+
+        if (String(req.query.containerID)) {
+            repo = repo.where().containerID('eq', req.query.containerID);
+        }
+
+        repo.list()
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
@@ -122,7 +136,8 @@ export default class EventRoutes {
                 }
                 res.status(200).json(result);
             })
-            .catch((err) => Result.Failure(err, 404).asResponse(res))
+            .catch((err) => {
+                Result.Failure(err, 404).asResponse(res)})
             .finally(() => next());
     }
 
@@ -150,6 +165,40 @@ export default class EventRoutes {
                 .finally(() => next());
         } else {
             Result.Failure(`event action not found`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static setActive(req: Request, res: Response, next: NextFunction) {
+        if (req.eventAction) {
+            actionRepo
+                .setActive(req.currentUser!, req.eventAction)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`unable to find event action`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static setInactive(req: Request, res: Response, next: NextFunction) {
+        if (req.eventAction) {
+            actionRepo
+                .setInactive(req.currentUser!, req.eventAction)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`unable to find event action`, 404).asResponse(res);
             next();
         }
     }

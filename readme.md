@@ -60,7 +60,7 @@ You must follow these steps in the exact order given. Failure to do so will caus
 
 1. NodeJS must be installed. You can find the download for your platform here: https://nodejs.org/en/download/ **note** - Newer versions of Node may be incompatible with some of the following commands. The most recent version tested that works fully is 16.13.0 - the latest LTS version.  
 
-2. Clone the DeepLynx [repository](https://gitlab.software.inl.gov/b650/Deep-Lynx/-/tree/master).
+2. Clone the DeepLynx [repository](https://github.inl.gov/Digital-Engineering/DeepLynx/tree/main).
 
 3. Change directories with `cd ./NodeLibraries/dl-fast-load` and run `cargo clean && cargo build --release  --message-format=json-render-diagnostics  > build-output.txt` - this preps the dl-fast-load rust module for installation
 
@@ -152,4 +152,4 @@ Below is a list of all `npm run` commands as listed in the `package.json` file.
 - `watch` Starts the application and rebuilds it each time you make a change to the code. **Note:** this command will not rebuild the bundled Admin Web Application
 - `test`: Runs all tests using the `.env` file to configure application and tests **Note:** You must have run the application at least once so that the database migration took place correctly.
 
-**There is a lot more information about Deep Lynx, and it's capabilities in its [Wiki](https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/Home). We highly recommend you start there if you have questions or need to figure out how best to utilize Deep Lynx in your project.**
+**There is a lot more information about Deep Lynx, and it's capabilities in its [Wiki](https://github.com/idaholab/Deep-Lynx/wiki/). We highly recommend you start there if you have questions or need to figure out how best to utilize Deep Lynx in your project.**
