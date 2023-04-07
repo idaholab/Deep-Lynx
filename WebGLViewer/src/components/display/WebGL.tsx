@@ -26,26 +26,26 @@ export default function WebGL() {
   useEffect(() => {
 
     async function get() {
-      const files = JSON.parse(localStorage.getItem('webgl')!);
-      const token = localStorage.getItem('user.token');
-      const webgl = regex(files);
+      // const files = JSON.parse(localStorage.getItem('webgl')!);
+      // const token = localStorage.getItem('user.token');
+      // const webgl = regex(files);
 
-      let loaderUrl = new URL(`${location.origin}/containers/${webgl.loader.container}/files/${webgl.loader.id}/download`);
-      loaderUrl.searchParams.append("auth_token", token!);
+      // let loaderUrl = new URL(`${location.origin}/containers/${webgl.loader.container}/files/${webgl.loader.id}/download`);
+      // loaderUrl.searchParams.append("auth_token", token!);
 
-      let dataUrl = new URL(`${location.origin}/containers/${webgl.data.container}/files/${webgl.data.id}/download`);
-      dataUrl.searchParams.append("auth_token", token!);
+      // let dataUrl = new URL(`${location.origin}/containers/${webgl.data.container}/files/${webgl.data.id}/download`);
+      // dataUrl.searchParams.append("auth_token", token!);
 
-      let frameworkUrl = new URL(`${location.origin}/containers/${webgl.framework.container}/files/${webgl.framework.id}/download`);
-      frameworkUrl.searchParams.append("auth_token", token!);
+      // let frameworkUrl = new URL(`${location.origin}/containers/${webgl.framework.container}/files/${webgl.framework.id}/download`);
+      // frameworkUrl.searchParams.append("auth_token", token!);
 
-      let codeUrl = new URL(`${location.origin}/containers/${webgl.wasm.container}/files/${webgl.wasm.id}/download`);
-      codeUrl.searchParams.append("auth_token", token!);
+      // let codeUrl = new URL(`${location.origin}/containers/${webgl.wasm.container}/files/${webgl.wasm.id}/download`);
+      // codeUrl.searchParams.append("auth_token", token!);
 
-      setLoaderUrl(loaderUrl);
-      setDataUrl(dataUrl);
-      setFrameworkUrl(frameworkUrl);
-      setCodeUrl(codeUrl);
+      // setLoaderUrl(loaderUrl);
+      // setDataUrl(dataUrl);
+      // setFrameworkUrl(frameworkUrl);
+      // setCodeUrl(codeUrl);
     }
 
     get();
@@ -54,14 +54,14 @@ export default function WebGL() {
 
   return (
     <Box sx={{ height: '100%', width: '100%', position: 'relative' }}>
-      { loaderUrl && dataUrl && frameworkUrl && codeUrl ?
+      {/* { loaderUrl && dataUrl && frameworkUrl && codeUrl ? */}
         <UnityInstance
           loaderUrl={loaderUrl}
           dataUrl={dataUrl}
           frameworkUrl={frameworkUrl}
           codeUrl={codeUrl}
         />
-      : null }
+      {/* : null } */}
     </Box>
   );
 }

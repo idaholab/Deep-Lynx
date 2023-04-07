@@ -29,10 +29,14 @@ function UnityInstance(props: any) {
     removeEventListener,
     isLoaded, } = useUnityContext({
     // These 4 compiled assets are the bundle that Unity generates when you build to WebGL
-    loaderUrl: props.loaderUrl.href,
-    dataUrl: props.dataUrl.href,
-    frameworkUrl: props.frameworkUrl.href,
-    codeUrl: props.codeUrl.href,
+    // loaderUrl: props.loaderUrl.href,
+    // dataUrl: props.dataUrl.href,
+    // frameworkUrl: props.frameworkUrl.href,
+    // codeUrl: props.codeUrl.href,
+      loaderUrl: "webgl/sandbox.loader.js",
+      dataUrl: "webgl/sandbox.data",
+      frameworkUrl: "webgl/sandbox.framework.js",
+      codeUrl: "webgl/sandbox.wasm",
   });
 
   // Dynamic resizing
@@ -45,6 +49,14 @@ function UnityInstance(props: any) {
     setHeight(window.innerHeight);
   };
 
+  // Variables
+  type selectedScene = string;
+  const selectedScene: selectedScene = useAppSelector((state: any) => state.appState.selectedSceneObject);
+  type selectedAssetOnScene = string;
+  const selectedAssetOnScene: selectedAssetOnScene = useAppSelector((state: any) => state.appState.selectAssetOnScene);
+  type highlightedGameObject = string;
+  const highlightedGameObject: highlightedGameObject = useAppSelector((state: any) => state.appState.highlightAssetOnScene);
+
   const handleDataPanel = useCallback((target: string) => {
       // TimeSeries
     },
@@ -54,7 +66,7 @@ function UnityInstance(props: any) {
   const handleNodes = useCallback((response: string) => {
     let nodes = response.split(",");
     dispatch(appStateActions.setUnityNodes(nodes));
-  }, []);
+  }, [selectedScene]);
 
   const handleScenes = useCallback((response: string) => {
     let scenes = response.split(",");
@@ -110,22 +122,16 @@ function UnityInstance(props: any) {
   ]);
 
   // Look At
-  type selectedAssetOnScene = string;
-  const selectedAssetOnScene: selectedAssetOnScene = useAppSelector((state: any) => state.appState.selectAssetOnScene);
   useEffect(() => {
     if(selectedAssetOnScene) handleLookAt(selectedAssetOnScene);
   }, [selectedAssetOnScene]);
 
   // Highlight
-  type highlightedGameObject = string;
-  const highlightedGameObject: highlightedGameObject = useAppSelector((state: any) => state.appState.highlightAssetOnScene);
   useEffect(() => {
     if(highlightedGameObject) handleHighlight(highlightedGameObject);
   }, [highlightedGameObject]);
 
   // Switch Scene
-  type selectedScene = string;
-  const selectedScene: selectedScene = useAppSelector((state: any) => state.appState.selectedSceneObject);
   useEffect(() => {
     if(selectedScene) handleSceneSelection(selectedScene);
   }, [selectedScene]);

@@ -84,14 +84,22 @@ const DrawerLeft: React.FC<Props> = ({}) => {
   const [selected, setSelected] = useState('nodeList');
   const [searchQuery, setSearchQuery] = useState("");
   const [nodes, setNodes] = useState(Array<{ [key: string]: any; }>);
-  const [filteredData, setFilteredData] = useState();
+  const [filteredData, setFilteredData] = useState(); 
+
+  type selectedScene = string;
+  const selectedScene: selectedScene = useAppSelector((state: any) => state.appState.selectedSceneObject);
 
   useEffect(() => {
     async function getNodes() {
-      const token = localStorage.getItem('user.token');
-      const containerId = localStorage.getItem('container');
+      // const token = localStorage.getItem('user.token');
+      const token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGl0eV9wcm92aWRlciI6InNlcnZpY2UiLCJkaXNwbGF5X25hbWUiOiJXZWJHTCIsImVtYWlsIjoiIiwiYWRtaW4iOmZhbHNlLCJhY3RpdmUiOnRydWUsInJlc2V0X3JlcXVpcmVkIjpmYWxzZSwiZW1haWxfdmFsaWQiOmZhbHNlLCJ0eXBlIjoidXNlciIsInBlcm1pc3Npb25zIjpbXSwicm9sZXMiOltdLCJ1c2VyX2lkIjoiMyIsImtleSI6Ik16RXdaalpqWVRndFpURmlaaTAwTkRneExXRTBNbVV0T1dVMFpEUXdNelV6TldRNSIsInNlY3JldCI6IiQyYSQxMCRnbGlFdG02RWV2ZlRmQmllN20xMmRPLjdVY2lsLnIyc2tMNjhhN3JFdEV2OWNuQWdkZEVTLiIsIm5vdGUiOm51bGwsImlkIjoiMyIsImlkZW50aXR5X3Byb3ZpZGVyX2lkIjpudWxsLCJjcmVhdGVkX2F0IjoiMjAyMy0wNC0wNlQwNjowMDowMC4wMDBaIiwibW9kaWZpZWRfYXQiOiIyMDIzLTA0LTA2VDA2OjAwOjAwLjAwMFoiLCJjcmVhdGVkX2J5IjoiMiIsIm1vZGlmaWVkX2J5IjoiMiIsInJlc2V0X3Rva2VuX2lzc3VlZCI6bnVsbCwiaWF0IjoxNjgwODEyMDA0LCJleHAiOjE3MTIzNjk2MDR9.fBFpQcdnDNc4zZ1AIReBkcY89EM8Ri7kQcQ10gnOubnM19e865D3ipZeUen4O_Jd5elJsfjwNyeW_DCJgof78A"
+      // const containerId = localStorage.getItem('container');
+      // const tagId = localStorage.getItem('tag');
+      const containerId = 1;
+      const tagId = 1;
+      dispatch(appStateActions.setContainerId(containerId));
 
-      await axios.get ( `${location.origin}/containers/${containerId}/graphs/nodes`,
+      await axios.get ( `http://localhost:8090/containers/${containerId}/graphs/tags/${tagId}/nodes`,
         {
           headers: {
             Authorization: `bearer ${token}`
@@ -99,13 +107,13 @@ const DrawerLeft: React.FC<Props> = ({}) => {
         }).then (
           (response: any) => {
             console.log(response.data);
-            setNodes(queryFilterData(searchQuery, response.data.value))
+            setNodes(queryFilterData(searchQuery, response.data.value));
           }
         )
     }
 
     getNodes();
-  }, []);
+  }, [selectedScene]);
 
   type openDrawerLeftState = boolean;
   const openDrawerLeftState: openDrawerLeftState = useAppSelector((state: any) => state.appState.openDrawerLeft);
