@@ -16,7 +16,8 @@ const initialState = {
   sceneList: [],
   unityNodes: [],
   deepLynxNodes: [],
-  tagId: '',
+  tag: [],
+  tagId: null,
 };
 
 const appStateSlice = createSlice({
@@ -71,6 +72,14 @@ const appStateSlice = createSlice({
       const store = state;
       store.selectedWebGLFileSetId = action.payload;
     },
+    setTag: (state, action) => {
+      const store = state;
+      store.tag = action.payload;
+    },
+    setTagId: (state, action) => {
+      const store = state;
+      store.tagId = action.payload;
+    },
 
     // DeepLynx data
     setContainerId: (state, action) => {
@@ -80,10 +89,6 @@ const appStateSlice = createSlice({
     setDeepLynxNodes: (state, action) => {
       const store = state;
       store.deepLynxNodes = action.payload;
-    },
-    setTagId: (state, action) => {
-      const store = state;
-      store.tagId = action.payload;
     },
 
     // Unity Data

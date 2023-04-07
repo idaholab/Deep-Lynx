@@ -29,14 +29,14 @@ function UnityInstance(props: any) {
     removeEventListener,
     isLoaded, } = useUnityContext({
     // These 4 compiled assets are the bundle that Unity generates when you build to WebGL
-    // loaderUrl: props.loaderUrl.href,
-    // dataUrl: props.dataUrl.href,
-    // frameworkUrl: props.frameworkUrl.href,
-    // codeUrl: props.codeUrl.href,
-      loaderUrl: "webgl/sandbox.loader.js",
-      dataUrl: "webgl/sandbox.data",
-      frameworkUrl: "webgl/sandbox.framework.js",
-      codeUrl: "webgl/sandbox.wasm",
+    loaderUrl: props.loaderUrl.href,
+    dataUrl: props.dataUrl.href,
+    frameworkUrl: props.frameworkUrl.href,
+    codeUrl: props.codeUrl.href,
+    // loaderUrl: 'webgl/sandbox.loader.js',
+    // dataUrl: 'webgl/sandbox.data',
+    // frameworkUrl: 'webgl/sandbox.framework.js',
+    // codeUrl: 'webgl/sandbox.wasm',
   });
 
   // Dynamic resizing
