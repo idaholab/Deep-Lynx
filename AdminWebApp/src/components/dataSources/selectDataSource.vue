@@ -65,6 +65,9 @@ export default class SelectDataSource extends Vue {
   @Prop({required: false, default: false})
   clear?: boolean
 
+  @Prop({required: false})
+  timeseries?: boolean;
+
   errorMessage = ""
   loading = true
   dataSources: DataSourceT[] = []
@@ -76,28 +79,28 @@ export default class SelectDataSource extends Vue {
     this.key += 1
   }
 
-  beforeMount() {
-    this.$client.listDataSources(this.containerID, this.showArchived)
+  mounted() {
+    this.$client.listDataSources(this.containerID, this.showArchived, this.timeseries)
         .then(dataSources => {
           this.dataSources = dataSources
 
-          if(this.dataSourceID) {
-            if(Array.isArray(this.dataSourceID)) {
+          if (this.dataSourceID) {
+            if (Array.isArray(this.dataSourceID)) {
               this.selected = []
 
               this.dataSourceID.forEach(id => {
                 const source = this.dataSources.find(source => source.id === id)
-                if(source) (this.selected as DataSourceT[]).push(source)
+                if (source) (this.selected as DataSourceT[]).push(source)
               })
             } else {
               const source = this.dataSources.find(source => source.id === this.dataSourceID)
-              if(source) this.selected = source
+              if (source) this.selected = source
             }
           }
         })
         .catch(e => this.errorMessage = e)
         .finally(() => {
-          if(this.selected) {
+          if (this.selected) {
             this.$emit('selected', this.selected)
           }
 
@@ -107,6 +110,50 @@ export default class SelectDataSource extends Vue {
 
   setDataSource(source: DataSourceT) {
     this.$emit('selected', source)
+  }
+
+  // used to reset the select dropdown from parent component
+  reset(tab?: string) {
+    this.selected = null
+    this.dataSources = []
+    this.listDataSources(tab)
+  }
+
+  listDataSources(tab?: string) {
+    let timeseries: boolean | undefined;
+    if (tab && tab === 'timeseries') {
+      timeseries = true
+    } else if (tab) {
+      timeseries = false
+    } else {
+      timeseries = this.timeseries
+    }
+    this.$client.listDataSources(this.containerID, this.showArchived, timeseries)
+        .then(dataSources => {
+          this.dataSources = dataSources
+
+          if (this.dataSourceID) {
+            if (Array.isArray(this.dataSourceID)) {
+              this.selected = []
+
+              this.dataSourceID.forEach(id => {
+                const source = this.dataSources.find(source => source.id === id)
+                if (source) (this.selected as DataSourceT[]).push(source)
+              })
+            } else {
+              const source = this.dataSources.find(source => source.id === this.dataSourceID)
+              if (source) this.selected = source
+            }
+          }
+        })
+        .catch(e => this.errorMessage = e)
+        .finally(() => {
+          if (this.selected) {
+            this.$emit('selected', this.selected)
+          }
+
+          this.loading = false
+        })
   }
 }
 </script>

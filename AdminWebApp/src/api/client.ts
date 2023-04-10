@@ -834,6 +834,10 @@ export class Client {
         return this.get<Map<string, [boolean, string]>>(`/containers/${containerID}/graphs/nodes/${nodeID}/timeseries`);
     }
 
+    downloadTimeseriesData(containerID: string, dataSourceID: string) {
+        return this.get(`/containers/${containerID}/import/datasources/${dataSourceID}/download`);
+    }
+
     retrieveTimeseriesRowCount(containerID: string, dataSourceID: string): Promise<TimeseriesRowCount> {
         return this.get<TimeseriesRowCount>(`/containers/${containerID}/import/datasources/${dataSourceID}/timeseries/count`);
     }

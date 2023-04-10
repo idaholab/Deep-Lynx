@@ -64,6 +64,7 @@ export default {
             settingsDescription: 'Container Level Settings',
             dataImports: 'Import Data',
             dataImportsDescription: 'Manage Imported Data',
+            timeseriesImportsDescription: 'View and Manage Imported Timeseries Data',
             containerAdministration: 'Container Administration',
             containerUsers: 'Container Users',
             containerUsersDescription: 'Manage Container Users',
@@ -691,7 +692,7 @@ export default {
         },
         dataSources: {
             dataSources: 'Data Sources',
-            timeseriesDatasources: 'Timeseries Data Sources',
+            timeseries: 'Timeseries Data Sources',
             copyID: 'Copy ID to clipboard ',
             id: 'ID',
             create: 'Create',

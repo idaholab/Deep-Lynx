@@ -1,48 +1,68 @@
 <template>
   <v-card>
+    <v-tabs grow>
+      <v-tab @click="switchTabs('datasources')">
+        {{ $t('dataSources.dataSources') }}
+      </v-tab>
+      <v-tab @click="switchTabs('timeseries'); refreshTimeseriesDataSources()">
+        {{ $t('dataSources.timeseries') }}
+      </v-tab>
+    </v-tabs>
     <error-banner :message="errorMessage"></error-banner>
     <success-banner :message="successMessage"></success-banner>
-    <v-toolbar flat color="white">
-      <v-toolbar-title>{{$t('home.dataImportsDescription')}}</v-toolbar-title>
-    </v-toolbar>
-    <div class="mx-2">
+    <div class="mx-2" v-if="activeTab === 'datasources'">
+      <v-toolbar flat color="white">
+        <v-toolbar-title>{{$t('home.dataImportsDescription')}}</v-toolbar-title>
+      </v-toolbar>
       <select-data-source
         :containerID="containerID"
         :showArchived="true"
         :dataSourceID="argument"
-        @selected="setDataSource">
-      </select-data-source>
+        @selected="setDataSource"
+        ref="selectDataSource"
+      />
+    </div>
+
+    <div class="mx-2" v-if="activeTab === 'timeseries'">
+      <v-toolbar flat color="white">
+        <v-toolbar-title>{{$t('home.timeseriesImportsDescription')}}</v-toolbar-title>
+      </v-toolbar>
+      <select-data-source
+        :containerID="containerID"
+        :showArchived="true"
+        :timeseries="true"
+        @selected="setDataSource"
+        ref="selectDataSource"
+      />
     </div>
 
     <v-divider v-if="(selectedDataSource !== null)"></v-divider>
 
     <div v-if="(selectedDataSource !== null)">
       <v-data-table
-          :headers="headers()"
-          :items="imports"
-          :server-items-length="importCount"
-          :options.sync="listOptions"
-          :loading="importsLoading"
-          :items-per-page="100"
-          :footer-props="{
-                  'items-per-page-options': [25, 50, 100]
-                }"
+        :headers="headers()"
+        :items="imports"
+        :server-items-length="importCount"
+        :options.sync="listOptions"
+        :loading="importsLoading"
+        :items-per-page="100"
+        :footer-props="{'items-per-page-options': [25, 50, 100]}"
       >
         <template v-slot:top>
           <v-col class="d-flex flex-row">
             <h3 class="text-h3">{{$t('dataImports.tableTitle')}}</h3>
             <v-spacer></v-spacer>
-            <div v-if="selectedDataSource.adapter_type === 'standard' || selectedDataSource.adapter_type === 'manual'">
+            <div v-if="selectedDataSource.adapter_type === 'standard' || selectedDataSource.adapter_type === 'manual' || selectedDataSource.adapter_type === 'timeseries'">
               <import-data-dialog
-                  :dataSourceID="selectedDataSource.id"
-                  :containerID="containerID"
-                  :disabled="!selectedDataSource.active || selectedDataSource.archived"
-                  @importUploaded="listImports">
+                :dataSourceID="selectedDataSource.id"
+                :containerID="containerID"
+                :disabled="!selectedDataSource.active || selectedDataSource.archived"
+                @importUploaded="listImports">
               </import-data-dialog>
             </div>
           </v-col>
         </template>
-        
+
         <template v-slot:item.percentage_processed="{ item }">
           {{ item.total_records == 0 ? $t('dataImports.noData') : (Math.round((item.records_inserted / item.total_records) * 100) * 100 / 100).toFixed(2) + "%" }}
         </template>
@@ -53,38 +73,38 @@
         </template>
 
         <template v-slot:item.actions="{ item }">
-          <v-icon
-              small
-              class="mr-2"
-              @click="viewItem(item)"
-          >
+          <v-icon small class="mr-2" @click="viewItem(item)" v-if="activeTab === 'datasources'">
             mdi-eye
           </v-icon>
-          <delete-data-import-dialog :containerID="containerID" :dataImport="item" :icon="true" @dataImportDeleted="listImports"></delete-data-import-dialog>
-          <reprocess-data-import-dialog :containerID="containerID" :dataImport="item" :icon="true" @dataImportReprocessed="listImports"></reprocess-data-import-dialog>
+          <timeseries-source-dialog v-if="activeTab === 'timeseries'"
+            :containerID="containerID"
+            :dataSourceID="selectedDataSource.id"
+            :icon="true"
+          />
+          <delete-data-import-dialog v-if="activeTab === 'datasources'"
+            :containerID="containerID"
+            :dataImport="item" :icon="true"
+            @dataImportDeleted="listImports"
+          ></delete-data-import-dialog>
+          <reprocess-data-import-dialog v-if="activeTab === 'dataSources'"
+            :containerID="containerID"
+            :dataImport="item"
+            :icon="true"
+            @dataImportReprocessed="listImports"
+          ></reprocess-data-import-dialog>
         </template>
       </v-data-table>
     </div>
 
     <v-dialog
-        v-model="dialog"
-        fullscreen
-        hide-overlay
-        transition="dialog-bottom-transition"
+      v-model="dialog"
+      fullscreen
+      hide-overlay
+      transition="dialog-bottom-transition"
     >
-
       <v-card>
-        <v-toolbar
-            dark
-            color="warning"
-            flat
-            tile
-        >
-          <v-btn
-              icon
-              dark
-              @click="dialog = false"
-          >
+        <v-toolbar dark color="warning" flat tile>
+          <v-btn icon dark @click="dialog = false">
             <v-icon>mdi-close</v-icon>
           </v-btn>
           <v-toolbar-title>{{$t("dataImports.dataView")}}</v-toolbar-title>
@@ -94,19 +114,16 @@
         <error-banner :message="dataErrorMessage"></error-banner>
         <success-banner :message="dataSuccessMessage"></success-banner>
         <v-data-table
-            :headers="importDataHeaders()"
-            :items="importData"
-            class="elevation-1"
-            :server-items-length="importDataCount"
-            :options.sync="options"
-            :loading="importLoading"
-            :items-per-page="100"
-            :footer-props="{
-                'items-per-page-options':[25,50,100]
-              }"
+          :headers="importDataHeaders()"
+          :items="importData"
+          class="elevation-1"
+          :server-items-length="importDataCount"
+          :options.sync="options"
+          :loading="importLoading"
+          :items-per-page="100"
+          :footer-props="{'items-per-page-options':[25,50,100]}"
         >
-          <template v-slot:top>
-          </template>
+          <template v-slot:top></template>
 
           <template v-slot:[`item.id`]="{ item }">
             <v-tooltip top>
@@ -123,32 +140,22 @@
           </template>
 
           <template v-slot:item.actions="{ item }">
-            <v-icon
-                small
-                class="mr-2"
-                @click="viewImportData(item)"
-            >
+            <v-icon small class="mr-2" @click="viewImportData(item)">
               mdi-eye
             </v-icon>
-            <v-icon
-                small
-                @click="deleteImportData(item)"
-            >
+            <v-icon small @click="deleteImportData(item)">
               mdi-delete
             </v-icon>
           </template>
         </v-data-table>
       </v-card>
     </v-dialog>
-    <v-dialog
-      v-model="dataDialog"
-      width="60%"
-      scrollable
-    >
+
+    <v-dialog v-model="dataDialog" width="60%" scrollable>
       <v-card class="d-flex flex-column">
         <v-card-title class="grey lighten-2 flex-shrink-1">
           <span class="headline text-h3">{{$t('dataImports.viewData')}}</span>
-        </v-card-title>   
+        </v-card-title>
 
         <json-viewer
           class="pt-4 px-4 flex-grow-1"
@@ -164,11 +171,7 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog
-        v-model="mappingDialog"
-        width="90%"
-        scrollable
-    >
+    <v-dialog v-model="mappingDialog" width="90%" scrollable>
       <v-card class="d-flex flex-column">
         <v-card-title class="grey lighten-2 flex-shrink-1">
           <span class="headline text-h3">{{$t('dataImports.editTypeMapping')}}</span>
@@ -198,6 +201,7 @@ import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
 import DeleteDataImportDialog from "@/components/dataImport/deleteDataImportDialog.vue";
 import ReprocessDataImportDialog from "@/components/dataImport/reprocessDataImportDialog.vue";
 import {mdiFileDocumentMultiple} from "@mdi/js";
+import TimeseriesSourceDialog from '@/components/data/timeseriesSourceDialog.vue';
 
 
 @Component({filters: {
@@ -210,7 +214,8 @@ import {mdiFileDocumentMultiple} from "@mdi/js";
     DataTypeMapping,
     SelectDataSource,
     DeleteDataImportDialog,
-    ReprocessDataImportDialog
+    ReprocessDataImportDialog,
+    TimeseriesSourceDialog
   }
 })
 export default class DataImports extends Vue {
@@ -254,15 +259,19 @@ export default class DataImports extends Vue {
   importDataCount = 0
   importLoading = false
   selectedDataShapeHash = ''
+  activeTab = 'datasources'
+  timeseriesDataSources: DataSourceT[] = []
+  timeseriesLoading = false
+
+  $refs!: {
+    selectDataSource: SelectDataSource
+  }
 
   headers() {
-    return  [{
-      text: this.$t('dataImports.createdAt'),
-      value: "created_at",
-    },
+    const headers = [
       {
-        text: this.$t('dataImports.percentageProcessed'),
-        value: "percentage_processed"
+        text: this.$t('dataImports.createdAt'),
+        value: "created_at",
       },
       {
         text: this.$t('dataImports.status'),
@@ -278,7 +287,27 @@ export default class DataImports extends Vue {
         value: "status_message",
         sortable: false
       },
-      { text: this.$t('dataImports.viewEditData'),  value: 'actions', sortable: false }]
+      { text: this.$t('dataImports.viewEditData'),
+        value: 'actions',
+        sortable: false
+      }
+    ]
+
+    if (this.activeTab === 'datasources') {
+      headers.splice(1, 0, {
+        text: this.$t('dataImports.percentageProcessed'),
+        value: "percentage_processed"
+      })
+    }
+
+    return headers;
+  }
+
+  switchTabs(tab: string) {
+    this.activeTab = tab
+    this.resetDropdown(tab)
+    this.selectedDataSource = null
+    this.$forceUpdate()
   }
 
   importDataHeaders() {
@@ -302,6 +331,16 @@ export default class DataImports extends Vue {
       {  text: this.$t('dataImports.viewDeleteData'), value: 'actions', sortable: false },]
   }
 
+  timeseriesHeaders() {
+    return [
+      { text: '', value: 'copy'},
+      { text: this.$t('dataSources.id'), value: 'id'},
+      { text: this.$t('dataSources.name'), value: 'name'},
+      { text: 'Index Type', value: 'type'},
+      { text: this.$t('dataSources.active'), value: 'active'},
+      { text: 'Actions', value: 'actions'},
+    ]
+  }
 
   @Watch('options')
   onOptionChange() {
@@ -359,7 +398,24 @@ export default class DataImports extends Vue {
         .then(dataSources => {
           this.dataSources = dataSources
         })
+        .catch(e => this.errorMessage = e);
+
+    this.refreshTimeseriesDataSources();
+  }
+
+  refreshTimeseriesDataSources() {
+    this.timeseriesLoading = true
+    this.$client.listDataSources(this.containerID, true, true)
+        .then(dataSources => {
+          this.timeseriesDataSources= dataSources
+        })
         .catch(e => this.errorMessage = e)
+        .finally(() => this.timeseriesLoading = false)
+  }
+
+  downloadTimeseriesData(sourceID: string) {
+    this.$client.downloadTimeseriesData(this.containerID, sourceID)
+      .catch(e => this.errorMessage = e)
   }
 
   deleteItem(importT: ImportT) {
@@ -372,15 +428,17 @@ export default class DataImports extends Vue {
   }
 
   viewItem(importT: ImportT) {
-    this.selectedImport = importT
-    this.loadImportData()
+    if (this.activeTab === 'datasources') {
+      this.selectedImport = importT
+      this.loadImportData()
 
-    this.$client.countImportData(this.containerID, importT.id)
-        .then((count) => {
-          this.importDataCount = count
-          this.dialog = true
-        })
-        .catch((e: any) => this.errorMessage = e)
+      this.$client.countImportData(this.containerID, importT.id)
+          .then((count) => {
+            this.importDataCount = count
+            this.dialog = true
+          })
+          .catch((e: any) => this.errorMessage = e)
+    }
   }
 
   loadImportData() {
@@ -453,6 +511,10 @@ export default class DataImports extends Vue {
 
   copyID(id: string) {
     navigator.clipboard.writeText(id)
+  }
+
+  resetDropdown(tab: string) {
+    this.$refs.selectDataSource!.reset(tab)
   }
 }
 </script>
