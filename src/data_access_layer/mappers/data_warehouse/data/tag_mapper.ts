@@ -275,7 +275,13 @@ export default class TagMapper extends Mapper {
 
     private nodesWithTag(tagID: string): QueryConfig {
         return {
-            text: `SELECT nodes.* FROM nodes LEFT JOIN node_tags ON nodes.id = node_tags.node_id WHERE tag_id = $1`,
+            text: `SELECT DISTINCT ON (nodes.id) nodes.*
+            FROM nodes 
+            JOIN node_tags 
+            ON nodes.id = node_tags.node_id 
+            WHERE tag_id = $1
+            AND nodes.deleted_at IS NULL
+            ORDER BY nodes.id, nodes.created_at DESC`,
             values: [tagID],
         };
     }
@@ -294,7 +300,13 @@ export default class TagMapper extends Mapper {
 
     private edgesWithTag(tagID: string): QueryConfig {
         return {
-            text: `SELECT edges.* FROM edges LEFT JOIN edge_tags ON edges.id = edge_tags.edge_id WHERE tag_id = $1`,
+            text: `SELECT DISTINCT ON (edges.origin_id, edges.destination_id, edges.data_source_id, edges.relationship_pair_id) edges.*
+            FROM edges 
+            JOIN edge_tags 
+            ON edges.id = edge_tags.edge_id 
+            WHERE tag_id = $1
+            AND edges.deleted_at IS NULL
+            ORDER BY edges.origin_id, edges.destination_id, edges.data_source_id, edges.relationship_pair_id, edges.created_at DESC`,
             values: [tagID],
         };
     }
