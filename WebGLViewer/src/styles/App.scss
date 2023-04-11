@@ -68,12 +68,21 @@ Button {
 
 .main-container-sizing {
   height: calc(100vh - 64px);
-  width: calc(100vw);
+  width: calc(100vw - 64px);
   overflow: hidden;
   transition: all 400ms;
 
-  &.main-container-sizing-with-drawer {
-    width: calc(100vw - 365px);
+  div {
+    height: calc(100vh - 64px);
+  }
+
+  &.main-container-sizing-with-list-drawer {
+    width: calc(100vw - 430px);
+    transition: all 400ms;
+  }
+
+  &.main-container-sizing-with-info-drawer {
+    width: calc(100vw - 800px);
     transition: all 400ms;
   }
 }
@@ -82,12 +91,4 @@ Button {
   width: 100% !important;
   height: 100% !important;
   transition: all 400ms;
-}
-
-.drawer-left-sizing {
-  flex: 1 0 100%;  
-
-  &.drawer-left-sizing-asset-selected {
-    flex: 1 0 50%;
-  }
 }

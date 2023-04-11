@@ -6,10 +6,10 @@ const loader_ext = /^[^.]+.loader.js$/;
 function regex(arr) {
   // This function takes an array of files, and uses regex to organize them by file extension, returning an object:
   //   {
-  //     data: { id: '1', container_id: '1', file_name: 'WebGL.data' },
-  //     loader: { id: '2', container_id: '1', file_name: 'WebGL.loader.js' },
-  //     framework: { id: '3', container_id: '1', file_name: 'WebGL.framework.js' },
-  //     wasm: { id: '4', container_id: '1', file_name: 'WebGL.wasm' }
+  //     data: { id: '1', container_id: '1', file_name: 'WebGL.data', tag_name: 'tag' },
+  //     loader: { id: '2', container_id: '1', file_name: 'WebGL.loader.js', tag_name: 'tag' },
+  //     framework: { id: '3', container_id: '1', file_name: 'WebGL.framework.js', tag_name: 'tag' },
+  //     wasm: { id: '4', container_id: '1', file_name: 'WebGL.wasm', tag_name: 'tag' }
   //   }
 
   let results = {};
@@ -22,6 +22,7 @@ function regex(arr) {
             id: obj.file_id,
             container: obj.container_id,
             file_name: value,
+            tag_name: obj.tag_name,
           };
         }
 
@@ -30,6 +31,7 @@ function regex(arr) {
             id: obj.file_id,
             container: obj.container_id,
             file_name: value,
+            tag_name: obj.tag_name,
           };
         }
         if (framework_ext.test(value) === true) {
@@ -37,6 +39,7 @@ function regex(arr) {
             id: obj.file_id,
             container: obj.container_id,
             file_name: value,
+            tag_name: obj.tag_name,
           };
         }
         if (loader_ext.test(value) === true) {
@@ -44,6 +47,7 @@ function regex(arr) {
             id: obj.file_id,
             container: obj.container_id,
             file_name: value,
+            tag_name: obj.tag_name,
           };
         }
       }

@@ -3,9 +3,14 @@ import React from "react";
 
 // Hooks
 import { useEffect, useState } from "react";
+import { useAppSelector, useAppDispatch } from '../../../app/hooks/reduxTypescriptHooks';
 
 // Helpers
 import regex from "../../../app/helpers/regex";
+import regexTag from "../../../app/helpers/tags";
+
+// Import Redux Actions
+import { appStateActions } from '../../../app/store/index';
 
 // MUI Components
 import {
@@ -15,20 +20,36 @@ import {
 // Custom Components 
 import UnityInstance from "./UnityInstance";
 
-export default function WebGL() {
+// Axios
+import axios from "axios";
 
+export default function WebGL() {
+  // Store
+  const dispatch = useAppDispatch();
+
+  // LocalStorage
+  const token = localStorage.getItem('user.token');
+  const containerId = localStorage.getItem('container');
+  const files = JSON.parse(localStorage.getItem('webgl')!);
+  
   // WebGL Urls
   const [loaderUrl, setLoaderUrl] = useState<URL>();
   const [dataUrl, setDataUrl] = useState<URL>();
   const [frameworkUrl, setFrameworkUrl] = useState<URL>();
   const [codeUrl, setCodeUrl] = useState<URL>();
 
-  useEffect(() => {
+  // Tag
+  type webgl_tag = string;
+  const webgl_tag: webgl_tag = useAppSelector((state: any) => state.appState.tag);
 
+  useEffect(() => {
     async function get() {
-      const files = JSON.parse(localStorage.getItem('webgl')!);
-      const token = localStorage.getItem('user.token');
       const webgl = regex(files);
+      const tag = regexTag(webgl);
+
+      console.log("Tag: " + tag);
+      
+      dispatch(appStateActions.setTag(tag));
 
       let loaderUrl = new URL(`${location.origin}/containers/${webgl.loader.container}/files/${webgl.loader.id}/download`);
       loaderUrl.searchParams.append("auth_token", token!);
@@ -52,6 +73,32 @@ export default function WebGL() {
     
   }, []);
 
+  useEffect(() => {
+
+    async function getTagId()
+    {
+      await axios.get(`${location.origin}/containers/${containerId}/graphs/tags`,
+      {
+        headers: {
+            Authorization: `bearer ${token}`
+          }
+        }
+      ).then((response) => {
+        console.log(response.data);
+        let tags = response.data.value;
+        tags.forEach((tag: any) => {
+          if (tag.tag_name == webgl_tag)
+          {
+            console.log("Tag ID: " + tag.id);
+            dispatch(appStateActions.setTagId(tag.id));
+          }
+        })
+      })
+    }
+
+    if(webgl_tag != "") getTagId();
+  }, [webgl_tag])
+
   return (
     <Box sx={{ height: '100%', width: '100%', position: 'relative' }}>
       { loaderUrl && dataUrl && frameworkUrl && codeUrl ?
@@ -61,7 +108,7 @@ export default function WebGL() {
           frameworkUrl={frameworkUrl}
           codeUrl={codeUrl}
         />
-      : null }
+      : null } 
     </Box>
   );
 }

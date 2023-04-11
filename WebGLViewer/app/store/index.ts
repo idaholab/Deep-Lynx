@@ -2,29 +2,45 @@ import { createSlice, configureStore } from '@reduxjs/toolkit';
 import { webGLReducer } from './slices/webGLSlice';
 
 const initialState = {
-  openDrawerLeft: true,
-  openDrawerLeftWidth: 365,
+  openDrawerLeft: false,
+  openDrawerLeftWidth: 64,
   openDrawerRight: false,
   openDrawerRightWidth: 425,
   selectedAssetObject: {},
+  selectedSceneObject: {},
+  selectedWebGLFileSetId: null,
   selectAssetOnScene: '',
   highlightAssetOnScene: '',
   dataViewObject: {},
+  containerId: null,
+  sceneList: [],
+  unityNodes: [],
+  deepLynxNodes: [],
+  tag: [],
+  tagId: null,
 };
 
 const appStateSlice = createSlice({
   name: 'appState',
   initialState,
   reducers: {
+    // App functions
     toggleDrawerLeft: (state) => {
       const store = state;
       store.openDrawerLeft = !store.openDrawerLeft;
+    },
+    setDrawerLeftWidth: (state, action) => {
+      const store = state;
+      store.openDrawerLeftWidth = action.payload;
     },
     toggleDrawerRight: (state) => {
       const store = state;
       store.openDrawerRight = !store.openDrawerRight;
     },
+
+    // Asset functions
     selectAssetObject: (state, action) => {
+      console.log(action.payload);
       const store = state;
       store.selectedAssetObject = action.payload;
     },
@@ -40,6 +56,46 @@ const appStateSlice = createSlice({
       const store = state;
       store.dataViewObject = action.payload;
     },
+
+    // Scene functions
+    selectSceneObject: (state, action) => {
+      const store = state;
+      store.selectedSceneObject = action.payload;
+    },
+    setSceneList: (state, action) => {
+      const store = state;
+      store.sceneList = action.payload;
+    },
+
+    // WebGL File Set Functions
+    setWebGLFileSetId: (state, action) => {
+      const store = state;
+      store.selectedWebGLFileSetId = action.payload;
+    },
+    setTag: (state, action) => {
+      const store = state;
+      store.tag = action.payload;
+    },
+    setTagId: (state, action) => {
+      const store = state;
+      store.tagId = action.payload;
+    },
+
+    // DeepLynx data
+    setContainerId: (state, action) => {
+      const store = state;
+      store.containerId = action.payload;
+    },
+    setDeepLynxNodes: (state, action) => {
+      const store = state;
+      store.deepLynxNodes = action.payload;
+    },
+
+    // Unity Data
+    setUnityNodes: (state, action) => {
+      const store = state;
+      store.unityNodes = action.payload;
+    }
   },
 });
 
