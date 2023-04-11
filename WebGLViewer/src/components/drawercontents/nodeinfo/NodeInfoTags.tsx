@@ -41,9 +41,6 @@ const NodeInfoTags: React.FC<Props> = ({
     // {title: 'Actions', alignment: 'center'},
   ];
 
-  type webGLFileSetId = Array<{ [key: string]: any; }>;
-  const webGLFileSetId = useAppSelector((state: any) => state.appState.selectedWebGLFileSetId);
-
   useEffect(() => {
     async function getTagList() {
       const token = localStorage.getItem('user.token');
@@ -57,17 +54,15 @@ const NodeInfoTags: React.FC<Props> = ({
           (response: any) => {
             const responseTagList = response.data.value;
             responseTagList.map((obj: any) => {
-              if (obj.id === webGLFileSetId) {
-                let tagList: Array<{ [key: string]: any; }> = [];
-                if (typeof(obj.tag_name) === 'string') {
-                  tagList = [{name: obj.tag_name}]
-                } else if (Array.isArray(obj.tag_name)) {
-                  obj.tag_name.map((tag: string) => {
-                    responseTagList.push({name: tag})
-                  })
-                }
-                setTableRowData(tagList);
+              let tagList: Array<{ [key: string]: any; }> = [];
+              if (typeof(obj.tag_name) === 'string') {
+                tagList = [{name: obj.tag_name}]
+              } else if (Array.isArray(obj.tag_name)) {
+                obj.tag_name.map((tag: string) => {
+                  responseTagList.push({name: tag})
+                })
               }
+              setTableRowData(tagList);
             })
           }
         )

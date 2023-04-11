@@ -73,12 +73,8 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
           }
         }).then (
           (response: any) => {
-            setNodeHistory(() => {
-              const history = response.data.value;
-              return (
-                history
-              )
-            })
+            console.log(response.data.value);
+            setNodeHistory(response.data.value);
           }
         )
     }
@@ -108,7 +104,7 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
                 >
                   { key }
                 </Typography>
-                {value !== null
+                {value !== null && value !== undefined
                   ? (
                     <Typography>{ value.toString() }</Typography>
                   ) : (

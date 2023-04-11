@@ -46,6 +46,8 @@ export default function WebGL() {
     async function get() {
       const webgl = regex(files);
       const tag = regexTag(webgl);
+
+      console.log("Tag: " + tag);
       
       dispatch(appStateActions.setTag(tag));
 
@@ -87,6 +89,7 @@ export default function WebGL() {
         tags.forEach((tag: any) => {
           if (tag.tag_name == webgl_tag)
           {
+            console.log("Tag ID: " + tag.id);
             dispatch(appStateActions.setTagId(tag.id));
           }
         })
