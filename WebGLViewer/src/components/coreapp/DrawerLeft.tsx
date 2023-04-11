@@ -95,7 +95,7 @@ const DrawerLeft: React.FC<Props> = ({}) => {
       const token = localStorage.getItem('user.token');
       const containerId = localStorage.getItem('container');
 
-      dispatch(appStateActions.setContainerId(1));
+      dispatch(appStateActions.setContainerId(containerId));
 
       await axios.get ( `${location.origin}/containers/${containerId}/graphs/tags/${tag_id}/nodes`,
         {
