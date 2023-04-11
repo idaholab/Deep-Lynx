@@ -491,7 +491,7 @@ export default class DataSourceMapper extends Mapper {
     private hypertableCopyToStatement(source: DataSourceRecord, options?: copyTableOptions): string {
         const config = source.config as TimeseriesDataSourceConfig;
 
-        if (!options || !options.startTimeOrIndex || !options.endTime) {
+        if (!options || !options.startTimeOrIndex) {
             if (options && options.secondaryIndexName && options.secondaryIndexStartValue) {
                 return `COPY (SELECT * FROM y_${source.id} WHERE ${format(
                     '%I > %L',
