@@ -89,13 +89,13 @@ export default class TagRepository extends Repository implements RepositoryInter
                 return Promise.resolve(Result.Pass(results));
             }
         } else {
-            // If the tag already exists in this container, pass
-            const original = await this.retrieve(tag.tag_name!);
+            // If the tag already exists in this container with this name, alert the user
+            const original = await this.containerID('eq', tag.container_id).retrieve(tag.tag_name!);
             if (original.isError) {
                 return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
             } else if (original.value) {
                 Object.assign(tag, original.value);
-                return Promise.resolve(Result.Pass(original));
+                return Promise.resolve(Result.Failure('A tag with this name already exists. Please choose a new name.'));
             }
 
             // If the incoming tag doesn't exist in the database, create a new one
