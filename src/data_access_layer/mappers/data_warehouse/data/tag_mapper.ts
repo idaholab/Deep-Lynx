@@ -326,6 +326,7 @@ export default class TagMapper extends Mapper {
                    INNER JOIN tags
                    ON tags.id = file_tags.tag_id
                    WHERE tags.metadata->>'webgl' = 'true'
+                   AND tags.container_id = $1
                    AND files.container_id = $1
                    ORDER BY file_id, file_modified_at DESC;`,
             values: [containerID],
