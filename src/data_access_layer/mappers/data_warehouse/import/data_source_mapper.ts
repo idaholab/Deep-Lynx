@@ -158,10 +158,7 @@ export default class DataSourceMapper extends Mapper {
                 }
 
                 const stream = client.query(copyTo(this.hypertableCopyToStatement(source, options)));
-                stream.on('error', (err) => {
-                    console.log(err);
-                    done;
-                });
+                stream.on('error', done);
                 stream.on('end', done);
 
                 return resolve(Result.Success(stream));
