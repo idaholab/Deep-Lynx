@@ -242,14 +242,12 @@ export default class IfcViewer extends Vue {
         //@ts-ignore
         const geometry = found.object.geometry;
         const ifc = ifcLoader.ifcManager;
-        ifc.getExpressId(geometry, index as number)
-        .then((id: any) => {
+        const id = ifc.getExpressId(geometry, index as number)
+        //@ts-ignore
+        ifc.getItemProperties(found.object.modelID, id, true)
+        .then((properties) => {
           //@ts-ignore
-          ifc.getItemProperties(found.object.modelID, id, true)
-          .then((properties) => {
-            //@ts-ignore
-            vue.selected = properties
-          })
+          vue.selected = properties
         })
       }
     }
@@ -276,21 +274,19 @@ export default class IfcViewer extends Vue {
         //@ts-ignore
         const geometry = found.object.geometry;
         const ifc = ifcLoader.ifcManager;
-        ifc.getExpressId(geometry, index as number)
-        .then((id: any) => {
-          // Creates subset
-          ifcLoader.ifcManager.createSubset({
-            modelID: model.id,
-            ids: [id],
-            material: material,
-            scene: scene,
-            removePrevious: true
-          })
+        const id = ifc.getExpressId(geometry, index as number)
+        // Creates subset
+        ifcLoader.ifcManager.createSubset({
+          modelID: model.id,
+          ids: [id],
+          material: material,
+          scene: scene,
+          removePrevious: true
         })
 
       } else {
         // Removes previous highlight
-        ifc.removeSubset(model.id, scene, material);
+        ifc.removeSubset(model.id, material);
       }
     }
 

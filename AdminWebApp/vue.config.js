@@ -1,5 +1,5 @@
 module.exports = {
-    transpileDependencies: ['vuetify', '@observablehq/plot', 'plot', 'vuex-persist'],
+    transpileDependencies: ['vuetify', 'plot', 'vuex-persist'],
     devServer: {
         client: {
             logging: 'info',
