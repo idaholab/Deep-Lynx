@@ -1405,7 +1405,7 @@ export default class GraphQLRunner {
                 // eslint-disable-next-line @typescript-eslint/no-misused-promises
                 return new Promise((resolve) =>
                     repo
-                        .list(true, {
+                        .list(false, {
                             limit: input._record?.limit ? input._record.limit : 10000,
                             offset: input._record?.page ? input._record.limit * (input._record.page > 0 ? input._record.page - 1 : 0) : undefined,
                             sortBy,
@@ -1726,7 +1726,7 @@ export default class GraphQLRunner {
                 // eslint-disable-next-line @typescript-eslint/no-misused-promises
                 return new Promise((resolve) =>
                     repo
-                        .list(true, {
+                        .list(false, {
                             limit: input.limit ? input.limit : 10000,
                             offset: input.page ? input.limit * (input.page > 0 ? input.page - 1 : 0) : undefined,
                             sortBy,
@@ -2135,7 +2135,7 @@ export default class GraphQLRunner {
                 // eslint-disable-next-line @typescript-eslint/no-misused-promises
                 return new Promise((resolve) =>
                     repo
-                        .list(true, {limit: 10000})
+                        .list(false, {limit: input._record?.limit ? input._record.limit : 10000})
                         .then((results) => {
                             if (results.isError) {
                                 Logger.error(`unable to list edges ${results.error?.error}`);
