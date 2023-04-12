@@ -28,7 +28,7 @@
           >
             <v-icon>{{ isOpen ? 'mdi-minus' : 'mdi-plus' }}</v-icon>
           </v-btn>
-          {{ items[0].tag_name }}
+          {{ items[0].tag_name }} ({{ items[0].id }})
 
           <edit-tag-dialog
               :containerID="items[0].container_id"
@@ -141,6 +141,7 @@ export default class FileManager extends Vue {
 
   open3DViewer(selectedTag: any) {
     localStorage.setItem("webgl", JSON.stringify(selectedTag));
+    localStorage.setItem("container", this.containerID);
     window.open(`${Config.deepLynxApiUri}/viewer`, "_blank");
   }
 

@@ -2,9 +2,9 @@
 import * as React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
-// Hooks
-import { useEffect } from 'react';
-import { useAppSelector, useAppDispatch } from '../app/hooks/reduxTypescriptHooks';
+// Import Packages
+import "@fontsource/source-sans-pro/400.css"; // Weight 400.
+import "@fontsource/source-sans-pro/600.css"; // Weight 600.
 
 // MUI Styles
 import {
@@ -26,9 +26,7 @@ import COLORS from './styles/variables';
 import './styles/App.scss';
 
 // Custom Components
-import MainScaffold from './layouts/MainScaffold';
 import Dashboard from './pages/Dashboard';
-// import Settings from './pages/Settings';
 
 const getDesignTokens = (mode: PaletteMode) => ({
   palette: {
@@ -39,10 +37,6 @@ const getDesignTokens = (mode: PaletteMode) => ({
     secondary: {
       main: COLORS.colorSecondary,
     },
-    // background: {
-    //   default: 'rgb(18, 18, 18)',
-    //   paper: 'rgb(18, 18, 18)',
-    // },
     text: {
       ...(mode === 'light'
         ? {
@@ -61,7 +55,7 @@ const getDesignTokens = (mode: PaletteMode) => ({
   typography: {
     fontFamily: [
       'Source Sans Pro',
-      'serif',
+      'sans-serif',
     ].join(','),
   },
   components: {
@@ -91,7 +85,7 @@ function App() {
   theme.typography.h1 = {
     fontFamily: [
       'Montserrat',
-      'serif',
+      'sans-serif',
     ].join(','),
     fontSize: '1rem',
   };
@@ -99,7 +93,7 @@ function App() {
   theme.typography.h2 = {
     fontFamily: [
       'Montserrat',
-      'serif',
+      'sans-serif',
     ].join(','),
     fontSize: '1.5rem',
   };
@@ -107,7 +101,7 @@ function App() {
   theme.typography.h3 = {
     fontFamily: [
       'Montserrat',
-      'serif',
+      'sans-serif',
     ].join(','),
     fontSize: '1.25rem',
   };
@@ -115,7 +109,7 @@ function App() {
   theme.typography.h4 = {
     fontFamily: [
       'Montserrat',
-      'serif',
+      'sans-serif',
     ].join(','),
     fontSize: '1rem',
   };
@@ -123,7 +117,7 @@ function App() {
   theme.typography.h5 = {
     fontFamily: [
       'Montserrat',
-      'serif',
+      'sans-serif',
     ].join(','),
     fontSize: '1rem',
   };
@@ -131,7 +125,7 @@ function App() {
   theme.typography.h6 = {
     fontFamily: [
       'Montserrat',
-      'serif',
+      'sans-serif',
     ].join(','),
     fontSize: '1rem',
   };
@@ -139,12 +133,10 @@ function App() {
   return (
     <div className="App">
       <CssBaseline>
-        <MainScaffold>
-          <Routes>
-            <Route path="/viewer" element={<Dashboard />} />
-            {/* <Route path="/settings" element={<Settings />} /> */}
-          </Routes>
-        </MainScaffold>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/viewer" element={<Dashboard />} />
+        </Routes>
       </CssBaseline>
     </div>
   );

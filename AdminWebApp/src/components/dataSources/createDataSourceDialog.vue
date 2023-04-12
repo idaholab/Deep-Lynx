@@ -820,7 +820,7 @@ export default class CreateDataSourceDialog extends Vue {
     return this.authorized.includes(type);
   }
 
-  async refreshSourceAuth(type?: string) {
+  async refreshSourceAuth() {
     // clear existing permissions
     this.authorized = [];
 

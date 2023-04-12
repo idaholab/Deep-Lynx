@@ -11,7 +11,14 @@
         </template>
 
         <template v-slot:item.actions="{ item }">
-          <node-timeseries-dialog :nodeID="nodeID" :containerID="containerID" :dataSourceID="item.value[1]" :legacy="item.value[0]"  @timeseriesDialogClose="incrementKey" :key="key"></node-timeseries-dialog>
+          <node-timeseries-dialog 
+            :nodeID="nodeID" 
+            :containerID="containerID" 
+            :dataSourceID="item.value[1]" 
+            :legacy="item.value[0]"
+            @timeseriesDialogClose="incrementKey" 
+            :key="key"
+          />
         </template>
       </v-data-table>
     </v-col>

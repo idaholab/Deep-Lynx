@@ -139,6 +139,11 @@ export default class DataSourceRoutes {
                         return;
                     }
 
+                    stream.value.on('error', (e: any) => {
+                        Result.Error(e).asResponse(res);
+                        next();
+                    });
+
                     const fileRepo = new FileRepository();
                     fileRepo
                         .uploadFile(req.container?.id!, req.currentUser!, `${req.dataSource?.DataSourceRecord?.name}-${new Date().toISOString()}`, stream.value)

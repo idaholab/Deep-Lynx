@@ -509,21 +509,21 @@ export default class DataSourceMapper extends Mapper {
         if (primaryTimestampColumn?.type === 'date') {
             if (options && options.secondaryIndexName && options.secondaryIndexStartValue) {
                 return `COPY (SELECT * FROM y_${source.id} WHERE ${format(primaryTimestampColumn?.column_name)} BETWEEN ${format(
-                    'to_timestamp("%s", %L)',
+                    'to_timestamp(%L, %L)',
                     options.startTimeOrIndex,
                     formatString,
-                )} AND ${options.endTime ? format('to_timestamp("%s", %L)', options.endTime, formatString) : format('NOW()')} AND ${format(
+                )} AND ${options.endTime ? format('to_timestamp(%L, %L)', options.endTime, formatString) : format('NOW()')} AND ${format(
                     '%I > %L',
                     options.secondaryIndexName,
                     options.secondaryIndexStartValue,
                 )}) TO STDOUT WITH (FORMAT CSV, HEADER)`;
             } else {
                 return `COPY (SELECT * FROM y_${source.id} WHERE ${format(primaryTimestampColumn?.column_name)} BETWEEN ${format(
-                    'to_timestamp("%s", %L)',
+                    'to_timestamp(%L, %L)',
                     options.startTimeOrIndex,
                     formatString,
                 )} AND ${
-                    options.endTime ? format('to_timestamp("%s", %L)', options.endTime, formatString) : format('NOW()')
+                    options.endTime ? format('to_timestamp(%L, %L)', options.endTime, formatString) : format('NOW()')
                 }) TO STDOUT WITH (FORMAT CSV, HEADER)`;
             }
         }

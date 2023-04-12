@@ -8,9 +8,6 @@ import File from '../../../../../domain_objects/data_warehouse/data/file';
 // Express
 import {NextFunction, Request, Response} from 'express';
 
-// Mappers
-import FileDataStorage from '../../../../../data_access_layer/mappers/data_warehouse/data/file_mapper';
-
 // Repository
 import NodeRepository from '../../../../../data_access_layer/repositories/data_warehouse/data/node_repository';
 import EdgeRepository from '../../../../../data_access_layer/repositories/data_warehouse/data/edge_repository';
@@ -213,7 +210,14 @@ export default class FileFunctions {
                     return;
                 }
 
+                if (file.value.file_size) {
+                    res.set({
+                        'Content-Length': file.value.file_size > 0 ? file.value.file_size * 1000 : 0,
+                        'Accept-Ranges': 'bytes',
+                    });
+                }
                 res.attachment(file.value.file_name);
+
                 fileRepo
                     .downloadFile(file.value)
                     .then((stream) => {

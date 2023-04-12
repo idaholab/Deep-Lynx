@@ -29,6 +29,8 @@ import {
     CreateServiceUserPayloadT,
     ServiceUserPermissionSetT,
     FullStatistics,
+    EventActionT,
+    EventActionStatusT,
     TagT,
     TimeseriesRange,
     TimeseriesRowCount,
@@ -432,7 +434,7 @@ export class Client {
         const query: {[key: string]: any} = {};
         if (note) query.note = note;
 
-        return this.get<KeyPairT[]>(`/containers/${containerID}/service-users/keys`)
+        return this.get<KeyPairT[]>(`/containers/${containerID}/service-users/keys`);
     }
 
     generateKeyPairForServiceUser(containerID: string, serviceUserID: string, note?: string): Promise<KeyPairT> {
@@ -739,6 +741,64 @@ export class Client {
         return this.postNoPayload(`/containers/${containerID}/import/imports/${importID}/reprocess`);
     }
 
+    //****** EVENT SYSTEM CLIENTS ******//
+
+    createEvent(event: any): Promise<EventActionT> {
+        return this.post<EventActionT>(`/events`, event);
+    }
+
+    activateEventAction(actionID: string): Promise<boolean> {
+        return this.postNoPayload(`/event_actions/${actionID}/active`);
+    }
+
+    deactivateEventAction(actionID: string): Promise<boolean> {
+        return this.delete(`/event_actions/${actionID}/active`);
+    }
+
+    createEventAction(action: any): Promise<EventActionT> {
+        return this.post<EventActionT>('/event_actions', action);
+    }
+
+    updateEventAction(action: EventActionT): Promise<EventActionT> {
+        return this.put<EventActionT>(`/event_actions/${action.id}`, action);
+    }
+
+    listEventActions(archived = false, containerID?: string): Promise<EventActionT[]> {
+        // we hardcoded the sortBy to insure we're always getting archived data sources at the bottom of the list
+        const query: {[key: string]: any} = {};
+        query.archived = archived;
+        query.sortBy = 'archived';
+        if (containerID) {
+            query.containerID = containerID;
+        }
+        return this.get<EventActionT[]>(`/event_actions`, query);
+    }
+
+    retrieveEventAction(actionID: string): Promise<EventActionT> {
+        return this.get<EventActionT>(`/event_actions/${actionID}`);
+    }
+
+    deleteEventAction(actionID: string): Promise<boolean> {
+        return this.delete(`/event_actions/${actionID}`);
+    }
+
+    listEventActionStatusForEventAction(actionID: string): Promise<EventActionStatusT[]> {
+        return this.get<EventActionStatusT[]>(`/event_actions/${actionID}/event_action_status`);
+    }
+
+    updateEventActionStatus(status: EventActionT): Promise<EventActionStatusT> {
+        return this.put<EventActionStatusT>(`/event_action_status/${status.id}`, status);
+    }
+
+    listEventActionStatuses(archived = false): Promise<EventActionStatusT[]> {
+        // we hardcoded the sortBy to insure we're always getting archived data sources at the bottom of the list
+        return this.get<EventActionStatusT[]>(`/event_action_status`, {archived, sortBy: 'archived'});
+    }
+
+    retrieveEventActionStatus(statusID: string): Promise<EventActionStatusT> {
+        return this.get<EventActionStatusT>(`/event_action_status/${statusID}`);
+    }
+
     createOrUpdateNode(containerID: string, node: any): Promise<NodeT[]> {
         return this.post<NodeT[]>(`/containers/${containerID}/graphs/nodes`, node);
     }
@@ -772,6 +832,10 @@ export class Client {
 
     listTimeseriesTables(containerID: string, nodeID: string): Promise<Map<string, [boolean, string]>> {
         return this.get<Map<string, [boolean, string]>>(`/containers/${containerID}/graphs/nodes/${nodeID}/timeseries`);
+    }
+
+    downloadTimeseriesData(containerID: string, dataSourceID: string) {
+        return this.get(`/containers/${containerID}/import/datasources/${dataSourceID}/download`);
     }
 
     retrieveTimeseriesRowCount(containerID: string, dataSourceID: string): Promise<TimeseriesRowCount> {

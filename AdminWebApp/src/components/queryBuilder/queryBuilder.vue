@@ -10,7 +10,7 @@
               <v-list-item-content>
                 <v-list-item-subtitle>No queries to display</v-list-item-subtitle>
               </v-list-item-content>
-            </v-list-item>            
+            </v-list-item>
             <v-list-item
               v-for="result of previousResults" :key="result.id"
               @click="setResult(result)"
@@ -113,7 +113,7 @@
 
                           <v-divider></v-divider><br/>
 
-                          To get started, try selecting one of the sample query templates below. 
+                          To get started, try selecting one of the sample query templates below.
                           Be sure to remove any comments and replace text in CAPS before running the query!
 
                           <br/>
@@ -129,13 +129,13 @@
 
                           <br/>
 
-                          While writing your query, hit "Ctrl-Space" to bring up the autocompletion menu. 
+                          While writing your query, hit "Ctrl-Space" to bring up the autocompletion menu.
                           This menu provides some of the available schema from which to query. <br/><br/>
 
-                          In the results window you can hold down the "Alt" key and click on an the arrow for 
+                          In the results window you can hold down the "Alt" key and click on an the arrow for
                           an object or array to fully expand the contents.
                           </v-card-text>
-                          
+
                         </v-card>
                       </v-menu>
 
@@ -153,7 +153,7 @@
                   <span v-if="!loading">{{$t('queryBuilder.runQuery')}}</span>
                 </v-btn>
               </v-row>
-              
+
 
               <v-row style="margin-bottom:15px">
                 <v-col :cols="6">
@@ -234,54 +234,54 @@ export default class QueryBuilder extends Vue {
 // SAMPLE QUERIES
 // hardcoded, format and indentation matters
 
-  metatypeSampleQuery = 
-`{ 
+  metatypeSampleQuery =
+`{
   metatypes {
-    YOUR_METATYPE_HERE # optionally add desired filters within () 
+    YOUR_METATYPE_HERE # optionally add desired filters within ()
     {
       # metatype properties you wish to retrieve here
       _record { # contains metadata about the node
         id
-        data_source_id 
-        original_id 
-        import_id 
-        metatype_id 
-        metatype_name 
-        created_at 
-        created_by 
-        modified_at 
-        modified_by 
+        data_source_id
+        original_id
+        import_id
+        metatype_id
+        metatype_name
+        created_at
+        created_by
+        modified_at
+        modified_by
         metadata
-      } 
-    } 
+      }
+    }
   }
 }`
 
-relationshipSampleQuery = 
-`{ 
+relationshipSampleQuery =
+`{
   relationships {
-    YOUR_REALTIONSHIP_HERE # optionally add desired filters within () 
+    YOUR_REALTIONSHIP_HERE # optionally add desired filters within ()
     {
       # relationship properties you wish to retrieve here
       _record { # contains metadata about the edge
         id
-        data_source_id 
-        original_id 
-        import_id 
-        metatype_id 
-        metatype_name 
-        created_at 
-        created_by 
-        modified_at 
-        modified_by 
+        data_source_id
+        original_id
+        import_id
+        metatype_id
+        metatype_name
+        created_at
+        created_by
+        modified_at
+        modified_by
         metadata
-      } 
-    } 
+      }
+    }
   }
 }`
 
   introspectiveQuery = // good for metatypes, relationships, and graphs
-`{ 
+`{
   __type(name:"YOUR_METATYPE_OR_RELATIONSHIP_HERE OR graph_type"){
     name
     fields{
@@ -305,7 +305,7 @@ relationshipSampleQuery =
     destination_properties
 
     origin_id
-    origin_metatype_id 
+    origin_metatype_id
     origin_metatype_name
 
     edge_id
@@ -321,9 +321,9 @@ relationshipSampleQuery =
     path
   }
 }
-` 
+`
 
-  simpleGraphQuery = 
+  simpleGraphQuery =
 `{
   graph(
     root_node: "NODE_ID"
@@ -407,11 +407,11 @@ relationshipSampleQuery =
     // run the default query on page load
     this.submitQuery()
   }
-  
+
   setRawEditor() {
     this.activeTab = 'rawEditor'
     this.$emit('disableGraphEdit', true)
-    
+
     // clear any graph results
     if (this.results !== null) {
       this.results = null
@@ -432,7 +432,7 @@ relationshipSampleQuery =
   }
 
   enableQueryEditor() {
-    
+
     if (this.codeMirror === null) {
 
       const queryEditor = this.$refs.queryEditor as any;
@@ -457,9 +457,9 @@ relationshipSampleQuery =
           schema: this.schema,
         },
       })
-      
+
     }
-    
+
   }
 
   updateSelectedQuery(newQuery: string) {
@@ -555,7 +555,7 @@ relationshipSampleQuery =
     this.$client.submitGraphQLQuery(this.containerID, query, {rawMetadataEnabled: this.rawMetadataEnabled})
         .then((results: any) => {
           if(results.errors) {
-            this.errorMessage = results.errors[0].message ? 
+            this.errorMessage = results.errors[0].message ?
               results.errors.map(function(result: any) { return result.message }).join(", ") : (results.errors as string[]).join(' ')
             return
           }
@@ -748,5 +748,5 @@ export type ResultSet = {
     &:nth-child(2) {
       border-top-left-radius: 6px;
     }
-  }  
+  }
 </style>

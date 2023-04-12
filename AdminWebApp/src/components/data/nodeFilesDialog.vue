@@ -64,6 +64,10 @@
 
         <template v-slot:[`item.actions`]="{ item }">
           <v-flex style="display: flex; height: 100%; align-items: center">
+            <ViewMediaFileDialog v-if="isVideo(item.file_name)">
+              <!-- <VideoPlayer :options="videoOptions"  /> -->
+              <VideoPlayer :options="viewVideo(item)" />
+            </ViewMediaFileDialog>
             <v-icon
                 small
                 @click="downloadFile(item)"
@@ -75,7 +79,7 @@
             <v-icon
                 small
                 @click="removeFile(item)"
-                class="mx-2"
+                class=""
             >
               mdi-delete
             </v-icon>
@@ -83,7 +87,7 @@
             <ifc-viewer v-if="item.file_name.includes('.ifc')" :file="item" :icon="true"></ifc-viewer>
 
             <div @click="viewImage(item)" style="display: flex; height: 100%">
-              <img :id="item.file_name" v-if="isImage(item.file_name)" v-observe-visibility="generateThumbnail(item)" :src="imageURL(item)" style="max-height: 50px; max-width: 150px" :alt="item.file_name">
+              <img :id="item.file_name" v-if="isImage(item.file_name)" v-observe-visibility="generateThumbnail(item)" :src="fileURL(item)" style="max-height: 50px; max-width: 150px" :alt="item.file_name">
             </div>
 
           </v-flex>
@@ -104,8 +108,10 @@ import Viewer from 'viewerjs';
 import {AxiosBasicCredentials, AxiosRequestConfig, AxiosResponse, default as axios} from "axios";
 import {RetrieveJWT} from "@/auth/authentication_service";
 import buildURL from "build-url";
+import ViewMediaFileDialog from "../dialogs/ViewMediaFileDialog.vue";
+import VideoPlayer from "../media/VideoPlayer.vue";
 
-@Component({components: {IfcViewer}})
+@Component({components: {IfcViewer, ViewMediaFileDialog, VideoPlayer}})
 export default class NodeFilesDialog extends Vue {
   @Prop({required: true})
   readonly node!: NodeT
@@ -117,6 +123,8 @@ export default class NodeFilesDialog extends Vue {
   files: FileT[] = []
   copy = mdiFileDocumentMultiple
   imageViewers: Map<string, Viewer> = new Map()
+
+  videoOptions = {}
 
   @Watch('node', {immediate: true})
   onNodeChange() {
@@ -160,6 +168,28 @@ export default class NodeFilesDialog extends Vue {
     if (viewer) viewer.show(true);
   }
 
+  viewVideo(file: FileT) {
+    const filepath = this.fileURL(file)
+    return {
+      autoplay: true,
+      controls: true,
+      fluid: true,
+      controlBar: {
+        skipButtons: {
+          forward: 5
+        }
+      },
+      preload: 'auto',
+      responsive: true,
+      sources: [
+        {
+          src: filepath,
+          type: 'video/mp4'
+        }
+      ]
+    }
+  }
+
   headers() {
     return [
       {text: this.$t('nodeFiles.id'), value: 'id', sortable: false},
@@ -183,6 +213,7 @@ export default class NodeFilesDialog extends Vue {
               .finally(() => {
                 this.addFileDialog = false
                 this.fileLoading = false
+                this.$emit('nodeFilesDialogClose')
               })
         })
   }
@@ -238,12 +269,18 @@ export default class NodeFilesDialog extends Vue {
     return extensions.some(ext => fileName.includes(ext));
   }
 
-  imageURL(file: FileT): string {
+  isVideo(fileName: string): boolean {
+    const extensions = ['mp4'];
+
+    return extensions.some(ext => fileName.includes(ext));
+  }
+
+  fileURL(file: FileT): string {
     const token = localStorage.getItem('user.token');
 
-    const imageUrl = new URL(`${Config.deepLynxApiUri}/containers/${file.container_id}/files/${file.id}/download`);
-    imageUrl.searchParams.append("auth_token", token!);
-    return imageUrl.toString()
+    const fileUrl = new URL(`${Config.deepLynxApiUri}/containers/${file.container_id}/files/${file.id}/download`);
+    fileUrl.searchParams.append("auth_token", token!);
+    return fileUrl.toString()
   }
 
   copyID(id: string) {

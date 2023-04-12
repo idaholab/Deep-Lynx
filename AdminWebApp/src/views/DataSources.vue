@@ -5,7 +5,7 @@
         {{ $t('dataSources.dataSources') }}
       </v-tab>
       <v-tab @click="activeTab = 'timeseriesDatasources'; refreshTimeseriesDataSources()">
-        {{ $t('dataSources.timeseriesDatasources') }}
+        {{ $t('dataSources.timeseries') }}
       </v-tab>
     </v-tabs>
     <error-banner :message="errorMessage"></error-banner>
@@ -13,7 +13,6 @@
         v-if="activeTab ==='datasources'"
         :headers="headers()"
         :items="dataSources"
-        sort-by="calories"
         :loading="dataSourcesLoading"
         class="elevation-1"
     >
@@ -91,7 +90,6 @@
         v-if="activeTab ==='timeseriesDatasources'"
         :headers="headers()"
         :items="timeseriesDataSources"
-        sort-by="calories"
         class="elevation-1"
     >
       <template v-slot:top>
@@ -135,6 +133,13 @@
         />
       </template>
       <template v-slot:[`item.actions`]="{ item }">
+        <timeseries-source-dialog v-if="activeTab === 'timeseriesDatasources'"
+          :containerID="containerID"
+          :dataSourceID="item.id"
+          :icon="true"
+          :key="timeseriesKey"
+          @timeseriesDialogClose="incrementKey"
+        ></timeseries-source-dialog>
         <edit-data-source-dialog
             :containerID="containerID"
             :dataSource="item"
@@ -168,12 +173,14 @@ import DeleteDataSourceDialog from "@/components/dataSources/deleteDataSourceDia
 import {mdiFileDocumentMultiple} from "@mdi/js";
 import ReprocessDataSourceDialog from "@/components/dataImport/reprocessDataSourceDialog.vue";
 import EditDataSourceDialog from "@/components/dataSources/editDataSourceDialog.vue";
+import TimeseriesSourceDialog from '@/components/data/timeseriesSourceDialog.vue';
 
 @Component({components:{
     CreateDataSourceDialog,
     EditDataSourceDialog,
     DeleteDataSourceDialog,
-    ReprocessDataSourceDialog
+    ReprocessDataSourceDialog,
+    TimeseriesSourceDialog
   }})
 export default class DataSources extends Vue {
   @Prop({required: true})
@@ -187,6 +194,7 @@ export default class DataSources extends Vue {
   errorMessage = ""
   copy = mdiFileDocumentMultiple
   activeTab = 'datasources'
+  timeseriesKey = 0
 
   headers() {
     return [
@@ -238,6 +246,10 @@ export default class DataSources extends Vue {
           })
           .catch((e: any) => this.errorMessage = e)
     }
+  }
+
+  incrementKey() {
+    this.timeseriesKey += 1
   }
 
   copyID(id: string) {

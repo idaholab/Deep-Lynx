@@ -2,17 +2,15 @@
 import * as React from 'react';
 
 // Hooks
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../../../app/hooks/reduxTypescriptHooks';
 
 // Import Packages
-import classNames from 'classnames';
+import { v4 as uuidv4 } from 'uuid';
+import axios from 'axios';
 
 // Import Redux Actions
 import { appStateActions } from '../../../app/store/index';
-
-// MUI Styles
-import { useTheme } from '@mui/material/styles';
 
 // MUI Components
 import {
@@ -22,28 +20,35 @@ import {
   FormControl,
   List,
   ListItem,
-  ListItemText,
+  ListItemIcon,
   ListItemButton,
   OutlinedInput,
-  Paper,
-  Stack,
-  Toolbar,
   Tooltip,
-  Typography
+  Typography,
 } from '@mui/material';
 
+
 // MUI Icons
+import MenuIcon from '@mui/icons-material/Menu';
+import MenuOpenIcon from '@mui/icons-material/MenuOpen';
+import CategoryIcon from '@mui/icons-material/Category';
+import ImageIcon from '@mui/icons-material/Image';
 import InfoIcon from '@mui/icons-material/Info';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 // Custom Components
-import MetadataPanels from '../display/MetadataPanels';
+import DrawerContentsNodeList from '../drawercontents/DrawerContentsNodeList';
+import DrawerContentsNodeInfo from '../drawercontents/DrawerContentsNodeInfo';
+import DrawerContentsSceneList from '../drawercontents/DrawerContentsSceneList';
+import DrawerContentsSettings from '../drawercontents/DrawerContentsSettings';
+import ButtonIconText from '../elements/ButtonIconText';
 
-// Import styles
+// Styles
 import '../../styles/App.scss';
 // @ts-ignore
-import COLORS from '../../styles/variables';
+import COLORS from '../../../src/styles/variables';
 
-const filterData = (query: any, data: any) => {
+const queryFilterData = (query: any, data: any) => {
   if (!query) {
     return data;
   } else {
@@ -52,7 +57,7 @@ const filterData = (query: any, data: any) => {
 };
 
 const SearchBar = ({setSearchQuery}: any) => (
-  <FormControl fullWidth sx={{ mr: 2 }} variant="outlined" size="small">
+  <FormControl fullWidth variant="outlined" size="small">
     <OutlinedInput
       id="search-bar"
       className="text"
@@ -70,12 +75,42 @@ const SearchBar = ({setSearchQuery}: any) => (
   </FormControl>
 );
 
-export default function DrawerLeft(props: any) {
-  const { children } = props;
+type Props = {};
 
-  const theme = useTheme();
+const DrawerLeft: React.FC<Props> = ({}) => {
 
   const dispatch = useAppDispatch();
+
+  const [selected, setSelected] = useState('nodeList');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [nodes, setNodes] = useState(Array<{ [key: string]: any; }>);
+  const [filteredData, setFilteredData] = useState(); 
+
+  // Tag
+  type tag_id = number;
+  const tag_id: tag_id = useAppSelector((state: any) => state.appState.tagId);
+
+  useEffect(() => {
+    async function getNodes() {
+      const token = localStorage.getItem('user.token');
+      const containerId = localStorage.getItem('container');
+
+      dispatch(appStateActions.setContainerId(containerId));
+
+      await axios.get ( `${location.origin}/containers/${containerId}/graphs/tags/${tag_id}/nodes`,
+        {
+          headers: {
+            Authorization: `bearer ${token}`
+          }
+        }).then (
+          (response: any) => {
+            setNodes(queryFilterData(searchQuery, response.data.value));
+          }
+        )
+    }
+
+    if(tag_id) getNodes();
+  }, [tag_id]);
 
   type openDrawerLeftState = boolean;
   const openDrawerLeftState: openDrawerLeftState = useAppSelector((state: any) => state.appState.openDrawerLeft);
@@ -83,343 +118,219 @@ export default function DrawerLeft(props: any) {
   type openDrawerLeftWidth = number;
   const openDrawerLeftWidth: openDrawerLeftWidth = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);
 
-  const [searchQuery, setSearchQuery] = useState("");
+  const handleToggleOpenDrawerLeft = () => {
+    dispatch(appStateActions.toggleDrawerLeft());
+    if (openDrawerLeftWidth === 64) {
+      dispatch(appStateActions.setDrawerLeftWidth(430));
+    } else if (openDrawerLeftWidth === 430 || openDrawerLeftWidth === 800) {
+      dispatch(appStateActions.setDrawerLeftWidth(64));
+      dispatch(appStateActions.selectAssetObject({}));
+    }
+  };
 
-  const [selected, setSelected] = React.useState<string | false>(false);
-
+  // Selected Asset Object
   type selectedAssetObject = any;
   const selectedAssetObject: selectedAssetObject = useAppSelector((state: any) => state.appState.selectedAssetObject);
-  const handleSelectAssetObject = (obj: any, selectedItem: string) => {
-    dispatch(appStateActions.selectAssetObject(obj));
-    setSelected(selectedItem);
+
+  const handleDeselectAssetObject = () => {
+    dispatch(appStateActions.selectAssetObject({}));
+    dispatch(appStateActions.setDrawerLeftWidth(430));
   };
 
-  type selectAssetOnScene = string;
-  const selectAssetOnScene: selectAssetOnScene = useAppSelector((state: any) => state.appState.selectAssetOnScene);
-  const handleSelectAssetOnScene = (payload: string) => {
-    dispatch(appStateActions.selectAssetOnScene(payload))
+  // Menu links and menu link selection
+  const menuLinkList = [
+    {
+      title: 'Nodes',
+      icon: CategoryIcon,
+      pane: 'nodeList'
+    },
+    {
+      title: 'Scenes',
+      icon: ImageIcon,
+      pane: 'sceneList'
+    },
+    {
+      title: 'Settings',
+      icon: SettingsIcon,
+      pane: 'settings'
+    },
+  ]
+
+  const handleSelectMenuLink = (selectedLink: string) => {
+    setSelected(selectedLink);
+    if (openDrawerLeftState === false) {
+      dispatch(appStateActions.toggleDrawerLeft());
+    }
+    dispatch(appStateActions.setDrawerLeftWidth(430));
+    dispatch(appStateActions.selectAssetObject({}));
   };
 
-  type highlightAssetOnScene = string;
-  const highlightAssetOnScene: highlightAssetOnScene = useAppSelector((state: any) => state.appState.highlightAssetOnScene);
-  const handleHighlightAssetOnScene = (payload: string) => {
-    dispatch(appStateActions.highlightAssetOnScene(payload))
-  };
-
-  const handleShowAssetOnGraph = (payload: string) => {
-    console.log('Action to \"Show On Graph\" clicked!')
-  }
-
-  const handleToggleDataView = (payload: string) => {
-    dispatch(appStateActions.setDataViewObject(payload));
-    dispatch(appStateActions.toggleDrawerRight())
-  }
+  // Component display switching
+  const menuItemMatchesComponent = (pane: string) => selected === pane;
 
   return (
-    <Drawer
+    <Drawer variant="permanent" open={openDrawerLeftState}
       sx={{
-        width: openDrawerLeftWidth,
-        flexShrink: 0,
-        '& .MuiDrawer-paper': {
-          width: openDrawerLeftWidth,
-          boxSizing: 'border-box',
-          background: COLORS.colorLightgray,
+        '& > .MuiDrawer-paper': {
+          border: 'none'
         },
+        ...(openDrawerLeftState === true && {
+          transition: 'width .4s',
+          width: openDrawerLeftWidth,
+          '& .MuiDrawer-paper': {
+            transition: 'width .4s',
+            width: openDrawerLeftWidth
+          }
+        }),
+        ...(openDrawerLeftState === false && {
+          transition: 'width .4s',
+          width: '64px',
+          '& .MuiDrawer-paper': {
+            transition: 'width .4s',
+            width: '64px'
+          }
+        })
       }}
-      variant="persistent"
-      anchor="left"
-      open={openDrawerLeftState}
     >
-      <Box sx={{ width: '100%', overflow: 'hidden', paddingBottom: '12px', marginBottom: '-10px' }}>
-        <Paper square={true} elevation={3} sx={{ width: '102%', height: '64px', backgroundColor: COLORS.colorSecondary, }}>
-          <Toolbar sx={{ padding: 0 }}>
-            <img alt="Deep Lynx Logo" width="100" src="/assets/lynx-white.png" style={{ marginLeft: '-8px' }} />
-          </Toolbar>
-        </Paper>
-      </Box>
+      <Box sx={{ display: 'flex', height: '100%', marginTop: '64px', alignItems: 'stretch' }}>
+        <Box sx={{ display: 'flex', height: '100%', backgroundColor: COLORS.colorLightgray3 }}>
+          <List sx={{ p: 0 }}>
+            {/* Hamburger menu icon to open and close Drawer */}
+            <ListItem key={uuidv4()} disablePadding>
+              <ListItemButton
+                sx={{
+                  minHeight: 64,
+                  px: 2.5,
+                  backgroundColor: '#E3B180',
+                  '&.Mui-selected': {
+                    backgroundColor: `${COLORS.colorSecondary} !important`
+                  },
+                  '&.Mui-focusVisible': {
+                    backgroundColor: `${COLORS.colorSecondary} !important`
+                  },
+                  '&:hover': {
+                    backgroundColor: `${COLORS.colorSecondary} !important`
+                  }
+                }}
+                onClick={handleToggleOpenDrawerLeft}
+              >
+                <ListItemIcon
+                  sx={{
+                    minWidth: 0,
+                    mr: 'auto',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {openDrawerLeftState ? <MenuOpenIcon /> : <MenuIcon />}
+                </ListItemIcon>
+              </ListItemButton>
+            </ListItem>
 
-
-      <Box sx={{ display: 'flex', height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
-        <Box
-          sx={{ display: 'flex', flexDirection: 'column', padding: '16px 0px 0', overflowX: 'hidden', }}
-          className={classNames(
-            'drawer-left-sizing',
-            {
-              'drawer-left-sizing-asset-selected': Object.keys(selectedAssetObject).length !== 0,
-            },
-          )}
-        >
-
-          {/* <Box sx={{ flex: '1, 1, auto', display: 'flex', flexDirection: 'row', alignItems: 'center', marginBottom: '12px' }}>
+            {/* Drawer Menu link list */}
+            {menuLinkList.map((menuLinkItem, index) => {
+              const MenuLinkItemIcon = menuLinkItem.icon;
+              return (
+                <ListItem key={uuidv4()} disablePadding>
+                  <ListItemButton
+                    sx={{
+                      minHeight: 64,
+                      px: 2.5,
+                      '&.Mui-selected': {
+                        backgroundColor: `${COLORS.colorListSelectDarkGray} !important`
+                      },
+                      '&.Mui-focusVisible': {
+                        backgroundColor: `${COLORS.colorListSelectDarkGray} !important`
+                      },
+                      '&:hover': {
+                        backgroundColor: `${COLORS.colorListSelectDarkGray} !important`
+                      }
+                    }}
+                    selected={menuItemMatchesComponent(menuLinkItem.pane)}
+                    onClick={() => handleSelectMenuLink(menuLinkItem.pane)}
+                  >
+                    <ListItemIcon
+                      sx={{
+                        minWidth: 0,
+                        mr: 'auto',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <MenuLinkItemIcon />
+                    </ListItemIcon>
+                  </ListItemButton>
+                </ListItem>
+              )
+            })}
+          </List>
+        </Box>
+        <Box sx={{ display: 'flex', height: '100%', flex: '1 0', flexDirection: 'column', overflowX: 'hidden', backgroundColor: COLORS.colorLightgray }}>
+          <Box sx={{ flex: '1, 1, auto', display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '16px' }}>
             <Typography
               variant="h3"
               sx={{
                 alignItems: 'center',
-                padding: '0 0 0 16px'
+                padding: '5px 0px'
               }}
             >
-              Assets
-            </Typography>
-            <Tooltip title="View scene asset/object information. Select and Highlight objects. Show on Graph. View Data.">
-              <InfoIcon sx={{ fill: COLORS.colorDarkgray2, marginLeft: '10px', marginRight: '10px', height: '15px', width: '15px' }} />
-            </Tooltip>
-            <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-          </Box>
-          <Box sx={{ display: 'flex', flexDirection: 'row', fontSize: '14px', padding: '0px 10px 6px' }}>
-            <Box sx={{ borderRight: `1px solid ${COLORS.colorDarkgray2}`, paddingRight: '6px', marginRight: '6px' }}>
-              Id
-            </Box>
-            <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              Title
-            </Box>
-          </Box> */}
-          <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0', borderTop: `1px solid ${COLORS.colorDarkgray}` }}>
-            {/* <List dense sx={{ paddingTop: '0' }}>
-              {dataFiltered.map((object: any, index: number) => (
-                <ListItem
-                  key={object.id}
-                  disablePadding
-                  sx={{ borderBottom: `1px solid ${COLORS.colorDarkgray}` }}
-                  secondaryAction={
-                    <Stack spacing={.5} direction="row">
-                      <Button
-                        variant="contained"
-                        size="small"
-                        sx={{
-                          height: '25px',
-                          width: '25px',
-                          padding: '4px',
-                          minWidth: '25px',
-                          '& span': {
-                            fontSize: '18px'
-                          }
-                        }}
-                        onClick={() => {
-                          handleSelectAssetOnScene(object.title)
-                        }}
-                      >
-                        <span className="material-symbols-rounded">
-                          ads_click
-                        </span>
-                      </Button>
-                      <Button
-                        variant="contained"
-                        size="small"
-                        sx={{
-                          height: '25px',
-                          width: '25px',
-                          padding: '4px',
-                          minWidth: '25px',
-                          '& span': {
-                            fontSize: '18px'
-                          }
-                        }}
-                        onClick={() => {
-                          handleHighlightAssetOnScene(object.title)
-                        }}
-                      >
-                        <span className="material-symbols-rounded">
-                          highlight
-                        </span>
-                      </Button>
-                      <Button
-                        variant="contained"
-                        size="small"
-                        sx={{
-                          height: '25px',
-                          width: '25px',
-                          padding: '4px',
-                          minWidth: '25px',
-                          '& span': {
-                            fontSize: '16px'
-                          }
-                        }}
-                        onClick={() => {
-                          handleShowAssetOnGraph(object)
-                        }}
-                      >
-                        <span className="material-symbols-rounded">
-                          hub
-                        </span>
-                      </Button>
-                      <Button
-                        variant="contained"
-                        size="small"
-                        sx={{
-                          height: '25px',
-                          width: '25px',
-                          padding: '4px',
-                          minWidth: '25px',
-                          '& span': {
-                            fontSize: '18px'
-                          }
-                        }}
-                        onClick={() => {
-                          handleToggleDataView(object)
-                        }}
-                      >
-                        <span className="material-symbols-rounded">
-                          show_chart
-                        </span>
-                      </Button>
-                    </Stack>
-                  }
+              {selected === 'nodeList' && (Object.keys(selectedAssetObject).length === 0) ? 'Nodes'
+                : selected === 'sceneList' ? 'Scenes'
+                : selected === 'settings' ? 'Settings'
+                : `Node ${selectedAssetObject.id}`
+              }
+              {(Object.keys(selectedAssetObject).length !== 0) && 
+                <span
+                  style={{
+                    marginLeft: '8px',
+                    paddingLeft: '8px',
+                    borderLeft: `1px solid ${COLORS.colorDarkgray2}`
+                  }}
                 >
-                  <ListItemButton
-                    onClick={() => handleSelectAssetObject(object, `listItem${index+1}`)}
-                    selected={selected === `listItem${index+1}`}
-                    sx={{
-                      '&.Mui-selected': {
-                        backgroundColor: `${COLORS.colorListSelectGray} !important`
-                      },
-                      '&.Mui-focusVisible': {
-                        backgroundColor: `${COLORS.colorListSelectGray} !important`
-                      },
-                      '&:hover': {
-                        backgroundColor: `${COLORS.colorListSelectGray} !important`
-                      }
-                    }}
-                  >
-                    <ListItemText>
-                      <Box sx={{ display: 'flex', flexDirection: 'row' }}>
-                        <Box sx={{ borderRight: `1px solid ${COLORS.colorDarkgray2}`, paddingRight: '6px', marginRight: '6px' }}>
-                          { object.id }
-                        </Box>
-                        <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          { object.title }
-                        </Box>
-                      </Box>
-                    </ListItemText>
-                  </ListItemButton>
-                </ListItem>
-              ))}
-            </List> */}
+                  { selectedAssetObject.properties.name }
+                </span>
+              }
+            </Typography>
+            <Tooltip title={
+              selected === 'nodeList' ? 'View scene asset/object information. Select and Highlight objects. Show on Graph. View Data.'
+              : selected === 'sceneList' ? 'View and change Scenes'
+              : selected === 'settings' ? 'View and edit Settings'
+              : null
+            }>
+              <InfoIcon
+                sx={{
+                  fill: COLORS.colorDarkgray2,
+                  marginLeft: '10px',
+                  marginRight: '10px',
+                  height: '15px',
+                  width: '15px'
+                }}
+              />
+            </Tooltip>
+            {(selected === 'nodeList' && (Object.keys(selectedAssetObject).length === 0)) &&
+              <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+            }
+            {(selected === 'nodeList' && (Object.keys(selectedAssetObject).length !== 0)) &&
+              // <Box sx={{ flex: '1, 1, auto', display: 'flex', flexDirection: 'row', alignItems: 'center', margin: '12px 0px 12px auto' }}>
+              <Box sx={{ position: 'absolute', right: '0px', paddingRight: '16px' }}>
+                <ButtonIconText text='Back To List' handleClick={() => handleDeselectAssetObject()} type="close" color="error" />
+              </Box>
+            }
           </Box>
+          {selected === 'nodeList' && 
+            <>
+              {(Object.keys(selectedAssetObject).length === 0) && <DrawerContentsNodeList data={nodes} />}
+              {(Object.keys(selectedAssetObject).length !== 0) && <DrawerContentsNodeInfo />}
+            </>
+          }
+          {selected === 'sceneList' && 
+            <DrawerContentsSceneList />
+          }
+          {selected === 'settings' && 
+            <DrawerContentsSettings />
+          }
         </Box>
-        {Object.keys(selectedAssetObject).length !== 0 && 
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              flex: '0 50%',
-              borderTop: `1px solid ${COLORS.colorDarkgray}`,
-              padding: '16px 0px 0px 16px',
-              backgroundColor: COLORS.colorLightgray3,
-              overflow: 'hidden'
-            }}
-          >
-            <Box sx={{  }}>
-              <Typography
-                variant="h3"
-                sx={{  }}
-              >
-                Asset Information
-              </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'row' }}>
-                <Typography sx={{ borderRight: `1px solid ${COLORS.colorDarkgray2}`, paddingRight: '5px', marginRight: '5px' }}>
-                  { selectedAssetObject.id }
-                </Typography>
-                <Typography>
-                  { selectedAssetObject.title }
-                </Typography>
-              </Box>
-              <Box sx={{ marginTop: '8px', marginBottom: '16px' }}>
-                <Stack sx={{ marginBottom: '8px' }} spacing={.5} direction="row">
-                  <Button
-                    variant="contained"
-                    size="small"
-                    sx={{
-                      height: '25px',
-                      padding: '4px 8px 4px 4px',
-                      minWidth: '25px',
-                      color: 'white',
-                      '& span': {
-                        fontSize: '16px'
-                      }
-                    }}
-                    onClick={() => {
-                      handleSelectAssetOnScene(selectedAssetObject.title)
-                    }}
-                  >
-                    <span className="material-symbols-rounded" style={{ marginRight: '5px' }}>
-                      ads_click
-                    </span>
-                    Select on Scene
-                  </Button>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    sx={{
-                      height: '25px',
-                      padding: '4px 8px 4px 4px',
-                      minWidth: '25px',
-                      color: 'white',
-                      '& span': {
-                        fontSize: '16px'
-                      }
-                    }}
-                    onClick={() => {
-                      handleHighlightAssetOnScene(selectedAssetObject.title)
-                    }}
-                  >
-                    <span className="material-symbols-rounded" style={{ marginRight: '5px' }}>
-                      highlight
-                    </span>
-                    Highlight on Scene
-                  </Button>
-                </Stack>
-                <Stack spacing={.5} direction="row">
-                  <Button
-                    variant="contained"
-                    size="small"
-                    sx={{
-                      height: '25px',
-                      padding: '4px 8px 4px 4px',
-                      minWidth: '25px',
-                      color: 'white',
-                      '& span': {
-                        fontSize: '16px'
-                      }
-                    }}
-                    onClick={() => {
-                      handleShowAssetOnGraph(selectedAssetObject)
-                    }}
-                  >
-                    <span className="material-symbols-rounded" style={{ marginRight: '5px' }}>
-                      hub
-                    </span>
-                    Show on Graph
-                  </Button>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    sx={{
-                      height: '25px',
-                      padding: '4px 8px 4px 4px',
-                      minWidth: '25px',
-                      color: 'white',
-                      '& span': {
-                        fontSize: '16px'
-                      }
-                    }}
-                    onClick={() => {
-                      handleHighlightAssetOnScene(selectedAssetObject)
-                    }}
-                  >
-                    <span className="material-symbols-rounded" style={{ marginRight: '5px' }}>
-                      show_chart
-                    </span>
-                    Toggle Data View
-                  </Button>
-                </Stack>
-              </Box>
-            </Box>      
-            <Box sx={{ flex: 1, minHeight: 0, overflowY: 'scroll', padding: '0px 16px 20px 0px' }}>
-              <MetadataPanels />
-            </Box>
-          </Box>
-        }
       </Box>
     </Drawer>
-  )
+  );
 }
+
+export default DrawerLeft;
