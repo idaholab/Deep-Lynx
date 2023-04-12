@@ -137,6 +137,8 @@
           :containerID="containerID"
           :dataSourceID="item.id"
           :icon="true"
+          :key="timeseriesKey"
+          @timeseriesDialogClose="incrementKey"
         ></timeseries-source-dialog>
         <edit-data-source-dialog
             :containerID="containerID"
@@ -192,6 +194,7 @@ export default class DataSources extends Vue {
   errorMessage = ""
   copy = mdiFileDocumentMultiple
   activeTab = 'datasources'
+  timeseriesKey = 0
 
   headers() {
     return [
@@ -243,6 +246,10 @@ export default class DataSources extends Vue {
           })
           .catch((e: any) => this.errorMessage = e)
     }
+  }
+
+  incrementKey() {
+    this.timeseriesKey += 1
   }
 
   copyID(id: string) {

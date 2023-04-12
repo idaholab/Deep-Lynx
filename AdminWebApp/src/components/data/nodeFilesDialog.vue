@@ -213,6 +213,7 @@ export default class NodeFilesDialog extends Vue {
               .finally(() => {
                 this.addFileDialog = false
                 this.fileLoading = false
+                this.$emit('nodeFilesDialogClose')
               })
         })
   }

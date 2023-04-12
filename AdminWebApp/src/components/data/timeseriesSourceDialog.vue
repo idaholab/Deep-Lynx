@@ -12,9 +12,9 @@
       <v-icon v-if="icon" small class="mr-2" v-on="on">mdi-eye</v-icon>
     </template>
 
-    <timeseries-annotation-dialog 
-      :dialog="createAnnotation" 
-      :x="annotationX" 
+    <timeseries-annotation-dialog
+      :dialog="createAnnotation"
+      :x="annotationX"
       :y="annotationY"
       :z="annotationZ"
       @createAnnotation="createPlotlyAnnotation"
@@ -304,7 +304,7 @@ export default class TimeseriesSourceDialog extends Vue {
   errorMessage = ''
   successMessage = ''
   dataSource: DataSourceT | null = null
-  initialStart: Date = new Date(Date.now() - 1000 * 60 * 60 * 24 * 30)
+  initialStart: Date = new Date(Date.now() - 1000 * 60 * 60 * 24)
   initialEnd: Date = new Date()
   endDate = ''
   startDate = ''
@@ -493,8 +493,11 @@ export default class TimeseriesSourceDialog extends Vue {
     this.load()
     this.loadDataSources()
 
+    // provide sane defaults. may be overwritten by datasource information
     this.startDate = this.initialStart.toISOString()
     this.endDate = this.initialEnd.toISOString()
+    this.startIndex = 0
+    this.endIndex = 5000
   }
 
   addTrace() {
@@ -595,7 +598,7 @@ export default class TimeseriesSourceDialog extends Vue {
         }
 
         for (const column of yColumns) {
-          const singlePlot: {x: number[], y: number[], mode: string, name: string} = { 
+          const singlePlot: {x: number[], y: number[], mode: string, name: string} = {
             x: [], y: [], mode: mode, name: column.uniqueName
           };
 
@@ -608,7 +611,7 @@ export default class TimeseriesSourceDialog extends Vue {
         }
       } else if (this.chartType === 'bar') {
         for (const column of yColumns) {
-          const singlePlot: {x: number[], y: number[], type: Plotly.PlotType, name: string} = { 
+          const singlePlot: {x: number[], y: number[], type: Plotly.PlotType, name: string} = {
             x: [], y: [], type: 'bar', name: column.uniqueName
           };
 
@@ -785,11 +788,19 @@ export default class TimeseriesSourceDialog extends Vue {
 
       // set start and end times/index if main data source
       if (this.selectedDataSources.length === 1 && this.timeseriesFlag) {
-        this.startDate = range.start
-        this.endDate = range.end
+        if (range.start !== 'NaN') {
+          this.startDate = range.start
+          this.endDate = range.end
+        } else {
+          this.errorMessage = `Data source ${dataSource.name} may be empty`
+        }
       } else if (this.selectedDataSources.length === 1 && !this.timeseriesFlag) {
-        this.startIndex = Number(range.start)
-        this.endIndex = Number(range.end)
+        if (range.start !== 'NaN') {
+          this.startIndex = Number(range.start)
+          this.endIndex = Number(range.end)
+        } else {
+          this.errorMessage = `Data source ${dataSource.name} may be empty`
+        }
       }
     })
   }

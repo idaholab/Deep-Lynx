@@ -297,7 +297,7 @@
                       <div><span class="text-overline">{{$t('dataQuery.nodeFiles')}}:</span></div>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
-                      <node-files-dialog :icon="true" :node="currentNodeInfo"></node-files-dialog>
+                      <node-files-dialog :icon="true" :node="currentNodeInfo" @nodeFilesDialogClose="refreshFiles" :key="fileKey"></node-files-dialog>
                     </v-expansion-panel-content>
                   </v-expansion-panel>
                   <!-- Node Tags -->
@@ -735,7 +735,7 @@
             <v-list-item
                 v-for="(item, i) in nodeColorsArray"
                 :key="i"
-                @click="filterOnGroupItem(i)"
+                @click="filterOnGroupItem(Number(i))"
             >
               <v-list-item-icon style="margin-right: 12px">
                 <v-icon color="#b2df8a" :style='`color: ` + item.key + `!important`'>mdi-circle</v-icon>
@@ -974,12 +974,11 @@ import NodeTagsDialog from "@/components/data/nodeTagsDialog.vue";
 import EdgeTagsDialog from "@/components/data/edgeTagsDialog.vue";
 import {ResultSet} from "@/components/queryBuilder/queryBuilder.vue";
 import {Component, Prop, Watch, Vue} from "vue-property-decorator";
-import {NodeT, DataSourceT, MetatypeRelationshipPairT, MetatypeRelationshipKeyT, UserT} from "@/api/types";
+import {NodeT, DataSourceT, MetatypeRelationshipPairT, MetatypeRelationshipKeyT, UserT, EdgeT, OntologyVersionT} from "@/api/types";
 import ForceGraph, {ForceGraphInstance} from 'force-graph';
 import {forceX, forceY, forceManyBody} from 'd3-force';
 
 import {mdiInformation} from "@mdi/js";
-import { EdgeT, OntologyVersionT } from "../../api/types";
 
 @Component({components: {
     NodeFilesDialog,
@@ -1007,6 +1006,7 @@ export default class GraphViewer extends Vue {
   currentEdgeID: any = null
   openPanels: number[] = [0]
   selectedNodeHistory = ''
+  selectedEdgeHistory = ''
   loading = false
 
   graphHeight = 0
@@ -1086,7 +1086,6 @@ export default class GraphViewer extends Vue {
   selectedDataSource: DataSourceT | null = null
 
   relationshipPairs: MetatypeRelationshipPairT[] = []
-  relationshipPairSearch = ""
   selectedRelationshipPair: MetatypeRelationshipPairT | null = null
   relationshipKeys: any = {}
   validEdge = false
@@ -1114,10 +1113,12 @@ export default class GraphViewer extends Vue {
   timeSlider = false
   datePickerSet = false
   datePickerTime: any = null
-  pointInTimeString = (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().substr(0, 10)
+  pointInTimeString = (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().substring(0, 10)
 
   previousNodeSelect: any = null
   selectedLink: any = null
+
+  fileKey = 0
 
   @Watch('results', {immediate: true})
   graphUpdate() {
@@ -1154,7 +1155,7 @@ export default class GraphViewer extends Vue {
     // create array of data source IDs or metatype names from the given index(es)
     this.colorGroupFilter.forEach((i: number) => {
       // remove any parts of the string in brackets or parentheses
-      let colorList = this.nodeColorsArray[i].value.replace(/(\[\d+\])/g, "").trim()
+      let colorList = this.nodeColorsArray[i].value.replace(/(\[\d+])/g, "").trim()
       colorList = colorList.replace(/( \(.+\))/g, "").trim()
 
       // if the nodeColorsArray value is a string with multiple values separated by spaces, separate out the values
@@ -1185,17 +1186,9 @@ export default class GraphViewer extends Vue {
       // use a nodes "collapsed" property to determine whether to hide it
       if (this.colorGroup === 'data source') {
 
-        if (filterList.indexOf(node.data_source_id) === -1) {
-          node.collapsed = true
-        } else {
-          node.collapsed = false
-        }
+        node.collapsed = filterList.indexOf(node.data_source_id) === -1;
       } else { // default filter on metatype
-        if (filterList.indexOf(node.metatype_name) === -1) {
-          node.collapsed = true
-        } else {
-          node.collapsed = false
-        }
+        node.collapsed = filterList.indexOf(node.metatype_name) === -1;
       }
     });
 
@@ -1363,7 +1356,7 @@ export default class GraphViewer extends Vue {
 
     const graphElem = this.$refs.forcegraph as HTMLElement;
 
-    if (graphElem != null) {
+    if (graphElem) {
       this.canvas = this.forceGraph!(graphElem)
           .width(graphElem.offsetWidth) // canvas width
           .height(graphElem.offsetHeight) // canvas height
@@ -1633,9 +1626,8 @@ export default class GraphViewer extends Vue {
             this.selectedLink = link;
 
             this.currentEdgeID = link.id;
-            this.edgeDialog = true;
             this.$client.retrieveEdge(this.containerID, link.id).then((edge) => {
-              this.getEdgeInfo(edge)
+              this.showEdgeProperties(edge)
             });
           })
           .onLinkHover(link => {
@@ -1793,7 +1785,7 @@ export default class GraphViewer extends Vue {
     this.newGraphDialog = false
 
     // load newly created graph
-    this.loadResults(graphResults)
+    void this.loadResults(graphResults)
     // Reset Graph may be used to return to original results
   }
 
@@ -1945,7 +1937,7 @@ export default class GraphViewer extends Vue {
 
       }
 
-      // incremement counter
+      // increment counter
       colorEntry = nodeColorsMap.get(node.color)
       if (this.colorGroup === 'data source') {
         const colorNode = colorEntry.filter((x: any) => (x.name === dataSourceName))[0]
@@ -2107,6 +2099,8 @@ export default class GraphViewer extends Vue {
       history: edgeHistory,
       metadata_properties: data.metadata_properties
     }
+
+    this.selectedEdgeHistory = edgeHistory[edgeHistory.length-1].created_at
 
     if (this.results.rawMetadataEnabled) {
       if (index) {
@@ -2343,8 +2337,8 @@ export default class GraphViewer extends Vue {
     const pointInTime = new Date(this.pointInTime).toISOString()
 
     // update the variables for the date and time pickers to ensure both the pickers and slider are consistent
-    this.pointInTimeString = pointInTime.substr(0, 10)
-    this.datePickerTime = pointInTime.substr(11, 8)
+    this.pointInTimeString = pointInTime.substring(0, 10)
+    this.datePickerTime = pointInTime.substring(11, 19)
 
 
     // Add the current pointInTime to the query, resubmit, and redo graph results
@@ -2382,6 +2376,10 @@ export default class GraphViewer extends Vue {
     // update the selected time of the selected date
     const currentDate = new Date(this.pointInTime).toISOString().split('T')[0]
     this.pointInTime = new Date(currentDate + 'T' + time).getTime()
+  }
+
+  refreshFiles() {
+    this.fileKey += 1
   }
 
   async mounted() {
