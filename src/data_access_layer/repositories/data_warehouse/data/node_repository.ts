@@ -321,15 +321,18 @@ export default class NodeRepository extends Repository implements RepositoryInte
         // that pulling and looping through them is going to cause issues
         const matchedDataSources = dataSources.value.filter((source) => {
             if (!source) return false;
+            let truthCount = 0;
 
             const config = source.DataSourceRecord!.config as TimeseriesDataSourceConfig;
+            if (config.attachment_parameters.length === 0) return false;
             for (const parameter of config.attachment_parameters) {
                 // if we don't match this filter then we can assume we fail the rest as it's only AND conjunction at
                 // this time
                 switch (parameter.type) {
                     case 'data_source': {
                         try {
-                            return valueCompare(parameter.operator!, node.data_source_id, parameter.value);
+                            if (valueCompare(parameter.operator!, node.data_source_id, parameter.value)) truthCount += 1;
+                            break;
                         } catch (e) {
                             Logger.error(`error comparing values for data source attachment parameters`);
                             return false;
@@ -337,7 +340,8 @@ export default class NodeRepository extends Repository implements RepositoryInte
                     }
                     case 'metatype_id': {
                         try {
-                            return valueCompare(parameter.operator!, node.metatype_id, parameter.value);
+                            if (valueCompare(parameter.operator!, node.metatype_id, parameter.value)) truthCount += 1;
+                            break;
                         } catch (e) {
                             Logger.error(`error comparing values for metatype id attachment parameters`);
                             return false;
@@ -346,7 +350,8 @@ export default class NodeRepository extends Repository implements RepositoryInte
 
                     case 'metatype_name': {
                         try {
-                            return valueCompare(parameter.operator!, node.metatype_name, parameter.value);
+                            if (valueCompare(parameter.operator!, node.metatype_name, parameter.value)) truthCount += 1;
+                            break;
                         } catch (e) {
                             Logger.error(`error comparing values for metatype name attachment parameters`);
                             return false;
@@ -355,7 +360,8 @@ export default class NodeRepository extends Repository implements RepositoryInte
 
                     case 'original_id': {
                         try {
-                            return valueCompare(parameter.operator!, node.original_data_id, parameter.value);
+                            if (valueCompare(parameter.operator!, node.original_data_id, parameter.value)) truthCount += 1;
+                            break;
                         } catch (e) {
                             Logger.error(`error comparing values for original id attachment parameters`);
                             return false;
@@ -365,7 +371,8 @@ export default class NodeRepository extends Repository implements RepositoryInte
                     case 'property': {
                         try {
                             type ObjectKey = keyof typeof node.properties;
-                            return valueCompare(parameter.operator!, node.properties[parameter.key as ObjectKey], parameter.value);
+                            if (valueCompare(parameter.operator!, node.properties[parameter.key as ObjectKey], parameter.value)) truthCount += 1;
+                            break;
                         } catch (e) {
                             Logger.error(`error comparing values for property attachment parameters`);
                             return false;
@@ -374,7 +381,8 @@ export default class NodeRepository extends Repository implements RepositoryInte
 
                     case 'id': {
                         try {
-                            return valueCompare(parameter.operator!, node.id, parameter.value);
+                            if (valueCompare(parameter.operator!, node.id, parameter.value)) truthCount += 1;
+                            break;
                         } catch (e) {
                             Logger.error(`error comparing values for id attachment parameters`);
                             return false;
@@ -383,7 +391,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
                 }
             }
 
-            return true;
+            return truthCount === config.attachment_parameters.length;
         });
 
         // we need to follow the same naming scheme as the graphQL layer, legacy on the transformations so there

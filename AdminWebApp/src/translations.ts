@@ -1424,6 +1424,7 @@ export default {
             PropertyFilter: 'Property Filter',
             results: 'result(s)',
             createdBy: 'Created By',
+            includeRaw: 'Include Raw Metadata',
         },
         eventAction: {
             formTitle: 'Create New Event Action',
@@ -1476,7 +1477,8 @@ export default {
         deleteEventAction: {
             deleteEventAction: 'Delete Event Action',
             formTitle: 'Delete Event Action',
-            deleteWarning: 'Deleting an Event Action means it will be unrecoverable to even administrative users. Only delete Events you know are no longer needed or that were created in error.',
+            deleteWarning:
+                'Deleting an Event Action means it will be unrecoverable to even administrative users. Only delete Events you know are no longer needed or that were created in error.',
         },
         sendEventAction: {
             formTitle: 'Send Event Action',
