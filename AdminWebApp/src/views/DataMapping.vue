@@ -350,13 +350,13 @@
         </v-card-title>
 
         <div class="flex-grow-1" v-if="selectedDataSource !== null && mappingDialog">
-          <data-type-mapping 
-            :dataSourceID="selectedDataSource.id" 
-            :containerID="containerID" 
+          <data-type-mapping
+            :dataSourceID="selectedDataSource.id"
+            :containerID="containerID"
             :typeMappingID="selectedTypeMapping.id"
             :active="selectedTypeMapping?.active"
-            @mappingCreated="mappingDialog = false" 
-            @updated="loadTypeMappings(true)"
+            @mappingCreated="mappingDialog = false"
+            @updated="loadTypeMappings()"
           ></data-type-mapping>
         </div>
         <v-card-actions class="flex-shrink-1">
@@ -616,7 +616,7 @@ export default class DataMapping extends Vue {
       .catch((e: any) => this.errorMessage = e)
   }
 
-  loadTypeMappings(updated?: boolean) {
+  loadTypeMappings() {
     if(this.selectedDataSource) {
       this.mappingsLoading= true
       this.typeMappings = []
@@ -779,7 +779,7 @@ export default class DataMapping extends Vue {
     const errors = results.filter(r => r.isError)
     if(errors.length > 0){
       this.errorMessage = `Errors importing type mappings: check type mapping file or logs for more information`
-      this.loadTypeMappings(true)
+      this.loadTypeMappings()
     } else {
       this.$router.go(0);
     }
@@ -802,7 +802,7 @@ export default class DataMapping extends Vue {
 
     this.$client.upgradeTypeMappings(this.containerID, this.selectedDataSource?.id!, payload)
     .then(() => {
-      this.loadTypeMappings(true)
+      this.loadTypeMappings()
       this.$forceUpdate()
     })
     .catch(e => this.errorMessage = e)
