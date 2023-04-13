@@ -588,7 +588,7 @@
 
 <script lang="ts">
 import {v4 as uuidv4} from 'uuid'
-import {Component, Prop, Vue} from "vue-property-decorator"
+import {Component, Prop, Vue, Watch} from "vue-property-decorator"
 import {
   AvevaDataSourceConfig, ContainerT,
   DataSourceT,
@@ -657,6 +657,16 @@ export default class CreateDataSourceDialog extends Vue {
     'string',
     'boolean',
   ]
+
+  @Watch('timeseries')
+  timeseriesUpdate() {
+    if(this.timeseries) {
+      this.select = 'timeseries'
+      this.selectAdapter('timeseries')
+    } else {
+      this.select = ''
+    }
+  }
 
   beforeMount() {
     this.container = this.$store.getters.activeContainer;
