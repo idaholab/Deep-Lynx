@@ -21,7 +21,7 @@ import MetatypeRelationshipPairMapper from '../../../../data_access_layer/mapper
 import NodeMapper from '../../../../data_access_layer/mappers/data_warehouse/data/node_mapper';
 
 // Repository
-import TagRepository from '../../../../../src/data_access_layer/repositories/data_warehouse/data/tag_repository';
+import TagRepository from '../../../../data_access_layer/repositories/data_warehouse/data/tag_repository';
 import FileRepository from '../../../../data_access_layer/repositories/data_warehouse/data/file_repository';
 import EdgeRepository from '../../../../data_access_layer/repositories/data_warehouse/data/edge_repository';
 
@@ -102,6 +102,8 @@ describe('A tag repository can', async () => {
     });
 
     after(async () => {
+        await cMapper.Delete(containerID);
+        await UserMapper.Instance.Delete(user.id!);
         return PostgresAdapter.Instance.close();
     });
 
