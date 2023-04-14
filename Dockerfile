@@ -9,7 +9,7 @@ WORKDIR /srv/core_api/NodeLibraries/dl-fast-load
 RUN cargo build --release  --message-format=json-render-diagnostics  > build-output.txt
 
 
-FROM node:18.14.1-alpine3.17 as production
+FROM node:lts-alpine3.17 as production
 # these settings are needed for the admin web gui build, these variables are all baked into the Vue application and thus
 # are available to any end user that wants to dig deep enough in the webpage - as such we don't feel it a security risk
 # to have these env variables available to anyone running the history commmand on the container/image
