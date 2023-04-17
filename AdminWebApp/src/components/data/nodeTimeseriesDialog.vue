@@ -491,8 +491,12 @@ export default class NodeTimeseriesDialog extends Vue {
     this.tableResults = []
 
     this.selectedDataSources.forEach((dataSource) => {
-      const dataSourcePrimaryTimestamp = (dataSource.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)?.column_name
+      let dataSourcePrimaryTimestamp = (dataSource.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)?.column_name
       const dataSourceColumns = this.selectedColumns.filter(c => c.dataSource === dataSource.name)
+
+      if (this.selectedColumns.find(c => c.x)?.name !== dataSourcePrimaryTimestamp) {
+        dataSourcePrimaryTimestamp = this.selectedColumns.find(c => c.x)?.name
+      }
 
       const yColumns = dataSourceColumns.filter(c => c.y)
       const zColumns = dataSourceColumns.filter(c => c.z)
@@ -696,7 +700,13 @@ export default class NodeTimeseriesDialog extends Vue {
 
   columnXChange(uniqueName: string) {
     for (const column of this.selectedColumns) {
-      column.x = column.uniqueName === uniqueName;
+      if (column.uniqueName === uniqueName) {
+        column.x = true
+        column.y = false
+        column.z = false
+      } else {
+        column.x = false
+      }
     }
   }
 
@@ -882,7 +892,7 @@ export default class NodeTimeseriesDialog extends Vue {
 
     this.errorMessage = ''
 
-    if (new Date(this.endDate) <= new Date(this.startDate)) {
+    if (this.timeseriesFlag && (new Date(this.endDate) <= new Date(this.startDate))) {
       this.errorMessage = 'Please enter an end date that is greater than the start date'
       return
     }
@@ -1045,7 +1055,7 @@ export default class NodeTimeseriesDialog extends Vue {
       // number and number64 are compatible
       const dataSourceType = dataSourcePrimaryColumn.type!.includes('number') ? 'number' : dataSourcePrimaryColumn.type
 
-      if (xColumnType !== dataSourceType) {
+      if (xColumnType !== dataSourceType && xColumn.dataSource !== dataSource.name) {
         this.errorMessage = `Some data could not be displayed due to incompatible primary timestamp types. Type selected: ${xColumnType}`
         continue
       }
@@ -1105,9 +1115,15 @@ export default class NodeTimeseriesDialog extends Vue {
   }
 
   buildQuery(dataSource: DataSourceT) {
-    const dataSourcePrimaryTimestamp = (dataSource.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)
-    const primaryTimestampColumn = dataSourcePrimaryTimestamp?.column_name
+    let dataSourcePrimaryTimestamp = (dataSource.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)
+    let primaryTimestampColumn = dataSourcePrimaryTimestamp?.column_name
     const dataSourceColumns = this.selectedColumns.filter(c => c.dataSource === dataSource.name)
+
+    // override primary timestamp with selected x column if applicable
+    if (this.selectedColumns.find(c => c.x)?.name !== primaryTimestampColumn) {
+      primaryTimestampColumn = this.selectedColumns.find(c => c.x)?.name
+      dataSourcePrimaryTimestamp = (dataSource.config as TimeseriesDataSourceConfig).columns.find(c => c.column_name === primaryTimestampColumn)
+    }
 
     if (this.timeseriesFlag) {
       return {
@@ -1129,7 +1145,7 @@ export default class NodeTimeseriesDialog extends Vue {
       }
     } else {
       // if the primary timestamp is a number, any raw values must be ints
-      // if the primary timestamp is number64, raw values must be passed as strings
+      // if the primary timestamp is number64 or float, raw values must be passed as strings
       if (dataSourcePrimaryTimestamp?.type === 'number'){
         return {
           query: `
@@ -1148,7 +1164,7 @@ export default class NodeTimeseriesDialog extends Vue {
       }
         `
         }
-      } else if (dataSourcePrimaryTimestamp?.type === 'number64') {
+      } else if (dataSourcePrimaryTimestamp?.type === 'number64' || dataSourcePrimaryTimestamp?.type === 'float64' || dataSourcePrimaryTimestamp?.type === 'float') {
         return {
           query: `
       {
