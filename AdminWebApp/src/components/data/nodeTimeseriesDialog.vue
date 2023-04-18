@@ -928,7 +928,7 @@ export default class NodeTimeseriesDialog extends Vue {
             const dataSource = this.selectedDataSources.find(d => d.name === dataSourceName)
             if (!dataSource) return
 
-            const primaryTimestampColumn = (dataSource.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)?.column_name
+            const primaryTimestampColumn = this.selectedColumns.find(c => c.x)?.name
             if (!primaryTimestampColumn) return
 
             if (!this.results[dataSourceName]) this.results[dataSourceName] = [] // init the results array for this data source if it does not exist
@@ -971,19 +971,12 @@ export default class NodeTimeseriesDialog extends Vue {
             const dataSource = this.selectedDataSources.find(d => d.name === dataSourceName)
             if (!dataSource) return
 
-            const primaryTimestampColumn = (dataSource.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)?.column_name
+            const primaryTimestampColumn = this.selectedColumns.find(c => c.x)?.name
             if (!primaryTimestampColumn) return
 
-            if (!this.results[dataSourceName]) this.results[dataSourceName] = [] // init the results array for this data source if it does not exist
+            if (!this.results[dataSourceName]) this.results[dataSourceName] = []
 
-            let dataStartIndex = recordCount - this.replayRecordSize // to be used for search as little of the data as possible in each iteration
-
-            for (dataStartIndex; dataStartIndex < (records as any).length; dataStartIndex++) {
-              const entry = (records as any)[dataStartIndex]
-              if (entry[primaryTimestampColumn] && entry[primaryTimestampColumn] >= this.startIndex && entry[primaryTimestampColumn] <= recordCount) {
-                this.results[dataSourceName].push(entry)
-              }
-            }
+            this.results[dataSourceName] = (records as any).slice(0, recordCount)
           }
 
           this.updatePlot()
