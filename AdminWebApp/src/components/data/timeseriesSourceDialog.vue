@@ -467,7 +467,13 @@ export default class TimeseriesSourceDialog extends Vue {
 
   columnXChange(uniqueName: string) {
     for (const column of this.selectedColumns) {
-      column.x = column.uniqueName === uniqueName;
+      if (column.uniqueName === uniqueName) {
+        column.x = true
+        column.y = false
+        column.z = false
+      } else {
+        column.x = false
+      }
     }
   }
 
@@ -568,8 +574,12 @@ export default class TimeseriesSourceDialog extends Vue {
     this.tableResults = []
 
     this.selectedDataSources.forEach((dataSource) => {
-      const dataSourcePrimaryTimestamp = (dataSource.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)?.column_name
+      let dataSourcePrimaryTimestamp = (dataSource.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)?.column_name
       const dataSourceColumns = this.selectedColumns.filter(c => c.dataSource === dataSource.name)
+
+      if (this.selectedColumns.find(c => c.x)?.name !== dataSourcePrimaryTimestamp) {
+        dataSourcePrimaryTimestamp = this.selectedColumns.find(c => c.x)?.name
+      }
 
       const yColumns = dataSourceColumns.filter(c => c.y)
       const zColumns = dataSourceColumns.filter(c => c.z)
@@ -811,7 +821,7 @@ export default class TimeseriesSourceDialog extends Vue {
 
     this.errorMessage = ''
 
-    if (new Date(this.endDate) <= new Date(this.startDate)) {
+    if (this.timeseriesFlag && (new Date(this.endDate) <= new Date(this.startDate))) {
       this.errorMessage = 'Please enter an end date that is greater than the start date'
       return
     }
@@ -847,7 +857,7 @@ export default class TimeseriesSourceDialog extends Vue {
             const dataSource = this.selectedDataSources.find(d => d.name === dataSourceName)
             if (!dataSource) return
 
-            const primaryTimestampColumn = (dataSource.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)?.column_name
+            const primaryTimestampColumn = this.selectedColumns.find(c => c.x)?.name
             if (!primaryTimestampColumn) return
 
             if (!this.results[dataSourceName]) this.results[dataSourceName] = [] // init the results array for this data source if it does not exist
@@ -889,19 +899,12 @@ export default class TimeseriesSourceDialog extends Vue {
             const dataSource = this.selectedDataSources.find(d => d.name === dataSourceName)
             if (!dataSource) return
 
-            const primaryTimestampColumn = (dataSource.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)?.column_name
+            const primaryTimestampColumn = this.selectedColumns.find(c => c.x)?.name
             if (!primaryTimestampColumn) return
 
-            if (!this.results[dataSourceName]) this.results[dataSourceName] = [] // init the results array for this data source if it does not exist
+            if (!this.results[dataSourceName]) this.results[dataSourceName] = []
 
-            let dataStartIndex = recordCount - this.replayRecordSize // to be used for search as little of the data as possible in each iteration
-
-            for (dataStartIndex; dataStartIndex < (records as any).length; dataStartIndex++) {
-              const entry = (records as any)[dataStartIndex]
-              if (entry[primaryTimestampColumn] && entry[primaryTimestampColumn] >= this.startIndex && entry[primaryTimestampColumn] <= recordCount) {
-                this.results[dataSourceName].push(entry)
-              }
-            }
+            this.results[dataSourceName] = (records as any).slice(0, recordCount)
           }
 
           this.updatePlot()
@@ -970,7 +973,8 @@ export default class TimeseriesSourceDialog extends Vue {
       // number and number64 are compatible
       const dataSourceType = dataSourcePrimaryColumn.type!.includes('number') ? 'number' : dataSourcePrimaryColumn.type
 
-      if (xColumnType !== dataSourceType) {
+      // don't show data for data sources that are incompatible with the selected primary timestamp and not the current data source
+      if (xColumnType !== dataSourceType && xColumn.dataSource !== dataSource.name) {
         this.errorMessage = `Some data could not be displayed due to incompatible primary timestamp types. Type selected: ${xColumnType}`
         continue
       }
@@ -998,9 +1002,15 @@ export default class TimeseriesSourceDialog extends Vue {
   }
 
   buildQuery(dataSource: DataSourceT) {
-    const dataSourcePrimaryTimestamp = (dataSource.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)
-    const primaryTimestampColumn = dataSourcePrimaryTimestamp?.column_name
+    let dataSourcePrimaryTimestamp = (dataSource.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)
+    let primaryTimestampColumn = dataSourcePrimaryTimestamp?.column_name
     const dataSourceColumns = this.selectedColumns.filter(c => c.dataSource === dataSource.name)
+
+    // override primary timestamp with selected x column if applicable
+    if (this.selectedColumns.find(c => c.x)?.name !== primaryTimestampColumn) {
+      primaryTimestampColumn = this.selectedColumns.find(c => c.x)?.name
+      dataSourcePrimaryTimestamp = (dataSource.config as TimeseriesDataSourceConfig).columns.find(c => c.column_name === primaryTimestampColumn)
+    }
 
     if (this.timeseriesFlag) {
       return {
@@ -1022,7 +1032,7 @@ export default class TimeseriesSourceDialog extends Vue {
       }
     } else {
       // if the primary timestamp is a number, any raw values must be ints
-      // if the primary timestamp is number64, raw values must be passed as strings
+      // if the primary timestamp is number64 or float, raw values must be passed as strings
       if (dataSourcePrimaryTimestamp?.type === 'number') {
         return {
           query: `
@@ -1041,7 +1051,7 @@ export default class TimeseriesSourceDialog extends Vue {
         }
       }`
         }
-      } else if (dataSourcePrimaryTimestamp?.type === 'number64') {
+      } else if (dataSourcePrimaryTimestamp?.type === 'number64' || dataSourcePrimaryTimestamp?.type === 'float64' || dataSourcePrimaryTimestamp?.type === 'float') {
         return {
           query: `
       {
