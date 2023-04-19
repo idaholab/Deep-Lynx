@@ -20,7 +20,10 @@
         <v-toolbar flat color="white">
           <v-toolbar-title>{{$t('home.dataSourcesDescription')}}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <create-data-source-dialog :containerID="containerID" @dataSourceCreated="refreshDataSources(); refreshTimeseriesDataSources()"></create-data-source-dialog>
+          <create-data-source-dialog 
+            :containerID="containerID" 
+            @dataSourceCreated="refreshDataSources(); refreshTimeseriesDataSources()"
+          />
         </v-toolbar>
       </template>
       <template v-slot:[`item.copy`]="{ item }">
@@ -96,7 +99,12 @@
         <v-toolbar flat color="white">
           <v-toolbar-title>{{$t('home.dataSourcesDescription')}}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <create-data-source-dialog :timeseries="true" :containerID="containerID" @dataSourceCreated="refreshDataSources(); refreshTimeseriesDataSources()" @timeseriesSourceCreated="activeTab === 'timeseriesDatasources'"></create-data-source-dialog>
+          <create-data-source-dialog 
+            :timeseries="true" 
+            :containerID="containerID" 
+            @dataSourceCreated="refreshDataSources(); refreshTimeseriesDataSources()" 
+            @timeseriesSourceCreated="activeTab === 'timeseriesDatasources'"
+          />
         </v-toolbar>
       </template>
       <template v-slot:[`item.copy`]="{ item }">
@@ -115,6 +123,9 @@
       <template v-slot:[`item.adapter_type`]="{ item }">
         <span v-if="!item.archived">{{item.adapter_type}}</span>
         <span v-else class="text--disabled">{{item.adapter_type}}</span>
+      </template>
+      <template v-slot:[`item.fastload`]="{ item }">
+        <span>{{ item.config.fast_load_enabled }}</span>
       </template>
       <template v-slot:[`item.active`]="{ item }">
         <v-switch
@@ -197,7 +208,7 @@ export default class DataSources extends Vue {
   timeseriesKey = 0
 
   headers() {
-    return [
+    const headers = [
       { text: '', value: 'copy'},
       { text: this.$t('dataSources.id'), value: 'id'},
       { text: this.$t('dataSources.name'), value: 'name' },
@@ -205,6 +216,12 @@ export default class DataSources extends Vue {
       { text: this.$t('dataSources.active'), value: 'active'},
       { text: this.$t('dataSources.actions'), value: 'actions', sortable: false }
     ]
+
+    if (this.activeTab === 'timeseriesDatasources') {
+      headers.splice(4, 0, {text: 'Fast Load Enabled', value: 'fastload'})
+    }
+
+    return headers;
   }
 
   mounted() {

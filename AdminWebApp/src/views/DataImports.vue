@@ -56,9 +56,10 @@
               <import-data-dialog
                 :dataSourceID="selectedDataSource.id"
                 :containerID="containerID"
+                :fastload="selectedDataSource.config.fast_load_enabled"
                 :disabled="!selectedDataSource.active || selectedDataSource.archived"
-                @importUploaded="listImports">
-              </import-data-dialog>
+                @importUploaded="listImports"
+              />
             </div>
           </v-col>
         </template>

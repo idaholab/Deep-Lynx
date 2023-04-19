@@ -504,7 +504,7 @@ export default class DataSourceMapper extends Mapper {
         }
 
         const primaryTimestampColumn = config.columns.find((c) => c.is_primary_timestamp);
-        const formatString = 'YYYY-MM-DD HH24:MI:SS.US';
+        const formatString = config.fast_load_enabled ? '%Y-%m-%d %H:%M:%S.%f' : 'YYYY-MM-DD HH24:MI:SS.US';
 
         if (primaryTimestampColumn?.type === 'date') {
             if (options && options.secondaryIndexName && options.secondaryIndexStartValue) {
@@ -553,7 +553,7 @@ export default class DataSourceMapper extends Mapper {
         config.columns.forEach((c) => {
             switch (c.type) {
                 case 'date': {
-                    if (!c.date_conversion_format_string) c.date_conversion_format_string = 'YYYY-MM-DD HH24:MI:SS.US';
+                    if (!c.date_conversion_format_string) c.date_conversion_format_string = config.fast_load_enabled ? '%Y-%m-%d %H:%M:%S.%f' : 'YYYY-MM-DD HH24:MI:SS.US';
                     columns.push(format(`to_timestamp(i."%s", %L) as %I`, c.property_name, c.date_conversion_format_string, c.column_name));
                     break;
                 }
