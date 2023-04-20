@@ -103,7 +103,11 @@ export default class SearchMetatypes extends Vue {
       }
       this.$client.listMetatypes(this.containerID, {nameIn: this.metatypeName, loadKeys: false, ontologyVersion: this.$store.getters.currentOntologyVersionID})
         .then((metatypes) => {
-          this.selectedMetatype = metatypes as MetatypeT[]
+          if ((metatypes as MetatypeT[]).length > 1) {
+            this.selectedMetatype = metatypes as MetatypeT[]
+          } else {
+            this.selectedMetatype = (metatypes as MetatypeT[])[0]
+          }
         })
         .catch((e: any) => this.errorMessage = e)
         .finally(() => this.loading = false)

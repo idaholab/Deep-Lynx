@@ -260,6 +260,7 @@ export type TimeseriesDataSourceConfig = {
     value_nodes?: string[];
     data_retention_days?: number;
     raw_retention_enabled?: boolean;
+    fast_load_enabled?: boolean;
 };
 
 export type HttpDataSourceConfig = {
@@ -804,5 +805,6 @@ export function DefaultTimeseriesDataSourceConfig(): TimeseriesDataSourceConfig 
         kind: 'timeseries',
         columns: [],
         attachment_parameters: [],
+        fast_load_enabled: true,
     };
 }

@@ -659,8 +659,8 @@ export class Client {
         return this.postRawReturn<ResultT<boolean>[]>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/upgrade`, payload);
     }
 
-    dataSourceJSONFileImport(containerID: string, dataSourceID: string, file: File): Promise<boolean> {
-        return this.postFile(`/containers/${containerID}/import/datasources/${dataSourceID}/imports`, 'import', file);
+    dataSourceJSONFileImport(containerID: string, dataSourceID: string, file: File, fastload?: boolean): Promise<boolean> {
+        return this.postFile(`/containers/${containerID}/import/datasources/${dataSourceID}/imports`, 'import', file, {fastLoad: fastload});
     }
 
     async uploadFile(containerID: string, dataSourceID: string, file: File): Promise<FileT> {
@@ -1565,7 +1565,7 @@ export class Client {
         });
     }
 
-    private async postFile(uri: string, inputName: string, file: File): Promise<boolean> {
+    private async postFile(uri: string, inputName: string, file: File, queryParams?: {[key: string]: any}): Promise<boolean> {
         const config: AxiosRequestConfig = {};
         config.headers = {'Access-Control-Allow-Origin': '*', 'Content-Type': 'multipart/form-data'};
         config.validateStatus = () => {
@@ -1580,10 +1580,17 @@ export class Client {
             config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials;
         }
 
+        let url: string;
+        if (queryParams) {
+            url = buildURL(this.config?.rootURL!, {path: uri, queryParams: queryParams!});
+        } else {
+            url = buildURL(this.config?.rootURL!, {path: uri})
+        }
+
         const formData = new FormData();
         formData.append(inputName, file);
 
-        const resp: AxiosResponse = await axios.post(buildURL(this.config?.rootURL!, {path: uri}), formData, config);
+        const resp: AxiosResponse = await axios.post(url, formData, config);
 
         return new Promise<boolean>((resolve, reject) => {
             if (resp.status < 200 || resp.status > 299) reject(resp.data.error);

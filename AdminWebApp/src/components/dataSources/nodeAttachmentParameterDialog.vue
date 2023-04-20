@@ -23,6 +23,9 @@
             v-model="item.type"
             :rules="[v => !!v || $t('dataMapping.required')]"
         />
+        <div v-if="index > 0">
+          <span style="position: absolute; margin-top: -70px; margin-left: -40px;">AND</span>
+        </div>
       </template>
 
       <template v-slot:[`item.operator`]="{ item }">

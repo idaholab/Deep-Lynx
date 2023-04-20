@@ -390,6 +390,11 @@
               </div>
 
               <div v-if="newDataSource.adapter_type === 'timeseries'">
+                <v-checkbox
+                  label="Enable Fastload Ingestion"
+                  v-model="fastload"
+                />
+
                 <p><b>{{$t('createDataSource.description')}}</b></p>
                 <p>{{$t('createDataSource.timeseriesDescription')}} <a href="https://github.com/idaholab/Deep-Lynx/wiki/Timeseries-Data-Sources" target="_blank">{{$t('dataMapping.here')}}.</a></p>
 
@@ -465,19 +470,23 @@
 
                       <v-col v-if="item.type === 'date'" :cols="12">
                         <v-text-field
-                            :label="$t('dataMapping.dateFormatString')"
-                            v-model="item.date_conversion_format_string"
+                          :label="$t('dataMapping.dateFormatString')"
+                          v-model="item.date_conversion_format_string"
+                          :rules="[rules.dateString]"
                         >
-                          <template slot="append-outer"><a href="https://www.postgresql.org/docs/current/functions-formatting.html#FUNCTIONS-FORMATTING-DATETIME-TABLE" target="_blank">{{$t('dataMapping.dateFormatStringHelp')}}</a></template>
+                          <template slot="append-outer">
+                            <a :href="timeseriesHelpLink()" target="_blank">
+                              {{$t('dataMapping.dateFormatStringHelp')}}
+                            </a>
+                          </template>
                         </v-text-field>
                       </v-col>
                       <v-col v-if="item.type === 'date'" class="text-left">
                         <v-checkbox
-                            :label="$t('dataMapping.isPrimaryTimestamp')"
-                            v-model="item.is_primary_timestamp"
-                            disabled
-                        >
-                        </v-checkbox>
+                          :label="$t('dataMapping.isPrimaryTimestamp')"
+                          v-model="item.is_primary_timestamp"
+                          disabled
+                        />
                       </v-col>
                     </td>
                   </template>
@@ -588,7 +597,7 @@
 
 <script lang="ts">
 import {v4 as uuidv4} from 'uuid'
-import {Component, Prop, Vue} from "vue-property-decorator"
+import {Component, Prop, Vue, Watch} from "vue-property-decorator"
 import {
   AvevaDataSourceConfig, ContainerT,
   DataSourceT,
@@ -632,6 +641,17 @@ export default class CreateDataSourceDialog extends Vue {
   }
   hideP6pass = true
   authorized: string[] = []
+  fastload = true
+  defaultFormatString = '%Y-%m-%d %H:%M:%S.%f'
+  rules={
+    dateString: (value: any) => {
+      if (this.getFastload()) {
+        return value.includes('%') || 'Date String should be in strftime datetime format'
+      } else {
+        return !value.includes('%') || 'Date String should be in postgres datetime format'
+      }
+    }
+  }
 
   newDataSource: DataSourceT = {
     name: "",
@@ -657,6 +677,47 @@ export default class CreateDataSourceDialog extends Vue {
     'string',
     'boolean',
   ]
+
+  @Watch('timeseries')
+  timeseriesUpdate() {
+    if(this.timeseries) {
+      this.select = 'timeseries'
+      this.selectAdapter('timeseries')
+    } else {
+      this.select = ''
+    }
+  }
+
+  // for some reason calling the variable itself in the validation always results 
+  // in the default "true". this getter is a workaround for that
+  getFastload() {
+    return this.fastload
+  }
+
+  @Watch('fastload')
+  dateStringChange() {
+    if (this.fastload) {
+      this.defaultFormatString = '%Y-%m-%d %H:%M:%S.%f'
+    } else {
+      this.defaultFormatString = 'YYYY-MM-DD HH24:MI:SS.US'
+    }
+    this.checkDateStrings()
+  }
+
+  checkDateStrings() {
+    this.timeseriesConfig.columns.forEach(col => {
+      if (col.date_conversion_format_string && col.date_conversion_format_string !== this.defaultFormatString) {
+        // if fastload enabled and no percent symbols, assume that string needs to be reformatted to rust format
+        // similarly, if fastload disabled but percent symbols present, reformat string to pg format
+        if (
+          (this.fastload && !col.date_conversion_format_string.includes('%')) 
+          || (!this.fastload && col.date_conversion_format_string.includes('%'))
+        ) {
+          col.date_conversion_format_string = this.defaultFormatString
+        }
+      }
+    })
+  }
 
   beforeMount() {
     this.container = this.$store.getters.activeContainer;
@@ -700,6 +761,13 @@ export default class CreateDataSourceDialog extends Vue {
       },
       {text: this.$t('dataMapping.actions'), value: "actions", sortable: false}
     ]
+  }
+
+  timeseriesHelpLink(): string {
+    if (this.fastload === true) {
+      return "https://docs.rs/chrono/0.4.24/chrono/format/strftime/index.html"
+    } 
+    return "https://www.postgresql.org/docs/current/functions-formatting.html#FUNCTIONS-FORMATTING-DATETIME-TABLE"
   }
 
   selectAdapter(adapter: string) {
@@ -776,6 +844,7 @@ export default class CreateDataSourceDialog extends Vue {
       }
 
       case "timeseries": {
+        this.timeseriesConfig.fast_load_enabled = this.fastload;
         this.newDataSource.config = this.timeseriesConfig;
         this.newDataSource.active = true;
         break;
@@ -885,7 +954,7 @@ export default class CreateDataSourceDialog extends Vue {
         is_primary_timestamp: true,
         unique: false,
         type: 'date',
-        date_conversion_format_string: 'YYYY-MM-DD HH24:MI:SS.US',
+        date_conversion_format_string: this.fastload ? '%Y-%m-%d %H:%M:%S.%f' : 'YYYY-MM-DD HH24:MI:SS.US',
       })
 
       this.expandedTimeSeries.push(this.timeseriesConfig.columns[0])

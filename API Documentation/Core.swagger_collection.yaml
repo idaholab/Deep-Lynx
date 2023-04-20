@@ -279,6 +279,7 @@ paths:
       parameters:
         - schema:
             type: boolean
+            default: 'false'
           in: query
           name: dryrun
           description: If true returns a description of the container that will be created and its contents.
