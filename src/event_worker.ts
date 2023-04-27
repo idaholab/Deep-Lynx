@@ -30,7 +30,11 @@ async function Start(): Promise<any> {
                 interval: '1 day',
             },
             {
-                name: 'materialized_view_refresh', // will run staging_clean.ts
+                name: 'metatype_keys_refresh', // will run metatype_keys_refresh.ts
+                interval: '1m',
+            },
+            {
+                name: 'current_nodes_refresh', // will run current_nodes_refresh.ts
                 interval: '1m',
             },
         ],
