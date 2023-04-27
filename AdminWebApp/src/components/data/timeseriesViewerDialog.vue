@@ -10,7 +10,7 @@
             :y="annotationY"
             :z="annotationZ"
             @createAnnotation="createPlotlyAnnotation"
-        ></timeseries-annotation-dialog>
+        />
 
         <v-card id="dialog">
             <error-banner :message="errorMessage"></error-banner>
@@ -19,9 +19,7 @@
                 <v-btn icon dark @click="closeDialog">
                     <v-icon>mdi-close</v-icon>
                 </v-btn>
-                <v-toolbar-title
-                    >{{ $t('timeseries.searchView') }}<span v-if="transformation"> - {{ transformation.name }}</span></v-toolbar-title
-                >
+                <v-toolbar-title>{{ $t('timeseries.searchView') }}</v-toolbar-title>
                 <v-spacer></v-spacer>
             </v-toolbar>
 
@@ -34,17 +32,17 @@
                             v-model="timeseriesFlag"
                             :label="timeseriesFlag ? 'Timeseries' : 'Index'"
                             :disabled="streamActive"
-                        ></v-switch>
+                        />
 
                         <v-form ref="searchForm" v-model="validSearch" lazy-validation>
                             <div v-show="timeseriesFlag">
                                 <div class="d-block">
                                     <label for="startDate" style="padding-right: 4px">Start: </label
-                                    ><input type="text" placeholder="Select Date.." id="startDate" />
+                                    ><input type="text" placeholder="Select Date..." id="startDate" />
                                 </div>
-
                                 <div class="d-block">
-                                    <label for="endDate" style="padding-right: 11px">End: </label><input type="text" placeholder="Select Date.." id="endDate" />
+                                    <label for="endDate" style="padding-right: 11px">End: </label
+                                    ><input type="text" placeholder="Select Date..." id="endDate" />
                                 </div>
                             </div>
 
@@ -54,7 +52,7 @@
                                 type="number"
                                 :rules="[rules.number]"
                                 :label="$t('timeseries.startIndex')"
-                            ></v-text-field>
+                            />
 
                             <v-text-field
                                 v-show="!timeseriesFlag"
@@ -62,7 +60,7 @@
                                 type="number"
                                 :rules="[rules.number]"
                                 :label="$t('timeseries.endIndex')"
-                            ></v-text-field>
+                            />
 
                             <v-text-field
                                 class="pt-5"
@@ -71,15 +69,15 @@
                                 :rules="[rules.required, rules.positiveNumber, rules.number]"
                                 :label="$t('timeseries.resultLimit')"
                                 hint="Enter 0 for unlimited results (may impact performance)"
-                            ></v-text-field>
+                            />
 
                             <v-row>
                                 <v-col :cols="runType !== '--' && !timeseriesFlag ? 6 : 8">
-                                    <v-select v-model="runType" :items="runTypes" hint="Replay or Live Stream" persistent-hint> </v-select>
+                                    <v-select v-model="runType" :items="runTypes" hint="Replay or Live Stream" persistent-hint />
                                 </v-col>
 
                                 <v-col v-if="runType !== '--' && !timeseriesFlag" :cols="3">
-                                    <v-text-field v-model.number="replayRecordSize" type="number" :rules="[rules.number]" label="Records per"></v-text-field>
+                                    <v-text-field v-model.number="replayRecordSize" type="number" :rules="[rules.number]" label="Records per" />
                                 </v-col>
 
                                 <v-col :cols="runType !== '--' && !timeseriesFlag ? 3 : 4">
@@ -90,7 +88,7 @@
                                         :rules="[rules.number]"
                                         label="Interval"
                                         suffix="s"
-                                    ></v-text-field>
+                                    />
                                 </v-col>
                             </v-row>
                         </v-form>
@@ -98,8 +96,7 @@
                         <v-card-actions class="mt-2">
                             <v-btn v-if="!streamActive" color="primary" @click="submitSearch">{{ $t('timeseries.runSearch') }}</v-btn>
                             <v-btn v-else color="primary" @click="clearIntervals">Stop Stream</v-btn>
-
-                            <v-spacer></v-spacer>
+                            <v-spacer />
                             <v-progress-linear
                                 v-if="streamActive && runType !== 'Live Stream'"
                                 :value="streamEntireProgress"
@@ -112,14 +109,14 @@
                                     <strong>{{ Math.ceil(value) }}%</strong>
                                 </template>
                             </v-progress-linear>
-                            <v-progress-circular v-if="streamActive" :value="streamProgress" color="primary"></v-progress-circular>
+                            <v-progress-circular v-if="streamActive" :value="streamProgress" color="primary" />
                         </v-card-actions>
                     </v-card>
                 </v-col>
 
                 <v-col :cols="3">
                     <v-card class="pa-4" style="height: 100%">
-                        <v-select v-model="chartType" :items="chartTypes" hint="Chart Type" persistent-hint @change="updatePlot(true)"> </v-select>
+                        <v-select v-model="chartType" :items="chartTypes" hint="Chart Type" persistent-hint @change="updatePlot(true)" />
 
                         <v-select
                             v-if="chartType === 'heatmap'"
@@ -128,8 +125,7 @@
                             hint="Color Scale"
                             persistent-hint
                             @change="updatePlot(true)"
-                        >
-                        </v-select>
+                        />
 
                         <v-select
                             v-model="selectedDataSources"
@@ -142,15 +138,14 @@
                             chips
                             deletable-chips
                             @change="adjustColumnNames"
-                        >
-                        </v-select>
+                        />
 
                         <exploratory-data-analysis-dialog
-                            v-if="Object.keys(this.results).length > 0"
+                            v-if="Object.keys(results).length > 0"
                             :selectedDataSources="selectedDataSources"
                             :results="results"
                             :dataSourceShapes="dataSourceShapes"
-                        ></exploratory-data-analysis-dialog>
+                        />
                     </v-card>
                 </v-col>
 
@@ -161,27 +156,24 @@
                             :headers="columnHeaders"
                             :items="selectedColumns"
                             :items-per-page="10"
-                            :footer-props="{
-                                'items-per-page-options': [10, 20, 50],
-                            }"
+                            :footer-props="{'items-per-page-options': [10, 20, 50]}"
                             fixed-header
                             dense
                         >
-                            <template v-slot:header.z>
-                                <span v-if="chartType === 'bubble'">Size</span>
-                                <span v-else>Z</span>
-                            </template>
                             <template v-slot:item.x="{item}">
-                                <v-simple-checkbox v-if="chartType === 'scatter 3D'" v-model="item.x"></v-simple-checkbox>
+                                <v-simple-checkbox v-if="chartType === 'scatter 3D'" v-model="item.x" />
                                 <v-radio-group v-else v-model="selectedXColumn" @change="columnXChange(item.uniqueName)">
                                     <v-radio v-model="item.uniqueName" />
                                 </v-radio-group>
                             </template>
+
                             <template v-slot:item.y="{item}">
-                                <v-simple-checkbox v-model="item.y" :disabled="item.x"></v-simple-checkbox>
+                                <v-simple-checkbox v-model="item.y" :disabled="item.x" />
                             </template>
+
+                            <template v-slot:header.z> <span v-if="chartType === 'bubble'">Size</span><span v-else>Z</span> </template>
                             <template v-slot:item.z="{item}">
-                                <v-simple-checkbox v-model="item.z" :disabled="item.x"> </v-simple-checkbox>
+                                <v-simple-checkbox v-model="item.z" :disabled="item.x" />
                             </template>
 
                             <!-- Trace select for 3D scatter plots -->
@@ -202,24 +194,23 @@
                 <v-col :cols="12">
                     <v-card class="pa-4 mx-3">
                         <div id="timeseriesPlot"></div>
-                        <v-btn color="primary" dark v-show="Object.keys(this.results).length > 0" class="mx-3" @click="showChart = !showChart">
-                            <v-icon v-if="showChart"> mdi-table </v-icon>
-                            <v-icon v-else> mdi-arrow-up-drop-circle </v-icon>
+                        <v-btn v-show="Object.keys(results).length > 0" color="primary" dark class="mx-3" @click="showChart = !showChart">
+                            <v-icon v-if="showChart">mdi-table</v-icon> <v-icon v-else>mdi-arrow-up-drop-circle</v-icon>
                         </v-btn>
-                        <v-btn color="primary" dark v-show="Object.keys(this.results).length > 0" class="mx-3" @click="downloadCSV">
-                            <v-icon> mdi-download </v-icon>
+
+                        <v-btn v-show="Object.keys(results).length > 0" color="primary" dark class="mx-3" @click="downloadCSV">
+                            <v-icon>mdi-download</v-icon>
                         </v-btn>
+
                         <div v-show="!showChart">
                             <v-data-table
-                                v-if="transformation || dataSource"
+                                v-if="dataSource"
                                 :headers="headers"
                                 :items="tableResults"
                                 group-by="datasource"
                                 show-group-by
                                 :items-per-page="1000"
-                                :footer-props="{
-                                    'items-per-page-options': [1000, 5000, 10000],
-                                }"
+                                :footer-props="{'items-per-page-options': [1000, 5000, 10000]}"
                                 class="mx-3 elevation-2"
                                 fixed-header
                                 :height="tableHeight"
@@ -229,7 +220,6 @@
                                 </template>
                             </v-data-table>
                         </div>
-
                         <span v-if="Object.keys(results).length === 0">No Results</span>
                     </v-card>
                 </v-col>
@@ -240,7 +230,7 @@
 
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from 'vue-property-decorator';
-import {DataSourceT, NodeT, TimeseriesDataSourceConfig, TypeMappingTransformationT} from '@/api/types';
+import {DataSourceT, TimeseriesDataSourceConfig} from '@/api/types';
 import TimeseriesAnnotationDialog from '@/components/data/timeseriesAnnotationDialog.vue';
 import Plotly, {Datum} from 'plotly.js-dist-min';
 import {json2csv} from 'json-2-csv';
@@ -261,21 +251,12 @@ type selectedColumn = {
 };
 
 @Component({components: {ExploratoryDataAnalysisDialog, TimeseriesAnnotationDialog}})
-export default class NodeTimeseriesDialog extends Vue {
-    @Prop({required: true})
-    readonly nodeID!: string;
-
+export default class TimeseriesViewerDialog extends Vue {
     @Prop({required: true})
     readonly containerID!: string;
 
     @Prop({required: false})
-    readonly transformationID?: string;
-
-    @Prop({required: false})
     readonly dataSourceID?: string;
-
-    @Prop({required: false, default: false})
-    readonly legacy!: boolean;
 
     @Prop({required: false, default: true})
     readonly icon!: boolean;
@@ -283,13 +264,11 @@ export default class NodeTimeseriesDialog extends Vue {
     dialog = false;
     errorMessage = '';
     successMessage = '';
-    transformation: TypeMappingTransformationT | null = null;
     dataSource: DataSourceT | null = null;
     initialStart: Date = new Date(Date.now() - 1000 * 60 * 60 * 24);
     initialEnd: Date = new Date();
     endDate = '';
     startDate = '';
-    node: NodeT | null = null;
     results: any = {};
     tableResults: any[] = [];
     timeseriesFlag = true;
@@ -344,10 +323,6 @@ export default class NodeTimeseriesDialog extends Vue {
     get primaryTimestampName(): string {
         let found: string | undefined = undefined;
 
-        if (this.transformation && this.transformation.keys) {
-            found = this.transformation?.keys?.find((k) => k.is_primary_timestamp)?.column_name;
-        }
-
         if (this.dataSource && (this.dataSource?.config as TimeseriesDataSourceConfig).columns) {
             found = (this.dataSource?.config as TimeseriesDataSourceConfig).columns.find((c) => c.is_primary_timestamp)?.column_name;
         }
@@ -357,22 +332,52 @@ export default class NodeTimeseriesDialog extends Vue {
         return '';
     }
 
-    @Watch('nodeID')
-    nodeChange() {
-        this.load();
-        this.loadNode();
+    get headers() {
+        let columns = [{text: 'DataSource', value: 'datasource'}];
+        const columnNames = this.selectedColumns
+            .filter((c) => c.x || c.y || c.z)
+            .map((c) => {
+                return {
+                    text: c.name,
+                    value: c.name,
+                    groupable: false,
+                };
+            });
+        columns = columns.concat(columnNames);
+        return columns;
     }
 
-    @Watch('transformationID')
-    transformationChange() {
-        this.load();
-        this.loadNode();
+    get columnHeaders() {
+        const columnNames = [
+            {text: this.$t('timeseries.columnName'), value: 'name', sortable: false},
+            {text: this.$t('timeseries.dataSource'), value: 'dataSource', sortable: false},
+            {text: this.$t('timeseries.type'), value: 'type', sortable: false},
+            {text: 'X', value: 'x', sortable: false},
+        ];
+
+        const yColumn = {text: 'Y', value: 'y', sortable: false};
+        const zColumn = {text: 'Z', value: 'z', sortable: false};
+        const traceColumn = {text: this.$t('timeseries.trace'), value: 'trace', sortable: false};
+
+        if (['line', 'markers', 'line and markers', 'bar'].includes(this.chartType)) {
+            columnNames.push(yColumn);
+        } else if (this.chartType === 'bubble') {
+            columnNames.push(yColumn);
+            columnNames.push(zColumn);
+        } else if (this.chartType === 'heatmap') {
+            columnNames.push(zColumn);
+        } else if (this.chartType === 'scatter 3D') {
+            columnNames.push(yColumn);
+            columnNames.push(zColumn);
+            columnNames.push(traceColumn);
+        }
+
+        return columnNames;
     }
 
     @Watch('dataSourceID')
     dataSourceChange() {
         this.load();
-        this.loadNode();
     }
 
     @Watch('streamActive')
@@ -394,6 +399,130 @@ export default class NodeTimeseriesDialog extends Vue {
             this.streamEntireProgress = 0;
             this.streamSeconds = 0;
         }
+    }
+
+    setDatePickers() {
+        const startPickr = flatpickr('#startDate', {
+            altInput: true,
+            altFormat: 'F j, y h:i:S K',
+            dateFormat: 'Z',
+            enableTime: true,
+            enableSeconds: true,
+            allowInput: true,
+        }) as flatpickr.Instance;
+
+        (startPickr as flatpickr.Instance).config.onChange.push((selectedDates, dateStr) => {
+            this.startDate = dateStr;
+        });
+        (startPickr as flatpickr.Instance).setDate(this.startDate);
+
+        const endPickr = flatpickr('#endDate', {
+            altInput: true,
+            altFormat: 'F j, y h:i:S K',
+            dateFormat: 'Z',
+            enableTime: true,
+            enableSeconds: true,
+            allowInput: true,
+        });
+
+        (endPickr as flatpickr.Instance).config.onChange.push((selectedDates, dateStr) => {
+            this.endDate = dateStr;
+        });
+        (endPickr as flatpickr.Instance).setDate(this.endDate);
+    }
+
+    columnXChange(uniqueName: string) {
+        for (const column of this.selectedColumns) {
+            if (column.uniqueName === uniqueName) {
+                column.x = true;
+                column.y = false;
+                column.z = false;
+            } else {
+                column.x = false;
+            }
+        }
+    }
+
+    load() {
+        this.$client
+            .retrieveDataSource(this.containerID, this.dataSourceID!)
+            .then((result) => {
+                this.dataSource = result;
+                this.selectedDataSources = [this.dataSource];
+                this.adjustColumnNames();
+            })
+            .catch((e) => (this.errorMessage = e));
+    }
+
+    loadDataSources() {
+        this.$client
+            .listDataSources(this.containerID, false, true)
+            .then((result) => {
+                this.dataSources = result;
+            })
+            .catch((e) => (this.errorMessage = e));
+    }
+
+    mounted() {
+        this.load();
+        this.loadDataSources();
+
+        // provide sane defaults. may be overwritten by datasource information
+        this.startDate = this.initialStart.toISOString();
+        this.endDate = this.initialEnd.toISOString();
+        this.startIndex = 0;
+        this.endIndex = 5000;
+    }
+
+    addTrace() {
+        const length = this.userTraces.length;
+        this.userTraces.push(`${length + 1}`);
+    }
+
+    async createPlotlyAnnotation(annotation: any) {
+        this.createAnnotation = false;
+
+        if (!annotation) return;
+
+        const plotlyDiv = document.getElementById('timeseriesPlot') as any;
+        const currentLayout = plotlyDiv.layout;
+
+        // default arrow direction to up, but change if specified
+        let y = -40;
+        if (annotation.direction === 'below') y = 40;
+
+        if (annotation.z) {
+            // scene.annotations used for 3D annotations
+            if (!currentLayout.scene) currentLayout.scene = {};
+            if (!currentLayout.scene.annotations) currentLayout.scene.annotations = [];
+
+            currentLayout.scene.annotations.push({
+                x: annotation.x,
+                y: annotation.y,
+                z: annotation.z,
+                text: annotation.annotation,
+                showarrow: true,
+                arrowhead: 2,
+                ax: 0,
+                ay: y,
+            });
+        } else {
+            if (!currentLayout.annotations) currentLayout.annotations = [];
+
+            currentLayout.annotations.push({
+                x: annotation.x,
+                y: annotation.y,
+                xref: 'x',
+                yref: 'y',
+                text: annotation.annotation,
+                showarrow: true,
+                arrowhead: 2,
+                ax: 0,
+                ay: y,
+            });
+        }
+
+        void Plotly.update(plotlyDiv, {}, currentLayout);
     }
 
     async updatePlot(styleUpdate = false) {
@@ -437,7 +566,7 @@ export default class NodeTimeseriesDialog extends Vue {
             const resultLength =
                 Number(this.defaultPlotLimit) !== 0 ? Math.min(dataSourceResults.length, Number(this.defaultPlotLimit)) : dataSourceResults.length;
 
-            if (this.chartType === 'line' || this.chartType === 'markers' || this.chartType === 'line and markers') {
+            if (['line', 'markers', 'line and markers'].includes(this.chartType)) {
                 let mode = 'line';
                 if (this.chartType === 'line and markers') {
                     mode = 'lines+markers';
@@ -446,7 +575,12 @@ export default class NodeTimeseriesDialog extends Vue {
                 }
 
                 for (const column of yColumns) {
-                    const singlePlot: {x: number[]; y: number[]; mode: string; name: string} = {x: [], y: [], mode: mode, name: column.uniqueName};
+                    const singlePlot: {x: number[]; y: number[]; mode: string; name: string} = {
+                        x: [],
+                        y: [],
+                        mode: mode,
+                        name: column.uniqueName,
+                    };
 
                     for (let i = 0; i < resultLength; i++) {
                         singlePlot.x.push(dataSourceResults[i][dataSourcePrimaryTimestamp!]);
@@ -457,7 +591,12 @@ export default class NodeTimeseriesDialog extends Vue {
                 }
             } else if (this.chartType === 'bar') {
                 for (const column of yColumns) {
-                    const singlePlot: {x: number[]; y: number[]; type: Plotly.PlotType; name: string} = {x: [], y: [], type: 'bar', name: column.uniqueName};
+                    const singlePlot: {x: number[]; y: number[]; type: Plotly.PlotType; name: string} = {
+                        x: [],
+                        y: [],
+                        type: 'bar',
+                        name: column.uniqueName,
+                    };
 
                     for (let i = 0; i < resultLength; i++) {
                         singlePlot.x.push(dataSourceResults[i][dataSourcePrimaryTimestamp!]);
@@ -490,8 +629,11 @@ export default class NodeTimeseriesDialog extends Vue {
                 }
             } else if (this.chartType === 'heatmap') {
                 // current support for basic heat map utilizing z exclusively
-
-                const plot: {z: number[][]; type: Plotly.PlotType; colorscale: Plotly.ColorScale} = {z: [], type: 'heatmap', colorscale: this.colorScale};
+                const plot: {z: number[][]; type: Plotly.PlotType; colorscale: Plotly.ColorScale} = {
+                    z: [],
+                    type: 'heatmap',
+                    colorscale: this.colorScale,
+                };
 
                 for (const column of zColumns) {
                     // each column specified is a new row in the heat map
@@ -507,7 +649,6 @@ export default class NodeTimeseriesDialog extends Vue {
                 plotData.push(plot);
             } else if (this.chartType === 'scatter 3D') {
                 // create a plot (trace) for each valid user-specified set of traces
-
                 for (const trace of this.userTraces) {
                     const traceColumns = dataSourceColumns.filter((c) => c.trace.includes(trace));
                     const xColumn = traceColumns.filter((c) => c.x);
@@ -571,197 +712,6 @@ export default class NodeTimeseriesDialog extends Vue {
         plotlyDiv!.lastElementChild!.scrollIntoView({behavior: 'auto'});
     }
 
-    async createPlotlyAnnotation(annotation: any) {
-        this.createAnnotation = false;
-
-        if (!annotation) return;
-
-        const plotlyDiv = document.getElementById('timeseriesPlot') as any;
-        const currentLayout = plotlyDiv.layout;
-
-        // default arrow direction to up, but change if specified
-        let y = -40;
-        if (annotation.direction === 'below') y = 40;
-
-        if (annotation.z) {
-            // scene.annotations used for 3D annotations
-            if (!currentLayout.scene) currentLayout.scene = {};
-            if (!currentLayout.scene.annotations) currentLayout.scene.annotations = [];
-
-            currentLayout.scene.annotations.push({
-                x: annotation.x,
-                y: annotation.y,
-                z: annotation.z,
-                text: annotation.annotation,
-                showarrow: true,
-                arrowhead: 2,
-                ax: 0,
-                ay: y,
-            });
-        } else {
-            if (!currentLayout.annotations) currentLayout.annotations = [];
-
-            currentLayout.annotations.push({
-                x: annotation.x,
-                y: annotation.y,
-                xref: 'x',
-                yref: 'y',
-                text: annotation.annotation,
-                showarrow: true,
-                arrowhead: 2,
-                ax: 0,
-                ay: y,
-            });
-        }
-
-        void Plotly.update(plotlyDiv, {}, currentLayout);
-    }
-
-    columnXChange(uniqueName: string) {
-        for (const column of this.selectedColumns) {
-            if (column.uniqueName === uniqueName) {
-                column.x = true;
-                column.y = false;
-                column.z = false;
-            } else {
-                column.x = false;
-            }
-        }
-    }
-
-    mounted() {
-        this.load();
-        this.loadNode();
-        this.loadDataSources();
-
-        // provide sane defaults. may be overwritten by datasource information
-        this.startDate = this.initialStart.toISOString();
-        this.endDate = this.initialEnd.toISOString();
-        this.startIndex = 0;
-        this.endIndex = 5000;
-    }
-
-    // we must pull the transformation in order to build the table correctly
-    load() {
-        if (this.legacy) {
-            this.$client
-                .retrieveTransformation(this.containerID, this.transformationID!)
-                .then((result) => {
-                    this.transformation = result;
-                })
-                .catch((e) => (this.errorMessage = e));
-        } else {
-            this.$client
-                .retrieveDataSource(this.containerID, this.dataSourceID!)
-                .then((result) => {
-                    this.dataSource = result;
-                    this.selectedDataSources = [this.dataSource];
-                    this.adjustColumnNames();
-                })
-                .catch((e) => (this.errorMessage = e));
-        }
-    }
-
-    loadNode() {
-        this.$client
-            .retrieveNode(this.containerID, this.nodeID)
-            .then((result) => {
-                this.node = result;
-            })
-            .catch((e) => (this.errorMessage = e));
-    }
-
-    loadDataSources() {
-        this.$client
-            .listDataSources(this.containerID, false, true)
-            .then((result) => {
-                this.dataSources = result;
-            })
-            .catch((e) => (this.errorMessage = e));
-    }
-
-    setDatePickers() {
-        const startPickr = flatpickr('#startDate', {
-            altInput: true,
-            altFormat: 'F j, y h:i:S K',
-            dateFormat: 'Z',
-            enableTime: true,
-            enableSeconds: true,
-            allowInput: true,
-        }) as flatpickr.Instance;
-
-        (startPickr as flatpickr.Instance).config.onChange.push((selectedDates, dateStr) => {
-            this.startDate = dateStr;
-        });
-        (startPickr as flatpickr.Instance).setDate(this.startDate);
-
-        const endPickr = flatpickr('#endDate', {
-            altInput: true,
-            altFormat: 'F j, y h:i:S K',
-            dateFormat: 'Z',
-            enableTime: true,
-            enableSeconds: true,
-            allowInput: true,
-        });
-
-        (endPickr as flatpickr.Instance).config.onChange.push((selectedDates, dateStr) => {
-            this.endDate = dateStr;
-        });
-        (endPickr as flatpickr.Instance).setDate(this.endDate);
-    }
-
-    get headers() {
-        if (this.transformation && this.transformation?.keys) {
-            return this.transformation.keys.map((key) => {
-                return {
-                    text: key.column_name,
-                    value: key.column_name,
-                };
-            });
-        } else {
-            let columns = [{text: 'DataSource', value: 'datasource'}];
-            const columnNames = this.selectedColumns
-                .filter((c) => c.x || c.y || c.z)
-                .map((c) => {
-                    return {
-                        text: c.name,
-                        value: c.name,
-                        groupable: false,
-                    };
-                });
-            columns = columns.concat(columnNames);
-            return columns;
-        }
-    }
-
-    get columnHeaders() {
-        const columnNames = [
-            {text: this.$t('timeseries.columnName'), value: 'name', sortable: false},
-            {text: this.$t('timeseries.dataSource'), value: 'dataSource', sortable: false},
-            {text: this.$t('timeseries.type'), value: 'type', sortable: false},
-            {text: 'X', value: 'x', sortable: false},
-        ];
-
-        const yColumn = {text: 'Y', value: 'y', sortable: false};
-        const zColumn = {text: 'Z', value: 'z', sortable: false};
-        const traceColumn = {text: this.$t('timeseries.trace'), value: 'trace', sortable: false};
-
-        if (this.chartType === 'line' || this.chartType === 'markers' || this.chartType === 'line and markers' || this.chartType === 'bar') {
-            columnNames.push(yColumn);
-        } else if (this.chartType === 'bubble') {
-            columnNames.push(yColumn);
-            columnNames.push(zColumn);
-        } else if (this.chartType === 'heatmap') {
-            columnNames.push(zColumn);
-        } else if (this.chartType === 'scatter 3D') {
-            columnNames.push(yColumn);
-            columnNames.push(zColumn);
-            columnNames.push(traceColumn);
-        }
-
-        return columnNames;
-    }
-
     adjustColumnNames() {
         // have at minimum the chosen data source selected
         if (this.selectedDataSources.length === 0) this.selectedDataSources.push(this.dataSource!);
@@ -812,6 +762,37 @@ export default class NodeTimeseriesDialog extends Vue {
                 }
             }
         }
+    }
+
+    determineDataSourceShape() {
+        this.selectedDataSources.forEach(async (dataSource: DataSourceT) => {
+            const count = await this.$client.retrieveTimeseriesRowCount(this.containerID, dataSource.id!);
+
+            const range = await this.$client.retrieveTimeseriesRange(this.containerID, dataSource.id!);
+
+            this.dataSourceShapes.set(dataSource.id!, {
+                count: count.count,
+                start: range.start,
+                end: range.end,
+            });
+
+            // set start and end times/index if main data source
+            if (this.selectedDataSources.length === 1 && this.timeseriesFlag) {
+                if (range.start !== 'NaN') {
+                    this.startDate = range.start;
+                    this.endDate = range.end;
+                } else {
+                    this.errorMessage = `Data source ${dataSource.name} may be empty`;
+                }
+            } else if (this.selectedDataSources.length === 1 && !this.timeseriesFlag) {
+                if (range.start !== 'NaN') {
+                    this.startIndex = Number(range.start);
+                    this.endIndex = Number(range.end);
+                } else {
+                    this.errorMessage = `Data source ${dataSource.name} may be empty`;
+                }
+            }
+        });
     }
 
     async submitSearch() {
@@ -976,6 +957,7 @@ export default class NodeTimeseriesDialog extends Vue {
             // number and number64 are compatible
             const dataSourceType = dataSourcePrimaryColumn.type!.includes('number') ? 'number' : dataSourcePrimaryColumn.type;
 
+            // don't show data for data sources that are incompatible with the selected primary timestamp and not the current data source
             if (xColumnType !== dataSourceType && xColumn.dataSource !== dataSource.name) {
                 this.errorMessage = `Some data could not be displayed due to incompatible primary timestamp types. Type selected: ${xColumnType}`;
                 continue;
@@ -999,46 +981,8 @@ export default class NodeTimeseriesDialog extends Vue {
     }
 
     async runSearch() {
-        if (this.legacy) {
-            this.$client
-                .submitNodeGraphQLQuery(this.containerID, this.nodeID, this.buildQueryLegacy())
-                .then((results) => {
-                    if (results.errors) {
-                        this.errorMessage = (results.errors as string[]).join(' ');
-                        return;
-                    }
-
-                    let data =
-                        results.data[
-                            this.transformation?.name
-                                ? this.$utils.stringToValidPropertyName(this.transformation?.name) + '_legacy'
-                                : 'z_' + this.transformation?.id + '_legacy'
-                        ];
-                    if (!Array.isArray(data)) data = [data];
-                    this.results = data;
-                })
-                .catch((e) => (this.errorMessage = e));
-        } else {
-            this.results = await this.queryTimeseriesData();
-            void this.updatePlot();
-        }
-    }
-
-    buildQueryLegacy() {
-        return {
-            query: `
-{
-  ${this.transformation?.name ? this.$utils.stringToValidPropertyName(this.transformation?.name!) + '_legacy' : 'z_' + this.transformationID + '_legacy'}
-  (_record: {
-      sortBy: "${this.transformation?.keys.find((k) => k.is_primary_timestamp)?.column_name}",sortDesc: false}
-      ${this.transformation?.keys.find((k) => k.is_primary_timestamp)?.column_name}: {
-      operator: "between", value: ["${this.startDate}", "${this.endDate}"]
-      }){
-      ${this.transformation?.keys.map((k) => k.column_name).join(' ')}
-  }
-}
-      `,
-        };
+        this.results = await this.queryTimeseriesData();
+        void this.updatePlot();
     }
 
     buildQuery(dataSource: DataSourceT) {
@@ -1057,22 +1001,22 @@ export default class NodeTimeseriesDialog extends Vue {
             return {
                 query: `
       {
-        Timeseries(_record: {
-          limit: ${this.defaultPlotLimit},
-          sortBy: "${primaryTimestampColumn}",
-          sortDesc: false }
+        Timeseries(
+          _record: {
+            limit: ${this.defaultPlotLimit},
+            sortBy: "${primaryTimestampColumn}",
+            sortDesc: false
+          }
           ${original_primaryTimestampColumn}: {
             operator: "between", value: ["${this.startDate}", "${this.endDate}"]
           }
-        )
-        {
-        ${dataSourceColumns
-            .filter((c) => c.x || c.y || c.z || c.uniqueName === `${dataSource.name}_${primaryTimestampColumn}`)
-            .map((c) => c.name)
-            .join(' ')}
+        ) {
+          ${dataSourceColumns
+              .filter((c) => c.x || c.y || c.z || c.uniqueName === `${dataSource.name}_${primaryTimestampColumn}`)
+              .map((c) => c.name)
+              .join(' ')}
         }
-      }
-        `,
+      }`,
             };
         } else {
             // if the primary timestamp is a number, any raw values must be ints
@@ -1081,22 +1025,22 @@ export default class NodeTimeseriesDialog extends Vue {
                 return {
                     query: `
       {
-        Timeseries(_record: {
-          limit: ${this.defaultPlotLimit},
-          sortBy: "${primaryTimestampColumn}",
-          sortDesc: false }
+        Timeseries(
+          _record: {
+            limit: ${this.defaultPlotLimit},
+            sortBy: "${primaryTimestampColumn}",
+            sortDesc: false
+          }
           ${original_primaryTimestampColumn}: {
             operator: "between", value: [${this.startIndex}, ${this.endIndex}]
           }
-        )
-        {
-        ${dataSourceColumns
-            .filter((c) => c.x || c.y || c.z || c.uniqueName === `${dataSource.name}_${primaryTimestampColumn}`)
-            .map((c) => c.name)
-            .join(' ')}
+        ) {
+          ${dataSourceColumns
+              .filter((c) => c.x || c.y || c.z || c.uniqueName === `${dataSource.name}_${primaryTimestampColumn}`)
+              .map((c) => c.name)
+              .join(' ')}
         }
-      }
-        `,
+      }`,
                 };
             } else if (
                 dataSourcePrimaryTimestamp?.type === 'number64' ||
@@ -1106,46 +1050,27 @@ export default class NodeTimeseriesDialog extends Vue {
                 return {
                     query: `
       {
-        Timeseries(_record: {
-          limit: ${this.defaultPlotLimit},
-          sortBy: "${primaryTimestampColumn}",
-          sortDesc: false }
+        Timeseries(
+          _record: {
+            limit: ${this.defaultPlotLimit},
+            sortBy: "${primaryTimestampColumn}",
+            sortDesc: false
+          }
           ${original_primaryTimestampColumn}: {
             operator: "between", value: ["${this.startIndex}", "${this.endIndex}"]
           }
-        )
-        {
-        ${dataSourceColumns
-            .filter((c) => c.x || c.y || c.z || c.uniqueName === `${dataSource.name}_${primaryTimestampColumn}`)
-            .map((c) => c.name)
-            .join(' ')}
+        ) {
+          ${dataSourceColumns
+              .filter((c) => c.x || c.y || c.z || c.uniqueName === `${dataSource.name}_${primaryTimestampColumn}`)
+              .map((c) => c.name)
+              .join(' ')}
         }
-      }
-        `,
+      }`,
                 };
             } else {
                 this.errorMessage = 'Unrecognized primary timestamp type';
                 return '';
             }
-        }
-    }
-
-    addTrace() {
-        const length = this.userTraces.length;
-        this.userTraces.push(`${length + 1}`);
-    }
-
-    downloadCSV() {
-        for (const [dataSourceName, records] of Object.entries(this.results)) {
-            const data = (records as object[]).map((r: any) => {
-                delete r.datasource;
-                return r;
-            });
-            json2csv(data)
-                .then((csv) => {
-                    this.performDownload(csv, dataSourceName);
-                })
-                .catch((e) => (this.errorMessage = e));
         }
     }
 
@@ -1162,35 +1087,24 @@ export default class NodeTimeseriesDialog extends Vue {
         link.remove();
     }
 
-    determineDataSourceShape() {
-        this.selectedDataSources.forEach(async (dataSource: DataSourceT) => {
-            const count = await this.$client.retrieveTimeseriesRowCount(this.containerID, dataSource.id!);
-
-            const range = await this.$client.retrieveTimeseriesRange(this.containerID, dataSource.id!);
-
-            this.dataSourceShapes.set(dataSource.id!, {
-                count: count.count,
-                start: range.start,
-                end: range.end,
+    downloadCSV() {
+        for (const [dataSourceName, records] of Object.entries(this.results)) {
+            const data = (records as object[]).map((r: any) => {
+                delete r.datasource;
+                return r;
             });
+            json2csv(data)
+                .then((csv) => {
+                    this.performDownload(csv, dataSourceName);
+                })
+                .catch((e) => (this.errorMessage = e));
+        }
+    }
 
-            // set start and end times/index if main data source
-            if (this.selectedDataSources.length === 1 && this.timeseriesFlag) {
-                if (range.start !== 'NaN') {
-                    this.startDate = range.start;
-                    this.endDate = range.end;
-                } else {
-                    this.errorMessage = `Data source ${dataSource.name} may be empty`;
-                }
-            } else if (this.selectedDataSources.length === 1 && !this.timeseriesFlag) {
-                if (range.start !== 'NaN') {
-                    this.startIndex = Number(range.start);
-                    this.endIndex = Number(range.end);
-                } else {
-                    this.errorMessage = `Data source ${dataSource.name} may be empty`;
-                }
-            }
-        });
+    closeDialog() {
+        this.clearIntervals();
+        this.dialog = false;
+        this.$emit('timeseriesDialogClose');
     }
 
     clearIntervals() {
@@ -1199,12 +1113,6 @@ export default class NodeTimeseriesDialog extends Vue {
         clearInterval(this.timeseriesReplayInterval);
         clearInterval(this.indexReplayInterval);
         clearInterval(this.liveStreamInterval);
-    }
-
-    closeDialog() {
-        this.clearIntervals();
-        this.dialog = false;
-        this.$emit('timeseriesDialogClose');
     }
 }
 </script>

@@ -11,12 +11,10 @@
         </template>
 
         <template v-slot:item.actions="{ item }">
-          <node-timeseries-dialog 
-            :nodeID="nodeID" 
-            :containerID="containerID" 
-            :dataSourceID="item.value[1]" 
-            :legacy="item.value[0]"
-            @timeseriesDialogClose="incrementKey" 
+          <timeseries-viewer-dialog
+            :containerID="containerID"
+            :dataSourceID="item.value[1]"
+            @timeseriesDialogClose="incrementKey"
             :key="key"
           />
         </template>
@@ -27,9 +25,9 @@
 
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from "vue-property-decorator";
-import NodeTimeseriesDialog from "@/components/data/nodeTimeseriesDialog.vue";
+import TimeseriesViewerDialog from "./timeseriesViewerDialog.vue";
 
-@Component({components: {NodeTimeseriesDialog}})
+@Component({components: {TimeseriesViewerDialog}})
 export default class NodeTimeseriesDataTable extends Vue {
   @Prop({required: true})
   readonly nodeID!: string

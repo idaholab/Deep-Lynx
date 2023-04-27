@@ -144,13 +144,13 @@
         />
       </template>
       <template v-slot:[`item.actions`]="{ item }">
-        <timeseries-source-dialog v-if="activeTab === 'timeseriesDatasources'"
+        <timeseries-viewer-dialog v-if="activeTab === 'timeseriesDatasources'"
           :containerID="containerID"
           :dataSourceID="item.id"
           :icon="true"
           :key="timeseriesKey"
           @timeseriesDialogClose="incrementKey"
-        ></timeseries-source-dialog>
+        ></timeseries-viewer-dialog>
         <edit-data-source-dialog
             :containerID="containerID"
             :dataSource="item"
@@ -184,14 +184,14 @@ import DeleteDataSourceDialog from "@/components/dataSources/deleteDataSourceDia
 import {mdiFileDocumentMultiple} from "@mdi/js";
 import ReprocessDataSourceDialog from "@/components/dataImport/reprocessDataSourceDialog.vue";
 import EditDataSourceDialog from "@/components/dataSources/editDataSourceDialog.vue";
-import TimeseriesSourceDialog from '@/components/data/timeseriesSourceDialog.vue';
+import TimeseriesViewerDialog from '@/components/data/timeseriesViewerDialog.vue';
 
 @Component({components:{
     CreateDataSourceDialog,
     EditDataSourceDialog,
     DeleteDataSourceDialog,
     ReprocessDataSourceDialog,
-    TimeseriesSourceDialog
+    TimeseriesViewerDialog
   }})
 export default class DataSources extends Vue {
   @Prop({required: true})

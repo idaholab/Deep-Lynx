@@ -77,7 +77,7 @@
           <v-icon small class="mr-2" @click="viewItem(item)" v-if="activeTab === 'datasources'">
             mdi-eye
           </v-icon>
-          <timeseries-source-dialog v-if="activeTab === 'timeseries'"
+          <timeseries-viewer-dialog v-if="activeTab === 'timeseries'"
             :containerID="containerID"
             :dataSourceID="selectedDataSource.id"
             :icon="true"
@@ -202,7 +202,7 @@ import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
 import DeleteDataImportDialog from "@/components/dataImport/deleteDataImportDialog.vue";
 import ReprocessDataImportDialog from "@/components/dataImport/reprocessDataImportDialog.vue";
 import {mdiFileDocumentMultiple} from "@mdi/js";
-import TimeseriesSourceDialog from '@/components/data/timeseriesSourceDialog.vue';
+import TimeseriesViewerDialog from '@/components/data/timeseriesViewerDialog.vue';
 
 
 @Component({filters: {
@@ -216,7 +216,7 @@ import TimeseriesSourceDialog from '@/components/data/timeseriesSourceDialog.vue
     SelectDataSource,
     DeleteDataImportDialog,
     ReprocessDataImportDialog,
-    TimeseriesSourceDialog
+    TimeseriesViewerDialog
   }
 })
 export default class DataImports extends Vue {
