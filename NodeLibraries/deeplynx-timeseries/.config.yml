@@ -1,0 +1,2 @@
+db_connection_string: "postgresql://postgres:deeplynxcore@localhost/deep_lynx"
+max_columns: 2
