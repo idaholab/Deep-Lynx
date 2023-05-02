@@ -28,9 +28,9 @@
                 <template slot="prepend"><info-tooltip :message="$t('containerExport.exportDataSourceHelp')"></info-tooltip> </template>
               </v-checkbox>
 
-            <v-checkbox v-model="exportTypeMappings" disabled>
+            <v-checkbox v-model="exportTypeMappings">
                 <template v-slot:label>
-                  {{$t('containerExport.exportTypeMappings')}} <p class="text-caption" style="margin-left: 5px"> {{$t('comingSoon')}}</p>
+                  {{$t('containerExport.exportTypeMappings')}} <p class="text-caption" style="margin-left: 5px"> {{$t('beta')}}</p>
                 </template>
               </v-checkbox>
 

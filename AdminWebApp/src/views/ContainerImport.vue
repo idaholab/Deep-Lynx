@@ -28,9 +28,9 @@
                 <template slot="prepend"><info-tooltip :message="$t('containerImport.importDataSourceHelp')"></info-tooltip> </template>
               </v-checkbox>
 
-            <v-checkbox v-model="importTypeMappings" disabled>
+            <v-checkbox v-model="importTypeMappings">
                 <template v-slot:label>
-                  {{$t('containerImport.importTypeMappings')}} <p class="text-caption" style="margin-left: 5px"> {{$t('comingSoon')}}</p>
+                  {{$t('containerImport.importTypeMappings')}} <p class="text-caption" style="margin-left: 5px"> {{$t('beta')}}</p>
                 </template>
               </v-checkbox>
 

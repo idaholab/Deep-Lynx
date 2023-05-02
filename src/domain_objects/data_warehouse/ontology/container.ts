@@ -5,12 +5,13 @@ import Result from '../../../common_classes/result';
 import Authorization from '../../access_management/authorization/authorization';
 import Logger from '../../../services/logger';
 import {Type} from 'class-transformer';
-import Metatype from "./metatype";
-import MetatypeRelationship from "./metatype_relationship";
-import MetatypeKey from "./metatype_key";
-import MetatypeRelationshipKey from "./metatype_relationship_key";
-import MetatypeRelationshipPair from "./metatype_relationship_pair";
-import {DataSource} from "../../../interfaces_and_impl/data_warehouse/import/data_source";
+import Metatype from './metatype';
+import MetatypeRelationship from './metatype_relationship';
+import MetatypeKey from './metatype_key';
+import MetatypeRelationshipKey from './metatype_relationship_key';
+import MetatypeRelationshipPair from './metatype_relationship_pair';
+import {DataSource} from '../../../interfaces_and_impl/data_warehouse/import/data_source';
+import TypeMapping from '../etl/type_mapping';
 
 /*
     ContainerConfig allows the user and system to toggle features at a container
@@ -28,11 +29,7 @@ export class ContainerConfig extends NakedDomainClass {
     @IsOptional()
     enabled_data_sources?: string[] = [];
 
-    constructor(input?: {
-        data_versioning_enabled: boolean; 
-        ontology_versioning_enabled?: boolean; 
-        enabled_data_sources?: string[];
-    }) {
+    constructor(input?: {data_versioning_enabled: boolean; ontology_versioning_enabled?: boolean; enabled_data_sources?: string[]}) {
         super();
 
         if (input) {
@@ -220,8 +217,17 @@ export class ContainerExport extends NakedDomainClass {
     @IsOptional()
     data_sources?: DataSource[];
 
-    constructor(input?: {version?: number, metatypes?: Metatype[]; metatype_keys?: MetatypeKey[];
-        relationships?: MetatypeRelationship[]; relationship_keys?: MetatypeRelationshipKey[], relationship_pairs?: MetatypeRelationshipPair[]}) {
+    @IsOptional()
+    type_mappings?: TypeMapping[];
+
+    constructor(input?: {
+        version?: number;
+        metatypes?: Metatype[];
+        metatype_keys?: MetatypeKey[];
+        relationships?: MetatypeRelationship[];
+        relationship_keys?: MetatypeRelationshipKey[];
+        relationship_pairs?: MetatypeRelationshipPair[];
+    }) {
         super();
         if (input) {
             this.version = input.version;

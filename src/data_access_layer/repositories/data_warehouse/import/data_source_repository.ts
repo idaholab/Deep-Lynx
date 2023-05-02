@@ -125,8 +125,68 @@ export default class DataSourceRepository extends Repository implements Reposito
         return Promise.resolve(Result.Success(true));
     }
 
-    async importDataSources(containerID: string, user: User, fileBuffer: Buffer): Promise<Result<string>> {
+    // attempts to create a new data source and returns the newly created data source
+    async createDataSource(t: DataSource, user: User): Promise<Result<DataSource>> {
+        if (!t.DataSourceRecord) return Promise.resolve(Result.Failure(`Data Source must have a data source record instantiated`));
+
+        const errors = await t.DataSourceRecord.validationErrors();
+        if (errors) return Promise.resolve(Result.Failure(`attached data source record does not pass validation ${errors.join(',')}`));
+
+        const toSave = await t.ToSave();
+        let savedRecord: DataSourceRecord;
+
+        if (toSave.id) {
+            // check for unique source name within container scope
+            const sources = await new DataSourceRepository().where().containerID('eq', toSave.container_id).and().id('neq', toSave.id).list();
+            if (sources.isError) return Promise.resolve(Result.Failure(`unable to list data sources for container ${sources.error}`));
+
+            // to allow partial updates we must first fetch the original object
+            const original = await this.findByID(toSave.id);
+            if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
+
+            const originalToSave = await original.value.ToSave();
+
+            Object.assign(originalToSave, toSave);
+
+            const updated = await this.#mapper.Update(user.id!, originalToSave);
+            if (updated.isError) return Promise.resolve(Result.Pass(updated));
+
+            savedRecord = updated.value;
+        } else {
+            // check for unique source name within container scope
+            const sources = await new DataSourceRepository().where().containerID('eq', toSave.container_id).list();
+            if (sources.isError) return Promise.resolve(Result.Failure(`unable to list data sources for container ${sources.error}`));
+
+            // we need a transaction so that a hypertable failure can delete data source as well
+            const transaction = await this.#mapper.startTransaction();
+
+            const created = await this.#mapper.Create(user.id!, toSave, transaction.value);
+            if (created.isError) return Promise.resolve(Result.Pass(created));
+
+            if (created.value.adapter_type === 'timeseries') {
+                const hypertable_created = await this.#mapper.CreateHypertable(created.value);
+                if (hypertable_created.isError) {
+                    await this.#mapper.rollbackTransaction(transaction.value);
+                    return Promise.resolve(Result.Failure(`unable to create hypertable for timeseries data source ${hypertable_created.error?.error}`));
+                }
+            }
+
+            await this.#mapper.completeTransaction(transaction.value);
+
+            savedRecord = created.value;
+        }
+
+        const newDataSource = this.#factory.fromDataSourceRecord(savedRecord);
+        if (!newDataSource) return Promise.resolve(Result.Failure(`unable to instantiate new data source from saved data source record`));
+
+        Object.assign(t, newDataSource);
+
+        return Promise.resolve(Result.Success(newDataSource));
+    }
+
+    async importDataSources(containerID: string, user: User, fileBuffer: Buffer): Promise<Result<Map<string, string>>> {
         const jsonImport = JSON.parse(fileBuffer.toString('utf8').trim());
+        const sourceIDMapping: Map<string, string> = new Map();
 
         if (!('data_sources' in jsonImport)) {
             return Promise.resolve(Result.Failure('Container export file does not contain all necessary sections for a data source export.'));
@@ -149,6 +209,7 @@ export default class DataSourceRepository extends Repository implements Reposito
             const existingDataSource = currentDataSources.value.find((ds) => ds?.DataSourceRecord?.name === dataSource.DataSourceRecord!.name);
             if (existingDataSource) {
                 dataSource.DataSourceRecord.id = existingDataSource.DataSourceRecord?.id;
+                sourceIDMapping.set(source.DataSourceRecord.id, existingDataSource.DataSourceRecord?.id!);
             } else {
                 dataSource.DataSourceRecord.id = undefined;
             }
@@ -156,10 +217,13 @@ export default class DataSourceRepository extends Repository implements Reposito
             dataSource.DataSourceRecord.container_id = containerID;
             dataSource.DataSourceRecord.active = false;
 
-            void (await this.save(dataSource, user));
+            const newDataSource = await this.createDataSource(dataSource, user);
+            if (newDataSource.isError) return Promise.resolve(Result.Failure('Unable to save data source'));
+
+            sourceIDMapping.set(source.DataSourceRecord.id, newDataSource.value.DataSourceRecord?.id!);
         }
 
-        return Promise.resolve(Result.Success('Successful data source import.'));
+        return Promise.resolve(Result.Success(sourceIDMapping));
     }
 
     // setting a data source to inactive will automatically stop the process loop
