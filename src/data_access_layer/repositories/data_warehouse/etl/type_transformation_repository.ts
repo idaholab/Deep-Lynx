@@ -62,11 +62,6 @@ export default class TypeTransformationRepository extends Repository implements 
         await this.deleteCached(t);
         await mappingRepo.deleteCached(t.type_mapping_id!);
 
-        const removed = await this.#mapper.DeleteHypertable(t.id)
-        if(removed.isError) {
-            return Result.Failure(`unable to remove timeseries tables for transformation ${removed.error}`)
-        }
-
         if(options && options.removeData) {
             return this.#mapper.DeleteWithData(t.id);
         } else {
@@ -148,12 +143,6 @@ export default class TypeTransformationRepository extends Repository implements 
         await this.deleteCached(t);
         await new TypeMappingRepository().deleteCached(t.type_mapping_id!);
 
-        // now we create the hypertable IF NEEDED, lack of both metatype and pair indicate this is timeseries transformation
-        if(t.type === 'timeseries' && Config.timescaledb_enabled) {
-            const built = await this.#mapper.CreateHypertable(t)
-            if(built.isError) Logger.error(`unable to create hypertable for transformation`)
-        }
-
         return Promise.resolve(Result.Success(true));
     }
 
@@ -226,7 +215,6 @@ export default class TypeTransformationRepository extends Repository implements 
 
         for (const transformation of transformations) {
             if (transformation.metatype_name && !transformation.metatype_id) metatypeNames.push(transformation.metatype_name);
-            if (transformation.tab_metatype_name) metatypeNames.push(transformation.tab_metatype_name);
             if (transformation.metatype_relationship_pair_name && !transformation.metatype_relationship_pair_id)
                 relationshipPairNames.push(transformation.metatype_relationship_pair_name);
         }
@@ -288,14 +276,6 @@ export default class TypeTransformationRepository extends Repository implements 
                 }
             }
 
-            if (transformations[i].tab_metatype_name) {
-                const foundMetatype = metatypes.find((m) => m.name === transformations[i].tab_metatype_name);
-
-                if (foundMetatype) {
-                    transformations[i].tab_metatype_id = foundMetatype.id
-                }
-            }
-
             // set pair id and any attached relationship keys correctly
             if (!transformations[i].metatype_relationship_pair_id && transformations[i].metatype_relationship_pair_name) {
                 const foundPair = relationshipPairs.find((p) => p.name === transformations[i].metatype_relationship_pair_name);
@@ -328,11 +308,6 @@ export default class TypeTransformationRepository extends Repository implements 
                         transformations[i].destination_parameters![0].value = foundPair.destination_metatype_id
                     }
                 }
-            }
-
-
-            if (transformations[i].type === 'timeseries' || transformations[i].tab_metatype_name) {
-                transformations[i].tab_data_source_id = dataSourceID
             }
         }
 
@@ -376,7 +351,6 @@ export default class TypeTransformationRepository extends Repository implements 
         // override the fields to select
         this._query.SELECT = [`${this._tableAlias}.*`,
                          `metatypes.name as metatype_name`,
-                         `m2.name as tab_metatype_name`,
                          `metatype_relationship_pairs.name as metatype_relationship_pair_name`,
                          `metatypes.ontology_version as metatype_ontology_version`,
                          `metatype_relationship_pairs.ontology_version as metatype_relationship_pair_ontology_version`,
@@ -389,7 +363,6 @@ export default class TypeTransformationRepository extends Repository implements 
             `FROM ${TypeTransformationMapper.tableName} ${this._tableAlias}`,
             `LEFT JOIN type_mappings as mapping ON ${this._tableAlias}.type_mapping_id = mapping.id`,
             `LEFT JOIN metatypes ON ${this._tableAlias}.metatype_id = metatypes.id`,
-            `LEFT JOIN metatypes m2 on ${this._tableAlias}.tab_metatype_id = m2.id`,
             `LEFT JOIN metatype_relationship_pairs 
                                ON ${this._tableAlias}.metatype_relationship_pair_id = metatype_relationship_pairs.id`
         ].join(' ');
@@ -412,7 +385,6 @@ export default class TypeTransformationRepository extends Repository implements 
 
         this._query.SELECT = [`${this._tableAlias}.*`,
                          `metatypes.name as metatype_name`,
-                         `m2.name as tab_metatype_name`,
                          `metatype_relationship_pairs.name as metatype_relationship_pair_name`,
                          `metatypes.ontology_version as metatype_ontology_version`,
                          `metatype_relationship_pairs.ontology_version as metatype_relationship_pair_ontology_version`,
@@ -424,7 +396,6 @@ export default class TypeTransformationRepository extends Repository implements 
             `FROM ${TypeTransformationMapper.tableName}`,
             `LEFT JOIN type_mappings as mapping ON ${this._tableAlias}.type_mapping_id = mapping.id`,
             `LEFT JOIN metatypes ON ${this._tableAlias}.metatype_id = metatypes.id`,
-            `LEFT JOIN metatypes m2 ON ${this._tableAlias}.tab_metatype_id = m2.id`,
             `LEFT JOIN metatype_relationship_pairs 
                                ON ${this._tableAlias}.metatype_relationship_pair_id = metatype_relationship_pairs.id`
         ].join(' ');

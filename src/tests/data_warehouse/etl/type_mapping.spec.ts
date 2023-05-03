@@ -27,7 +27,6 @@ import TypeTransformation, {Condition, KeyMapping} from '../../../domain_objects
 import Import, {DataStaging} from '../../../domain_objects/data_warehouse/import/import';
 import DataStagingRepository from '../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import DataSourceRecord from '../../../domain_objects/data_warehouse/import/data_source';
-import TimeseriesEntry from '../../../domain_objects/data_warehouse/data/timeseries';
 
 describe('A Data Type Mapping can', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -427,7 +426,7 @@ describe('A Data Type Mapping can', async () => {
         expect((results.value as Node[])[0].original_data_id).eq('UUID');
 
         // run through and set the right metatype and container
-        results.value.forEach((node: Node | Edge | TimeseriesEntry) => {
+        results.value.forEach((node: Node | Edge) => {
             (node as Node).container_id = containerID;
             (node as Node).metatype = car;
         });
@@ -470,7 +469,7 @@ describe('A Data Type Mapping can', async () => {
         expect((results.value as Node[])[0].original_data_id).eq('UUID');
 
         // run through and set the right metatype and container
-        results.value.forEach((node: Node | Edge | TimeseriesEntry) => {
+        results.value.forEach((node: Node | Edge) => {
             (node as Node).container_id = containerID;
             (node as Node).metatype = car;
         });
@@ -526,7 +525,7 @@ describe('A Data Type Mapping can', async () => {
         expect((results.value as Node[])[1].original_data_id).eq('2'); // original IDs are strings
 
         // run through and set the right metatype and container
-        results.value.forEach((node: Node | Edge | TimeseriesEntry) => {
+        results.value.forEach((node: Node | Edge) => {
             (node as Node).container_id = containerID;
             (node as Node).metatype = entry;
         });
@@ -609,7 +608,7 @@ describe('A Data Type Mapping can', async () => {
         expect((results.value as Node[])[4].original_data_id).eq('bolts');
 
         // run through and set the right metatype and container
-        results.value.forEach((node: Node | Edge | TimeseriesEntry) => {
+        results.value.forEach((node: Node | Edge) => {
             (node as Node).container_id = containerID;
             (node as Node).metatype = part;
         });
@@ -682,7 +681,7 @@ describe('A Data Type Mapping can', async () => {
         expect((results.value as Node[])[0].original_data_id).eq('oil');
 
         // run through and set the right metatype and container
-        results.value.forEach((node: Node | Edge | TimeseriesEntry) => {
+        results.value.forEach((node: Node | Edge) => {
             (node as Node).container_id = containerID;
             (node as Node).metatype = part;
         });
@@ -727,7 +726,7 @@ describe('A Data Type Mapping can', async () => {
         expect((results.value as Node[])[0].original_data_id).eq('1');
 
         // run through and set the right metatype and container
-        results.value.forEach((node: Node | Edge | TimeseriesEntry) => {
+        results.value.forEach((node: Node | Edge) => {
             (node as Node).container_id = containerID;
             (node as Node).metatype = component;
         });
@@ -781,7 +780,7 @@ describe('A Data Type Mapping can', async () => {
         expect((maintenanceResult.value as Node[])[0].original_data_id).eq('UUID'); // original IDs are strings
 
         // run through and set the right metatype and container
-        maintenanceResult.value.forEach((node: Node | Edge | TimeseriesEntry) => {
+        maintenanceResult.value.forEach((node: Node | Edge) => {
             (node as Node).container_id = containerID;
             (node as Node).metatype = maintenance;
         });
@@ -832,7 +831,7 @@ describe('A Data Type Mapping can', async () => {
         expect((results.value as Node[])[1].original_data_id).eq('2'); // original IDs are strings
 
         // run through and set the right metatype and container
-        results.value.forEach((node: Node | Edge | TimeseriesEntry) => {
+        results.value.forEach((node: Node | Edge) => {
             (node as Node).container_id = containerID;
             (node as Node).metatype = entry;
         });
@@ -857,44 +856,13 @@ describe('A Data Type Mapping can', async () => {
         expect(maintenanceEdgeResult.value.length).eq(2); // a total of two nodes should be created
 
         // run through and set the right metatype relationship pair and container
-        maintenanceEdgeResult.value.forEach((edge: Node | Edge | TimeseriesEntry) => {
+        maintenanceEdgeResult.value.forEach((edge: Node | Edge) => {
             (edge as Edge).container_id = containerID;
             (edge as Edge).metatypeRelationshipPair = maintenancePair;
         });
 
         const maintenanceEdgeInserted = await EdgeMapper.Instance.BulkCreate('test suite', maintenanceEdgeResult.value as Edge[]);
         expect(maintenanceEdgeInserted.isError).false;
-
-        return Promise.resolve();
-    });
-
-    it('can generate a car timeseries entry', async () => {
-        const carTransformation = new TypeTransformation({
-            type_mapping_id: typeMappingID,
-            type: 'timeseries',
-            keys: [
-                new KeyMapping({
-                    key: 'car.id',
-                    value_type: 'string',
-                    column_name: 'id',
-                }),
-                new KeyMapping({
-                    key: 'car.name',
-                    value_type: 'string',
-                    column_name: 'name',
-                }),
-            ],
-            container_id: containerID,
-            data_source_id: dataSourceID,
-        });
-
-        const results = await carTransformation.applyTransformation(data!);
-
-        (results.value as TimeseriesEntry[])[0].data.forEach((data) => {
-            expect(data.column_name).oneOf(['id', 'name']);
-            expect(data.value_type).eq('string');
-            expect(data.value).oneOf(['UUID', 'test car']);
-        });
 
         return Promise.resolve();
     });

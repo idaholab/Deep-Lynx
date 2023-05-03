@@ -6,13 +6,7 @@ import {expect} from 'chai';
 import ContainerMapper from '../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import Logger from '../../services/logger';
 import DataSourceMapper from '../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
-import TypeMappingMapper from '../../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper';
 import DataSourceRecord, {TimeseriesColumn, TimeseriesDataSourceConfig} from '../../domain_objects/data_warehouse/import/data_source';
-import TypeMapping from '../../domain_objects/data_warehouse/etl/type_mapping';
-import TypeTransformationMapper from '../../data_access_layer/mappers/data_warehouse/etl/type_transformation_mapper';
-import TypeTransformation, {KeyMapping} from '../../domain_objects/data_warehouse/etl/type_transformation';
-import TimeseriesEntry, {TimeseriesData} from '../../domain_objects/data_warehouse/data/timeseries';
-import TimeseriesEntryRepository from '../../data_access_layer/repositories/data_warehouse/data/timeseries_entry_repository';
 import {GraphQLInt, GraphQLObjectType} from 'graphql';
 import {graphql} from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
@@ -24,7 +18,6 @@ import DataSourceGraphQLSchemaGenerator from '../../graphql/timeseries_schema';
 
 describe('A Data Source Schema Generator', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
-    let transformationID: string = '';
     let dataSourceID: string = '';
     let user: User;
     let stdDataSourceID: string = '';
@@ -40,7 +33,6 @@ describe('A Data Source Schema Generator', async () => {
 
         await PostgresAdapter.Instance.init();
         const mapper = ContainerStorage.Instance;
-        const mappingStorage = TypeMappingMapper.Instance;
 
         const container = await mapper.Create(
             'test suite',
@@ -83,112 +75,6 @@ describe('A Data Source Schema Generator', async () => {
 
         expect(stdDataSource.isError).false;
         expect(stdDataSource.value).not.empty;
-
-        const mapping = await mappingStorage.CreateOrUpdate(
-            'test suite',
-            new TypeMapping({
-                container_id: containerID,
-                data_source_id: stdDataSource.value.id!,
-                sample_payload: test_raw_payload,
-            }),
-        );
-
-        const transformation = await TypeTransformationMapper.Instance.Create(
-            'test suite',
-            new TypeTransformation({
-                name: 'Test',
-                type_mapping_id: mapping.value.id!,
-                type: 'timeseries',
-                keys: [
-                    new KeyMapping({
-                        key: 'RADIUS',
-                        column_name: 'radius',
-                        value_type: 'float',
-                    }),
-                    new KeyMapping({
-                        key: 'COLOR',
-                        column_name: 'color',
-                        value_type: 'string',
-                    }),
-                    new KeyMapping({
-                        key: 'OPEN',
-                        column_name: 'open',
-                        value_type: 'boolean',
-                    }),
-                    new KeyMapping({
-                        key: 'AT',
-                        column_name: 'at',
-                        value_type: 'date',
-                        is_primary_timestamp: true,
-                    }),
-                ],
-            }),
-        );
-
-        expect(transformation.isError).false;
-        transformationID = transformation.value.id!;
-
-        let created = await TypeTransformationMapper.Instance.CreateHypertable(transformation.value);
-        expect(created.isError, created.error?.error).false;
-
-        const entries = [
-            new TimeseriesEntry({
-                transformation_id: transformationID,
-                data: [
-                    new TimeseriesData({
-                        column_name: 'radius',
-                        value_type: 'float',
-                        value: 1.2,
-                    }),
-                    new TimeseriesData({
-                        column_name: 'color',
-                        value_type: 'string',
-                        value: 'green',
-                    }),
-                    new TimeseriesData({
-                        column_name: 'open',
-                        value_type: 'boolean',
-                        value: false,
-                    }),
-                    new TimeseriesData({
-                        column_name: 'at',
-                        value_type: 'timestamp',
-                        value: new Date(),
-                    }),
-                ],
-            }),
-            new TimeseriesEntry({
-                transformation_id: transformationID,
-                data: [
-                    new TimeseriesData({
-                        column_name: 'radius',
-                        value_type: 'float',
-                        value: 0.2,
-                    }),
-                    new TimeseriesData({
-                        column_name: 'color',
-                        value_type: 'string',
-                        value: 'blue',
-                    }),
-                    new TimeseriesData({
-                        column_name: 'open',
-                        value_type: 'boolean',
-                        value: false,
-                    }),
-                    new TimeseriesData({
-                        column_name: 'at',
-                        value_type: 'timestamp',
-                        value: new Date(),
-                    }),
-                ],
-            }),
-        ];
-
-        const repo = new TimeseriesEntryRepository();
-
-        const saved = await repo.bulkSave(entries);
-
-        expect(saved.isError, saved.error?.error).false;
 
         const sourceRepo = new DataSourceRepository();
 
@@ -267,7 +153,6 @@ describe('A Data Source Schema Generator', async () => {
     });
 
     after(async () => {
-        await TypeTransformationMapper.Instance.DeleteHypertable(transformationID);
         // we have to delete datasource manually so hypertable gets deleted, hopefully that eventually
         // gets handled as hypertable should always be deleted with the datasource and container
         await DataSourceMapper.Instance.DeleteWithData(dataSourceID);
@@ -414,13 +299,6 @@ describe('A Data Source Schema Generator', async () => {
         return Promise.resolve();
     });
 });
-
-const test_raw_payload = {
-    RAD: 0.1,
-    COLOR: 'blue',
-    OPEN: true,
-    AT: '2022-04-20T14:30:21.018Z',
-};
 
 const sampleJSON = JSON.stringify([
     {

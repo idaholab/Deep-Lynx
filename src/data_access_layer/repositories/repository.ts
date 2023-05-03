@@ -105,7 +105,7 @@ export class Repository {
     }
 
     // access function used to clear the select root for special repos that
-    // will never be using distinct/distinct on, such as timeseries_entry or node_leaf
+    // will never be using distinct/distinct on, such as node_leaf
     // putting this in a function prevents accidental overwriting of select root
     _noSelectRoot() {
         this._selectRoot = '';

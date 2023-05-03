@@ -481,10 +481,6 @@ export type TypeMappingTransformationT = {
     destination_id_key?: string;
     destination_metatype_id?: string;
     destination_data_source_id?: string;
-    tab_data_source_id?: string;
-    tab_metatype_id?: string;
-    tab_node_id?: string;
-    tab_node_key?: string;
     unique_identifier_key?: string;
     on_conflict?: 'create' | 'update' | 'ignore';
     metatype_name?: string;

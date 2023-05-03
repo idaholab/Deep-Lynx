@@ -549,134 +549,6 @@
 
                       </template>
                     </template>
-
-                    <!-- timeseries -->
-                    <template v-if="payloadType === 'timeseries'">
-                      <h4>{{ $t('dataMapping.selectNodeID') }}
-                        <info-tooltip :message="$t('dataMapping.nodeIDHelp')"></info-tooltip>
-                      </h4>
-                      <v-col cols="12" md="6" lg="4">
-                        <select-data-source
-                            @selected="setTabDataSource"
-                            :dataSourceID="tab_data_source_id"
-                            :rules="[tabDataSourceValid]"
-                            :containerID="containerID">
-                        </select-data-source>
-                      </v-col>
-                      <v-col cols="12" md="6" lg="4">
-                        <search-metatypes
-                            @selected="setTabMetatype"
-                            :metatypeID="tab_metatype_id"
-                            :rules="[tabMetatypeValid]"
-                            :containerID="containerID">
-                        </search-metatypes>
-                      </v-col>
-                      <v-col cols="12" md="6" lg="4">
-                        <v-combobox
-                            :items="payloadKeys"
-                            clearable
-                            v-model="tab_node_key"
-                            :disabled="tab_node_id !== null"
-                            :rules="[tabNodeValid]"
-                        >
-                          <template v-slot:append-outer>{{ $t('dataMapping.or') }}</template>
-                          <template v-slot:label>{{ $t('dataMapping.nodeIDKey') }}</template>
-                        </v-combobox>
-                      </v-col>
-                      <v-col cols="12" md="6" lg="4">
-                        <v-text-field
-                            :label="$t('dataMapping.nodeID')"
-                            clearable
-                            v-model="tab_node_id"
-                            :disabled="tab_node_key !== null"
-                            :rules="[tabNodeValid]"
-                        />
-                      </v-col>
-                      <v-col cols="12">
-                        <h4>{{ $t('dataMapping.tableDesign') }}
-                          <info-tooltip :message="$t('dataMapping.tableDesignHelp')"></info-tooltip>
-                        </h4>
-                        <v-data-table
-                            :headers="timeSeriesHeader()"
-                            :items="propertyMapping"
-                            :items-per-page="-1"
-                            :expanded.sync="expandedTimeSeries"
-                            mobile-breakpoint="960"
-                            item-key="id"
-                            show-expand
-                            flat
-                            tile
-                            fixed-header
-                            disable-pagination
-                            disable-sort
-                            hide-default-footer
-                        >
-                          <template v-slot:[`item.column_name`]="{ item, index }">
-
-                            <v-text-field
-                                :label="$t('dataMapping.columnName')"
-                                v-model="item.column_name"
-                                :disabled="transformation !== null"
-                                :rules="[v => !!v || $t('dataMapping.required'),validColumnName(index, item.column_name)]"
-                            >
-                            </v-text-field>
-                          </template>
-
-                          <template v-slot:[`item.value_type`]="{ item }">
-                            <v-select
-                                :label="$t('dataMapping.columnDataType')"
-                                :items=dataTypes
-                                :disabled="item.is_primary_timestamp || transformation !== null"
-                                v-model="item.value_type"
-                                :rules="[v => !!v || $t('dataMapping.required')]"
-                            />
-                          </template>
-
-                          <template v-slot:[`item.key`]="{ item }">
-                            <v-combobox
-                                :items="payloadKeys"
-                                v-model="item.key"
-                                :label="$t('dataMapping.mapPayloadKey')"
-                                :rules="[v => !!v || $t('dataMapping.required')]"
-                            >
-                            </v-combobox>
-                          </template>
-                          <template v-slot:[`item.actions`]="{ index }">
-                            <v-icon v-if="index !== 0" @click="removeMapping(index)">mdi-close</v-icon>
-                          </template>
-
-                          <template v-slot:expanded-item="{ item }">
-                            <td :colspan="timeSeriesHeader().length">
-                              <v-col v-if="item.value_type === 'date'" :cols="12">
-                                <v-text-field
-                                    :label="$t('dataMapping.dateFormatString')"
-                                    v-model="item.date_conversion_format_string"
-                                >
-                                  <template slot="append-outer"><a href="https://date-fns.org/v2.28.0/docs/parse"
-                                                                   target="_blank">{{ $t('dataMapping.dateFormatStringHelp') }}</a>
-                                  </template>
-                                </v-text-field>
-                              </v-col>
-                              <v-col v-if="item.value_type === 'date'" class="text-left">
-                                <v-checkbox
-                                    :label="$t('dataMapping.isPrimaryTimestamp')"
-                                    v-model="item.is_primary_timestamp"
-                                    disabled
-                                >
-                                </v-checkbox>
-                              </v-col>
-                            </td>
-                          </template>
-                        </v-data-table>
-                      </v-col>
-
-                      <v-col :cols="12" style="padding:25px" align="center" justify="center">
-                        <v-btn :disabled="transformation !== null" @click="addMapping">
-                          {{ $t('dataMapping.addColumn') }}
-                        </v-btn>
-                        <p v-if="transformation !== null">{{ $t('dataMapping.editingTimeseriesDisabled') }}</p>
-                      </v-col>
-                    </template>
                   </v-row>
                 </v-form>
               </v-expansion-panel-content>
@@ -792,7 +664,7 @@
                                   v-if="key.data_type !== 'boolean'"
                                   :label="$t('dataMapping.constantValue')"
                                   @input="selectPropertyKey($event, key, true)"
-                                  :disabled="isKeyMapped(key, true)"
+                                  :disabled="isKeyMapped(key)"
                                   :value="propertyKeyValue(key)"
                               />
                               <v-select
@@ -800,7 +672,7 @@
                                   :label="$t('dataMapping.constantValue')"
                                   :items="['true', 'false']"
                                   @input="selectPropertyKey($event, key, true)"
-                                  :disabled="isKeyMapped(key, true)"
+                                  :disabled="isKeyMapped(key)"
                                   :value="propertyKeyValue(key)"
                               />
                             </v-col>
@@ -875,7 +747,7 @@
                                   v-if="key.data_type !== 'boolean'"
                                   :label="$t('dataMapping.constantValue')"
                                   @input="selectRelationshipPropertyKey($event, key, true)"
-                                  :disabled="isRelationshipKeyMapped(key, true)"
+                                  :disabled="isRelationshipKeyMapped(key)"
                                   :value="relationshipPropertyKeyValue(key)"
                                   clearable
                               />
@@ -1219,8 +1091,7 @@ import {
 } from "@/api/types";
 import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
 import SearchMetatypes from "@/components/ontology/metatypes/searchMetatypes.vue";
-import {v4 as uuidv4} from 'uuid'
-import Config from "@/config";
+import {v4 as uuidv4} from 'uuid';
 import MetatypeKeysSelect from "@/components/ontology/metatypes/metatypeKeysSelect.vue";
 
 @Component({
@@ -1255,7 +1126,6 @@ export default class TransformationDialog extends Vue {
   search = ""
   openPanels: number[] = [0]
   expanded = []
-  expandedTimeSeries = []
   loading = false
   keysLoading = false
   dialog = false
@@ -1343,11 +1213,6 @@ export default class TransformationDialog extends Vue {
 
   limitedConfigFilterTypes = [{text: 'Metatype', value: 'metatype_id'}];
 
-  tab_data_source_id: any = null
-  tab_metatype_id: any = null
-  tab_node_id: any = null
-  tab_node_key: any = null
-
   uniqueIdentifierKey: any = null
   propertyMapping: { [key: string]: any }[] = []
 
@@ -1388,24 +1253,6 @@ export default class TransformationDialog extends Vue {
       }, {
         text: this.$t('dataMapping.value'),
         value: "value"
-      },
-      {text: this.$t('dataMapping.actions'), value: "actions", sortable: false}
-    ]
-  }
-
-  timeSeriesHeader() {
-    return [
-      {
-        text: this.$t('dataMapping.columnName'),
-        value: "column_name"
-      },
-      {
-        text: this.$t('dataMapping.dataType'),
-        value: "value_type"
-      },
-      {
-        text: this.$t('dataMapping.payloadKey'),
-        value: "key"
       },
       {text: this.$t('dataMapping.actions'), value: "actions", sortable: false}
     ]
@@ -1506,15 +1353,6 @@ export default class TransformationDialog extends Vue {
           .catch(e => this.errorMessage = e)
     }
 
-    if (this.transformation?.type === 'timeseries') {
-      this.payloadType = 'timeseries'
-      this.tab_data_source_id = this.transformation?.tab_data_source_id
-      this.tab_metatype_id = this.transformation?.tab_metatype_id
-      this.tab_node_id = this.transformation?.tab_node_id
-      this.tab_node_key = this.transformation?.tab_node_key
-      this.propertyMapping = this.transformation?.keys as any
-    }
-
     this.name = this.transformation?.name!
     this.onConversionError = this.transformation?.config.on_conversion_error as TransformationErrorAction;
     this.onKeyExtractionError = this.transformation?.config.on_key_extraction_error as TransformationErrorAction;
@@ -1523,32 +1361,6 @@ export default class TransformationDialog extends Vue {
 
   updated() {
     this.handleResize()
-  }
-
-  addMapping() {
-    if (this.propertyMapping.length === 0) {
-      this.propertyMapping.push({
-        id: uuidv4(),
-        column_name: '',
-        key: '',
-        value_type: 'date',
-        is_primary_timestamp: true
-      })
-
-      this.expandedTimeSeries.push(this.propertyMapping[0] as never)
-    } else {
-      this.propertyMapping.push({
-        id: uuidv4(),
-        column_name: '',
-        key: '',
-        value_type: 'string',
-        is_primary_timestamp: false
-      })
-    }
-  }
-
-  removeMapping(index: any) {
-    this.propertyMapping.splice(index, 1)
   }
 
   // retrieves the height of the type mapping column (on left) if present
@@ -1782,22 +1594,6 @@ export default class TransformationDialog extends Vue {
     })
   }
 
-  @Watch('tab_node_id', {immediate: false})
-  onTabNodeIDChange() {
-    if (this.$refs.mainForm) {
-      // @ts-ignore
-      this.$refs.mainForm.validate()
-    }
-  }
-
-  @Watch('tab_node_key', {immediate: false})
-  onTabNodeKeyChange() {
-    if (this.$refs.mainForm) {
-      // @ts-ignore
-      this.$refs.mainForm.validate()
-    }
-  }
-
   // autoPopulateMetatypeKeys attempts to match a selected metatype key's to payload
   // keys by property name
   autoPopulateMetatypeKeys() {
@@ -1844,11 +1640,6 @@ export default class TransformationDialog extends Vue {
     // @ts-ignore
     if (!this.$refs.mainForm!.validate()) return;
 
-    if (this.payloadType == 'timeseries' && (this.propertyMapping.length === 0 || !this.primaryTimestampSelected)) {
-      this.validationErrorMessage = this.$t('dataMapping.tabularValidationError') as string
-      return;
-    }
-
     this.setMetadataKeys()
 
     this.loading = true
@@ -1874,11 +1665,6 @@ export default class TransformationDialog extends Vue {
 
     payload.config.on_conversion_error = this.onConversionError
     payload.config.on_key_extraction_error = this.onKeyExtractionError
-
-    payload.tab_data_source_id = this.tab_data_source_id
-    payload.tab_metatype_id = this.tab_metatype_id
-    payload.tab_node_key = this.tab_node_key
-    payload.tab_node_id = this.tab_node_id
     payload.conditions = this.conditions
     payload.keys = this.propertyMapping
     if (this.uniqueIdentifierKey) payload.unique_identifier_key = this.uniqueIdentifierKey
@@ -1915,10 +1701,6 @@ export default class TransformationDialog extends Vue {
     payload.destination_id_key = this.destination_key
     payload.destination_metatype_id = this.destination_metatype_id
     payload.destination_data_source_id = this.destination_data_source_id
-    payload.tab_data_source_id = this.tab_data_source_id
-    payload.tab_metatype_id = this.tab_metatype_id
-    payload.tab_node_key = this.tab_node_key
-    payload.tab_node_id = this.tab_node_id
     payload.destination_parameters = this.destinationConfigKeys
     payload.origin_parameters = this.originConfigKeys
 
@@ -1948,15 +1730,6 @@ export default class TransformationDialog extends Vue {
       name: this.$t("dataMapping.relationship"),
       value: 'edge'
     }]
-
-    // only show if timeseries is enabled and it's existing transformation
-    // we don't want users to use this old method  of doing timeseries data
-    if (Config.timeSeriesEnabled && this.transformation) {
-      types.push({
-        name: this.$t("dataMapping.tabularData"),
-        value: 'timeseries'
-      })
-    }
 
     return types
   }
@@ -2231,28 +2004,6 @@ export default class TransformationDialog extends Vue {
     this.subexpressionOperator = null
   }
 
-  tabDataSourceValid() {
-    if (!this.tab_data_source_id || this.tab_data_source_id === '') {
-      return this.$t('dataMapping.required')
-    }
-    return true
-  }
-
-  tabMetatypeValid() {
-    if (!this.tab_metatype_id || this.tab_metatype_id === '') {
-      return this.$t('dataMapping.required')
-    }
-    return true
-  }
-
-  tabNodeValid() {
-    if ((!this.tab_node_key || this.tab_node_key === '') && (!this.tab_node_id || this.tab_node_id === '')) {
-      return this.$t('dataMapping.required')
-    }
-
-    return true
-  }
-
   validName(value: any) {
     if (!value) {
       return true
@@ -2263,21 +2014,6 @@ export default class TransformationDialog extends Vue {
     const matches = /^[a-zA-Z][a-zA-Z0-9_]{1,30}(?!\s)$/.exec(value)
     if (!matches || matches.length === 0) {
       return this.$t('dataMapping.nameRequirements')
-    }
-
-    return true
-  }
-
-  validColumnName(index: any, value: any) {
-    if (this.propertyMapping.filter(p => value === p.column_name).length > 1) {
-      return this.$t('dataMapping.columnNameMustBeUnique')
-    }
-
-    // this regex should match only if the name starts with a letter, contains only alphanumerics and underscores with
-    // no spaces and is between 1 and 30 characters in length
-    const matches = /^[a-zA-Z][a-zA-Z0-9_]{1,30}$/.exec(value)
-    if (!matches || matches.length === 0) {
-      return this.$t('dataMapping.columnNameRequirements')
     }
 
     return true
@@ -2299,12 +2035,6 @@ export default class TransformationDialog extends Vue {
     }
   }
 
-  setTabDataSource(ds: DataSourceT) {
-    if (ds) {
-      this.tab_data_source_id = ds.id as string
-    }
-  }
-
   setParentMetatype(m: MetatypeT) {
     if (m) {
       this.origin_metatype_id = m.id
@@ -2314,12 +2044,6 @@ export default class TransformationDialog extends Vue {
   setChildMetatype(m: MetatypeT) {
     if (m) {
       this.destination_metatype_id = m.id
-    }
-  }
-
-  setTabMetatype(m: MetatypeT) {
-    if (m) {
-      this.tab_metatype_id = m.id
     }
   }
 
@@ -2357,14 +2081,6 @@ export default class TransformationDialog extends Vue {
     } else {
       return null
     }
-  }
-
-  get primaryTimestampSelected() {
-    if (this.propertyMapping.length > 0) {
-      if (this.propertyMapping.find(p => p.is_primary_timestamp)) return true
-    }
-
-    return false;
   }
 
   // we need all the keys in a given data payload, this

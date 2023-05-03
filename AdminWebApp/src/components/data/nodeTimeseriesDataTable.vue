@@ -13,7 +13,7 @@
         <template v-slot:item.actions="{ item }">
           <timeseries-viewer-dialog
             :containerID="containerID"
-            :dataSourceID="item.value[1]"
+            :dataSourceID="item.value"
             @timeseriesDialogClose="incrementKey"
             :key="key"
           />
@@ -36,7 +36,6 @@ export default class NodeTimeseriesDataTable extends Vue {
   readonly containerID!: string
 
   errorMessage = ''
-  // the tuple here is [legacy, id]
   timeseriesTables: object[] = []
 
   key = 0
@@ -64,7 +63,7 @@ export default class NodeTimeseriesDataTable extends Vue {
   loadTimeseriesTables() {
     this.$client.listTimeseriesTables(this.containerID, this.nodeID)
         .then((results) => {
-          const map = new Map<string, [boolean, string]>(Object.entries(results))
+          const map = new Map<string, string>(Object.entries(results))
           this.timeseriesTables = Array.from(map, ([name, value]) => ({ name, value }));
         })
         .catch(e => this.errorMessage = e)

@@ -830,8 +830,8 @@ export class Client {
         return this.get<NodeT[]>(`/containers/${containerID}/graphs/nodes`, query);
     }
 
-    listTimeseriesTables(containerID: string, nodeID: string): Promise<Map<string, [boolean, string]>> {
-        return this.get<Map<string, [boolean, string]>>(`/containers/${containerID}/graphs/nodes/${nodeID}/timeseries`);
+    listTimeseriesTables(containerID: string, nodeID: string): Promise<Map<string, string>> {
+        return this.get<Map<string, string>>(`/containers/${containerID}/graphs/nodes/${nodeID}/timeseries`);
     }
 
     downloadTimeseriesData(containerID: string, dataSourceID: string) {
