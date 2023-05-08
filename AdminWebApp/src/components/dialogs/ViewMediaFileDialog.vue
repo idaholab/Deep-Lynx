@@ -25,7 +25,7 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="close" >{{$t("fileManager.close")}}</v-btn>
+        <v-btn color="primary" text @click="close" >{{$t("fileManager.close")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

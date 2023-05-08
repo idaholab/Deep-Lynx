@@ -102,6 +102,8 @@ export default class KeyPairMapper extends Mapper {
         const text = `INSERT INTO keypairs("key", secret, user_id, note) VALUES %L RETURNING *`;
         const values = keys.map((key) => [key.key, key.secret, key.user_id, key.note]);
 
+        console.log(format(text, values));
+
         return format(text, values);
     }
 

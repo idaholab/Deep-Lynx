@@ -15,7 +15,7 @@
         <v-card id="dialog">
             <error-banner :message="errorMessage"></error-banner>
             <success-banner :message="successMessage"></success-banner>
-            <v-toolbar dark color="warning" flat tile v-observe-visibility="setDatePickers">
+            <v-toolbar dark color="secondary" flat tile v-observe-visibility="setDatePickers">
                 <v-btn icon dark @click="closeDialog">
                     <v-icon>mdi-close</v-icon>
                 </v-btn>
@@ -1122,7 +1122,7 @@ export default class TimeseriesViewerDialog extends Vue {
     width: 250px;
     border-width: 1px;
     border-style: solid;
-    border-color: #2ba8e0;
+    border-color: $primary;
     border-radius: 5px;
     padding: 8px;
 }

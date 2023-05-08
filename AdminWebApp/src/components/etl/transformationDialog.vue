@@ -180,7 +180,7 @@
                         <v-col cols="12" md="6" lg="4" v-if="keysLoading">
                           <v-progress-linear
                               indeterminate
-                              color="orange"
+                              color="warning"
                           ></v-progress-linear>
                         </v-col>
                       </template>

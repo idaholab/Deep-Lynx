@@ -64,7 +64,7 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="dialog = false">{{$t('home.cancel')}}</v-btn>
+        <v-btn color="primary" text @click="dialog = false">{{$t('home.cancel')}}</v-btn>
       </v-card-actions>
     </v-card>
 

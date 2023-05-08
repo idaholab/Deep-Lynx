@@ -45,8 +45,8 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="dialog = false; reset()" >{{$t("createMetatypeRelationship.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" :disabled="!valid" text @click="createMetatype()">{{$t("createMetatypeRelationship.save")}}</v-btn>
+        <v-btn color="primary" text @click="dialog = false; reset()" >{{$t("createMetatypeRelationship.cancel")}}</v-btn>
+        <v-btn color="primary" :disabled="!valid" text @click="createMetatype()">{{$t("createMetatypeRelationship.save")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

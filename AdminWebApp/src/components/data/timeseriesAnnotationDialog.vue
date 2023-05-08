@@ -47,7 +47,7 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="$emit('createAnnotation')">{{$t('home.cancel')}}</v-btn>
+        <v-btn color="primary" text @click="$emit('createAnnotation')">{{$t('home.cancel')}}</v-btn>
         <v-btn
             :disabled="!valid"
             color="primary"

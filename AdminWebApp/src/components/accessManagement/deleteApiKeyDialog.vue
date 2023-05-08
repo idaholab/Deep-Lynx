@@ -29,7 +29,7 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="dialog = false">{{$t("deleteApiKey.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="dialog = false">{{$t("deleteApiKey.cancel")}}</v-btn>
         <v-btn color="red darken-1" text @click="deleteApiKey">
           <span>{{$t("deleteApiKey.delete")}}</span>
         </v-btn>

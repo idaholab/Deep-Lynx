@@ -77,7 +77,7 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="dialog = false" >{{$t("viewMetatype.close")}}</v-btn>
+        <v-btn color="primary" text @click="dialog = false" >{{$t("viewMetatype.close")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -160,27 +160,27 @@ export default class ViewMetatypeDialog extends Vue {
 
 .edited-field {
   input {
-    background: #CD7F32;
+    background: $warning;
     color: white !important;
-    box-shadow: -5px 0 0 #CD7F32;
+    box-shadow: -5px 0 0 $warning;
   }
 
   textarea {
-    background: #CD7F32;
+    background: $warning;
     color: white !important;
-    box-shadow: -5px 0 0 #CD7F32;
+    box-shadow: -5px 0 0 $warning;
   }
 
   .v-select__slot {
-    background: #CD7F32;
+    background: $warning;
     color: white !important;
-    box-shadow: -5px 0 0 #CD7F32;
+    box-shadow: -5px 0 0 $warning;
   }
 
   .v-select__selection {
-    background: #CD7F32;
+    background: $warning;
     color: white !important;
-    box-shadow: -5px 0 0 #CD7F32;
+    box-shadow: -5px 0 0 $warning;
   }
 }
 </style>

@@ -31,12 +31,12 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn 
-          color="blue darken-1" 
+          color="primary" 
           text
           @click="reset(); dialog = false" 
         >{{successMessage === '' ? $t("home.cancel") : "Close"}}</v-btn>
         <v-btn v-if="successMessage === ''"
-          color="blue darken-1" 
+          color="primary" 
           text 
           @click="sendEvent()" 
         >{{$t("sendEventAction.send")}}</v-btn>

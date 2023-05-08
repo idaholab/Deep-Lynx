@@ -170,7 +170,7 @@
 
           <template v-slot:[`item.isError`]="{ item }">
             <p v-if="!item.isError">Successful</p>
-            <p v-else style="color:orange">Error: {{item.error}}</p>
+            <p v-else class="warning--text">Error: {{item.error}}</p>
           </template>
 
           <template v-slot:[`item.value.sample_payload`]="{ item }">
@@ -331,7 +331,7 @@
 
         <v-card-actions class="flex-shrink-1">
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="dataDialog = false" >{{$t("dataMapping.done")}}</v-btn>
+          <v-btn color="primary" text @click="dataDialog = false" >{{$t("dataMapping.done")}}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -361,7 +361,7 @@
         </div>
         <v-card-actions class="flex-shrink-1">
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="mappingDialog = false" >{{$t("dataMapping.done")}}</v-btn>
+          <v-btn color="primary" text @click="mappingDialog = false" >{{$t("dataMapping.done")}}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -812,12 +812,12 @@ export default class DataMapping extends Vue {
 
 <style lang="scss">
 .edited-item {
-  background: #CD7F32;
+  background: $warning;
   color: white;
-  box-shadow: -5px 0 0 #CD7F32, 5px 0 0 #CD7F32;
+  box-shadow: -5px 0 0 $warning, 5px 0 0 $warning;
 
   &:hover {
-    background: #FFA726 !important;
+    background: lighten($warning, 5%) !important;
     color: black;
   }
 
@@ -840,7 +840,7 @@ export default class DataMapping extends Vue {
 }
 
 .edited {
-  background-color: #CD7F32;
+  background-color: $warning;
 }
 
 .card-actions-fixed {

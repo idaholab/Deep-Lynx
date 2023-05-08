@@ -24,7 +24,7 @@
             class="d-flex justify-center"
             v-model="isEditMode"
             :disabled="(!isCurrent || !$auth.Auth('ontology', 'write', containerID)) && !$store.getters.isEditMode"
-            color="orange lighten-3"
+            color="warning"
           ></v-switch>
           <span class="ml-2 mr-8">
             {{$t('ontologyToolbar.editMode')}}

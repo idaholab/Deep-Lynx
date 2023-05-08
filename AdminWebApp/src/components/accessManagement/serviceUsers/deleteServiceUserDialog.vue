@@ -28,7 +28,7 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="reset()">{{$t("deleteServiceUser.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="reset()">{{$t("deleteServiceUser.cancel")}}</v-btn>
         <v-btn color="red darken-1" text :disabled="countDown > 0" @click="deleteServiceUser()">
           <span>{{$t("deleteServiceUser.delete")}}</span>
           <span v-if="countDown > 0">{{$t('deleteServiceUser.in')}} {{countDown}}</span>

@@ -37,9 +37,9 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="clearTag" >{{$t("home.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="clearTag" >{{$t("home.cancel")}}</v-btn>
         <v-btn
-            color="blue darken-1"
+            color="primary"
             text
             @click="updateTag" >
           {{$t("home.update")}}

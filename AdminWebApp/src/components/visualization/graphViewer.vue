@@ -28,7 +28,7 @@
               <template v-slot:activator="{ on: onTooltip }">
 
                 <v-btn
-                  color="blue darken-2"
+                  color="primary"
                   dark
                   fab
                   small
@@ -455,7 +455,7 @@
             <template v-slot:activator="{ on, attrs }">
               <v-btn
                 v-model="editFab"
-                :color="edgeFlag ? 'purple' : 'blue darken-2'"
+                :color="edgeFlag ? 'purple' : 'primary'"
                 dark
                 editFab
                 v-on="edgeFlag ? on : null"
@@ -546,7 +546,7 @@
             <template v-slot:activator="{ on: onTooltip }">
 
               <v-btn
-                color="blue darken-2"
+                color="primary"
                 dark
                 v-on="onTooltip"
               >
@@ -591,7 +591,7 @@
             <template v-slot:activator="{ on: onTooltip }">
 
               <v-btn
-                color="blue darken-2"
+                color="primary"
                 dark
                 v-on="onTooltip"
               >
@@ -624,7 +624,7 @@
           <v-btn
             v-if="datePickerSet"
             @click="datePickerSet = !datePickerSet"
-            color="blue darken-2"
+            color="primary"
             dark
             fab
             small
@@ -664,7 +664,7 @@
 
         <v-btn
             dark
-            color="blue darken-2"
+            color="primary"
             @click="setPointInTime"
         >
           GO
@@ -775,8 +775,8 @@
 
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="newGraphDialog = false" >{{$t("createNode.cancel")}}</v-btn>
-          <v-btn color="blue darken-1" text @click="openNodeGraph(newGraphNode, newGraphDepth)">Go</v-btn>
+          <v-btn color="primary" text @click="newGraphDialog = false" >{{$t("createNode.cancel")}}</v-btn>
+          <v-btn color="primary" text @click="openNodeGraph(newGraphNode, newGraphDepth)">Go</v-btn>
         </v-card-actions>
 
       </v-card>
@@ -953,8 +953,8 @@
 
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn color="blue darken-1" text @click="closeEdgeDialog()" >{{$t("createNode.cancel")}}</v-btn>
-              <v-btn v-if="relationshipPairs.length > 0" color="blue darken-1" text :disabled="!validEdge" @click="createEdge()">{{$t("createNode.save")}}</v-btn>
+              <v-btn color="primary" text @click="closeEdgeDialog()" >{{$t("createNode.cancel")}}</v-btn>
+              <v-btn v-if="relationshipPairs.length > 0" color="primary" text :disabled="!validEdge" @click="createEdge()">{{$t("createNode.save")}}</v-btn>
             </v-card-actions>
           </v-form>
         </template>

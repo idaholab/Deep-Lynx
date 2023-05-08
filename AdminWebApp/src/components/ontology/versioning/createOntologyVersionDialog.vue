@@ -7,7 +7,7 @@
           v-on="on"
           style="color:white !important"
       >mdi-plus-circle</v-icon>
-      <v-btn v-show="!icon" color="orange accent-4" dark class="mb-2" v-on="on">{{ $t("createChangelist.newChangelistButton") }}</v-btn>
+      <v-btn v-show="!icon" color="warning" dark class="mb-2" v-on="on">{{ $t("createChangelist.newChangelistButton") }}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
@@ -44,8 +44,8 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="clearNew">{{ $t("createChangelist.cancel") }}</v-btn>
-        <v-btn color="blue darken-1" text @click="createVersion"><span v-if="!loading">{{ $t("createChangelist.save") }}</span>
+        <v-btn color="primary" text @click="clearNew">{{ $t("createChangelist.cancel") }}</v-btn>
+        <v-btn color="primary" text @click="createVersion"><span v-if="!loading">{{ $t("createChangelist.save") }}</span>
           <span v-if="loading"><v-progress-circular indeterminate></v-progress-circular></span>
         </v-btn>
       </v-card-actions>

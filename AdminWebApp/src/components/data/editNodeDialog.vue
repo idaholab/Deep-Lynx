@@ -96,14 +96,14 @@
                     <v-card-actions>
                       <v-spacer></v-spacer>
                       <v-btn
-                        color="blue darken-1"
+                        color="primary"
                         text
                         @click="closeAddPropertyDialog"
                       >
                         {{$t("editNode.cancel")}}
                       </v-btn>
                       <v-btn
-                        color="blue darken-1"
+                        color="primary"
                         text
                         @click="addProperty"
                       >
@@ -143,8 +143,8 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="close" >{{$t("editNode.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" text @click="updateNode">{{$t("editNode.save")}}</v-btn>
+        <v-btn color="primary" text @click="close" >{{$t("editNode.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="updateNode">{{$t("editNode.save")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

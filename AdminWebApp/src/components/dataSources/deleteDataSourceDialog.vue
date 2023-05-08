@@ -50,8 +50,8 @@
 
       <v-card-actions v-if="!importsLoading">
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="reset()">{{$t("deleteDataSource.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" text @click="archiveSource()" v-if="!dataSource.archived">
+        <v-btn color="primary" text @click="reset()">{{$t("deleteDataSource.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="archiveSource()" v-if="!dataSource.archived">
           <v-progress-circular v-if="archiveLoading" indeterminate></v-progress-circular>
           {{$t("deleteDataSource.archive")}}
         </v-btn>
@@ -81,8 +81,8 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="reset()">{{$t("deleteDataSource.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" text @click="archiveSource()">{{$t("deleteDataSource.archive")}}</v-btn>
+        <v-btn color="primary" text @click="reset()">{{$t("deleteDataSource.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="archiveSource()">{{$t("deleteDataSource.archive")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

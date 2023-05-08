@@ -38,7 +38,7 @@
       <v-card-actions>
         <div v-if="!loading">
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="reset()">{{$t("reprocessDataSource.cancel")}}</v-btn>
+          <v-btn color="primary" text @click="reset()">{{$t("reprocessDataSource.cancel")}}</v-btn>
           <v-btn color="red darken-1" text :disabled="countDown > 0" @click="reprocessImport()">
             <span>{{$t("reprocessDataSource.reprocess")}}</span>
             <span v-if="countDown > 0">{{$t('reprocessDataSource.in')}} {{countDown}}</span>
