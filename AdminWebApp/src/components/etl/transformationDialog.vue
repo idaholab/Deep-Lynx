@@ -1020,7 +1020,7 @@
           <v-btn
               v-if="!transformation"
               @click="createTransformation()"
-              color="success"
+              color="primary"
               text
           >
             <v-progress-circular
@@ -1033,7 +1033,7 @@
           <v-btn
               v-if="transformation"
               @click="editTransformation()"
-              color="success"
+              color="primary"
               text
               :disabled="transformation.archived"
           >

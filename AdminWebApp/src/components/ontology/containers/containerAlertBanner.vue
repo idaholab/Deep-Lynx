@@ -21,7 +21,7 @@
     </div>
 
     <div v-for="version in versions" :key="version.id">
-      <v-alert type="warning">
+      <v-alert type="warning" style="margin: 40px 40px 0px 40px">
         <p>{{$t('containerAlert.generatingOntology')}} - {{version.name}}</p>
         <v-progress-linear color="white" indeterminate></v-progress-linear>
       </v-alert>
