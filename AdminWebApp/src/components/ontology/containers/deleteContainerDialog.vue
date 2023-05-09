@@ -29,7 +29,7 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="primary" text @click="reset()">{{$t("deleteContainer.cancel")}}</v-btn>
-        <v-btn color="red darken-1" text :disabled="countDown > 0" @click="deleteContainer()">
+        <v-btn color="error" text :disabled="countDown > 0" @click="deleteContainer()">
           <span>{{$t("deleteContainer.delete")}}</span>
           <span v-if="countDown > 0">{{$t('deleteContainer.in')}} {{countDown}}</span>
         </v-btn>

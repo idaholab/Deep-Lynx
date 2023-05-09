@@ -55,7 +55,7 @@
           <v-progress-circular v-if="archiveLoading" indeterminate></v-progress-circular>
           {{$t("deleteTransformation.archive")}}
         </v-btn>
-        <v-btn color="red darken-1" text :disabled="countDown > 0" @click="deleteSource()">
+        <v-btn color="error" text :disabled="countDown > 0" @click="deleteSource()">
           <v-progress-circular v-if="deleteLoading" indeterminate></v-progress-circular>
           <span v-if="!inUse">{{$t("deleteTransformation.delete")}}</span>
           <span v-else>{{$t("deleteTransformation.forceDelete")}}</span>

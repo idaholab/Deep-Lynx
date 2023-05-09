@@ -19,7 +19,7 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="primary" text @click="reset()">{{$t('home.cancel')}}</v-btn>
-        <v-btn color="red darken-1" text @click="deleteConfig()">{{$t('home.delete')}}</v-btn>
+        <v-btn color="error" text @click="deleteConfig()">{{$t('home.delete')}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

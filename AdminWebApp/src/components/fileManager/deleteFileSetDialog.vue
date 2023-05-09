@@ -30,7 +30,7 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="primary" text @click="reset()">{{$t("home.cancel")}}</v-btn>
-        <v-btn color="red darken-1" text @click="deleteFileSet()">
+        <v-btn color="error" text @click="deleteFileSet()">
           <v-progress-circular v-if="deleteLoading" indeterminate></v-progress-circular>
           <span v-if="!deleteLoading">{{$t("home.delete")}}</span>
         </v-btn>

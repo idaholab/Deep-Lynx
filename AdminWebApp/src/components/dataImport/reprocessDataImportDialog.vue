@@ -39,7 +39,7 @@
         <div v-if="!loading">
           <v-spacer></v-spacer>
           <v-btn color="primary" text @click="reset()">{{$t("reprocessDataImport.cancel")}}</v-btn>
-          <v-btn color="red darken-1" text :disabled="countDown > 0" @click="reprocessImport()">
+          <v-btn color="error" text :disabled="countDown > 0" @click="reprocessImport()">
             <span>{{$t("reprocessDataImport.reprocess")}}</span>
             <span v-if="countDown > 0">{{$t('reprocessDataImport.in')}} {{countDown}}</span>
           </v-btn>

@@ -36,12 +36,12 @@
       <v-card-actions v-if="!transformationsLoading">
         <v-spacer></v-spacer>
         <v-btn color="primary" text @click="reset()">{{$t("deleteTypeMapping.cancel")}}</v-btn>
-        <v-btn v-if="transformationCount <= 0" color="red darken-1" text :disabled="countDown > 0" @click="deleteMapping()">
+        <v-btn v-if="transformationCount <= 0" color="error" text :disabled="countDown > 0" @click="deleteMapping()">
           <v-progress-circular v-if="deleteLoading" indeterminate></v-progress-circular>
           <span>{{$t("deleteTypeMapping.delete")}}</span>
           <span v-if="countDown > 0">{{$t('deleteTypeMapping.in')}} {{countDown}}</span>
         </v-btn>
-        <v-btn v-else color="red darken-1" text disabled>
+        <v-btn v-else color="error" text disabled>
           <span>{{$t("deleteTypeMapping.delete")}}</span>
         </v-btn>
       </v-card-actions>

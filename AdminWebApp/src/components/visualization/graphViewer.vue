@@ -319,7 +319,7 @@
           <p v-if="currentNodeInfo === null">{{$t('dataQuery.selectNode')}}</p>
           <v-row>
             <v-col :cols="12">
-              <v-btn color="red darken-1" style="color: white" @click="deleteNode(currentNodeInfo)">{{$t('dataQuery.deleteNode')}}</v-btn>
+              <v-btn color="error" style="color: white" @click="deleteNode(currentNodeInfo)">{{$t('dataQuery.deleteNode')}}</v-btn>
             </v-col>
           </v-row>
 
@@ -432,7 +432,7 @@
           <p v-if="currentEdgeID === null">{{$t('dataQuery.selectEdge')}}</p>
           <v-row>
             <v-col :cols="12">
-              <v-btn color="red darken-1" style="color: white" @click="deleteEdge(currentEdgeID)">{{$t('dataQuery.deleteEdge')}}</v-btn>
+              <v-btn color="error" style="color: white" @click="deleteEdge(currentEdgeID)">{{$t('dataQuery.deleteEdge')}}</v-btn>
             </v-col>
           </v-row>
         </div>
