@@ -29,8 +29,6 @@ export default class KeyPairRepository implements RepositoryInterface<KeyPair> {
     }
 
     async save(t: KeyPair, user: User): Promise<Result<boolean>> {
-        console.log(t.user_id)
-        console.log(user.id)
         // if we have the secret already set, assume we're dealing with a created
         // keypair
         if (t.secret) return Promise.resolve(Result.Success(true));
