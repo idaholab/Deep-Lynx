@@ -10,7 +10,6 @@ import FileRepository from '../../../../data_access_layer/repositories/data_ware
 import DataSourceRepository from '../../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import {DataSource} from '../../../../interfaces_and_impl/data_warehouse/import/data_source';
 import pAll from 'p-all';
-import TypeMappingRepository from '../../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository';
 
 const Busboy = require('busboy');
 const Buffer = require('buffer').Buffer;
@@ -324,10 +323,7 @@ export default class ContainerRoutes {
             containerExport.data_sources = dataSourceExport.value as DataSource[];
         }
         if (String(req.query.exportTypeMappings).toLowerCase() === 'true') {
-            const mappingRepo = new TypeMappingRepository();
-            const query = mappingRepo.where().containerID('eq', req.container.id!);
-            const typeMappings = await query.list(true);
-            containerExport.type_mappings = typeMappings.value;
+            // Implement in future update
         }
 
         repository
@@ -387,22 +383,18 @@ export default class ContainerRoutes {
 
         busboy.on('finish', async () => {
             // check query params supplied and attempt to import
-            // const importPromises: (() => Promise<Result<string>>)[] = [];
+            const importPromises: (() => Promise<Result<string>>)[] = [];
             const importReturn: Result<string> = new Result('', false);
-            let dataSourceImport: Result<Map<string, string>> | null = null;
 
             if (String(req.query.importOntology).toLowerCase() === 'true') {
-                const ontologyImport = await repository.importOntology(req.container!.id!, req.currentUser!, fileBuffer);
+                importPromises.push(() => repository.importOntology(req.container!.id!, req.currentUser!, fileBuffer));
             }
             if (String(req.query.importDataSources).toLowerCase() === 'true') {
                 const dsRepository = new DataSourceRepository();
-                dataSourceImport = await dsRepository.importDataSources(req.container!.id!, req.currentUser!, fileBuffer);
+                // importPromises.push(() => dsRepository.importDataSources(req.container!.id!, req.currentUser!, fileBuffer));
             }
             if (String(req.query.importTypeMappings).toLowerCase() === 'true') {
                 // Implement in future update
-                if (dataSourceImport) {
-                    // update data source IDs to newly created data sources
-                }
             }
 
             const importResults: Result<string>[] = await pAll(importPromises, {concurrency: 2});
