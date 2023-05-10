@@ -180,7 +180,7 @@
                         <v-col cols="12" md="6" lg="4" v-if="keysLoading">
                           <v-progress-linear
                               indeterminate
-                              color="orange"
+                              color="warning"
                           ></v-progress-linear>
                         </v-col>
                       </template>
@@ -1020,7 +1020,7 @@
           <v-btn
               v-if="!transformation"
               @click="createTransformation()"
-              color="success"
+              color="primary"
               text
           >
             <v-progress-circular
@@ -1033,7 +1033,7 @@
           <v-btn
               v-if="transformation"
               @click="editTransformation()"
-              color="success"
+              color="primary"
               text
               :disabled="transformation.archived"
           >

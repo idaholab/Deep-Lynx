@@ -24,8 +24,8 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="clear" >{{$t("home.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" text @click="uploadImport" ><div v-if="!loading">{{$t("home.upload")}}</div><div v-else>
+        <v-btn color="primary" text @click="clear" >{{$t("home.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="uploadImport" ><div v-if="!loading">{{$t("home.upload")}}</div><div v-else>
           <v-progress-circular indeterminate></v-progress-circular>
         </div></v-btn>
       </v-card-actions>

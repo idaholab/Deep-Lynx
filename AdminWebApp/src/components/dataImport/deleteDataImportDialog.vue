@@ -34,8 +34,8 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="reset()">{{$t("deleteDataImport.cancel")}}</v-btn>
-        <v-btn color="red darken-1" text :disabled="countDown > 0" @click="deleteImport()">
+        <v-btn color="primary" text @click="reset()">{{$t("deleteDataImport.cancel")}}</v-btn>
+        <v-btn color="error" text :disabled="countDown > 0" @click="deleteImport()">
           <span>{{$t("deleteDataImport.delete")}}</span>
           <span v-if="countDown > 0">{{$t('deleteDataImport.in')}} {{countDown}}</span>
         </v-btn>

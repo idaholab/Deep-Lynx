@@ -41,7 +41,7 @@
       </v-card-text>
 
       <v-card-actions>
-        <v-btn color="blue darken-1" class="mt-2" text @click="exportContainer" :disabled="!exportSelected"><span v-if="!loading">{{$t("containerExport.export")}}</span>
+        <v-btn color="primary" class="mt-2" text @click="exportContainer" :disabled="!exportSelected"><span v-if="!loading">{{$t("containerExport.export")}}</span>
           <span v-if="loading"><v-progress-circular indeterminate></v-progress-circular></span>
         </v-btn>
       </v-card-actions>

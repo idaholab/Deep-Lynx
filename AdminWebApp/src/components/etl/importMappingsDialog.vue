@@ -24,8 +24,8 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="dialog = false; reset()" >{{$t("exportMapping.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" text @click="uploadMappings">{{$t("importMapping.importFromFile")}}</v-btn>
+        <v-btn color="primary" text @click="dialog = false; reset()" >{{$t("exportMapping.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="uploadMappings">{{$t("importMapping.importFromFile")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

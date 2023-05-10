@@ -35,9 +35,9 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="dialog = false; reset()" >{{$t("exportMapping.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" text @click="exportToFile()">{{$t("exportMapping.exportToFile")}}</v-btn>
-        <v-btn color="blue darken-1" :disabled="!dataSource" text @click="exportToDataSource()">{{$t("exportMapping.exportToDataSource")}}</v-btn>
+        <v-btn color="primary" text @click="dialog = false; reset()" >{{$t("exportMapping.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="exportToFile()">{{$t("exportMapping.exportToFile")}}</v-btn>
+        <v-btn color="primary" :disabled="!dataSource" text @click="exportToDataSource()">{{$t("exportMapping.exportToDataSource")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

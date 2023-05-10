@@ -33,11 +33,11 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <div v-if="returnedKey !== null">
-          <v-btn color="blue darken-1" text @click="dialog = false; returnedKey = null" >{{$t("createApiKey.close")}}</v-btn>
+          <v-btn color="primary" text @click="dialog = false; returnedKey = null" >{{$t("createApiKey.close")}}</v-btn>
         </div>
         <div v-else>
-          <v-btn color="blue darken-1" text @click="dialog = false; returnedKey = null" >{{$t("createApiKey.cancel")}}</v-btn>
-          <v-btn  color="blue darken-1" text @click="generateApiKey">{{$t("createApiKey.create")}}</v-btn>
+          <v-btn color="primary" text @click="dialog = false; returnedKey = null" >{{$t("createApiKey.cancel")}}</v-btn>
+          <v-btn  color="primary" text @click="generateApiKey">{{$t("createApiKey.create")}}</v-btn>
         </div>
 
       </v-card-actions>

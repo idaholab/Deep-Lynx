@@ -33,7 +33,7 @@
             <v-tab @click="setRawEditor">{{$t('queryBuilder.rawEditor')}}</v-tab>
             <v-spacer />
             <v-btn v-if="!results" color="warning" style="margin: 6px;" @click="resetQuery">{{$t('queryBuilder.resetQuery')}}</v-btn>
-            <v-btn v-if="results" color="success" style="margin: 6px;" @click="resetQuery">{{$t('queryBuilder.newQuery')}}</v-btn>
+            <v-btn v-if="results" color="primary" style="margin: 6px;" @click="resetQuery">{{$t('queryBuilder.newQuery')}}</v-btn>
           </v-tabs>
           <v-tabs-items v-model="activeTab">
             <v-tab-item class="mx-5">

@@ -47,7 +47,7 @@
           </template>
         </v-file-input>
 
-        <v-btn color="blue darken-1" class="mt-2" text @click="importContainer" :disabled="!importSelected || !importFile"><span v-if="!loading">{{$t("containerImport.import")}}</span>
+        <v-btn color="primary" class="mt-2" text @click="importContainer" :disabled="!importSelected || !importFile"><span v-if="!loading">{{$t("containerImport.import")}}</span>
           <span v-if="loading"><v-progress-circular indeterminate></v-progress-circular></span>
         </v-btn>
       </v-card-actions>

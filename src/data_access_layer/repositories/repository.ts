@@ -1037,6 +1037,7 @@ export type QueryOptions = {
     tableName?: string | null | undefined;
     // load from a materialized view if one is present
     loadFromView?: boolean;
+    print?: boolean;
 };
 
 export type JoinOptions = {
