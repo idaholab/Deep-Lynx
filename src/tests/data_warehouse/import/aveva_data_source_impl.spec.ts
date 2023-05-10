@@ -64,7 +64,7 @@ describe('A Aveva DataSource Implementation can', async () => {
         // build the data source first
         const sourceRepo = new DataSourceRepository();
 
-        const source = new DataSourceFactory().fromDataSourceRecord(
+        const source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',

@@ -118,7 +118,7 @@ describe('A Node Schema Generator', async () => {
         // this is for the new timeseries data source system
         const sourceRepo = new DataSourceRepository();
 
-        let source = new DataSourceFactory().fromDataSourceRecord(
+        let source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source Timeseries Graphql',
@@ -194,7 +194,7 @@ describe('A Node Schema Generator', async () => {
         expect(received.isError, received.error?.error).false;
 
         // throw another one up with non-matching parameters, so we can test that we don't see it
-        source = new DataSourceFactory().fromDataSourceRecord(
+        source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'No Match Data Source',

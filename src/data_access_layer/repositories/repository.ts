@@ -615,6 +615,23 @@ export class Repository {
                 this._query.WHERE?.push(format(`%s IN (%s)`, fieldName, output.join(',')));
                 break;
             }
+            case 'not in': {
+                let values: any[] = [];
+                if (!Array.isArray(value)) {
+                    values = `${value}`.split(','); // support comma separated lists
+                } else {
+                    values = value;
+                }
+
+                const output: string[] = [];
+
+                values.forEach((v) => {
+                    output.push(`'${v}'`);
+                });
+
+                this._query.WHERE?.push(format(`%s NOT IN (%s)`, fieldName, output.join(',')));
+                break;
+            }
             case 'between': {
                 let values: any[] = [];
                 if (!Array.isArray(value)) {

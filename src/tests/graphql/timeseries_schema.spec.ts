@@ -78,7 +78,7 @@ describe('A Data Source Schema Generator', async () => {
 
         const sourceRepo = new DataSourceRepository();
 
-        let source = new DataSourceFactory().fromDataSourceRecord(
+        let source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source Timeseries GraphQL',

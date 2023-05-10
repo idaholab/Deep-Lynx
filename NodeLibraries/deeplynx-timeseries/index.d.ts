@@ -7,6 +7,10 @@ export interface Configuration {
   dbConnectionString: string
   maxColumns?: number
 }
+/**
+ * Because we can't send the raw Bucket back to Node, and because we want to work with Objects in
+ * Node, we built these translation types for the Node return and parameter types
+ */
 export interface BucketColumn {
   name: string
   shortName: string
@@ -48,19 +52,22 @@ export class BucketRepository {
   /**
    * # Safety
    *
-   * This spawns multithreaded operations so be wary
+   * This spawns multithreaded operations so be wary. The beginCsvIngestion function initializes the
+   * repository to receive CSV data from a node.js source
    */
   beginCsvIngestion(bucketId: number): Promise<void>
   /**
    * # Safety
    *
    * A "begin_x_ingestion" must have been called successfully before you attempt to read.
+   * This is how data is passed into our internal pipeline
    */
   readData(bytes: Buffer): Promise<void>
   /**
    * # Safety
    *
-   * This terminates multithreaded operations so be wary
+   * This terminates multithreaded operations so be wary. This is called when you've completed the
+   * ingestion and can also be used to check for errors during the operation
    */
   completeIngestion(): Promise<void>
 }
