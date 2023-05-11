@@ -70,7 +70,7 @@ describe('A P6 data source implementation', async () => {
         config.username = faker.name.findName();
         config.password = 'password'
 
-        const source = new DataSourceFactory().fromDataSourceRecord(
+        const source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test P6 Source',

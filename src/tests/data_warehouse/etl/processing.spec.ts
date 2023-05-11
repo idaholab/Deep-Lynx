@@ -359,7 +359,7 @@ describe('A Data Processor', async () => {
         expect(exp.value).not.empty;
 
         const dfactory = new DataSourceFactory();
-        dataSource = dfactory.fromDataSourceRecord(exp.value);
+        dataSource = await dfactory.fromDataSourceRecord(exp.value);
 
         const mapping = new TypeMapping({
             container_id: containerID,

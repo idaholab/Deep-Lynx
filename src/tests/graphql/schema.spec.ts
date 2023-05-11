@@ -481,7 +481,7 @@ describe('The GraphQL Schema Generator', async () => {
         expect(insertedData.value).not.empty;
         data = insertedData.value[0];
 
-        const dataSource = new DataSourceFactory().fromDataSourceRecord(exp.value);
+        const dataSource = await new DataSourceFactory().fromDataSourceRecord(exp.value);
 
         // create the transformations and process
         const carMaintenanceKeys = test_metatypes.find((m) => m.name === 'Maintenance')!.keys;

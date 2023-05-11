@@ -155,8 +155,8 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="dialog = false" >{{$t("editMetatype.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" :disabled="!valid" text @click="editMetatype()">{{$t("editMetatype.save")}}</v-btn>
+        <v-btn color="primary" text @click="dialog = false" >{{$t("editMetatype.cancel")}}</v-btn>
+        <v-btn color="primary" :disabled="!valid" text @click="editMetatype()">{{$t("editMetatype.save")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -327,24 +327,24 @@ export default class EditMetatypeDialog extends Vue {
 
   .edited-field {
     input {
-      background: #CD7F32;
+      background: $warning;
       color: white !important;
-      box-shadow: -5px 0 0 #CD7F32;
+      box-shadow: -5px 0 0 $warning;
     }
 
     textarea {
-      background: #CD7F32;
+      background: $warning;
       color: white !important;
-      box-shadow: -5px 0 0 #CD7F32;
+      box-shadow: -5px 0 0 $warning;
     }
   }
 
     .edited-item {
-      background: #CD7F32;
+      background: $warning;
       color: white;
 
       &:hover {
-        background: #FFA726 !important;
+        background: lighten($warning, 5%) !important;
         color: black;
       }
 
@@ -358,11 +358,11 @@ export default class EditMetatypeDialog extends Vue {
     }
 
     .created-item {
-      background: #7CB342;
+      background: $success;
       color: white;
 
       &:hover {
-        background: #9CCC65 !important;
+        background: lighten($success, 5%) !important;
         color: black;
       }
 
@@ -376,11 +376,11 @@ export default class EditMetatypeDialog extends Vue {
     }
 
     .deleted-item {
-      background: #E53935;
+      background: $error;
       color: white;
 
       &:hover {
-        background: #EF5350 !important;
+        background: lighten($error, 5%) !important;
         color: black;
       }
 
@@ -403,14 +403,14 @@ export default class EditMetatypeDialog extends Vue {
     }
 
     .created {
-      background-color: #7CB342;
+      background-color: $success;
     }
 
     .edited {
-      background-color: #CD7F32;
+      background-color: $warning;
     }
 
     .removed {
-      background-color: #E53935;
+      background-color: $error;
     }
 </style>

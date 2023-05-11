@@ -31,8 +31,8 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="clearNew" >{{$t("containerInvite.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" text @click="sendInvite" :disabled="!formValid || email === ''" ><span v-if="!loading">{{$t("containerInvite.sendInvite")}}</span><v-progress-circular indeterminate v-if="loading"></v-progress-circular> </v-btn>
+        <v-btn color="primary" text @click="clearNew" >{{$t("containerInvite.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="sendInvite" :disabled="!formValid || email === ''" ><span v-if="!loading">{{$t("containerInvite.sendInvite")}}</span><v-progress-circular indeterminate v-if="loading"></v-progress-circular> </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

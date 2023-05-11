@@ -85,7 +85,7 @@ describe('An HTTP Data Source can', async () => {
         // first create and save the source
         const sourceRepo = new DataSourceRepository();
 
-        let source = new DataSourceFactory().fromDataSourceRecord(
+        let source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test HTTP Data Source',

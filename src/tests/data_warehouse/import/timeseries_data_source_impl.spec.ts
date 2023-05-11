@@ -85,7 +85,7 @@ describe('A Standard DataSource Implementation can', async () => {
         // build the data source first
         const sourceRepo = new DataSourceRepository();
 
-        let source = new DataSourceFactory().fromDataSourceRecord(
+        let source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -118,7 +118,7 @@ describe('A Standard DataSource Implementation can', async () => {
         expect(results.isError, results.error?.error).false;
 
         // now we try with a unique index
-        source = new DataSourceFactory().fromDataSourceRecord(
+        source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -152,7 +152,7 @@ describe('A Standard DataSource Implementation can', async () => {
         expect(results.isError).false;
 
         // now we try with a bigint ID,fails at first because no chunk interval
-        source = new DataSourceFactory().fromDataSourceRecord(
+        source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -182,7 +182,7 @@ describe('A Standard DataSource Implementation can', async () => {
         expect(results.isError).true;
 
         // now we try with a bigint ID
-        source = new DataSourceFactory().fromDataSourceRecord(
+        source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -223,7 +223,7 @@ describe('A Standard DataSource Implementation can', async () => {
         // build the data source first
         const sourceRepo = new DataSourceRepository();
 
-        let source = new DataSourceFactory().fromDataSourceRecord(
+        let source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -245,7 +245,7 @@ describe('A Standard DataSource Implementation can', async () => {
         let results = await sourceRepo.save(source!, user);
         expect(results.isError).true;
 
-        source = new DataSourceFactory().fromDataSourceRecord(
+        source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -273,7 +273,7 @@ describe('A Standard DataSource Implementation can', async () => {
         results = await sourceRepo.save(source!, user);
         expect(results.isError).true;
 
-        source = new DataSourceFactory().fromDataSourceRecord(
+        source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -314,7 +314,7 @@ describe('A Standard DataSource Implementation can', async () => {
         // build the data source first
         const sourceRepo = new DataSourceRepository();
 
-        let source = new DataSourceFactory().fromDataSourceRecord(
+        let source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -402,7 +402,7 @@ describe('A Standard DataSource Implementation can', async () => {
         // build the data source first
         const sourceRepo = new DataSourceRepository();
 
-        let source = new DataSourceFactory().fromDataSourceRecord(
+        let source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -499,7 +499,7 @@ describe('A Standard DataSource Implementation can', async () => {
         // build the data source first
         const sourceRepo = new DataSourceRepository();
 
-        let source = new DataSourceFactory().fromDataSourceRecord(
+        let source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -608,7 +608,7 @@ describe('A Standard DataSource Implementation can', async () => {
             `echo "Timestamp,Temperature (K),Velocity[i] (m/s),Velocity[j] (m/s),X (m),Y (m),Z (m)" > ${__dirname}/1million.csv && perl -E \'for($i=0;$i<1000000;$i++){say "2022-07-18 02:32:27.532059,$i,$i,$i,$i,$i,$i"}\' >> ${__dirname}/1million.csv`,
         );
 
-        let source = new DataSourceFactory().fromDataSourceRecord(
+        let source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',

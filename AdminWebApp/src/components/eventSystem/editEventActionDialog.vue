@@ -79,8 +79,8 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="editReset()" >{{$t("home.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" text @click="updateEventAction()" >{{$t("home.save")}}</v-btn>
+        <v-btn color="primary" text @click="editReset()" >{{$t("home.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="updateEventAction()" >{{$t("home.save")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

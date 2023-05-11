@@ -201,7 +201,7 @@ const DrawerLeft: React.FC<Props> = ({}) => {
                 sx={{
                   minHeight: 64,
                   px: 2.5,
-                  backgroundColor: '#E3B180',
+                  backgroundColor: `${COLORS.colorPrimary}`,
                   '&.Mui-selected': {
                     backgroundColor: `${COLORS.colorSecondary} !important`
                   },

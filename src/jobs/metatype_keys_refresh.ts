@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-floating-promises,@typescript-eslint/no-misused-promises */
 /*
-    This job will delete all data in data_staging older than it's data source's data retention policy
+    This job will refresh the materialized view containing metatype keys
  */
 import Logger from '../services/logger';
 import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/postgres';
@@ -24,14 +24,14 @@ void postgresAdapter
             .catch((e) => {
                 void PostgresAdapter.Instance.close();
 
-                Logger.error(`unable to run refresh materialized view job ${e}`);
+                Logger.error(`unable to run refresh metatype keys view job ${e}`);
                 process.exit(1);
             });
     })
     .catch((e) => {
         void PostgresAdapter.Instance.close();
 
-        Logger.error(`unexpected error in materialized view refresh thread ${e}`);
+        Logger.error(`unexpected error in metatype keys view refresh thread ${e}`);
         if (parentPort) parentPort.postMessage('done');
         else {
             process.exit(1);

@@ -93,8 +93,8 @@
 
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="editDialog = false">{{$t("users.cancel")}}</v-btn>
-          <v-btn color="blue darken-1" text @click="saveUser">{{$t("home.save")}}</v-btn>
+          <v-btn color="primary" text @click="editDialog = false">{{$t("users.cancel")}}</v-btn>
+          <v-btn color="primary" text @click="saveUser">{{$t("home.save")}}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

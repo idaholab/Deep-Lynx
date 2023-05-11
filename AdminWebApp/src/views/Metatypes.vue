@@ -353,11 +353,11 @@ export default class Metatypes extends Vue {
 
 <style lang="scss">
   .edited-item {
-    background: #CD7F32;
+    background: $warning;
     color: white;
 
     &:hover {
-      background: #FFA726 !important;
+      background: lighten($warning, 5%) !important;
       color: black;
     }
 
@@ -371,11 +371,11 @@ export default class Metatypes extends Vue {
   }
 
   .created-item {
-    background: #7CB342;
+    background: $success;
     color: white;
 
     &:hover {
-    background: #9CCC65 !important;
+    background: lighten($success, 5%) !important;
       color: black;
     }
 
@@ -389,11 +389,11 @@ export default class Metatypes extends Vue {
   }
 
   .deleted-item {
-    background: #E53935;
+    background: $error;
     color: white;
 
     &:hover {
-      background: #EF5350 !important;
+      background: lighten($error, 5%) !important;
       color: black;
     }
 
@@ -416,15 +416,15 @@ export default class Metatypes extends Vue {
   }
 
   .created {
-    background-color: #7CB342;
+    background-color: $success;
   }
 
   .edited {
-    background-color: #CD7F32;
+    background-color: $warning;
   }
 
   .removed {
-    background-color: #E53935;
+    background-color: $error;
   }
 
 

@@ -90,7 +90,7 @@ const NodeInfoMainTabs: React.FC<Props> = ({
                   lineHeight: 0.85,
                   '&.Mui-selected': {
                     borderBottomWidth: 0,
-                    background: '#ffffff',
+                    background: 'white',
                     '& $wrapper': {
                       opacity: 1,
                     },
@@ -119,7 +119,7 @@ const NodeInfoMainTabs: React.FC<Props> = ({
             key={index}
           >
             {value === index && (
-              <Box sx={{ p: 0, background: '#ffffff', display: 'flex', flex: '1 0 100%', flexDirection: 'column', marginTop: '-1px', padding: '16px' }}>
+              <Box sx={{ p: 0, background: 'white', display: 'flex', flex: '1 0 100%', flexDirection: 'column', marginTop: '-1px', padding: '16px' }}>
                 <DynamicTag data={data} />
               </Box>
             )}

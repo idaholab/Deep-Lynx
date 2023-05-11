@@ -118,6 +118,7 @@
         "csv": "^5.5.3",
         "csvtojson": "^2.0.10",
         "date-fns": "^2.28.0",
+        "deeplynx-timeseries": "file:NodeLibraries/deeplynx-timeseries",
         "dev-null": "^0.1.1",
         "digest-stream": "^2.0.0",
         "dl-fast-load": "file:NodeLibraries/dl-fast-load",

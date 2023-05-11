@@ -84,7 +84,12 @@ async function Start(): Promise<any> {
                     timeout: 0,
                 },
                 {
-                    name: 'materialized_view_refresh', // will run materialized_view_refresh.js
+                    name: 'metatype_keys_refresh', // will run metatype_keys_refresh.js
+                    interval: '1m',
+                    timeout: 0,
+                },
+                {
+                    name: 'current_nodes_refresh', // will run current_nodes_refresh.js
                     interval: '1m',
                     timeout: 0,
                 },

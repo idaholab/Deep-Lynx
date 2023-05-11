@@ -1023,6 +1023,28 @@ paths:
       tags:
         - Graph
         - TimeSeries
+    get:
+      summary: List Timeseries Sources for Node
+      operationId: list-ts-for-node
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                x-examples:
+                  Example 1:
+                    value:
+                      sourceA: '123'
+                      sourceB: '456'
+                    isError: false
+                properties:
+                  value:
+                    type: object
+                  isError:
+                    type: boolean
+      description: Returns a dictionary of source names and source IDs for each source attached to the given node.
   '/containers/{container_id}/import/datasources/{data_source_id}/data':
     post:
       summary: Timeseries Data Source Query

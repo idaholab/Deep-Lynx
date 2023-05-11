@@ -199,7 +199,7 @@ describe('A Data Type Mapping Transformation', async () => {
         return storage.Delete(exp.value.id!);
     });
 
-    it('can listed by type mapping id', async () => {
+    it('can list by type mapping id', async () => {
         const storage = DataSourceMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
         const keyStorage = MetatypeKeyMapper.Instance;

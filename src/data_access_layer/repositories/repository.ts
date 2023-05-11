@@ -105,7 +105,7 @@ export class Repository {
     }
 
     // access function used to clear the select root for special repos that
-    // will never be using distinct/distinct on, such as timeseries_entry or node_leaf
+    // will never be using distinct/distinct on, such as node_leaf
     // putting this in a function prevents accidental overwriting of select root
     _noSelectRoot() {
         this._selectRoot = '';
@@ -615,6 +615,23 @@ export class Repository {
                 this._query.WHERE?.push(format(`%s IN (%s)`, fieldName, output.join(',')));
                 break;
             }
+            case 'not in': {
+                let values: any[] = [];
+                if (!Array.isArray(value)) {
+                    values = `${value}`.split(','); // support comma separated lists
+                } else {
+                    values = value;
+                }
+
+                const output: string[] = [];
+
+                values.forEach((v) => {
+                    output.push(`'${v}'`);
+                });
+
+                this._query.WHERE?.push(format(`%s NOT IN (%s)`, fieldName, output.join(',')));
+                break;
+            }
             case 'between': {
                 let values: any[] = [];
                 if (!Array.isArray(value)) {
@@ -1037,6 +1054,7 @@ export type QueryOptions = {
     tableName?: string | null | undefined;
     // load from a materialized view if one is present
     loadFromView?: boolean;
+    print?: boolean;
 };
 
 export type JoinOptions = {

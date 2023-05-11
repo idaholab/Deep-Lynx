@@ -50,12 +50,12 @@
 
       <v-card-actions v-if="!importsLoading">
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="reset()">{{$t("deleteDataSource.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" text @click="archiveSource()" v-if="!dataSource.archived">
+        <v-btn color="primary" text @click="reset()">{{$t("deleteDataSource.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="archiveSource()" v-if="!dataSource.archived">
           <v-progress-circular v-if="archiveLoading" indeterminate></v-progress-circular>
           {{$t("deleteDataSource.archive")}}
         </v-btn>
-        <v-btn color="red darken-1" text :disabled="countDown > 0" @click="deleteSource()">
+        <v-btn color="error" text :disabled="countDown > 0" @click="deleteSource()">
           <v-progress-circular v-if="deleteLoading" indeterminate></v-progress-circular>
           <span v-if="importCount <= 0">{{$t("deleteDataSource.delete")}}</span>
           <span v-else>{{$t("deleteDataSource.forceDelete")}}</span>
@@ -81,8 +81,8 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="reset()">{{$t("deleteDataSource.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" text @click="archiveSource()">{{$t("deleteDataSource.archive")}}</v-btn>
+        <v-btn color="primary" text @click="reset()">{{$t("deleteDataSource.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="archiveSource()">{{$t("deleteDataSource.archive")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

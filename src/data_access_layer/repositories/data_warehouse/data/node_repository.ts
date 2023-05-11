@@ -291,27 +291,10 @@ export default class NodeRepository extends Repository implements RepositoryInte
         return this.#fileMapper.ListForNode(node.id);
     }
 
-    // listTimeseriesTables returns a list of all the GraphQL friendly names of the data sources and transformations
-    // that exist - the tuple is [legacy, id]
-    async listTimeseriesTables(node: Node, containerID: string): Promise<Result<Map<string, [boolean, string]>>> {
-        const out = new Map<string, [boolean, string]>();
+    // listTimeseriesTables returns a list of all the GraphQL friendly names of the data sources that exist
+    async listTimeseriesTables(node: Node, containerID: string): Promise<Result<Map<string, string>>> {
+        const out = new Map<string, string>();
 
-        const nodeTransformations = await this.#mapper.ListTransformationsForNode(node.id!);
-        if (!nodeTransformations.isError) {
-            // we need to follow the same naming scheme as the graphQL layer, legacy on the transformations so there
-            // are no clashes
-            nodeTransformations.value.map((t, index) => {
-                if (out.get(stringToValidPropertyName(t.name!) + '_legacy')) {
-                    out.set(`${stringToValidPropertyName(t.name!)}_legacy_${index}`, [true, t.transformation_id!]);
-                } else {
-                    out.set(`${stringToValidPropertyName(t.name!)}_legacy`, [true, t.transformation_id!]);
-                }
-            });
-        } else {
-            Logger.error(`unable to list node transformations ${nodeTransformations.error?.error}`);
-        }
-
-        // now fetch the data sources, we fail here because this isn't the legacy method for fetching data
         const dataSources = await new DataSourceRepository().where().containerID('eq', containerID).and().adapter_type('eq', 'timeseries').list();
         if (dataSources.isError) {
             return Promise.resolve(Result.Failure(`unable to list datasources for timeseries for node ${dataSources.error?.error}`));
@@ -394,13 +377,12 @@ export default class NodeRepository extends Repository implements RepositoryInte
             return truthCount === config.attachment_parameters.length;
         });
 
-        // we need to follow the same naming scheme as the graphQL layer, legacy on the transformations so there
-        // are no clashes
+        // we need to follow the same naming scheme as the graphQL layer
         matchedDataSources.map((d, index) => {
             if (out.get(stringToValidPropertyName(d?.DataSourceRecord?.name!))) {
-                out.set(`${stringToValidPropertyName(d?.DataSourceRecord?.name!)}_${index}`, [false, d?.DataSourceRecord?.id!]);
+                out.set(`${stringToValidPropertyName(d?.DataSourceRecord?.name!)}_${index}`, d?.DataSourceRecord?.id!);
             } else {
-                out.set(stringToValidPropertyName(d?.DataSourceRecord?.name!), [false, d?.DataSourceRecord?.id!]);
+                out.set(stringToValidPropertyName(d?.DataSourceRecord?.name!), d?.DataSourceRecord?.id!);
             }
         });
 

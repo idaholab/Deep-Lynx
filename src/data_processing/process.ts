@@ -12,10 +12,8 @@ import Edge, {EdgeQueueItem, IsEdges} from '../domain_objects/data_warehouse/dat
 import DataStagingRepository from '../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import {DataStagingFile, NodeFile} from '../domain_objects/data_warehouse/data/file';
 import NodeMapper from '../data_access_layer/mappers/data_warehouse/data/node_mapper';
-import TimeseriesEntry, {IsTimeseries} from '../domain_objects/data_warehouse/data/timeseries';
 import Cache from '../services/cache/cache';
 import Config from '../services/config';
-import TimeseriesEntryRepository from '../data_access_layer/repositories/data_warehouse/data/timeseries_entry_repository';
 import EdgeQueueItemMapper from '../data_access_layer/mappers/data_warehouse/data/edge_queue_item_mapper';
 import {classToPlain} from 'class-transformer';
 
@@ -26,7 +24,6 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
     const stagingRepo = new DataStagingRepository();
     const mappingRepo = new TypeMappingRepository();
     const nodeRepository = new NodeRepository();
-    const timeseriesRepo = new TimeseriesEntryRepository();
 
     const transaction = await stagingMapper.startTransaction();
 
@@ -94,7 +91,6 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
 
     let nodesToInsert: Node[] = [];
     const edgesToInsert: Edge[] = [];
-    const timeseriesToInsert: TimeseriesEntry[] = [];
 
     // for each transformation run the transformation process. Results will either be an array of nodes or an array of edges
     // if we run into errors, add the error to the data staging row, and immediately return. Do not attempt to
@@ -119,7 +115,6 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
             // check to see result type, force into corresponding container
             if (IsNodes(results.value)) nodesToInsert.push(...results.value);
             if (IsEdges(results.value)) edgesToInsert.push(...results.value);
-            if (IsTimeseries(results.value)) timeseriesToInsert.push(...results.value);
         }
 
     // we must deduplicate nodes based on original ID in order to avoid a database transaction error. We toss out the
@@ -202,18 +197,6 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
 
             await stagingRepo.setErrors(staging.id!, [`error attempting to send edges to queue ${sent.error?.error}`]);
             return new Promise((resolve) => resolve(Result.DebugFailure(`error attempting to send edges to queue ${sent.error?.error}`)));
-        }
-    }
-
-    // we can't attach files to timeseries data like we can with nodes and edges currently, so unfortunately we just
-    // ignore any files that may be attached to this transformation
-    if (timeseriesToInsert.length > 0) {
-        const inserted = await timeseriesRepo.bulkSave(timeseriesToInsert, transaction.value);
-        if (inserted.isError) {
-            await stagingMapper.rollbackTransaction(transaction.value);
-
-            await stagingRepo.addError(staging.id!, `unable to create timeseries data entries from data ${inserted.error?.error}`);
-            return Promise.resolve(Result.DebugFailure(`unable to create timeseries data entries from data ${inserted.error?.error}`));
         }
     }
 

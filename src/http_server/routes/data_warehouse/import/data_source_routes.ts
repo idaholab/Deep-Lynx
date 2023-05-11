@@ -45,29 +45,32 @@ export default class DataSourceRoutes {
                 return;
             }
 
-            const dataSource = dataSourceFactory.fromDataSourceRecord(payload);
-            if (!dataSource) {
-                // we make an assumption here as to why this fails - it's a fairly
-                // safe assumption as that's the only way this could actually fail
-                Result.Failure(`unknown data source adapter type`).asResponse(res);
-                next();
-                return;
-            }
-
-            dataSourceRepo
-                .save(dataSource, currentUser)
-                .then((result) => {
-                    if (result.isError) {
-                        result.asResponse(res);
+            dataSourceFactory.fromDataSourceRecord(payload)
+                .then((dataSource) => {
+                    if (!dataSource) {
+                        Result.Failure(`unknown data source adapter type`).asResponse(res);
+                        next();
                         return;
                     }
 
-                    Result.Success(dataSource.DataSourceRecord).asResponse(res);
+                    dataSourceRepo
+                        .save(dataSource, currentUser)
+                        .then((result) => {
+                            if (result.isError) {
+                                result.asResponse(res);
+                                return;
+                            }
+
+                            Result.Success(dataSource.DataSourceRecord).asResponse(res);
+                        })
+                        .catch((err) => {
+                            Result.Error(err).asResponse(res);
+                        })
+                        .finally(() => next());
                 })
                 .catch((err) => {
                     Result.Error(err).asResponse(res);
-                })
-                .finally(() => next());
+                });
         } else {
             Result.Failure(`unable to find container`).asResponse(res);
             next();
@@ -238,7 +241,7 @@ export default class DataSourceRoutes {
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,
                     sortBy: req.query.sortBy,
-                    sortDesc: req.query.sortDesc ? String(req.query.sortDesc).toLowerCase() === 'true' : undefined,
+                    sortDesc: req.query.sortDesc ? String(req.query.sortDesc).toLowerCase() === 'true' : undefined
                 } as QueryOptions)
                 .then(async (result) => {
                     if (result.isError) {

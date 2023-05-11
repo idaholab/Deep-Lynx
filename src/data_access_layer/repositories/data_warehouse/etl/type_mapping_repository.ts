@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-for-in-array */
 import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
-import TypeMapping, {TypeMappingComparison} from '../../../../domain_objects/data_warehouse/etl/type_mapping';
+import TypeMapping from '../../../../domain_objects/data_warehouse/etl/type_mapping';
 import TypeMappingMapper from '../../../mappers/data_warehouse/etl/type_mapping_mapper';
 import Result from '../../../../common_classes/result';
 import {PoolClient} from 'pg';
@@ -20,7 +20,6 @@ import {ContainerAlert} from '../../../../domain_objects/data_warehouse/ontology
 import ContainerRepository from '../ontology/container_respository';
 import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
 import MetatypeRelationship from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship';
-import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
 import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
 import MetatypeRelationshipKey from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
 
@@ -230,17 +229,6 @@ export default class TypeMappingRepository extends Repository implements Reposit
                 return Promise.resolve(Result.Pass(results));
             }
 
-            results.value.forEach((t) => {
-                if (t.type === 'timeseries' && Config.timescaledb_enabled) {
-                    this.#transformationMapper
-                        .CreateHypertable(t)
-                        .then((built) => {
-                            if (built.isError) Logger.error(`unable to create hypertable for transformation`);
-                        })
-                        .catch((e) => Logger.error(`unable to create hypertable for transformation ${e}`));
-                }
-            });
-
             returnTransformations.push(...results.value);
         }
 
@@ -428,8 +416,6 @@ export default class TypeMappingRepository extends Repository implements Reposit
 
                     typeMapping.transformations[i].metatype_id = undefined;
                     typeMapping.transformations[i].metatype_relationship_pair_id = undefined;
-                    typeMapping.transformations[i].tab_data_source_id = undefined;
-                    typeMapping.transformations[i].tab_metatype_id = undefined;
                 }
 
                 // need infer type if it isn't present so that older type mappings will still function
@@ -438,8 +424,6 @@ export default class TypeMappingRepository extends Repository implements Reposit
                         typeMapping.transformations[i].type = 'node';
                     } else if (typeMapping.transformations[i].metatype_relationship_pair_id || typeMapping.transformations[i].metatype_relationship_pair_name) {
                         typeMapping.transformations[i].type = 'edge';
-                    } else {
-                        typeMapping.transformations[i].type = 'timeseries';
                     }
                 }
 
@@ -453,8 +437,6 @@ export default class TypeMappingRepository extends Repository implements Reposit
                 typeMapping.transformations[i].origin_data_source_id = undefined;
                 typeMapping.transformations[i].destination_metatype_id = undefined;
                 typeMapping.transformations[i].destination_data_source_id = undefined;
-                typeMapping.transformations[i].tab_data_source_id = undefined;
-                typeMapping.transformations[i].tab_metatype_id = undefined;
                 typeMapping.transformations[i].shape_hash = undefined;
 
                 typeMapping.transformations[i].created_by = undefined;

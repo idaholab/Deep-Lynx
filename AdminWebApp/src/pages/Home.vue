@@ -22,10 +22,8 @@
       width="260"
       class="grey--text text--darken-2"
     >
-      <div class="logo-div d-flex align-center pa-1">
-        <div style="margin-left:15px;" >
-          <v-img max-height="120" max-width="120"  src="../assets/lynx-white.png"></v-img>
-        </div>
+      <div class="logo-div" style="display: flex; padding: 8px 12px;">
+        <img style="max-width:100%;" src="../assets/lynx-white.png">
       </div>
 
       <v-list dense class="nav-drawer-accordion pa-0">

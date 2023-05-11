@@ -366,7 +366,7 @@ describe('We can generate test data', async () => {
         expect(exp.value).not.empty;
 
         const dfactory = new DataSourceFactory();
-        dataSource = dfactory.fromDataSourceRecord(exp.value);
+        dataSource = await dfactory.fromDataSourceRecord(exp.value);
 
         amountToGenerate = process.env.TEST_DATA_NODES ? parseInt(process.env.TEST_DATA_NODES, 10) : 1000;
 

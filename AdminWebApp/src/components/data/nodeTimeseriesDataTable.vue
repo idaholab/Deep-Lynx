@@ -11,12 +11,10 @@
         </template>
 
         <template v-slot:item.actions="{ item }">
-          <node-timeseries-dialog 
-            :nodeID="nodeID" 
-            :containerID="containerID" 
-            :dataSourceID="item.value[1]" 
-            :legacy="item.value[0]"
-            @timeseriesDialogClose="incrementKey" 
+          <timeseries-viewer-dialog
+            :containerID="containerID"
+            :dataSourceID="item.value"
+            @timeseriesDialogClose="incrementKey"
             :key="key"
           />
         </template>
@@ -27,9 +25,9 @@
 
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from "vue-property-decorator";
-import NodeTimeseriesDialog from "@/components/data/nodeTimeseriesDialog.vue";
+import TimeseriesViewerDialog from "./timeseriesViewerDialog.vue";
 
-@Component({components: {NodeTimeseriesDialog}})
+@Component({components: {TimeseriesViewerDialog}})
 export default class NodeTimeseriesDataTable extends Vue {
   @Prop({required: true})
   readonly nodeID!: string
@@ -38,7 +36,6 @@ export default class NodeTimeseriesDataTable extends Vue {
   readonly containerID!: string
 
   errorMessage = ''
-  // the tuple here is [legacy, id]
   timeseriesTables: object[] = []
 
   key = 0
@@ -66,7 +63,7 @@ export default class NodeTimeseriesDataTable extends Vue {
   loadTimeseriesTables() {
     this.$client.listTimeseriesTables(this.containerID, this.nodeID)
         .then((results) => {
-          const map = new Map<string, [boolean, string]>(Object.entries(results))
+          const map = new Map<string, string>(Object.entries(results))
           this.timeseriesTables = Array.from(map, ([name, value]) => ({ name, value }));
         })
         .catch(e => this.errorMessage = e)

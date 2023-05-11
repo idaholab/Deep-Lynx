@@ -41,9 +41,9 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="clearNewFileSet" >{{$t("home.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="clearNewFileSet" >{{$t("home.cancel")}}</v-btn>
         <v-btn
-            color="blue darken-1"
+            color="primary"
             text
             @click="updateFile" >
           {{$t("home.save")}}

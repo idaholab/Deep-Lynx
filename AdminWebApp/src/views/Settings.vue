@@ -81,7 +81,7 @@
       <v-card-actions>
         <delete-container-dialog :containerID="container.id"></delete-container-dialog>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="updateContainer" ><span v-if="!loading">{{$t("home.save")}}</span>
+        <v-btn color="primary" text @click="updateContainer" ><span v-if="!loading">{{$t("home.save")}}</span>
           <span v-if="loading"><v-progress-circular indeterminate></v-progress-circular></span>
         </v-btn>
       </v-card-actions>

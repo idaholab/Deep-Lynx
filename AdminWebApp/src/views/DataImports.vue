@@ -56,9 +56,10 @@
               <import-data-dialog
                 :dataSourceID="selectedDataSource.id"
                 :containerID="containerID"
+                :fastload="selectedDataSource.config.fast_load_enabled"
                 :disabled="!selectedDataSource.active || selectedDataSource.archived"
-                @importUploaded="listImports">
-              </import-data-dialog>
+                @importUploaded="listImports"
+              />
             </div>
           </v-col>
         </template>
@@ -76,7 +77,7 @@
           <v-icon small class="mr-2" @click="viewItem(item)" v-if="activeTab === 'datasources'">
             mdi-eye
           </v-icon>
-          <timeseries-source-dialog v-if="activeTab === 'timeseries'"
+          <timeseries-viewer-dialog v-if="activeTab === 'timeseries'"
             :containerID="containerID"
             :dataSourceID="selectedDataSource.id"
             :icon="true"
@@ -103,7 +104,7 @@
       transition="dialog-bottom-transition"
     >
       <v-card>
-        <v-toolbar dark color="warning" flat tile>
+        <v-toolbar dark color="secondary" flat tile>
           <v-btn icon dark @click="dialog = false">
             <v-icon>mdi-close</v-icon>
           </v-btn>
@@ -166,7 +167,7 @@
 
         <v-card-actions class="flex-shrink-1">
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="dataDialog = false" >{{$t("dataImports.done")}}</v-btn>
+          <v-btn color="primary" text @click="dataDialog = false" >{{$t("dataImports.done")}}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -185,7 +186,7 @@
         </div>
         <v-card-actions class="flex-shrink-1">
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="mappingDialog = false" >{{$t("dataMapping.done")}}</v-btn>
+          <v-btn color="primary" text @click="mappingDialog = false" >{{$t("dataMapping.done")}}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -201,7 +202,7 @@ import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
 import DeleteDataImportDialog from "@/components/dataImport/deleteDataImportDialog.vue";
 import ReprocessDataImportDialog from "@/components/dataImport/reprocessDataImportDialog.vue";
 import {mdiFileDocumentMultiple} from "@mdi/js";
-import TimeseriesSourceDialog from '@/components/data/timeseriesSourceDialog.vue';
+import TimeseriesViewerDialog from '@/components/data/timeseriesViewerDialog.vue';
 
 
 @Component({filters: {
@@ -215,7 +216,7 @@ import TimeseriesSourceDialog from '@/components/data/timeseriesSourceDialog.vue
     SelectDataSource,
     DeleteDataImportDialog,
     ReprocessDataImportDialog,
-    TimeseriesSourceDialog
+    TimeseriesViewerDialog
   }
 })
 export default class DataImports extends Vue {
