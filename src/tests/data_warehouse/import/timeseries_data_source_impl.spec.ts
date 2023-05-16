@@ -27,7 +27,7 @@ const fastLoad = require('dl-fast-load');
 
 // Generally testing the standard implementation to verify that the ReceiveData and other underlying functions that most
 // other implementations rely on function ok.
-describe('A Standard DataSource Implementation can', async () => {
+describe('A Timeseries DataSource Implementation can', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let user: User;
 

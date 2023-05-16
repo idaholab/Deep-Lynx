@@ -134,41 +134,6 @@ describe('A Standard DataSource Implementation can', async () => {
         return Promise.resolve();
     });
 
-    it('can receive data from an array of objects, and return data staging records', async () => {
-        // build the data source first
-        const sourceRepo = new DataSourceRepository();
-
-        const source = await new DataSourceFactory().fromDataSourceRecord(
-            new DataSourceRecord({
-                container_id: containerID,
-                name: 'Test Data Source',
-                active: false,
-                adapter_type: 'standard',
-                data_format: 'json',
-            }),
-        );
-
-        let results = await sourceRepo.save(source!, user);
-        expect(results.isError).false;
-        expect(source!.DataSourceRecord?.id).not.undefined;
-
-        // now we create an import through the datasource
-        const newImport = await source!.ReceiveData(toStream([sampleObject]), user, {overrideJsonStream: true, returnStagingRecords: true, bufferSize: 1});
-        expect(newImport.isError).false;
-        expect((newImport.value as DataStaging[]).length === 1).true;
-
-        // verify the data actually wrote - should be a total of 1 record
-        const stagingRepo = new DataStagingRepository();
-        const result = await stagingRepo.where().dataSourceID('eq', source?.DataSourceRecord?.id).list();
-
-        expect(result.isError).false;
-        expect(result.value.length).eq(1);
-
-        expect((newImport.value as DataStaging[])[0].id).eq(result.value[0].id);
-
-        return Promise.resolve();
-    });
-
     it('can receive data from a valid JSON file stream', async () => {
         // build the data source first
         const sourceRepo = new DataSourceRepository();

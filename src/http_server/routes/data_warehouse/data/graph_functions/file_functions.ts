@@ -50,7 +50,7 @@ export default class FileFunctions {
     public static updateFile(req: Request, res: Response, next: NextFunction) {
         const fileNames: string[] = [];
         const files: Promise<Result<File>>[] = [];
-        const dataStagingRecords: Promise<Result<Import | DataStaging[] | boolean>>[] = [];
+        const importRecords: Promise<Result<Import | boolean>>[] = [];
         const busboy = Busboy({headers: req.headers});
         const metadata: {[key: string]: any} = {};
         let metadataFieldCount = 0;
@@ -70,19 +70,17 @@ export default class FileFunctions {
             // check if this is the metadata file - if it is, attempt to process it
             if (fieldname === 'metadata') {
                 if (mimeType === 'application/json') {
-                    dataStagingRecords.push(
+                    importRecords.push(
                         req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
                             importID: req.query.importID as string | undefined,
-                            returnStagingRecords: true,
                             bufferSize: Config.data_source_receive_buffer,
                             has_files: true
                         }),
                     );
                 } else if (mimeType === 'text/csv') {
-                    dataStagingRecords.push(
+                    importRecords.push(
                         req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
                             importID: req.query.importID as string | undefined,
-                            returnStagingRecords: true,
                             transformStream: csv({
                                 downstreamFormat: 'array', // this is necessary as the ReceiveData expects an array of json, not single objects
                             }),
@@ -92,10 +90,9 @@ export default class FileFunctions {
                     );
                 } else if (mimeType === 'text/xml' || mimeType === 'application/xml') {
                     const xmlStream = xmlParser.createStream();
-                    dataStagingRecords.push(
+                    importRecords.push(
                         req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
                             importID: req.query.importID as string | undefined,
-                            returnStagingRecords: true,
                             transformStream: xmlStream,
                             bufferSize: Config.data_source_receive_buffer,
                             has_files: true
@@ -126,8 +123,8 @@ export default class FileFunctions {
             // via the normal file querying channels
             void Promise.all(files)
                 .then((results) => {
-                    if (dataStagingRecords.length > 0) {
-                        void Promise.all(dataStagingRecords)
+                    if (importRecords.length > 0) {
+                        void Promise.all(importRecords)
                             .then((stagingResults) => {
                                 stagingResults.forEach((stagingResult) => {
                                     if (stagingResult.isError) {
@@ -135,21 +132,21 @@ export default class FileFunctions {
                                         return;
                                     }
 
-                                    (stagingResult.value as DataStaging[]).forEach((stagingResult) => {
-                                        results.forEach((fileResult) => {
-                                            void stagingRepo
-                                                .addFile(stagingResult, fileResult.value.id!)
-                                                .then((addFileResult) => {
-                                                    if (addFileResult.isError) {
-                                                        Logger.error(`error adding file to staging record ${addFileResult.error?.error}`);
-                                                    } else {
-                                                        Logger.debug(`file added to staging record successfully`);
-                                                    }
-                                                })
-                                                .catch((e) => {
-                                                    Logger.error(`error adding file to staging record ${e}`);
-                                                });
-                                        });
+                                    const importID = (stagingResult.value as Import).id!;
+
+                                    results.forEach((fileResult) => {
+                                        void stagingRepo
+                                            .addFileWithImport(importID, fileResult.value.id!)
+                                            .then((addFileResult) => {
+                                                if (addFileResult.isError) {
+                                                    Logger.error(`error adding file to staging record ${addFileResult.error?.error}`);
+                                                } else {
+                                                    Logger.debug(`file added to staging record successfully`);
+                                                }
+                                            })
+                                            .catch((e) => {
+                                                Logger.error(`error adding file to staging record ${e}`);
+                                            });
                                     });
                                 });
                             })
@@ -246,7 +243,7 @@ export default class FileFunctions {
     public static uploadFile(req: Request, res: Response, next: NextFunction) {
         const fileNames: string[] = [];
         const files: Promise<Result<File>>[] = [];
-        const dataStagingRecords: Promise<Result<Import | DataStaging[] | boolean>>[] = [];
+        const importRecords: Promise<Result<Import | boolean>>[] = [];
         const busboy = Busboy({headers: req.headers});
         const metadata: {[key: string]: any} = {};
         let metadataFieldCount = 0;
@@ -266,19 +263,17 @@ export default class FileFunctions {
             // check if this is the metadata file - if it is, attempt to process it
             if (fieldname === 'metadata') {
                 if (mimeType === 'application/json') {
-                    dataStagingRecords.push(
+                    importRecords.push(
                         req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
                             importID: req.query.importID as string | undefined,
-                            returnStagingRecords: true,
                             bufferSize: Config.data_source_receive_buffer,
                             has_files: true,
                         }),
                     );
                 } else if (mimeType === 'text/csv') {
-                    dataStagingRecords.push(
+                    importRecords.push(
                         req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
                             importID: req.query.importID as string | undefined,
-                            returnStagingRecords: true,
                             transformStream: csv({
                                 downstreamFormat: 'array', // this is necessary as the ReceiveData expects an array of json, not single objects
                             }),
@@ -288,10 +283,9 @@ export default class FileFunctions {
                     );
                 } else if (mimeType === 'text/xml' || mimeType === 'application/xml') {
                     const xmlStream = xmlParser.createStream();
-                    dataStagingRecords.push(
+                    importRecords.push(
                         req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
                             importID: req.query.importID as string | undefined,
-                            returnStagingRecords: true,
                             transformStream: xmlStream,
                             bufferSize: Config.data_source_receive_buffer,
                             has_files: true,
@@ -322,8 +316,8 @@ export default class FileFunctions {
             // via the normal file querying channels
             void Promise.all(files)
                 .then((results) => {
-                    if (dataStagingRecords.length > 0) {
-                        void Promise.all(dataStagingRecords)
+                    if (importRecords.length > 0) {
+                        void Promise.all(importRecords)
                             .then((stagingResults) => {
                                 stagingResults.forEach((stagingResult) => {
                                     if (stagingResult.isError) {
@@ -331,21 +325,21 @@ export default class FileFunctions {
                                         return;
                                     }
 
-                                    (stagingResult.value as DataStaging[]).forEach((stagingResult) => {
-                                        results.forEach((fileResult) => {
-                                            void stagingRepo
-                                                .addFile(stagingResult, fileResult.value.id!)
-                                                .then((addFileResult) => {
-                                                    if (addFileResult.isError) {
-                                                        Logger.error(`error adding file to staging record ${addFileResult.error?.error}`);
-                                                    } else {
-                                                        Logger.debug(`file added to staging record successfully`);
-                                                    }
-                                                })
-                                                .catch((e) => {
-                                                    Logger.error(`error adding file to staging record ${e}`);
-                                                });
-                                        });
+                                    const importID = (stagingResult.value as Import).id!;
+
+                                    results.forEach((fileResult) => {
+                                        void stagingRepo
+                                            .addFileWithImport(importID, fileResult.value.id!)
+                                            .then((addFileResult) => {
+                                                if (addFileResult.isError) {
+                                                    Logger.error(`error adding file to staging record ${addFileResult.error?.error}`);
+                                                } else {
+                                                    Logger.debug(`file added to staging record successfully`);
+                                                }
+                                            })
+                                            .catch((e) => {
+                                                Logger.error(`error adding file to staging record ${e}`);
+                                            });
                                     });
                                 });
                             })

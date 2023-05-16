@@ -1,13 +1,14 @@
 import DataSourceRecord, {ReceiveDataOptions} from '../../../domain_objects/data_warehouse/import/data_source';
 import {DataSource} from './data_source';
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
-import {PassThrough, Readable, Writable} from 'stream';
+import {PassThrough, Readable, Writable, Transform} from 'stream';
 import {User} from '../../../domain_objects/access_management/user';
 import Result from '../../../common_classes/result';
 import Import, {DataStaging} from '../../../domain_objects/data_warehouse/import/import';
 const JSONStream = require('JSONStream');
 const fastLoad = require('dl-fast-load');
 import Config from '../../../services/config';
+const devnull = require('dev-null');
 
 import pLimit from 'p-limit';
 import ImportMapper from '../../../data_access_layer/mappers/data_warehouse/import/import_mapper';
@@ -27,7 +28,7 @@ export default class TimeseriesDataSourceImpl implements DataSource {
         }
     }
 
-    async fastLoad(payloadStream: Readable, user: User, dataSourceImport: Import): Promise<Result<Import | DataStaging[] | boolean>> {
+    async fastLoad(payloadStream: Readable, user: User, dataSourceImport: Import): Promise<Result<Import | boolean>> {
         let loader = fastLoad.new({
             connectionString: Config.core_db_connection_string as string,
             dataSource: this.DataSourceRecord as object,
@@ -63,7 +64,7 @@ export default class TimeseriesDataSourceImpl implements DataSource {
     }
 
     // see the interface declaration's explanation of ReceiveData
-    async ReceiveData(payloadStream: Readable, user: User, options?: ReceiveDataOptions): Promise<Result<Import | DataStaging[] | boolean>> {
+    async ReceiveData(payloadStream: Readable, user: User, options?: ReceiveDataOptions): Promise<Result<Import | boolean>> {
         if (!this.DataSourceRecord || !this.DataSourceRecord.id) {
             if (options?.transaction) await this.#mapper.rollbackTransaction(options?.transaction);
             return Promise.resolve(
@@ -103,25 +104,41 @@ export default class TimeseriesDataSourceImpl implements DataSource {
         // lets us wait for all save operations to complete
         const saveOperations: Promise<Result<boolean>>[] = [];
 
-        // our PassThrough stream is what actually processes the data, it's the last step in our eventual pipe
-        const pass = new PassThrough({objectMode: true});
+        // store relevant properties belonging to `this` in variables for use in the transform stream
+        const mapper = this.#mapper;
+        const dataSourceRecord = this.DataSourceRecord!;
 
-        pass.on('data', (data) => {
-            recordBuffer.push(data);
+        const transform = new Transform({
+            transform(chunk: any, encoding: any, callback: any) {
+                recordBuffer.push(chunk);
 
-            // if we've reached the process record limit, insert into the database and wipe the records array
-            // make sure to COPY the array into bulkSave function so that we can push it into the array of promises
-            // and not modify the underlying array on save, allowing us to move asynchronously,
-            if (!options || recordBuffer.length >= options.bufferSize) {
-                const toSave = [...recordBuffer];
-                recordBuffer = [];
+                // if we've reached the process record limit, insert into the database and wipe the records array
+                // make sure to COPY the array into bulkSave function so that we can push it into the array of promises
+                // and not modify the underlying array on save, allowing us to move asynchronously,
+                if (!options || recordBuffer.length >= options.bufferSize) {
+                    const toSave = [...recordBuffer];
+                    recordBuffer = [];
 
-                saveOperations.push(limit(() => this.#mapper.InsertIntoHypertable(this.DataSourceRecord!, toSave)));
-            }
+                    mapper
+                        .InsertIntoHypertable(dataSourceRecord, toSave)
+                        .then(() => {
+                            // @ts-ignore
+                            this.push(new Buffer.from(chunk.toString()));
+                            callback(null);
+                        })
+                        .catch((err) => {
+                            callback(err);
+                        });
+                } else {
+                    // @ts-ignore
+                    this.push(new Buffer.from(chunk.toString()));
+                    callback(null);
+                }
+            },
+            objectMode: true,
         });
 
-        // catch any records remaining in the buffer
-        pass.on('end', () => {
+        transform.on('end', () => {
             saveOperations.push(limit(() => this.#mapper.InsertIntoHypertable(this.DataSourceRecord!, recordBuffer)));
         });
 
@@ -141,18 +158,20 @@ export default class TimeseriesDataSourceImpl implements DataSource {
                         if (options?.errorCallback) options.errorCallback(err);
                         fulfill(err);
                     })
-                    .pipe(pass)
+                    .pipe(transform)
+                    .pipe(devnull())
                     .on('finish', fulfill);
             });
         } else if (options && options.overrideJsonStream) {
             await new Promise((fulfill) =>
                 payloadStream
-                    .pipe(pass)
+                    .pipe(transform)
                     .on('error', (err: any) => {
                         errorMessage = err;
                         if (options?.errorCallback) options.errorCallback(err);
                         fulfill(err);
                     })
+                    .pipe(devnull())
                     .on('finish', fulfill),
             );
         } else {
@@ -164,7 +183,8 @@ export default class TimeseriesDataSourceImpl implements DataSource {
                         if (options?.errorCallback) options.errorCallback(err);
                         fulfill(err);
                     })
-                    .pipe(pass)
+                    .pipe(transform)
+                    .pipe(devnull())
                     .on('finish', fulfill),
             );
         }

@@ -203,7 +203,7 @@ export default class ImportRoutes {
                 // @ts-ignore
             } else {
                 const busboy = Busboy({headers: req.headers});
-                const importPromises: Promise<Result<Import | DataStaging[] | boolean>>[] = [];
+                const importPromises: Promise<Result<Import | boolean>>[] = [];
 
                 busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, info: FileInfo) => {
                     const {filename, encoding, mimeType} = info;
@@ -338,7 +338,7 @@ export default class ImportRoutes {
                 // @ts-ignore
             } else {
                 const busboy = Busboy({headers: req.headers});
-                const importPromises: Promise<Result<Import | DataStaging[] | boolean>>[] = [];
+                const importPromises: Promise<Result<Import | boolean>>[] = [];
 
                 busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, info: FileInfo) => {
                     const {filename, encoding, mimeType} = info;

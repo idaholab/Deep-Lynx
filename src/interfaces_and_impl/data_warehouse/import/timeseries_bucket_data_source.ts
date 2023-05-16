@@ -26,7 +26,7 @@ export default class TimeseriesBucketDataSourceImpl implements DataSource {
         }
     }
 
-    ReceiveData(payload: Readable, user: User, options?: ReceiveDataOptions): Promise<Result<Import | DataStaging[] | boolean>> {
+    ReceiveData(payload: Readable, user: User, options?: ReceiveDataOptions): Promise<Result<Import | boolean>> {
         return Promise.resolve(Result.Success(true))
     }
 

@@ -30,7 +30,6 @@ import { Bucket, ChangeBucketPayload } from 'deeplynx-timeseries';
 export class ReceiveDataOptions {
     transaction?: PoolClient;
     importID?: string;
-    returnStagingRecords? = false; // needed if you'd rather return the individual staging records over the import, useful if needing to attach files
     overrideJsonStream? = false; // needed if you're passing raw json objects or an object stream
     transformStream?: Transform; // streams to pipe to, prior to piping to the JSONStream
     bufferSize = 1000; // buffer size for timeseries records to be inserted into the db, modify this at runtime if needed

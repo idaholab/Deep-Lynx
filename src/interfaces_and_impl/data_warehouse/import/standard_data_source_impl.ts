@@ -8,12 +8,13 @@ import Config from '../../../services/config';
 import Import, {DataStaging} from '../../../domain_objects/data_warehouse/import/import';
 import Result from '../../../common_classes/result';
 import {User} from '../../../domain_objects/access_management/user';
-import {PassThrough, Readable, Writable} from 'stream';
+import {PassThrough, Readable, Writable, Transform} from 'stream';
 import TypeMapping from '../../../domain_objects/data_warehouse/etl/type_mapping';
 import {DataSource} from './data_source';
 import {QueueFactory} from '../../../services/queue/queue';
 const JSONStream = require('JSONStream');
 import Cache from '../../../services/cache/cache';
+const devnull = require('dev-null');
 
 /*
     StandardDataSourceImpl is the most basic of data sources, and serves as the base
@@ -36,7 +37,7 @@ export default class StandardDataSourceImpl implements DataSource {
     }
 
     // see the interface declaration's explanation of ReceiveData
-    async ReceiveData(payloadStream: Readable, user: User, options?: ReceiveDataOptions): Promise<Result<Import | DataStaging[] | boolean>> {
+    async ReceiveData(payloadStream: Readable, user: User, options?: ReceiveDataOptions): Promise<Result<Import | boolean>> {
         if (!this.DataSourceRecord || !this.DataSourceRecord.id) {
             return Promise.resolve(Result.Failure('cannot receive data, no underlying or saved data source record'));
         }
@@ -97,72 +98,117 @@ export default class StandardDataSourceImpl implements DataSource {
         // emitting the data straight to the queue
         const saveOperations: Promise<Result<boolean>>[] = [];
 
-        // our PassThrough stream is what actually processes the data, it's the last step in our eventual pipe
-        const pass = new PassThrough({objectMode: true});
+        // our Transform stream is what actually processes the data, it's the last step in our eventual pipe
+        let transform: Transform | undefined = undefined;
         const queue = await QueueFactory();
 
-        // default to storing the raw data
-        if (
-            !this.DataSourceRecord.config?.data_retention_days ||
-            (this.DataSourceRecord.config?.data_retention_days && this.DataSourceRecord.config.data_retention_days !== 0)
-        ) {
-            pass.on('data', (data) => {
-                recordBuffer.push(
-                    new DataStaging({
-                        container_id: this.DataSourceRecord?.container_id,
-                        data_source_id: this.DataSourceRecord!.id!,
-                        import_id: retrievedImport.value.id!,
-                        data,
-                        shape_hash: TypeMapping.objectToShapeHash(data, {
-                            value_nodes: this.DataSourceRecord?.config?.value_nodes,
-                            stop_nodes: this.DataSourceRecord?.config?.stop_nodes,
-                        }),
-                        file_attached: options?.has_files,
-                    }),
-                );
+        // store relevant properties belonging to `this` in variables for use in the transform stream
+        const dataSourceRecord = this.DataSourceRecord!;
+        const stagingRepo = this.#stagingRepo;
+        // set a default buffer size if none specified
+        const bufferSize = (options && options.bufferSize) ? options.bufferSize : 1000;
 
-                // if we've reached the process record limit, insert into the database and wipe the records array
-                // make sure to COPY the array into bulkSave function so that we can push it into the array of promises
-                // and not modify the underlying array on save, allowing us to move asynchronously - if we have an open
-                // websocket we also want to save it immediately
-                if (!options || recordBuffer.length >= options.bufferSize) {
-                    // if we are returning
-                    // the staging records, don't wipe the buffer just keep adding
-                    if (!options || !options.returnStagingRecords) {
+        if (
+            !dataSourceRecord.config?.data_retention_days ||
+            (dataSourceRecord.config?.data_retention_days && dataSourceRecord.config.data_retention_days !== 0)
+        ) {
+            // batch save data and add it to queue
+            transform = new Transform({
+                transform(chunk: any, encoding: any, callback: any) {
+                    recordBuffer.push(
+                        new DataStaging({
+                            container_id: dataSourceRecord.container_id,
+                            data_source_id: dataSourceRecord.id!,
+                            import_id: retrievedImport.value.id!,
+                            data: chunk,
+                            shape_hash: TypeMapping.objectToShapeHash(chunk, {
+                                value_nodes: dataSourceRecord.config?.value_nodes,
+                                stop_nodes: dataSourceRecord.config?.stop_nodes,
+                            }),
+                            file_attached: options?.has_files,
+                        })
+                    );
+
+                    // if we've reached the process record limit, insert into the database and wipe the records array
+                    // make sure to COPY the array into bulkSave function so that we can push it into the array of promises
+                    // and not modify the underlying array on save, allowing us to move asynchronously - if we have an open
+                    // websocket we also want to save it immediately
+                    if (recordBuffer.length >= bufferSize) {
                         const toSave = [...recordBuffer];
                         recordBuffer = [];
-
-                        saveOperations.push(this.#stagingRepo.bulkSaveAndSend(toSave, options?.transaction));
+                        stagingRepo.bulkSaveAndSend(toSave, options?.transaction)
+                            .then(() => {
+                                // @ts-ignore
+                                this.push(new Buffer.from(chunk.toString()));
+                                callback(null);
+                            })
+                            .catch((err) => {
+                                callback(err);
+                            });
+                    } else {
+                        // @ts-ignore
+                        this.push(new Buffer.from(chunk.toString()));
+                        callback(null);
                     }
-                }
+                },
+                objectMode: true,
             });
 
-            // catch any records remaining in the buffer
-            pass.on('end', () => {
+            transform.on('end', () => {
                 saveOperations.push(this.#stagingRepo.bulkSaveAndSend(recordBuffer, options?.transaction));
-            });
+            })
         } else {
             // if data retention isn't configured, or it is 0 - we do not retain the data permanently
             // instead of our pipe saving data staging records to the database and having them emitted
             // later we immediately put the full message on the queue for processing - we also only log
             // errors that we encounter when putting on the queue, we don't fail outright
+            transform = new Transform({
+                transform(chunk: any, encoding: any, callback: any) {
+                    recordBuffer.push(
+                        new DataStaging({
+                            container_id: dataSourceRecord.container_id,
+                            data_source_id: dataSourceRecord.id!,
+                            import_id: retrievedImport.value.id!,
+                            data: chunk,
+                            shape_hash: TypeMapping.objectToShapeHash(chunk, {
+                                value_nodes: dataSourceRecord.config?.value_nodes,
+                                stop_nodes: dataSourceRecord.config?.stop_nodes,
+                            }),
+                            file_attached: options?.has_files,
+                        })
+                    );
 
-            pass.on('data', (data) => {
-                const staging = new DataStaging({
-                    container_id: this.DataSourceRecord?.container_id,
-                    data_source_id: this.DataSourceRecord!.id!,
-                    import_id: retrievedImport.value.id!,
-                    data,
-                    shape_hash: TypeMapping.objectToShapeHash(data, {
-                        value_nodes: this.DataSourceRecord?.config?.value_nodes,
-                        stop_nodes: this.DataSourceRecord?.config?.stop_nodes,
-                    }),
-                    file_attached: options?.has_files,
-                });
+                    if (recordBuffer.length >= bufferSize) {
+                        const toSave = [...recordBuffer];
+                        recordBuffer = [];
+                        queue.Put(Config.process_queue, toSave)
+                            .then(() => {
+                                // @ts-ignore
+                                this.push(new Buffer.from(chunk.toString()));
+                                callback(null);
+                            })
+                            .catch((err) => {
+                                callback(err);
+                                Logger.error(`unable to put data staging record on the queue ${err}`)
+                            });
+                    } else {
+                        // @ts-ignore
+                        this.push(new Buffer.from(chunk.toString()));
+                        callback(null);
+                    }
+                },
+                objectMode: true,
+            });
 
-                if (this.DataSourceRecord && (!this.DataSourceRecord.config?.data_retention_days || this.DataSourceRecord.config?.data_retention_days === 0)) {
-                    queue.Put(Config.process_queue, staging).catch((err) => Logger.error(`unable to put data staging record on the queue ${err}`));
-                }
+            // catch any records remaining in the buffer
+            transform.on('end', () => {
+                queue.Put(Config.process_queue, recordBuffer)
+                    .then(() => {
+                        console.log('All records added to queue successfully');
+                    })
+                    .catch((err) => {
+                        Logger.error('Error while adding staging records to queue', err);
+                    });
             });
         }
 
@@ -182,18 +228,20 @@ export default class StandardDataSourceImpl implements DataSource {
                         if (options.errorCallback) options.errorCallback(err);
                         fulfill(err);
                     })
-                    .pipe(pass)
+                    .pipe(transform!)
+                    .pipe(devnull())
                     .on('finish', fulfill);
             });
         } else if (options && options.overrideJsonStream) {
             await new Promise((fulfill) =>
                 payloadStream
-                    .pipe(pass)
+                    .pipe(transform!)
                     .on('error', (err: any) => {
                         errorMessage = err;
                         if (options.errorCallback) options.errorCallback(err);
                         fulfill(err);
                     })
+                    .pipe(devnull())
                     .on('finish', fulfill),
             );
         } else {
@@ -205,7 +253,8 @@ export default class StandardDataSourceImpl implements DataSource {
                         if (options?.errorCallback) options.errorCallback(err);
                         fulfill(err);
                     })
-                    .pipe(pass)
+                    .pipe(transform!)
+                    .pipe(devnull())
                     .on('finish', fulfill),
             );
         }
@@ -233,11 +282,6 @@ export default class StandardDataSourceImpl implements DataSource {
         if (options?.transaction) {
             const commit = await this.#mapper.completeTransaction(options?.transaction);
             if (commit.isError) return Promise.resolve(Result.Pass(commit));
-        }
-
-        // return the saved buffer as we haven't wiped it, should contain all records with their updated IDs
-        if (options && options.returnStagingRecords) {
-            return new Promise((resolve) => resolve(Result.Success(recordBuffer)));
         }
 
         return new Promise((resolve) => resolve(Result.Success(retrievedImport.value)));
