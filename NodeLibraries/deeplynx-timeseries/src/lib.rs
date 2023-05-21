@@ -23,12 +23,9 @@ use sqlx::postgres::PgPool;
 use sqlx::types::Json;
 use sqlx::{Executor, Pool, Postgres, Transaction};
 use std::collections::HashMap;
-use std::{env, thread};
-use std::future::{Future, IntoFuture};
-use std::io::{BufReader, Read};
-use std::sync::Arc;
-use std::task::Poll;
-use futures::FutureExt;
+use std::io::{Read};
+use std::sync::{Arc, mpsc, Mutex};
+use std::sync::mpsc::{Receiver, Sender};
 use napi::bindgen_prelude::Either14::N;
 use uuid::Uuid;
 use validator::{HasLen, Validate};
@@ -294,7 +291,7 @@ pub struct BucketRepository {
   db: PgPool,
   config: Configuration,
   // this is the channel that we pass data into once the data pipeline has been initiated
-  stream_reader_channel: Option<Arc<tokio::sync::RwLock<tokio::sync::mpsc::Sender<StreamMessage>>>>,
+  stream_reader_channel: Option<Arc<Mutex<Sender<StreamMessage>>>>,
   // this is how we receive status updates from the reader
   reader_status_channel:
     Option<Arc<tokio::sync::RwLock<tokio::sync::mpsc::Receiver<StreamStatusMessage>>>>,
@@ -1307,7 +1304,7 @@ impl BucketRepository {
   /// and node.js - so we basically spin up a thread to handle ingestion and then stream the data from
   /// node.js to it
   pub async fn begin_csv_ingestion(&mut self, bucket_id: i32) -> Result<(), DataError> {
-    let (tx, rx) = tokio::sync::mpsc::channel::<StreamMessage>(2048);
+    let (tx, rx) = mpsc::channel::<StreamMessage>();
     let (status_tx, status_rx) = tokio::sync::mpsc::channel::<StreamStatusMessage>(2048);
     let db_connection = self.db.clone();
 
@@ -1330,7 +1327,7 @@ impl BucketRepository {
     });
 
     // set that status message receiver so that the complete ingestion can wait on it
-    self.stream_reader_channel = Some(Arc::new(tokio::sync::RwLock::new(tx)));
+    self.stream_reader_channel = Some(Arc::new(Mutex::new(tx)));
     self.reader_status_channel = Some(Arc::new(tokio::sync::RwLock::new(status_rx)));
     Ok(())
   }
@@ -1340,7 +1337,7 @@ impl BucketRepository {
   /// and node.js - so we basically spin up a thread to handle ingestion and then stream the data from
   /// node.js to it
   pub async fn begin_legacy_csv_ingestion(&mut self, data_source_id: String, columns: Vec<LegacyTimeseriesColumn>) -> Result<(), DataError> {
-    let (tx, rx) = tokio::sync::mpsc::channel::<StreamMessage>(2048);
+    let (tx, rx) = mpsc::channel::<StreamMessage>();
     let (status_tx, status_rx) = tokio::sync::mpsc::channel::<StreamStatusMessage>(2048);
     let db_connection = self.db.clone();
 
@@ -1365,7 +1362,7 @@ impl BucketRepository {
 
 
     // set that status message receiver so that the complete ingestion can wait on it
-    self.stream_reader_channel = Some(Arc::new(tokio::sync::RwLock::new(tx)));
+    self.stream_reader_channel = Some(Arc::new(Mutex::new(tx)));
     self.reader_status_channel = Some(Arc::new(tokio::sync::RwLock::new(status_rx)));
     Ok(())
   }
@@ -1378,14 +1375,21 @@ impl BucketRepository {
       .as_mut()
       .ok_or(DataError::Unwrap("no reader channel".to_string()))?;
 
-    let channel = channel.write().await;
-    match channel.send(StreamMessage::Write(bytes)).await {
-      Ok(_) => Ok(()),
+    match channel.lock() {
+      Ok(c) => {
+        match c.send(StreamMessage::Write(bytes)){
+          Ok(_) => Ok(()),
+          Err(e) => {
+            c.send(StreamMessage::Close);
+            Err(DataError::Thread(e.to_string()))
+          },
+        }
+      }
       Err(e) => {
-        channel.send(StreamMessage::Close).await;
         Err(DataError::Thread(e.to_string()))
-      },
+      }
     }
+
   }
 
   /// `complete ingestion` waits for either the first error message or complete status from the
@@ -1399,10 +1403,18 @@ impl BucketRepository {
       .ok_or(DataError::Unwrap("no stream status channel".to_string()))?;
 
     {
-      let reader_channel = reader_channel.write().await;
-      // TODO: Find out why this message gets sent but never received
-      match reader_channel.send(StreamMessage::Close).await {
-        Ok(_) => {}
+      match reader_channel.lock() {
+        Ok(c) => {
+          match c.send(StreamMessage::Close) {
+            Ok(_) => {}
+            Err(e) => {
+              return Err(DataError::Thread(format!(
+                "unable to send close message to reader {}",
+                e
+              )))
+            }
+          }
+        }
         Err(e) => {
           return Err(DataError::Thread(format!(
             "unable to send close message to reader {}",
@@ -1455,13 +1467,13 @@ enum StreamStatusMessage {
 }
 
 pub struct NodeStreamReader {
-  channel: tokio::sync::mpsc::Receiver<StreamMessage>,
+  channel: Receiver<StreamMessage>,
   buffer: Vec<u8>,
   is_closed: bool,
 }
 
 impl NodeStreamReader {
-  fn new(rx: tokio::sync::mpsc::Receiver<StreamMessage>) -> Self {
+  fn new(rx: Receiver<StreamMessage>) -> Self {
     NodeStreamReader {
       channel: rx,
       buffer: vec![],
@@ -1493,7 +1505,7 @@ impl Read for NodeStreamReader {
       }
     }
 
-    while let Some(message) = futures::executor::block_on(self.channel.recv()) {
+    while let Ok(message) = self.channel.recv() {
       match message {
         // TODO: Fix hang here
         StreamMessage::Write(bytes) => self.buffer.extend_from_slice(bytes.as_slice()),
