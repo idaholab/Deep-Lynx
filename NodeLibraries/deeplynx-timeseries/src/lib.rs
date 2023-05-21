@@ -1379,7 +1379,6 @@ impl BucketRepository {
       .ok_or(DataError::Unwrap("no reader channel".to_string()))?;
 
     let channel = channel.write().await;
-    println!("{}", channel.is_closed());
     match channel.send(StreamMessage::Write(bytes)).await {
       Ok(_) => Ok(()),
       Err(e) => {
