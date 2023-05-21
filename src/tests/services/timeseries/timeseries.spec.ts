@@ -1,19 +1,23 @@
 import {expect} from 'chai';
-import { PassThrough } from 'stream';
+import {PassThrough} from 'stream';
 import TimeseriesService from '../../../services/timeseries/timeseries';
-import fs from "fs";
+import fs from 'fs';
 
 describe('The Timeseries Bucket service', async () => {
     it('can create a bucket', async () => {
-        const repo = TimeseriesService.Instance;
+        const repo = TimeseriesService.GetInstance();
 
-        const bucket = await (await repo).createBucket({
-            name: "Test Bucket",
-            columns: [{
-                name: "test column",
-                shortName: "test",
-                dataType: "INT"
-            }]
+        const bucket = await (
+            await repo
+        ).createBucket({
+            name: 'Test Bucket',
+            columns: [
+                {
+                    name: 'test column',
+                    shortName: 'test',
+                    dataType: 'INT',
+                },
+            ],
         });
 
         expect(bucket.id).not.undefined;
@@ -26,15 +30,19 @@ describe('The Timeseries Bucket service', async () => {
     });
 
     it('can create two buckets with the same name but different IDs', async () => {
-        const repo = TimeseriesService.Instance;
+        const repo = TimeseriesService.GetInstance();
 
-        const bucket1 = await (await repo).createBucket({
-            name: "Test Bucket",
-            columns: [{
-                name: "test column",
-                shortName: "test",
-                dataType: "INT"
-            }]
+        const bucket1 = await (
+            await repo
+        ).createBucket({
+            name: 'Test Bucket',
+            columns: [
+                {
+                    name: 'test column',
+                    shortName: 'test',
+                    dataType: 'INT',
+                },
+            ],
         });
 
         expect(bucket1.id).not.undefined;
@@ -44,13 +52,17 @@ describe('The Timeseries Bucket service', async () => {
         expect(bucket1.structure[0].dataType).eq('INT');
 
         // should create a new bucket as names are not unique
-        const bucket2 = await (await repo).createBucket({
-            name: "Test Bucket",
-            columns: [{
-                name: "test column",
-                shortName: "test",
-                dataType: "INT"
-            }]
+        const bucket2 = await (
+            await repo
+        ).createBucket({
+            name: 'Test Bucket',
+            columns: [
+                {
+                    name: 'test column',
+                    shortName: 'test',
+                    dataType: 'INT',
+                },
+            ],
         });
 
         expect(bucket2.id).not.undefined;
@@ -67,16 +79,20 @@ describe('The Timeseries Bucket service', async () => {
     });
 
     it('can retrieve a bucket', async () => {
-        const repo = TimeseriesService.Instance;
+        const repo = TimeseriesService.GetInstance();
 
-        const bucket = await (await repo).createBucket({
-            name: "Test Bucket",
-            columns: [{
-                name: "test column",
-                shortName: "test",
-                dataType: "INT"
-            }]
-        })
+        const bucket = await (
+            await repo
+        ).createBucket({
+            name: 'Test Bucket',
+            columns: [
+                {
+                    name: 'test column',
+                    shortName: 'test',
+                    dataType: 'INT',
+                },
+            ],
+        });
         expect(bucket.id).not.undefined;
 
         const retrieved = await (await repo).retrieveBucket(bucket.id);
@@ -91,19 +107,24 @@ describe('The Timeseries Bucket service', async () => {
     });
 
     it('can ingest data into a bucket', async () => {
-        const repo = TimeseriesService.Instance;
+        const repo = TimeseriesService.GetInstance();
 
-        const bucket = await (await repo).createBucket({
-            name: "Test Bucket",
-            columns: [{
-                name: "int",
-                shortName: "int",
-                dataType: "INT"
-            },{
-                name: "bigint",
-                shortName: "bigint",
-                dataType: "BIGINT"
-            }]
+        const bucket = await (
+            await repo
+        ).createBucket({
+            name: 'Test Bucket',
+            columns: [
+                {
+                    name: 'int',
+                    shortName: 'int',
+                    dataType: 'INT',
+                },
+                {
+                    name: 'bigint',
+                    shortName: 'bigint',
+                    dataType: 'BIGINT',
+                },
+            ],
         });
         expect(bucket.id).not.undefined;
         expect(bucket.structure[0].name).eq('int');
@@ -119,9 +140,11 @@ describe('The Timeseries Bucket service', async () => {
             });
 
             pass.on('finish', async () => {
-                (await repo).completeIngestion()
+                (await repo)
+                    .completeIngestion()
                     .then(async () => {
-                        (await repo).deleteBucket(bucket.id)
+                        (await repo)
+                            .deleteBucket(bucket.id)
                             .then(() => resolve())
                             .catch((e) => reject(e));
                     })
@@ -134,28 +157,36 @@ describe('The Timeseries Bucket service', async () => {
     });
 
     it('can update a bucket', async () => {
-        const repo = TimeseriesService.Instance;
+        const repo = TimeseriesService.GetInstance();
 
-        const bucket = await (await repo).createBucket({
-            name: "Test Bucket",
-            columns: [{
-                name: "test column",
-                shortName: "test",
-                dataType: "INT"
-            }]
+        const bucket = await (
+            await repo
+        ).createBucket({
+            name: 'Test Bucket',
+            columns: [
+                {
+                    name: 'test column',
+                    shortName: 'test',
+                    dataType: 'INT',
+                },
+            ],
         });
         expect(bucket.id).not.undefined;
         expect(bucket.name).eq('Test Bucket');
         expect(bucket.structure[0].dataType).eq('INT');
 
-        const newName = "New Bucket";
-        const updated = await (await repo).updateBucket(bucket.id, {
+        const newName = 'New Bucket';
+        const updated = await (
+            await repo
+        ).updateBucket(bucket.id, {
             name: newName,
-            columns: [{
-                name: "test column",
-                shortName: "test",
-                dataType: "TEXT"
-            }]
+            columns: [
+                {
+                    name: 'test column',
+                    shortName: 'test',
+                    dataType: 'TEXT',
+                },
+            ],
         });
         expect(updated.id).not.undefined;
         expect(updated.id).eq(bucket.id);

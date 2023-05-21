@@ -702,7 +702,7 @@ describe('A Timeseries DataSource Implementation can', async () => {
             await timer(1000);
         }
 
-        fs.unlinkSync(__dirname + '/1million.csv');
+        //  fs.unlinkSync(__dirname + '/1million.csv');
         return sourceRepo.delete(source as DataSource, {removeData: true, force: true});
     }).timeout(10000);
 });

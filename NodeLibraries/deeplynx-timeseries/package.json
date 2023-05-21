@@ -32,5 +32,8 @@
     "test": "ava",
     "universal": "napi universal",
     "version": "napi version"
+  },
+  "dependencies": {
+    "dev-null": "^0.1.1"
   }
 }

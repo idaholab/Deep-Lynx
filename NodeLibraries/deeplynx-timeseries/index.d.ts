@@ -22,6 +22,13 @@ export interface BucketColumn {
   numericScale?: number
   maxCharacters?: number
 }
+export interface LegacyTimeseriesColumn {
+  column_name: string
+  property_name: string
+  is_primary_timestamp: boolean
+  type: string
+  date_conversion_format_string?: string
+}
 export interface Bucket {
   id: number
   name: string
@@ -59,10 +66,17 @@ export class BucketRepository {
   /**
    * # Safety
    *
+   * This spawns multithreaded operations so be wary. The beginCsvIngestion function initializes the
+   * repository to receive CSV data from a node.js source
+   */
+  beginLegacyCsvIngestion(dataSourceId: string, columns: Array<LegacyTimeseriesColumn>): Promise<void>
+  /**
+   * # Safety
+   *
    * A "begin_x_ingestion" must have been called successfully before you attempt to read.
    * This is how data is passed into our internal pipeline
    */
-  readData(bytes: Buffer): Promise<void>
+  readData(bytes: Buffer): void
   /**
    * # Safety
    *

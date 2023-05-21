@@ -20,8 +20,17 @@ pub enum DataTypes {
     Uuid,
     Jsonb,
 }
-
-
+#[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
+pub enum LegacyDataTypes {
+    Number,
+    Number64,
+    Float,
+    Float64,
+    Date,
+    String,
+    Boolean,
+    Json
+}
 
 impl DataTypes {
     pub fn to_postgres_string(&self) -> String {
@@ -81,6 +90,21 @@ impl From<String> for DataTypes {
             "UUID" => DataTypes::Uuid,
             "JSONB" => DataTypes::Jsonb,
             _ => DataTypes::Jsonb, // catch all
+        }
+    }
+}
+
+impl From<String> for LegacyDataTypes {
+    fn from(value: String) -> Self {
+        match value.to_lowercase().as_str() {
+            "number" => LegacyDataTypes::Number,
+            "number64" => LegacyDataTypes::Number64,
+            "float" => LegacyDataTypes::Float,
+            "float64" => LegacyDataTypes::Float64,
+            "date" => LegacyDataTypes::Date,
+            "string" => LegacyDataTypes::String,
+            "boolean" => LegacyDataTypes::Boolean,
+            _=> LegacyDataTypes::Json
         }
     }
 }

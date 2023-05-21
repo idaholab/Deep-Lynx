@@ -9,7 +9,7 @@ mod errors;
 mod tests;
 
 use crate::config::Configuration;
-use crate::data_types::DataTypes;
+use crate::data_types::{DataTypes, LegacyDataTypes};
 use crate::errors::{DataError, ValidationError};
 use bytes::Bytes;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime};
@@ -23,6 +23,7 @@ use sqlx::postgres::PgPool;
 use sqlx::types::Json;
 use sqlx::{Executor, Pool, Postgres, Transaction};
 use std::collections::HashMap;
+use std::env;
 use std::io::{BufReader, Read};
 use std::sync::Arc;
 use uuid::Uuid;
@@ -76,6 +77,21 @@ pub struct JsBucketColumn {
   pub numeric_precision: Option<i32>,
   pub numeric_scale: Option<i32>,
   pub max_characters: Option<i32>,
+}
+
+#[derive(Clone, Debug)]
+#[napi(object)]
+pub struct LegacyTimeseriesColumn {
+  #[napi(js_name = "column_name")]
+  pub column_name: String,
+  #[napi(js_name = "property_name")]
+  pub property_name: String,
+  #[napi(js_name = "is_primary_timestamp")]
+  pub is_primary_timestamp: bool,
+  #[napi(js_name = "type")]
+  pub data_type: String,
+  #[napi(js_name = "date_conversion_format_string")]
+  pub date_conversion_format_string: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize, sqlx::FromRow, Clone)]
@@ -274,10 +290,10 @@ pub struct BucketRepository {
   db: PgPool,
   config: Configuration,
   // this is the channel that we pass data into once the data pipeline has been initiated
-  stream_reader_channel: Option<Arc<tokio::sync::RwLock<tokio::sync::mpsc::Sender<StreamMessage>>>>,
+  stream_reader_channel: Option<Arc<tokio::sync::RwLock<tokio::sync::mpsc::UnboundedSender<StreamMessage>>>>,
   // this is how we receive status updates from the reader
   reader_status_channel:
-    Option<Arc<tokio::sync::RwLock<tokio::sync::mpsc::Receiver<StreamStatusMessage>>>>,
+    Option<Arc<tokio::sync::RwLock<tokio::sync::mpsc::UnboundedReceiver<StreamStatusMessage>>>>,
 }
 
 #[napi(js_name = "BucketRepository")]
@@ -402,17 +418,37 @@ impl JsBucketRepository {
   #[napi]
   /// # Safety
   ///
+  /// This spawns multithreaded operations so be wary. The beginCsvIngestion function initializes the
+  /// repository to receive CSV data from a node.js source
+  pub async unsafe fn begin_legacy_csv_ingestion(&mut self, data_source_id: String, columns: Vec<LegacyTimeseriesColumn>) -> Result<(), napi::Error> {
+    let inner = self.inner.as_mut().ok_or(napi::Error::new(
+      napi::Status::GenericFailure,
+      "must call init before calling functions",
+    ))?;
+
+    match inner.begin_legacy_csv_ingestion(data_source_id, columns).await {
+      Ok(_) => Ok(()),
+      Err(e) => Err(napi::Error::new(
+        napi::Status::GenericFailure,
+        e.to_string(),
+      )),
+    }
+  }
+
+  #[napi]
+  /// # Safety
+  ///
   /// A "begin_x_ingestion" must have been called successfully before you attempt to read.
   /// This is how data is passed into our internal pipeline
-  pub async unsafe fn read_data(&mut self, bytes: Buffer) -> Result<(), napi::Error> {
-    let bytes = bytes.into();
+  pub fn read_data(&mut self, bytes: Buffer) -> Result<(), napi::Error> {
+    let bytes: Vec<u8> = bytes.into();
 
     let inner = self.inner.as_mut().ok_or(napi::Error::new(
       napi::Status::GenericFailure,
       "must call init before calling functions",
     ))?;
 
-    match inner.read_data(bytes).await {
+    match futures::executor::block_on(inner.read_data(bytes)) {
       Ok(_) => Ok(()),
       Err(e) => Err(napi::Error::new(
         napi::Status::GenericFailure,
@@ -434,10 +470,12 @@ impl JsBucketRepository {
 
     match inner.complete_ingestion().await {
       Ok(_) => Ok(()),
-      Err(e) => Err(napi::Error::new(
-        napi::Status::GenericFailure,
-        e.to_string(),
-      )),
+      Err(e) => {
+        Err(napi::Error::new(
+          napi::Status::GenericFailure,
+          e.to_string(),
+        ))
+      },
     }
   }
 }
@@ -479,7 +517,7 @@ impl BucketRepository {
     let columns: Vec<ColumnReturn> = sqlx::query_as(
             r#"SELECT table_name, column_name,udt_name, numeric_precision, numeric_scale, character_maximum_length
                 FROM information_schema.columns
-                WHERE table_schema = 'buckets' AND  table_name <> 'buckets' AND table_name <> '_sqlx_migrations' 
+                WHERE table_schema = 'buckets' AND  table_name <> 'buckets' AND table_name <> '_sqlx_migrations'
                 AND column_name <> '_bucket_id' AND column_name <> '_inserted_at' ORDER BY table_name"#
         )
         .fetch_all(&mut transaction)
@@ -631,7 +669,7 @@ impl BucketRepository {
     let columns: Vec<ColumnReturn> = sqlx::query_as(
       r#"SELECT table_name, column_name,udt_name, numeric_precision, numeric_scale, character_maximum_length
                 FROM information_schema.columns
-                WHERE table_schema = 'buckets' AND  table_name <> 'buckets' AND table_name <> '_sqlx_migrations' AND table_name = '$1' 
+                WHERE table_schema = 'buckets' AND  table_name <> 'buckets' AND table_name <> '_sqlx_migrations' AND table_name = '$1'
                 AND column_name <> '_bucket_id' AND column_name <> '_inserted_at' ORDER BY table_name"#,
     )
         .bind(current_bucket.data_table_assignment.clone().ok_or(DataError::Unwrap("table assignment".to_string()))?)
@@ -930,7 +968,7 @@ impl BucketRepository {
       .await?
       .ok_or(DataError::NotFound)?;
 
-    let mut csv_reader = csv::ReaderBuilder::new().flexible(true).from_reader(reader);
+    let mut csv_reader = csv::ReaderBuilder::new().flexible(false).from_reader(reader);
     // let's fetch the headers - also a quick way to check if we're actually dealing with a csv
     // they should stay in the order they are in the CSV - index, csv name, column name
     #[derive(Clone)]
@@ -995,7 +1033,7 @@ impl BucketRepository {
       for position in &positions {
         let value = record
           .get(position.index)
-          .ok_or(DataError::Unwrap("csv record field".to_string()))?;
+          .ok_or(DataError::Unwrap(format!("csv record field: {}, {:?}", position.index, record)))?;
 
         match position.data_type {
           DataTypes::TimestampWithTimezone => {
@@ -1043,6 +1081,99 @@ impl BucketRepository {
         .send([new_record.join(",").as_bytes(), "\n".as_bytes()].concat())
         .await?;
     }
+
+    copier.finish().await?;
+    Ok(())
+  }
+
+  /// ingest_csv_legacy allows us to use the same paradigm as all other bucket ingestion patterns here
+  pub async fn ingest_csv_legacy<T: Read>(
+    db: Pool<Postgres>,
+    reader: T,
+    data_source_id: String,
+    columns: Vec<LegacyTimeseriesColumn>
+  ) -> Result<(), DataError> {
+    let mut csv_reader = csv::ReaderBuilder::new().flexible(true).from_reader(reader);
+    // let's fetch the headers - also a quick way to check if we're actually dealing with a csv
+    // they should stay in the order they are in the CSV - index, csv name, column name
+    #[derive(Clone)]
+    struct Position {
+      index: usize,
+      column_name: String,
+      data_type: LegacyDataTypes,
+      format_string: Option<String>,
+    }
+
+    let mut positions: Vec<Position> = vec![];
+    for (i, header) in csv_reader.headers()?.iter().enumerate() {
+      // check to see if that header exists in the bucket definition, if it does, record its
+      // spot and name
+      match columns
+          .iter()
+          .find(|bc| bc.property_name.as_str() == header)
+      {
+        None => {}
+        Some(bc) => positions.push(Position {
+          index: i,
+          column_name: bc.column_name.clone(),
+          data_type: bc.data_type.clone().into(),
+          format_string: bc.date_conversion_format_string.clone(),
+        }),
+      }
+    }
+
+    if positions.is_empty() {
+      return Err(DataError::CsvValidation(ValidationError::MissingColumns));
+    }
+
+    let column_names: Vec<String> = positions
+        .clone()
+        .iter()
+        .map(|pos| format!("\"{}\"", pos.column_name.clone()))
+        .collect();
+
+    let mut copier = db
+        .copy_in_raw(
+          format!(
+            "COPY y_{}({}) FROM STDIN WITH (FORMAT csv, HEADER FALSE, DELIMITER \",\")",
+            data_source_id,
+            column_names.join(",")
+          )
+              .as_str(),
+        )
+        .await?;
+
+    // in order to append the bucket_id we have to actually parse the csv row per row and send
+    // it into the copier - it's really not that slow since the underlying async reader has is
+    // buffered
+    while let Some(record) = csv_reader.records().next() {
+      let record = record?;
+      let mut new_record: Vec<String> = vec![];
+
+      for position in &positions {
+        let value = record
+            .get(position.index)
+            .ok_or(DataError::Unwrap("csv record field".to_string()))?;
+
+        match position.data_type {
+          LegacyDataTypes::Date => {
+            let format_string = match position.format_string.clone() {
+              None => "%Y-%m-%d %H:%M:%S".to_string(),
+              Some(s) => s,
+            };
+
+            let timestamp = NaiveDateTime::parse_from_str(value, format_string.as_str())?;
+            new_record.push(timestamp.to_string())
+          }
+          _ => new_record.push(value.to_string()),
+        };
+      }
+
+      copier
+          .send([new_record.join(",").as_bytes(), "\n".as_bytes()].concat())
+          .await?;
+    }
+    println!("out of copier");
 
     copier.finish().await?;
     Ok(())
@@ -1172,20 +1303,22 @@ impl BucketRepository {
   /// and node.js - so we basically spin up a thread to handle ingestion and then stream the data from
   /// node.js to it
   pub async fn begin_csv_ingestion(&mut self, bucket_id: i32) -> Result<(), DataError> {
-    let (tx, rx) = tokio::sync::mpsc::channel::<StreamMessage>(2048);
-    let (status_tx, status_rx) = tokio::sync::mpsc::channel::<StreamStatusMessage>(2048);
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<StreamMessage>();
+    let (status_tx, status_rx) = tokio::sync::mpsc::unbounded_channel::<StreamStatusMessage>();
     let db_connection = self.db.clone();
 
     // inner multithreaded loop to handle the copy from the csv file to the db
     tokio::task::spawn(async move {
-      let stream_reader = BufReader::with_capacity(2048, NodeStreamReader::new(rx));
+      let stream_reader = NodeStreamReader::new(rx);
 
-      match BucketRepository::ingest_csv(db_connection, stream_reader, bucket_id).await {
-        Ok(_) => match status_tx.send(StreamStatusMessage::Complete).await {
+      let result = BucketRepository::ingest_csv(db_connection, stream_reader, bucket_id).await;
+      println!("sending stream status close");
+      match result {
+        Ok(_) => match status_tx.send(StreamStatusMessage::Complete){
           Ok(_) => Ok(()),
           Err(e) => Err(DataError::Thread(e.to_string())),
         },
-        Err(e) => match status_tx.send(StreamStatusMessage::Error(e)).await {
+        Err(e) => match status_tx.send(StreamStatusMessage::Error(e)){
           Ok(_) => Ok(()),
           Err(e) => Err(DataError::Thread(format!("ingest csv problem: {}", e))),
         },
@@ -1195,7 +1328,37 @@ impl BucketRepository {
     // set that status message receiver so that the complete ingestion can wait on it
     self.stream_reader_channel = Some(Arc::new(tokio::sync::RwLock::new(tx)));
     self.reader_status_channel = Some(Arc::new(tokio::sync::RwLock::new(status_rx)));
-    println!("channel set");
+    Ok(())
+  }
+
+  /// `begin_legacy_csv_ingestion` intializes a data pipeline and prepares it to receive csv data from a node.js
+  /// readable stream. We have to do things this way because there is no stream interopt between Rust
+  /// and node.js - so we basically spin up a thread to handle ingestion and then stream the data from
+  /// node.js to it
+  pub async fn begin_legacy_csv_ingestion(&mut self, data_source_id: String, columns: Vec<LegacyTimeseriesColumn>) -> Result<(), DataError> {
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<StreamMessage>();
+    let (status_tx, status_rx) = tokio::sync::mpsc::unbounded_channel::<StreamStatusMessage>();
+    let db_connection = self.db.clone();
+
+    // inner multithreaded loop to handle the copy from the csv file to the db
+    tokio::task::spawn(async move {
+      let stream_reader = NodeStreamReader::new(rx);
+
+      match BucketRepository::ingest_csv_legacy(db_connection, stream_reader, data_source_id, columns).await {
+        Ok(_) => match status_tx.send(StreamStatusMessage::Complete) {
+          Ok(_) => Ok(()),
+          Err(e) => Err(DataError::Thread(e.to_string())),
+        },
+        Err(e) => match status_tx.send(StreamStatusMessage::Error(e)) {
+          Ok(_) => Ok(()),
+          Err(e) => Err(DataError::Thread(format!("ingest csv problem: {}", e))),
+        },
+      }
+    });
+
+    // set that status message receiver so that the complete ingestion can wait on it
+    self.stream_reader_channel = Some(Arc::new(tokio::sync::RwLock::new(tx)));
+    self.reader_status_channel = Some(Arc::new(tokio::sync::RwLock::new(status_rx)));
     Ok(())
   }
 
@@ -1208,9 +1371,12 @@ impl BucketRepository {
       .ok_or(DataError::Unwrap("no reader channel".to_string()))?;
 
     let channel = channel.write().await;
-    match channel.send(StreamMessage::Write(bytes)).await {
+    match channel.send(StreamMessage::Write(bytes)) {
       Ok(_) => Ok(()),
-      Err(e) => Err(DataError::Thread(e.to_string())),
+      Err(e) => {
+        channel.send(StreamMessage::Close);
+        Err(DataError::Thread(e.to_string()))
+      },
     }
   }
 
@@ -1225,7 +1391,7 @@ impl BucketRepository {
       .ok_or(DataError::Unwrap("no stream status channel".to_string()))?;
 
     let reader_channel = reader_channel.write().await;
-    match reader_channel.send(StreamMessage::Close).await {
+    match reader_channel.send(StreamMessage::Close) {
       Ok(_) => {}
       Err(e) => {
         return Err(DataError::Thread(format!(
@@ -1235,19 +1401,27 @@ impl BucketRepository {
       }
     }
 
+    println!("sent close message");
     let channel = self
       .reader_status_channel
       .as_mut()
       .ok_or(DataError::Unwrap("no stream status channel".to_string()))?;
 
     let mut channel = channel.write().await;
+
     match channel.recv().await {
-      None => Err(DataError::Thread(
-        "channel closed before message could be received".to_string(),
-      )),
+      None => {
+        Err(DataError::Thread(
+          "channel closed before message could be received".to_string(),
+        ))
+      },
       Some(m) => match m {
-        StreamStatusMessage::Error(e) => Err(e),
-        StreamStatusMessage::Complete => Ok(()),
+        StreamStatusMessage::Error(e) => {
+          Err(e)
+        },
+        StreamStatusMessage::Complete => {
+          Ok(())
+        },
       },
     }
   }
@@ -1257,6 +1431,7 @@ impl BucketRepository {
 This entire section is our async reader for pulling in from node.js streams. This allows us to
 setup an async reader to pass into things like the CSV parser and allows us to async ingest data
  */
+#[derive(Debug)]
 enum StreamMessage {
   Write(Vec<u8>),
   Close,
@@ -1268,13 +1443,13 @@ enum StreamStatusMessage {
 }
 
 pub struct NodeStreamReader {
-  channel: tokio::sync::mpsc::Receiver<StreamMessage>,
+  channel: tokio::sync::mpsc::UnboundedReceiver<StreamMessage>,
   buffer: Vec<u8>,
   is_closed: bool,
 }
 
 impl NodeStreamReader {
-  fn new(rx: tokio::sync::mpsc::Receiver<StreamMessage>) -> Self {
+  fn new(rx: tokio::sync::mpsc::UnboundedReceiver<StreamMessage>) -> Self {
     NodeStreamReader {
       channel: rx,
       buffer: vec![],
@@ -1310,6 +1485,7 @@ impl Read for NodeStreamReader {
       match message {
         StreamMessage::Write(bytes) => self.buffer.extend_from_slice(bytes.as_slice()),
         StreamMessage::Close => {
+          println!("close message received");
           self.is_closed = true;
           buf[..self.buffer.len()].copy_from_slice(self.buffer.as_slice());
           let len = self.buffer.len();
