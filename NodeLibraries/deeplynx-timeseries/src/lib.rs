@@ -1341,7 +1341,7 @@ impl BucketRepository {
   /// node.js to it
   pub async fn begin_legacy_csv_ingestion(&mut self, data_source_id: String, columns: Vec<LegacyTimeseriesColumn>) -> Result<(), DataError> {
     let (tx, rx) = tokio::sync::mpsc::channel::<StreamMessage>(2048);
-    let (status_tx, status_rx) = tokio::sync::mpsc::channel::<StreamStatusMessage>(2058);
+    let (status_tx, status_rx) = tokio::sync::mpsc::channel::<StreamStatusMessage>(2048);
     let db_connection = self.db.clone();
 
      tokio::spawn(async move {
@@ -1398,17 +1398,21 @@ impl BucketRepository {
       .as_mut()
       .ok_or(DataError::Unwrap("no stream status channel".to_string()))?;
 
-    let reader_channel = reader_channel.write().await;
-    match reader_channel.send(StreamMessage::Close).await {
-      Ok(_) => {}
-      Err(e) => {
-        return Err(DataError::Thread(format!(
-          "unable to send close message to reader {}",
-          e
-        )))
+    {
+      let reader_channel = reader_channel.write().await;
+      // TODO: Find out why this message gets sent but never received
+      match reader_channel.send(StreamMessage::Close).await {
+        Ok(_) => {}
+        Err(e) => {
+          return Err(DataError::Thread(format!(
+            "unable to send close message to reader {}",
+            e
+          )))
+        }
       }
     }
 
+    println!("close message sent");
     let channel = self
       .reader_status_channel
       .as_mut()
@@ -1416,6 +1420,7 @@ impl BucketRepository {
 
     let mut channel = channel.write().await;
 
+    // TODO: hangs here because of the reader never sending things back
     match channel.recv().await {
       None => {
         Err(DataError::Thread(
@@ -1490,9 +1495,9 @@ impl Read for NodeStreamReader {
 
     while let Some(message) = futures::executor::block_on(self.channel.recv()) {
       match message {
+        // TODO: Fix hang here
         StreamMessage::Write(bytes) => self.buffer.extend_from_slice(bytes.as_slice()),
         StreamMessage::Close => {
-          println!("close message received");
           self.is_closed = true;
           buf[..self.buffer.len()].copy_from_slice(self.buffer.as_slice());
           let len = self.buffer.len();
