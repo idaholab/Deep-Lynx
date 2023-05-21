@@ -1382,7 +1382,7 @@ impl BucketRepository {
     match channel.send(StreamMessage::Write(bytes)).await {
       Ok(_) => Ok(()),
       Err(e) => {
-        channel.send(StreamMessage::Close);
+        channel.send(StreamMessage::Close).await;
         Err(DataError::Thread(e.to_string()))
       },
     }
