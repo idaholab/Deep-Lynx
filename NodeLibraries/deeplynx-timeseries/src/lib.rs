@@ -23,14 +23,13 @@ use sqlx::postgres::PgPool;
 use sqlx::types::Json;
 use sqlx::{Executor, Pool, Postgres, Transaction};
 use std::collections::HashMap;
-use std::env;
-use std::future::IntoFuture;
+use std::{env, thread};
+use std::future::{Future, IntoFuture};
 use std::io::{BufReader, Read};
 use std::sync::Arc;
 use std::task::Poll;
 use futures::FutureExt;
 use napi::bindgen_prelude::Either14::N;
-use tokio::task::JoinHandle;
 use uuid::Uuid;
 use validator::{HasLen, Validate};
 
@@ -1345,21 +1344,24 @@ impl BucketRepository {
     let (status_tx, status_rx) = tokio::sync::mpsc::channel::<StreamStatusMessage>(2058);
     let db_connection = self.db.clone();
 
-    // inner multithreaded loop to handle the copy from the csv file to the db
-    tokio::task::spawn(async move {
-      let stream_reader = NodeStreamReader::new(rx);
+     tokio::spawn(async move {
+        let stream_reader = NodeStreamReader::new(rx);
 
-      match BucketRepository::ingest_csv_legacy(db_connection, stream_reader, data_source_id, columns).await {
-        Ok(_) => match status_tx.send(StreamStatusMessage::Complete).await{
-          Ok(_) => Ok(()),
-          Err(e) => Err(DataError::Thread(e.to_string())),
-        },
-        Err(e) => match status_tx.send(StreamStatusMessage::Error(e)).await {
-          Ok(_) => Ok(()),
-          Err(e) => Err(DataError::Thread(format!("ingest csv problem: {}", e))),
-        },
-      }
-    });
+        let check = BucketRepository::ingest_csv_legacy(db_connection, stream_reader, data_source_id, columns).await;
+        match  check {
+          Ok(_) => match status_tx.send(StreamStatusMessage::Complete).await{
+            Ok(_) => Ok(()),
+            Err(e) => Err(DataError::Thread(e.to_string())),
+          },
+          Err(e) => {
+            match status_tx.send(StreamStatusMessage::Error(e)).await {
+              Ok(_) => Ok(()),
+              Err(e) => Err(DataError::Thread(format!("ingest csv problem: {}", e))),
+            }
+          },
+        }
+      });
+    // inner multithreaded loop to handle the copy from the csv file to the db
 
 
     // set that status message receiver so that the complete ingestion can wait on it
@@ -1377,6 +1379,7 @@ impl BucketRepository {
       .ok_or(DataError::Unwrap("no reader channel".to_string()))?;
 
     let channel = channel.write().await;
+    println!("{}", channel.is_closed());
     match channel.send(StreamMessage::Write(bytes)).await {
       Ok(_) => Ok(()),
       Err(e) => {

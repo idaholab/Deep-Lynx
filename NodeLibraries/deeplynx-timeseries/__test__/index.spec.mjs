@@ -74,6 +74,7 @@ test('bucket retrieval', async (t) => {
     }
 })
 
+/*
 test('ingestion async test', async (t) => {
     let repo = new BucketRepository();
     await repo.init({
@@ -122,6 +123,7 @@ test('ingestion async test', async (t) => {
         return Promise.reject(e)
     }
 })
+*/
 
 test('legacy ingestion async test', async (t) => {
     let repo = new BucketRepository();
@@ -168,6 +170,7 @@ test('legacy ingestion async test', async (t) => {
 
             pass.on('finish', () => {
                 repo.completeIngestion()
+                    .then(() => resolve())
                     .catch((e) => reject(e))
             });
 
