@@ -131,7 +131,7 @@ test('legacy ingestion async test', async (t) => {
     })
     // should create a new bucket as names are not unique
     try {
-        repo.beginLegacyCsvIngestion('46', [
+        repo.beginLegacyCsvIngestion('CHANGE ME AFTER YOU BUILD A DATA SOURCE', [
             {
                 is_primary_timestamp: true,
                 column_name: "time",
