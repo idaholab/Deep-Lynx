@@ -421,7 +421,7 @@ impl JsBucketRepository {
   ///
   /// This spawns multithreaded operations so be wary. The beginCsvIngestion function initializes the
   /// repository to receive CSV data from a node.js source
-  pub async unsafe fn begin_legacy_csv_ingestion(
+  pub unsafe fn begin_legacy_csv_ingestion(
     &mut self,
     data_source_id: String,
     columns: Vec<LegacyTimeseriesColumn>,
@@ -433,7 +433,6 @@ impl JsBucketRepository {
 
     match inner
       .begin_legacy_csv_ingestion(data_source_id, columns)
-      .await
     {
       Ok(_) => Ok(()),
       Err(e) => Err(napi::Error::new(
@@ -456,7 +455,7 @@ impl JsBucketRepository {
       "must call init before calling functions",
     ))?;
 
-    match futures::executor::block_on(inner.read_data(bytes)) {
+    match inner.read_data(bytes) {
       Ok(_) => Ok(()),
       Err(e) => Err(napi::Error::new(
         napi::Status::GenericFailure,
@@ -1343,7 +1342,7 @@ impl BucketRepository {
   /// readable stream. We have to do things this way because there is no stream interopt between Rust
   /// and node.js - so we basically spin up a thread to handle ingestion and then stream the data from
   /// node.js to it
-  pub async fn begin_legacy_csv_ingestion(
+  pub fn begin_legacy_csv_ingestion(
     &mut self,
     data_source_id: String,
     columns: Vec<LegacyTimeseriesColumn>,
@@ -1379,7 +1378,7 @@ impl BucketRepository {
 
   /// `read_data` is called by the stream to pass data into the previously configured multithreaded
   /// reader. Call this function regardless of what starting method you called to ingest the data
-  pub async fn read_data(&mut self, bytes: Vec<u8>) -> Result<(), DataError> {
+  pub fn read_data(&mut self, bytes: Vec<u8>) -> Result<(), DataError> {
     let channel = self
       .stream_reader_channel
       .as_mut()

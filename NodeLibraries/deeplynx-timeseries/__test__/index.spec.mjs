@@ -133,7 +133,7 @@ test('legacy ingestion async test', async (t) => {
     })
     // should create a new bucket as names are not unique
     try {
-        await repo.beginLegacyCsvIngestion('46', [
+        repo.beginLegacyCsvIngestion('46', [
             {
                 is_primary_timestamp: true,
                 column_name: "time",

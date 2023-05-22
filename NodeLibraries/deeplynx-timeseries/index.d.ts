@@ -69,7 +69,7 @@ export class BucketRepository {
    * This spawns multithreaded operations so be wary. The beginCsvIngestion function initializes the
    * repository to receive CSV data from a node.js source
    */
-  beginLegacyCsvIngestion(dataSourceId: string, columns: Array<LegacyTimeseriesColumn>): Promise<void>
+  beginLegacyCsvIngestion(dataSourceId: string, columns: Array<LegacyTimeseriesColumn>): void
   /**
    * # Safety
    *
