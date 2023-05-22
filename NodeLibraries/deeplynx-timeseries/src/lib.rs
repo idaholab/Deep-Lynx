@@ -15,6 +15,7 @@ use bytes::Bytes;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime};
 use futures::stream::BoxStream;
 use napi::bindgen_prelude::Buffer;
+use napi::bindgen_prelude::Either14::N;
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -23,10 +24,9 @@ use sqlx::postgres::PgPool;
 use sqlx::types::Json;
 use sqlx::{Executor, Pool, Postgres, Transaction};
 use std::collections::HashMap;
-use std::io::{Read};
-use std::sync::{Arc, mpsc, Mutex};
+use std::io::Read;
 use std::sync::mpsc::{Receiver, Sender};
-use napi::bindgen_prelude::Either14::N;
+use std::sync::{mpsc, Arc, Mutex};
 use uuid::Uuid;
 use validator::{HasLen, Validate};
 
@@ -421,13 +421,20 @@ impl JsBucketRepository {
   ///
   /// This spawns multithreaded operations so be wary. The beginCsvIngestion function initializes the
   /// repository to receive CSV data from a node.js source
-  pub async unsafe fn begin_legacy_csv_ingestion(&mut self, data_source_id: String, columns: Vec<LegacyTimeseriesColumn>) -> Result<(), napi::Error> {
+  pub async unsafe fn begin_legacy_csv_ingestion(
+    &mut self,
+    data_source_id: String,
+    columns: Vec<LegacyTimeseriesColumn>,
+  ) -> Result<(), napi::Error> {
     let inner = self.inner.as_mut().ok_or(napi::Error::new(
       napi::Status::GenericFailure,
       "must call init before calling functions",
     ))?;
 
-    match inner.begin_legacy_csv_ingestion(data_source_id, columns).await {
+    match inner
+      .begin_legacy_csv_ingestion(data_source_id, columns)
+      .await
+    {
       Ok(_) => Ok(()),
       Err(e) => Err(napi::Error::new(
         napi::Status::GenericFailure,
@@ -471,12 +478,10 @@ impl JsBucketRepository {
 
     match inner.complete_ingestion().await {
       Ok(_) => Ok(()),
-      Err(e) => {
-        Err(napi::Error::new(
-          napi::Status::GenericFailure,
-          e.to_string(),
-        ))
-      },
+      Err(e) => Err(napi::Error::new(
+        napi::Status::GenericFailure,
+        e.to_string(),
+      )),
     }
   }
 }
@@ -969,7 +974,9 @@ impl BucketRepository {
       .await?
       .ok_or(DataError::NotFound)?;
 
-    let mut csv_reader = csv::ReaderBuilder::new().flexible(false).from_reader(reader);
+    let mut csv_reader = csv::ReaderBuilder::new()
+      .flexible(false)
+      .from_reader(reader);
     // let's fetch the headers - also a quick way to check if we're actually dealing with a csv
     // they should stay in the order they are in the CSV - index, csv name, column name
     #[derive(Clone)]
@@ -1032,9 +1039,10 @@ impl BucketRepository {
       let mut new_record: Vec<String> = vec![];
 
       for position in &positions {
-        let value = record
-          .get(position.index)
-          .ok_or(DataError::Unwrap(format!("csv record field: {}, {:?}", position.index, record)))?;
+        let value = record.get(position.index).ok_or(DataError::Unwrap(format!(
+          "csv record field: {}, {:?}",
+          position.index, record
+        )))?;
 
         match position.data_type {
           DataTypes::TimestampWithTimezone => {
@@ -1092,7 +1100,7 @@ impl BucketRepository {
     db: Pool<Postgres>,
     reader: T,
     data_source_id: String,
-    columns: Vec<LegacyTimeseriesColumn>
+    columns: Vec<LegacyTimeseriesColumn>,
   ) -> Result<(), DataError> {
     let mut csv_reader = csv::ReaderBuilder::new().flexible(true).from_reader(reader);
     // let's fetch the headers - also a quick way to check if we're actually dealing with a csv
@@ -1110,8 +1118,8 @@ impl BucketRepository {
       // check to see if that header exists in the bucket definition, if it does, record its
       // spot and name
       match columns
-          .iter()
-          .find(|bc| bc.property_name.as_str() == header)
+        .iter()
+        .find(|bc| bc.property_name.as_str() == header)
       {
         None => {}
         Some(bc) => positions.push(Position {
@@ -1128,21 +1136,21 @@ impl BucketRepository {
     }
 
     let column_names: Vec<String> = positions
-        .clone()
-        .iter()
-        .map(|pos| format!("\"{}\"", pos.column_name.clone()))
-        .collect();
+      .clone()
+      .iter()
+      .map(|pos| format!("\"{}\"", pos.column_name.clone()))
+      .collect();
 
     let mut copier = db
-        .copy_in_raw(
-          format!(
-            "COPY y_{}({}) FROM STDIN WITH (FORMAT csv, HEADER FALSE, DELIMITER \",\")",
-            data_source_id,
-            column_names.join(",")
-          )
-              .as_str(),
+      .copy_in_raw(
+        format!(
+          "COPY y_{}({}) FROM STDIN WITH (FORMAT csv, HEADER FALSE, DELIMITER \",\")",
+          data_source_id,
+          column_names.join(",")
         )
-        .await?;
+        .as_str(),
+      )
+      .await?;
 
     // in order to append the bucket_id we have to actually parse the csv row per row and send
     // it into the copier - it's really not that slow since the underlying async reader has is
@@ -1153,8 +1161,8 @@ impl BucketRepository {
 
       for position in &positions {
         let value = record
-            .get(position.index)
-            .ok_or(DataError::Unwrap("csv record field".to_string()))?;
+          .get(position.index)
+          .ok_or(DataError::Unwrap("csv record field".to_string()))?;
 
         match position.data_type {
           LegacyDataTypes::Date => {
@@ -1171,8 +1179,8 @@ impl BucketRepository {
       }
 
       copier
-          .send([new_record.join(",").as_bytes(), "\n".as_bytes()].concat())
-          .await?;
+        .send([new_record.join(",").as_bytes(), "\n".as_bytes()].concat())
+        .await?;
     }
     println!("out of copier");
 
@@ -1313,13 +1321,12 @@ impl BucketRepository {
       let stream_reader = NodeStreamReader::new(rx);
 
       let result = BucketRepository::ingest_csv(db_connection, stream_reader, bucket_id).await;
-      println!("sending stream status close");
       match result {
-        Ok(_) => match status_tx.send(StreamStatusMessage::Complete).await{
+        Ok(_) => match status_tx.send(StreamStatusMessage::Complete).await {
           Ok(_) => Ok(()),
           Err(e) => Err(DataError::Thread(e.to_string())),
         },
-        Err(e) => match status_tx.send(StreamStatusMessage::Error(e)).await{
+        Err(e) => match status_tx.send(StreamStatusMessage::Error(e)).await {
           Ok(_) => Ok(()),
           Err(e) => Err(DataError::Thread(format!("ingest csv problem: {}", e))),
         },
@@ -1336,30 +1343,33 @@ impl BucketRepository {
   /// readable stream. We have to do things this way because there is no stream interopt between Rust
   /// and node.js - so we basically spin up a thread to handle ingestion and then stream the data from
   /// node.js to it
-  pub async fn begin_legacy_csv_ingestion(&mut self, data_source_id: String, columns: Vec<LegacyTimeseriesColumn>) -> Result<(), DataError> {
+  pub async fn begin_legacy_csv_ingestion(
+    &mut self,
+    data_source_id: String,
+    columns: Vec<LegacyTimeseriesColumn>,
+  ) -> Result<(), DataError> {
     let (tx, rx) = mpsc::channel::<StreamMessage>();
     let (status_tx, status_rx) = tokio::sync::mpsc::channel::<StreamStatusMessage>(2048);
     let db_connection = self.db.clone();
 
-     tokio::spawn(async move {
-        let stream_reader = NodeStreamReader::new(rx);
+    tokio::spawn(async move {
+      let stream_reader = NodeStreamReader::new(rx);
 
-        let check = BucketRepository::ingest_csv_legacy(db_connection, stream_reader, data_source_id, columns).await;
-        match  check {
-          Ok(_) => match status_tx.send(StreamStatusMessage::Complete).await{
-            Ok(_) => Ok(()),
-            Err(e) => Err(DataError::Thread(e.to_string())),
-          },
-          Err(e) => {
-            match status_tx.send(StreamStatusMessage::Error(e)).await {
-              Ok(_) => Ok(()),
-              Err(e) => Err(DataError::Thread(format!("ingest csv problem: {}", e))),
-            }
-          },
-        }
-      });
-    // inner multithreaded loop to handle the copy from the csv file to the db
-
+      let check =
+        BucketRepository::ingest_csv_legacy(db_connection, stream_reader, data_source_id, columns)
+          .await;
+      println!("sending stream status close");
+      match check {
+        Ok(_) => match status_tx.send(StreamStatusMessage::Complete).await {
+          Ok(_) => Ok(()),
+          Err(e) => Err(DataError::Thread(e.to_string())),
+        },
+        Err(e) => match status_tx.send(StreamStatusMessage::Error(e)).await {
+          Ok(_) => Ok(()),
+          Err(e) => Err(DataError::Thread(format!("ingest csv problem: {}", e))),
+        },
+      }
+    });
 
     // set that status message receiver so that the complete ingestion can wait on it
     self.stream_reader_channel = Some(Arc::new(Mutex::new(tx)));
@@ -1376,20 +1386,15 @@ impl BucketRepository {
       .ok_or(DataError::Unwrap("no reader channel".to_string()))?;
 
     match channel.lock() {
-      Ok(c) => {
-        match c.send(StreamMessage::Write(bytes)){
-          Ok(_) => Ok(()),
-          Err(e) => {
-            c.send(StreamMessage::Close);
-            Err(DataError::Thread(e.to_string()))
-          },
+      Ok(c) => match c.send(StreamMessage::Write(bytes)) {
+        Ok(_) => Ok(()),
+        Err(e) => {
+          c.send(StreamMessage::Close);
+          Err(DataError::Thread(e.to_string()))
         }
-      }
-      Err(e) => {
-        Err(DataError::Thread(e.to_string()))
-      }
+      },
+      Err(e) => Err(DataError::Thread(e.to_string())),
     }
-
   }
 
   /// `complete ingestion` waits for either the first error message or complete status from the
@@ -1404,17 +1409,15 @@ impl BucketRepository {
 
     {
       match reader_channel.lock() {
-        Ok(c) => {
-          match c.send(StreamMessage::Close) {
-            Ok(_) => {}
-            Err(e) => {
-              return Err(DataError::Thread(format!(
-                "unable to send close message to reader {}",
-                e
-              )))
-            }
+        Ok(c) => match c.send(StreamMessage::Close) {
+          Ok(_) => {}
+          Err(e) => {
+            return Err(DataError::Thread(format!(
+              "unable to send close message to reader {}",
+              e
+            )))
           }
-        }
+        },
         Err(e) => {
           return Err(DataError::Thread(format!(
             "unable to send close message to reader {}",
@@ -1434,18 +1437,12 @@ impl BucketRepository {
 
     // TODO: hangs here because of the reader never sending things back
     match channel.recv().await {
-      None => {
-        Err(DataError::Thread(
-          "channel closed before message could be received".to_string(),
-        ))
-      },
+      None => Err(DataError::Thread(
+        "channel closed before message could be received".to_string(),
+      )),
       Some(m) => match m {
-        StreamStatusMessage::Error(e) => {
-          Err(e)
-        },
-        StreamStatusMessage::Complete => {
-          Ok(())
-        },
+        StreamStatusMessage::Error(e) => Err(e),
+        StreamStatusMessage::Complete => Ok(()),
       },
     }
   }
