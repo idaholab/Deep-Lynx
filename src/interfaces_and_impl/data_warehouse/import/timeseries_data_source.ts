@@ -4,7 +4,7 @@ import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/
 import {PassThrough, Readable, Writable, Transform} from 'stream';
 import {User} from '../../../domain_objects/access_management/user';
 import Result from '../../../common_classes/result';
-import Import, {DataStaging} from '../../../domain_objects/data_warehouse/import/import';
+import Import from '../../../domain_objects/data_warehouse/import/import';
 const JSONStream = require('JSONStream');
 const devnull = require('dev-null');
 
@@ -28,19 +28,6 @@ export default class TimeseriesDataSourceImpl implements DataSource {
     }
 
     async fastLoad(payloadStream: Readable): Promise<void> {
-        const formatMemoryUsage = (data: any) => `${Math.round((data / 1024 / 1024) * 100) / 100} MB`;
-
-        const memoryData = process.memoryUsage();
-
-        const memoryUsage = {
-            rss: `${formatMemoryUsage(memoryData.rss)} -> Resident Set Size - total memory allocated for the process execution`,
-            heapTotal: `${formatMemoryUsage(memoryData.heapTotal)} -> total size of the allocated heap`,
-            heapUsed: `${formatMemoryUsage(memoryData.heapUsed)} -> actual memory used during the execution`,
-            external: `${formatMemoryUsage(memoryData.external)} -> V8 external memory`,
-        };
-
-        console.log(memoryUsage);
-
         let timeseriesService = await TimeseriesService.GetInstance();
 
         return new Promise((resolve, reject) => {

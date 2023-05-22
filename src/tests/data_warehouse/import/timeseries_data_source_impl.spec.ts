@@ -20,6 +20,8 @@ import Import from '../../../domain_objects/data_warehouse/import/import';
 import {DataSource} from '../../../interfaces_and_impl/data_warehouse/import/data_source';
 import ImportMapper from '../../../data_access_layer/mappers/data_warehouse/import/import_mapper';
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
+import TimeseriesService from '../../../services/timeseries/timeseries';
+import {LegacyTimeseriesColumn} from 'deeplynx-timeseries';
 
 const promiseExec = promisify(exec);
 const csv = require('csvtojson');
@@ -668,50 +670,34 @@ describe('A Timeseries DataSource Implementation can', async () => {
         expect(results.isError, results.error?.error).false;
         expect(source!.DataSourceRecord?.id).not.undefined;
 
-        let imports = new Import({
-            data_source_id: source?.DataSourceRecord?.id!,
-            status_message: 'ready',
-        });
-
-        await new ImportRepository().save(imports, user);
-        expect(imports.id).not.undefined;
-
-        let loader = fastLoad.new({
-            connectionString: Config.core_db_connection_string as string,
-            dataSource: source?.DataSourceRecord as object,
-            importID: imports.id! as string,
-        });
-
+        let loader = await TimeseriesService.GetInstance();
         const pass = new PassThrough();
 
-        pass.on('data', (chunk) => {
-            fastLoad.read(loader, chunk);
-        });
+        loader.beginLegacyCsvIngestion(
+            source?.DataSourceRecord?.id!,
+            (source?.DataSourceRecord!.config as TimeseriesDataSourceConfig).columns as LegacyTimeseriesColumn[],
+        );
 
-        pass.on('finish', () => {
-            fastLoad.finish(loader);
+        pass.on('data', (chunk) => {
+            loader.readData(chunk);
         });
 
         const stream = fs.createReadStream(__dirname + '/1million.csv');
+
+        pass.on('finish', () => {
+            loader
+                .completeIngestion()
+                .then(() => {
+                    sourceRepo.delete(source as DataSource, {removeData: true, force: true});
+                    fs.unlinkSync(__dirname + '/1million.csv');
+                    done();
+                })
+                .catch((e) => expect.fail(e));
+        });
+
         stream.pipe(pass);
-
-        while (true) {
-            let retrieved = await ImportMapper.Instance.Retrieve(imports.id!);
-            if (!retrieved.isError && retrieved.value.status === 'completed') break;
-
-            await timer(1000);
-        }
-
-        //  fs.unlinkSync(__dirname + '/1million.csv');
-        return sourceRepo.delete(source as DataSource, {removeData: true, force: true});
-    }).timeout(10000);
+    }).timeout(30000);
 });
-
-function timer(ms: number): Promise<any> {
-    return new Promise((resolve) => {
-        setTimeout(() => resolve(true), ms);
-    });
-}
 
 const sampleCSV =
     'Timestamp,Temperature (K),Velocity[i] (m/s),Velocity[j] (m/s),X (m),Y (m),Z (m)\n' +
