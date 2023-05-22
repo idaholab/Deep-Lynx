@@ -12,11 +12,6 @@ import PostgresAdapter from './data_access_layer/mappers/db_adapters/postgres/po
 import OAuthRepository from './data_access_layer/repositories/access_management/oauth_repository';
 import {Migrator} from './data_access_layer/migrate';
 
-const SegfaultHandler = require('segfault-handler');
-import * as dotenv from 'dotenv'; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
-dotenv.config();
-SegfaultHandler.registerHandler('crash.log'); // With no argument, SegfaultHandler will generate a generic log file name
-
 process.on('unhandledRejection', (reason, promise) => {
     BackedLogger.error(`Unhandled rejection at ${promise} reason: ${reason}`);
     process.exit(1);
