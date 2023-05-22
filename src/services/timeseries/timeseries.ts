@@ -46,11 +46,11 @@ export default class TimeseriesService {
         return this.repo.beginCsvIngestion(bucketId);
     }
 
-    beginLegacyCsvIngestion(dataSourceID: string, columns: LegacyTimeseriesColumn[]): Promise<void> {
+    beginLegacyCsvIngestion(dataSourceID: string, columns: LegacyTimeseriesColumn[]): void {
         return this.repo.beginLegacyCsvIngestion(dataSourceID, columns);
     }
 
-    readData(bytes: Buffer): Promise<void> {
+    readData(bytes: Buffer): void {
         return this.repo.readData(bytes);
     }
 

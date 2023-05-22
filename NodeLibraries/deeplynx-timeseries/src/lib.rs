@@ -25,7 +25,7 @@ use sqlx::types::Json;
 use sqlx::{Executor, Pool, Postgres, Transaction};
 use std::collections::HashMap;
 use std::io::Read;
-use std::sync::mpsc::{Receiver, Sender};
+use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 use std::sync::{mpsc, Arc, Mutex};
 use uuid::Uuid;
 use validator::{HasLen, Validate};
@@ -1501,7 +1501,16 @@ impl Read for NodeStreamReader {
       }
     }
 
-    while let Ok(message) = self.channel.recv() {
+    loop {
+      let message = match self.channel.try_recv() {
+        Ok(m) => m,
+          Err(e) => match e {
+            TryRecvError::Empty => continue,
+            TryRecvError::Disconnected => break
+          }
+      };
+
+
       match message {
         // TODO: Fix hang here
         StreamMessage::Write(bytes) => self.buffer.extend_from_slice(bytes.as_slice()),

@@ -273,7 +273,7 @@ mod main_tests {
     let buff = std::fs::read("./test_files/sparse_ingestion_test.csv")?;
 
     bucket_repo.begin_csv_ingestion(bucket.id).await?;
-    bucket_repo.read_data(buff).await?;
+    bucket_repo.read_data(buff)?;
     bucket_repo.complete_ingestion().await?;
 
     let mut out_file = File::create("./test_files/out.csv")?;

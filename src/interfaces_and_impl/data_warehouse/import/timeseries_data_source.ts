@@ -42,39 +42,33 @@ export default class TimeseriesDataSourceImpl implements DataSource {
         console.log(memoryUsage);
 
         let timeseriesService = await TimeseriesService.GetInstance();
-        await timeseriesService.beginLegacyCsvIngestion(
-            this.DataSourceRecord?.id!,
-            (this.DataSourceRecord?.config as TimeseriesDataSourceConfig).columns as LegacyTimeseriesColumn[],
-        );
-
-        const transform = new Transform({
-            transform(chunk: any, encoding: any, callback: any) {
-                timeseriesService
-                    .readData(chunk)
-                    .then(() => {
-                        this.push(chunk);
-                        callback(null);
-                    })
-                    .catch((e) => callback(e));
-            },
-        });
-
-        transform.on('error', (e: any) => {
-            return Promise.resolve(Result.Failure(JSON.stringify(e)));
-        });
 
         return new Promise((resolve, reject) => {
-            payloadStream
-                .pipe(transform)
-                .pipe(devnull())
-                .on('finish', () => {
-                    timeseriesService
-                        .completeIngestion()
-                        .then(() => resolve())
-                        .catch((e) => {
-                            reject(e.message);
-                        });
-                });
+            timeseriesService.beginLegacyCsvIngestion(
+                this.DataSourceRecord?.id!,
+                (this.DataSourceRecord?.config as TimeseriesDataSourceConfig).columns as LegacyTimeseriesColumn[],
+            );
+
+            let pass = new PassThrough();
+
+            pass.on('data', (chunk: any) => {
+                timeseriesService.readData(chunk);
+            });
+
+            pass.on('error', (e: any) => {
+                return Promise.resolve(Result.Failure(JSON.stringify(e)));
+            });
+
+            pass.on('finish', () => {
+                timeseriesService
+                    .completeIngestion()
+                    .then(() => resolve())
+                    .catch((e) => {
+                        reject(e.message);
+                    });
+            });
+
+            payloadStream.pipe(pass);
         });
     }
 

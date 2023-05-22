@@ -170,7 +170,10 @@ test('legacy ingestion async test', async (t) => {
 
             pass.on('finish', () => {
                 repo.completeIngestion()
-                    .then(() => resolve())
+                    .then(() => {
+                        t.assert(true);
+                        resolve()
+                    })
                     .catch((e) => reject(e))
             });
 
