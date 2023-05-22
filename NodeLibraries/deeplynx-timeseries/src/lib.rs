@@ -15,7 +15,6 @@ use bytes::Bytes;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime};
 use futures::stream::BoxStream;
 use napi::bindgen_prelude::Buffer;
-use napi::bindgen_prelude::Either14::N;
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -431,9 +430,7 @@ impl JsBucketRepository {
       "must call init before calling functions",
     ))?;
 
-    match inner
-      .begin_legacy_csv_ingestion(data_source_id, columns)
-    {
+    match inner.begin_legacy_csv_ingestion(data_source_id, columns) {
       Ok(_) => Ok(()),
       Err(e) => Err(napi::Error::new(
         napi::Status::GenericFailure,
@@ -1181,7 +1178,6 @@ impl BucketRepository {
         .send([new_record.join(",").as_bytes(), "\n".as_bytes()].concat())
         .await?;
     }
-    println!("out of copier");
 
     copier.finish().await?;
     Ok(())
@@ -1354,11 +1350,14 @@ impl BucketRepository {
     tokio::spawn(async move {
       let stream_reader = NodeStreamReader::new(rx);
 
-      let check =
-        BucketRepository::ingest_csv_legacy(db_connection, stream_reader, data_source_id, columns)
-          .await;
-      println!("sending stream status close");
-      match check {
+      match BucketRepository::ingest_csv_legacy(
+        db_connection,
+        stream_reader,
+        data_source_id,
+        columns,
+      )
+      .await
+      {
         Ok(_) => match status_tx.send(StreamStatusMessage::Complete).await {
           Ok(_) => Ok(()),
           Err(e) => Err(DataError::Thread(e.to_string())),
@@ -1426,7 +1425,6 @@ impl BucketRepository {
       }
     }
 
-    println!("close message sent");
     let channel = self
       .reader_status_channel
       .as_mut()
@@ -1434,7 +1432,6 @@ impl BucketRepository {
 
     let mut channel = channel.write().await;
 
-    // TODO: hangs here because of the reader never sending things back
     match channel.recv().await {
       None => Err(DataError::Thread(
         "channel closed before message could be received".to_string(),
@@ -1488,31 +1485,29 @@ impl Read for NodeStreamReader {
       let send = self.buffer.clone();
       self.buffer = vec![];
 
-      if send.len() > buf.len() {
+      return if send.len() > buf.len() {
         let (dest, overflow) = send.split_at(buf.len());
 
         buf.copy_from_slice(dest);
         self.buffer.extend_from_slice(overflow);
 
-        return Ok(dest.len());
+        Ok(dest.len())
       } else {
         buf.copy_from_slice(send.as_slice());
-        return Ok(buf.len());
+        Ok(buf.len())
       }
     }
 
     loop {
       let message = match self.channel.try_recv() {
         Ok(m) => m,
-          Err(e) => match e {
-            TryRecvError::Empty => continue,
-            TryRecvError::Disconnected => break
-          }
+        Err(e) => match e {
+          TryRecvError::Empty => continue,
+          TryRecvError::Disconnected => break,
+        },
       };
 
-
       match message {
-        // TODO: Fix hang here
         StreamMessage::Write(bytes) => self.buffer.extend_from_slice(bytes.as_slice()),
         StreamMessage::Close => {
           self.is_closed = true;
