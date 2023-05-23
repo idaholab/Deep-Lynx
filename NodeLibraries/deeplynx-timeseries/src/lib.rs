@@ -14,6 +14,7 @@ use crate::errors::{DataError, ValidationError};
 use bytes::Bytes;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime};
 use futures::stream::BoxStream;
+use futures::StreamExt;
 use napi::bindgen_prelude::Buffer;
 use rand::distributions::Alphanumeric;
 use rand::Rng;
@@ -24,8 +25,13 @@ use sqlx::types::Json;
 use sqlx::{Executor, Pool, Postgres, Transaction};
 use std::collections::HashMap;
 use std::io::Read;
+use std::ops::DerefMut;
+use std::pin::Pin;
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 use std::sync::{mpsc, Arc, Mutex};
+use std::task::{Context, Poll};
+use std::thread;
+use tokio::io::{AsyncRead, ReadBuf};
 use uuid::Uuid;
 use validator::{HasLen, Validate};
 
@@ -290,7 +296,7 @@ pub struct BucketRepository {
   db: PgPool,
   config: Configuration,
   // this is the channel that we pass data into once the data pipeline has been initiated
-  stream_reader_channel: Option<Arc<Mutex<Sender<StreamMessage>>>>,
+  stream_reader_channel: Option<Arc<Mutex<tokio::sync::broadcast::Sender<StreamMessage>>>>,
   // this is how we receive status updates from the reader
   reader_status_channel:
     Option<Arc<tokio::sync::RwLock<tokio::sync::mpsc::Receiver<StreamStatusMessage>>>>,
@@ -1092,13 +1098,15 @@ impl BucketRepository {
   }
 
   /// ingest_csv_legacy allows us to use the same paradigm as all other bucket ingestion patterns here
-  pub async fn ingest_csv_legacy<T: Read>(
+  pub async fn ingest_csv_legacy<T: AsyncRead + Send + Unpin>(
     db: Pool<Postgres>,
     reader: T,
     data_source_id: String,
     columns: Vec<LegacyTimeseriesColumn>,
   ) -> Result<(), DataError> {
-    let mut csv_reader = csv::ReaderBuilder::new().flexible(true).from_reader(reader);
+    let mut csv_reader = csv_async::AsyncReaderBuilder::new()
+      .flexible(true)
+      .create_reader(reader);
     // let's fetch the headers - also a quick way to check if we're actually dealing with a csv
     // they should stay in the order they are in the CSV - index, csv name, column name
     #[derive(Clone)]
@@ -1110,7 +1118,7 @@ impl BucketRepository {
     }
 
     let mut positions: Vec<Position> = vec![];
-    for (i, header) in csv_reader.headers()?.iter().enumerate() {
+    for (i, header) in csv_reader.headers().await?.iter().enumerate() {
       // check to see if that header exists in the bucket definition, if it does, record its
       // spot and name
       match columns
@@ -1151,7 +1159,7 @@ impl BucketRepository {
     // in order to append the bucket_id we have to actually parse the csv row per row and send
     // it into the copier - it's really not that slow since the underlying async reader has is
     // buffered
-    while let Some(record) = csv_reader.records().next() {
+    while let Some(record) = csv_reader.records().next().await {
       let record = record?;
       let mut new_record: Vec<String> = vec![];
 
@@ -1307,13 +1315,14 @@ impl BucketRepository {
   /// and node.js - so we basically spin up a thread to handle ingestion and then stream the data from
   /// node.js to it
   pub async fn begin_csv_ingestion(&mut self, bucket_id: i32) -> Result<(), DataError> {
-    let (tx, rx) = mpsc::channel::<StreamMessage>();
+    let (tx, rx) = tokio::sync::broadcast::channel::<StreamMessage>(2048);
     let (status_tx, status_rx) = tokio::sync::mpsc::channel::<StreamStatusMessage>(2048);
     let db_connection = self.db.clone();
 
+    let inner_tx = tx.clone();
     // inner multithreaded loop to handle the copy from the csv file to the db
     tokio::task::spawn(async move {
-      let stream_reader = NodeStreamReader::new(rx);
+      let stream_reader = NodeStreamReader::new(rx, inner_tx);
 
       let result = BucketRepository::ingest_csv(db_connection, stream_reader, bucket_id).await;
       match result {
@@ -1343,12 +1352,14 @@ impl BucketRepository {
     data_source_id: String,
     columns: Vec<LegacyTimeseriesColumn>,
   ) -> Result<(), DataError> {
-    let (tx, rx) = mpsc::channel::<StreamMessage>();
-    let (status_tx, status_rx) = tokio::sync::mpsc::channel::<StreamStatusMessage>(2048);
+    let (tx, rx) = tokio::sync::broadcast::channel::<StreamMessage>(4096);
+    let (status_tx, status_rx) = tokio::sync::mpsc::channel::<StreamStatusMessage>(4096);
     let db_connection = self.db.clone();
 
+    let tx_inner = tx.clone();
+
     tokio::spawn(async move {
-      let stream_reader = NodeStreamReader::new(rx);
+      let stream_reader = NodeStreamReader::new(rx, tx_inner);
 
       match BucketRepository::ingest_csv_legacy(
         db_connection,
@@ -1378,6 +1389,26 @@ impl BucketRepository {
   /// `read_data` is called by the stream to pass data into the previously configured multithreaded
   /// reader. Call this function regardless of what starting method you called to ingest the data
   pub fn read_data(&mut self, bytes: Vec<u8>) -> Result<(), DataError> {
+    let channel = self
+      .reader_status_channel
+      .as_mut()
+      .ok_or(DataError::Unwrap("no stream status channel".to_string()))?;
+
+    let mut channel = futures::executor::block_on(channel.write());
+
+    match channel.try_recv() {
+      Ok(m) => match m {
+        StreamStatusMessage::Error(e) => return Err(e),
+        StreamStatusMessage::Complete => return Ok(()),
+      },
+      Err(e) => match e {
+        tokio::sync::mpsc::error::TryRecvError::Empty => {}
+        tokio::sync::mpsc::error::TryRecvError::Disconnected => {
+          return Err(DataError::Thread("status thread disconnected".to_string()))
+        }
+      },
+    }
+
     let channel = self
       .stream_reader_channel
       .as_mut()
@@ -1448,7 +1479,7 @@ impl BucketRepository {
 This entire section is our async reader for pulling in from node.js streams. This allows us to
 setup an async reader to pass into things like the CSV parser and allows us to async ingest data
  */
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum StreamMessage {
   Write(Vec<u8>),
   Close,
@@ -1460,17 +1491,109 @@ enum StreamStatusMessage {
 }
 
 pub struct NodeStreamReader {
-  channel: Receiver<StreamMessage>,
+  channel: tokio::sync::broadcast::Receiver<StreamMessage>,
+  test: tokio::sync::broadcast::Sender<StreamMessage>,
   buffer: Vec<u8>,
   is_closed: bool,
+  message: Option<StreamMessage>,
 }
 
 impl NodeStreamReader {
-  fn new(rx: Receiver<StreamMessage>) -> Self {
+  fn new(
+    rx: tokio::sync::broadcast::Receiver<StreamMessage>,
+    test: tokio::sync::broadcast::Sender<StreamMessage>,
+  ) -> Self {
     NodeStreamReader {
       channel: rx,
+      test,
       buffer: vec![],
       is_closed: false,
+      message: None,
+    }
+  }
+}
+
+impl AsyncRead for NodeStreamReader {
+  fn poll_read(
+    mut self: Pin<&mut Self>,
+    cx: &mut Context<'_>,
+    buf: &mut ReadBuf<'_>,
+  ) -> Poll<std::io::Result<()>> {
+    if self.is_closed {
+      return Poll::Ready(Ok(()));
+    }
+
+    if self.buffer.len() >= buf.initialized().len() {
+      let send = self.buffer.clone();
+      self.buffer = vec![];
+
+      return if send.len() > buf.initialized().len() {
+        let (dest, overflow) = send.split_at(buf.initialized().len());
+
+        buf.put_slice(dest);
+        self.buffer.extend_from_slice(overflow);
+
+        Poll::Ready(Ok(()))
+      } else {
+        buf.put_slice(send.as_slice());
+        Poll::Ready(Ok(()))
+      };
+    }
+
+    loop {
+      let message = match self.channel.try_recv() {
+        Ok(m) => m,
+        Err(e) => match e {
+          tokio::sync::broadcast::error::TryRecvError::Empty => {
+            let waker = cx.waker().clone();
+            let sub = self.test.subscribe();
+            tokio::spawn(async move {
+              loop {
+                if sub.is_empty() {
+                  continue;
+                } else {
+                  break;
+                }
+              }
+
+              waker.wake();
+            });
+            return Poll::Pending;
+          }
+          tokio::sync::broadcast::error::TryRecvError::Closed
+          | tokio::sync::broadcast::error::TryRecvError::Lagged(_) => break,
+        },
+      };
+
+      match message {
+        StreamMessage::Write(bytes) => self.buffer.extend_from_slice(bytes.as_slice()),
+        StreamMessage::Close => {
+          self.is_closed = true;
+          buf.put_slice(self.buffer.as_slice());
+          self.buffer = vec![];
+
+          return Poll::Ready(Ok(()));
+        }
+      }
+
+      if self.buffer.len() >= buf.initialized().len() {
+        break;
+      }
+    }
+
+    let send = self.buffer.clone();
+    self.buffer = vec![];
+
+    if send.len() > buf.initialized().len() {
+      let (dest, overflow) = send.split_at(buf.initialized().len());
+
+      buf.put_slice(dest);
+      self.buffer.extend_from_slice(overflow);
+
+      Poll::Ready(Ok(()))
+    } else {
+      buf.put_slice(send.as_slice());
+      Poll::Ready(Ok(()))
     }
   }
 }
@@ -1495,15 +1618,16 @@ impl Read for NodeStreamReader {
       } else {
         buf.copy_from_slice(send.as_slice());
         Ok(buf.len())
-      }
+      };
     }
 
     loop {
       let message = match self.channel.try_recv() {
         Ok(m) => m,
         Err(e) => match e {
-          TryRecvError::Empty => continue,
-          TryRecvError::Disconnected => break,
+          tokio::sync::broadcast::error::TryRecvError::Empty => continue,
+          tokio::sync::broadcast::error::TryRecvError::Closed => break,
+          tokio::sync::broadcast::error::TryRecvError::Lagged(_) => break,
         },
       };
 

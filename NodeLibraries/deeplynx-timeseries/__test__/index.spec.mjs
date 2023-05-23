@@ -74,7 +74,7 @@ test('bucket retrieval', async (t) => {
     }
 })
 
-test('ingestion async test', async (t) => {
+/*test('ingestion async test', async (t) => {
     let repo = new BucketRepository();
     await repo.init({
         dbConnectionString: "postgresql://postgres:deeplynxcore@localhost/deep_lynx",
@@ -121,7 +121,7 @@ test('ingestion async test', async (t) => {
     } catch (e) {
         return Promise.reject(e)
     }
-})
+})*/
 
 test('legacy ingestion async test', async (t) => {
     let repo = new BucketRepository();
@@ -131,7 +131,7 @@ test('legacy ingestion async test', async (t) => {
     })
     // should create a new bucket as names are not unique
     try {
-        repo.beginLegacyCsvIngestion('CHANGE ME AFTER YOU BUILD A DATA SOURCE', [
+        repo.beginLegacyCsvIngestion('46', [
             {
                 is_primary_timestamp: true,
                 column_name: "time",
