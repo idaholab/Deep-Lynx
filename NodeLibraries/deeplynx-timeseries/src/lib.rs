@@ -296,7 +296,7 @@ pub struct BucketRepository {
   db: PgPool,
   config: Configuration,
   // this is the channel that we pass data into once the data pipeline has been initiated
-  stream_reader_channel: Option<Arc<Mutex<tokio::sync::broadcast::Sender<StreamMessage>>>>,
+  stream_reader_channel: Option<Arc<tokio::sync::broadcast::Sender<StreamMessage>>>,
   // this is how we receive status updates from the reader
   reader_status_channel:
     Option<Arc<tokio::sync::RwLock<tokio::sync::mpsc::Receiver<StreamStatusMessage>>>>,
@@ -1338,7 +1338,7 @@ impl BucketRepository {
     });
 
     // set that status message receiver so that the complete ingestion can wait on it
-    self.stream_reader_channel = Some(Arc::new(Mutex::new(tx)));
+    self.stream_reader_channel = Some(Arc::new(tx));
     self.reader_status_channel = Some(Arc::new(tokio::sync::RwLock::new(status_rx)));
     Ok(())
   }
@@ -1381,7 +1381,7 @@ impl BucketRepository {
     });
 
     // set that status message receiver so that the complete ingestion can wait on it
-    self.stream_reader_channel = Some(Arc::new(Mutex::new(tx)));
+    self.stream_reader_channel = Some(Arc::new(tx));
     self.reader_status_channel = Some(Arc::new(tokio::sync::RwLock::new(status_rx)));
     Ok(())
   }
@@ -1411,18 +1411,15 @@ impl BucketRepository {
 
     let channel = self
       .stream_reader_channel
-      .as_mut()
+      .clone()
       .ok_or(DataError::Unwrap("no reader channel".to_string()))?;
 
-    match channel.lock() {
-      Ok(c) => match c.send(StreamMessage::Write(bytes)) {
-        Ok(_) => Ok(()),
-        Err(e) => {
-          c.send(StreamMessage::Close);
-          Err(DataError::Thread(e.to_string()))
-        }
-      },
-      Err(e) => Err(DataError::Thread(e.to_string())),
+    match channel.send(StreamMessage::Write(bytes)) {
+      Ok(_) => Ok(()),
+      Err(e) => {
+        channel.send(StreamMessage::Close);
+        Err(DataError::Thread(e.to_string()))
+      }
     }
   }
 
@@ -1437,16 +1434,8 @@ impl BucketRepository {
       .ok_or(DataError::Unwrap("no stream status channel".to_string()))?;
 
     {
-      match reader_channel.lock() {
-        Ok(c) => match c.send(StreamMessage::Close) {
-          Ok(_) => {}
-          Err(e) => {
-            return Err(DataError::Thread(format!(
-              "unable to send close message to reader {}",
-              e
-            )))
-          }
-        },
+      match reader_channel.send(StreamMessage::Close) {
+        Ok(_) => {}
         Err(e) => {
           return Err(DataError::Thread(format!(
             "unable to send close message to reader {}",
