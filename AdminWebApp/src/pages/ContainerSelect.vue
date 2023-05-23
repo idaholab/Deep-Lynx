@@ -14,7 +14,7 @@
             <v-col cols="7">
               <v-container class="py-9 pl-6 pr-9 d-flex">
                 <div class="align-self-center ma-auto">
-                  <h2 class="text-h2 text-center mb-4">{{$t('containers.container')}}</h2>
+                  <h2 class="text-h2 text-center mb-4">{{$t('general.welcome')}}</h2>
                   <error-banner :message="errorMessage"></error-banner>
                   <p>{{$t('help.chooseContainer')}}</p>
                   <v-form>

@@ -1043,7 +1043,7 @@
                 indeterminate
                 v-if="loading"
             ></v-progress-circular>
-            <span v-if="!loading">{{ $t("general.edit") }}</span>
+            <span v-if="!loading">{{ $t("general.save") }}</span>
           </v-btn>
 
           <v-btn

@@ -205,7 +205,7 @@
           <v-btn color="error" @click="reviewMappings = false; importedMappingResults = []">{{$t('general.endReview')}}</v-btn>
         </v-toolbar>
 
-        <v-col :cols="4" class="mt-2 mb-n3"><div class="box edited mr-2"></div><p>{{$t('transformations.deprecatedParams')}} <info-tooltip :message="$t('help.deprecatedParams')"></info-tooltip></p></v-col>
+        <v-col :cols="4" class="mt-2 mb-n3"><div class="box edited mr-2"></div><p>{{$t('transformations.deprecated')}} <info-tooltip :message="$t('help.deprecatedParams')"></info-tooltip></p></v-col>
         <v-data-table
             v-if="!selectedMetatype && !selectedRelationshipPair && !reviewMappings"
             :headers="headers()"
