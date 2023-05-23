@@ -88,7 +88,7 @@ test('ingestion async test', async (t) => {
                 name: "int",
                 shortName: "int",
                 dataType: "INT"
-            },{
+            }, {
                 name: "bigint",
                 shortName: "bigint",
                 dataType: "BIGINT"
@@ -115,7 +115,67 @@ test('ingestion async test', async (t) => {
                     .catch((e) => reject(e))
             });
 
-            let stream = fs.createReadStream('./test_files/sparse_ingestion_test.csv');
+            let stream = fs.createReadStream('./test_files/1milliontest.csv');
+            stream.pipe(pass);
+        })
+    } catch (e) {
+        return Promise.reject(e)
+    }
+})
+
+test('legacy ingestion async test', async (t) => {
+    let repo = new BucketRepository();
+    await repo.init({
+        dbConnectionString: "postgresql://postgres:deeplynxcore@localhost/deep_lynx",
+        maxColumns: 100
+    })
+    // should create a new bucket as names are not unique
+    try {
+        repo.beginLegacyCsvIngestion('CHANGE ME', [
+            {
+                is_primary_timestamp: true,
+                column_name: "time",
+                property_name: "time",
+                type: "date",
+                date_conversion_format_string: "%Y-%m-%d %H:%M:%S%.f"
+            },
+            {
+                is_primary_timestamp: false,
+                column_name: "int",
+                property_name: 'int',
+                type: 'number'
+            },
+            {
+                is_primary_timestamp: false,
+                column_name: "bigint",
+                property_name: 'bigint',
+                type: 'number64'
+            },
+            {
+                is_primary_timestamp: false,
+                column_name: "int_again",
+                property_name: 'int_again',
+                type: 'number'
+            }
+        ])
+
+        return new Promise((resolve, reject) => {
+            const pass = new PassThrough();
+
+            pass.on('data', (chunk) => {
+                repo.readData(chunk)
+            });
+
+            pass.on('finish', () => {
+                repo.completeIngestion()
+                    .then(() => {
+                        t.assert(true);
+                        resolve()
+                    })
+                    .catch((e) => reject(e))
+            });
+
+            let stream = fs.createReadStream('./test_files/1milliontestlegacy.csv');
             stream.pipe(pass);
         })
     } catch (e) {

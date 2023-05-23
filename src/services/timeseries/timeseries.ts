@@ -1,29 +1,24 @@
-import { BucketRepository, ChangeBucketPayload, Bucket } from "deeplynx-timeseries";
-import Config from "../config";
+import {BucketRepository, ChangeBucketPayload, Bucket, LegacyTimeseriesColumn} from 'deeplynx-timeseries';
+import Config from '../config';
 
 export default class TimeseriesService {
-
-    private static instance: TimeseriesService;
     private repo: BucketRepository;
 
-    public static get Instance(): Promise<TimeseriesService> {
-        if (!TimeseriesService.instance) {
-            TimeseriesService.instance = new TimeseriesService();
-            return new Promise((resolve, reject) => {
-                TimeseriesService.instance.init(Config.core_db_connection_string)
-                    .then(() => {
-                        resolve(TimeseriesService.instance);
-                    })
-                    .catch(e => {
-                        reject(e)
-                    })
-            })
-        }
-
-        return Promise.resolve(TimeseriesService.instance);
+    public static GetInstance(): Promise<TimeseriesService> {
+        const instance = new TimeseriesService();
+        return new Promise((resolve, reject) => {
+            instance
+                .init(Config.core_db_connection_string)
+                .then(() => {
+                    resolve(instance);
+                })
+                .catch((e) => {
+                    reject(e);
+                });
+        });
     }
 
-    private init(dbConnection: string, maxColumns?: number): Promise<void> {
+    init(dbConnection: string, maxColumns?: number): Promise<void> {
         return this.repo.init({dbConnectionString: dbConnection, maxColumns});
     }
 
@@ -51,7 +46,11 @@ export default class TimeseriesService {
         return this.repo.beginCsvIngestion(bucketId);
     }
 
-    readData(bytes: Buffer): Promise<void> {
+    beginLegacyCsvIngestion(dataSourceID: string, columns: LegacyTimeseriesColumn[]): void {
+        return this.repo.beginLegacyCsvIngestion(dataSourceID, columns);
+    }
+
+    readData(bytes: Buffer): void {
         return this.repo.readData(bytes);
     }
 
