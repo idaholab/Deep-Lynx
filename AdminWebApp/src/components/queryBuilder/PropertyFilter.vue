@@ -8,7 +8,7 @@
             item-value="property_name"
             :disabled="disabled"
             v-model="property"
-            :label="$t('queryBuilder.propertyKey')"
+            :label="$t('properties.name')"
         ></v-combobox>
       </v-col>
       <v-col :cols="3">
@@ -16,7 +16,7 @@
       </v-col>
       <v-col :cols="6">
         <v-text-field v-if="operator !== 'in'"
-          :placeholder="$t('queryBuilder.typeToAdd')"
+          :placeholder="$t('general.typeToAdd')"
           @change="setValue"
           :disabled="disabled"
           v-model="value"
@@ -25,7 +25,7 @@
           :disabled="disabled"
           multiple
           clearable
-          :placeholder="$t('queryBuilder.typeToAdd')"
+          :placeholder="$t('general.typeToAdd')"
           @change="setValue"
           v-model="value"
         ></v-combobox>

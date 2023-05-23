@@ -8,21 +8,21 @@
             color="white"
             :class="`${alert.type}--text`"
             @click="authorizeContainer(alert.id)"
-          >{{$t('containerAlert.authorize')}}</v-btn>
+          >{{$t('containers.acknowledgeAlert')}}</v-btn>
           <v-btn v-else
             color="white"
             :class="`${alert.type}--text`"
             @click="acknowledgeAlert(alert.id)" 
-          >{{$t('containerAlert.acknowledge')}}</v-btn>
+          >{{$t('containers.acknowledgeAlert')}}</v-btn>
         </div>
         
-        <p v-else>{{$t('containerAlert.containerAdminAcknowledge')}}</p>
+        <p v-else>{{$t('containers.adminAlert')}}</p>
       </v-alert>
     </div>
 
     <div v-for="version in versions" :key="version.id">
       <v-alert type="warning" style="margin: 40px 40px 0px 40px">
-        <p>{{$t('containerAlert.generatingOntology')}} - {{version.name}}</p>
+        <p>{{$t('ontology.generating')}} - {{version.name}}</p>
         <v-progress-linear color="white" indeterminate></v-progress-linear>
       </v-alert>
     </div>

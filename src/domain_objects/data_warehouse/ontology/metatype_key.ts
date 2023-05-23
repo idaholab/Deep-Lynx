@@ -3,7 +3,7 @@ import {IsArray, IsBoolean, IsDate, IsIn, IsNotEmpty, IsObject, IsOptional, IsSt
 import {Type} from 'class-transformer';
 
 /*
-    MetatypeKey represents a metatype key record in the Deep Lynx database and the various
+    MetatypeKey represents a metatype key record in the DeepLynx database and the various
     validations required for said record to be considered valid.
  */
 export default class MetatypeKey extends BaseDomainClass {

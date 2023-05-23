@@ -1,13 +1,13 @@
 <template>
   <v-container>
     <v-row>
-      <v-col :cols="3" style="padding-top:30px" class="text-right">{{$t('queryBuilder.originalDataID')}}</v-col>
+      <v-col :cols="3" style="padding-top:30px" class="text-right">{{$t('general.originalID')}}</v-col>
       <v-col :cols="3">
         <operators-select @selected="setOperator" :operator="operator" :disabled="disabled"></operators-select>
       </v-col>
       <v-col :cols="6">
         <v-text-field v-if="operator !== 'in'"
-          :placeholder="$t('queryBuilder.typeToAdd')"
+          :placeholder="$t('general.typeToAdd')"
           @change="setValue"
           :disabled="disabled"
           v-model="value"
@@ -15,7 +15,7 @@
         <v-combobox v-if="operator === 'in'"
           multiple
           clearable
-          :placeholder="$t('queryBuilder.typeToAdd')"
+          :placeholder="$t('general.typeToAdd')"
           @change="setValue"
           :disabled="disabled"
           v-model="value"

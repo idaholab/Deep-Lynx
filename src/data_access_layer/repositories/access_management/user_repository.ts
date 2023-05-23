@@ -120,7 +120,7 @@ export default class UserRepository extends Repository implements RepositoryInte
 
             // we send the email after the transaction has completed, as we won't actually be failing on email failure
             if (Config.email_validation_enforced) {
-                void Emailer.Instance.send(u.email, 'Validate Deep Lynx Email Address', ValidateEmailTemplate(u.id!, u.email_validation_token!)).then(
+                void Emailer.Instance.send(u.email, 'Validate DeepLynx Email Address', ValidateEmailTemplate(u.id!, u.email_validation_token!)).then(
                     (result) => {
                         if (result.isError) Logger.debug(`unable to send email verification email ${result.error?.error}`);
                     },
@@ -299,7 +299,7 @@ export default class UserRepository extends Repository implements RepositoryInte
         // is valid by virtue of it failing to send
         const sentEmail = await Emailer.Instance.send(
             resetUser.value.email,
-            'Reset Password Deep Lynx',
+            'Reset Password DeepLynx',
             ResetPasswordEmailTemplate(resetUser.value.email, resetUser.value.reset_token!),
         );
         if (sentEmail.isError) {
@@ -360,7 +360,7 @@ export default class UserRepository extends Repository implements RepositoryInte
     }
 
     // this allows authorized users to invite either registered or new users to an
-    // existing Deep Lynx container by providing their email. Currently this is only
+    // existing DeepLynx container by providing their email. Currently this is only
     // used by the Admin Web App
     async inviteUserToContainer(user: User, invite: ContainerUserInvite): Promise<Result<boolean>> {
         const containerRepo = new ContainerRepository();
@@ -383,7 +383,7 @@ export default class UserRepository extends Repository implements RepositoryInte
         // invite
         void Emailer.Instance.send(
             created.value.email,
-            'Invitation to Deep Lynx Container',
+            'Invitation to DeepLynx Container',
             ContainerInviteEmailTemplate(created.value.token!, container.isError ? created.value.container!.id! : container.value.name),
         ).then((result) => {
             if (result.isError) Logger.error(`unable to send container invitation email`);

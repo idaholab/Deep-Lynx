@@ -1,12 +1,12 @@
 <template>
   <v-dialog v-model="dialog" max-width="80%" @click:outside="errorMessage = ''; dialog = false; clearNewFileSet()">
     <template v-slot:activator="{ on }">
-      <v-btn color="primary" dark class="mt-2" v-on="on">{{$t("fileManager.newFileSet")}}</v-btn>
+      <v-btn color="primary" dark class="mt-2" v-on="on">{{$t("files.createSet")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline text-h3">{{$t("fileManager.createFileSet")}}</span>
+        <span class="headline text-h3">{{$t("files.newSet")}}</span>
       </v-card-title>
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
@@ -25,16 +25,16 @@
                   multiple
                   show-size
                   truncate-length="50"
-                  label="WebGL Files"
+                  :label="$t('files.webGL')"
                   @change="addFiles"
                   v-model="filesToUpload"
-                  :rules="[v => v ? v.length > 0 || $t('fileManager.filesRequired') : '']"
+                  :rules="[v => v ? v.length > 0 || $t('validation.required') : '']"
               ></v-file-input>
 
               <v-text-field
                   v-model="tagName"
-                  :label="$t('fileManager.tagName')"
-                  :rules="[v => !!v || $t('fileManager.tagRequired')]"
+                  :label="$t('tags.name')"
+                  :rules="[v => !!v || $t('validation.required')]"
               ></v-text-field>
 
             </v-form>
@@ -44,12 +44,12 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" text @click="clearNewFileSet" >{{$t("home.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="clearNewFileSet" >{{$t("general.cancel")}}</v-btn>
         <v-btn
             color="primary"
             text
             @click="createFileSet" >
-          <span v-if="!filesLoading">{{$t("home.create")}}</span>
+          <span v-if="!filesLoading">{{$t("general.create")}}</span>
           <v-progress-circular indeterminate v-if="filesLoading"></v-progress-circular>
         </v-btn>
       </v-card-actions>

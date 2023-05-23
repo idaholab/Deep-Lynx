@@ -8,7 +8,7 @@ import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_do
 import Container from '../ontology/container';
 
 /*
-    Tag represents a tag record in the Deep Lynx database and the various
+    Tag represents a tag record in the DeepLynx database and the various
     validations required for said record to be considered valid.
  */
 export default class Tag extends BaseDomainClass {

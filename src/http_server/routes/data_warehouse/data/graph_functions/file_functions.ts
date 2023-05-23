@@ -111,7 +111,7 @@ export default class FileFunctions {
         });
 
         // hold on to the field data, we consider this metadata and will create
-        // a record to be ingested by deep lynx once the busboy finishes parsing
+        // a record to be ingested by DeepLynx once the busboy finishes parsing
         busboy.on('field', (fieldName: string, value: any) => {
             metadata[fieldName] = value;
             metadataFieldCount++;
@@ -119,7 +119,7 @@ export default class FileFunctions {
 
         busboy.on('finish', () => {
             // if there is no additional metadata we do not not create information
-            // to be processed by Deep Lynx, simply store the file and make it available
+            // to be processed by DeepLynx, simply store the file and make it available
             // via the normal file querying channels
             void Promise.all(files)
                 .then((results) => {
@@ -304,7 +304,7 @@ export default class FileFunctions {
         });
 
         // hold on to the field data, we consider this metadata and will create
-        // a record to be ingested by deep lynx once the busboy finishes parsing
+        // a record to be ingested by DeepLynx once the busboy finishes parsing
         busboy.on('field', (fieldName: string, value: any) => {
             metadata[fieldName] = value;
             metadataFieldCount++;
@@ -312,7 +312,7 @@ export default class FileFunctions {
 
         busboy.on('finish', () => {
             // if there is no additional metadata we do not not create information
-            // to be processed by Deep Lynx, simply store the file and make it available
+            // to be processed by DeepLynx, simply store the file and make it available
             // via the normal file querying channels
             void Promise.all(files)
                 .then((results) => {

@@ -415,7 +415,7 @@ export class TimeseriesBucketDataSourceConfig extends BaseDataSourceConfig {
 }
 
 /*
-    DataSourceRecord represents a data source record in the Deep Lynx database and the various
+    DataSourceRecord represents a data source record in the DeepLynx database and the various
     validations required for said record to be considered valid.
  */
 export default class DataSourceRecord extends BaseDomainClass {

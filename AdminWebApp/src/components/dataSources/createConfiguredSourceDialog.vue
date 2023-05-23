@@ -1,12 +1,12 @@
 <template>
   <v-dialog v-model="dialog" max-width="80%" @click:outside="reset()">
     <template v-slot:activator="{on}">
-      <v-btn color="primary" dark class="mt-2" v-on="on">{{$t('configuredSource.addNew')}}</v-btn>
+      <v-btn color="primary" dark class="mt-2" v-on="on">{{$t('dataSources.addConfigured')}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline text-h3">{{$t('configuredSource.new')}}</span>
+        <span class="headline text-h3">{{$t('dataSources.newConfigured')}}</span>
       </v-card-title>
 
       <v-card-text>
@@ -17,7 +17,7 @@
               v-model="type"
               :items="adapterTypes()"
               @input="selectAdapter"
-              :label="$t('createDataSource.sourceType')"
+              :label="$t('dataSources.selectType')"
               required
             />
           </v-col>
@@ -31,23 +31,23 @@
             <v-row>
               <v-col :cols="12">
                 <v-text-field
-                  :label="$t('createDataSource.p6alias')"
+                  :label="$t('dataSources.alias')"
                   v-model="config.name"
-                  :rules="[v => !!v || 'Required']"
+                  :rules="[v => !!v || $t('validation.required')]"
                 />
               </v-col>
             </v-row>
             <v-row>
               <v-col :cols="6">
                 <v-text-field
-                  :label="$t('createDataSource.p6endpoint')"
+                  :label="$t('general.endpoint')"
                   v-model="config.endpoint"
-                  :rules="[v => !!v || 'Required']"
+                  :rules="[v => !!v || $t('validation.required')]"
                 />
               </v-col>
               <v-col :cols="6">
                 <v-text-field
-                  :label="$t('createDataSource.p6projectID')"
+                  :label="$t('general.projectID')"
                   v-model="config.projectID"
                 />
               </v-col>
@@ -58,13 +58,13 @@
             
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" text @click="reset()">{{$t('home.cancel')}}</v-btn>
+        <v-btn color="primary" text @click="reset()">{{$t('general.cancel')}}</v-btn>
         <v-btn
           :disabled="!valid"
           color="primary"
           dark
           @click="createConfig"
-        >{{$t('home.create')}}</v-btn>
+        >{{$t('general.create')}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -91,7 +91,7 @@ export default class CreateConfiguredSourceDialog extends Vue {
 
   adapterTypes() {
     const types = [
-      {text: this.$t('createDataSource.p6'), value: 'p6', description: this.$t('createDataSource.p6description')}
+      {text: this.$t('dataSources.p6Name'), value: 'p6', description: this.$t('dataSources.p6description')}
     ]
 
     return types

@@ -9,7 +9,7 @@
           <v-toolbar
               flat
           >
-            <v-toolbar-title>{{$t('nodeFiles.attachedFiles')}}</v-toolbar-title>
+            <v-toolbar-title>{{$t('files.attached')}}</v-toolbar-title>
             <v-divider
                 class="mx-4"
                 inset
@@ -29,7 +29,7 @@
                     v-bind="attrs"
                     v-on="on"
                 >
-                  {{$t('nodeFiles.addFile')}}
+                  {{$t('files.add')}}
                 </v-btn>
               </template>
 
@@ -39,7 +39,7 @@
                 </v-card-title>
                 <v-card-text>
                   <v-progress-linear indeterminate v-if="fileLoading"></v-progress-linear>
-                  <v-file-input v-if="!fileLoading" :label="$t('nodeFiles.selectFile')" @change="addFile"></v-file-input>
+                  <v-file-input v-if="!fileLoading" :label="$t('files.selectToUpload')" @change="addFile"></v-file-input>
                 </v-card-text>
               </v-card>
             </v-dialog>
@@ -53,7 +53,7 @@
             <template v-slot:activator="{on, attrs}">
               <v-icon v-bind="attrs" v-on="on" @click="copyID(item.id)">{{copy}}</v-icon>
             </template>
-            <span>{{$t('nodeFiles.copyID')}} </span>
+            <span>{{$t('general.copyID')}} </span>
             <span>{{item.id}}</span>
           </v-tooltip>
         </template>
@@ -192,11 +192,11 @@ export default class NodeFilesDialog extends Vue {
 
   headers() {
     return [
-      {text: this.$t('nodeFiles.id'), value: 'id', sortable: false},
-      {text: this.$t('nodeFiles.fileName'), value: 'file_name'},
-      {text: this.$t('nodeFiles.fileSize'), value: 'file_size'},
-      {text: this.$t('nodeFiles.lastModified'), value: 'modified_at'},
-      {text: this.$t('nodeFiles.actions'), value: 'actions', sortable: false}
+      {text: this.$t('general.id'), value: 'id', sortable: false},
+      {text: this.$t('files.name'), value: 'file_name'},
+      {text: this.$t('files.fileSize'), value: 'file_size'},
+      {text: this.$t('general.modifiedAt'), value: 'modified_at'},
+      {text: this.$t('general.actions'), value: 'actions', sortable: false}
     ]
   }
 
@@ -250,7 +250,7 @@ export default class NodeFilesDialog extends Vue {
     axios.get(url, config)
         .then((response: AxiosResponse) => {
           if (response.status > 299 || response.status < 200) {
-            this.errorMessage = `Unable to download file`
+            this.errorMessage = this.$t('files.downloadError') as string;
           } else {
             const fetchedURL = window.URL.createObjectURL(new Blob([response.data]))
             const link = document.createElement('a')

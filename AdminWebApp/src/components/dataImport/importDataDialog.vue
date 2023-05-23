@@ -1,12 +1,12 @@
 <template>
   <v-dialog v-model="dialog" max-width="500px">
     <template v-slot:activator="{ on }">
-      <v-btn color="primary" :disabled="disabled" dark class="mt-1" v-on="on">Import Data</v-btn>
+      <v-btn color="primary" :disabled="disabled" dark class="mt-1" v-on="on">{{$t('imports.data')}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline text-h3">Import Data (csv, json, and xml accepted)</span>
+        <span class="headline text-h3">{{$t('imports.dataDescription')}}</span>
       </v-card-title>   
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
@@ -14,7 +14,7 @@
           <v-col :cols="12">
             <v-form ref="form" lazy-validation>
               <v-file-input 
-                label=".json, .xml, .csv" 
+                :label="$t('imports.fileTypes')" 
                 @change="addFiles"
               />
             </v-form>
@@ -24,8 +24,8 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" text @click="clear" >{{$t("home.cancel")}}</v-btn>
-        <v-btn color="primary" text @click="uploadImport" ><div v-if="!loading">{{$t("home.upload")}}</div><div v-else>
+        <v-btn color="primary" text @click="clear" >{{$t("general.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="uploadImport" ><div v-if="!loading">{{$t("general.upload")}}</div><div v-else>
           <v-progress-circular indeterminate></v-progress-circular>
         </div></v-btn>
       </v-card-actions>
