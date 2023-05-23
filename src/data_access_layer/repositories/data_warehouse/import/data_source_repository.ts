@@ -38,7 +38,7 @@ export default class DataSourceRepository extends Repository implements Reposito
     #importRepo = new ImportRepository();
     #factory = new DataSourceFactory();
     #groupBy?: string[];
-    #timeseriesBucket = TimeseriesService.GetInstance();
+    #timeseriesBucket = TimeseriesService.GetInstance;
 
     async delete(t: DataSource, options?: DeleteOptions): Promise<Result<boolean>> {
         if (!t.DataSourceRecord || !t.DataSourceRecord.id)
@@ -47,7 +47,7 @@ export default class DataSourceRepository extends Repository implements Reposito
 
         const config = t.DataSourceRecord.config as TimeseriesBucketDataSourceConfig;
         if (t.DataSourceRecord.adapter_type === 'timeseries_bucket' && config.bucket!.id) {
-            await (await this.#timeseriesBucket).deleteBucket(config.bucket!.id);
+            await (await this.#timeseriesBucket()).deleteBucket(config.bucket!.id);
         }
 
         if (options) {
@@ -109,7 +109,7 @@ export default class DataSourceRepository extends Repository implements Reposito
                 const bucketId = originalConfig.bucket!.id;
 
                 // update bucket according to the payload
-                const bucket = await (await this.#timeseriesBucket).updateBucket(bucketId, changeBucketPayload);
+                const bucket = await (await this.#timeseriesBucket()).updateBucket(bucketId, changeBucketPayload);
                 config.bucket = bucket;
 
                 // reset changeBucketPayload to undefined in case future updates don't require bucket update
@@ -133,7 +133,7 @@ export default class DataSourceRepository extends Repository implements Reposito
             const config = toSave.config as TimeseriesBucketDataSourceConfig;
             if (toSave.adapter_type === 'timeseries_bucket') {
                 const changeBucketPayload = config.change_bucket_payload!;
-                const bucket = await (await this.#timeseriesBucket).createBucket(changeBucketPayload);
+                const bucket = await (await this.#timeseriesBucket()).createBucket(changeBucketPayload);
                 config.bucket = bucket;
                 // reset changeBucketPayload to undefined in case future updates don't require bucket update
                 config.change_bucket_payload = undefined;
@@ -384,7 +384,7 @@ export class DataSourceFactory {
         | P6DataSourceImpl
         | TimeseriesBucketDataSourceImpl
         | undefined
-        > {
+    > {
         switch (sourceRecord.adapter_type) {
             case 'http': {
                 return Promise.resolve(new HttpDataSourceImpl(sourceRecord));
