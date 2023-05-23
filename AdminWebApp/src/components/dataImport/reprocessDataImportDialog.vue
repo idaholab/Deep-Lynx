@@ -12,15 +12,15 @@
               @click="initiate()"
           >mdi-restore</v-icon>
         </template>
-       <span>{{$t('reprocessDataImport.tooltip')}}</span>
+       <span>{{$t('imports.reprocessDescription')}}</span>
       </v-tooltip>
 
-      <v-btn v-if="!displayIcon" color="primary" dark class="mb-1" v-on="on">{{$t("reprocessDataImport.reprocessImport")}}</v-btn>
+      <v-btn v-if="!displayIcon" color="primary" dark class="mb-1" v-on="on">{{$t("imports.reprocessTitle")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline text-h3">{{$t('reprocessDataImport.title')}}</span>
+        <span class="headline text-h3">{{$t('imports.reprocessTitle')}}</span>
       </v-card-title>   
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
@@ -28,7 +28,7 @@
           <v-col :cols="12">
             <div>
               <v-alert type="warning">
-                {{$t('reprocessDataImport.warning')}}
+                {{$t('warnings.reprocessImport')}}
               </v-alert>
             </div>
           </v-col>
@@ -38,10 +38,10 @@
       <v-card-actions>
         <div v-if="!loading">
           <v-spacer></v-spacer>
-          <v-btn color="primary" text @click="reset()">{{$t("reprocessDataImport.cancel")}}</v-btn>
+          <v-btn color="primary" text @click="reset()">{{$t("general.cancel")}}</v-btn>
           <v-btn color="error" text :disabled="countDown > 0" @click="reprocessImport()">
-            <span>{{$t("reprocessDataImport.reprocess")}}</span>
-            <span v-if="countDown > 0">{{$t('reprocessDataImport.in')}} {{countDown}}</span>
+            <span>{{$t("general.reprocess")}}</span>
+            <span v-if="countDown > 0">{{$t('operators.in')}} {{countDown}}</span>
           </v-btn>
         </div>
        <v-progress-linear indeterminate v-if="loading"></v-progress-linear>

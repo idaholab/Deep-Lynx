@@ -4,7 +4,7 @@ import {Type} from 'class-transformer';
 
 /*
     MetatypeRelationshipKey represents a metatype relationship key record in the
-    Deep Lynx database and the various validations required for said record to be
+    DeepLynx database and the various validations required for said record to be
     considered valid.
  */
 export default class MetatypeRelationshipKey extends BaseDomainClass {

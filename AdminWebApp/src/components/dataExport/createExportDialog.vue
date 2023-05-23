@@ -7,12 +7,12 @@
         class="mr-2"
         v-on="on"
       >mdi-card-plus</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("createExport.createExport")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("exports.create")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline text-h3">{{$t("createExport.formTitle")}}</span>
+        <span class="headline text-h3">{{$t("exports.createNew")}}</span>
       </v-card-title>   
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
@@ -26,32 +26,32 @@
               <v-select
                   :items="destinationTypes"
                   @input="selectDestinationType"
-                  :label="$t('createExport.destinationType')"
+                  :label="$t('exports.destinationType')"
                   return-object
                   item-text="name"
                   required
               >
-                <template slot="append-outer"><info-tooltip :message="$t('createExport.destinationHelp')"></info-tooltip> </template>
+                <template slot="append-outer"><info-tooltip :message="$t('help.exportDestination')"></info-tooltip> </template>
               </v-select>
 
               <v-select
                   v-if="adapters.length > 0"
                   :items="adapters"
                   @input="selectAdapter"
-                  :label="$t('createExport.adapter')"
+                  :label="$t('exports.protocol')"
                   required
               >
-                <template slot="append-outer"><info-tooltip :message="$t('createExport.adapterHelp')"></info-tooltip> </template>
+                <template slot="append-outer"><info-tooltip :message="$t('help.exportProtocol')"></info-tooltip> </template>
               </v-select>
 
               <div v-if="adapter  === 'gremlin'">
-                <h3>{{$t('createExport.gremlinConfiguration')}}</h3>
+                <h3>{{$t('exports.gremlinConfiguration')}}</h3>
                 <v-text-field
                     v-model="gremlinConfig.traversal_source"
                     required
                 >
-                  <template v-slot:label>{{$t('createExport.traversalSource')}} <small style="color:red" >*</small></template>
-                  <template slot="append-outer"><info-tooltip :message="$t('createExport.traversalSourceHelp')"></info-tooltip> </template>
+                  <template v-slot:label>{{$t('exports.traversal')}} <small style="color:red" >*</small></template>
+                  <template slot="append-outer"><info-tooltip :message="$t('help.exportTraversal')"></info-tooltip> </template>
                 </v-text-field>
 
                 <v-row>
@@ -60,8 +60,8 @@
                         v-model="gremlinConfig.user"
                         required
                     >
-                      <template v-slot:label>{{$t('createExport.user')}}</template>
-                      <template slot="append-outer"><info-tooltip :message="$t('createExport.userHelp')"></info-tooltip> </template>
+                      <template v-slot:label>{{$t('general.username')}}</template>
+                      <template slot="append-outer"><info-tooltip :message="$t('help.exportUsername')"></info-tooltip> </template>
                     </v-text-field>
                   </v-col>
                   <v-col :cols="6">
@@ -69,8 +69,8 @@
                         v-model="gremlinConfig.key"
                         required
                     >
-                      <template v-slot:label>{{$t('createExport.key')}}</template>
-                      <template slot="append-outer"><info-tooltip :message="$t('createExport.keyHelp')"></info-tooltip> </template>
+                      <template v-slot:label>{{$t('general.password')}}</template>
+                      <template slot="append-outer"><info-tooltip :message="$t('help.exportPassword')"></info-tooltip> </template>
                     </v-text-field>
                   </v-col>
                 </v-row>
@@ -78,42 +78,42 @@
                     v-model="gremlinConfig.endpoint"
                     required
                 >
-                  <template v-slot:label>{{$t('createExport.endpoint')}} <small style="color:red" >*</small></template>
-                  <template slot="append-outer"><info-tooltip :message="$t('createExport.endpointHelp')"></info-tooltip> </template>
+                  <template v-slot:label>{{$t('general.endpoint')}} <small style="color:red" >*</small></template>
+                  <template slot="append-outer"><info-tooltip :message="$t('help.exportEndpoint')"></info-tooltip> </template>
                 </v-text-field>
                 <v-text-field
                     v-model="gremlinConfig.port"
                     required
                 >
-                  <template v-slot:label>{{$t('createExport.port')}} <small style="color:red" >*</small></template>
-                  <template slot="append-outer"><info-tooltip :message="$t('createExport.portHelp')"></info-tooltip> </template>
+                  <template v-slot:label>{{$t('general.port')}} <small style="color:red" >*</small></template>
+                  <template slot="append-outer"><info-tooltip :message="$t('help.exportPort')"></info-tooltip> </template>
                 </v-text-field>
                 <v-text-field
                     v-model="gremlinConfig.path"
                     required
                 >
-                  <template v-slot:label>{{$t('createExport.path')}}</template>
-                  <template slot="append-outer"><info-tooltip :message="$t('createExport.pathHelp')"></info-tooltip> </template>
+                  <template v-slot:label>{{$t('general.path')}}</template>
+                  <template slot="append-outer"><info-tooltip :message="$t('help.exportPath')"></info-tooltip> </template>
                 </v-text-field>
                 <v-text-field
                     v-model="gremlinConfig.writes_per_second"
                     required
                     type="number"
                 >
-                  <template v-slot:label>{{$t('createExport.writes')}} <small style="color:red" >*</small></template>
-                  <template slot="append-outer"><info-tooltip :message="$t('createExport.writesHelp')"></info-tooltip> </template>
+                  <template v-slot:label>{{$t('exports.wps')}} <small style="color:red" >*</small></template>
+                  <template slot="append-outer"><info-tooltip :message="$t('help.exportWrites')"></info-tooltip> </template>
                 </v-text-field>
               </div>
             </v-form>
-            <p><span style="color:red">*</span> = {{$t('createExport.requiredField')}}</p>
+            <p><span style="color:red">*</span> = {{$t('validation.required')}}</p>
           </v-col>
         </v-row>
       </v-card-text>
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" text @click="dialog = false" >{{$t("home.cancel")}}</v-btn>
-        <v-btn color="primary" text @click="createExport" >{{$t("home.create")}}</v-btn>
+        <v-btn color="primary" text @click="dialog = false" >{{$t("general.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="createExport" >{{$t("general.create")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -150,11 +150,11 @@ export default class CreateExportDialog extends Vue {
   select = ""
   select_auth = ""
   destinationTypes: destination[] = [
-    {name: "AWS Neptune", adapters: ["gremlin"]},
-    {name: "Neo4J", adapters: ["gremlin"]},
-    {name: "CosmosDB", adapters: ["gremlin"]},
-    {name: "JanusGraph", adapters: ["gremlin"]},
-    {name: "TinkerPop Enabled System", adapters: ["gremlin"]}
+    {name: this.$t('exports.neptune') as string, adapters: ["gremlin"]},
+    {name: this.$t('exports.neo4j') as string, adapters: ["gremlin"]},
+    {name: this.$t('exports.cosmo') as string, adapters: ["gremlin"]},
+    {name: this.$t('exports.janus') as string, adapters: ["gremlin"]},
+    {name: this.$t('exports.tinkerPop') as string, adapters: ["gremlin"]}
   ]
   // this will be dynamically filled in based on the destination_type selection
   adapters: string[] = []
@@ -204,7 +204,7 @@ export default class CreateExportDialog extends Vue {
     } as ExportT)
     .then(result => {
       if(!result) {
-        this.errorMessage = this.$t('createExport.errorCreatingAPI') as string
+        this.errorMessage = this.$t('errors.errorCommunicating') as string
       } else {
         this.dialog = false
 
@@ -212,7 +212,7 @@ export default class CreateExportDialog extends Vue {
         this.reset()
       }
     })
-    .catch(e => this.errorMessage = this.$t('createExport.errorCreatingAPI') as string + e)
+    .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
   }
 
 }

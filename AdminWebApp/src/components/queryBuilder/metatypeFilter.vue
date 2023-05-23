@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-row>
-      <v-col :cols="3" style="padding-top:30px" class="text-right">{{$t('queryBuilder.metatype')}}</v-col>
+      <v-col :cols="3" style="padding-top:30px" class="text-right">{{$t('classes.class')}}</v-col>
       <v-col :cols="3">
         <operators-select
             :disabled="disabled"
@@ -19,13 +19,13 @@
             @selected="setMetatype"></search-metatypes>
         <v-checkbox 
           v-model="limitOntologyVersion" 
-          :label="$t('queryBuilder.limitOntology')"
+          :label="$t('query.limitOntology')"
           :disabled="disabled"
         />
       </v-col>
     </v-row>
     <v-row v-if="metatype !== ''">
-      <v-col align="left"><p>{{$t('queryBuilder.PropertyFilter')}}</p></v-col>
+      <v-col align="left"><p>{{$t('query.PropertyFilter')}}</p></v-col>
       <v-col v-if="loading" :cols="12" align="center"><v-progress-circular indeterminate></v-progress-circular></v-col>
       <v-col v-if="!loading" :cols="12" align="center">
         <div v-for="part in keyQueryParts" :key="part.id" style="margin-top: 10px">
@@ -39,7 +39,7 @@
               @update="updateQueryPart(part, ...arguments)"></property-filter>
         </div>
       </v-col>
-      <v-col v-if="!loading" :cols="12" align="center">{{$t('queryBuilder.clickToAddProperty')}}</v-col>
+      <v-col v-if="!loading" :cols="12" align="center">{{$t('query.clickToAddProperty')}}</v-col>
       <v-col v-if="!loading" :cols="12" align="center">
         <v-icon
             large
@@ -80,9 +80,9 @@ export default class MetatypeFilter extends Vue {
   limitOntologyVersion = false
 
   operators = [
-    {text: 'equals', value: 'eq'},
-    {text: 'not equals', value: 'neq'},
-    {text: 'in', value: 'in'},
+    {text: (this.$t('operators.equals') as string), value: 'eq'},
+    {text: (this.$t('operators.notEquals') as string), value: 'neq'},
+    {text: (this.$t('operators.in') as string), value: 'in'},
   ]
 
   beforeMount() {

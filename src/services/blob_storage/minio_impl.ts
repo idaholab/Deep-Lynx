@@ -11,7 +11,7 @@ const digestStream = require('digest-stream');
 import Config from '../config';
 
 /*
-    AzureBlobImpl allows Deep Lynx to store and retrieve any kind of file using
+    AzureBlobImpl allows DeepLynx to store and retrieve any kind of file using
     Microsoft Azure's Blob storage.
  */
 export default class MinioBlobImpl implements BlobStorage {

@@ -1,4 +1,4 @@
-﻿This project contains code from Idaho National Laboratory's Deep Lynx: Digital Engineering Integration Hub  Project
+﻿This project contains code from Idaho National Laboratory's DeepLynx: Digital Engineering Integration Hub  Project
 Github URL /IdahoLab/DeepLynx
 Licensed under MIT License.
 

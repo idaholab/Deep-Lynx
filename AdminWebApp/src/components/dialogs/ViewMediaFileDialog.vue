@@ -7,12 +7,12 @@
           class="mr-2"
           v-on="on"
       >mdi-eye</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("fileManager.viewFile")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("general.view")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline text-h3">{{$t("fileManager.viewFile")}}</span>
+        <span class="headline text-h3">{{$t("general.view")}}</span>
       </v-card-title>
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
@@ -25,7 +25,7 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" text @click="close" >{{$t("fileManager.close")}}</v-btn>
+        <v-btn color="primary" text @click="close" >{{$t("general.close")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

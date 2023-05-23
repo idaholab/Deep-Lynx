@@ -2,16 +2,18 @@
   <div>
     <v-card>
       <v-toolbar flat color="white">
-        <v-toolbar-title>{{$t('home.ontologyVersioningDescription')}}<br><span class="text-caption">{{$t('home.ontologyVersioningLongDescription')}}</span></v-toolbar-title>
+        <v-toolbar-title>{{$t('ontology.versioningSubtitle')}}<br><span class="text-caption">{{$t('ontology.versioningDescription')}}</span></v-toolbar-title>
       </v-toolbar>
 
       <error-banner :message="errorMessage"></error-banner>
       <success-banner :message="successMessage"></success-banner>
       <v-tabs grow>
         <v-tab @click="activeTab = 'ontologyVersions'; listOntologyVersions()">
-          {{ $t('ontologyVersioning.ontologyVersions') }}
+          {{ $t('ontology.versions') }}
         </v-tab>
-        <v-tab @click="activeTab = 'changelists'; listChangelists()">{{ $t('ontologyVersioning.changelists') }}</v-tab>
+        <v-tab @click="activeTab = 'changelists'; listChangelists()">
+          {{ $t('changelists.changelists') }}
+        </v-tab>
       </v-tabs>
       <v-card v-if="activeTab ==='ontologyVersions'">
         <v-data-table
@@ -39,7 +41,7 @@
                   mdi-backup-restore
                 </v-icon>
               </template>
-              <span>{{$t('ontologyVersioning.rollbackOntology')}}</span>
+              <span>{{$t('ontology.rollbackDescription')}}</span>
             </v-tooltip>
           </template>
 
@@ -72,7 +74,7 @@
                   mdi-swap-horizontal
                 </v-icon>
               </template>
-              <span>{{$t('ontologyVersioning.applyChangelist')}}</span>
+              <span>{{$t('changelists.apply')}}</span>
             </v-tooltip>
 
             <v-tooltip bottom v-if="item.status === 'ready' || item.status === 'rejected'">
@@ -85,7 +87,7 @@
                   mdi-send
                 </v-icon>
               </template>
-              <span>{{$t('ontologyVersioning.sendApproval')}}</span>
+              <span>{{$t('changelists.send')}}</span>
             </v-tooltip>
 
             <v-tooltip bottom
@@ -100,7 +102,7 @@
                   mdi-check
                 </v-icon>
               </template>
-              <span>{{$t('ontologyVersioning.approveChangelist')}}</span>
+              <span>{{$t('changelists.approve')}}</span>
             </v-tooltip>
 
             <v-tooltip bottom
@@ -115,7 +117,7 @@
                   mdi-close
                 </v-icon>
               </template>
-              <span>{{$t('ontologyVersioning.revokeApproval')}}</span>
+              <span>{{$t('changelists.reject')}}</span>
             </v-tooltip>
 
             <v-tooltip bottom
@@ -130,7 +132,7 @@
                   mdi-delete
                 </v-icon>
               </template>
-              <span>{{$t('ontologyVersioning.deleteChangelist')}}</span>
+              <span>{{$t('changelists.delete')}}</span>
             </v-tooltip>
 
           </template>
@@ -157,18 +159,18 @@ export default class OntologyVersioning extends Vue {
 
   versionHeaders() {
     return [{
-      text: this.$t('ontologyVersioning.id'),
+      text: this.$t('general.id'),
       value: "id",
       align: 'center'
     }, {
-      text: this.$t('ontologyVersioning.name'),
+      text: this.$t('general.name'),
       value: "name",
     }, {
-      text: this.$t('ontologyVersioning.description'),
+      text: this.$t('general.description'),
       value: "description",
       sortable: false
     }, {
-      text: this.$t('ontologyVersioning.actions'),
+      text: this.$t('general.actions'),
       value: 'actions',
       align: 'center',
       sortable: false
@@ -177,24 +179,24 @@ export default class OntologyVersioning extends Vue {
 
   changelistHeaders() {
     return [{
-      text: this.$t('ontologyVersioning.id'),
+      text: this.$t('general.id'),
       value: "id",
       align: 'center'
     }, {
-      text: this.$t('ontologyVersioning.name'),
+      text: this.$t('general.name'),
       value: "name",
     }, {
-      text: this.$t('ontologyVersioning.description'),
+      text: this.$t('general.description'),
       value: "description",
     }, {
-      text: this.$t('ontologyVersioning.status'),
+      text: this.$t('general.status'),
       value: "status",
     }, {
-      text: this.$t('ontologyVersioning.publishedAt'),
+      text: this.$t('ontology.publishedAt'),
       value: "published_at",
       sortable: false
     }, {
-      text: this.$t('ontologyVersioning.actions'),
+      text: this.$t('general.actions'),
       value: 'actions',
       align: 'right',
       sortable: false
@@ -233,7 +235,7 @@ export default class OntologyVersioning extends Vue {
   applyChangelist(version: OntologyVersionT) {
     this.$client.applyOntologyVersion(this.containerID, version.id!)
         .then(() => {
-          this.successMessage = 'Changelist Applied Successfully'
+          this.successMessage = (this.$t('changelists.applied') as string)
           this.$store.dispatch('refreshOwnedCurrentChangelists')
           this.$store.dispatch('refreshCurrentOntologyVersions')
           this.listChangelists()
@@ -245,7 +247,7 @@ export default class OntologyVersioning extends Vue {
   sendChangelistForApproval(version: OntologyVersionT) {
     this.$client.sendOntologyVersionForApproval(this.containerID, version.id!)
         .then(() => {
-          this.successMessage = 'Changelist Successfully Updated'
+          this.successMessage = (this.$t('changelists.updated') as string)
           this.listChangelists()
         })
         .catch(e => this.errorMessage = e)
@@ -254,7 +256,7 @@ export default class OntologyVersioning extends Vue {
   deleteChangelist(version: OntologyVersionT) {
     this.$client.deleteOntologyVersion(this.containerID, version.id!)
         .then(() => {
-          this.successMessage = 'Changelist Successfully Deleted'
+          this.successMessage = (this.$t('changelists.deleted') as string)
           this.listChangelists()
         })
         .catch(e => this.errorMessage = e)
@@ -263,7 +265,7 @@ export default class OntologyVersioning extends Vue {
   approveChangelist(version: OntologyVersionT) {
     this.$client.approveOntologyVersion(this.containerID, version.id!)
         .then(() => {
-          this.successMessage = 'Changelist Successfully Approved'
+          this.successMessage = (this.$t('changelists.approved') as string)
           this.listChangelists()
         })
         .catch(e => this.errorMessage = e)
@@ -272,7 +274,7 @@ export default class OntologyVersioning extends Vue {
   revokeChangelistApproval(version: OntologyVersionT) {
     this.$client.revokeOntologyVersionApproval(this.containerID, version.id!)
         .then(() => {
-          this.successMessage = 'Changelist Successfully Updated'
+          this.successMessage = (this.$t('changelists.updated') as string)
           this.listChangelists()
         })
         .catch(e => this.errorMessage = e)
@@ -286,7 +288,7 @@ export default class OntologyVersioning extends Vue {
       container_id: this.containerID
     }, version.id! )
         .then(() => {
-          this.successMessage = 'Ontology Rollback Started - Check Changelists'
+          this.successMessage = (this.$t('ontology.rollbackStarted') as string)
           this.listOntologyVersions()
           this.$forceUpdate()
         })

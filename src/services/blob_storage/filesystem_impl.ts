@@ -8,7 +8,7 @@ const short = require('short-uuid');
 const digestStream = require('digest-stream');
 
 /*
-    Filesystem is a very simple implementation of BlobStorage and allows Deep Lynx
+    Filesystem is a very simple implementation of BlobStorage and allows DeepLynx
     to store and retrieve files on the host system. Note: using this in a sharded
     environment could have unintended consequences
  */

@@ -6,7 +6,7 @@
         :items="dataSources"
         item-text="name"
         @change="setDataSource"
-        :label="label"
+        :label="label ? label : selectDataSourceString()"
         :multiple="multiple"
         :clearable="multiple"
         :disabled="disabled"
@@ -16,7 +16,7 @@
         :key="key"
     >
       <template slot="item" slot-scope="data">
-        <span v-if="data.item.archived" class="text--disabled">{{data.item.name}} - <i class="text-caption">{{$t('dataSources.archived')}}</i></span>
+        <span v-if="data.item.archived" class="text--disabled">{{data.item.name}} - <i class="text-caption">{{$t('general.archived')}}</i></span>
         <span v-else>{{data.item.name}}</span>
       </template>
 
@@ -59,7 +59,7 @@ export default class SelectDataSource extends Vue {
   @Prop({required: false, default: false})
   noIndent?: boolean
 
-  @Prop({required: false, default: 'Select Data Source'})
+  @Prop({required: false})
   label!: string
 
   @Prop({required: false, default: false})
@@ -117,6 +117,10 @@ export default class SelectDataSource extends Vue {
     this.selected = null
     this.dataSources = []
     this.listDataSources(tab)
+  }
+
+  selectDataSourceString() {
+    return this.$t('dataSources.select') as string
   }
 
   listDataSources(tab?: string) {

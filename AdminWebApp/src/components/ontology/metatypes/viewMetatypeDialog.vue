@@ -2,15 +2,17 @@
   <v-dialog v-model="dialog" @click:outside="dialog = false" max-width="60%">
     <template v-slot:activator="{ on }">
       <v-icon
+          v-if="icon"
           small
           class="mr-2"
           v-on="on"
       >mdi-eye</v-icon>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t('classes.view')}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2" v-if="selectedMetatype">
       <v-card-title>
-        <span class="headline text-h3">{{selectedMetatype.name}}</span>
+        <span class="headline text-h3">{{$t('general.view')}} {{selectedMetatype.name}}</span>
       </v-card-title>   
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
@@ -22,21 +24,21 @@
             >
               <v-text-field
                   v-model="selectedMetatype.name"
-                  :rules="[v => !!v || $t('editMetatype.nameRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
                   required
                   :disabled="true"
                   class="disabled"
               >
-                <template v-slot:label>{{$t('editMetatype.name')}}</template>
+                <template v-slot:label>{{$t('general.name')}}</template>
               </v-text-field>
               <v-textarea
                   v-model="selectedMetatype.description"
-                  :rules="[v => !!v || $t('editMetatype.descriptionRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
                   required
                   :disabled="true"
                   class="disabled"
               >
-                <template v-slot:label>{{$t('editMetatype.description')}} </template>
+                <template v-slot:label>{{$t('general.description')}} </template>
               </v-textarea>
             </v-form>
           </v-col>
@@ -58,7 +60,7 @@
 
               <template v-slot:top>
                 <v-toolbar flat color="white">
-                  <v-toolbar-title>{{$t("viewMetatype.keys")}}</v-toolbar-title>
+                  <v-toolbar-title>{{$t("properties.properties")}}</v-toolbar-title>
                   <v-divider
                       class="mx-4"
                       inset
@@ -77,7 +79,7 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" text @click="dialog = false" >{{$t("viewMetatype.close")}}</v-btn>
+        <v-btn color="primary" text @click="dialog = false" >{{$t("general.close")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -94,6 +96,9 @@ import ViewMetatypeKeyDialog from "@/components/ontology/metatypes/viewMetatypeK
 export default class ViewMetatypeDialog extends Vue {
   @Prop({required: true})
   metatype!: MetatypeT;
+
+  @Prop({required: false})
+  readonly icon!: boolean
 
   errorMessage = ""
   keysLoading = false
@@ -112,10 +117,10 @@ export default class ViewMetatypeDialog extends Vue {
 
   headers() {
     return  [
-      { text: this.$t('viewMetatype.keyName'), value: 'name', sortable: false },
-      { text: this.$t('viewMetatype.keyDescription'), value: 'description', sortable: false},
-      { text: this.$t('viewMetatype.keyType'), value: 'data_type', sortable: false},
-      { text: this.$t('viewMetatype.actions'), value: 'actions', sortable: false }
+      { text: this.$t('general.name'), value: 'name', sortable: false },
+      { text: this.$t('general.description'), value: 'description', sortable: false},
+      { text: this.$t('general.dataType'), value: 'data_type', sortable: false},
+      { text: this.$t('general.actions'), value: 'actions', sortable: false }
     ]
   }
 

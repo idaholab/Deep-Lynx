@@ -6,8 +6,8 @@
         v-model="selectedMetatypeKeys"
         :single-line="false"
         item-text="name"
-        :label="$t('dataMapping.chooseMetatypeKey')"
-        :placeholder="$t('dataMapping.typeToSearch')"
+        :label="$t('classes.selectProperty')"
+        :placeholder="$t('classes.searchProperty')"
         @change="emitSelected"
         return-object
         :multiple="multiple"

@@ -9,19 +9,19 @@
       >
         mdi-delete
       </v-icon>
-      <v-btn v-if="!displayIcon" color="primary" dark class="mt-2" v-on="on">{{$t("deleteApiKey.deleteApiKey")}}</v-btn>
+      <v-btn v-if="!displayIcon" color="primary" dark class="mt-2" v-on="on">{{$t("apiKeys.delete")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline text-h3">{{$t('deleteApiKey.deleteTitle')}}</span>
+        <span class="headline text-h3">{{$t('apiKeys.delete')}}</span>
       </v-card-title>   
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
         <v-row>
           <v-col :cols="12">
               <v-alert type="warning">
-                {{$t('deleteApiKey.deleteWarning')}}
+                {{$t('warnings.deleteApiKey')}}
               </v-alert>
           </v-col>
         </v-row>
@@ -29,9 +29,9 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" text @click="dialog = false">{{$t("deleteApiKey.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="dialog = false">{{$t("general.cancel")}}</v-btn>
         <v-btn color="error" text @click="deleteApiKey">
-          <span>{{$t("deleteApiKey.delete")}}</span>
+          <span>{{$t("general.delete")}}</span>
         </v-btn>
       </v-card-actions>
     </v-card>

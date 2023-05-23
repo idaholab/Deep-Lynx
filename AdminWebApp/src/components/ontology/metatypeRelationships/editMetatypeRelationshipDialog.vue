@@ -7,12 +7,12 @@
           class="mr-2"
           v-on="on"
       >mdi-pencil</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on" style="margin-top: 0px !important;">{{$t("editMetatypeRelationship.editMetatypeRelationship")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on" style="margin-top: 0px !important;">{{$t("relationshipTypes.edit")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2" v-if="selectedMetatypeRelationship">
       <v-card-title>
-        <span class="headline text-h3">{{ $t('editMetatypeRelationship.edit') }} {{ selectedMetatypeRelationship.name }}</span>
+        <span class="headline text-h3">{{ $t('general.edit') }} {{ selectedMetatypeRelationship.name }}</span>
       </v-card-title>   
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
@@ -24,21 +24,21 @@
             >
               <v-text-field
                   v-model="comparisonMetatypeRelationship.name"
-                  :rules="[v => !!v || $t('editMetatypeRelationship.nameRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
                   required
                   disabled
                   class="disabled"
               >
-                <template v-slot:label>{{$t('editMetatypeRelationship.name')}}</template>
+                <template v-slot:label>{{$t('general.name')}}</template>
               </v-text-field>
               <v-textarea
                   v-model="comparisonMetatypeRelationship.description"
-                  :rules="[v => !!v || $t('editMetatypeRelationship.descriptionRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
                   required
                   disabled
                   class="disabled"
               >
-                <template v-slot:label>{{$t('editMetatypeRelationship.description')}}</template>
+                <template v-slot:label>{{$t('general.description')}}</template>
               </v-textarea>
 
             </v-form>
@@ -59,7 +59,7 @@
 
               <template v-slot:top>
                 <v-toolbar flat color="white">
-                  <v-toolbar-title>{{$t("editMetatypeRelationship.keys")}}</v-toolbar-title>
+                  <v-toolbar-title>{{$t("properties.properties")}}</v-toolbar-title>
                   <v-divider
                       class="mx-4"
                       inset
@@ -86,21 +86,21 @@
             >
               <v-text-field
                   v-model="selectedMetatypeRelationship.name"
-                  :rules="[v => !!v || $t('editMetatypeRelationship.nameRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
                   required
               >
-                <template v-slot:label>{{$t('editMetatypeRelationship.name')}} <small style="color:red" >*</small></template>
+                <template v-slot:label>{{$t('general.name')}} <small style="color:red" >*</small></template>
               </v-text-field>
               <v-textarea
                   v-model="selectedMetatypeRelationship.description"
-                  :rules="[v => !!v || $t('editMetatypeRelationship.descriptionRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
                   required
               >
-                <template v-slot:label>{{$t('editMetatypeRelationship.description')}} <small style="color:red" >*</small></template>
+                <template v-slot:label>{{$t('general.description')}} <small style="color:red" >*</small></template>
               </v-textarea>
 
             </v-form>
-            <p><span style="color:red">*</span> = {{$t('editMetatypeRelationship.requiredField')}}</p>
+            <p><span style="color:red">*</span> = {{$t('validation.required')}}</p>
 
             <v-progress-linear indeterminate v-if="keysLoading"></v-progress-linear>
             <v-data-table
@@ -117,7 +117,7 @@
 
               <template v-slot:top>
                 <v-toolbar flat color="white">
-                  <v-toolbar-title>{{$t("editMetatypeRelationship.keys")}}</v-toolbar-title>
+                  <v-toolbar-title>{{$t("properties.properties")}}</v-toolbar-title>
                   <v-divider
                       class="mx-4"
                       inset
@@ -153,9 +153,9 @@
               </template>
             </v-data-table>
             <v-row v-if="$store.getters.isEditMode" style="margin-top: 15px">
-              <v-col :cols="3"><div class="box created mr-2"></div><p>{{$t('metatypes.created')}}</p></v-col>
-              <v-col :cols="3"><div class="box edited mr-2"></div><p>{{$t('metatypes.edited')}}</p></v-col>
-              <v-col :cols="3"><div class="box removed mr-2"></div><p>{{$t('metatypes.removed')}}</p></v-col>
+              <v-col :cols="3"><div class="box created mr-2"></div><p>{{$t('general.created')}}</p></v-col>
+              <v-col :cols="3"><div class="box edited mr-2"></div><p>{{$t('general.edited')}}</p></v-col>
+              <v-col :cols="3"><div class="box removed mr-2"></div><p>{{$t('general.removed')}}</p></v-col>
             </v-row>
           </v-col>
         </v-row>
@@ -163,8 +163,8 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" text @click="dialog = false" >{{$t("editMetatypeRelationship.cancel")}}</v-btn>
-        <v-btn color="primary" :disabled="!valid" text @click="editMetatypeRelationship()">{{$t("editMetatypeRelationship.save")}}</v-btn>
+        <v-btn color="primary" text @click="dialog = false" >{{$t("general.cancel")}}</v-btn>
+        <v-btn color="primary" :disabled="!valid" text @click="editMetatypeRelationship()">{{$t("general.save")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -211,10 +211,10 @@ export default class EditMetatypeRelationshipDialog extends Vue {
 
   headers() {
     return  [
-      { text: this.$t('editMetatypeRelationship.keyName'), value: 'name' },
-      { text: this.$t('editMetatypeRelationship.keyDescription'), value: 'description'},
-      { text: this.$t('editMetatypeRelationship.keyType'), value: 'data_type'},
-      { text: this.$t('editMetatypeRelationship.actions'), value: 'actions', sortable: false }
+      { text: this.$t('general.name'), value: 'name' },
+      { text: this.$t('general.description'), value: 'description'},
+      { text: this.$t('general.dataType'), value: 'data_type'},
+      { text: this.$t('general.actions'), value: 'actions', sortable: false }
     ]
   }
 
@@ -228,13 +228,13 @@ export default class EditMetatypeRelationshipDialog extends Vue {
         {"name": this.selectedMetatypeRelationship?.name, "description": this.selectedMetatypeRelationship?.description})
         .then(result => {
           if(!result) {
-            this.errorMessage = this.$t('editMetatypeRelationship.errorUpdatingAPI') as string
+            this.errorMessage = this.$t('errors.errorCommunicating') as string
           } else {
             this.dialog = false
             this.$emit('metatypeRelationshipEdited')
           }
         })
-        .catch(e => this.errorMessage = this.$t('editMetatypeRelationship.errorUpdatingAPI') as string + e)
+        .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
   }
 
   loadKeys() {
@@ -258,21 +258,21 @@ export default class EditMetatypeRelationshipDialog extends Vue {
   deleteKey(key: MetatypeRelationshipKeyT) {
     this.$client.deleteMetatypeRelationshipKey(this.selectedMetatypeRelationship?.container_id!, this.selectedMetatypeRelationship?.id!, key.id!, {permanent: !this.$store.getters.isEditMode})
     .then(result => {
-      if(!result) this.errorMessage = this.$t('editMetatypeRelationship.errorUpdatingAPI') as string
+      if(!result) this.errorMessage = this.$t('errors.errorCommunicating') as string
 
       this.loadKeys()
     })
-    .catch(e => this.errorMessage = this.$t('editMetatypeRelationship.errorUpdatingAPI') as string + e)
+    .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
   }
 
   undeleteKey(key: MetatypeRelationshipKeyT) {
     this.$client.deleteMetatypeRelationshipKey(this.selectedMetatypeRelationship?.container_id!, this.selectedMetatypeRelationship?.id!, key.id!, {reverse: true})
         .then(result => {
-          if(!result) this.errorMessage = this.$t('editMetatypeRelationship.errorUpdatingAPI') as string
+          if(!result) this.errorMessage = this.$t('errors.errorCommunicating') as string
 
           this.loadKeys()
         })
-        .catch(e => this.errorMessage = this.$t('editMetatypeRelationship.errorUpdatingAPI') as string + e)
+        .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
   }
 
   keyItemRowBackground(item: any) {

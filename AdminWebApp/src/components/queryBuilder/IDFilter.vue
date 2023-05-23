@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-row>
-      <v-col :cols="3" style="padding-top:30px" class="text-right">{{$t('queryBuilder.deepLynxID')}}</v-col>
+      <v-col :cols="3" style="padding-top:30px" class="text-right">{{$t('general.deepLynxID')}}</v-col>
       <v-col :cols="3">
         <operators-select 
           @selected="setOperator" 
@@ -12,7 +12,7 @@
       </v-col>
       <v-col :cols="6">
         <v-text-field v-if="operator !== 'in'"
-          :placeholder="$t('queryBuilder.typeToAdd')"
+          :placeholder="$t('general.typeToAdd')"
           @change="setValue"
           :disabled="disabled"
           v-model="value"
@@ -20,7 +20,7 @@
         <v-combobox v-if="operator === 'in'"
           multiple
           clearable
-          :placeholder="$t('queryBuilder.typeToAdd')"
+          :placeholder="$t('general.typeToAdd')"
           @change="setValue"
           :disabled="disabled"
           v-model="value"
@@ -47,11 +47,11 @@ export default class IDFilter extends Vue {
   value = ""
 
   operators = [
-    {text: 'equals', value: 'eq'},
-    {text: 'not equals', value: 'neq'},
-    {text: 'in', value: 'in'},
-    {text: 'less than', value: '<'},
-    {text: 'greater than', value: '>'},
+    {text: this.$t('operators.equals'), value: 'eq'},
+    {text: this.$t('operators.notEquals'), value: 'neq'},
+    {text: this.$t('operators.in'), value: 'in'},
+    {text: this.$t('operators.lessThan'), value: '<'},
+    {text: this.$t('operators.greaterThan'), value: '>'},
   ]
 
   beforeMount() {

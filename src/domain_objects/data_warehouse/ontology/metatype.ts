@@ -8,7 +8,7 @@ import {fold} from 'fp-ts/Either';
 import {Type} from 'class-transformer';
 
 /*
-    Metatype represents a metatype record in the Deep Lynx database and the various
+    Metatype represents a metatype record in the DeepLynx database and the various
     validations required for said record to be considered valid. It also contains
     operations for managing the metatype's keys and validating an unknown object
     against all keys.

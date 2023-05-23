@@ -26,7 +26,7 @@ export class NodeMetadata {
 }
 
 /*
-    Node represents a node record in the Deep Lynx database and the various
+    Node represents a node record in the DeepLynx database and the various
     validations required for said record to be considered valid.
  */
 export default class Node extends BaseDomainClass {

@@ -1,7 +1,7 @@
 <template>
   <v-card>
     <v-toolbar flat color="white">
-      <v-toolbar-title>{{$t('home.ontologyUpdateDescription')}}</v-toolbar-title>
+      <v-toolbar-title>{{$t('ontology.updateDescription')}}</v-toolbar-title>
     </v-toolbar>
 
     <v-card-text>
@@ -16,11 +16,11 @@
             >
               <v-file-input
                 @change="addFile"
-                :rules="[v => !!v || 'Please select one']">
+                :rules="[v => !!v || $t('validation.selectOne')]">
                 <template v-slot:label>
                   .owl File
                 </template>
-                <template v-slot:append-outer><info-tooltip :message="$t('containers.owlFileHelp')"></info-tooltip> </template>
+                <template v-slot:append-outer><info-tooltip :message="$t('help.owlFile')"></info-tooltip> </template>
               </v-file-input>
               <v-row class="my-8 mx-0" align="center">
                 <v-divider></v-divider>
@@ -28,15 +28,15 @@
                 <v-divider></v-divider>
               </v-row>
               <v-text-field v-model="owlFilePath"
-                :rules="[v => !!v || 'Please select one']">
+                :rules="[v => !!v || $t('validation.selectOne')]">
                 <template v-slot:label>
                   URL to .owl File
                 </template>
-                <template slot="append-outer"><info-tooltip :message="$t('containers.owlUrlHelp')"></info-tooltip> </template>
+                <template slot="append-outer"><info-tooltip :message="$t('help.owlUrl')"></info-tooltip> </template>
               </v-text-field>
 
               <br>
-              <p>{{$t('containers.importHelp')}} <a :href="importHelpLink()">{{$t('containerSelect.wiki')}}</a> </p>
+              <p>{{$t('help.needHelp')}} <a :href="importHelpLink()">{{$t('general.wiki')}}</a> </p>
             </v-form>
           </v-col>
         </v-row>
@@ -45,7 +45,7 @@
 
     <v-card-actions>
         <v-spacer></v-spacer>
-      <v-btn color="primary" text @click="updateContainer" ><span v-if="!loading">{{$t("home.save")}}</span>
+      <v-btn color="primary" text @click="updateContainer" ><span v-if="!loading">{{$t("general.save")}}</span>
         <span v-if="loading"><v-progress-circular indeterminate></v-progress-circular></span>
       </v-btn>
     </v-card-actions>
@@ -85,13 +85,13 @@ export default class OntologyUpdate extends Vue {
             this.errorMessage = e
           })
     } else {
-      this.errorMessage = "Please select either an ontology file or valid URL to an ontology file"
+      this.errorMessage = (this.$t('errors.owl') as string)
       this.loading = false
     }
   }
 
   importHelpLink() {
-    return this.$t('containers.importWikiLink')
+    return this.$t('links.importOntology')
   }
 }
 </script>

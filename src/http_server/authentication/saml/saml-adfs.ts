@@ -60,7 +60,7 @@ export function SetSamlAdfs(app: express.Application) {
 
                             if (result.isError && result.error?.errorCode === 404) {
                                 void storage.List().then((users) => {
-                                    // if there are no other users of this Deep Lynx instance
+                                    // if there are no other users of this DeepLynx instance
                                     // we go ahead and assign admin status to this newly created
                                     // user
                                     void storage

@@ -1063,7 +1063,7 @@ export class Client {
     }
 
     // only use this function when exporting type mappings from one data source to another WITHIN THE SAME DL INSTANCE
-    // this will not work for exporting to a separate instance of Deep Lynx
+    // this will not work for exporting to a separate instance of DeepLynx
     exportTypeMappings(containerID: string, dataSourceID: string, targetDataSource: string, ...typeMappings: TypeMappingT[]): Promise<ResultT<any>[]> {
         return this.postRawReturn<ResultT<any>[]>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/export`, {
             mapping_ids: typeMappings.map((mapping) => mapping.id),

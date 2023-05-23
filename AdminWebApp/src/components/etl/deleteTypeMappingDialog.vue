@@ -8,12 +8,12 @@
           v-on="on"
           @click="initiate()"
       >mdi-delete</v-icon>
-      <v-btn v-if="!displayIcon" color="primary" dark class="mt-2" v-on="on">{{$t("deleteTypeMapping.deleteTypeMapping")}}</v-btn>
+      <v-btn v-if="!displayIcon" color="primary" dark class="mt-2" v-on="on">{{$t("typeMappings.delete")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline text-h3">{{$t('deleteTypeMapping.deleteTitle')}}</span>
+        <span class="headline text-h3">{{$t('typeMappings.delete')}}</span>
       </v-card-title>
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
@@ -22,11 +22,11 @@
             <v-progress-linear v-if="transformationsLoading" indeterminate></v-progress-linear>
             <div v-else>
               <v-alert type="warning" v-if="transformationCount <= 0">
-                {{$t('deleteTypeMapping.deleteWarning')}}
+                {{$t('warnings.deleteMapping')}}
               </v-alert>
 
               <v-alert type="error" v-else>
-                {{$t('deleteTypeMapping.unableToDelete')}}
+                {{$t('errors.deleteMappings')}}
               </v-alert>
             </div>
           </v-col>
@@ -35,14 +35,14 @@
 
       <v-card-actions v-if="!transformationsLoading">
         <v-spacer></v-spacer>
-        <v-btn color="primary" text @click="reset()">{{$t("deleteTypeMapping.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="reset()">{{$t("general.cancel")}}</v-btn>
         <v-btn v-if="transformationCount <= 0" color="error" text :disabled="countDown > 0" @click="deleteMapping()">
           <v-progress-circular v-if="deleteLoading" indeterminate></v-progress-circular>
-          <span>{{$t("deleteTypeMapping.delete")}}</span>
-          <span v-if="countDown > 0">{{$t('deleteTypeMapping.in')}} {{countDown}}</span>
+          <span>{{$t("general.delete")}}</span>
+          <span v-if="countDown > 0">{{$t('operators.in')}} {{countDown}}</span>
         </v-btn>
         <v-btn v-else color="error" text disabled>
-          <span>{{$t("deleteTypeMapping.delete")}}</span>
+          <span>{{$t("general.delete")}}</span>
         </v-btn>
       </v-card-actions>
     </v-card>

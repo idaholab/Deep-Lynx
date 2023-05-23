@@ -4,7 +4,7 @@
     <v-combobox
         :items="dataSourceTypes"
         @change="setDataSource"
-        label="Select Enabled Data Source Types"
+        :label="$t('dataSources.selectEnabled')"
         :multiple="true"
         :clearable="true"
         v-model="selected"
@@ -35,34 +35,34 @@ export default class SelectDataSourceTypes extends Vue {
   errorMessage = ""
 
   selected = [{
-    text: "Standard",
+    text: this.$t('dataSources.standardName'),
     value: "standard"
   },{
-    text: "HTTP",
+    text: this.$t('dataSources.httpName'),
     value: "http"
   },{
-    text: "Timeseries",
+    text: this.$t('timeseries.timeseries'),
     value: "timeseries"
   }]
 
   dataSourceTypes = [{
-    text: "Standard",
+    text: this.$t('dataSources.standardName'),
     value: "standard"
   },{
-    text: "HTTP",
+    text: this.$t('dataSources.httpName'),
     value: "http"
   },//{
-  //   text: "Jazz/DNG", // DISABLED UNTIL REMOVED
+  //   text: this.$t('dataSources.jazzName'), // DISABLED UNTIL REMOVED
   //   value: "jazz"
   //},
     {
-    text: "Aveva",
+    text: this.$t('dataSources.avevaName'),
     value: "aveva"
   },{
-    text: "P6",
+    text: this.$t('dataSources.p6Name'),
     value: "p6"
   },{
-    text: "Timeseries",
+    text: this.$t('timeseries.timeseries'),
     value: "timeseries"
   }]
 

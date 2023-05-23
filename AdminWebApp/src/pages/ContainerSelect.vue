@@ -14,22 +14,22 @@
             <v-col cols="7">
               <v-container class="py-9 pl-6 pr-9 d-flex">
                 <div class="align-self-center ma-auto">
-                  <h2 class="text-h2 text-center mb-4">{{$t('containerSelect.container')}}</h2>
+                  <h2 class="text-h2 text-center mb-4">{{$t('containers.container')}}</h2>
                   <error-banner :message="errorMessage"></error-banner>
-                  <p>{{$t('containerSelect.choose')}}</p>
+                  <p>{{$t('help.chooseContainer')}}</p>
                   <v-form>
                     <container-select @containerSelected="containerSelected"></container-select>
                   </v-form>
                   <v-row v-if="outstandingInvites.length > 0" class="my-8 mx-0" align="center">
                     <v-divider></v-divider>
-                    <span class="px-2">{{$t('containerSelect.or')}}</span>
+                    <span class="px-2">{{$t('general.or')}}</span>
                     <v-divider></v-divider>
                   </v-row>
-                  <p v-if="outstandingInvites.length > 0 ">{{$t('containerSelect.acceptInviteLong')}}</p>
+                  <p v-if="outstandingInvites.length > 0 ">{{$t('containers.acceptInviteLong')}}</p>
                   <div v-for="invite in outstandingInvites" v-bind:key="invite.id">
                     <v-row class="px-11 mt-4">
                       <v-col :cols="8">{{invite.container_name}}</v-col>
-                      <v-col :cols="4"><v-btn @click="acceptInvite(invite.token, invite.container_name)">{{$t('containerSelect.acceptInvite')}}</v-btn></v-col>
+                      <v-col :cols="4"><v-btn @click="acceptInvite(invite.token, invite.container_name)">{{$t('containers.acceptInvite')}}</v-btn></v-col>
                     </v-row>
                   </div>
 
@@ -46,8 +46,8 @@
 
 
                   <br>
-                  <p>{{$t('containerSelect.needHelp')}} <a :href="helpLink()">{{$t('containerSelect.wiki')}}</a> </p>
-                  <p style="margin-top: 10px">{{$t('home.bugs')}} <a href="mailto:GRP-deeplynx-team@inl.gov">{{$t('home.contactUs')}}</a> </p>
+                  <p>{{$t('help.needHelp')}} <a :href="helpLink()">{{$t('general.wiki')}}</a> </p>
+                  <p style="margin-top: 10px">{{$t('help.foundBugs')}} <a :href="email()">{{$t('help.tellUs')}}</a> </p>
 
                   <v-row>
                     <logout></logout>
@@ -68,7 +68,7 @@
         app
     >
       <v-col :cols="2" class="pa-0">
-        <span class="d-block text-h6">&copy; {{ new Date().getFullYear() }} Idaho National Laboratory</span>
+        <span class="d-block text-h6">&copy; {{ new Date().getFullYear() }} {{$t('general.inl')}}</span>
       </v-col>
       <v-col :cols="2" :offset="8" class="pa-0">
         <language-select class="mb-1"></language-select>
@@ -149,7 +149,11 @@ export default class ContainerSelection extends Vue {
   }
 
   helpLink() {
-    return this.$t('containerSelect.wikiLink')
+    return this.$t('links.wiki')
+  }
+
+  email() {
+    return this.$t('links.email')
   }
 }
 </script>
