@@ -8,19 +8,19 @@
           v-on="on"
           @click="startCountdown()"
       >mdi-delete</v-icon>
-      <v-btn v-if="!displayIcon" color="error" dark class="mt-2" v-on="on" @click="startCountdown()">{{$t("deleteContainer.deleteContainer")}}</v-btn>
+      <v-btn v-if="!displayIcon" color="error" dark class="mt-2" v-on="on" @click="startCountdown()">{{$t("containers.delete")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline text-h3">{{$t('deleteContainer.deleteTitle')}}</span>
+        <span class="headline text-h3">{{$t('containers.permanentlyDelete')}}</span>
       </v-card-title>
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
         <v-row>
           <v-col :cols="12">
               <v-alert type="error">
-                {{$t('deleteContainer.warning')}}
+                {{$t('warnings.deleteContainer')}}
               </v-alert>
           </v-col>
         </v-row>
@@ -28,10 +28,10 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" text @click="reset()">{{$t("deleteContainer.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="reset()">{{$t("general.cancel")}}</v-btn>
         <v-btn color="error" text :disabled="countDown > 0" @click="deleteContainer()">
-          <span>{{$t("deleteContainer.delete")}}</span>
-          <span v-if="countDown > 0">{{$t('deleteContainer.in')}} {{countDown}}</span>
+          <span>{{$t("containers.delete")}}</span>
+          <span v-if="countDown > 0">{{$t('operators.in')}} {{countDown}}</span>
         </v-btn>
       </v-card-actions>
     </v-card>

@@ -2,12 +2,12 @@
   <div>
     <error-banner :message="errorMessage"></error-banner>
     <div class="pa-6 pb-0">
-      <p>{{$t('dataMapping.typeMappingHelp')}}</p>
+      <p>{{$t('help.typeMapping')}}</p>
       <v-checkbox
         v-if="typeMapping"
         v-model="typeMapping.active"
         @click="updateTypeMapping"
-        :label="$t('dataMapping.active')"
+        :label="$t('typeMappings.enable')"
         class="ml-n1"
       ></v-checkbox>
     </div>
@@ -16,7 +16,7 @@
     <v-row no-gutters>
       <v-col :cols="8" class="pt-2">
         <div class="d-flex flex-row">
-          <h3 class="text-h3 px-6">{{$t('dataMapping.transformationsTableTitle')}}</h3>
+          <h3 class="text-h3 px-6">{{$t('transformations.transformations')}}</h3>
           <v-spacer></v-spacer>
           <div class="mr-3">
             <transformation-dialog
@@ -77,7 +77,7 @@
       </v-col>
       <v-divider vertical />
       <v-col :cols="4" class="pt-2 pl-6">
-        <h3 class="text-h3 pr-6">{{$t('dataMapping.currentDataSet')}}</h3>
+        <h3 class="text-h3 pr-6">{{$t('transformations.currentDataSet')}}</h3>
         <v-card
           max-height="460"
           style="overflow-y: scroll" flat
@@ -146,10 +146,10 @@ export default class DataTypeMapping extends Vue {
 
   headers() {
     return  [{
-      text: this.$t("dataMapping.resultingTypeName"),
+      text: this.$t("typeMappings.resultingName"),
       value: 'names'
     }, {
-      text: this.$t("dataMapping.actions"),
+      text: this.$t("general.actions"),
       value: "actions"
     }]
   }

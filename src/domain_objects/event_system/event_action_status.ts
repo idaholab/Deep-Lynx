@@ -2,7 +2,7 @@ import {BaseDomainClass} from '../../common_classes/base_domain_class';
 import {IsOptional, IsString} from 'class-validator';
 
 /*
-    EventActionStatus represents an event action status record in the Deep Lynx
+    EventActionStatus represents an event action status record in the DeepLynx
     database and the various validations required for said record to be considered valid.
  */
 export default class EventActionStatus extends BaseDomainClass {

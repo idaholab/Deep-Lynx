@@ -649,9 +649,9 @@ export type TimeseriesRowCount = {
     count: number;
 };
 
-// DefaultAvevaDataSourceConfig are sane defaults found through trial and error with the Aveva Deep Lynx Adapter
+// DefaultAvevaDataSourceConfig are sane defaults found through trial and error with the Aveva DeepLynx Adapter
 // while we could include this on the createDataSourceDialog component, it's so large that it clutters
-// that component - better to pull it out and maintain it here so the connection to Deep Lynx is clear.
+// that component - better to pull it out and maintain it here so the connection to DeepLynx is clear.
 export function DefaultAvevaDataSourceConfig(): AvevaDataSourceConfig {
     return {
         kind: 'aveva',

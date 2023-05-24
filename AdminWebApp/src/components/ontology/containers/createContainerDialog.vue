@@ -1,12 +1,12 @@
 <template>
   <v-dialog v-model="dialog" width="40%" @click:outside="clearNew">
     <template v-slot:activator="{ on }">
-      <v-btn color="primary" dark class="mt-2" v-on="on">{{$t("containers.newContainerButton")}}</v-btn>
+      <v-btn color="primary" dark class="mt-2" v-on="on">{{$t("containers.createNew")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline text-h3">{{$t("containers.formTitle")}}</span>
+        <span class="headline text-h3">{{$t("containers.new")}}</span>
       </v-card-title>
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
@@ -20,43 +20,43 @@
             >
               <v-text-field
                   v-model="newContainer.name"
-                  :label="$t('containers.name')"
-                  :rules="[v => !!v || $t('dataMapping.required')]"
+                  :label="$t('general.name')"
+                  :rules="[v => !!v || $t('validation.required')]"
                   required
               ></v-text-field>
               <v-textarea
                   :rows="2"
                   v-model="newContainer.description"
-                  :label="$t('containers.description')"
-                  :rules="[v => !!v || $t('dataMapping.required')]"
+                  :label="$t('general.description')"
+                  :rules="[v => !!v || $t('validation.required')]"
                   required
               ></v-textarea>
               <v-file-input @change="addFile">
                 <template v-slot:label>
-                  {{$t('containers.owlFile')}} <small>({{$t('containers.optional')}})</small>
+                  {{$t('ontology.owlFile')}} <small>({{$t('general.optional')}})</small>
                 </template>
-                <template v-slot:append-outer><info-tooltip :message="$t('containers.owlFileHelp')"></info-tooltip> </template>
+                <template v-slot:append-outer><info-tooltip :message="$t('help.owlFile')"></info-tooltip> </template>
               </v-file-input>
 
-              <p>{{$t('containers.importHelp')}} <a :href="importHelpLink()">{{$t('containerSelect.wiki')}}</a> </p>
+              <p>{{$t('help.needHelp')}} <a :href="importHelpLink()">{{$t('general.wiki')}}</a> </p>
               <v-row class="my-8 mx-0" align="center">
                 <v-divider></v-divider>
-                <span class="px-2">{{$t('containers.or')}}</span>
+                <span class="px-2">{{$t('general.or')}}</span>
                 <v-divider></v-divider>
               </v-row>
               <v-text-field v-model="owlFilePath">
                 <template v-slot:label>
-                  {{$t('containers.urlOwlFile')}} <small>({{$t('containers.optional')}})</small>
+                  {{$t('ontology.urlOwlFile')}} <small>({{$t('general.optional')}})</small>
                 </template>
-                <template slot="append-outer"><info-tooltip :message="$t('containers.owlUrlHelp')"></info-tooltip> </template>
+                <template slot="append-outer"><info-tooltip :message="$t('help.owlUrl')"></info-tooltip> </template>
               </v-text-field>
 
               <v-checkbox v-model="newContainer.config.ontology_versioning_enabled">
                 <template v-slot:label>
-                  {{$t('containers.ontologyVersioningEnabled')}}<p class="text-caption" style="margin-left: 5px"> {{$t('beta')}}</p>
+                  {{$t('ontology.versioningEnabled')}}<p class="text-caption" style="margin-left: 5px"> {{$t('general.beta')}}</p>
                 </template>
 
-                <template slot="prepend"><info-tooltip :message="$t('containers.ontologyVersioningHelp')"></info-tooltip> </template>
+                <template slot="prepend"><info-tooltip :message="$t('help.ontologyVersioning')"></info-tooltip> </template>
               </v-checkbox>
 
               <select-data-source-types @selected="setDataSources"></select-data-source-types>
@@ -69,8 +69,8 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" text @click="clearNew" >{{$t("home.cancel")}}</v-btn>
-        <v-btn color="primary" text @click="createContainer" ><span v-if="!loading">{{$t("home.save")}}</span>
+        <v-btn color="primary" text @click="clearNew" >{{$t("general.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="createContainer" ><span v-if="!loading">{{$t("general.save")}}</span>
           <span v-if="loading"><v-progress-circular indeterminate></v-progress-circular></span>
         </v-btn>
       </v-card-actions>
@@ -136,15 +136,15 @@ export default class CreateContainerDialog extends Vue {
             if (typeof(e) === "object") {
               if (e.detail) {
                 if (e.detail.toLowerCase().includes('already exists')) {
-                  this.$emit("error", `Container creation unsuccessful. A container with this name has already been created by the current user.`)
+                  this.$emit("error", `${this.$t('errors.containerCreation')} ${this.$t('errors.containerName')}`)
                 } else {
-                  this.$emit("error", `Container creation unsuccessful. ${e.detail}`)
+                  this.$emit("error", `${this.$t('errors.containerCreation')} ${e.detail}`)
                 }
               } else {
-                this.$emit("error", `Container creation unsuccessful. Please see the logs for additional detail.`)
+                this.$emit("error", `${this.$t('errors.containerCreation')} ${this.$t('errors.checkLogs')}`)
               }
             } else {
-              this.$emit("error", `Container created successfully but unable to load ontology from OWL file or OWL file URL. Navigate to your container and attempt to upload the ontology again, or delete the newly created container and use this dialog again. Error: ${e}` )
+              this.$emit("error", `${this.$t('errors.loadOntology')} ${e}` )
             }
           })
     } else {
@@ -180,7 +180,7 @@ export default class CreateContainerDialog extends Vue {
   }
 
   importHelpLink() {
-    return this.$t('containers.importWikiLink')
+    return this.$t('links.importOntology')
   }
 }
 </script>

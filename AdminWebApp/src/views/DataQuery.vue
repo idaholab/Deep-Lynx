@@ -2,7 +2,7 @@
   <div>
     <v-card>
       <v-toolbar flat color="white">
-        <v-toolbar-title>{{$t('home.dataQueryDescription')}}</v-toolbar-title>
+        <v-toolbar-title>{{$t('query.viewerDescription')}}</v-toolbar-title>
       </v-toolbar>
       <query-builder
           :initialQuery="true"
@@ -61,7 +61,7 @@
                         <template v-slot:activator="{on, attrs}">
                           <v-icon v-bind="attrs" v-on="on" @click="copyID(item.id)">{{copy}}</v-icon>
                         </template>
-                        <span>{{$t('dataQuery.copyID')}} </span>
+                        <span>{{$t('general.copyID')}} </span>
                         <span>{{item.id}}</span>
                       </v-tooltip>
                     </template>
@@ -75,7 +75,7 @@
                         <!-- Properties -->
                           <v-expansion-panel>
                             <v-expansion-panel-header>
-                              <div><span class="text-overline">{{$t('dataQuery.viewProperties')}}:</span></div>
+                              <div><span class="text-overline">{{$t('properties.properties')}}:</span></div>
                             </v-expansion-panel-header>
                             <v-expansion-panel-content>
                               <json-viewer :value="item.properties" copyable/>
@@ -84,7 +84,7 @@
                         <!-- Files -->
                           <v-expansion-panel>
                             <v-expansion-panel-header>
-                              <div><span class="text-overline">{{$t('dataQuery.nodeFiles')}}:</span></div>
+                              <div><span class="text-overline">{{$t('files.files')}}:</span></div>
                             </v-expansion-panel-header>
                             <v-expansion-panel-content>
                               <node-files-dialog :icon="true" :node="item"></node-files-dialog>
@@ -93,7 +93,7 @@
                         <!-- Edges -->
                           <v-expansion-panel v-if="item.links">
                             <v-expansion-panel-header>
-                              <div><span class="text-overline">{{$t('dataQuery.edges')}}:</span></div>
+                              <div><span class="text-overline">{{$t('edges.edges')}}:</span></div>
                             </v-expansion-panel-header>
                             <v-expansion-panel-content>
                               <v-data-table
@@ -113,7 +113,7 @@
                                   <template v-slot:activator="{on, attrs}">
                                     <v-icon v-bind="attrs" v-on="on" @click="copyID(item.id)">{{copy}}</v-icon>
                                   </template>
-                                  <span>{{$t('dataQuery.copyID')}} </span>
+                                  <span>{{$t('general.copyID')}} </span>
                                   <span>{{item.id}}</span>
                                 </v-tooltip>
                               </template>
@@ -123,7 +123,7 @@
                         <!-- Metadata Properties -->
                           <v-expansion-panel v-if="item.metadata_properties">
                             <v-expansion-panel-header>
-                              <div><span class="text-overline">{{$t('dataQuery.metadataProperties')}}:</span></div>
+                              <div><span class="text-overline">{{$t('query.metadataProperties')}}:</span></div>
                             </v-expansion-panel-header>
                             <v-expansion-panel-content>
                               <json-viewer :value="item.metadata_properties" copyable/>
@@ -132,7 +132,7 @@
                         <!-- Raw Data -->
                           <v-expansion-panel v-if="item.raw_data_history && results?.rawMetadataEnabled">
                             <v-expansion-panel-header>
-                              <div><span class="text-overline">{{$t('dataQuery.rawData')}}:</span></div>
+                              <div><span class="text-overline">{{$t('query.rawData')}}:</span></div>
                             </v-expansion-panel-header>
                             <v-expansion-panel-content>
                               <json-viewer :value="item.raw_data_history" copyable/>
@@ -197,34 +197,34 @@ export default class DataQuery extends Vue {
 
   tabs() {
     return  [
-      { id: 0, name: 'graph', display: this.$t('dataQuery.graph')},
-      { id: 1, name: 'list', display: this.$t('dataQuery.list') },
-      { id: 2, name: 'json', display: this.$t('dataQuery.json')},
+      { id: 0, name: 'graph', display: this.$t('graph.graph')},
+      { id: 1, name: 'list', display: this.$t('general.list') },
+      { id: 2, name: 'json', display: this.$t('general.json')},
     ]
   }
 
   headers() {
     return [
-      {text: this.$t('dataQuery.id'), value: 'id', sortable: false},
-      {text: this.$t('dataQuery.metatypeName'), value: 'metatype_name'},
-      {text: this.$t('dataQuery.createdAt'), value: 'created_at'},
+      {text: this.$t('general.id'), value: 'id', sortable: false},
+      {text: this.$t('classes.class'), value: 'metatype_name'},
+      {text: this.$t('general.createdAt'), value: 'created_at'},
       {value: 'data-table-expand'}
     ]
   }
 
   edgeHeaders() {
     return [
-      {text: this.$t('dataQuery.id'), value: 'id'},
-      {text: this.$t('dataQuery.originMetatype'), value: 'origin'},
-      {text: this.$t('dataQuery.relType'), value: 'rel'},
-      {text: this.$t('dataQuery.destinationMetatype'), value: 'destination'},
-      {text: this.$t('dataQuery.linkType'), value: 'type'},
+      {text: this.$t('general.id'), value: 'id'},
+      {text: this.$t('edges.originClass'), value: 'origin'},
+      {text: this.$t('relationships.relationship'), value: 'rel'},
+      {text: this.$t('edges.destinationClass'), value: 'destination'},
+      {text: this.$t('general.type'), value: 'type'},
       {value: 'data-table-expand'}
     ]
   }
 
   getEdgeType(edge: any, nodeID: string) {
-    const type = edge.source.id === nodeID ? 'outgoing' : 'incoming'
+    const type = edge.source.id === nodeID ? this.$t('edges.outgoing') : this.$t('edges.incoming')
     return type
   }
 

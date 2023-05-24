@@ -1,12 +1,12 @@
 <template>
   <v-dialog v-model="dialog" max-width="80%" @click:outside="errorMessage = ''; clearNewAdapter()">
     <template v-slot:activator="{ on }">
-      <v-btn color="primary" dark class="mt-2" v-on="on" @click="refreshSourceAuth">{{$t("createDataSource.newDataSource")}}</v-btn>
+      <v-btn color="primary" dark class="mt-2" v-on="on" @click="refreshSourceAuth">{{$t("dataSources.createNew")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline text-h3">{{$t("createDataSource.formTitle")}}</span>
+        <span class="headline text-h3">{{$t("dataSources.new")}}</span>
       </v-card-title>
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
@@ -20,14 +20,14 @@
             >
               <v-text-field
                   v-model="newDataSource.name"
-                  :label="$t('createDataSource.name')"
-                  :rules="[v => !!v || $t('dataMapping.required')]"
+                  :label="$t('general.name')"
+                  :rules="[v => !!v || $t('validation.required')]"
               ></v-text-field>
 
               <v-select v-if="timeseries"
                 v-model="select"
-                :items="[{text: $t('createDataSource.timeseries'), value: 'timeseries', description: $t('createDataSource.timeseriesDescription')}]"
-                :label="$t('createDataSource.sourceType')"
+                :items="[{text: $t('timeseries.timeseries'), value: 'timeseries', description: $t('timeseries.description')}]"
+                :label="$t('dataSources.selectType')"
                 @input="selectAdapter"
                 required
               />
@@ -35,28 +35,28 @@
                 v-model="select"
                 :items="adapterTypes()"
                 @input="selectAdapter"
-                :label="$t('createDataSource.sourceType')"
+                :label="$t('dataSources.selectType')"
                 required
               />
 
               <div v-if="newDataSource.adapter_type === 'standard'">
-                <p><b>{{$t('createDataSource.description')}}</b></p>
-                <p>{{$t('createDataSource.standardDescription')}}</p>
+                <p><b>{{$t('general.description')}}</b></p>
+                <p>{{$t('dataSources.standardDescription')}}</p>
               </div>
 
               <div v-if="newDataSource.adapter_type === 'http'">
-                <p><b>{{$t('createDataSource.description')}}</b></p>
-                <p>{{$t('createDataSource.httpDescription')}}</p>
+                <p><b>{{$t('general.description')}}</b></p>
+                <p>{{$t('dataSources.httpDescription')}}</p>
                 <v-text-field
                     v-model="httpConfig.endpoint"
-                    :label="$t('createDataSource.endpoint')"
+                    :label="$t('general.endpoint')"
                     required
                 ></v-text-field>
 
                 <v-select
                     v-model="select_auth"
                     :items="authMethods"
-                    :label="$t('createDataSource.authMethod')"
+                    :label="$t('dataSources.authMethod')"
                     @input="selectAuthMethodHttp"
                     required
                 >
@@ -64,13 +64,13 @@
                 <div v-if="httpConfig.auth_method === 'basic'">
                   <v-text-field
                       v-model="httpConfig.username"
-                      :label="$t('createDataSource.username')"
+                      :label="$t('general.username')"
                       required
                   ></v-text-field>
 
                   <v-text-field
                       v-model="httpConfig.password"
-                      :label="$t('createDataSource.password')"
+                      :label="$t('general.password')"
                       required
                   ></v-text-field>
                 </div>
@@ -78,39 +78,39 @@
                 <div v-if="httpConfig.auth_method === 'token'">
                   <v-text-field
                       v-model="httpConfig.token"
-                      :label="$t('createDataSource.token')"
+                      :label="$t('general.token')"
                       required
                   ></v-text-field>
 
                 </div>
                   <v-text-field
                       v-model="httpConfig.poll_interval"
-                      :label="$t('createDataSource.pollInterval')"
+                      :label="$t('dataSources.pollInterval')"
                       type="number"
                       required
                   ></v-text-field>
 
                   <v-text-field
                       v-model="httpConfig.timeout"
-                      :label="$t('createDataSource.timeout')"
+                      :label="$t('general.timeout')"
                       type="number"
                       required
                   ></v-text-field>
 
                   <v-checkbox
                       v-model="httpConfig.secure"
-                      :label="$t('createDataSource.secure')"
+                      :label="$t('dataSources.useHttps')"
                       required
                   ></v-checkbox>
 
               </div>
 
               <div v-if="newDataSource.adapter_type === 'jazz'">
-                <p><b>{{$t('createDataSource.description')}}</b></p>
-                <p>{{$t('createDataSource.jazzDescription')}}</p>
+                <p><b>{{$t('general.description')}}</b></p>
+                <p>{{$t('dataSources.jazzDescription')}}</p>
                   <v-text-field
                       v-model="jazzConfig.project_name"
-                      :label="$t('createDataSource.projectName')"
+                      :label="$t('general.projectName')"
                       required
                   ></v-text-field>
 
@@ -120,61 +120,61 @@
                       small-chips
                       deletable-chips
                       v-model="jazzConfig.artifact_types"
-                      :label="$t('createDataSource.artifactTypes')"
-                      :placeholder="$t('createDataSource.typeToAdd')"
+                      :label="$t('dataSources.jazzArtifacts')"
+                      :placeholder="$t('general.typeToAdd')"
                   ></v-combobox>
 
                   <v-text-field
                       v-model="jazzConfig.endpoint"
-                      :label="$t('createDataSource.endpoint')"
+                      :label="$t('general.endpoint')"
                       required
                   ></v-text-field>
 
                   <v-text-field
                       v-model="jazzConfig.token"
-                      :label="$t('createDataSource.token')"
+                      :label="$t('general.token')"
                       required
                   ></v-text-field>
 
                   <v-text-field
                       v-model="jazzConfig.poll_interval"
-                      :label="$t('createDataSource.pollInterval')"
+                      :label="$t('dataSources.pollInterval')"
                       type="number"
                       required
                   ></v-text-field>
 
                   <v-text-field
                       v-model="jazzConfig.timeout"
-                      :label="$t('createDataSource.timeout')"
+                      :label="$t('general.timeout')"
                       type="number"
                       required
                   ></v-text-field>
 
                   <v-text-field
                       v-model="jazzConfig.limit"
-                      :label="$t('createDataSource.recordLimit')"
+                      :label="$t('dataSources.recordsPerCall')"
                       type="number"
                       required
                   ></v-text-field>
 
                   <v-checkbox
                       v-model="jazzConfig.secure"
-                      :label="$t('createDataSource.secure')"
+                      :label="$t('dataSources.useHttps')"
                       required
                   ></v-checkbox>
               </div>
 
               <div v-if="newDataSource.adapter_type === 'aveva'">
-                <p><b>{{$t('createDataSource.description')}}</b></p>
-                <p>{{$t('createDataSource.avevaDescription')}}</p>
+                <p><b>{{$t('general.description')}}</b></p>
+                <p>{{$t('dataSources.avevaDescription')}}</p>
                 <v-combobox
                     clearable
                     multiple
                     small-chips
                     deletable-chips
                     v-model="avevaConfig.ignore_dbs"
-                    :label="$t('createDataSource.ignoreDBs')"
-                    :placeholder="$t('createDataSource.typeToAdd')"
+                    :label="$t('dataSources.ignoredDBtypes')"
+                    :placeholder="$t('general.typeToAdd')"
                 ></v-combobox>
 
                 <v-combobox
@@ -183,8 +183,8 @@
                     small-chips
                     deletable-chips
                     v-model="avevaConfig.ignore_element_types"
-                    :label="$t('createDataSource.ignoreElements')"
-                    :placeholder="$t('createDataSource.typeToAdd')"
+                    :label="$t('dataSources.ignoredElements')"
+                    :placeholder="$t('general.typeToAdd')"
                 ></v-combobox>
 
                 <v-combobox
@@ -193,16 +193,16 @@
                     small-chips
                     deletable-chips
                     v-model="avevaConfig.ifc_element_types"
-                    :label="$t('createDataSource.ifcElementTypes')"
-                    :placeholder="$t('createDataSource.typeToAdd')"
+                    :label="$t('dataSources.ifcTypes')"
+                    :placeholder="$t('general.typeToAdd')"
                 ></v-combobox>
 
-                <h3>{{$t("createDataSource.ifcSettingsTitle")}}</h3>
+                <h3>{{$t("dataSources.ifcSettings.title")}}</h3>
                 <v-row>
                   <v-col :cols="6">
                     <v-text-field
                         v-model="avevaConfig.ifc_settings.format"
-                        :label="$t('createDataSource.ifcSettings.format')"
+                        :label="$t('dataSources.ifcSettings.format')"
                         required
                     ></v-text-field>
 
@@ -210,7 +210,7 @@
                   <v-col :cols="6">
                     <v-text-field
                         v-model="avevaConfig.ifc_settings.data_level"
-                        :label="$t('createDataSource.ifcSettings.dataLevel')"
+                        :label="$t('dataSources.ifcSettings.dataLevel')"
                         required
                     ></v-text-field>
 
@@ -221,7 +221,7 @@
                   <v-col :cols="6">
                     <v-text-field
                         v-model="avevaConfig.ifc_settings.log_detail"
-                        :label="$t('createDataSource.ifcSettings.logLevel')"
+                        :label="$t('dataSources.ifcSettings.logLevel')"
                         required
                         type="number"
                     ></v-text-field>
@@ -230,7 +230,7 @@
                   <v-col :cols="6">
                     <v-text-field
                         v-model="avevaConfig.ifc_settings.arc_tolerance"
-                        :label="$t('createDataSource.ifcSettings.arcTolerance')"
+                        :label="$t('dataSources.ifcSettings.arcTolerance')"
                         required
                     ></v-text-field>
 
@@ -241,7 +241,7 @@
                   <v-col :cols="4">
                     <v-checkbox
                         v-model="avevaConfig.ifc_settings.component_level"
-                        :label="$t('createDataSource.ifcSettings.componentLevel')"
+                        :label="$t('dataSources.ifcSettings.componentLevel')"
                         required
                     ></v-checkbox>
 
@@ -249,7 +249,7 @@
                   <v-col :cols="4">
                     <v-checkbox
                         v-model="avevaConfig.ifc_settings.tube"
-                        :label="$t('createDataSource.ifcSettings.tube')"
+                        :label="$t('dataSources.ifcSettings.tube')"
                         required
                     ></v-checkbox>
 
@@ -258,7 +258,7 @@
                   <v-col :cols="4">
                     <v-checkbox
                         v-model="avevaConfig.ifc_settings.cl"
-                        :label="$t('createDataSource.ifcSettings.cl')"
+                        :label="$t('dataSources.ifcSettings.cl')"
                         required
                     ></v-checkbox>
 
@@ -269,7 +269,7 @@
                   <v-col :cols="6">
                     <v-text-field
                         v-model="avevaConfig.ifc_settings.insu_translucency"
-                        :label="$t('createDataSource.ifcSettings.insuTranslucency')"
+                        :label="$t('dataSources.ifcSettings.insuTranslucency')"
                         required
                         type="number"
                     ></v-text-field>
@@ -278,7 +278,7 @@
                   <v-col :cols="6">
                     <v-text-field
                         v-model="avevaConfig.ifc_settings.obst_translucency"
-                        :label="$t('createDataSource.ifcSettings.obstTranslucency')"
+                        :label="$t('dataSources.ifcSettings.obstTranslucency')"
                         required
                         type="number"
                     ></v-text-field>
@@ -290,7 +290,7 @@
                   <v-col :cols="6">
                     <v-text-field
                         v-model="avevaConfig.ifc_settings.root"
-                        :label="$t('createDataSource.ifcSettings.root')"
+                        :label="$t('dataSources.ifcSettings.root')"
                         required
                         type="number"
                     ></v-text-field>
@@ -299,7 +299,7 @@
                   <v-col :cols="6">
                     <v-text-field
                         v-model="avevaConfig.ifc_settings.pipe"
-                        :label="$t('createDataSource.ifcSettings.pipe')"
+                        :label="$t('dataSources.ifcSettings.pipe')"
                         required
                         type="number"
                     ></v-text-field>
@@ -310,7 +310,7 @@
                   <v-col :cols="4">
                     <v-text-field
                         v-model="avevaConfig.ifc_settings.nozzle"
-                        :label="$t('createDataSource.ifcSettings.nozzle')"
+                        :label="$t('dataSources.ifcSettings.nozzle')"
                         required
                         type="number"
                     ></v-text-field>
@@ -319,7 +319,7 @@
                   <v-col :cols="4">
                     <v-text-field
                         v-model="avevaConfig.ifc_settings.structure"
-                        :label="$t('createDataSource.ifcSettings.structure')"
+                        :label="$t('dataSources.ifcSettings.structure')"
                         required
                         type="number"
                     ></v-text-field>
@@ -328,7 +328,7 @@
                   <v-col :cols="4">
                     <v-text-field
                         v-model="avevaConfig.ifc_settings.cable"
-                        :label="$t('createDataSource.ifcSettings.cable')"
+                        :label="$t('dataSources.ifcSettings.cable')"
                         required
                         type="number"
                     ></v-text-field>
@@ -341,18 +341,18 @@
                 <v-select v-if="newDataSource.adapter_type === 'p6' && container.config.configured_data_sources && container?.config.configured_data_sources.length > 0"
                   :items="p6configOptions()"
                   @input="selectP6config"
-                  :label="$t('createDataSource.customP6config')"
+                  :label="$t('dataSources.p6.selectConfig')"
                 />
-                <p><b>{{($t('createDataSource.description'))}}</b></p>
-                <p>{{$t('createDataSource.p6Description')}}</p>
+                <p><b>{{($t('general.description'))}}</b></p>
+                <p>{{$t('dataSources.p6Description')}}</p>
 
                 <v-row>
                   <v-col :cols="6">
                     <v-text-field
                       :disabled="p6preset.endpoint"
                       v-model="p6Config.endpoint"
-                      :label="$t('createDataSource.p6endpoint')"
-                      :rules="[v => !!v || $t('dataMapping.required')]"
+                      :label="$t('general.endpoint')"
+                      :rules="[v => !!v || $t('validation.required')]"
                     ></v-text-field>
                   </v-col>
 
@@ -360,8 +360,8 @@
                     <v-text-field
                       :disabled="p6preset.projectID"
                       v-model="p6Config.projectID"
-                      :label="$t('createDataSource.p6projectID')"
-                      :rules="[v => !!v || $t('dataMapping.required')]"
+                      :label="$t('general.projectID')"
+                      :rules="[v => !!v || $t('validation.required')]"
                     ></v-text-field>
                   </v-col>
                 </v-row>
@@ -370,20 +370,19 @@
                   <v-col :cols="6">
                     <v-text-field
                       v-model="p6Config.username"
-                      :label="$t('createDataSource.username')"
-                      :type="p6preset.username ? 'password' : 'text'"
-                      :rules="[v => !!v || $t('dataMapping.required')]"
+                      :label="$t('general.username')"
+                      :rules="[v => !!v || $t('validation.required')]"
                     ></v-text-field>
                   </v-col>
 
                   <v-col :cols="6">
                     <v-text-field
                       v-model="p6Config.password"
-                      :label="$t('createDataSource.password')"
+                      :label="$t('general.password')"
                       :append-icon="(hideP6pass ? 'mdi-eye' : 'mdi-eye-off')"
                       @click:append="() => (hideP6pass = !hideP6pass)"
                       :type="hideP6pass ? 'password' : 'text'"
-                      :rules="[v => !!v || $t('dataMapping.required')]"
+                      :rules="[v => !!v || $t('validation.required')]"
                     ></v-text-field>
                   </v-col>
                 </v-row>
@@ -391,14 +390,14 @@
 
               <div v-if="newDataSource.adapter_type === 'timeseries'">
                 <v-checkbox
-                  label="Enable Fastload Ingestion"
+                  :label="$t('timeseries.enableFastload')"
                   v-model="fastload"
                 />
 
-                <p><b>{{$t('createDataSource.description')}}</b></p>
-                <p>{{$t('createDataSource.timeseriesDescription')}} <a href="https://github.com/idaholab/Deep-Lynx/wiki/Timeseries-Data-Sources" target="_blank">{{$t('dataMapping.here')}}.</a></p>
+                <p><b>{{$t('general.description')}}</b></p>
+                <p>{{$t('timeseries.description')}} {{$t('help.findHelp')}} <a :href="timeseriesHelp()" target="_blank">{{$t('general.here')}}.</a></p>
 
-                <h4>{{$t('dataMapping.tableDesign')}}<info-tooltip :message="$t('dataMapping.tableDesignHelp')"></info-tooltip></h4>
+                <h4>{{$t('timeseries.tableDesign')}}<info-tooltip :message="$t('help.timeseriesTableDesign')"></info-tooltip></h4>
                 <v-data-table
                     :headers="timeSeriesHeader()"
                     :items="timeseriesConfig.columns"
@@ -417,27 +416,27 @@
                   <template v-slot:[`item.column_name`]="{ item, index }">
                     <span style="visibility: hidden" :id="`timeseries_column_${index}`"></span>
                     <v-text-field
-                        :label="$t('dataMapping.columnName')"
+                        :label="$t('general.columnName')"
                         v-model="item.column_name"
-                        :rules="[v => !!v || $t('dataMapping.required'),validColumnName(index, item.column_name)]"
+                        :rules="[v => !!v || $t('validation.required'),validColumnName(index, item.column_name)]"
                     >
                     </v-text-field>
                   </template>
 
                   <template v-slot:[`item.type`]="{ item, index }">
                     <v-select
-                        :label="$t('dataMapping.columnDataType')"
+                        :label="$t('general.dataType')"
                         :items='(index === 0) ? ["number", "number64", "date"] :dataTypes'
                         v-model="item.type"
-                        :rules="[v => !!v || $t('dataMapping.required')]"
+                        :rules="[v => !!v || $t('validation.required')]"
                     />
                   </template>
 
                   <template v-slot:[`item.property_name`]="{ item }">
                     <v-text-field
-                        :label="$t('createDataSource.propertyName')"
+                        :label="$t('properties.name')"
                         v-model="item.property_name"
-                        :rules="[v => !!v || $t('dataMapping.required')]"
+                        :rules="[v => !!v || $t('validation.required')]"
                     >
                     </v-text-field>
 
@@ -446,7 +445,7 @@
 
                   <template v-slot:[`item.unique`]="{ item}">
                     <v-select
-                        :label="$t('createDataSource.unique')"
+                        :label="$t('general.unique')"
                         :disabled="item.is_primary_timestamp"
                         :items='[true,false]'
                         v-model="item.unique"
@@ -461,29 +460,29 @@
                     <td :colspan="timeSeriesHeader().length">
                       <v-col v-if="item.is_primary_timestamp && item.type !== 'date'" :cols="12">
                         <v-text-field
-                            :label="$t('createDataSource.chunkInterval')"
+                            :label="$t('timeseries.chunkInterval')"
                             v-model="timeseriesConfig.chunk_interval"
                         >
-                          <template slot="append-outer"><a href="https://github.com/idaholab/Deep-Lynx/wiki/Timeseries-Data-Sources#table-design" target="_blank">{{$t('createDataSource.chunkIntervalHelp')}}</a></template>
+                          <template slot="append-outer"><a :href="chunkIntervalLink()" target="_blank">{{$t('help.chunkInterval')}}</a></template>
                         </v-text-field>
                       </v-col>
 
                       <v-col v-if="item.type === 'date'" :cols="12">
                         <v-text-field
-                          :label="$t('dataMapping.dateFormatString')"
+                          :label="$t('general.dateFormatString')"
                           v-model="item.date_conversion_format_string"
                           :rules="[rules.dateString]"
                         >
                           <template slot="append-outer">
                             <a :href="timeseriesHelpLink()" target="_blank">
-                              {{$t('dataMapping.dateFormatStringHelp')}}
+                              {{$t('help.dateFormatString')}}
                             </a>
                           </template>
                         </v-text-field>
                       </v-col>
                       <v-col v-if="item.type === 'date'" class="text-left">
                         <v-checkbox
-                          :label="$t('dataMapping.isPrimaryTimestamp')"
+                          :label="$t('timeseries.primaryTimestamp')"
                           v-model="item.is_primary_timestamp"
                           disabled
                         />
@@ -495,7 +494,7 @@
 
                 <v-row>
                   <v-col :cols="12" style="padding:25px" align="center" justify="center">
-                    <v-btn @click="addMapping">{{$t('dataMapping.addColumn')}}</v-btn>
+                    <v-btn @click="addMapping">{{$t('general.addColumn')}}</v-btn>
                   </v-col>
                 </v-row>
 
@@ -511,19 +510,19 @@
               <div v-if="newDataSource.adapter_type && newDataSource.adapter_type !== 'timeseries'">
                 <v-checkbox v-model="rawRetentionEnabled">
                   <template v-slot:label>
-                    {{$t('containers.rawRetentionEnabled')}}<p class="text-caption" style="margin-left: 5px"></p>
+                    {{$t('dataSources.attachStaging')}}<p class="text-caption" style="margin-left: 5px"></p>
                   </template>
 
-                  <template slot="prepend"><info-tooltip :message="$t('containers.rawRetentionHelp')"></info-tooltip></template>
+                  <template slot="prepend"><info-tooltip :message="$t('help.attachStaging')"></info-tooltip></template>
                 </v-checkbox>
 
-                <small>{{$t('createDataSource.dataRetentionHelp')}}</small>
+                <small>{{$t('help.dataRetention')}}</small>
                 <div v-if="rawRetentionEnabled">
                   <v-text-field
                     :value="-1"
                     disabled
                   >
-                    <template v-slot:label>{{$t('createDataSource.dataRetentionDays')}} </template>
+                    <template v-slot:label>{{$t('dataSources.dataRetentionDays')}} </template>
                   </v-text-field>
                 </div>
                 <div v-else>
@@ -532,18 +531,18 @@
                     v-model="dataRetentionDays"
                     :min="-1"
                   >
-                    <template v-slot:label>{{$t('createDataSource.dataRetentionDays')}} </template>
+                    <template v-slot:label>{{$t('dataSources.dataRetentionDays')}} </template>
                   </v-text-field>
                 </div>
                 <v-checkbox
                     v-model="newDataSource.active"
-                    :label="$t('createDataSource.enable')"
+                    :label="$t('general.enable')"
                     required
                 ></v-checkbox>
 
                 <v-expansion-panels>
                   <v-expansion-panel>
-                    <v-expansion-panel-header color="red"><span style="color:white">{{$t('createDataSource.dangerZone')}}</span></v-expansion-panel-header>
+                    <v-expansion-panel-header color="red"><span style="color:white">{{$t('dataSources.advanced')}}</span></v-expansion-panel-header>
                     <v-expansion-panel-content>
                       <v-combobox
                           style="margin-top: 10px"
@@ -552,10 +551,10 @@
                           small-chips
                           deletable-chips
                           v-model="stopNodes"
-                          :label="$t('createDataSource.stopNodes')"
-                          :placeholder="$t('createDataSource.typeToAdd')"
+                          :label="$t('dataSources.stopNodes')"
+                          :placeholder="$t('general.typeToAdd')"
                       >
-                        <template slot="append-outer"><info-tooltip :message="$t('createDataSource.stopNodesHelp')"></info-tooltip></template>
+                        <template slot="append-outer"><info-tooltip :message="$t('help.stopNodes')"></info-tooltip></template>
                       </v-combobox>
 
                       <v-combobox
@@ -565,10 +564,10 @@
                           small-chips
                           deletable-chips
                           v-model="valueNodes"
-                          :label="$t('createDataSource.valueNodes')"
-                          :placeholder="$t('createDataSource.typeToAdd')"
+                          :label="$t('dataSources.valueNodes')"
+                          :placeholder="$t('general.typeToAdd')"
                       >
-                        <template slot="append-outer"><info-tooltip :message="$t('createDataSource.valueNodesHelp')"></info-tooltip> </template>
+                        <template slot="append-outer"><info-tooltip :message="$t('help.valueNodes')"></info-tooltip> </template>
                       </v-combobox>
                     </v-expansion-panel-content>
                   </v-expansion-panel>
@@ -582,14 +581,14 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" text @click="clearNewAdapter" >{{$t("home.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="clearNewAdapter" >{{$t("general.cancel")}}</v-btn>
         <v-btn v-if="newDataSource.adapter_type === 'timeseries'"
           color="primary"
           text
           :disabled="timeseriesConfig.columns.length === 0"
           @click="createDataSource"
-        >{{$t("home.create")}}</v-btn>
-        <v-btn v-else color="primary" text @click="createDataSource" >{{$t("home.create")}}</v-btn>
+        >{{$t("general.create")}}</v-btn>
+        <v-btn v-else color="primary" text @click="createDataSource" >{{$t("general.create")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -646,9 +645,9 @@ export default class CreateDataSourceDialog extends Vue {
   rules={
     dateString: (value: any) => {
       if (this.getFastload()) {
-        return value.includes('%') || 'Date String should be in strftime datetime format'
+        return value.includes('%') || this.$t('help.strftimeDate')
       } else {
-        return !value.includes('%') || 'Date String should be in postgres datetime format'
+        return !value.includes('%') || this.$t('help.postgresDate')
       }
     }
   }
@@ -725,11 +724,11 @@ export default class CreateDataSourceDialog extends Vue {
 
   adapterTypes() {
     const types =  [
-      {text: this.$t('createDataSource.standard'), value: 'standard', description: this.$t('createDataSource.standardDescription')},
-      {text: this.$t('createDataSource.http'), value: 'http', description: this.$t('createDataSource.httpDescription')},
-      {text: this.$t('createDataSource.jazz'), value: 'jazz', description: this.$t('createDataSource.jazzDescription')},
-      {text: this.$t('createDataSource.aveva'), value: 'aveva', description: this.$t('createDataSource.avevaDescription')},
-      {text: this.$t('createDataSource.p6'), value: 'p6', description: this.$t('createDataSource.p6description')}
+      {text: this.$t('dataSources.standardName'), value: 'standard', description: this.$t('dataSources.standardDescription')},
+      {text: this.$t('dataSources.httpName'), value: 'http', description: this.$t('dataSources.httpDescription')},
+      {text: this.$t('dataSources.jazzName'), value: 'jazz', description: this.$t('dataSources.jazzDescription')},
+      {text: this.$t('dataSources.avevaName'), value: 'aveva', description: this.$t('dataSources.avevaDescription')},
+      {text: this.$t('dataSources.p6Name'), value: 'p6', description: this.$t('dataSources.p6description')}
     ]
 
 
@@ -743,31 +742,35 @@ export default class CreateDataSourceDialog extends Vue {
   timeSeriesHeader() {
     return [
       {
-        text: this.$t('dataMapping.columnName'),
+        text: this.$t('general.columnName'),
         value: "column_name"
       },
       {
-        text: this.$t('dataMapping.dataType'),
+        text: this.$t('general.dataType'),
         value: "type"
       },
       {
-        text: this.$t('createDataSource.propertyName'),
+        text: this.$t('properties.name'),
         value: "property_name"
       },
 
       {
-        text: this.$t('createDataSource.unique'),
+        text: this.$t('general.unique'),
         value: "unique"
       },
-      {text: this.$t('dataMapping.actions'), value: "actions", sortable: false}
+      {text: this.$t('general.actions'), value: "actions", sortable: false}
     ]
   }
 
   timeseriesHelpLink(): string {
     if (this.fastload === true) {
-      return "https://docs.rs/chrono/0.4.24/chrono/format/strftime/index.html"
+      return this.$t('links.rustTime') as string
     } 
-    return "https://www.postgresql.org/docs/current/functions-formatting.html#FUNCTIONS-FORMATTING-DATETIME-TABLE"
+    return this.$t('links.postgresTime') as string
+  }
+
+  chunkIntervalLink() {
+    return this.$t('links.chunkInterval') as string
   }
 
   selectAdapter(adapter: string) {
@@ -775,7 +778,7 @@ export default class CreateDataSourceDialog extends Vue {
   }
 
   p6configOptions() {
-    const options: string[] = ['Default P6 Adapter'];
+    const options: string[] = [this.$t('dataSources.p6.defaultAdapter') as string];
     this.container?.config.configured_data_sources?.forEach((source) => {
       options.push(source.name)
     })
@@ -783,7 +786,7 @@ export default class CreateDataSourceDialog extends Vue {
   }
 
   selectP6config(configName: string) {
-    if (configName !== 'Default P6 Adapter') {
+    if (configName !== this.$t('dataSources.p6.defaultAdapter')) {
       const index = this.container?.config.configured_data_sources?.findIndex(config => config.name === configName)
       const selectedConfig = this.container!.config.configured_data_sources![index!] as P6DataSourceConfig
       // Using object assign here otherwise some changes to the source will also be made to the config template
@@ -928,17 +931,21 @@ export default class CreateDataSourceDialog extends Vue {
 
   validColumnName(index: any, value: any) {
     if(this.timeseriesConfig.columns.filter(p  => value === p.column_name).length > 1){
-      return this.$t('dataMapping.columnNameMustBeUnique')
+      return this.$t('timeseries.colNameUnique')
     }
 
     // this regex should match only if the name starts with a letter, contains only alphanumerics and underscores with
     // no spaces and is between 1 and 30 characters in length
-    const matches = /^[a-z][a-z0-9_]{1,30}$/.exec(value)
+    const matches = /^[_a-z][a-z0-9_]{1,30}$/.exec(value)
     if(!matches || matches.length === 0) {
-      return this.$t('dataMapping.columnNameRequirements')
+      return this.$t('help.nameRegex')
     }
 
     return true
+  }
+
+  timeseriesHelp() {
+    return this.$t('links.timeseriesQuickStart') as string
   }
 
   removeMapping(index: any) {

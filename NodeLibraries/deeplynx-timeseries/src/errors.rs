@@ -26,6 +26,8 @@ pub enum DataError {
   InvalidData(#[from] validator::ValidationErrors),
   #[error("invalid csv data or structure: {0}")]
   Csv(#[from] csv::Error),
+  #[error("invalid csv data or structure: {0}")]
+  CsvAsync(#[from] csv_async::Error),
   #[error("system IO error: {0}")]
   IO(#[from] std::io::Error),
   #[error("csv not valid : {0}")]

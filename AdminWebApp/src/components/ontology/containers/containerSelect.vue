@@ -4,7 +4,7 @@
     <v-select
       :items="containers"
       item-text="name"
-      :label="$t('home.selectContainer')"
+      :label="$t('containers.select')"
       return-object
       @input="setActiveContainer"
     ></v-select>

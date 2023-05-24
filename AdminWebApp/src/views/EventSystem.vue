@@ -10,7 +10,7 @@
       >
         <template v-slot:top>
           <v-toolbar flat color="white">
-            <v-toolbar-title>{{$t('home.eventActionDescription')}}</v-toolbar-title>
+            <v-toolbar-title>{{$t('events.actionDescription')}}</v-toolbar-title>
             <v-spacer></v-spacer>
             <create-event-action-dialog :containerID="containerID" @eventCreated="refreshEventActions()" :key="key" @dialogClose="key += 1"></create-event-action-dialog>
           </v-toolbar>
@@ -86,12 +86,12 @@
   
     headers() {
       return [
-        { text: this.$t('eventAction.id'), value: 'id'},
-        { text: this.$t('eventAction.eventType'), value: 'event_type'},
-        { text: this.$t('eventAction.actionType'), value: 'action_type'},
-        { text: this.$t('eventAction.destination'), value: 'destination'},
-        { text: this.$t('eventAction.active'), value: 'active'},
-        { text: this.$t('eventAction.actions'), value: 'actions', sortable: false }
+        { text: this.$t('general.id'), value: 'id'},
+        { text: this.$t('events.eventType'), value: 'event_type'},
+        { text: this.$t('events.actionType'), value: 'action_type'},
+        { text: this.$t('edges.destination'), value: 'destination'},
+        { text: this.$t('general.active'), value: 'active'},
+        { text: this.$t('general.actions'), value: 'actions', sortable: false }
       ]
     }
   

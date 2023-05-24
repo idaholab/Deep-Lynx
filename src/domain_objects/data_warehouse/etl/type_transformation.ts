@@ -16,7 +16,7 @@ import MetatypeKeyRepository from "../../../data_access_layer/repositories/data_
 
 /*
    Condition represents a logical operation which can determine whether or not
-   Deep Lynx should apply this transformation to a given payload.
+   DeepLynx should apply this transformation to a given payload.
    We extend the naked class here because we don't need the metadata id, just
    the class for validation
  */
@@ -192,7 +192,7 @@ export class TransformationConfiguration {
 
 /*
     TypeTransformation represents a data type transformation record in the
-    Deep Lynx database and the various validations required for said record to
+    DeepLynx database and the various validations required for said record to
     be considered valid. It also contains all functions necessary for converting
     an object to an Edge or Node class depending on the transformation's properties
  */
@@ -871,7 +871,7 @@ export default class TypeTransformation extends BaseDomainClass {
             }
 
             // because dates can be formatted in various ways, all we can really do for conversion is to
-            // set it to string - Deep Lynx only checks to see if dates are strings currently
+            // set it to string - DeepLynx only checks to see if dates are strings currently
             case 'date': {
                 if (value instanceof Date) {
                     return new Conversion({original_value: value, converted_value: value.toISOString()});

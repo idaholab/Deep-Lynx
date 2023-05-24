@@ -19,7 +19,7 @@
                 <v-btn icon dark @click="closeDialog">
                     <v-icon>mdi-close</v-icon>
                 </v-btn>
-                <v-toolbar-title>{{ $t('timeseries.searchView') }}</v-toolbar-title>
+                <v-toolbar-title>{{ $t('timeseries.view') }}</v-toolbar-title>
                 <v-spacer></v-spacer>
             </v-toolbar>
 
@@ -30,19 +30,19 @@
                             hide-details
                             class="d-flex justify-center mt-0 mb-3 pt-0"
                             v-model="timeseriesFlag"
-                            :label="timeseriesFlag ? 'Timeseries' : 'Index'"
+                            :label="timeseriesFlag ? $t('timeseries.timestamp') : $t('timeseries.index')"
                             :disabled="streamActive"
                         />
 
                         <v-form ref="searchForm" v-model="validSearch" lazy-validation>
                             <div v-show="timeseriesFlag">
                                 <div class="d-block">
-                                    <label for="startDate" style="padding-right: 4px">Start: </label
-                                    ><input type="text" placeholder="Select Date..." id="startDate" />
+                                    <label for="startDate" style="padding-right: 4px">{{$t('general.start')}}: </label
+                                    ><input type="text" :placeholder="$t('timeseries.selectDate')" id="startDate" />
                                 </div>
                                 <div class="d-block">
-                                    <label for="endDate" style="padding-right: 11px">End: </label
-                                    ><input type="text" placeholder="Select Date..." id="endDate" />
+                                    <label for="endDate" style="padding-right: 11px">{{$t('general.end')}}: </label
+                                    ><input type="text" :placeholder="$t('timeseries.selectDate')" id="endDate" />
                                 </div>
                             </div>
 
@@ -67,17 +67,17 @@
                                 v-model.number="defaultPlotLimit"
                                 type="number"
                                 :rules="[rules.required, rules.positiveNumber, rules.number]"
-                                :label="$t('timeseries.resultLimit')"
-                                hint="Enter 0 for unlimited results (may impact performance)"
+                                :label="$t('general.limit')"
+                                :hint="$t('timeseries.limitHint')"
                             />
 
                             <v-row>
                                 <v-col :cols="runType !== '--' && !timeseriesFlag ? 6 : 8">
-                                    <v-select v-model="runType" :items="runTypes" hint="Replay or Live Stream" persistent-hint />
+                                    <v-select v-model="runType" :items="runTypes" :hint="$t('timeseries.replayOrStream')" persistent-hint />
                                 </v-col>
 
                                 <v-col v-if="runType !== '--' && !timeseriesFlag" :cols="3">
-                                    <v-text-field v-model.number="replayRecordSize" type="number" :rules="[rules.number]" label="Records per" />
+                                    <v-text-field v-model.number="replayRecordSize" type="number" :rules="[rules.number]" :label="$t('timeseries.recordsPer')" />
                                 </v-col>
 
                                 <v-col :cols="runType !== '--' && !timeseriesFlag ? 3 : 4">
@@ -86,7 +86,7 @@
                                         v-model.number="replayStreamInterval"
                                         type="number"
                                         :rules="[rules.number]"
-                                        label="Interval"
+                                        :label="$t('timeseries.interval')"
                                         suffix="s"
                                     />
                                 </v-col>
@@ -94,8 +94,8 @@
                         </v-form>
 
                         <v-card-actions class="mt-2">
-                            <v-btn v-if="!streamActive" color="primary" @click="submitSearch">{{ $t('timeseries.runSearch') }}</v-btn>
-                            <v-btn v-else color="primary" @click="clearIntervals">Stop Stream</v-btn>
+                            <v-btn v-if="!streamActive" color="primary" @click="submitSearch">{{ $t('general.search') }}</v-btn>
+                            <v-btn v-else color="primary" @click="clearIntervals">{{ $t('timeseries.stopStream') }}</v-btn>
                             <v-spacer />
                             <v-progress-linear
                                 v-if="streamActive && runType !== 'Live Stream'"
@@ -116,13 +116,13 @@
 
                 <v-col :cols="3">
                     <v-card class="pa-4" style="height: 100%">
-                        <v-select v-model="chartType" :items="chartTypes" hint="Chart Type" persistent-hint @change="updatePlot(true)" />
+                        <v-select v-model="chartType" :items="chartTypes" :hint="$t('timeseries.chartType')" persistent-hint @change="updatePlot(true)" />
 
                         <v-select
                             v-if="chartType === 'heatmap'"
                             v-model="colorScale"
                             :items="colorScales"
-                            hint="Color Scale"
+                            :hint="$t('timeseries.colorScale')"
                             persistent-hint
                             @change="updatePlot(true)"
                         />
@@ -131,7 +131,7 @@
                             v-model="selectedDataSources"
                             :items="dataSources"
                             item-text="name"
-                            hint="Selected Data Sources"
+                            :hint="$t('dataSources.selected')"
                             persistent-hint
                             return-object
                             multiple
@@ -171,7 +171,7 @@
                                 <v-simple-checkbox v-model="item.y" :disabled="item.x" />
                             </template>
 
-                            <template v-slot:header.z> <span v-if="chartType === 'bubble'">Size</span><span v-else>Z</span> </template>
+                            <template v-slot:header.z> <span v-if="chartType === 'bubble'">{{$t('general.size')}}</span><span v-else>Z</span> </template>
                             <template v-slot:item.z="{item}">
                                 <v-simple-checkbox v-model="item.z" :disabled="item.x" />
                             </template>
@@ -180,7 +180,7 @@
                             <template v-slot:item.trace="{item}">
                                 <v-select v-model="item.trace" :items="userTraces" multiple chips deletable-chips>
                                     <template v-slot:prepend-item>
-                                        <v-btn @click="addTrace" color="primary" class="mx-3 elevation-0" style="width: calc(100% - 24px)"> Add Trace </v-btn>
+                                        <v-btn @click="addTrace" color="primary" class="mx-3 elevation-0" style="width: calc(100% - 24px)"> {{$t('timeseries.addTrace')}} </v-btn>
                                         <v-divider class="mt-2"></v-divider>
                                     </template>
                                 </v-select>
@@ -220,7 +220,7 @@
                                 </template>
                             </v-data-table>
                         </div>
-                        <span v-if="Object.keys(results).length === 0">No Results</span>
+                        <span v-if="Object.keys(results).length === 0">{{$t('general.noResults')}}</span>
                     </v-card>
                 </v-col>
             </v-row>
@@ -275,13 +275,13 @@ export default class TimeseriesViewerDialog extends Vue {
     startIndex = 0;
     endIndex = 1000;
     rules = {
-        required: (value: any) => !!value || 'Required',
+        required: (value: any) => !!value || this.$t('validation.required'),
         number: (value: any) => {
             const pattern = /^[0-9]+$/;
-            return pattern.test(value) || 'Not a number';
+            return pattern.test(value) || this.$t('validation.nan');
         },
         positiveNumber: (value: any) => {
-            if (value < 0) return 'Please enter a positive number';
+            if (value < 0) return this.$t('validation.positive');
             return true;
         },
     };
@@ -333,7 +333,7 @@ export default class TimeseriesViewerDialog extends Vue {
     }
 
     get headers() {
-        let columns = [{text: 'DataSource', value: 'datasource'}];
+        let columns = [{text: this.$t('dataSources.dataSource'), value: 'datasource'}];
         const columnNames = this.selectedColumns
             .filter((c) => c.x || c.y || c.z)
             .map((c) => {
@@ -349,9 +349,9 @@ export default class TimeseriesViewerDialog extends Vue {
 
     get columnHeaders() {
         const columnNames = [
-            {text: this.$t('timeseries.columnName'), value: 'name', sortable: false},
-            {text: this.$t('timeseries.dataSource'), value: 'dataSource', sortable: false},
-            {text: this.$t('timeseries.type'), value: 'type', sortable: false},
+            {text: this.$t('general.columnName'), value: 'name', sortable: false},
+            {text: this.$t('dataSources.dataSource'), value: 'dataSource', sortable: false},
+            {text: this.$t('general.type'), value: 'type', sortable: false},
             {text: 'X', value: 'x', sortable: false},
         ];
 
@@ -782,14 +782,14 @@ export default class TimeseriesViewerDialog extends Vue {
                     this.startDate = range.start;
                     this.endDate = range.end;
                 } else {
-                    this.errorMessage = `Data source ${dataSource.name} may be empty`;
+                    this.errorMessage = `${this.$t('dataSources.dataSource')} ${dataSource.name} ${this.$t('general.mayBeEmpty')}`;
                 }
             } else if (this.selectedDataSources.length === 1 && !this.timeseriesFlag) {
                 if (range.start !== 'NaN') {
                     this.startIndex = Number(range.start);
                     this.endIndex = Number(range.end);
                 } else {
-                    this.errorMessage = `Data source ${dataSource.name} may be empty`;
+                    this.errorMessage = `${this.$t('dataSources.dataSource')} ${dataSource.name} ${this.$t('general.mayBeEmpty')}`;
                 }
             }
         });
@@ -802,7 +802,7 @@ export default class TimeseriesViewerDialog extends Vue {
         this.errorMessage = '';
 
         if (this.timeseriesFlag && new Date(this.endDate) <= new Date(this.startDate)) {
-            this.errorMessage = 'Please enter an end date that is greater than the start date';
+            this.errorMessage = this.$t('errors.endDate') as string;
             return;
         }
 
@@ -933,7 +933,7 @@ export default class TimeseriesViewerDialog extends Vue {
 
         const xColumn = this.selectedColumns.find((c) => c.x);
         if (!xColumn) {
-            this.errorMessage = 'Please select an x column';
+            this.errorMessage = this.$t('errors.xCol') as string;
             return {};
         }
         // number and number64 are compatible
@@ -959,7 +959,7 @@ export default class TimeseriesViewerDialog extends Vue {
 
             // don't show data for data sources that are incompatible with the selected primary timestamp and not the current data source
             if (xColumnType !== dataSourceType && xColumn.dataSource !== dataSource.name) {
-                this.errorMessage = `Some data could not be displayed due to incompatible primary timestamp types. Type selected: ${xColumnType}`;
+                this.errorMessage = `${this.$t('errors.timestampType')} ${xColumnType}`;
                 continue;
             }
 
@@ -1068,7 +1068,7 @@ export default class TimeseriesViewerDialog extends Vue {
       }`,
                 };
             } else {
-                this.errorMessage = 'Unrecognized primary timestamp type';
+                this.errorMessage = this.$t('errors.unrecognizedTimestamp') as string;
                 return '';
             }
         }

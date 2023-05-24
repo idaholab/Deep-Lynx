@@ -4,11 +4,11 @@
       <error-banner :message="errorMessage"></error-banner>
       <success-banner :message="successMessage"></success-banner>
       <v-alert type="success" v-if="importedMappingResults.length > 0">
-        {{$t('dataMapping.mappingsImported')}} -
-        <v-btn style="margin-top: 10px" class="mb-2" @click="reviewMappings = true">Review</v-btn>
+        {{$t('typeMappings.successfullyImported')}} -
+        <v-btn style="margin-top: 10px" class="mb-2" @click="reviewMappings = true">{{$t('general.review')}}</v-btn>
       </v-alert>
       <v-toolbar flat color="white">
-        <v-toolbar-title>{{$t('home.dataMappingDescription')}}</v-toolbar-title>
+        <v-toolbar-title>{{$t('typeMappings.description')}}</v-toolbar-title>
       </v-toolbar>
 
       <div class="mx-2">
@@ -23,13 +23,13 @@
       <v-divider v-if="selectedDataSource !== null"></v-divider>
 
       <v-tabs v-if="selectedDataSource !== null" grow class="mt-4">
-        <v-tab @click="activeTab = 'currentMappings'">{{$t('dataMapping.currentMappings')}}</v-tab>
+        <v-tab @click="activeTab = 'currentMappings'">{{$t('typeMappings.current')}}</v-tab>
         <v-tab @click="activeTab = 'pendingTransformations'" :disabled="noTransformationsCount === 0">
           <v-badge class="transformation-badge" v-if="noTransformationsCount !== 0" color="green" :content="noTransformationsCount">
-            {{$t('dataMapping.needsTransformations')}}
+            {{$t('typeMappings.needsTransformations')}}
           </v-badge>
           <div v-if="noTransformationsCount === 0">
-            {{$t('dataMapping.needsTransformations')}}
+            {{$t('typeMappings.needsTransformations')}}
           </div>
         </v-tab>
       </v-tabs>
@@ -45,13 +45,13 @@
                 :search-input.sync="metatypeSearch"
                 :single-line="false"
                 item-text="name"
-                :label="$t('dataMapping.chooseResultingMetatype')"
-                :placeholder="$t('dataMapping.typeToSearch')"
+                :label="$t('classes.select')"
+                :placeholder="$t('classes.search')"
                 return-object
                 :disabled="selectedRelationshipPair != null"
                 clearable
             >
-              <template slot="append-outer"><info-tooltip :message="$t('dataMapping.metatypeSearchHelp')"></info-tooltip> </template>
+              <template slot="append-outer"><info-tooltip :message="$t('help.classSearch')"></info-tooltip> </template>
             </v-autocomplete>
           </v-col>
           <v-col :cols="6" class="px-8">
@@ -61,13 +61,13 @@
                 :search-input.sync="relationshipPairSearch"
                 :single-line="false"
                 item-text="name"
-                :label="$t('dataMapping.chooseResultingRelationship')"
-                :placeholder="$t('dataMapping.typeToSearchRelationship')"
+                :label="$t('relationships.select')"
+                :placeholder="$t('relationships.search')"
                 return-object
                 :disabled="selectedMetatype != null"
                 clearable
             >
-              <template slot="append-outer"><info-tooltip :message="$t('dataMapping.relationshipPairSearchHelp')"></info-tooltip></template>
+              <template slot="append-outer"><info-tooltip :message="$t('help.relationshipSearch')"></info-tooltip></template>
 
               <template slot="item" slot-scope="data">
                 {{data.item.origin_metatype_name}} - {{data.item.relationship_pair_name}} - {{data.item.destination_metatype_name}}
@@ -169,8 +169,8 @@
 
 
           <template v-slot:[`item.isError`]="{ item }">
-            <p v-if="!item.isError">Successful</p>
-            <p v-else class="warning--text">Error: {{item.error}}</p>
+            <p v-if="!item.isError">{{$t('general.successful')}}</p>
+            <p v-else class="warning--text">{{$t('errors.error')}}: {{item.error}}</p>
           </template>
 
           <template v-slot:[`item.value.sample_payload`]="{ item }">
@@ -202,10 +202,10 @@
         </v-data-table>
 
         <v-toolbar v-if="reviewMappings">
-          <v-btn color="error" @click="reviewMappings = false; importedMappingResults = []">End Review</v-btn>
+          <v-btn color="error" @click="reviewMappings = false; importedMappingResults = []">{{$t('general.endReview')}}</v-btn>
         </v-toolbar>
 
-        <v-col :cols="4" class="mt-2 mb-n3"><div class="box edited mr-2"></div><p>{{$t('dataMapping.deprecated')}} <info-tooltip :message="$t('dataMapping.deprecatedTooltip')"></info-tooltip></p></v-col>
+        <v-col :cols="4" class="mt-2 mb-n3"><div class="box edited mr-2"></div><p>{{$t('transformations.deprecated')}} <info-tooltip :message="$t('help.deprecatedParams')"></info-tooltip></p></v-col>
         <v-data-table
             v-if="!selectedMetatype && !selectedRelationshipPair && !reviewMappings"
             :headers="headers()"
@@ -320,7 +320,7 @@
     >
       <v-card class="d-flex flex-column">
         <v-card-title class="grey lighten-2 flex-shrink-1">
-          <span class="headline text-h3">{{$t('dataMapping.viewSamplePayload')}}</span>
+          <span class="headline text-h3">{{$t('typeMappings.viewSamplePayload')}}</span>
         </v-card-title>
 
         <json-viewer
@@ -331,7 +331,7 @@
 
         <v-card-actions class="flex-shrink-1">
           <v-spacer></v-spacer>
-          <v-btn color="primary" text @click="dataDialog = false" >{{$t("dataMapping.done")}}</v-btn>
+          <v-btn color="primary" text @click="dataDialog = false" >{{$t("general.done")}}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -343,7 +343,7 @@
     >
       <v-card class="d-flex flex-column">
         <v-card-title class="grey lighten-2 flex-shrink-1">
-          <span class="headline text-h3">{{$t('dataImports.editTypeMapping')}}</span>
+          <span class="headline text-h3">{{$t('typeMappings.typeMapping')}}</span>
           <v-flex class="text-right">
             <v-icon class="justify-right"  @click="mappingDialog = false">mdi-window-close</v-icon>
           </v-flex>
@@ -361,7 +361,7 @@
         </div>
         <v-card-actions class="flex-shrink-1">
           <v-spacer></v-spacer>
-          <v-btn color="primary" text @click="mappingDialog = false" >{{$t("dataMapping.done")}}</v-btn>
+          <v-btn color="primary" text @click="mappingDialog = false" >{{$t("general.done")}}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -373,7 +373,7 @@
     >
       <v-card class="d-flex flex-column">
         <v-card-title class="grey lighten-2 flex-shrink-1">
-          <span class="headline text-h3">{{$t('dataImports.editTypeMapping')}}</span>
+          <span class="headline text-h3">{{$t('typeMappings.typeMapping')}}</span>
           <v-flex class="text-right">
             <v-icon class="justify-right"  @click="upgradeDialog = false">mdi-window-close</v-icon>
           </v-flex>
@@ -381,13 +381,13 @@
 
         <v-card-text>
           <v-alert type="warning">
-            {{$t('dataImports.upgradeMappingsWarning')}}
+            {{$t('warnings.upgradeMapping')}}
           </v-alert>
         </v-card-text>
 
         <v-card-actions class="flex-shrink-1">
           <v-spacer></v-spacer>
-          <v-btn color="primary" @click="upgradeMappings">Upgrade All Mappings</v-btn>
+          <v-btn color="primary" @click="upgradeMappings">{{$t('typeMappings.upgradeAll')}}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -472,23 +472,23 @@ export default class DataMapping extends Vue {
 
   headers() {
     return [{
-      text: this.$t('dataMapping.enabled'),
+      text: this.$t('general.enabled'),
       value: "active",
       align: 'center'
     },{
-      text: this.$t('dataMapping.createdAt'),
+      text: this.$t('general.createdAt'),
       value: "created_at"
     },{
-      text: this.$t('dataMapping.resultingTypes'),
+      text: this.$t('typeMappings.resultingName'),
       value: "resulting_types",
       sortable: false
     },{
-      text: this.$t('dataMapping.samplePayload'),
+      text: this.$t('typeMappings.samplePayload'),
       value: "sample_payload",
       align: 'center',
       sortable: false
     },{
-      text: 'Actions',
+      text: this.$t('general.actions'),
       value: 'actions',
       align: 'center',
       sortable: false
@@ -497,16 +497,16 @@ export default class DataMapping extends Vue {
 
   reviewHeaders() {
     return [{
-      text: this.$t('dataMapping.importedSuccessfully'),
+      text: this.$t('imports.status'),
       value: "isError",
       align: 'center'
     },{
-      text: this.$t('dataMapping.samplePayload'),
+      text: this.$t('typeMappings.samplePayload'),
       value: "value.sample_payload",
       align: 'center',
       sortable: false
     },{
-      text: 'Actions',
+      text: this.$t('general.actions'),
       value: 'actions',
       align: 'center',
       sortable: false
@@ -515,19 +515,19 @@ export default class DataMapping extends Vue {
 
   noTransformationHeaders() {
     return [{
-      text: this.$t('dataMapping.enabled'),
+      text: this.$t('general.enabled'),
       value: "active",
       align: 'center'
     },{
-      text: this.$t('dataMapping.createdAt'),
+      text: this.$t('general.createdAt'),
       value: "created_at"
     },{
-      text: this.$t('dataMapping.samplePayload'),
+      text: this.$t('typeMappings.samplePayload'),
       value: "sample_payload",
       align: 'center',
       sortable: false
     },{
-      text: 'Actions',
+      text: this.$t('general.actions'),
       value: 'actions',
       align: 'center',
       sortable: false
@@ -770,7 +770,7 @@ export default class DataMapping extends Vue {
   }
 
   mappingsExported() {
-    this.successMessage = 'Mappings successfully Exported'
+    this.successMessage = this.$t('typeMappings.successfullyExported') as string
   }
 
   // allows the user to potentially review imported type mappings
@@ -778,7 +778,7 @@ export default class DataMapping extends Vue {
     this.importedMappingResults = results
     const errors = results.filter(r => r.isError)
     if(errors.length > 0){
-      this.errorMessage = `Errors importing type mappings: check type mapping file or logs for more information`
+      this.errorMessage = this.$t('errors.importMappings') as string
       this.loadTypeMappings()
     } else {
       this.$router.go(0);

@@ -9,7 +9,7 @@
 
       <template v-slot:top>
         <v-toolbar flat color="white">
-          <v-toolbar-title>{{$t("home.serviceUsersDescription")}}</v-toolbar-title>
+          <v-toolbar-title>{{$t("serviceUsers.description")}}</v-toolbar-title>
           <v-spacer></v-spacer>
           <create-service-user :containerID="containerID" @serviceUserCreated="refreshUsers()"></create-service-user>
         </v-toolbar>
@@ -51,9 +51,9 @@
 
     get headers() {
       return  [
-        { text: this.$t("users.name"), value: 'display_name' },
-        { text: this.$t("users.createdAt"), value: 'created_at'},
-        { text: this.$t("users.actions"), value: 'actions', sortable: false }
+        { text: this.$t("general.name"), value: 'display_name' },
+        { text: this.$t("general.createdAt"), value: 'created_at'},
+        { text: this.$t("general.actions"), value: 'actions', sortable: false }
       ]
     }
 

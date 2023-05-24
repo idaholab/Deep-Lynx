@@ -7,18 +7,18 @@
           class="mr-2"
           v-on="on"
       >mdi-card-plus</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("createServiceUser.createServiceUser")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("serviceUsers.create")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline text-h3">{{$t('createServiceUser.createTitle')}}</span>
+        <span class="headline text-h3">{{$t('serviceUsers.create')}}</span>
       </v-card-title>   
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
         <v-row>
           <v-col :cols="12">
-            <p>{{$t('createServiceUser.description')}}</p>
+            <p>{{$t('serviceUsers.createDescription')}}</p>
 
             <v-form
                 ref="form"
@@ -26,63 +26,63 @@
             >
               <v-text-field
                   v-model="name"
-                  :rules="[v => !!v || $t('createServiceUser.nameMissing')]"
+                  :rules="[v => !!v || $t('validation.required')]"
                   required
               >
-                <template v-slot:label>{{$t('createServiceUser.name')}} <small style="color:red" >*</small></template>
+                <template v-slot:label>{{$t('general.name')}} <small style="color:red" >*</small></template>
               </v-text-field>
 
 
-              <span class="headline text-h4">{{$t('createServiceUser.permissions')}}</span>
-              <p style="margin-bottom: 0px">{{$t('serviceUserPermissions.containersDescription')}}</p>
+              <span class="headline text-h4">{{$t('users.permissions')}}</span>
+              <p style="margin-bottom: 0px">{{$t('serviceUsers.containersDescription')}}</p>
               <v-select
                   :items="options"
                   v-model="permissionSet.containers"
                   multiple
                   style="margin-top: 0px"
               >
-                <template v-slot:label>{{$t('serviceUserPermissions.containers')}}</template>
+                <template v-slot:label>{{$t('serviceUsers.containers')}}</template>
               </v-select>
 
-              <p style="margin-bottom: 0px">{{$t('serviceUserPermissions.ontologyDescription')}}</p>
+              <p style="margin-bottom: 0px">{{$t('serviceUsers.ontologyDescription')}}</p>
               <v-select
                   :items="options"
                   v-model="permissionSet.ontology"
                   multiple
                   style="margin-top: 0px"
               >
-                <template v-slot:label>{{$t('serviceUserPermissions.ontology')}}</template>
+                <template v-slot:label>{{$t('serviceUsers.ontology')}}</template>
               </v-select>
 
-              <p style="margin-bottom: 0px">{{$t('serviceUserPermissions.dataDescription')}}</p>
+              <p style="margin-bottom: 0px">{{$t('serviceUsers.dataDescription')}}</p>
               <v-select
                   :items="options"
                   v-model="permissionSet.data"
                   multiple
                   style="margin-top: 0px"
               >
-                <template v-slot:label>{{$t('serviceUserPermissions.data')}}</template>
+                <template v-slot:label>{{$t('serviceUsers.data')}}</template>
               </v-select>
 
-              <p style="margin-bottom: 0px">{{$t('serviceUserPermissions.usersDescription')}}</p>
+              <p style="margin-bottom: 0px">{{$t('serviceUsers.usersDescription')}}</p>
               <v-select
                   :items="options"
                   v-model="permissionSet.users"
                   multiple
                   style="margin-top: 0px"
               >
-                <template v-slot:label>{{$t('serviceUserPermissions.users')}}</template>
+                <template v-slot:label>{{$t('serviceUsers.users')}}</template>
               </v-select>
             </v-form>
-            <p><span style="color:red">*</span> = {{$t('createServiceUser.requiredField')}}</p>
+            <p><span style="color:red">*</span> = {{$t('validation.required')}}</p>
           </v-col>
         </v-row>
       </v-card-text>
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" text @click="dialog = false; reset()" >{{$t("createServiceUser.cancel")}}</v-btn>
-        <v-btn color="primary" :disabled="!valid" text @click="createServiceUser()">{{$t("createServiceUser.save")}}</v-btn>
+        <v-btn color="primary" text @click="dialog = false; reset()" >{{$t("general.cancel")}}</v-btn>
+        <v-btn color="primary" :disabled="!valid" text @click="createServiceUser()">{{$t("general.save")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -116,7 +116,7 @@ export default class CreateServiceUser extends Vue {
     this.$client.createServiceUser(this.containerID, {display_name: this.name})
         .then(result => {
           if(!result) {
-            this.errorMessage = this.$t('createServiceUser.errorCreatingAPI') as string
+            this.errorMessage = this.$t('errors.errorCommunicating') as string
           } else {
             this.$client.setServiceUsersPermissions(this.containerID, result.id, this.permissionSet)
                 .then(()=> {
@@ -132,7 +132,7 @@ export default class CreateServiceUser extends Vue {
                 })
           }
         })
-        .catch(e => this.errorMessage = this.$t('createServiceUser.errorCreatingAPI') as string + e)
+        .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
   }
 
   reset() {

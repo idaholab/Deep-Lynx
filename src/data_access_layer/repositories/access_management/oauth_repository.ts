@@ -19,7 +19,7 @@ const crypto = require('crypto');
 
 /*
     OAuthRepository contains methods for persisting and retrieving OAuthApplications
-    to storage as well as managing OAuth Request/Responses from Deep Lynx's OAuth2
+    to storage as well as managing OAuth Request/Responses from DeepLynx's OAuth2
     compliant identity service. Users should interact with repositories when
     possible and not the mappers as the repositories contain additional logic such
     as validation or transformation prior to storage or returning.

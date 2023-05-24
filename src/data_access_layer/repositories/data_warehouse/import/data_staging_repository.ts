@@ -11,6 +11,7 @@ import Logger from '../../../../services/logger';
 import Config from '../../../../services/config';
 import DataSourceMapper from '../../../mappers/data_warehouse/import/data_source_mapper';
 import {instanceToPlain} from 'class-transformer';
+import Import from '../../../../domain_objects/data_warehouse/import/import';
 
 /*
     DataStaging contains methods for persisting and retrieving an import's data
@@ -256,12 +257,12 @@ export default class DataStagingRepository extends Repository implements Reposit
         return this.#mapper.AddError(id, errors, transaction);
     }
 
-    addFile(t: DataStaging, fileID: string): Promise<Result<boolean>> {
-        if (!t.id) {
-            return Promise.resolve(Result.Failure('staging record must have id'));
-        }
+    addFile(stagingID: string, fileID: string): Promise<Result<boolean>> {
+        return this.#mapper.AddFile(stagingID, fileID);
+    }
 
-        return this.#mapper.AddFile(t.id, fileID);
+    addFileWithImport(importID: string, fileID: string): Promise<Result<boolean>> {
+        return this.#mapper.AddFileWithImport(importID, fileID);
     }
 
     removeFile(t: DataStaging, fileID: string): Promise<Result<boolean>> {

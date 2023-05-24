@@ -115,7 +115,7 @@ export class Server {
                 });
         });
 
-        this.logger.info(`starting Deep Lynx on port ${Config.server_port}`);
+        this.logger.info(`starting DeepLynx on port ${Config.server_port}`);
         // eslint-disable-next-line @typescript-eslint/no-empty-function,no-empty-function
         const server = this.server.listen(Config.server_port, () => {}); // empty callback on application exit. Could add something
         // here later if needed, such as processing cleanup

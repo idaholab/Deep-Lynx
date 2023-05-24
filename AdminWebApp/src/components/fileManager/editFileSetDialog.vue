@@ -7,12 +7,12 @@
           class="mr-2"
           v-on="on"
       >mdi-pencil</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("fileManager.updateFile")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("files.update")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline text-h3">{{$t("fileManager.updateFile")}}</span>
+        <span class="headline text-h3">{{$t("files.update")}}</span>
       </v-card-title>
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
@@ -28,10 +28,10 @@
               <v-file-input
                   show-size
                   truncate-length="50"
-                  :label="$t('fileManager.newFile')"
+                  :label="$t('files.new')"
                   @change="changeFile"
                   v-model="fileToUpload"
-                  :rules="[v => !!v || $t('fileManager.filesRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
               ></v-file-input>
 
             </v-form>
@@ -41,12 +41,12 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" text @click="clearNewFileSet" >{{$t("home.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="clearNewFileSet" >{{$t("general.cancel")}}</v-btn>
         <v-btn
             color="primary"
             text
             @click="updateFile" >
-          {{$t("home.save")}}
+          {{$t("general.save")}}
         </v-btn>
       </v-card-actions>
     </v-card>

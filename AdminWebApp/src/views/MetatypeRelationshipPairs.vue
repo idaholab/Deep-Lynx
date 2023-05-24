@@ -24,13 +24,13 @@
         <error-banner :message="errorMessage"></error-banner>
         <success-banner :message="successMessage"></success-banner>
         <v-alert type="success" v-if="createdMetatypeRelationshipPair">
-          {{$t('metatypeRelationshipPairs.pairSuccessfullyCreated')}} -
+          {{$t('relationships.createdSuccessfully')}} -
           <span>
             <edit-metatype-relationship-pair-dialog :pair="createdMetatypeRelationshipPair"></edit-metatype-relationship-pair-dialog>
           </span>
         </v-alert>
         <v-toolbar flat color="white">
-          <v-toolbar-title>{{$t("home.metatypeRelationshipPairsDescription")}}</v-toolbar-title>
+          <v-toolbar-title>{{$t("relationships.description")}}</v-toolbar-title>
           <v-spacer></v-spacer>
           <create-relationship-pair-dialog
               v-if="($store.getters.isEditMode && $store.getters.ontologyVersioningEnabled && $store.state.selectedChangelist) || !$store.getters.ontologyVersioningEnabled"
@@ -40,22 +40,22 @@
         </v-toolbar>
         <v-row>
           <v-col :cols="6">
-            <v-text-field v-model="name" :label="$t('metatypeRelationships.searchName')" class="mx-4"></v-text-field>
+            <v-text-field v-model="name" :label="$t('relationships.searchName')" class="mx-4"></v-text-field>
           </v-col>
           <v-col :cols="6">
-            <v-text-field v-model="description" :label="$t('metatypeRelationships.searchDescription')" class="mx-4"></v-text-field>
+            <v-text-field v-model="description" :label="$t('relationships.searchDescription')" class="mx-4"></v-text-field>
           </v-col>
           <v-col :cols="6">
-            <v-text-field v-model="originName" :label="$t('metatypeRelationships.searchOrigin')" class="mx-4"></v-text-field>
+            <v-text-field v-model="originName" :label="$t('edges.originClassSearch')" class="mx-4"></v-text-field>
           </v-col>
           <v-col :cols="6">
-            <v-text-field v-model="destinationName" :label="$t('metatypeRelationships.searchDestination')" class="mx-4"></v-text-field>
+            <v-text-field v-model="destinationName" :label="$t('edges.destinationClassSearch')" class="mx-4"></v-text-field>
           </v-col>
         </v-row>
         <v-row v-if="$store.getters.isEditMode">
-          <v-col :cols="2"><div class="box created mr-2"></div><p>{{$t('metatypes.created')}}</p></v-col>
-          <v-col :cols="2"><div class="box edited mr-2"></div><p>{{$t('metatypes.edited')}}</p></v-col>
-          <v-col :cols="2"><div class="box removed mr-2"></div><p>{{$t('metatypes.removed')}}</p></v-col>
+          <v-col :cols="2"><div class="box created mr-2"></div><p>{{$t('general.created')}}</p></v-col>
+          <v-col :cols="2"><div class="box edited mr-2"></div><p>{{$t('general.edited')}}</p></v-col>
+          <v-col :cols="2"><div class="box removed mr-2"></div><p>{{$t('general.removed')}}</p></v-col>
         </v-row>
       </template>
 
@@ -64,7 +64,7 @@
           <template v-slot:activator="{on, attrs}">
             <v-icon v-bind="attrs" v-on="on" @click="copyID(item.id)">{{copy}}</v-icon>
           </template>
-          <span>{{$t('metatypes.copyID')}}</span>
+          <span>{{$t('general.copyID')}}</span>
           <span>{{item.id}}</span>
         </v-tooltip>
       </template>
@@ -95,7 +95,7 @@
               mdi-delete
             </v-icon>
           </template>
-          <span>{{$t('metatypeRelationshipPairs.removePair')}}</span>
+          <span>{{$t('relationships.remove')}}</span>
         </v-tooltip>
 
         <v-tooltip bottom>
@@ -110,7 +110,7 @@
               mdi-restore
             </v-icon>
           </template>
-          <span>{{$t('metatypeRelationshipPairs.restorePair')}}</span>
+          <span>{{$t('relationships.restore')}}</span>
         </v-tooltip>
 
       </template>
@@ -210,12 +210,12 @@ export default class MetatypeRelationshipPairs extends Vue {
   headers() {
     return [
       { text: '', value: 'copy' },
-      { text: this.$t('metatypeRelationshipPairs.id'), value: 'id' },
-      { text: this.$t('metatypeRelationshipPairs.name'), value: 'name' },
-      { text: this.$t('metatypeRelationshipPairs.originName'), value: 'origin_metatype_name',sortable: false},
-      { text: this.$t('metatypeRelationshipPairs.destinationName'), value: 'destination_metatype_name', sortable: false },
-      { text: this.$t('metatypeRelationshipPairs.description'), value: 'description'},
-      { text: this.$t('metatypeRelationshipPairs.actions'), value: 'actions', sortable: false }
+      { text: this.$t('general.id'), value: 'id' },
+      { text: this.$t('general.name'), value: 'name' },
+      { text: this.$t('edges.origin'), value: 'origin_metatype_name',sortable: false},
+      { text: this.$t('edges.destination'), value: 'destination_metatype_name', sortable: false },
+      { text: this.$t('general.description'), value: 'description'},
+      { text: this.$t('general.actions'), value: 'actions', sortable: false }
     ]
   }
 

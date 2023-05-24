@@ -7,7 +7,7 @@
           :headers="headers()"
       >
         <template v-slot:top>
-          <p>{{$t('timeseries.explanation')}}</p>
+          <p>{{$t('timeseries.nodeExplanation')}}</p>
         </template>
 
         <template v-slot:item.actions="{ item }">
@@ -42,8 +42,8 @@ export default class NodeTimeseriesDataTable extends Vue {
 
   headers() {
     return [
-      {text: this.$t('timeseries.name'), value: 'name'},
-      {text: this.$t('timeseries.actions'), value: 'actions', sortable: false},
+      {text: this.$t('general.name'), value: 'name'},
+      {text: this.$t('general.view'), value: 'actions', sortable: false},
     ]
   }
 

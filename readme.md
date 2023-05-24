@@ -24,7 +24,7 @@ Leveraging this rich set of integrations allows for projects to efficiently cons
 1. [Wiki](https://github.com/idaholab/Deep-Lynx/wiki/Home)
 2. API level documentation in the form of an OpenAPI (Swagger) collection - found in the `API Documentation` folder
 
-## **Installation and Running Deep Lynx**
+## **Installation and Running DeepLynx**
 
 ### Docker
 ___________
@@ -56,13 +56,13 @@ _________
 - **Required** - `pg-crypto` Postgres extension (automatically included with Postgres > 12 and in the Docker images)
 - [TimescaleDB Postgres Extension](https://www.timescale.com/) - needed for raw data retention and time-series data
 
-You must follow these steps in the exact order given. Failure to do so will cause Deep Lynx to either fail to launch, or launch with problems.
+You must follow these steps in the exact order given. Failure to do so will cause DeepLynx to either fail to launch, or launch with problems.
 
 1. NodeJS must be installed. You can find the download for your platform here: https://nodejs.org/en/download/ **note** - Newer versions of Node may be incompatible with some of the following commands. The most recent version tested that works fully is 16.13.0 - the latest LTS version.  
 
 2. Clone the DeepLynx [repository](https://github.inl.gov/Digital-Engineering/DeepLynx/tree/main).
 
-3. Change directories with `cd ./NodeLibraries/dl-fast-load` and run `cargo clean && cargo build --release  --message-format=json-render-diagnostics  > build-output.txt` - this preps the dl-fast-load rust module for installation
+3. Change directories with `cd ../deeplynx-timeseries` and run `npm install` and then `npm run build` - this preps deeplynx-timeseries rust module for installation.
 
 4. Return to the root DeepLynx directory with `cd ../../` and run `npm upgrade && npm ci`.
 
@@ -70,7 +70,7 @@ You must follow these steps in the exact order given. Failure to do so will caus
 
 6. Update `.env` file. See the `readme` or comments in the file itself for details. 
 
-7. To build the database using docker, follow step **a**. To use a dedicated PostgreSQL database, follow step **b**. Then continue to step 8.   
+7. To build the database using docker, follow step **a**. To use a dedicated PostgreSQL database, follow step **b**. Then continue to step 9.   
 
 - 7a) Building the database using Docker:  
      - Ensure Docker is installed. You can find the download here: https://www.docker.com/products/docker-desktop.  
@@ -80,7 +80,6 @@ You must follow these steps in the exact order given. Failure to do so will caus
 ![image](uploads/e1d906d0399b1e4f890bf61035e5b64c/image.png)
      - Run `npm run docker:postgres:run` to run the created docker image (For Mac users, there is an alternative command `npm run mac:docker:postgres:run`).  
      - **Alternatively** you may use `npm run docker:timescale:run` (`npm run mac:docker:timescale:run` for Mac)to run a Postgres Docker image with the TimescaleDB extension already installed - to use TimescaleDB change the `.env` environment variable `TIMESCALEDB_ENABLED` to be `true`
-
 - 7b) Building the database using a dedicated PostgreSQL database:  
      - Ensure PostgreSQL is installed. You can find the download here: https://www.postgresql.org/download/. Please see [this page](DeepLynx-Requirements) for the latest requirements on PostgreSQL version.  
      - Run pgAdmin and create a new database. The database name should match whatever value is provided in the `CORE_DB_CONNECTION_STRING` of the `.env` file. The default value is `deep_lynx`.  
@@ -89,7 +88,7 @@ You must follow these steps in the exact order given. Failure to do so will caus
 8. Run `npm run build` to build the internal modules and bundled administration GUI. **Note** You must re-run this command  if you make changes to the administration GUI.
 ![image](uploads/72791227158a46ba389346566f745ccb/image.png)
 
-10. Run `npm run watch` or `npm run start` to start the application. See the `readme` for additional details and available commands. **This command starts a process that only ends when a user terminates with Cntrl+C or Cntrl+D - you will see a constant feed of logs from this terminal once you have started Deep Lynx. This is normal.** Changes to the source code of Deep Lynx will be captured if you run the application with the `npm run watch` command.
+9. Run `npm run watch` or `npm run start` to start the application. See the `readme` for additional details and available commands. **This command starts a process that only ends when a user terminates with Cntrl+C or Cntrl+D - you will see a constant feed of logs from this terminal once you have started DeepLynx. This is normal.** Changes to the source code of DeepLynx will be captured if you run the application with the `npm run watch` command.
 ![image](uploads/c04ddc5cfea2b77ffe47287d8c213700/image.png)
 
 **Note:** DeepLynx ships with a Vue single page application which serves as the primary UI for the DeepLynx system. You can run this [separately](Administration-Web-App-Installation) (and it's recommended to do so if you're developing it).
@@ -134,15 +133,15 @@ This application uses [Mocha](https://mochajs.org/) and [Chai](https://www.chaij
 
 If you decide to test graph functionality (Gremlin functionality in particular) in isolation or use something other than a CosmosDB or CosmosDB emulator you _must_ ensure that the `DATA_SOURCE_GRAPHSON_V1` environment variable is left blank. Failure to do so means you might be communicating in an unsupported format, or an unsupported combination of formats.
 
-You must also have run Deep Lynx at least once in order to run the testing suite.
+You must also have run DeepLynx at least once in order to run the testing suite.
 
 ## **Available Commands**
 
 Below is a list of all `npm run` commands as listed in the `package.json` file.
 
-- `docker:api:build` Creates a docker image of Deep Lynx injecting the .env file for configuration.
-- `docker:api:run` Runs previously created Deep Lynx image.
-- `docker:api:clean` Stops the Deep Lynx Docker container run by the command above and deletes the container and image.
+- `docker:api:build` Creates a docker image of DeepLynx injecting the .env file for configuration.
+- `docker:api:run` Runs previously created DeepLynx image.
+- `docker:api:clean` Stops the DeepLynx Docker container run by the command above and deletes the container and image.
 - `docker:postgres:build` Creates a Docker image containing a Postgres 12 data source.
 - `docker:postgres:run` Runs previously created Postgres image.
 - `docker:postgres:clean` Stops the Postgres Docker container run by the command above and deletes the container and image.
@@ -152,4 +151,4 @@ Below is a list of all `npm run` commands as listed in the `package.json` file.
 - `watch` Starts the application and rebuilds it each time you make a change to the code. **Note:** this command will not rebuild the bundled Admin Web Application
 - `test`: Runs all tests using the `.env` file to configure application and tests **Note:** You must have run the application at least once so that the database migration took place correctly.
 
-**There is a lot more information about Deep Lynx, and it's capabilities in its [Wiki](https://github.com/idaholab/Deep-Lynx/wiki/). We highly recommend you start there if you have questions or need to figure out how best to utilize Deep Lynx in your project.**
+**There is a lot more information about DeepLynx, and it's capabilities in its [Wiki](https://github.com/idaholab/Deep-Lynx/wiki/). We highly recommend you start there if you have questions or need to figure out how best to utilize DeepLynx in your project.**

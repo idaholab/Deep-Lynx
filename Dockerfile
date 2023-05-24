@@ -10,9 +10,6 @@ WORKDIR /srv/core_api
 COPY . .
 ENV RUSTFLAGS="-C target-feature=-crt-static"
 
-WORKDIR /srv/core_api/NodeLibraries/dl-fast-load
-RUN cargo build --release  --message-format=json-render-diagnostics  > build-output.txt
-
 WORKDIR /srv/core_api/NodeLibraries/deeplynx-timeseries
 RUN npm run build
 
@@ -50,7 +47,6 @@ RUN npm install cargo-cp-artifact --location=global
 COPY . .
 RUN rm -rf /srv/core_api/NodeLibraries/dl-fast-load
 RUN rm -rf /srv/core_api/NodeLibraries/deeplynx-timeseries
-COPY --from=build-rust /srv/core_api/NodeLibraries/dl-fast-load /srv/core_api/NodeLibraries/dl-fast-load
 COPY --from=build-rust /srv/core_api/NodeLibraries/deeplynx-timeseries /srv/core_api/NodeLibraries/deeplynx-timeseries
 
 RUN npm ci --include=dev

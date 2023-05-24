@@ -9,7 +9,7 @@
           <v-toolbar
               flat
           >
-            <v-toolbar-title>{{$t('nodeTags.attachedTags')}}</v-toolbar-title>
+            <v-toolbar-title>{{$t('tags.attached')}}</v-toolbar-title>
             <v-divider
                 class="mx-4"
                 inset
@@ -30,13 +30,13 @@
                     v-bind="attrs"
                     v-on="on"
                 >
-                  {{$t('nodeTags.addTag')}}
+                  {{$t('tags.add')}}
                 </v-btn>
               </template>
 
               <v-card class="pt-1 pb-3 px-2">
                 <v-card-title>
-                   <span class="headline text-h3">{{$t('nodeTags.addTag')}}</span>
+                   <span class="headline text-h3">{{$t('tags.add')}}</span>
                 </v-card-title>
                 <v-card-text>
                   <v-progress-linear indeterminate v-if="tagLoading"></v-progress-linear>
@@ -44,7 +44,7 @@
                       :items="containerTags"
                       item-text="tag_name"
                       return-object
-                      :label="$t('nodeTags.selectTag')"
+                      :label="$t('tags.select')"
                       v-model="selectedTag"
                   >
                   </v-select>
@@ -52,9 +52,9 @@
 
                 <v-card-actions>
                   <v-spacer></v-spacer>
-                  <v-btn color="primary" text @click="reset()">{{$t("home.cancel")}}</v-btn>
+                  <v-btn color="primary" text @click="reset()">{{$t("general.cancel")}}</v-btn>
                   <v-btn color="error" text @click="addTag(selectedTag)">
-                    {{$t("home.save")}}
+                    {{$t("general.save")}}
                   </v-btn>
                 </v-card-actions>
               </v-card>
@@ -69,7 +69,7 @@
             <template v-slot:activator="{on, attrs}">
               <v-icon v-bind="attrs" v-on="on" @click="copyID(item.id)">{{copy}}</v-icon>
             </template>
-            <span>{{$t('nodeTags.copyID')}} </span>
+            <span>{{$t('general.copyID')}} </span>
             <span>{{item.id}}</span>
           </v-tooltip>
         </template>
@@ -118,9 +118,9 @@ export default class NodeTagsDialog extends Vue {
 
   headers() {
     return [
-      {text: this.$t('nodeTags.id'), value: 'id', sortable: false},
-      {text: this.$t('nodeTags.tagName'), value: 'tag_name'},
-      {text: this.$t('nodeTags.actions'), value: 'actions', sortable: false}
+      {text: this.$t('general.id'), value: 'id', sortable: false},
+      {text: this.$t('tags.name'), value: 'tag_name'},
+      {text: this.$t('general.actions'), value: 'actions', sortable: false}
     ]
   }
 
