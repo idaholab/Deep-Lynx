@@ -115,7 +115,7 @@ test('ingestion async test', async (t) => {
                     .catch((e) => reject(e))
             });
 
-            let stream = fs.createReadStream('./test_files/1milliontest.csv');
+            let stream = fs.createReadStream('./test_files/sparse_ingestion_test.csv');
             stream.pipe(pass);
         })
     } catch (e) {
@@ -175,7 +175,7 @@ test('legacy ingestion async test', async (t) => {
                     .catch((e) => reject(e))
             });
 
-            let stream = fs.createReadStream('./test_files/1milliontestlegacy.csv');
+            let stream = fs.createReadStream('./test_files/sparse_legacy.csv');
             stream.pipe(pass);
         })
     } catch (e) {
