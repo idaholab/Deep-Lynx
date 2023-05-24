@@ -70,7 +70,7 @@ You must follow these steps in the exact order given. Failure to do so will caus
 
 6. Update `.env` file. See the `readme` or comments in the file itself for details. 
 
-7. To build the database using docker, follow step **a**. To use a dedicated PostgreSQL database, follow step **b**. Then continue to step 9.   
+7. To build the database using docker, follow step **a**. To use a dedicated PostgreSQL database, follow step **b**. Then continue to step 8.   
 
 - 7a) Building the database using Docker:  
      - Ensure Docker is installed. You can find the download here: https://www.docker.com/products/docker-desktop.  
