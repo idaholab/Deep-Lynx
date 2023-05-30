@@ -3,11 +3,10 @@ import * as React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
 // Hooks
-import {useState, useEffect} from "react";
+import { useState, useEffect, useCallback } from "react";
 
 // Helpers
-import ParseWebGL from "../app/helpers/regex";
-import ParseTag from "../app/helpers/tags";
+import { AttachDeepLynx } from "./helpers/init";
 
 // MUI Styles
 import {
@@ -88,50 +87,13 @@ const getDesignTokens = (mode: PaletteMode) => ({
 });
 
 function App() {
-
-  // Store
-  const dispatch = useAppDispatch();
-
   // Theme
   const theme = useTheme();
 
-  // Initialize React environment, setup to handle the webgl payload
-  useEffect(() => {
-    // In local development, the 3D Model Viewer targets a development container in deeplynx.azuredev.inl.gov
-    if(import.meta.env.MODE == "development") {
-      dispatch(appStateActions.setHost(import.meta.env.VITE_DEEPLYNX_HOST));
-      dispatch(appStateActions.setToken(import.meta.env.VITE_DEEPLYNX_TOKEN));
-      dispatch(appStateActions.setContainer(import.meta.env.VITE_DEEPLYNX_CONTAINER));
-
-      // Metadata
-      let metadata = JSON.parse(import.meta.env.VITE_DEEPLYNX_WEBGL_FILES);
-      dispatch(appStateActions.setMetadata(metadata));
-
-      const fileset = ParseWebGL(metadata);
-      const tag = ParseTag(fileset);
-
-      dispatch(appStateActions.setTag(tag));
-
-      dispatch(appStateActions.setQuery(true));
-    }
-    // In production, the envrionment is setup using variable DeepLynx put in localStorage
-    else {
-      dispatch(appStateActions.setHost(location.origin));
-      dispatch(appStateActions.setToken(localStorage.getItem('user.token')!));
-      dispatch(appStateActions.setContainer(localStorage.getItem('container')!));
-
-      // Metadata
-      let metadata = JSON.parse(import.meta.env.VITE_DEEPLYNX_WEBGL_FILES);
-      dispatch(appStateActions.setMetadata(metadata));
-
-      const fileset = ParseWebGL(metadata);
-      const tag = ParseTag(fileset);
-
-      dispatch(appStateActions.setTag(tag));
-
-      dispatch(appStateActions.setQuery(true));
-    }
-  }, [])
+  // Hooks 
+  useCallback(() => {
+    AttachDeepLynx();
+  }, []);
 
   theme.typography.h1 = {
     fontFamily: [
