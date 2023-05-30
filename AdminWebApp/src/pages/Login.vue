@@ -19,7 +19,7 @@
                     <div class="px-11">
                       <v-btn large block class="px-8" color="primary" type="submit" :href="loginURL">
                         <v-img max-height="40" max-width="40" src="../assets/data-white.png"></v-img>
-                        {{$t('login.deepLynx')}}
+                        {{$t('general.login')}}
                       </v-btn>
                     </div>
                   </v-row>
@@ -33,7 +33,7 @@
 
     <v-footer app>
       <v-col :cols="2" class="pa-0">
-        <span class="d-block text-h6">&copy; {{ new Date().getFullYear() }} Idaho National Laboratory</span>
+        <span class="d-block text-h6">&copy; {{ new Date().getFullYear() }} {{$t('general.inl')}}</span>
       </v-col>
       <v-col :cols="2" :offset="8" class="pa-0">
         <language-select class="mb-1"></language-select>

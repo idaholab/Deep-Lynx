@@ -7,8 +7,8 @@
         :search-input.sync="search"
         :single-line="false"
         item-text="name"
-        :label="$t('dataMapping.chooseMetatype')"
-        :placeholder="$t('dataMapping.typeToSearch')"
+        :label="$t('classes.select')"
+        :placeholder="$t('classes.search')"
         @change="emitSelected"
         return-object
         :multiple="multiple"

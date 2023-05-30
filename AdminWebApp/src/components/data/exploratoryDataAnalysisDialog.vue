@@ -6,7 +6,7 @@
   >
     <template v-slot:activator="{ on }">
       <v-btn class="mr-2 mt-8 primary" v-on="on">
-        Exploratory Data Analysis
+        {{$t('timeseries.analysis')}}
         <v-icon
             right
             dark
@@ -21,7 +21,7 @@
       <v-card class="pa-4 mb-4 d-flex justify-center">
         <v-row>
           <v-col :cols="12" class="d-flex justify-center">
-            <span>Data Source Shapes</span>
+            <span>{{$t('timeseries.sourceShapes')}}</span>
           </v-col>
 
           <v-col :cols="12" class="d-flex">
@@ -36,7 +36,7 @@
                 <span class="headline text-h4">{{ dataSource.name }} ({{ dataSource.id }})</span>
               </v-card-title>
               <v-card-subtitle v-if="dataSourceShapes.get(dataSource.id)">
-                <span class="headline text-subtitle-1">{{ dataSourceShapes.get(dataSource.id).count }} rows</span><br/>
+                <span class="headline text-subtitle-1">{{ dataSourceShapes.get(dataSource.id).count }} {{$t('general.rows')}}</span><br/>
                 <span class="headline text-subtitle-1">
                   {{ dataSourceShapes.get(dataSource.id).start }} - {{ dataSourceShapes.get(dataSource.id).end }}
                 </span>
@@ -53,7 +53,7 @@
       <v-card class="pa-4 my-4">
         <div id="correlationPlot"></div>
 
-        <span v-if="!correlationMatrixFlag">Results Length Varies, Cannot Show Correlation Matrix</span>
+        <span v-if="!correlationMatrixFlag">{{$t('errors.matrix')}}</span>
       </v-card>
 
       <v-row class="mx-0 mt-4">
@@ -64,7 +64,7 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="dialog = false">{{$t('home.cancel')}}</v-btn>
+        <v-btn color="primary" text @click="dialog = false">{{$t('general.cancel')}}</v-btn>
       </v-card-actions>
     </v-card>
 
@@ -182,7 +182,7 @@ export default class ExploratoryDataAnalysisDialog extends Vue {
 
     const boxLayout: Partial<Plotly.Layout> = {
       showlegend: true,
-      title: 'Box Plot',
+      title: this.$t('timeseries.boxPlot'),
     }
 
     if (plotlyBox) await Plotly.react(plotlyBox,
@@ -240,7 +240,7 @@ export default class ExploratoryDataAnalysisDialog extends Vue {
 
     const correlationLayout: Partial<Plotly.Layout> = {
       showlegend: true,
-      title: 'Correlation Plot',
+      title: this.$t('timeseries.correlationPlot'),
       margin: {
         l: 200
       },

@@ -7,12 +7,12 @@
           class="mr-2"
           v-on="on"
       >mdi-pencil</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("createMetatypeRelationshipKey.newKey")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("relationships.newProperty")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline text-h3">{{$t('createMetatypeRelationshipKey.newKey')}}</span>
+        <span class="headline text-h3">{{$t('relationships.newProperty')}}</span>
       </v-card-title>   
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
@@ -25,63 +25,63 @@
             >
               <v-text-field
                   v-model="metatypeRelationshipKey.name"
-                  :rules="[v => !!v || $t('createMetatypeRelationshipKey.nameRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
               >
-                <template v-slot:label>{{$t('createMetatypeRelationshipKey.name')}} <small style="color:red" >*</small></template>
+                <template v-slot:label>{{$t('general.name')}} <small style="color:red" >*</small></template>
               </v-text-field>
 
               <v-text-field
                   v-model="metatypeRelationshipKey.property_name"
-                  :rules="[v => !!v || $t('createMetatypeRelationshipKey.propertyNameRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
                   required
               >
-                <template v-slot:label>{{$t('createMetatypeRelationshipKey.propertyName')}} <small style="color:red" >*</small></template>
-                <template slot="append-outer"><info-tooltip :message="$t('ontology.propertyName')"></info-tooltip> </template>
+                <template v-slot:label>{{$t('properties.name')}} <small style="color:red" >*</small></template>
+                <template slot="append-outer"><info-tooltip :message="$t('help.propertyName')"></info-tooltip> </template>
               </v-text-field>
               <v-select
                   v-model="metatypeRelationshipKey.data_type"
                   :items="dataTypes"
                   @change="metatypeRelationshipKey.default_value = undefined"
-                  :rules="[v => !!v || $t('createMetatypeRelationshipKey.dataTypeRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
                   required
               >
-                <template v-slot:label>{{$t('createMetatypeRelationshipKey.dataType')}} <small style="color:red" >*</small></template>
+                <template v-slot:label>{{$t('general.dataType')}} <small style="color:red" >*</small></template>
               </v-select>
               <v-checkbox
                   v-model="metatypeRelationshipKey.required"
               >
-                <template v-slot:label>{{$t('createMetatypeRelationshipKey.required')}}</template>
+                <template v-slot:label>{{$t('validation.required')}}</template>
               </v-checkbox>
               <v-textarea
                   v-model="metatypeRelationshipKey.description"
                   :rows="2"
-                  :rules="[v => !!v || $t('createMetatypeRelationshipKey.descriptionRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
               >
-                <template v-slot:label>{{$t('createMetatypeRelationshipKey.description')}} <small style="color:red" >*</small></template>
+                <template v-slot:label>{{$t('general.description')}} <small style="color:red" >*</small></template>
               </v-textarea>
 
-              <h3>{{$t('createMetatypeRelationshipKey.validation')}}</h3>
+              <h3>{{$t('validation.validation')}}</h3>
               <v-text-field
                   v-model="metatypeRelationshipKey.validation.regex"
-                  :label="$t('createMetatypeRelationshipKey.regex')"
+                  :label="$t('validation.regex')"
               >
-                <template slot="append-outer"> <info-tooltip :message="$t('createMetatypeRelationshipKey.regexHelp')"></info-tooltip></template>
+                <template slot="append-outer"> <info-tooltip :message="$t('help.regex')"></info-tooltip></template>
               </v-text-field>
               <v-text-field
                   v-model.number="metatypeRelationshipKey.validation.max"
                   :disabled="metatypeRelationshipKey.validation.regex === ''"
                   type="number"
-                  :label="$t('createMetatypeRelationshipKey.max')"
+                  :label="$t('validation.max')"
               >
-                <template slot="append-outer"> <info-tooltip :message="$t('createMetatypeRelationshipKey.maxHelp')"></info-tooltip></template>
+                <template slot="append-outer"> <info-tooltip :message="$t('help.max')"></info-tooltip></template>
               </v-text-field>
               <v-text-field
                   v-model.number="metatypeRelationshipKey.validation.min"
                   :disabled="metatypeRelationshipKey.validation.regex === ''"
                   type="number"
-                  :label="$t('createMetatypeRelationshipKey.min')"
+                  :label="$t('validation.min')"
               >
-                <template slot="append-outer"> <info-tooltip :message="$t('createMetatypeRelationshipKey.minHelp')"></info-tooltip></template>
+                <template slot="append-outer"> <info-tooltip :message="$t('help.min')"></info-tooltip></template>
               </v-text-field>
 
               <!-- default value and options should be comboboxes when set to enumeration -->
@@ -96,13 +96,13 @@
 
                 <v-combobox
                     v-model="metatypeRelationshipKey.options"
-                    :label="$t('createMetatypeRelationshipKey.options')"
+                    :label="$t('general.options')"
                     multiple
                     clearable
                     deletable-chips
                     chips
                 >
-                  <template slot="append-outer"><info-tooltip :message="$t('ontology.optionsHelp')"></info-tooltip> </template>
+                  <template slot="append-outer"><info-tooltip :message="$t('help.enumOptions')"></info-tooltip> </template>
                 </v-combobox>
               </div>
 
@@ -111,12 +111,12 @@
                     v-if="metatypeRelationshipKey.data_type === 'number'"
                     v-model="metatypeRelationshipKey.default_value"
                     type="number"
-                    :label="$t('createMetatypeRelationshipKey.defaultValue')"
+                    :label="$t('general.defaultValue')"
                 ></v-text-field>
                 <v-select
                     v-else-if="metatypeRelationshipKey.data_type === 'boolean'"
                     v-model="metatypeRelationshipKey.default_value"
-                    :label="$t('createMetatypeRelationshipKey.defaultValue')"
+                    :label="$t('general.defaultValue')"
                     :items="booleanOptions"
                     required
                 >
@@ -124,20 +124,20 @@
                 <v-text-field
                     v-else
                     v-model="metatypeRelationshipKey.default_value"
-                    :label="$t('createMetatypeRelationshipKey.defaultValue')"
+                    :label="$t('general.defaultValue')"
                 ></v-text-field>
               </div>
 
             </v-form>
-            <p><span style="color:red">*</span> = {{$t('createMetatypeRelationshipKey.requiredField')}}</p>
+            <p><span style="color:red">*</span> = {{$t('validation.required')}}</p>
           </v-col>
         </v-row>
       </v-card-text>
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="dialog = false" >{{$t("createMetatypeRelationshipKey.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" :disabled="!formValid" text @click="createMetatypeKey()">{{$t("createMetatypeRelationshipKey.create")}}</v-btn>
+        <v-btn color="primary" text @click="dialog = false" >{{$t("general.cancel")}}</v-btn>
+        <v-btn color="primary" :disabled="!formValid" text @click="createMetatypeKey()">{{$t("general.create")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -173,13 +173,13 @@ export default class CreateMetatypeRelationshipKeyDialog extends Vue {
       this.$client.createMetatypeRelationshipKey(this.metatypeRelationship.container_id, this.metatypeRelationship.id!, this.metatypeRelationshipKey)
           .then(result => {
             if(!result) {
-              this.errorMessage = this.$t('createMetatypeRelationshipKey.errorCreatingAPI') as string
+              this.errorMessage = this.$t('errors.errorCommunicating') as string
             } else {
               this.dialog = false
               this.$emit('metatypeRelationshipKeyCreated', result[0])
             }
           })
-          .catch(e => this.errorMessage = this.$t('createMetatypeRelationshipKey.errorCreatingAPI') as string + e)
+          .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
     }
   }
 

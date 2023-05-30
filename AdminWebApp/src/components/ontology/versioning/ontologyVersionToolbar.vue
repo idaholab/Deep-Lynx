@@ -1,7 +1,7 @@
 <template>
   <div>
     <error-banner :message="errorMessage"></error-banner>
-    <error-banner v-if="!$store.getters.selectedChangelistID && $store.state.inEditMode" :message="$t('ontologyToolbar.selectChangelist')"></error-banner>
+    <error-banner v-if="!$store.getters.selectedChangelistID && $store.state.inEditMode" :message="$t('help.selectChangelist')"></error-banner>
     <v-toolbar
       :color="backgroundColor"
       style="border-top-left-radius: 5px; border-top-right-radius: 5px;"
@@ -12,11 +12,11 @@
           class="pr-3 mr-3"
           style="border-right: 1px solid white"
         >
-          {{$t('ontologyToolbar.mode')}} - <small>{{$t('ontologyToolbar.beta')}}</small>
+          {{$t('ontology.mode')}} - <small>{{$t('general.beta')}}</small>
         </div>
         <div class="d-flex flex-row align-center">
           <span class="mr-2">
-            {{$t('ontologyToolbar.viewMode')}}
+            {{$t('general.view')}}
           </span>
 
           <v-switch
@@ -24,10 +24,10 @@
             class="d-flex justify-center"
             v-model="isEditMode"
             :disabled="(!isCurrent || !$auth.Auth('ontology', 'write', containerID)) && !$store.getters.isEditMode"
-            color="orange lighten-3"
+            color="warning"
           ></v-switch>
           <span class="ml-2 mr-8">
-            {{$t('ontologyToolbar.editMode')}}
+            {{$t('general.edit')}}
           </span>
         </div>
       </div>
@@ -42,7 +42,7 @@
           :item-disabled="isGenerating"
           hide-details
           return-object
-          :label="$t('ontologyToolbar.activeChangelist')">
+          :label="$t('ontology.activeChangelist')">
 
         <template v-slot:item="{item}">
           {{item.name}} <span v-if="item.status === 'generating'">- {{item.status}}</span>
@@ -66,14 +66,14 @@
           item-text="name"
           hide-details
           return-object
-        :label="$t('ontologyToolbar.ontologyVersion')">
+        :label="$t('ontology.version')">
         <template v-slot:item="{item}">
           {{item.name}}
-          <div v-show="item.id === versions[0].id">-{{$t('ontologyToolbar.current')}}</div>
+          <div v-show="item.id === versions[0].id">-{{$t('general.current')}}</div>
         </template>
         <template v-slot:selection="{item}">
           {{item.name}}
-          <div v-show="item.id === versions[0].id">-{{$t('ontologyToolbar.current')}}</div>
+          <div v-show="item.id === versions[0].id">-{{$t('ongology.current')}}</div>
         </template>
       </v-select>
 

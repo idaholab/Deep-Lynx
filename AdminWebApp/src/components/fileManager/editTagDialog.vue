@@ -6,12 +6,12 @@
           class="mx-2"
           v-on="on"
       >mdi-pencil</v-icon>
-      <v-btn v-if="displayIcon ==='none'" color="primary" dark class="mt-2" v-on="on">{{$t("fileManager.updateTag")}}</v-btn>
+      <v-btn v-if="displayIcon ==='none'" color="primary" dark class="mt-2" v-on="on">{{$t("tags.update")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline text-h3">{{$t("fileManager.updateTag")}}</span>
+        <span class="headline text-h3">{{$t("tags.update")}}</span>
       </v-card-title>
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
@@ -26,8 +26,8 @@
 
               <v-text-field
                   v-model="tag.tag_name"
-                  :label="$t('fileManager.tagName')"
-                  :rules="[v => !!v || $t('fileManager.tagRequired')]"
+                  :label="$t('tags.name')"
+                  :rules="[v => !!v || $t('validation.required')]"
               ></v-text-field>
 
             </v-form>
@@ -37,12 +37,12 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="clearTag" >{{$t("home.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="clearTag" >{{$t("general.cancel")}}</v-btn>
         <v-btn
-            color="blue darken-1"
+            color="primary"
             text
             @click="updateTag" >
-          {{$t("home.update")}}
+          {{$t("general.update")}}
         </v-btn>
       </v-card-actions>
     </v-card>

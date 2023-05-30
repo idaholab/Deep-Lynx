@@ -1,7 +1,7 @@
 <template>
     <v-card class="pt-1 pb-3 px-2">
         <v-card-title>
-        <span class="headline text-h3">{{$t("createNode.formTitle")}}</span>
+        <span class="headline text-h3">{{$t("nodes.create")}}</span>
         </v-card-title>
         <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
@@ -13,7 +13,7 @@
             >
                 <v-autocomplete
                     v-model="metatype"
-                    :rules="[v => !!v || $t('createNode.metatypeRequired')]"
+                    :rules="[v => !!v || $t('validation.required')]"
                     :single-line="false"
                     :loading="metatypesLoading"
                     :items="originMetatypes"
@@ -24,12 +24,12 @@
                     required
                     clearable
                 >
-                <template v-slot:label>{{$t('createNode.metatype')}} <small style="color:red" >*</small></template>
+                <template v-slot:label>{{$t('classes.class')}} <small style="color:red" >*</small></template>
                 </v-autocomplete>
                 <v-col :cols="12" v-if="metatype && Object.keys(metatype).length !== 0">
                 <v-checkbox
                     v-model="optional"
-                    :label="'Show Optional Fields'"
+                    :label="$t('general.showOptional')"
                 ></v-checkbox>
                 <v-col :cols="12">
                     <v-data-table
@@ -73,14 +73,14 @@
                 </v-col>
                 </v-col>
             </v-form>
-            <p><span style="color:red">*</span> = {{$t('createNode.requiredField')}}</p>
+            <p><span style="color:red">*</span> = {{$t('validation.required')}}</p>
             </v-col>
         </v-row>
         </v-card-text>
         <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="close()" >{{$t("createNode.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" text :disabled="!valid" @click="newNode()">{{$t("createNode.save")}}</v-btn>
+        <v-btn color="primary" text @click="close()" >{{$t("general.cancel")}}</v-btn>
+        <v-btn color="primary" text :disabled="!valid" @click="newNode()">{{$t("general.save")}}</v-btn>
         </v-card-actions>
     </v-card>
 </template>
@@ -90,7 +90,7 @@ import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
 import {MetatypeT, PropertyT, NodeT, MetatypeKeyT} from "@/api/types";
 
 @Component
-export default class CreateNodeDialog extends Vue {
+export default class CreateNodeCard extends Vue {
   @Prop({required: true})
   containerID!: string;
 
@@ -153,7 +153,7 @@ export default class CreateNodeDialog extends Vue {
             this.$emit('nodeCreated', node)
             this.close()
           })
-          .catch(e => this.errorMessage = this.$t('createNode.errorCreatingAPI') as string + e)
+          .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
     }
   }
 

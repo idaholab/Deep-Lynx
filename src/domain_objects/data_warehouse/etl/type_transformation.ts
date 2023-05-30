@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import Result from '../../../common_classes/result';
-import MetatypeKeyMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper';
 import MetatypeRelationshipKeyMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_key_mapper';
 import Logger from '../../../services/logger';
 import Node, {NodeMetadata, NodeTransformation} from '../data/node';
@@ -11,17 +10,13 @@ import {Type} from 'class-transformer';
 import {DataStaging} from '../import/import';
 import MetatypeRelationshipKey from '../ontology/metatype_relationship_key';
 import MetatypeKey from '../ontology/metatype_key';
-
-import {toDate, parse} from 'date-fns';
-import TimeseriesEntry, {TimeseriesData, TimeseriesMetadata} from '../data/timeseries';
-import NodeRepository from '../../../data_access_layer/repositories/data_warehouse/data/node_repository';
+import {parse} from 'date-fns';
 import {PoolClient} from 'pg';
-import NodeMapper from '../../../data_access_layer/mappers/data_warehouse/data/node_mapper';
 import MetatypeKeyRepository from "../../../data_access_layer/repositories/data_warehouse/ontology/metatype_key_repository";
 
 /*
    Condition represents a logical operation which can determine whether or not
-   Deep Lynx should apply this transformation to a given payload.
+   DeepLynx should apply this transformation to a given payload.
    We extend the naked class here because we don't need the metadata id, just
    the class for validation
  */
@@ -197,7 +192,7 @@ export class TransformationConfiguration {
 
 /*
     TypeTransformation represents a data type transformation record in the
-    Deep Lynx database and the various validations required for said record to
+    DeepLynx database and the various validations required for said record to
     be considered valid. It also contains all functions necessary for converting
     an object to an Edge or Node class depending on the transformation's properties
  */
@@ -222,7 +217,7 @@ export default class TypeTransformation extends BaseDomainClass {
     keys: KeyMapping[] = [];
 
     @IsString()
-    type?: 'node' | 'edge' | 'timeseries';
+    type?: 'node' | 'edge';
 
     @ValidateIf((o) => o.metatype_relationship_pair_id === null && typeof o.metatype_relationship_pair_id === 'undefined')
     @IsString()
@@ -256,26 +251,6 @@ export default class TypeTransformation extends BaseDomainClass {
     @IsString()
     destination_data_source_id?: string;
 
-    // tabular data specific fields
-    @ValidateIf((o) => o.type === 'timeseries')
-    @IsOptional()
-    @IsString()
-    tab_data_source_id?: string;
-
-    @ValidateIf((o) => o.type === 'timeseries')
-    @IsString()
-    tab_metatype_id?: string;
-
-    @ValidateIf((o) => o.type === 'timeseries')
-    @IsOptional()
-    @IsString()
-    tab_node_id?: string;
-
-    @ValidateIf((o) => o.type === 'timeseries')
-    @IsOptional()
-    @IsString()
-    tab_node_key?: string;
-
     @IsOptional()
     @IsString()
     root_array?: string;
@@ -300,9 +275,6 @@ export default class TypeTransformation extends BaseDomainClass {
 
     @IsOptional()
     data_source_id?: string;
-
-    @IsOptional()
-    tab_metatype_name?: string;
 
     @IsOptional()
     metatype_name?: string;
@@ -333,7 +305,7 @@ export default class TypeTransformation extends BaseDomainClass {
         type_mapping_id: string;
         conditions?: Condition[];
         keys?: KeyMapping[];
-        type?: 'node' | 'edge' | 'timeseries';
+        type?: 'node' | 'edge';
         metatype_id?: string;
         metatype_relationship_pair_id?: string;
         origin_id_key?: string;
@@ -342,10 +314,6 @@ export default class TypeTransformation extends BaseDomainClass {
         destination_id_key?: string;
         destination_metatype_id?: string;
         destination_data_source_id?: string;
-        tab_data_source_id?: string;
-        tab_metatype_id?: string;
-        tab_node_id?: string;
-        tab_node_key?: string;
         root_array?: string;
         unique_identifier_key?: string;
         container_id?: string;
@@ -371,10 +339,6 @@ export default class TypeTransformation extends BaseDomainClass {
             if (input.destination_id_key) this.destination_id_key = input.destination_id_key;
             if (input.destination_metatype_id) this.destination_metatype_id = input.destination_metatype_id;
             if (input.destination_data_source_id) this.destination_data_source_id = input.destination_data_source_id;
-            if (input.tab_data_source_id) this.tab_data_source_id = input.tab_data_source_id;
-            if (input.tab_metatype_id) this.tab_metatype_id = input.tab_metatype_id;
-            if (input.tab_node_id) this.tab_node_id = input.tab_node_id;
-            if (input.tab_node_key) this.tab_node_key = input.tab_node_key;
             if (input.root_array) this.root_array = input.root_array;
             if (input.unique_identifier_key) this.unique_identifier_key = input.unique_identifier_key;
             if (input.container_id) this.container_id = input.container_id;
@@ -387,7 +351,7 @@ export default class TypeTransformation extends BaseDomainClass {
 
     // applyTransformation will take a mapping, a transformation, and a data record
     // in order to generate an array of nodes or edges based on the transformation type
-    async applyTransformation(data: DataStaging, transaction?: PoolClient): Promise<Result<Node[] | Edge[] | TimeseriesEntry[]>> {
+    async applyTransformation(data: DataStaging, transaction?: PoolClient): Promise<Result<Node[] | Edge[]>> {
         this.transaction = transaction;
         return this.transform(data);
     }
@@ -395,8 +359,8 @@ export default class TypeTransformation extends BaseDomainClass {
     // transform is used to recursively generate node/edges based on the transformation
     // this allows us to handle the root array portion of type transformations and to
     // generate nodes/edges based on nested data.
-    private async transform(data: DataStaging, index?: number[]): Promise<Result<Node[] | Edge[] | TimeseriesEntry[]>> {
-        let results: Node[] | Edge[] | TimeseriesEntry[] = [];
+    private async transform(data: DataStaging, index?: number[]): Promise<Result<Node[] | Edge[]>> {
+        let results: Node[] | Edge[] = [];
         // if no root array, act normally
         if (!this.root_array) {
             const results = await this.generateResults(data);
@@ -504,11 +468,10 @@ export default class TypeTransformation extends BaseDomainClass {
     // generate results is the actual node/edge creation. While this only ever returns
     // a single node/edge, it returns it in an array for ease of use in the recursive
     // transform function
-    private async generateResults(data: DataStaging, index?: number[]): Promise<Result<Node[] | Edge[] | TimeseriesEntry[]>> {
+    private async generateResults(data: DataStaging, index?: number[]): Promise<Result<Node[] | Edge[]>> {
         const newPayload: {[key: string]: any} = {};
         const newPayloadRelationship: {[key: string]: any} = {};
         const newMetadataPayload: {[key: string]: any} = {};
-        const timeseriesData: TimeseriesData[] = [];
         const failedConversions: Conversion[] = [];
         const conversions: Conversion[] = [];
         const metatypeKeyRepo = new MetatypeKeyRepository();
@@ -675,59 +638,6 @@ export default class TypeTransformation extends BaseDomainClass {
             }
         }
 
-        if (this.type === 'timeseries' && this.keys) {
-            for (const k of this.keys) {
-                const value = TypeTransformation.getNestedValue(k.key!, data.data, index);
-
-                if (typeof value === 'undefined') {
-                    switch (this.config.on_key_extraction_error) {
-                        case 'fail' || 'fail_on_required': {
-                            return Promise.resolve(Result.Failure('unable to fetch data from payload for a required key'));
-                            break;
-                        }
-
-                        // ignore means we can skip this key
-                        case 'ignore': {
-                            continue;
-                        }
-                    }
-                }
-
-                let convertedValue: any;
-
-                const conversion = TypeTransformation.convertValue(k.value_type!, value);
-                if (conversion === null) {
-                    convertedValue = value;
-                } else {
-                    if (conversion.errors) {
-                        failedConversions.push(conversion);
-
-                        switch (this.config.on_conversion_error) {
-                            case 'fail on required' || 'fail': {
-                                return Promise.resolve(Result.Failure('unable to fetch data from payload for a required key'));
-                            }
-
-                            // ignore means we can skip this key
-                            case 'ignore': {
-                                continue;
-                            }
-                        }
-                    } else {
-                        convertedValue = conversion.converted_value;
-                        conversions.push(conversion);
-                    }
-                }
-
-                timeseriesData.push(
-                    new TimeseriesData({
-                        column_name: k.column_name!,
-                        value_type: k.value_type!,
-                        value: convertedValue,
-                    }),
-                );
-            }
-        }
-
         if (this.type === 'node' && this.metatype_id) {
             const node = new Node({
                 metatype: this.metatype_id,
@@ -808,63 +718,7 @@ export default class TypeTransformation extends BaseDomainClass {
             return new Promise((resolve) => resolve(Result.Success([edge])));
         }
 
-        if (this.type === 'timeseries') {
-            // we must pull the nodes based on the transformation
-            let nodeID: string = this.tab_node_id!;
-            if (!nodeID) {
-                const nestedValue = TypeTransformation.getNestedValue(this.tab_node_key!, data.data, index);
-                const conversion = TypeTransformation.convertValue('string', nestedValue);
-
-                if (conversion && conversion.converted_value) {
-                    nodeID = conversion.converted_value as string;
-                } else {
-                    nodeID = nestedValue;
-                }
-            }
-
-            const matching = await new NodeRepository()
-                .where()
-                .containerID('eq', this.container_id)
-                .and()
-                .dataSourceID('eq', this.tab_data_source_id)
-                .and()
-                .metatypeID('eq', this.tab_metatype_id)
-                .and()
-                .originalDataID('eq', nodeID)
-                .list(false, {}, this.transaction);
-
-            if (matching.isError) {
-                Logger.error(`unable to list matching nodes for timeseries entry ${matching.error?.error}`);
-            } else {
-                // as long as we didn't error, make the transformation/nodes join records
-                const joins = matching.value.map(
-                    (node) =>
-                        new NodeTransformation({
-                            node_id: node.id!,
-                            transformation_id: this.id!,
-                        }),
-                );
-
-                const saved = await NodeMapper.Instance.BulkAddTransformation(joins, this.transaction);
-                if (saved.isError) {
-                    Logger.error(`unable to save node/transformation joins ${saved.error?.error}`);
-                }
-            }
-
-            const entry = new TimeseriesEntry({
-                transformation_id: this.id,
-                nodes: matching.value ? matching.value.map((node) => node.id!) : undefined,
-                metadata: new TimeseriesMetadata({
-                    conversions,
-                    failed_conversions: failedConversions,
-                }),
-                data: timeseriesData,
-            });
-
-            return new Promise((resolve) => resolve(Result.Success([entry])));
-        }
-
-        return new Promise((resolve) => resolve(Result.Failure('unable to generate a node, edge, or timeseries data')));
+        return new Promise((resolve) => resolve(Result.Failure('unable to generate a node or edge')));
     }
 
     // will return whether or not a transformation condition is valid for a given payload
@@ -1017,7 +871,7 @@ export default class TypeTransformation extends BaseDomainClass {
             }
 
             // because dates can be formatted in various ways, all we can really do for conversion is to
-            // set it to string - Deep Lynx only checks to see if dates are strings currently
+            // set it to string - DeepLynx only checks to see if dates are strings currently
             case 'date': {
                 if (value instanceof Date) {
                     return new Conversion({original_value: value, converted_value: value.toISOString()});

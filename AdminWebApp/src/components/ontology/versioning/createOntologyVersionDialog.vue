@@ -7,12 +7,12 @@
           v-on="on"
           style="color:white !important"
       >mdi-plus-circle</v-icon>
-      <v-btn v-show="!icon" color="orange accent-4" dark class="mb-2" v-on="on">{{ $t("createChangelist.newChangelistButton") }}</v-btn>
+      <v-btn v-show="!icon" color="warning" dark class="mb-2" v-on="on">{{ $t("ontology.newChangelist") }}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline text-h3">{{ $t("createChangelist.formTitle") }}</span>
+        <span class="headline text-h3">{{ $t("ontology.newChangelist") }}</span>
       </v-card-title>
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
@@ -25,27 +25,27 @@
             >
               <v-text-field
                   v-model="name"
-                  :label="$t('createChangelist.name')"
+                  :label="$t('general.name')"
                   required
               ></v-text-field>
               <v-textarea
                   v-model="description"
-                  :label="$t('createChangelist.description')"
+                  :label="$t('general.description')"
                   required
               >
               </v-textarea>
 
 
             </v-form>
-            <p><b>Note:</b> {{$t('createChangelist.creationNote')}}</p>
+            <p><b>Note:</b> {{$t('warnings.changelist')}}</p>
           </v-col>
         </v-row>
       </v-card-text>
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="clearNew">{{ $t("createChangelist.cancel") }}</v-btn>
-        <v-btn color="blue darken-1" text @click="createVersion"><span v-if="!loading">{{ $t("createChangelist.save") }}</span>
+        <v-btn color="primary" text @click="clearNew">{{ $t("general.cancel") }}</v-btn>
+        <v-btn color="primary" text @click="createVersion"><span v-if="!loading">{{ $t("general.save") }}</span>
           <span v-if="loading"><v-progress-circular indeterminate></v-progress-circular></span>
         </v-btn>
       </v-card-actions>

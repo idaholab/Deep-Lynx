@@ -15,7 +15,7 @@
       >mdi-eye
       </v-icon>
       <v-btn v-if="!transformation && !icon" color="primary" dark class="mt-2" v-on="on">
-        {{ $t("dataMapping.newTransformationButton") }}
+        {{ $t("transformations.createNew") }}
       </v-btn>
     </template>
 
@@ -26,19 +26,19 @@
             class="headline text-h3"
             v-if="!transformation"
         >
-          {{ $t("dataMapping.createNewTransformation") }}
+          {{ $t("transformations.createNew") }}
         </h3>
         <h3
             class="headline text-h3"
             v-if="transformation && !transformation.archived"
         >
-          {{ $t("dataMapping.editTransformation") }}
+          {{ $t("transformations.edit") }}
         </h3>
         <h3
             class="headline text-h3"
             v-if="transformation && transformation.archived"
         >
-          {{ $t("dataMapping.viewArchivedTransformation") }}
+          {{ $t("transofrmations.viewArchived") }}
         </h3>
       </v-card-title>
       <v-card-text class="d-flex flex-column pb-0" style="overflow-y: hidden;">
@@ -47,8 +47,8 @@
           <v-col :cols="12" style="position: sticky; top: 0px; z-index: 99; background: white">
             <div>
               <div class="d-flex">
-                <h4 class="headline text-h4 d-inline-block">{{ $t('typeTransformation.currentDataSet') }}</h4>
-                <info-tooltip class="d-inline-block ml-2" :message="$t('dataMapping.samplePayloadHelp')"></info-tooltip>
+                <h4 class="headline text-h4 d-inline-block">{{ $t('transformations.currentDataSet') }}</h4>
+                <info-tooltip class="d-inline-block ml-2" :message="$t('help.samplePayload')"></info-tooltip>
               </div>
 
               <v-card style="overflow-y: scroll; max-height: 20vh;" id="dataCol">
@@ -65,8 +65,8 @@
         <v-row class="mb-1 d-flex flex-grow-0">
           <v-col class="pt-0 pb-0" style="position: sticky; top: 0px; z-index: 99; background: white">
             <h4 class="headline text-h4" v-if="transformation">
-              {{ $t('typeTransformation.existingTransformationTitle') }} {{ transformation.id }}</h4>
-            <h4 class="headline text-h4" v-else>{{ $t('typeTransformation.newTransformationTitle') }}</h4>
+              {{ $t('transformations.transformation') }}: {{ transformation.id }}</h4>
+            <h4 class="headline text-h4" v-else>{{ $t('transformations.newOptions') }}</h4>
           </v-col>
         </v-row>
         <div class="content-div mx-n4 px-4 d-flex flex-grow-0 flex-column" style="overflow-y: scroll;">
@@ -79,8 +79,8 @@
                         v-model="name"
                         :rules="[validName(name)]"
                     >
-                      <template v-slot:label>{{ $t('dataMapping.name') }}
-                        <small>{{ $t('dataMapping.optional') }}</small></template>
+                      <template v-slot:label>{{ $t('general.name') }}
+                        <small>{{ $t('general.optional') }}</small></template>
                     </v-text-field>
                   </v-col>
                 </v-row>
@@ -95,8 +95,8 @@
                 <h4
                     class="text-h4"
                 >
-                  {{ $t("dataMapping.mapping") }}
-                  <info-tooltip :message="$t('dataMapping.mappingHelp')"></info-tooltip>
+                  {{ $t("typeMappings.mapping") }}
+                  <info-tooltip :message="$t('help.mapping')"></info-tooltip>
                 </h4>
               </v-expansion-panel-header>
               <v-expansion-panel-content eager style="max-height: 100% !important;">
@@ -111,10 +111,10 @@
                           v-model="rootArray"
                           clearable
                       >
-                        <template v-slot:label>{{ $t('dataMapping.rootArray') }}
-                          <small>{{ $t('dataMapping.optional') }}</small></template>
+                        <template v-slot:label>{{ $t('transformations.rootArray') }}
+                          <small>{{ $t('general.optional') }}</small></template>
                         <template slot="append-outer">
-                          <info-tooltip :message="$t('dataMapping.rootArrayHelp')"></info-tooltip>
+                          <info-tooltip :message="$t('help.rootArray')"></info-tooltip>
                         </template>
                       </v-select>
                     </v-col>
@@ -123,8 +123,8 @@
                           :items="payloadTypes()"
                           v-model="payloadType"
                           item-text="name"
-                          :rules="[v => !!v || 'Item is required']"
-                          :label="$t('dataMapping.resultingDataType')"
+                          :rules="[v => !!v || $t('validation.required')]"
+                          :label="$t('transformations.resulting')"
                           required
                       ></v-select>
                     </v-col>
@@ -138,15 +138,15 @@
                             :search-input.sync="search"
                             :single-line="false"
                             item-text="name"
-                            :label="$t('dataMapping.chooseMetatype')"
-                            :placeholder="$t('dataMapping.typeToSearch')"
-                            :rules="[v => !!v || 'Item is required']"
+                            :label="$t('classes.select')"
+                            :placeholder="$t('classes.search')"
+                            :rules="[v => !!v || $t('validation.required')]"
                             required
                             return-object
                             clearable
                         >
                           <template slot="append-outer">
-                            <info-tooltip :message="$t('dataMapping.metatypeSearchHelp')"></info-tooltip>
+                            <info-tooltip :message="$t('help.classSearch')"></info-tooltip>
                           </template>
                         </v-autocomplete>
                       </v-col>
@@ -160,9 +160,9 @@
                               clearable
                           >
 
-                            <template v-slot:label>{{ $t('dataMapping.uniqueIdentifierKey') }}</template>
+                            <template v-slot:label>{{ $t('transformations.uniqueID') }}</template>
                             <template slot="append-outer">
-                              <info-tooltip :message="$t('dataMapping.uniqueIdentifierHelp')"></info-tooltip>
+                              <info-tooltip :message="$t('help.uniqueID')"></info-tooltip>
                             </template>
                           </v-combobox>
                           <v-combobox
@@ -171,16 +171,16 @@
                               v-model="uniqueIdentifierKey"
                               clearable
                           >
-                            <template v-slot:label>{{ $t('dataMapping.uniqueIdentifierKey') }}</template>
+                            <template v-slot:label>{{ $t('transformations.uniqueID') }}</template>
                             <template slot="append-outer">
-                              <info-tooltip :message="$t('dataMapping.uniqueIdentifierHelp')"></info-tooltip>
+                              <info-tooltip :message="$t('help.uniqueID')"></info-tooltip>
                             </template>
                           </v-combobox>
                         </v-col>
                         <v-col cols="12" md="6" lg="4" v-if="keysLoading">
                           <v-progress-linear
                               indeterminate
-                              color="orange"
+                              color="warning"
                           ></v-progress-linear>
                         </v-col>
                       </template>
@@ -196,12 +196,12 @@
                             :single-line="false"
                             item-text="name"
                             clearable
-                            :label="$t('dataMapping.chooseRelationship')"
-                            :placeholder="$t('dataMapping.typeToSearch')"
+                            :label="$t('relationships.choose')"
+                            :placeholder="$t('relationships.search')"
                             return-object
                         >
                           <template slot="append-outer">
-                            <info-tooltip :message="$t('dataMapping.relationshipPairSearchHelp')"></info-tooltip>
+                            <info-tooltip :message="$t('help.relationshipSearch')"></info-tooltip>
                           </template>
 
                           <template slot="item" slot-scope="data">
@@ -215,25 +215,26 @@
                       <template v-if="this.selectedRelationshipPair">
                         <template v-if="hasOldEdgeParams">
                           <v-col :cols="12">
-                            <h5 class="text-h5">{{ $t('dataMapping.parentInformation') }} -
-                              <small>{{ $t('deprecatedParams') }}</small></h5>
+                            <h5 class="text-h5">{{ $t('transformations.parentInfo') }} -
+                              <small>{{ $t('typeMappings.deprecatedParams') }}</small></h5>
 
                             <v-row>
                               <v-col cols="12" md="6" lg="4">
                                 <v-select
                                     :items="payloadKeys"
                                     v-model="origin_key"
-                                    :rules="[v => !!v || 'Item is required']"
+                                    :rules="[v => !!v || $t('validation.required')]"
                                     required
                                 >
-                                  <template v-slot:label>{{ $t('dataMapping.originKey') }} <small
-                                      style="color:red">{{ $t('dataMapping.required') }}</small></template>
+                                  <template v-slot:label>{{ $t('transformations.parentID') }} <small
+                                      style="color:red">{{ $t('validation.required') }}</small></template>
                                 </v-select>
                               </v-col>
 
                               <v-col cols="12" md="6" lg="4">
                                 <select-data-source
                                     @selected="setParentDataSource"
+                                    :tooltipHelp="$t('help.dataSourceEdgeParam')"
                                     :dataSourceID="originDataSourceID"
                                     :containerID="containerID">
                                 </select-data-source>
@@ -242,6 +243,7 @@
                               <v-col cols="12" md="6" lg="4">
                                 <search-metatypes
                                     @selected="setParentMetatype"
+                                    :tooltipHelp="$t('help.classEdgeParam')"
                                     :metatypeID="originMetatypeID"
                                     :containerID="containerID">
                                 </search-metatypes>
@@ -250,22 +252,22 @@
 
                             <v-row>
                               <v-col cols="12">
-                                <h5 class="text-h5">{{ $t('dataMapping.childInformation') }} -
-                                  <small>{{ $t('deprecatedParams') }}</small></h5>
+                                <h5 class="text-h5">{{ $t('transformations.childInfo') }} -
+                                  <small>{{ $t('typeMappings.deprecatedParams') }}</small></h5>
 
                                 <v-row>
                                   <v-col cols="12" md="6" lg="4">
                                     <v-select
                                         :items="payloadKeys"
                                         v-model="destination_key"
-                                        :rules="[v => !!v || 'Item is required']"
+                                        :rules="[v => !!v || $t('validation.required')]"
                                         required
                                     >
-                                      <template v-slot:label>{{ $t('dataMapping.destinationKey') }} <small
-                                          style="color:red">{{ $t('dataMapping.required') }}</small></template>
+                                      <template v-slot:label>{{ $t('transformations.childID') }} <small
+                                          style="color:red">{{ $t('validation.required') }}</small></template>
                                       <template slot="append-outer">
                                         <info-tooltip
-                                            :message="$t('dataMapping.originDestinationKeyHelp')"></info-tooltip>
+                                            :message="$t('help.parentChildKeys')"></info-tooltip>
                                       </template>
                                     </v-select>
                                   </v-col>
@@ -274,7 +276,7 @@
                                     <select-data-source
                                         :tooltip="true"
                                         @selected="setChildDataSource"
-                                        :tooltipHelp="$t('dataMapping.dataSourceRelationshipHelp')"
+                                        :tooltipHelp="$t('help.dataSourceEdgeParam')"
                                         :dataSourceID="destinationDataSourceID"
                                         :containerID="containerID">
                                     </select-data-source>
@@ -284,7 +286,7 @@
                                     <search-metatypes
                                         :tooltip="true"
                                         @selected="setChildMetatype"
-                                        :tooltipHelp="$t('dataMapping.metatypeRelationshipHelp')"
+                                        :tooltipHelp="$t('help.classEdgeParam')"
                                         :metatypeID="destinationMetatypeID"
                                         :containerID="containerID">
                                     </search-metatypes>
@@ -292,7 +294,7 @@
                                 </v-row>
                               </v-col>
                             </v-row>
-                            <v-btn @click="convertToParameters">{{ $t('dataMapping.convertToParameters') }}</v-btn>
+                            <v-btn @click="convertToParameters">{{ $t('transformations.convertParams') }}</v-btn>
                           </v-col>
                         </template>
 
@@ -300,7 +302,7 @@
                           <v-col cols="12">
                             <v-card>
                               <v-card-title>
-                                {{ $t('dataMapping.parentParameters') }}
+                                {{ $t('transformations.parentParams') }}
                               </v-card-title>
 
                               <v-card-text>
@@ -319,18 +321,18 @@
                                   <template v-slot:[`item.type`]="{ item }">
                                     <v-select
                                         v-if="item.type === 'metatype_id' || item.type === 'metatype_uuid'"
-                                        :label="$t('dataMapping.type')"
+                                        :label="$t('query.filterType')"
                                         :items=limitedConfigFilterTypes
                                         v-model="item.type"
                                         disabled
-                                        :rules="[v => !!v || $t('dataMapping.required')]"
+                                        :rules="[v => !!v || $t('validation.required')]"
                                     />
                                     <v-select
                                         v-else
-                                        :label="$t('dataMapping.type')"
+                                        :label="$t('query.filterType')"
                                         :items=configFilterTypes
                                         v-model="item.type"
-                                        :rules="[v => !!v || $t('dataMapping.required')]"
+                                        :rules="[v => !!v || $t('validation.required')]"
                                     />
                                     <template v-if="item.type === 'property'">
                                       <metatype-keys-select
@@ -346,11 +348,11 @@
 
                                   <template v-slot:[`item.operator`]="{ item }">
                                     <v-select
-                                        :label="$t('dataMapping.operator')"
+                                        :label="$t('operators.operator')"
                                         :items=paramOperators
                                         v-model="item.operator"
                                         :disabled="item.type === 'metatype_id' || item.type ==='metatype_uuid'"
-                                        :rules="[v => !!v || $t('dataMapping.required')]"
+                                        :rules="[v => !!v || $t('validation.required')]"
                                     />
                                   </template>
 
@@ -358,7 +360,7 @@
                                     <v-row>
                                       <v-col :cols="12" v-if="item.type === 'metatype_id'">
                                         <search-metatypes
-                                            :label="$t('dataMapping.mapPayloadKey')"
+                                            :label="$t('transformations.typeSelectKey')"
                                             @selected="setFilterMetatypeID(item, ...arguments)"
                                             :metatypeID="item.value"
                                             disabled
@@ -378,19 +380,19 @@
                                       <template v-else>
                                         <v-col :cols="12" lg="7">
                                           <v-select
-                                              :label="$t('dataMapping.mapPayloadKey')"
+                                              :label="$t('transformations.typeSelectKey')"
                                               :items="payloadKeys"
                                               v-model="item.key"
                                               clearable
                                               :disabled="item.value !== null"
                                           >
-                                            <template v-slot:append-outer>{{ $t('dataMapping.or') }}</template>
-                                            <template v-slot:label>{{ $t('dataMapping.mapPayloadKey') }}</template>
+                                            <template v-slot:append-outer>{{ $t('general.or') }}</template>
+                                            <template v-slot:label>{{ $t('transformations.typeSelectKey') }}</template>
                                           </v-select>
                                         </v-col>
                                         <v-col :cols="12" lg="4">
                                           <v-text-field
-                                              :label="$t('dataMapping.constantValue')"
+                                              :label="$t('general.constant')"
                                               clearable
                                               v-model="item.value"
                                               :disabled="item.key !== null"
@@ -412,7 +414,7 @@
                                 <v-row>
                                   <v-col :cols="12" style="padding:25px" align="center" justify="center">
                                     <v-btn @click="addEdgeConfig('origin')">
-                                      {{ $t('dataMapping.addColumn') }}
+                                      {{ $t('general.addColumn') }}
                                     </v-btn>
                                   </v-col>
                                 </v-row>
@@ -424,7 +426,7 @@
                           <v-col cols="12">
                             <v-card>
                               <v-card-title>
-                                {{ $t('dataMapping.childParameters') }}
+                                {{ $t('transformations.childParams') }}
                               </v-card-title>
 
                               <v-card-text>
@@ -443,18 +445,18 @@
                                   <template v-slot:[`item.type`]="{ item }">
                                     <v-select
                                         v-if="item.type === 'metatype_id' || item.type === 'metatype_uuid'"
-                                        :label="$t('dataMapping.type')"
+                                        :label="$t('query.filterType')"
                                         :items=limitedConfigFilterTypes
                                         v-model="item.type"
                                         disabled
-                                        :rules="[v => !!v || $t('dataMapping.required')]"
+                                        :rules="[v => !!v || $t('validation.required')]"
                                     />
                                     <v-select
                                         v-else
-                                        :label="$t('dataMapping.type')"
+                                        :label="$t('query.filterType')"
                                         :items=configFilterTypes
                                         v-model="item.type"
-                                        :rules="[v => !!v || $t('dataMapping.required')]"
+                                        :rules="[v => !!v || $t('validation.required')]"
                                     />
                                     <template v-if="item.type === 'property'">
                                       <metatype-keys-select
@@ -470,11 +472,11 @@
 
                                   <template v-slot:[`item.operator`]="{ item }">
                                     <v-select
-                                        :label="$t('dataMapping.operator')"
+                                        :label="$t('operators.operator')"
                                         :items=paramOperators
                                         v-model="item.operator"
                                         :disabled="item.type === 'metatype_id' || item.type ==='metatype_uuid'"
-                                        :rules="[v => !!v || $t('dataMapping.required')]"
+                                        :rules="[v => !!v || $t('validation.required')]"
                                     />
                                   </template>
 
@@ -482,7 +484,7 @@
                                     <v-row>
                                       <v-col :cols="12" v-if="item.type === 'metatype_id'">
                                         <search-metatypes
-                                            :label="$t('dataMapping.mapPayloadKey')"
+                                            :label="$t('transformations.typeSelectKey')"
                                             @selected="setFilterMetatypeID(item, ...arguments)"
                                             :metatypeID="item.value"
                                             disabled
@@ -502,19 +504,19 @@
                                       <template v-else>
                                         <v-col :cols="12" lg="7">
                                           <v-select
-                                              :label="$t('dataMapping.mapPayloadKey')"
+                                              :label="$t('transformations.typeSelectKey')"
                                               :items="payloadKeys"
                                               v-model="item.key"
                                               clearable
                                               :disabled="item.value !== null"
                                           >
-                                            <template v-slot:append-outer>{{ $t('dataMapping.or') }}</template>
-                                            <template v-slot:label>{{ $t('dataMapping.mapPayloadKey') }}</template>
+                                            <template v-slot:append-outer>{{ $t('general.or') }}</template>
+                                            <template v-slot:label>{{ $t('transformations.typeSelectKey') }}</template>
                                           </v-select>
                                         </v-col>
                                         <v-col :cols="12" lg="4">
                                           <v-text-field
-                                              :label="$t('dataMapping.constantValue')"
+                                              :label="$t('general.constant')"
                                               clearable
                                               v-model="item.value"
                                               :disabled="item.key !== null"
@@ -536,7 +538,7 @@
                                 <v-row>
                                   <v-col :cols="12" style="padding:25px" align="center" justify="center">
                                     <v-btn @click="addEdgeConfig('destination')">
-                                      {{ $t('dataMapping.addColumn') }}
+                                      {{ $t('general.addColumn') }}
                                     </v-btn>
                                   </v-col>
                                 </v-row>
@@ -549,134 +551,6 @@
 
                       </template>
                     </template>
-
-                    <!-- timeseries -->
-                    <template v-if="payloadType === 'timeseries'">
-                      <h4>{{ $t('dataMapping.selectNodeID') }}
-                        <info-tooltip :message="$t('dataMapping.nodeIDHelp')"></info-tooltip>
-                      </h4>
-                      <v-col cols="12" md="6" lg="4">
-                        <select-data-source
-                            @selected="setTabDataSource"
-                            :dataSourceID="tab_data_source_id"
-                            :rules="[tabDataSourceValid]"
-                            :containerID="containerID">
-                        </select-data-source>
-                      </v-col>
-                      <v-col cols="12" md="6" lg="4">
-                        <search-metatypes
-                            @selected="setTabMetatype"
-                            :metatypeID="tab_metatype_id"
-                            :rules="[tabMetatypeValid]"
-                            :containerID="containerID">
-                        </search-metatypes>
-                      </v-col>
-                      <v-col cols="12" md="6" lg="4">
-                        <v-combobox
-                            :items="payloadKeys"
-                            clearable
-                            v-model="tab_node_key"
-                            :disabled="tab_node_id !== null"
-                            :rules="[tabNodeValid]"
-                        >
-                          <template v-slot:append-outer>{{ $t('dataMapping.or') }}</template>
-                          <template v-slot:label>{{ $t('dataMapping.nodeIDKey') }}</template>
-                        </v-combobox>
-                      </v-col>
-                      <v-col cols="12" md="6" lg="4">
-                        <v-text-field
-                            :label="$t('dataMapping.nodeID')"
-                            clearable
-                            v-model="tab_node_id"
-                            :disabled="tab_node_key !== null"
-                            :rules="[tabNodeValid]"
-                        />
-                      </v-col>
-                      <v-col cols="12">
-                        <h4>{{ $t('dataMapping.tableDesign') }}
-                          <info-tooltip :message="$t('dataMapping.tableDesignHelp')"></info-tooltip>
-                        </h4>
-                        <v-data-table
-                            :headers="timeSeriesHeader()"
-                            :items="propertyMapping"
-                            :items-per-page="-1"
-                            :expanded.sync="expandedTimeSeries"
-                            mobile-breakpoint="960"
-                            item-key="id"
-                            show-expand
-                            flat
-                            tile
-                            fixed-header
-                            disable-pagination
-                            disable-sort
-                            hide-default-footer
-                        >
-                          <template v-slot:[`item.column_name`]="{ item, index }">
-
-                            <v-text-field
-                                :label="$t('dataMapping.columnName')"
-                                v-model="item.column_name"
-                                :disabled="transformation !== null"
-                                :rules="[v => !!v || $t('dataMapping.required'),validColumnName(index, item.column_name)]"
-                            >
-                            </v-text-field>
-                          </template>
-
-                          <template v-slot:[`item.value_type`]="{ item }">
-                            <v-select
-                                :label="$t('dataMapping.columnDataType')"
-                                :items=dataTypes
-                                :disabled="item.is_primary_timestamp || transformation !== null"
-                                v-model="item.value_type"
-                                :rules="[v => !!v || $t('dataMapping.required')]"
-                            />
-                          </template>
-
-                          <template v-slot:[`item.key`]="{ item }">
-                            <v-combobox
-                                :items="payloadKeys"
-                                v-model="item.key"
-                                :label="$t('dataMapping.mapPayloadKey')"
-                                :rules="[v => !!v || $t('dataMapping.required')]"
-                            >
-                            </v-combobox>
-                          </template>
-                          <template v-slot:[`item.actions`]="{ index }">
-                            <v-icon v-if="index !== 0" @click="removeMapping(index)">mdi-close</v-icon>
-                          </template>
-
-                          <template v-slot:expanded-item="{ item }">
-                            <td :colspan="timeSeriesHeader().length">
-                              <v-col v-if="item.value_type === 'date'" :cols="12">
-                                <v-text-field
-                                    :label="$t('dataMapping.dateFormatString')"
-                                    v-model="item.date_conversion_format_string"
-                                >
-                                  <template slot="append-outer"><a href="https://date-fns.org/v2.28.0/docs/parse"
-                                                                   target="_blank">{{ $t('dataMapping.dateFormatStringHelp') }}</a>
-                                  </template>
-                                </v-text-field>
-                              </v-col>
-                              <v-col v-if="item.value_type === 'date'" class="text-left">
-                                <v-checkbox
-                                    :label="$t('dataMapping.isPrimaryTimestamp')"
-                                    v-model="item.is_primary_timestamp"
-                                    disabled
-                                >
-                                </v-checkbox>
-                              </v-col>
-                            </td>
-                          </template>
-                        </v-data-table>
-                      </v-col>
-
-                      <v-col :cols="12" style="padding:25px" align="center" justify="center">
-                        <v-btn :disabled="transformation !== null" @click="addMapping">
-                          {{ $t('dataMapping.addColumn') }}
-                        </v-btn>
-                        <p v-if="transformation !== null">{{ $t('dataMapping.editingTimeseriesDisabled') }}</p>
-                      </v-col>
-                    </template>
                   </v-row>
                 </v-form>
               </v-expansion-panel-content>
@@ -688,12 +562,12 @@
                 <!-- node -->
                 <template v-if="payloadType === 'node'">
                   <h4 class="text-h4">
-                    {{ $t('dataMapping.metatypePropertyMapping') }}
+                    {{ $t('properties.mapping') }}
                     <small class="mx-2">
-                      <span v-if="!rootArray">{{ propertyMapping.filter(k => (k.metatype_key_id || k.metatype_relationship_key_id)).length }} / {{ payloadKeys.length }} properties selected</span>
-                      <span v-if="rootArray">{{ propertyMapping.filter(k => (k.metatype_key_id || k.metatype_relationship_key_id)).length }} / {{ payloadKeys.length }} properties selected ({{ payloadSelectedArrayKeys.length }} array properties available)</span>
+                      <span v-if="!rootArray">{{ propertyMapping.filter(k => (k.metatype_key_id || k.metatype_relationship_key_id)).length }} / {{ payloadKeys.length }} {{$t('properties.selected')}}</span>
+                      <span v-if="rootArray">{{ propertyMapping.filter(k => (k.metatype_key_id || k.metatype_relationship_key_id)).length }} / {{ payloadKeys.length }} {{$t('properties.selected')}} ({{ payloadSelectedArrayKeys.length }} {{$t('transformations.arrayAvailable')}})</span>
                     </small>
-                    <info-tooltip :message="$t('dataMapping.PropertyMappingHelp')"></info-tooltip>
+                    <info-tooltip :message="$t('help.propertyMapping')"></info-tooltip>
                   </h4>
                   <v-spacer></v-spacer>
                   <v-btn
@@ -701,22 +575,22 @@
                       class="ml-auto mr-4"
                       style="flex: 0 1 auto;"
                   >
-                    {{ $t("dataMapping.autopopulate") }}
+                    {{ $t("transformations.autopopulate") }}
                   </v-btn>
                 </template>
 
                 <!-- edge -->
                 <template v-if="payloadType === 'edge'">
                   <h4 class="text-h4">
-                    {{ $t('dataMapping.metatypeRelationshipPropertyMapping') }}
-                    <info-tooltip :message="$t('dataMapping.PropertyMappingHelp')"></info-tooltip>
+                    {{ $t('properties.mapping') }}
+                    <info-tooltip :message="$t('help.propertyMapping')"></info-tooltip>
                   </h4>
                   <v-btn
                       @click.native.stop="autoPopulateRelationshipKeys()"
                       class="mr-4"
                       style="flex: 0 1 auto;"
                   >
-                    {{ $t("dataMapping.autopopulate") }}
+                    {{ $t("transformations.autopopulate") }}
                   </v-btn>
                 </template>
               </v-expansion-panel-header>
@@ -730,16 +604,16 @@
                       <thead>
                       <tr>
                         <th class="text-left">
-                          Name
+                          {{$t('general.name')}}
                         </th>
                         <th class="text-left">
-                          Keys
+                          {{$t('general.keys')}}
                         </th>
                         <th
                             class="text-left"
                             width="30%"
                         >
-                          Date
+                          {{$t('general.date')}}
                         </th>
                       </tr>
                       </thead>
@@ -756,16 +630,16 @@
                             <v-col cols="12" lg="6">
                               <v-combobox
                                   :items="payloadKeys"
-                                  label="map payload key"
+                                  :label="$t('transformations.mapPayloadKey')"
                                   @input="selectPropertyKey($event, key)"
                                   clearable
                                   eager
                                   :disabled="isValueMapped(key)"
                                   :value="propertyKey(key)"
                               >
-                                <template v-slot:append-outer>{{ $t("dataMapping.or") }}</template>
-                                <template v-slot:label>{{ $t('dataMapping.mapPayloadKey') }} <small style="color:red"
-                                                                                                    v-if="key.required">{{ $t("dataMapping.required") }}</small>
+                                <template v-slot:append-outer>{{ $t("general.or") }}</template>
+                                <template v-slot:label>{{ $t('transformations.typeSelectKey') }} <small style="color:red"
+                                                                                                    v-if="key.required">{{ $t('validation.required') }}</small>
                                 </template>
                                 <template v-slot:item="data">
                                   <!-- Display alternate formatting and key use count if key has been selected -->
@@ -790,17 +664,17 @@
                             <v-col cols="12" lg="6">
                               <v-text-field
                                   v-if="key.data_type !== 'boolean'"
-                                  :label="$t('dataMapping.constantValue')"
+                                  :label="$t('general.constant')"
                                   @input="selectPropertyKey($event, key, true)"
-                                  :disabled="isKeyMapped(key, true)"
+                                  :disabled="isKeyMapped(key)"
                                   :value="propertyKeyValue(key)"
                               />
                               <v-select
                                   v-if="key.data_type == 'boolean'"
-                                  :label="$t('dataMapping.constantValue')"
+                                  :label="$t('general.constant')"
                                   :items="['true', 'false']"
                                   @input="selectPropertyKey($event, key, true)"
-                                  :disabled="isKeyMapped(key, true)"
+                                  :disabled="isKeyMapped(key)"
                                   :value="propertyKeyValue(key)"
                               />
                             </v-col>
@@ -809,13 +683,13 @@
                         <td>
                           <v-text-field
                               v-if="key.data_type === 'date'"
-                              :label="$t('dataMapping.dateFormatString')"
+                              :label="$t('general.dateFormatString')"
                               @input="setDateConversionFormatStringRecord($event, key)"
                               :value="propertyKeyFormatString(key)"
                           >
                             <template slot="append-outer">
-                              <a href="https://date-fns.org/v2.28.0/docs/parse" target="_blank">
-                                {{ $t('dataMapping.dateFormatStringHelp') }}
+                              <a :href="dateString()" target="_blank">
+                                {{ $t('help.dateFormatString') }}
                               </a>
                             </template>
                           </v-text-field>
@@ -833,16 +707,16 @@
                       <thead>
                       <tr>
                         <th class="text-left">
-                          Name
+                          {{$t('general.name')}}
                         </th>
                         <th class="text-left">
-                          Keys
+                          {{$t('general.keys')}}
                         </th>
                         <th
                             class="text-left"
                             width="30%"
                         >
-                          Date
+                          {{$t('general.date')}}
                         </th>
                       </tr>
                       </thead>
@@ -864,24 +738,24 @@
                                   :value="relationshipPropertyKey(key)"
                               >
 
-                                <template v-slot:append-outer>{{ $t('dataMapping.or') }}</template>
-                                <template v-slot:label>{{ $t("dataMapping.mapPayloadKey") }} <small style="color:red"
-                                                                                                    v-if="key.required">{{ $t('dataMapping.required') }}</small>
+                                <template v-slot:append-outer>{{ $t('general.or') }}</template>
+                                <template v-slot:label>{{ $t("transformations.typeSelectKey") }} <small style="color:red"
+                                                                                                    v-if="key.required">{{ $t('validation.required') }}</small>
                                 </template>
                               </v-combobox>
                             </v-col>
                             <v-col cols="12" lg="6">
                               <v-text-field
                                   v-if="key.data_type !== 'boolean'"
-                                  :label="$t('dataMapping.constantValue')"
+                                  :label="$t('general.constant')"
                                   @input="selectRelationshipPropertyKey($event, key, true)"
-                                  :disabled="isRelationshipKeyMapped(key, true)"
+                                  :disabled="isRelationshipKeyMapped(key)"
                                   :value="relationshipPropertyKeyValue(key)"
                                   clearable
                               />
                               <v-select
                                   v-if="key.data_type == 'boolean'"
-                                  :label="$t('dataMapping.constantValue')"
+                                  :label="$t('general.constant')"
                                   :items="['true', 'false']"
                                   clearable
                                   @input="selectRelationshipPropertyKey($event, key, true)"
@@ -894,12 +768,12 @@
                         <td>
                           <v-text-field
                               v-if="key.data_type === 'date'"
-                              :label="$t('dataMapping.dateFormatString')"
+                              :label="$t('general.dateFormatString')"
                               @input="setDateConversionFormatStringRelationship($event, key)"
                           >
 
-                            <template slot="append-outer"><a href="https://date-fns.org/v2.28.0/docs/parse"
-                                                             target="_blank">{{ $t('dataMapping.dateFormatStringHelp') }}</a>
+                            <template slot="append-outer"><a :href="dateString()"
+                                                             target="_blank">{{ $t('help.dateFormatString') }}</a>
                             </template>
                           </v-text-field>
                         </td>
@@ -913,20 +787,20 @@
             <v-expansion-panel>
               <v-expansion-panel-header>
                 <h4 class="text-h4">
-                  {{$t('dataMapping.metadataMappingTitle')}}
+                  {{$t('transformations.metadata')}}
                   <small class="mx-2">
-                    <span v-if="!rootArray">{{ metadataKeys.length }} / {{ payloadKeys.length }} properties selected</span>
-                    <span v-if="rootArray">{{ metadataKeys.length }} / {{ payloadKeys.length }} properties selected ({{ payloadSelectedArrayKeys.length }} array properties available)</span>
+                    <span v-if="!rootArray">{{ metadataKeys.length }} / {{ payloadKeys.length }} {{$t('properties.selected')}}</span>
+                    <span v-if="rootArray">{{ metadataKeys.length }} / {{ payloadKeys.length }} {{$t('properties.selected')}} ({{ payloadSelectedArrayKeys.length }} {{$t('transformations.arrayAvailable')}})</span>
                   </small>
                 </h4>
                 <v-spacer></v-spacer>
               </v-expansion-panel-header>
               <v-expansion-panel-content>
-                <p>{{ $t('dataMapping.metadataMappingHelp') }}</p>
+                <p>{{ $t('help.metadataMapping') }}</p>
                 <v-combobox
                   :items="payloadKeys"
                   multiple
-                  :label="$t('dataMapping.metadataMappingKey')"
+                  :label="$t('transformations.metadataHint')"
                   v-model="metadataKeys"
                 />
               </v-expansion-panel-content>
@@ -937,16 +811,16 @@
                     class="text-h4"
                     v-if="transformation && transformation.conditions && transformation.conditions.length > 0"
                 >
-                  {{ transformation.conditions.length }} {{ $t("dataMapping.conditions") }}
-                  <small>{{ $t("dataMapping.optional") }}</small>
-                  <info-tooltip :message="$t('dataMapping.conditionsHelp')"></info-tooltip>
+                  {{ transformation.conditions.length }} {{ $t("transformations.conditions") }}
+                  <small>{{ $t("general.optional") }}</small>
+                  <info-tooltip :message="$t('help.conditions')"></info-tooltip>
                 </h4>
                 <h4
                     class="text-h4"
                     v-else
                 >
-                  0 {{ $t("dataMapping.conditions") }} <small>{{ $t("dataMapping.optional") }}</small>
-                  <info-tooltip :message="$t('dataMapping.conditionsHelp')"></info-tooltip>
+                  0 {{ $t("transformations.conditions") }} <small>{{ $t("general.optional") }}</small>
+                  <info-tooltip :message="$t('help.conditions')"></info-tooltip>
                 </h4>
               </v-expansion-panel-header>
 
@@ -968,9 +842,9 @@
                   </template>
                   <template v-slot:expanded-item="{headers, item}">
                     <td :colspan="headers.length" class="pt-3 px-5 pb-5 grey lighten-4">
-                      <h5 class="text-h5 mb-1">{{ $t("dataMapping.subexpressions") }}
-                        <small>{{ $t("dataMapping.optional") }}</small>
-                        <info-tooltip :message="$t('dataMapping.subexpressionsHelp')"></info-tooltip>
+                      <h5 class="text-h5 mb-1">{{ $t("transformations.subexpressions") }}
+                        <small>{{ $t("general.optional") }}</small>
+                        <info-tooltip :message="$t('help.subexpressions')"></info-tooltip>
                       </h5>
                       <v-data-table
                           :headers="subexpressionHeader()"
@@ -991,43 +865,43 @@
                           <v-col cols="12" lg="3">
                             <v-select
                                 :items="expressions"
-                                :rules="[v => !!v || 'Select one']"
+                                :rules="[v => !!v || $t('validation.selectOne')]"
                                 v-model="subexpressionExpression"
-                                :label="$t('dataMapping.expression')"
+                                :label="$t('transformations.expression')"
                                 required
                             >
 
                               <template slot="append-outer">
-                                <info-tooltip :message="$t('dataMapping.expressionHelp')"></info-tooltip>
+                                <info-tooltip :message="$t('help.conditions')"></info-tooltip>
                               </template>
                             </v-select>
                           </v-col>
                           <v-col cols="12" lg="3">
                             <v-select
                                 :items="payloadKeys"
-                                :rules="[v => !!v || 'Select one']"
+                                :rules="[v => !!v || $t('validation.selectOne')]"
                                 v-model="subexpressionKey"
-                                :label="$t('dataMapping.key')"
+                                :label="$t('general.key')"
                                 required
                             >
 
                               <template slot="append-outer">
-                                <info-tooltip :message="$t('dataMapping.keyHelp')"></info-tooltip>
+                                <info-tooltip :message="$t('help.mapKey')"></info-tooltip>
                               </template>
                             </v-select>
                           </v-col>
                           <v-col cols="12" lg="3">
                             <v-select
                                 :items="operators"
-                                :rules="[v => !!v || 'Select one']"
+                                :rules="[v => !!v || $t('validation.selectOne')]"
                                 v-model="subexpressionOperator"
                                 :return-object="true"
-                                :label="$t('dataMapping.operator')"
+                                :label="$t('operators.operator')"
                                 required
                             >
 
                               <template slot="append-outer">
-                                <info-tooltip :message="$t('dataMapping.operatorHelp')"></info-tooltip>
+                                <info-tooltip :message="$t('help.operator')"></info-tooltip>
                               </template>
                             </v-select>
                           </v-col>
@@ -1035,7 +909,7 @@
                             <v-text-field
                                 v-model="subexpressionValue"
                                 :disabled="subexpressionOperator && !subexpressionOperator.requiresValue"
-                                :label="$t('dataMapping.value')">
+                                :label="$t('general.value')">
 
                             </v-text-field>
                           </v-col>
@@ -1044,7 +918,7 @@
                           <v-col class="d-flex">
                             <v-spacer></v-spacer>
                             <v-btn color="primary" :disabled="!subexpressionFormValid" @click="addSubexpression(item)">
-                              Add
+                              {{$t('general.add')}}
                             </v-btn>
                           </v-col>
                         </v-row>
@@ -1060,13 +934,13 @@
                       <v-select
                           :items="payloadKeys"
                           v-model="conditionKey"
-                          :rules="[v => !!v || 'Select one']"
-                          :label="$t('dataMapping.key')"
+                          :rules="[v => !!v || $t('validation.selectOne')]"
+                          :label="$t('general.key')"
                           required
                       >
 
                         <template slot="append-outer">
-                          <info-tooltip :message="$t('dataMapping.keyHelp')"></info-tooltip>
+                          <info-tooltip :message="$t('help.mapKey')"></info-tooltip>
                         </template>
                       </v-select>
                     </v-col>
@@ -1075,13 +949,13 @@
                           :items="operators"
                           v-model="conditionOperator"
                           :return-object="true"
-                          :rules="[v => !!v || 'Select one']"
-                          :label="$t('dataMapping.operator')"
+                          :rules="[v => !!v || $t('validation.selectOne')]"
+                          :label="$t('operators.operator')"
                           required
                       >
 
                         <template slot="append-outer">
-                          <info-tooltip :message="$t('dataMapping.operatorHelp')"></info-tooltip>
+                          <info-tooltip :message="$t('help.operator')"></info-tooltip>
                         </template>
                       </v-select>
                     </v-col>
@@ -1089,7 +963,7 @@
                       <v-text-field
                           v-model="conditionValue"
                           :disabled="conditionOperator && !conditionOperator.requiresValue"
-                          :label="$t('dataMapping.value')">
+                          :label="$t('general.value')">
 
                       </v-text-field>
                     </v-col>
@@ -1098,7 +972,7 @@
                     <v-col class="d-flex">
                       <v-spacer></v-spacer>
                       <v-btn color="primary" :disabled="!conditionFormValid" @click="addCondition">
-                        {{ $t("dataMapping.addCondition") }}
+                        {{ $t("transformations.saveCondition") }}
                       </v-btn>
                     </v-col>
                   </v-row>
@@ -1108,9 +982,9 @@
 
             <v-expansion-panel>
               <v-expansion-panel-header>
-                <h4 class="text-h4" style="">{{ $t("dataMapping.configuration") }}
-                  <small>{{ $t('dataMapping.optional') }}</small>
-                  <info-tooltip :message="$t('dataMapping.configurationHelp')"></info-tooltip>
+                <h4 class="text-h4" style="">{{ $t("general.config") }}
+                  <small>{{ $t('general.optional') }}</small>
+                  <info-tooltip :message="$t('help.transformationConfig')"></info-tooltip>
                 </h4>
               </v-expansion-panel-header>
               <v-expansion-panel-content>
@@ -1121,7 +995,7 @@
                           :items="actionErrors()"
                           v-model="onConversionError"
                       >
-                        <template v-slot:label>{{ $t('dataMapping.onConversionError') }}</template>
+                        <template v-slot:label>{{ $t('errors.onConversion') }}</template>
                       </v-select>
                     </v-form>
                   </v-col>
@@ -1131,7 +1005,7 @@
                           :items="actionErrors()"
                           v-model="onKeyExtractionError"
                       >
-                        <template v-slot:label>{{ $t('dataMapping.onKeyExtractionError') }}</template>
+                        <template v-slot:label>{{ $t('errors.onExtraction') }}</template>
                       </v-select>
                     </v-form>
                   </v-col>
@@ -1142,26 +1016,26 @@
         </div>
       </v-card-text>
       <v-card-actions class="pl-6 grey lighten-4">
-        <p class="ma-0"><span style="color:red">*</span> = {{ $t('dataMapping.requiredField') }}</p>
+        <p class="ma-0"><span style="color:red">*</span> = {{ $t('validation.required') }}</p>
         <v-spacer/>
         <div>
           <v-btn
               v-if="!transformation"
               @click="createTransformation()"
-              color="success"
+              color="primary"
               text
           >
             <v-progress-circular
                 indeterminate
                 v-if="loading"
             ></v-progress-circular>
-            <span v-if="!loading">{{ $t("dataMapping.create") }}</span>
+            <span v-if="!loading">{{ $t("general.create") }}</span>
           </v-btn>
 
           <v-btn
               v-if="transformation"
               @click="editTransformation()"
-              color="success"
+              color="primary"
               text
               :disabled="transformation.archived"
           >
@@ -1169,7 +1043,7 @@
                 indeterminate
                 v-if="loading"
             ></v-progress-circular>
-            <span v-if="!loading">{{ $t("dataMapping.edit") }}</span>
+            <span v-if="!loading">{{ $t("general.save") }}</span>
           </v-btn>
 
           <v-btn
@@ -1178,7 +1052,7 @@
               text
               v-if="!loading && !transformation"
           >
-            {{ $t("dataMapping.reset") }}
+            {{ $t("general.reset") }}
           </v-btn>
 
           <v-btn
@@ -1188,7 +1062,7 @@
               v-if="!loading && transformation"
               :disabled="transformation.archived"
           >
-            {{ $t("dataMapping.reset") }}
+            {{ $t("general.reset") }}
           </v-btn>
 
           <v-btn
@@ -1196,7 +1070,7 @@
               color="error"
               text
           >
-            {{ $t("dataMapping.cancel") }}
+            {{ $t("general.cancel") }}
           </v-btn>
         </div>
       </v-card-actions>
@@ -1219,8 +1093,7 @@ import {
 } from "@/api/types";
 import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
 import SearchMetatypes from "@/components/ontology/metatypes/searchMetatypes.vue";
-import {v4 as uuidv4} from 'uuid'
-import Config from "@/config";
+import {v4 as uuidv4} from 'uuid';
 import MetatypeKeysSelect from "@/components/ontology/metatypes/metatypeKeysSelect.vue";
 
 @Component({
@@ -1255,7 +1128,6 @@ export default class TransformationDialog extends Vue {
   search = ""
   openPanels: number[] = [0]
   expanded = []
-  expandedTimeSeries = []
   loading = false
   keysLoading = false
   dialog = false
@@ -1288,15 +1160,15 @@ export default class TransformationDialog extends Vue {
   metadataKeys: string[] = []
 
   operators = [
-    {text: "==", value: "==", requiresValue: true},
-    {text: "!=", value: "!=", requiresValue: true},
-    {text: "in", value: "in", requiresValue: true},
-    {text: "contains", value: "contains", requiresValue: true},
-    {text: "exists", value: "exists", requiresValue: false},
-    {text: "<", value: "<", requiresValue: true},
-    {text: "<=", value: "<=", requiresValue: true},
-    {text: ">", value: ">", requiresValue: true},
-    {text: ">=", value: ">=", requiresValue: true},
+    {text: this.$t('operators.equals'), value: "==", requiresValue: true},
+    {text: this.$t('operators.notEquals'), value: "!=", requiresValue: true},
+    {text: this.$t('operators.in'), value: "in", requiresValue: true},
+    {text: this.$t('operators.contains'), value: "contains", requiresValue: true},
+    {text: this.$t('operators.exists'), value: "exists", requiresValue: false},
+    {text: this.$t('operators.lessThan'), value: "<", requiresValue: true},
+    {text: this.$t('operators.lte'), value: "<=", requiresValue: true},
+    {text: this.$t('operators.greaterThan'), value: ">", requiresValue: true},
+    {text: this.$t('operators.gte'), value: ">=", requiresValue: true},
   ]
   expressions = ["AND", "OR"]
   dataTypes = [
@@ -1310,13 +1182,13 @@ export default class TransformationDialog extends Vue {
   ]
 
   paramOperators = [
-    {text: "==", value: "==", requiresValue: true},
-    {text: "!=", value: "!=", requiresValue: true},
-    {text: "like", value: "%", requiresValue: true},
-    {text: "<", value: "<", requiresValue: true},
-    {text: "<=", value: "<=", requiresValue: true},
-    {text: ">", value: ">", requiresValue: true},
-    {text: ">=", value: ">=", requiresValue: true},
+    {text: this.$t('operators.equals'), value: "==", requiresValue: true},
+    {text: this.$t('operators.notEquals'), value: "!=", requiresValue: true},
+    {text: this.$t('operators.like'), value: "%", requiresValue: true},
+    {text: this.$t('operators.lessThan'), value: "<", requiresValue: true},
+    {text: this.$t('operators.lte'), value: "<=", requiresValue: true},
+    {text: this.$t('operators.greaterThan'), value: ">", requiresValue: true},
+    {text: this.$t('operators.gte'), value: ">=", requiresValue: true},
   ]
 
   relationshipPairSearch = ""
@@ -1337,16 +1209,11 @@ export default class TransformationDialog extends Vue {
   destinationConfigKeys: EdgeConfigKeyT[] = []
 
   configFilterTypes = [{text: 'Data Source ID', value: 'data_source'},
-    {text: 'Original Node ID', value: 'original_id'},
-    {text: 'Property', value: 'property'},
-    {text: 'Node ID', value: 'id'}];
+    {text: this.$t('general.originalID'), value: 'original_id'},
+    {text: this.$t('properties.property'), value: 'property'},
+    {text: this.$t('nodes.id'), value: 'id'}];
 
-  limitedConfigFilterTypes = [{text: 'Metatype', value: 'metatype_id'}];
-
-  tab_data_source_id: any = null
-  tab_metatype_id: any = null
-  tab_node_id: any = null
-  tab_node_key: any = null
+  limitedConfigFilterTypes = [{text: this.$t('classes.class'), value: 'metatype_id'}];
 
   uniqueIdentifierKey: any = null
   propertyMapping: { [key: string]: any }[] = []
@@ -1361,72 +1228,54 @@ export default class TransformationDialog extends Vue {
 
   conditionsHeader() {
     return [{
-      text: this.$t('dataMapping.key'),
+      text: this.$t('general.key'),
       value: "key"
     }, {
-      text: this.$t('dataMapping.operator'),
+      text: this.$t('operators.operator'),
       value: "operator",
     }, {
-      text: this.$t('dataMapping.value'),
+      text: this.$t('general.value'),
       value: "value"
     },
-      {text: this.$t('dataMapping.actions'), value: "actions", sortable: false}
+      {text: this.$t('general.actions'), value: "actions", sortable: false}
     ]
   }
 
   subexpressionHeader() {
     return [
       {
-        text: this.$t('dataMapping.expression'),
+        text: this.$t('transformations.expression'),
         value: "expression"
       }, {
-        text: this.$t('dataMapping.key'),
+        text: this.$t('general.key'),
         value: "key"
       }, {
-        text: this.$t('dataMapping.operator'),
+        text: this.$t('operators.operator'),
         value: "operator",
       }, {
-        text: this.$t('dataMapping.value'),
+        text: this.$t('general.value'),
         value: "value"
       },
-      {text: this.$t('dataMapping.actions'), value: "actions", sortable: false}
-    ]
-  }
-
-  timeSeriesHeader() {
-    return [
-      {
-        text: this.$t('dataMapping.columnName'),
-        value: "column_name"
-      },
-      {
-        text: this.$t('dataMapping.dataType'),
-        value: "value_type"
-      },
-      {
-        text: this.$t('dataMapping.payloadKey'),
-        value: "key"
-      },
-      {text: this.$t('dataMapping.actions'), value: "actions", sortable: false}
+      {text: this.$t('general.actions'), value: "actions", sortable: false}
     ]
   }
 
   edgeConfigHeader() {
     return [
       {
-        text: this.$t('dataMapping.type'),
+        text: this.$t('query.filterType'),
         value: "type",
       },
       {
-        text: this.$t('dataMapping.operator'),
+        text: this.$t('operators.operator'),
         value: "operator",
       },
       {
-        text: this.$t('dataMapping.keysOrValues'),
+        text: this.$t('typeMappings.keyOrValue'),
         value: "value",
       },
       {
-        text: this.$t('dataMapping.actions'),
+        text: this.$t('general.actions'),
         value: "actions", sortable: false
       },
     ]
@@ -1434,13 +1283,13 @@ export default class TransformationDialog extends Vue {
 
   actionErrors() {
     return [{
-      text: this.$t('dataMapping.failOnRequired'),
+      text: this.$t('validation.failOnRequired'),
       value: 'fail on required'
     }, {
-      text: this.$t('dataMapping.fail'),
+      text: this.$t('validation.fail'),
       value: 'fail'
     }, {
-      text: this.$t('dataMapping.ignore'),
+      text: this.$t('validation.ignore'),
       value: 'ignore'
     },
     ]
@@ -1506,49 +1355,18 @@ export default class TransformationDialog extends Vue {
           .catch(e => this.errorMessage = e)
     }
 
-    if (this.transformation?.type === 'timeseries') {
-      this.payloadType = 'timeseries'
-      this.tab_data_source_id = this.transformation?.tab_data_source_id
-      this.tab_metatype_id = this.transformation?.tab_metatype_id
-      this.tab_node_id = this.transformation?.tab_node_id
-      this.tab_node_key = this.transformation?.tab_node_key
-      this.propertyMapping = this.transformation?.keys as any
-    }
-
     this.name = this.transformation?.name!
     this.onConversionError = this.transformation?.config.on_conversion_error as TransformationErrorAction;
     this.onKeyExtractionError = this.transformation?.config.on_key_extraction_error as TransformationErrorAction;
 
   }
 
+  dateString() {
+    return this.$t('links.jsTime');
+  }
+
   updated() {
     this.handleResize()
-  }
-
-  addMapping() {
-    if (this.propertyMapping.length === 0) {
-      this.propertyMapping.push({
-        id: uuidv4(),
-        column_name: '',
-        key: '',
-        value_type: 'date',
-        is_primary_timestamp: true
-      })
-
-      this.expandedTimeSeries.push(this.propertyMapping[0] as never)
-    } else {
-      this.propertyMapping.push({
-        id: uuidv4(),
-        column_name: '',
-        key: '',
-        value_type: 'string',
-        is_primary_timestamp: false
-      })
-    }
-  }
-
-  removeMapping(index: any) {
-    this.propertyMapping.splice(index, 1)
   }
 
   // retrieves the height of the type mapping column (on left) if present
@@ -1782,22 +1600,6 @@ export default class TransformationDialog extends Vue {
     })
   }
 
-  @Watch('tab_node_id', {immediate: false})
-  onTabNodeIDChange() {
-    if (this.$refs.mainForm) {
-      // @ts-ignore
-      this.$refs.mainForm.validate()
-    }
-  }
-
-  @Watch('tab_node_key', {immediate: false})
-  onTabNodeKeyChange() {
-    if (this.$refs.mainForm) {
-      // @ts-ignore
-      this.$refs.mainForm.validate()
-    }
-  }
-
   // autoPopulateMetatypeKeys attempts to match a selected metatype key's to payload
   // keys by property name
   autoPopulateMetatypeKeys() {
@@ -1844,11 +1646,6 @@ export default class TransformationDialog extends Vue {
     // @ts-ignore
     if (!this.$refs.mainForm!.validate()) return;
 
-    if (this.payloadType == 'timeseries' && (this.propertyMapping.length === 0 || !this.primaryTimestampSelected)) {
-      this.validationErrorMessage = this.$t('dataMapping.tabularValidationError') as string
-      return;
-    }
-
     this.setMetadataKeys()
 
     this.loading = true
@@ -1874,11 +1671,6 @@ export default class TransformationDialog extends Vue {
 
     payload.config.on_conversion_error = this.onConversionError
     payload.config.on_key_extraction_error = this.onKeyExtractionError
-
-    payload.tab_data_source_id = this.tab_data_source_id
-    payload.tab_metatype_id = this.tab_metatype_id
-    payload.tab_node_key = this.tab_node_key
-    payload.tab_node_id = this.tab_node_id
     payload.conditions = this.conditions
     payload.keys = this.propertyMapping
     if (this.uniqueIdentifierKey) payload.unique_identifier_key = this.uniqueIdentifierKey
@@ -1915,10 +1707,6 @@ export default class TransformationDialog extends Vue {
     payload.destination_id_key = this.destination_key
     payload.destination_metatype_id = this.destination_metatype_id
     payload.destination_data_source_id = this.destination_data_source_id
-    payload.tab_data_source_id = this.tab_data_source_id
-    payload.tab_metatype_id = this.tab_metatype_id
-    payload.tab_node_key = this.tab_node_key
-    payload.tab_node_id = this.tab_node_id
     payload.destination_parameters = this.destinationConfigKeys
     payload.origin_parameters = this.originConfigKeys
 
@@ -1942,21 +1730,12 @@ export default class TransformationDialog extends Vue {
 
   payloadTypes() {
     const types = [{
-      name: this.$t("dataMapping.record"),
+      name: this.$t("nodes.node"),
       value: 'node'
     }, {
-      name: this.$t("dataMapping.relationship"),
+      name: this.$t("edges.edge"),
       value: 'edge'
     }]
-
-    // only show if timeseries is enabled and it's existing transformation
-    // we don't want users to use this old method  of doing timeseries data
-    if (Config.timeSeriesEnabled && this.transformation) {
-      types.push({
-        name: this.$t("dataMapping.tabularData"),
-        value: 'timeseries'
-      })
-    }
 
     return types
   }
@@ -2231,53 +2010,17 @@ export default class TransformationDialog extends Vue {
     this.subexpressionOperator = null
   }
 
-  tabDataSourceValid() {
-    if (!this.tab_data_source_id || this.tab_data_source_id === '') {
-      return this.$t('dataMapping.required')
-    }
-    return true
-  }
-
-  tabMetatypeValid() {
-    if (!this.tab_metatype_id || this.tab_metatype_id === '') {
-      return this.$t('dataMapping.required')
-    }
-    return true
-  }
-
-  tabNodeValid() {
-    if ((!this.tab_node_key || this.tab_node_key === '') && (!this.tab_node_id || this.tab_node_id === '')) {
-      return this.$t('dataMapping.required')
-    }
-
-    return true
-  }
-
   validName(value: any) {
     if (!value) {
       return true
     }
 
-    // this regex should match only if the name starts with a letter, contains only alphanumerics and underscores with
+    // this regex should match only if the name starts with an underscore or letter, 
+    // contains only alphanumerics and underscores with
     // no spaces and is between 1 and 30 characters in length
-    const matches = /^[a-zA-Z][a-zA-Z0-9_]{1,30}(?!\s)$/.exec(value)
+    const matches = /^[_a-zA-Z][a-zA-Z0-9_]{1,30}(?!\s)$/.exec(value)
     if (!matches || matches.length === 0) {
-      return this.$t('dataMapping.nameRequirements')
-    }
-
-    return true
-  }
-
-  validColumnName(index: any, value: any) {
-    if (this.propertyMapping.filter(p => value === p.column_name).length > 1) {
-      return this.$t('dataMapping.columnNameMustBeUnique')
-    }
-
-    // this regex should match only if the name starts with a letter, contains only alphanumerics and underscores with
-    // no spaces and is between 1 and 30 characters in length
-    const matches = /^[a-zA-Z][a-zA-Z0-9_]{1,30}$/.exec(value)
-    if (!matches || matches.length === 0) {
-      return this.$t('dataMapping.columnNameRequirements')
+      return this.$t('help.nameRegex')
     }
 
     return true
@@ -2299,12 +2042,6 @@ export default class TransformationDialog extends Vue {
     }
   }
 
-  setTabDataSource(ds: DataSourceT) {
-    if (ds) {
-      this.tab_data_source_id = ds.id as string
-    }
-  }
-
   setParentMetatype(m: MetatypeT) {
     if (m) {
       this.origin_metatype_id = m.id
@@ -2314,12 +2051,6 @@ export default class TransformationDialog extends Vue {
   setChildMetatype(m: MetatypeT) {
     if (m) {
       this.destination_metatype_id = m.id
-    }
-  }
-
-  setTabMetatype(m: MetatypeT) {
-    if (m) {
-      this.tab_metatype_id = m.id
     }
   }
 
@@ -2359,17 +2090,9 @@ export default class TransformationDialog extends Vue {
     }
   }
 
-  get primaryTimestampSelected() {
-    if (this.propertyMapping.length > 0) {
-      if (this.propertyMapping.find(p => p.is_primary_timestamp)) return true
-    }
-
-    return false;
-  }
-
   // we need all the keys in a given data payload, this
   // handles retrieving the nested keys and will go as deep
-  // as the object does. The type mapping system in Deep Lynx
+  // as the object does. The type mapping system in DeepLynx
   // will be able to handle nested keys on anything EXCEPT the
   // type, origin, destination, and full ID keys.
   flatten(data: any): any {

@@ -1,13 +1,13 @@
 <template>
   <v-dialog v-model="dialog" @click:outside="dialog = false; reset()" max-width="60%">
     <template v-slot:activator="{ on }">
-      <v-btn color="primary" v-if="mappings && mappings.length > 0" dark class="mb-2" v-on="on">{{$t("exportMapping.export")}} {{mappings.length}} Mapping(s)</v-btn>
-      <v-btn color="primary" v-else dark class="mb-2" v-on="on">{{$t("exportMapping.exportAll")}}</v-btn>
+      <v-btn color="primary" v-if="mappings && mappings.length > 0" dark class="mb-2" v-on="on">{{$t("exports.export")}} {{mappings.length}} {{$t('typeMappings.mappingsMaybePlural')}}</v-btn>
+      <v-btn color="primary" v-else dark class="mb-2" v-on="on">{{$t("typeMappings.exportAll")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline text-h3">{{$t('exportMapping.title')}}</span>
+        <span class="headline text-h3">{{$t('typeMappings.export')}}</span>
       </v-card-title>
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
@@ -16,7 +16,7 @@
             <v-select
               :items="containers"
               item-text="name"
-              :label="$t('exportMapping.selectContainer')"
+              :label="$t('containers.select')"
               return-object
               @input="setContainer"
             ></v-select>
@@ -24,7 +24,7 @@
             <v-select
               :items="dataSources"
               item-text="name"
-              :label="$t('exportMapping.selectDataSource')"
+              :label="$t('dataSources.select')"
               return-object
               @input="setDataSource"
               :disabled="!container"
@@ -35,9 +35,9 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="dialog = false; reset()" >{{$t("exportMapping.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" text @click="exportToFile()">{{$t("exportMapping.exportToFile")}}</v-btn>
-        <v-btn color="blue darken-1" :disabled="!dataSource" text @click="exportToDataSource()">{{$t("exportMapping.exportToDataSource")}}</v-btn>
+        <v-btn color="primary" text @click="dialog = false; reset()" >{{$t("general.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="exportToFile()">{{$t("exports.toFile")}}</v-btn>
+        <v-btn color="primary" :disabled="!dataSource" text @click="exportToDataSource()">{{$t("exports.toDataSource")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -133,13 +133,13 @@ export default class ExportMappingsDialog extends Vue {
     }, config)
     .then((response: AxiosResponse) => {
       if(response.status > 299 || response.status < 200) {
-        this.errorMessage = `Unable to download exported type mappings`
+        this.errorMessage = this.$t('errors.downloadMappings') as string
       } else {
         const fetchedURL = window.URL.createObjectURL(new Blob([response.data]))
         const link = document.createElement('a')
 
         link.href = fetchedURL
-        link.setAttribute('download', `${this.containerName} ${this.dataSourceName} Type Mappings.json`)
+        link.setAttribute('download', `${this.containerName} ${this.dataSourceName} ${this.$t('typeMappings.typeMappings')}.json`)
         document.body.append(link)
         link.click()
         this.dialog = false

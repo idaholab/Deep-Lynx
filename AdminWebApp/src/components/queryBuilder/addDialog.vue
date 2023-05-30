@@ -15,7 +15,7 @@
 
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title class="grey lighten-2">
-        <span class="headline text-h3">{{$t('queryBuilder.selectFilterType')}}</span>
+        <span class="headline text-h3">{{$t('query.selectFilter')}}</span>
       </v-card-title>
       <v-card-text>
         <v-row>
@@ -43,12 +43,12 @@ export default class AddDialog extends Vue {
 
   options() {
     const options = [
-      {text: this.$t('queryBuilder.MetatypeFilter'), value: 'MetatypeFilter'},
-      {text: this.$t('queryBuilder.DataSourceFilter'), value: 'DataSourceFilter'},
-      {text: this.$t('queryBuilder.IDFilter'), value: 'IDFilter'},
-      {text: this.$t('queryBuilder.OriginalIDFilter'), value: 'OriginalIDFilter'},
-      {text: this.$t('queryBuilder.MetadataFilter'), value: "MetadataFilter"},
-      {text: this.$t('queryBuilder.RawDataFilter'), value: 'RawDataFilter'}
+      {text: this.$t('query.MetatypeFilter'), value: 'MetatypeFilter'},
+      {text: this.$t('query.DataSourceFilter'), value: 'DataSourceFilter'},
+      {text: this.$t('query.IDFilter'), value: 'IDFilter'},
+      {text: this.$t('query.OriginalIDFilter'), value: 'OriginalIDFilter'},
+      {text: this.$t('query.MetadataFilter'), value: "MetadataFilter"},
+      {text: this.$t('query.RawDataFilter'), value: 'RawDataFilter'}
     ]
 
     return options

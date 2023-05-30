@@ -7,12 +7,12 @@
           class="mr-2"
           v-on="on"
       >mdi-pencil</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on" style="margin-top: 0px !important;">{{$t("editMetatypeRelationshipPair.editMetatypeRelationshipPair")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on" style="margin-top: 0px !important;">{{$t("relationships.edit")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline text-h3">{{$t("editMetatypeRelationshipPair.formTitle")}}</span>
+        <span class="headline text-h3">{{$t("relationships.edit")}}</span>
       </v-card-title>
       <v-card-text v-if="selectedPair">
         <error-banner :message="errorMessage"></error-banner>
@@ -27,18 +27,18 @@
                   disabled
                   class="disabled"
               >
-                <template v-slot:label>{{$t('editMetatypeRelationshipPair.name')}}</template>
+                <template v-slot:label>{{$t('general.name')}}</template>
               </v-text-field>
               <v-textarea
                   v-model="comparisonPair.description"
                   disabled
                   class="disabled"
               >
-                <template v-slot:label>{{$t('editMetatypeRelationshipPair.description')}} </template>
+                <template v-slot:label>{{$t('general.description')}} </template>
               </v-textarea>
               <v-autocomplete
                   v-model="comparisonPair.origin_metatype_id"
-                  :rules="[v => !!v || $t('editMetatypeRelationshipPair.originRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
                   :single-line="false"
                   :items="[comparisonPair.origin_metatype]"
                   item-text="name"
@@ -48,11 +48,11 @@
                   disabled
                   class="disabled"
               >
-                <template v-slot:label>{{$t('editMetatypeRelationshipPair.originMetatype')}}</template>
+                <template v-slot:label>{{$t('edges.originClass')}}</template>
               </v-autocomplete>
               <v-autocomplete
                   v-model="comparisonPair.relationship_id"
-                  :rules="[v => !!v || $t('editMetatypeRelationshipPair.relationshipRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
                   :single-line="false"
                   :items="[comparisonPair.relationship]"
                   item-text="name"
@@ -61,7 +61,7 @@
                   disabled
                   class="disabled"
               >
-                <template v-slot:label>{{$t('editMetatypeRelationshipPair.relationship')}}</template>
+                <template v-slot:label>{{$t('relationshipTypes.relType')}}</template>
               </v-autocomplete>
               <v-autocomplete
                   v-model="comparisonPair.destination_metatype_id"
@@ -73,7 +73,7 @@
                   disabled
                   class="disabled"
               >
-                <template v-slot:label>{{$t('editMetatypeRelationshipPair.destinationMetatype')}}</template>
+                <template v-slot:label>{{$t('edges.destinationClass')}}</template>
               </v-autocomplete>
               <v-select
                   v-model="comparisonPair.relationship_type"
@@ -82,7 +82,7 @@
                   disabled
                   class="disabled"
               >
-                <template v-slot:label>{{$t('editMetatypeRelationshipPair.relationshipType')}}</template>
+                <template v-slot:label>{{$t('relationships.cardinality')}}</template>
               </v-select>
             </v-form>
           </v-col>
@@ -95,23 +95,23 @@
             >
               <v-text-field
                   v-model="selectedPair.name"
-                  :rules="[v => !!v || $t('editMetatypeRelationshipPair.originRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
                   required
                   :class="(comparisonPair && selectedPair.name !== comparisonPair.name) ? 'edited-field' : ''"
               >
-                <template v-slot:label>{{$t('editMetatypeRelationshipPair.name')}} <small style="color:red" >*</small></template>
+                <template v-slot:label>{{$t('general.name')}} <small style="color:red" >*</small></template>
               </v-text-field>
               <v-textarea
                   v-model="selectedPair.description"
-                  :rules="[v => !!v || $t('editMetatypeRelationshipPair.originRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
                   :class="(comparisonPair && selectedPair.description !== comparisonPair.description) ? 'edited-field' : ''"
               >
-                <template v-slot:label>{{$t('editMetatypeRelationshipPair.description')}} <small style="color:red" >*</small></template>
+                <template v-slot:label>{{$t('general.description')}} <small style="color:red" >*</small></template>
               </v-textarea>
               <v-autocomplete
                   v-model="selectedPair.origin_metatype_id"
                   :class="(comparisonPair && selectedPair.origin_metatype_id !== comparisonPair.origin_metatype_id) ? 'edited-field' : ''"
-                  :rules="[v => !!v || $t('editMetatypeRelationshipPair.originRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
                   :single-line="false"
                   :items="originMetatypes"
                   :search-input.sync="originSearch"
@@ -121,11 +121,11 @@
                   required
                   clearable
               >
-                <template v-slot:label>{{$t('editMetatypeRelationshipPair.originMetatype')}} <small style="color:red" >*</small></template>
+                <template v-slot:label>{{$t('edges.originClass')}} <small style="color:red" >*</small></template>
               </v-autocomplete>
               <v-autocomplete
                   v-model="selectedPair.relationship_id"
-                  :rules="[v => !!v || $t('editMetatypeRelationshipPair.relationshipRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
                   :class="(comparisonPair && selectedPair.relationship_id !== comparisonPair.relationship_id) ? 'edited-field' : ''"
                   :single-line="false"
                   :items="metatypeRelationships"
@@ -136,11 +136,11 @@
                   required
                   clearable
               >
-                <template v-slot:label>{{$t('editMetatypeRelationshipPair.relationship')}} <small style="color:red" >*</small></template>
+                <template v-slot:label>{{$t('relationshipTypes.relType')}} <small style="color:red" >*</small></template>
               </v-autocomplete>
               <v-autocomplete
                   v-model="selectedPair.destination_metatype_id"
-                  :rules="[v => !!v || $t('editMetatypeRelationshipPair.destinationRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
                   :class="(comparisonPair && selectedPair.destination_metatype_id !== comparisonPair.destination_metatype_id) ? 'edited-field' : ''"
                   :single-line="false"
                   :items="destinationMetatypes"
@@ -151,26 +151,26 @@
                   required
                   clearable
               >
-                <template v-slot:label>{{$t('editMetatypeRelationshipPair.destinationMetatype')}} <small style="color:red" >*</small></template>
+                <template v-slot:label>{{$t('edges.destinationClass')}} <small style="color:red" >*</small></template>
               </v-autocomplete>
               <v-select
                   v-model="selectedPair.relationship_type"
                   :class="(comparisonPair && selectedPair.relationship_type !== comparisonPair.relationship_type) ? 'edited-field' : ''"
-                  :rules="[v => !!v || $t('editMetatypeRelationshipPair.relationshipTypeRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
                   :items="relationshipTypeChoices"
                   required
               >
-                <template v-slot:label>{{$t('editMetatypeRelationshipPair.relationshipType')}} <small style="color:red" >*</small></template>
+                <template v-slot:label>{{$t('relationships.cardinality')}} <small style="color:red" >*</small></template>
               </v-select>
             </v-form>
-            <p><span style="color:red">*</span> = {{$t('editMetatypeRelationshipPair.requiredField')}}</p>
+            <p><span style="color:red">*</span> = {{$t('validation.required')}}</p>
           </v-col>
         </v-row>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="dialog = false" >{{$t("editMetatypeRelationshipPair.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" text :disabled="!valid" @click="editRelationshipPair()">{{$t("editMetatypeRelationshipPair.save")}}</v-btn>
+        <v-btn color="primary" text @click="dialog = false" >{{$t("general.cancel")}}</v-btn>
+        <v-btn color="primary" text :disabled="!valid" @click="editRelationshipPair()">{{$t("general.save")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -249,7 +249,7 @@ export default class EditRelationshipPairDialog extends Vue {
           this.dialog = false
           this.$emit('pairEdited')
         })
-        .catch(e => this.errorMessage = this.$t('editMetatypeRelationshipPair.errorEditingAPI') as string + e)
+        .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
   }
 }
 
@@ -270,27 +270,27 @@ export default class EditRelationshipPairDialog extends Vue {
 
 .edited-field {
   input {
-    background: #CD7F32;
+    background: $warning;
     color: white !important;
-    box-shadow: -5px 0 0 #CD7F32;
+    box-shadow: -5px 0 0 $warning;
   }
 
   textarea {
-    background: #CD7F32;
+    background: $warning;
     color: white !important;
-    box-shadow: -5px 0 0 #CD7F32;
+    box-shadow: -5px 0 0 $warning;
   }
 
   .v-select__slot {
-    background: #CD7F32;
+    background: $warning;
     color: white !important;
-    box-shadow: -5px 0 0 #CD7F32;
+    box-shadow: -5px 0 0 $warning;
   }
 
   .v-select__selection {
-    background: #CD7F32;
+    background: $warning;
     color: white !important;
-    box-shadow: -5px 0 0 #CD7F32;
+    box-shadow: -5px 0 0 $warning;
   }
 }
 </style>

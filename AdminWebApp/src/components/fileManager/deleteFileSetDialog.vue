@@ -6,12 +6,12 @@
           class="mr-2"
           v-on="on"
       >mdi-delete</v-icon>
-      <v-btn v-if="displayIcon ==='none'" color="primary" dark class="mt-2" v-on="on">{{$t("fileManager.deleteFileSet")}}</v-btn>
+      <v-btn v-if="displayIcon ==='none'" color="primary" dark class="mt-2" v-on="on">{{$t("files.deleteSet")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline text-h3">{{$t('fileManager.deleteTitle')}}</span>
+        <span class="headline text-h3">{{$t('files.delete')}}</span>
       </v-card-title>
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
@@ -19,7 +19,7 @@
           <v-col :cols="12">
             <div>
               <v-alert type="warning">
-                {{$t('fileManager.deleteWarning')}}
+                {{$t('modelExplorer.fileDeleteWarn')}}
               </v-alert>
 
             </div>
@@ -29,10 +29,10 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="reset()">{{$t("home.cancel")}}</v-btn>
-        <v-btn color="red darken-1" text @click="deleteFileSet()">
+        <v-btn color="primary" text @click="reset()">{{$t("general.cancel")}}</v-btn>
+        <v-btn color="error" text @click="deleteFileSet()">
           <v-progress-circular v-if="deleteLoading" indeterminate></v-progress-circular>
-          <span v-if="!deleteLoading">{{$t("home.delete")}}</span>
+          <span v-if="!deleteLoading">{{$t("general.delete")}}</span>
         </v-btn>
       </v-card-actions>
     </v-card>

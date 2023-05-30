@@ -830,8 +830,8 @@ export class Client {
         return this.get<NodeT[]>(`/containers/${containerID}/graphs/nodes`, query);
     }
 
-    listTimeseriesTables(containerID: string, nodeID: string): Promise<Map<string, [boolean, string]>> {
-        return this.get<Map<string, [boolean, string]>>(`/containers/${containerID}/graphs/nodes/${nodeID}/timeseries`);
+    listTimeseriesTables(containerID: string, nodeID: string): Promise<Map<string, string>> {
+        return this.get<Map<string, string>>(`/containers/${containerID}/graphs/nodes/${nodeID}/timeseries`);
     }
 
     downloadTimeseriesData(containerID: string, dataSourceID: string) {
@@ -1063,7 +1063,7 @@ export class Client {
     }
 
     // only use this function when exporting type mappings from one data source to another WITHIN THE SAME DL INSTANCE
-    // this will not work for exporting to a separate instance of Deep Lynx
+    // this will not work for exporting to a separate instance of DeepLynx
     exportTypeMappings(containerID: string, dataSourceID: string, targetDataSource: string, ...typeMappings: TypeMappingT[]): Promise<ResultT<any>[]> {
         return this.postRawReturn<ResultT<any>[]>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/export`, {
             mapping_ids: typeMappings.map((mapping) => mapping.id),

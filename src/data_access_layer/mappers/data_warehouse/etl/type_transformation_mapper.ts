@@ -81,10 +81,6 @@ export default class TypeTransformationMapper extends Mapper {
     }
 
     public async BulkDelete(transformations: TypeTransformation[], transaction?: PoolClient): Promise<Result<boolean>> {
-        transformations.forEach((t) => {
-            void this.DeleteHypertable(t.id!);
-        });
-
         return super.runStatement(this.bulkDeleteStatement(transformations), {
             transaction,
         });
@@ -102,39 +98,11 @@ export default class TypeTransformationMapper extends Mapper {
     }
 
     public Delete(id: string): Promise<Result<boolean>> {
-        // in case the hypertable didn't get dropped earlier
-        void this.DeleteHypertable(id);
-
         return super.runStatement(this.deleteStatement(id));
     }
 
     public DeleteWithData(id: string): Promise<Result<boolean>> {
-        // in case the hypertable didn't get dropped earlier
-        void this.DeleteHypertable(id);
-
         return super.runAsTransaction(...this.deleteWithDataStatement(id));
-    }
-
-    /**
-     * @deprecated favor timeseries type data sources
-     */
-    public async CreateHypertable(transformation: TypeTransformation): Promise<Result<boolean>> {
-        if (!transformation.id || !transformation.keys || transformation.keys.length === 0) {
-            return Result.Failure('transformation must have id and mapping keys in order to create time series table');
-        }
-
-        if (transformation.metatype_id || transformation.metatype_relationship_pair_id) {
-            return Result.Failure('transformation is not a time series transformation');
-        }
-
-        return super.runAsTransaction(...this.createHypertableStatement(transformation));
-    }
-
-    /**
-     * @deprecated favor timeseries type data sources
-     */
-    public async DeleteHypertable(transformationID: string): Promise<Result<boolean>> {
-        return super.runStatement(this.deleteHypertableStatement(transformationID));
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -156,10 +124,6 @@ export default class TypeTransformationMapper extends Mapper {
             destination_id_key,
             destination_metatype_id,
             destination_data_source_id,
-            tab_data_source_id,
-            tab_metatype_id,
-            tab_node_id,
-            tab_node_key,
             unique_identifier_key,
             root_array,
             config,
@@ -193,10 +157,6 @@ export default class TypeTransformationMapper extends Mapper {
             tt.destination_id_key,
             tt.destination_metatype_id,
             tt.destination_data_source_id,
-            tt.tab_data_source_id,
-            tt.tab_metatype_id,
-            tt.tab_node_id,
-            tt.tab_node_key,
             tt.unique_identifier_key,
             tt.root_array,
             JSON.stringify(tt.config),
@@ -224,10 +184,6 @@ export default class TypeTransformationMapper extends Mapper {
             destination_id_key = u.destination_id_key,
             destination_metatype_id = u.destination_metatype_id::bigint,
             destination_data_source_id = u.destination_data_source_id::bigint,
-            tab_data_source_id = u.tab_data_source_id::bigint,
-            tab_metatype_id = u.tab_metatype_id::bigint,
-            tab_node_id = u.tab_node_id::text,
-            tab_node_key = u.tab_node_key::text,
             unique_identifier_key = u.unique_identifier_key,
             root_array = u.root_array,
             config = u.config::jsonb,
@@ -250,10 +206,6 @@ export default class TypeTransformationMapper extends Mapper {
                             destination_id_key,
                             destination_metatype_id,
                             destination_data_source_id,
-                            tab_data_source_id,
-                            tab_metatype_id,
-                            tab_node_id,
-                            tab_node_key,
                             unique_identifier_key,
                             root_array,
                             config,
@@ -287,10 +239,6 @@ export default class TypeTransformationMapper extends Mapper {
             tt.destination_id_key,
             tt.destination_metatype_id,
             tt.destination_data_source_id,
-            tt.tab_data_source_id,
-            tt.tab_metatype_id,
-            tt.tab_node_id,
-            tt.tab_node_key,
             tt.unique_identifier_key,
             tt.root_array,
             JSON.stringify(tt.config),
@@ -356,7 +304,6 @@ export default class TypeTransformationMapper extends Mapper {
     private listByMapping(typeMappingID: string): QueryConfig {
         return {
             text: `SELECT type_mapping_transformations.*,
-                          m2.name as tab_metatype_name,
                           metatypes.name as metatype_name,
                           metatype_relationship_pairs.name as metatype_relationship_pair_name,
                           metatypes.ontology_version as metatype_ontology_version,
@@ -367,7 +314,6 @@ export default class TypeTransformationMapper extends Mapper {
                    FROM type_mapping_transformations
                             LEFT JOIN type_mappings as mapping ON type_mapping_transformations.type_mapping_id = mapping.id
                             LEFT JOIN metatypes ON type_mapping_transformations.metatype_id = metatypes.id
-                            LEFT JOIN metatypes m2 on type_mapping_transformations.tab_metatype_id = m2.id
                             LEFT JOIN metatype_relationship_pairs 
                                 ON type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id
                    WHERE type_mapping_id = $1`,
@@ -394,88 +340,6 @@ export default class TypeTransformationMapper extends Mapper {
                     SELECT e.id FROM edges e WHERE e.type_mapping_transformation_id = $1) LIMIT 1`,
             values: [transformationID],
         };
-    }
-    /**
-     * @deprecated favor timeseries type data sources
-     */
-    private createHypertableStatement(transformation: TypeTransformation): QueryConfig[] {
-        let primaryTimestampColumnName = '';
-        const columnStatements: string[] = transformation.keys.map((key) => {
-            if (key.is_primary_timestamp) {
-                primaryTimestampColumnName = key.column_name!;
-            }
-            // this determines the data type of the column to be created
-            let type = 'text';
-
-            switch (key.value_type) {
-                case undefined: {
-                    type = 'text';
-                    break;
-                }
-
-                case 'number': {
-                    type = 'integer';
-                    break;
-                }
-
-                case 'number64': {
-                    type = 'bigint';
-                    break;
-                }
-
-                case 'float': {
-                    type = 'numeric';
-                    break;
-                }
-                case 'float64': {
-                    type = 'numeric';
-                    break;
-                }
-
-                case 'date': {
-                    type = 'timestamp';
-                    break;
-                }
-
-                case 'boolean': {
-                    type = 'boolean';
-                    break;
-                }
-            }
-
-            return format('%I %I DEFAULT NULL', key.column_name, type);
-        });
-
-        const createStatement = format(
-            `CREATE TABLE IF NOT EXISTS %I (
-                ${columnStatements.join(',')},
-                _nodes bigint[] DEFAULT NULL,
-                _metadata jsonb DEFAULT NULL
-                )`,
-            'z_' + transformation.id!,
-        );
-
-        return [
-            {
-                text: format(`DROP TABLE IF EXISTS %s`, 'z_' + transformation.id!),
-            },
-            {
-                text: createStatement,
-            },
-            {
-                text: format(`SELECT create_hypertable(%L, %L)`, 'z_' + transformation.id!, primaryTimestampColumnName),
-            },
-        ];
-    }
-
-    /**
-     * @deprecated favor timeseries type data sources
-     */
-    private deleteHypertableStatement(transformationID: string): string {
-        const text = `DROP TABLE IF EXISTS %s`;
-        const values = ['z_' + transformationID];
-
-        return format(text, values);
     }
 
     private listFromIDsStatement(ids: string[]): string {

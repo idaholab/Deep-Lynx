@@ -1,26 +1,28 @@
 <template>
-  <div style="margin-top: 1px">
+  <div>
     <div v-for="alert in alerts" :key="alert.id">
-      <v-alert :type="alert.type">
+      <v-alert :type="alert.type" style="margin: 40px 40px 0px 40px">
         <p>{{alert.message}}</p>
         <div v-if="$auth.Auth('containers','write', containerID)">
           <v-btn v-if="alert.message.includes('Authorize')"
-            :color="alert.type"
+            color="white"
+            :class="`${alert.type}--text`"
             @click="authorizeContainer(alert.id)"
-          >{{$t('containerAlert.authorize')}}</v-btn>
+          >{{$t('containers.acknowledgeAlert')}}</v-btn>
           <v-btn v-else
-            :color="alert.type" 
+            color="white"
+            :class="`${alert.type}--text`"
             @click="acknowledgeAlert(alert.id)" 
-          >{{$t('containerAlert.acknowledge')}}</v-btn>
+          >{{$t('containers.acknowledgeAlert')}}</v-btn>
         </div>
         
-        <p v-else>{{$t('containerAlert.containerAdminAcknowledge')}}</p>
+        <p v-else>{{$t('containers.adminAlert')}}</p>
       </v-alert>
     </div>
 
     <div v-for="version in versions" :key="version.id">
-      <v-alert type="warning">
-        <p>{{$t('containerAlert.generatingOntology')}} - {{version.name}}</p>
+      <v-alert type="warning" style="margin: 40px 40px 0px 40px">
+        <p>{{$t('ontology.generating')}} - {{version.name}}</p>
         <v-progress-linear color="white" indeterminate></v-progress-linear>
       </v-alert>
     </div>

@@ -7,12 +7,12 @@
           class="mr-2"
           v-on="on"
       >mdi-pencil</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("editMetatypeKey.editMetatypeKey")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("classes.editProperty")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2" v-if="selectedMetatypeKey">
       <v-card-title>
-        <span class="headline text-h3">{{$t('editMetatypeKey.edit')}} {{selectedMetatypeKey.name}}</span>
+        <span class="headline text-h3">{{$t('general.edit')}} {{selectedMetatypeKey.name}}</span>
       </v-card-title>   
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
@@ -24,59 +24,59 @@
                   v-model="comparisonMetatypeKey.name"
                   disabled
               >
-                <template v-slot:label>{{$t('editMetatypeKey.name')}} <small style="color:red" >*</small></template>
+                <template v-slot:label>{{$t('general.name')}} <small style="color:red" >*</small></template>
               </v-text-field>
 
               <v-text-field
                   v-model="comparisonMetatypeKey.property_name"
                   disabled
               >
-                <template v-slot:label>{{$t('editMetatypeKey.propertyName')}} <small style="color:red" >*</small></template>
+                <template v-slot:label>{{$t('properties.name')}} <small style="color:red" >*</small></template>
               </v-text-field>
               <v-select
                   v-model="comparisonMetatypeKey.data_type"
                   :items="dataTypes"
                   disabled
               >
-                <template v-slot:label>{{$t('editMetatypeKey.dataType')}} <small style="color:red" >*</small></template>
+                <template v-slot:label>{{$t('general.dataType')}} <small style="color:red" >*</small></template>
               </v-select>
               <v-checkbox
                   disabled
                   v-model="comparisonMetatypeKey.required"
               >
-                <template v-slot:label>{{$t('editMetatypeKey.required')}} <small style="color:#ff0000" >*</small></template>
+                <template v-slot:label>{{$t('validation.required')}} <small style="color:#ff0000" >*</small></template>
               </v-checkbox>
               <v-textarea
                   v-model="comparisonMetatypeKey.description"
                   :rows="2"
                   disabled
               >
-                <template v-slot:label>{{$t('editMetatypeKey.description')}} <small style="color:#ff0000" >*</small></template>
+                <template v-slot:label>{{$t('general.description')}} <small style="color:#ff0000" >*</small></template>
               </v-textarea>
 
-              <h3>{{$t('editMetatypeKey.validation')}}</h3>
+              <h3>{{$t('validation.validation')}}</h3>
               <v-text-field
                   v-model="comparisonMetatypeKey.validation.regex"
                   disabled
-                  :label="$t('editMetatypeKey.regex')"
+                  :label="$t('validation.regex')"
               >
-                <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeKey.regexHelp')"></info-tooltip></template>
+                <template slot="append-outer"> <info-tooltip :message="$t('help.regex')"></info-tooltip></template>
               </v-text-field>
               <v-text-field
                   v-model.number="comparisonMetatypeKey.validation.max"
                   type="number"
-                  :label="$t('editMetatypeKey.max')"
+                  :label="$t('validation.max')"
                   disabled
               >
-                <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeKey.maxHelp')"></info-tooltip></template>
+                <template slot="append-outer"> <info-tooltip :message="$t('help.max')"></info-tooltip></template>
               </v-text-field>
               <v-text-field
                   v-model.number="comparisonMetatypeKey.validation.min"
                   disabled
                   type="number"
-                  :label="$t('editMetatypeKey.min')"
+                  :label="$t('validation.min')"
               >
-                <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeKey.minHelp')"></info-tooltip></template>
+                <template slot="append-outer"> <info-tooltip :message="$t('help.min')"></info-tooltip></template>
               </v-text-field>
 
 
@@ -99,13 +99,13 @@
                     v-model="comparisonMetatypeKey.default_value"
                     type="number"
                     disabled
-                    :label="$t('editMetatypeKey.defaultValue')"
+                    :label="$t('general.defaultValue')"
                 ></v-text-field>
                 <v-select
                     v-else-if="comparisonMetatypeKey.data_type === 'boolean'"
                     v-model="comparisonMetatypeKey.default_value"
                     disabled
-                    :label="$t('editMetatypeKey.defaultValue')"
+                    :label="$t('general.defaultValue')"
                     :items="booleanOptions"
                     required
                 >
@@ -114,13 +114,13 @@
                     v-else
                     disabled
                     v-model="comparisonMetatypeKey.default_value"
-                    :label="$t('editMetatypeKey.defaultValue')"
+                    :label="$t('general.defaultValue')"
                 ></v-text-field>
               </div>
 
               <v-combobox
                   v-model="comparisonMetatypeKey.options"
-                  :label="$t('editMetatypeKey.options')"
+                  :label="$t('general.options')"
                   multiple
                   clearable
                   disabled
@@ -139,69 +139,69 @@
               <v-text-field
                   v-model="selectedMetatypeKey.name"
                   :class="(comparisonMetatypeKey && selectedMetatypeKey.name !== comparisonMetatypeKey.name) ? 'edited-field' : ''"
-                  :rules="[v => !!v || $t('editMetatypeKey.nameRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
               >
-                <template v-slot:label>{{$t('editMetatypeKey.name')}} <small style="color:red" >*</small></template>
+                <template v-slot:label>{{$t('general.name')}} <small style="color:red" >*</small></template>
               </v-text-field>
 
               <v-text-field
                   v-model="selectedMetatypeKey.property_name"
-                  :rules="[v => !!v || $t('editMetatypeKey.propertyNameRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
                   :class="(comparisonMetatypeKey && selectedMetatypeKey.property_name !== comparisonMetatypeKey.property_name) ? 'edited-field' : ''"
                   required
               >
-                <template v-slot:label>{{$t('editMetatypeKey.propertyName')}} <small style="color:red" >*</small></template>
-                <template slot="append-outer"><info-tooltip :message="$t('ontology.propertyName')"></info-tooltip> </template>
+                <template v-slot:label>{{$t('properties.name')}} <small style="color:red" >*</small></template>
+                <template slot="append-outer"><info-tooltip :message="$t('help.propertyName')"></info-tooltip> </template>
               </v-text-field>
               <v-select
                   v-model="selectedMetatypeKey.data_type"
                   :items="dataTypes"
                   @change="selectedMetatypeKey.default_value = undefined"
-                  :rules="[v => !!v || $t('editMetatypeKey.dataTypeRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
                   required
                   :class="(comparisonMetatypeKey && selectedMetatypeKey.data_type !== comparisonMetatypeKey.data_type) ? 'edited-field' : ''"
               >
-                <template v-slot:label>{{$t('editMetatypeKey.dataType')}} <small style="color:red" >*</small></template>
+                <template v-slot:label>{{$t('general.dataType')}} <small style="color:red" >*</small></template>
               </v-select>
               <v-checkbox
                   v-model="selectedMetatypeKey.required"
               >
-                <template v-slot:label>{{$t('editMetatypeKey.required')}}</template>
+                <template v-slot:label>{{$t('validation.required')}}</template>
               </v-checkbox>
               <v-textarea
                   v-model="selectedMetatypeKey.description"
                   :class="(comparisonMetatypeKey && selectedMetatypeKey.description !== comparisonMetatypeKey.description) ? 'edited-field' : ''"
                   :rows="2"
-                  :rules="[v => !!v || $t('editMetatypeKey.descriptionRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
               >
-                <template v-slot:label>{{$t('editMetatypeKey.description')}} <small style="color:#ff0000" >*</small></template>
+                <template v-slot:label>{{$t('general.description')}} <small style="color:#ff0000" >*</small></template>
               </v-textarea>
 
-              <h3>{{$t('editMetatypeKey.validation')}}</h3>
+              <h3>{{$t('validation.validation')}}</h3>
               <v-text-field
                   v-model="selectedMetatypeKey.validation.regex"
                   :class="(comparisonMetatypeKey && selectedMetatypeKey.validation.regex !== comparisonMetatypeKey.validation.regex) ? 'edited-field' : ''"
-                  :label="$t('editMetatypeKey.regex')"
+                  :label="$t('validation.regex')"
               >
-                <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeKey.regexHelp')"></info-tooltip></template>
+                <template slot="append-outer"> <info-tooltip :message="$t('help.regex')"></info-tooltip></template>
               </v-text-field>
               <v-text-field
                   v-model.number="selectedMetatypeKey.validation.max"
                   :class="(comparisonMetatypeKey && selectedMetatypeKey.validation.max !== comparisonMetatypeKey.validation.max) ? 'edited-field' : ''"
                   :disabled="selectedMetatypeKey.validation.regex === ''"
                   type="number"
-                  :label="$t('editMetatypeKey.max')"
+                  :label="$t('validation.max')"
               >
-                <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeKey.maxHelp')"></info-tooltip></template>
+                <template slot="append-outer"> <info-tooltip :message="$t('help.max')"></info-tooltip></template>
               </v-text-field>
               <v-text-field
                   v-model.number="selectedMetatypeKey.validation.min"
                   :class="(comparisonMetatypeKey && selectedMetatypeKey.validation.min !== comparisonMetatypeKey.validation.min) ? 'edited-field' : ''"
                   :disabled="selectedMetatypeKey.validation.regex === ''"
                   type="number"
-                  :label="$t('editMetatypeKey.min')"
+                  :label="$t('validation.min')"
               >
-                <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeKey.minHelp')"></info-tooltip></template>
+                <template slot="append-outer"> <info-tooltip :message="$t('help.min')"></info-tooltip></template>
               </v-text-field>
 
 
@@ -218,13 +218,13 @@
 
                 <v-combobox
                     v-model="selectedMetatypeKey.options"
-                    :label="$t('editMetatypeKey.options')"
+                    :label="$t('general.options')"
                     multiple
                     clearable
                     chips
                     deletable-chips
                 >
-                  <template slot="append-outer"><info-tooltip :message="$t('ontology.optionsHelp')"></info-tooltip> </template>
+                  <template slot="append-outer"><info-tooltip :message="$t('help.enumOptions')"></info-tooltip> </template>
                 </v-combobox>
               </div>
 
@@ -234,13 +234,13 @@
                     v-model="selectedMetatypeKey.default_value"
                     :class="(comparisonMetatypeKey && selectedMetatypeKey.default_value !== comparisonMetatypeKey.default_value) ? 'edited-field' : ''"
                     type="number"
-                    :label="$t('editMetatypeKey.defaultValue')"
+                    :label="$t('general.defaultValue')"
                 ></v-text-field>
                 <v-select
                     v-else-if="selectedMetatypeKey.data_type === 'boolean'"
                     v-model="selectedMetatypeKey.default_value"
                     :class="(comparisonMetatypeKey && selectedMetatypeKey.default_value !== comparisonMetatypeKey.default_value) ? 'edited-field' : ''"
-                    :label="$t('editMetatypeKey.defaultValue')"
+                    :label="$t('general.defaultValue')"
                     :items="booleanOptions"
                     required
                 >
@@ -249,20 +249,20 @@
                     v-else
                     v-model="selectedMetatypeKey.default_value"
                     :class="(comparisonMetatypeKey && selectedMetatypeKey.default_value !== comparisonMetatypeKey.default_value) ? 'edited-field' : ''"
-                    :label="$t('editMetatypeKey.defaultValue')"
+                    :label="$t('general.defaultValue')"
                 ></v-text-field>
               </div>
 
             </v-form>
-            <p><span style="color:red">*</span> = {{$t('editMetatypeKey.requiredField')}}</p>
+            <p><span style="color:red">*</span> = {{$t('validation.required')}}</p>
           </v-col>
         </v-row>
       </v-card-text>
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="dialog = false" >{{$t("editMetatypeKey.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" text @click="editMetatypeKey()">{{$t("editMetatypeKey.save")}}</v-btn>
+        <v-btn color="primary" text @click="dialog = false" >{{$t("general.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="editMetatypeKey()">{{$t("general.save")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -317,13 +317,13 @@ export default class EditMetatypeKeyDialog extends Vue {
       this.$client.updateMetatypeKey(this.metatype.container_id,this.metatype.id!, this.selectedMetatypeKey?.id!, this.selectedMetatypeKey)
           .then(result => {
             if(!result) {
-              this.errorMessage = this.$t('editMetatypeKey.errorUpdatingAPI') as string
+              this.errorMessage = this.$t('errors.errorCommunicating') as string
             } else {
               this.dialog = false
               this.$emit('metatypeKeyEdited')
             }
           })
-          .catch(e => this.errorMessage = this.$t('editMetatypeKey.errorUpdatingAPI') as string + e)
+          .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
     }
   }
 }
@@ -344,27 +344,27 @@ export default class EditMetatypeKeyDialog extends Vue {
 
 .edited-field {
   input {
-    background: #CD7F32;
+    background: $warning;
     color: white !important;
-    box-shadow: -5px 0 0 #CD7F32;
+    box-shadow: -5px 0 0 $warning;
   }
 
   textarea {
-    background: #CD7F32;
+    background: $warning;
     color: white !important;
-    box-shadow: -5px 0 0 #CD7F32;
+    box-shadow: -5px 0 0 $warning;
   }
 
   .v-select__slot {
-    background: #CD7F32;
+    background: $warning;
     color: white !important;
-    box-shadow: -5px 0 0 #CD7F32;
+    box-shadow: -5px 0 0 $warning;
   }
 
   .v-select__selection {
-    background: #CD7F32;
+    background: $warning;
     color: white !important;
-    box-shadow: -5px 0 0 #CD7F32;
+    box-shadow: -5px 0 0 $warning;
   }
 }
 </style>

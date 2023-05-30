@@ -7,14 +7,14 @@
           class="mr-2"
           v-on="on"
       >mdi-eye</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("viewMetatypeRelationship.editMetatypeRelationship")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("relationshipTypes.view")}}</v-btn>
     </template>
 
     <v-card v-if="selectedMetatypeRelationship">
       <v-card-text>
         <v-container>
           <error-banner :message="errorMessage"></error-banner>
-          <span class="headline">{{ $t('viewMetatypeRelationship.edit') }} {{ selectedMetatypeRelationship.name }}</span>
+          <span class="headline">{{ $t('general.view') }} {{ selectedMetatypeRelationship.name }}</span>
           <v-row>
             <v-col :cols="12">
 
@@ -24,21 +24,21 @@
               >
                 <v-text-field
                     v-model="selectedMetatypeRelationship.name"
-                    :rules="[v => !!v || $t('viewMetatypeRelationship.nameRequired')]"
+                    :rules="[v => !!v || $t('validation.required')]"
                     :disabled="true"
                     required
                     class="disabled"
                 >
-                  <template v-slot:label>{{$t('viewMetatypeRelationship.name')}} </template>
+                  <template v-slot:label>{{$t('general.name')}} </template>
                 </v-text-field>
                 <v-textarea
                     v-model="selectedMetatypeRelationship.description"
-                    :rules="[v => !!v || $t('viewMetatypeRelationship.descriptionRequired')]"
+                    :rules="[v => !!v || $t('validation.required')]"
                     required
                     :disabled="true"
                     class="disabled"
                 >
-                  <template v-slot:label>{{$t('viewMetatypeRelationship.description')}} </template>
+                  <template v-slot:label>{{$t('general.description')}} </template>
                 </v-textarea>
 
               </v-form>
@@ -60,7 +60,7 @@
 
                 <template v-slot:top>
                   <v-toolbar flat color="white">
-                    <v-toolbar-title>{{$t("viewMetatypeRelationship.keys")}}</v-toolbar-title>
+                    <v-toolbar-title>{{$t("properties.properties")}}</v-toolbar-title>
                     <v-divider
                         class="mx-4"
                         inset
@@ -80,7 +80,7 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="dialog = false" >{{$t("viewMetatypeRelationship.close")}}</v-btn>
+        <v-btn color="primary" text @click="dialog = false" >{{$t("general.close")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -119,10 +119,10 @@ export default class ViewMetatypeRelationshipDialog extends Vue {
 
   headers() {
     return  [
-      { text: this.$t('viewMetatypeRelationship.keyName'), value: 'name' },
-      { text: this.$t('viewMetatypeRelationship.keyDescription'), value: 'description'},
-      { text: this.$t('viewMetatypeRelationship.keyType'), value: 'data_type'},
-      { text: this.$t('viewMetatypeRelationship.actions'), value: 'actions', sortable: false }
+      { text: this.$t('general.name'), value: 'name' },
+      { text: this.$t('general.description'), value: 'description'},
+      { text: this.$t('general.dataType'), value: 'data_type'},
+      { text: this.$t('general.actions'), value: 'actions', sortable: false }
     ]
   }
 
@@ -166,27 +166,27 @@ export default class ViewMetatypeRelationshipDialog extends Vue {
 
 .edited-field {
   input {
-    background: #CD7F32;
+    background: $warning;
     color: white !important;
-    box-shadow: -5px 0 0 #CD7F32;
+    box-shadow: -5px 0 0 $warning;
   }
 
   textarea {
-    background: #CD7F32;
+    background: $warning;
     color: white !important;
-    box-shadow: -5px 0 0 #CD7F32;
+    box-shadow: -5px 0 0 $warning;
   }
 
   .v-select__slot {
-    background: #CD7F32;
+    background: $warning;
     color: white !important;
-    box-shadow: -5px 0 0 #CD7F32;
+    box-shadow: -5px 0 0 $warning;
   }
 
   .v-select__selection {
-    background: #CD7F32;
+    background: $warning;
     color: white !important;
-    box-shadow: -5px 0 0 #CD7F32;
+    box-shadow: -5px 0 0 $warning;
   }
 }
 </style>

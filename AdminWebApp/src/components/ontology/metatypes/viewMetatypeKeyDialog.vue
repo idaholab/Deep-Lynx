@@ -21,7 +21,7 @@
                 :disabled="true"
                 class="disabled"
             >
-              <template v-slot:label>{{$t('viewMetatypeKey.name')}}</template>
+              <template v-slot:label>{{$t('general.name')}}</template>
             </v-text-field>
 
             <v-text-field
@@ -30,8 +30,8 @@
                 :disabled="true"
                 class="disabled"
             >
-              <template v-slot:label>{{$t('viewMetatypeKey.propertyName')}}</template>
-              <template slot="append-outer"><info-tooltip :message="$t('ontology.propertyName')"></info-tooltip> </template>
+              <template v-slot:label>{{$t('properties.name')}}</template>
+              <template slot="append-outer"><info-tooltip :message="$t('help.propertyName')"></info-tooltip> </template>
             </v-text-field>
             <v-select
                 v-model="selectedMetatypeKey.data_type"
@@ -40,7 +40,7 @@
                 :disabled="true"
                 class="disabled"
             >
-              <template v-slot:label>{{$t('viewMetatypeKey.dataType')}}</template>
+              <template v-slot:label>{{$t('general.dataType')}}</template>
             </v-select>
 
             <v-checkbox
@@ -48,37 +48,37 @@
                 :disabled="true"
                 class="disabled"
             >
-              <template v-slot:label>{{$t('editMetatypeKey.required')}}</template>
+              <template v-slot:label>{{$t('validation.required')}}</template>
             </v-checkbox>
 
 
 
-              <h3>{{$t('editMetatypeKey.validation')}}</h3>
+              <h3>{{$t('validation.validation')}}</h3>
               <v-text-field
                   v-model="selectedMetatypeKey.validation.regex"
                   :disabled="true"
-                  :label="$t('editMetatypeKey.regex')"
+                  :label="$t('validation.regex')"
                   class="disabled"
               >
-                <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeKey.regexHelp')"></info-tooltip></template>
+                <template slot="append-outer"> <info-tooltip :message="$t('help.regex')"></info-tooltip></template>
               </v-text-field>
               <v-text-field
                   v-model.number="selectedMetatypeKey.validation.max"
                   :disabled="true"
                   type="number"
-                  :label="$t('editMetatypeKey.max')"
+                  :label="$t('validation.max')"
                   class="disabled"
               >
-                <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeKey.maxHelp')"></info-tooltip></template>
+                <template slot="append-outer"> <info-tooltip :message="$t('help.max')"></info-tooltip></template>
               </v-text-field>
               <v-text-field
                   v-model.number="selectedMetatypeKey.validation.min"
                   :disabled="true"
                   type="number"
-                  :label="$t('editMetatypeKey.min')"
+                  :label="$t('validation.min')"
                   class="disabled"
               >
-                <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeKey.minHelp')"></info-tooltip></template>
+                <template slot="append-outer"> <info-tooltip :message="$t('help.min')"></info-tooltip></template>
               </v-text-field>
 
 
@@ -98,7 +98,7 @@
 
               <v-combobox
                   v-model="selectedMetatypeKey.options"
-                  :label="$t('editMetatypeKey.options')"
+                  :label="$t('general.options')"
                   multiple
                   clearable
                   chips
@@ -107,7 +107,7 @@
                   class="disabled"
               ></v-combobox>
 
-            <h3>{{$t('viewMetatype.defaultValue')}}</h3>
+            <h3>{{$t('general.defaultValue')}}</h3>
             <hr>
             <p>{{selectedMetatypeKey.default_value}}</p>
 
@@ -117,7 +117,7 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="dialog = false" >{{$t("viewMetatypeKey.close")}}</v-btn>
+        <v-btn color="primary" text @click="dialog = false" >{{$t("general.close")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -176,27 +176,27 @@ export default class ViewMetatypeKeyDialog extends Vue {
 
 .edited-field {
   input {
-    background: #CD7F32;
+    background: $warning;
     color: white !important;
-    box-shadow: -5px 0 0 #CD7F32;
+    box-shadow: -5px 0 0 $warning;
   }
 
   textarea {
-    background: #CD7F32;
+    background: $warning;
     color: white !important;
-    box-shadow: -5px 0 0 #CD7F32;
+    box-shadow: -5px 0 0 $warning;
   }
 
   .v-select__slot {
-    background: #CD7F32;
+    background: $warning;
     color: white !important;
-    box-shadow: -5px 0 0 #CD7F32;
+    box-shadow: -5px 0 0 $warning;
   }
 
   .v-select__selection {
-    background: #CD7F32;
+    background: $warning;
     color: white !important;
-    box-shadow: -5px 0 0 #CD7F32;
+    box-shadow: -5px 0 0 $warning;
   }
 }
 </style>

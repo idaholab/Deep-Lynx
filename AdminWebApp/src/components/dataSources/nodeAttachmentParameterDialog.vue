@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h4 style="padding-top: 150px">{{$t('dataMapping.nodeAttachmentParameters')}}<info-tooltip :message="$t('dataMapping.nodeAttachmentParametersHelp')"></info-tooltip></h4>
+    <h4 style="padding-top: 150px">{{$t('timeseries.attachmentParams')}}<info-tooltip :message="$t('help.attachmentParams')"></info-tooltip></h4>
     <v-data-table
         :headers="attachmentHeader()"
         :items="timeseriesConfig.attachment_parameters"
@@ -18,22 +18,22 @@
       <template v-slot:[`item.type`]="{ item, index}">
         <span style="visibility: hidden" :id="`node_attachment_${index}`"></span>
         <v-select
-            :label="$t('dataMapping.type')"
+            :label="$t('query.filterType')"
             :items=parameterFilterTypes
             v-model="item.type"
-            :rules="[v => !!v || $t('dataMapping.required')]"
+            :rules="[v => !!v || $t('validation.required')]"
         />
         <div v-if="index > 0">
-          <span style="position: absolute; margin-top: -70px; margin-left: -40px;">AND</span>
+          <span style="position: absolute; margin-top: -70px; margin-left: -40px;">{{$t('general.and')}}</span>
         </div>
       </template>
 
       <template v-slot:[`item.operator`]="{ item }">
         <v-select
-            :label="$t('dataMapping.operators')"
+            :label="$t('operators.operators')"
             :items=getOperators(item.type)
             v-model="item.operator"
-            :rules="[v => !!v || $t('dataMapping.required')]"
+            :rules="[v => !!v || $t('validation.required')]"
         />
       </template>
 
@@ -62,24 +62,24 @@
           <div v-else>
             <v-text-field
                 v-if="item.type && item.type ==='property'"
-                :label="$t('createDataSource.key')"
+                :label="$t('general.key')"
                 v-model="item.key"
-                :rules="[v => !!v || $t('dataMapping.required')]"
+                :rules="[v => !!v || $t('validation.required')]"
             />
 
             <v-text-field
                 v-if="item.operator !== 'in'"
                 :disabled="item.type === 'property' && !item.key"
-                :label="$t('createDataSource.value')"
+                :label="$t('general.value')"
                 v-model="item.value"
-                :rules="[v => !!v || $t('dataMapping.required')]"
+                :rules="[v => !!v || $t('validation.required')]"
             />
             <v-combobox
                 v-if="item.operator === 'in'"
                 :disabled="item.type === 'property' && !item.key"
                 multiple
                 clearable
-                :placeholder="$t('queryBuilder.typeToAdd')"
+                :placeholder="$t('general.typeToAdd')"
                 v-model="item.value"
             />
           </div>
@@ -96,7 +96,7 @@
 
     <v-row>
       <v-col :cols="12" style="padding:25px" align="center" justify="center">
-        <v-btn @click="addParameter">{{$t('dataMapping.addColumn')}}</v-btn>
+        <v-btn @click="addParameter">{{$t('general.addColumn')}}</v-btn>
       </v-col>
     </v-row>
   </div>
@@ -116,49 +116,51 @@ export default class NodeAttachmentParameterDialog extends Vue {
   @Prop({required: true})
   readonly timeseriesConfig!: TimeseriesDataSourceConfig;
 
-  parameterFilterTypes = [{text: 'Data Source ID', value: 'data_source'},
-    {text: 'Metatype ID', value: 'metatype_id'},
-    {text: 'Metatype Name', value: 'metatype_name'},
-    {text: 'Original Node ID', value: 'original_id'},
-    {text: 'Property', value: 'property'},
-    {text: 'Id', value: 'id'}];
+  parameterFilterTypes = [
+    {text: this.$t('dataSources.id'), value: 'data_source'},
+    {text: this.$t('classes.id'), value: 'metatype_id'},
+    {text: this.$t('classes.name'), value: 'metatype_name'},
+    {text: this.$t('general.originalID'), value: 'original_id'},
+    {text: this.$t('properties.property'), value: 'property'},
+    {text: this.$t('general.id'), value: 'id'}
+  ];
 
   operators = [
-    {text: "equals", value: "==", requiresValue: true},
-    {text: "not equals", value: "!=", requiresValue: true},
-    {text: "in", value: "in", requiresValue: true},
-    {text: "contains", value: "contains", requiresValue: true},
-    {text: "exists", value: "exists", requiresValue: false},
-    {text: "less than", value: "<", requiresValue: true},
-    {text: "less than or equal to", value: "<=", requiresValue: true},
-    {text: "greater than", value: ">", requiresValue: true},
-    {text: "greater than or equal to", value: ">=", requiresValue: true},
+    {text: this.$t('operators.equals'), value: "==", requiresValue: true},
+    {text: this.$t('operators.notEquals'), value: "!=", requiresValue: true},
+    {text: this.$t('operators.in'), value: "in", requiresValue: true},
+    {text: this.$t('operators.contains'), value: "contains", requiresValue: true},
+    {text: this.$t('operators.exists'), value: "exists", requiresValue: false},
+    {text: this.$t('operators.lessThan'), value: "<", requiresValue: true},
+    {text: this.$t('operators.lte'), value: "<=", requiresValue: true},
+    {text: this.$t('operators.greaterThan'), value: ">", requiresValue: true},
+    {text: this.$t('operators.gte'), value: ">=", requiresValue: true},
   ]
 
   attachmentHeader() {
     return [
       {
-        text: this.$t('dataMapping.type'),
+        text: this.$t('query.filterType'),
         value: "type"
       },
       {
-        text: this.$t('dataMapping.operator'),
+        text: this.$t('operators.operator'),
         value: "operator"
       },
       {
-        text: this.$t('createDataSource.value'),
+        text: this.$t('general.value'),
         value: "value"
       },
-      {text: this.$t('dataMapping.actions'), value: "actions", sortable: false}
+      {text: this.$t('general.actions'), value: "actions", sortable: false}
     ]
   }
 
   // return only operators that make sense based on parameter filter type
   getOperators(paramFilter: string) {
     const baseOperators = [
-      {text: "equals", value: "==", requiresValue: true},
-      {text: "not equals", value: "!=", requiresValue: true},
-      {text: "in", value: "in", requiresValue: true},
+      {text: this.$t('operators.equals'), value: "==", requiresValue: true},
+      {text: this.$t('operators.notEquals'), value: "!=", requiresValue: true},
+      {text: this.$t('operators.in'), value: "in", requiresValue: true},
     ]
 
     if (paramFilter === 'data_source' || paramFilter === 'metatype_name') {
@@ -167,10 +169,10 @@ export default class NodeAttachmentParameterDialog extends Vue {
 
     if (paramFilter === 'metatype_id' || paramFilter === 'id') {
       return baseOperators.concat([
-        {text: "less than", value: "<", requiresValue: true},
-        {text: "less than or equal to", value: "<=", requiresValue: true},
-        {text: "greater than", value: ">", requiresValue: true},
-        {text: "greater than or equal to", value: ">=", requiresValue: true},
+        {text: this.$t('operators.lessThan'), value: "<", requiresValue: true},
+        {text: this.$t('operators.lte'), value: "<=", requiresValue: true},
+        {text: this.$t('operators.greaterThan'), value: ">", requiresValue: true},
+        {text: this.$t('operators.gte'), value: ">=", requiresValue: true},
       ]);
     }
 

@@ -39,10 +39,6 @@ export class Config {
         return process.env.VUE_APP_TIME_SERIES_ENABLED === 'true';
     }
 
-    get dataEditorEnabled(): boolean {
-        return process.env.VUE_APP_DATA_EDITOR_ENABLED === 'true';
-    }
-
     get p6RedirectAddress(): string {
         return process.env.VUE_APP_P6_REDIRECT_ADDRESS || 'http://localhost:8181'
     }

@@ -10,13 +10,13 @@
 
       <template v-slot:top>
         <v-toolbar flat color="white">
-          <v-toolbar-title>{{$t("home.containerUsersDescription")}}</v-toolbar-title>
+          <v-toolbar-title>{{$t("users.containerDescription")}}</v-toolbar-title>
           <v-spacer></v-spacer>
           <invite-user-to-container-dialog :containerID="containerID" @userInvited="flashSuccess"></invite-user-to-container-dialog>
         </v-toolbar>
       </template>
       <template v-slot:[`item.role`]="{ item }">
-        <div v-if="$store.getters.activeContainer.created_by === item.id">Owner</div>
+        <div v-if="$store.getters.activeContainer.created_by === item.id">{{$t('users.owner')}}</div>
         <div v-else>
           {{item.role}}
         </div>
@@ -36,7 +36,7 @@
               mdi-pencil
             </v-icon>
           </template>
-          <span>{{$t('home.editUser')}}</span>
+          <span>{{$t('users.editContainerRoles')}}</span>
         </v-tooltip>
 
         <v-tooltip top>
@@ -52,7 +52,7 @@
               mdi-account-multiple-minus
             </v-icon>
           </template>
-          <span>{{$t('home.deleteUser')}}</span>
+          <span>{{$t('users.remove')}}</span>
         </v-tooltip>
 
       </template>
@@ -61,7 +61,7 @@
     <v-dialog v-model="editDialog" max-width="900px" @click:outside="clear()">
       <v-card class="pt-1 pb-3 px-2">
         <v-card-title>
-          <span class="headline text-h3">{{$t("containerUsers.editUserTitle")}}</span>
+          <span class="headline text-h3">{{$t("users.edit")}}</span>
         </v-card-title>
         <v-card-text>
           <v-row>
@@ -75,7 +75,7 @@
                   <v-col :cols="6">
                     <v-text-field
                       v-model="toEdit.display_name"
-                      :label="$t('containerUsers.name')"
+                      :label="$t('general.name')"
                       required
                       disabled
                     ></v-text-field>
@@ -85,7 +85,7 @@
                   <v-col :cols="6">
                     <v-text-field
                       v-model="toEdit.email"
-                      :label="$t('containerUsers.email')"
+                      :label="$t('general.email')"
                       required
                       disabled
                     ></v-text-field>
@@ -100,7 +100,7 @@
 
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="editDialog = false; refreshUsers()">{{$t("containerUsers.close")}}</v-btn>
+          <v-btn color="primary" text @click="editDialog = false; refreshUsers()">{{$t("general.close")}}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -137,10 +137,10 @@
 
     get headers() {
       return  [
-        { text: this.$t("containerUsers.name"), value: 'display_name' },
-        { text: this.$t("containerUsers.email"), value: 'email'},
-        { text: this.$t("containerUsers.role"), value: 'role'},
-        { text: this.$t("containerUsers.actions"), value: 'actions', sortable: false }
+        { text: this.$t("general.name"), value: 'display_name' },
+        { text: this.$t("general.email"), value: 'email'},
+        { text: this.$t("users.role"), value: 'role'},
+        { text: this.$t("general.actions"), value: 'actions', sortable: false }
       ]
     }
 
@@ -205,7 +205,7 @@
     }
 
     flashSuccess(){
-      this.inviteSuccess = this.$t('containerUsers.successfullyInvited') as string
+      this.inviteSuccess = this.$t('users.invited') as string
     }
 
     assignRole(role: string) {
@@ -218,7 +218,7 @@
 
         this.$client.assignRoleToUser(this.containerID, assignRolePayload)
         .then(() => {
-          this.successMessage = this.$t('containerUsers.successfullySetRole') as string
+          this.successMessage = this.$t('users.assigned') as string
 
           setTimeout(() => {
             this.successMessage = ''

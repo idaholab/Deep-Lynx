@@ -20,6 +20,8 @@ import Import from '../../../domain_objects/data_warehouse/import/import';
 import {DataSource} from '../../../interfaces_and_impl/data_warehouse/import/data_source';
 import ImportMapper from '../../../data_access_layer/mappers/data_warehouse/import/import_mapper';
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
+import TimeseriesService from '../../../services/timeseries/timeseries';
+import {LegacyTimeseriesColumn} from 'deeplynx-timeseries';
 
 const promiseExec = promisify(exec);
 const csv = require('csvtojson');
@@ -27,7 +29,7 @@ const fastLoad = require('dl-fast-load');
 
 // Generally testing the standard implementation to verify that the ReceiveData and other underlying functions that most
 // other implementations rely on function ok.
-describe('A Standard DataSource Implementation can', async () => {
+describe('A Timeseries DataSource Implementation can', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let user: User;
 
@@ -85,7 +87,7 @@ describe('A Standard DataSource Implementation can', async () => {
         // build the data source first
         const sourceRepo = new DataSourceRepository();
 
-        let source = new DataSourceFactory().fromDataSourceRecord(
+        let source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -118,7 +120,7 @@ describe('A Standard DataSource Implementation can', async () => {
         expect(results.isError, results.error?.error).false;
 
         // now we try with a unique index
-        source = new DataSourceFactory().fromDataSourceRecord(
+        source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -152,7 +154,7 @@ describe('A Standard DataSource Implementation can', async () => {
         expect(results.isError).false;
 
         // now we try with a bigint ID,fails at first because no chunk interval
-        source = new DataSourceFactory().fromDataSourceRecord(
+        source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -182,7 +184,7 @@ describe('A Standard DataSource Implementation can', async () => {
         expect(results.isError).true;
 
         // now we try with a bigint ID
-        source = new DataSourceFactory().fromDataSourceRecord(
+        source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -223,7 +225,7 @@ describe('A Standard DataSource Implementation can', async () => {
         // build the data source first
         const sourceRepo = new DataSourceRepository();
 
-        let source = new DataSourceFactory().fromDataSourceRecord(
+        let source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -245,7 +247,7 @@ describe('A Standard DataSource Implementation can', async () => {
         let results = await sourceRepo.save(source!, user);
         expect(results.isError).true;
 
-        source = new DataSourceFactory().fromDataSourceRecord(
+        source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -273,7 +275,7 @@ describe('A Standard DataSource Implementation can', async () => {
         results = await sourceRepo.save(source!, user);
         expect(results.isError).true;
 
-        source = new DataSourceFactory().fromDataSourceRecord(
+        source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -314,7 +316,7 @@ describe('A Standard DataSource Implementation can', async () => {
         // build the data source first
         const sourceRepo = new DataSourceRepository();
 
-        let source = new DataSourceFactory().fromDataSourceRecord(
+        let source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -402,7 +404,7 @@ describe('A Standard DataSource Implementation can', async () => {
         // build the data source first
         const sourceRepo = new DataSourceRepository();
 
-        let source = new DataSourceFactory().fromDataSourceRecord(
+        let source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -499,7 +501,7 @@ describe('A Standard DataSource Implementation can', async () => {
         // build the data source first
         const sourceRepo = new DataSourceRepository();
 
-        let source = new DataSourceFactory().fromDataSourceRecord(
+        let source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -608,7 +610,7 @@ describe('A Standard DataSource Implementation can', async () => {
             `echo "Timestamp,Temperature (K),Velocity[i] (m/s),Velocity[j] (m/s),X (m),Y (m),Z (m)" > ${__dirname}/1million.csv && perl -E \'for($i=0;$i<1000000;$i++){say "2022-07-18 02:32:27.532059,$i,$i,$i,$i,$i,$i"}\' >> ${__dirname}/1million.csv`,
         );
 
-        let source = new DataSourceFactory().fromDataSourceRecord(
+        let source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -668,50 +670,34 @@ describe('A Standard DataSource Implementation can', async () => {
         expect(results.isError, results.error?.error).false;
         expect(source!.DataSourceRecord?.id).not.undefined;
 
-        let imports = new Import({
-            data_source_id: source?.DataSourceRecord?.id!,
-            status_message: 'ready',
-        });
-
-        await new ImportRepository().save(imports, user);
-        expect(imports.id).not.undefined;
-
-        let loader = fastLoad.new({
-            connectionString: Config.core_db_connection_string as string,
-            dataSource: source?.DataSourceRecord as object,
-            importID: imports.id! as string,
-        });
-
+        let loader = await TimeseriesService.GetInstance();
         const pass = new PassThrough();
 
-        pass.on('data', (chunk) => {
-            fastLoad.read(loader, chunk);
-        });
+        loader.beginLegacyCsvIngestion(
+            source?.DataSourceRecord?.id!,
+            (source?.DataSourceRecord!.config as TimeseriesDataSourceConfig).columns as LegacyTimeseriesColumn[],
+        );
 
-        pass.on('finish', () => {
-            fastLoad.finish(loader);
+        pass.on('data', (chunk) => {
+            loader.readData(chunk);
         });
 
         const stream = fs.createReadStream(__dirname + '/1million.csv');
+
+        pass.on('finish', () => {
+            loader
+                .completeIngestion()
+                .then(() => {
+                    sourceRepo.delete(source as DataSource, {removeData: true, force: true});
+                    fs.unlinkSync(__dirname + '/1million.csv');
+                    done();
+                })
+                .catch((e) => expect.fail(e));
+        });
+
         stream.pipe(pass);
-
-        while (true) {
-            let retrieved = await ImportMapper.Instance.Retrieve(imports.id!);
-            if (!retrieved.isError && retrieved.value.status === 'completed') break;
-
-            await timer(1000);
-        }
-
-        fs.unlinkSync(__dirname + '/1million.csv');
-        return sourceRepo.delete(source as DataSource, {removeData: true, force: true});
-    }).timeout(10000);
+    }).timeout(30000);
 });
-
-function timer(ms: number): Promise<any> {
-    return new Promise((resolve) => {
-        setTimeout(() => resolve(true), ms);
-    });
-}
 
 const sampleCSV =
     'Timestamp,Temperature (K),Velocity[i] (m/s),Velocity[j] (m/s),X (m),Y (m),Z (m)\n' +

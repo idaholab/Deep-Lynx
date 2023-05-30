@@ -8,7 +8,7 @@ import {expect} from 'chai';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
 import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
-import DataSourceRecord from '../../../domain_objects/data_warehouse/import/data_source';
+import DataSourceRecord, { TimeseriesBucketDataSourceConfig } from '../../../domain_objects/data_warehouse/import/data_source';
 import DataSourceRepository, {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import StandardDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/standard_data_source_impl';
 import HttpDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/http_data_source_impl';
@@ -19,12 +19,13 @@ import fs from 'fs';
 import FileRepository from '../../../data_access_layer/repositories/data_warehouse/data/file_repository';
 import ContainerRepository from '../../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
 import {DataSource} from '../../../interfaces_and_impl/data_warehouse/import/data_source';
+import TimeseriesBucketDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/timeseries_bucket_data_source';
 
 // some general tests on data sources that aren't specific to the implementation
 describe('A Datasource Repository', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let user: User;
-    let dataSource: StandardDataSourceImpl | HttpDataSourceImpl | TimeseriesDataSourceImpl | undefined;
+    let dataSource: StandardDataSourceImpl | HttpDataSourceImpl | TimeseriesDataSourceImpl | TimeseriesBucketDataSourceImpl | undefined;
     let mappingID: string;
 
     before(async function () {
@@ -78,7 +79,7 @@ describe('A Datasource Repository', async () => {
         );
 
         expect(exp.isError).false;
-        dataSource = new DataSourceFactory().fromDataSourceRecord(exp.value);
+        dataSource = await new DataSourceFactory().fromDataSourceRecord(exp.value);
 
         return Promise.resolve();
     });
@@ -94,7 +95,7 @@ describe('A Datasource Repository', async () => {
         // build the data source first
         const sourceRepo = new DataSourceRepository();
 
-        const source = new DataSourceFactory().fromDataSourceRecord(
+        const source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -128,7 +129,7 @@ describe('A Datasource Repository', async () => {
         // build the data source first
         const sourceRepo = new DataSourceRepository();
 
-        const source = new DataSourceFactory().fromDataSourceRecord(
+        const source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -162,7 +163,7 @@ describe('A Datasource Repository', async () => {
         // build the data source first
         const sourceRepo = new DataSourceRepository();
 
-        const source = new DataSourceFactory().fromDataSourceRecord(
+        const source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -192,7 +193,7 @@ describe('A Datasource Repository', async () => {
         // build the data source first
         const sourceRepo = new DataSourceRepository();
 
-        const source = new DataSourceFactory().fromDataSourceRecord(
+        const source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',

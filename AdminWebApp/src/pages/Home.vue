@@ -22,10 +22,8 @@
       width="260"
       class="grey--text text--darken-2"
     >
-      <div class="logo-div d-flex align-center pa-1">
-        <div style="margin-left:15px;" >
-          <v-img max-height="120" max-width="120"  src="../assets/lynx-white.png"></v-img>
-        </div>
+      <div class="logo-div" style="display: flex; padding: 8px 12px;">
+        <img style="max-width:100%;" src="../assets/lynx-white.png">
       </div>
 
       <v-list dense class="nav-drawer-accordion pa-0">
@@ -35,7 +33,7 @@
           :ripple="{class:'list-ripple'}"
         >
           <v-list-item-content>
-            <v-list-item-title>{{$t("Dashboard")}}</v-list-item-title>
+            <v-list-item-title>{{$t("general.dashboard")}}</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
         <v-list-item
@@ -46,12 +44,12 @@
             :ripple="{class:'list-ripple'}"
         >
           <v-list-item-content>
-            <v-list-item-title>{{$t("home.dataQuery")}}</v-list-item-title>
+            <v-list-item-title>{{$t("query.viewer")}}</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
         <v-list-group :value="false" dense :ripple="{class:'list-ripple'}">
           <template v-slot:activator>
-            <v-list-item-title>{{$t("home.taxonomy")}}</v-list-item-title>
+            <v-list-item-title>{{$t("ontology.ontology")}}</v-list-item-title>
           </template>
 
           <v-list-item
@@ -63,8 +61,8 @@
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
-              <v-list-item-title>{{$t("home.metatypes")}}</v-list-item-title>
-              <v-list-item-subtitle>{{$t("home.metatypesDescription")}}</v-list-item-subtitle>
+              <v-list-item-title>{{$t("classes.classes")}}</v-list-item-title>
+              <v-list-item-subtitle>{{$t("classes.description")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
 
@@ -77,8 +75,8 @@
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
-              <v-list-item-title>{{$t("home.metatypeRelationships")}}</v-list-item-title>
-              <v-list-item-subtitle>{{$t("home.metatypeRelationshipsDescription")}}</v-list-item-subtitle>
+              <v-list-item-title>{{$t("relationshipTypes.relTypes")}}</v-list-item-title>
+              <v-list-item-subtitle>{{$t("relationshipTypes.description")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
 
@@ -91,8 +89,8 @@
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
-              <v-list-item-title>{{$t("home.metatypeRelationshipPairs")}}</v-list-item-title>
-              <v-list-item-subtitle>{{$t("home.metatypeRelationshipPairsDescription")}}</v-list-item-subtitle>
+              <v-list-item-title>{{$t("relationships.relationships")}}</v-list-item-title>
+              <v-list-item-subtitle>{{$t("relationships.description")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
 
@@ -105,8 +103,8 @@
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
-              <v-list-item-title>{{$t("home.ontologyVersioning")}}</v-list-item-title>
-              <v-list-item-subtitle>{{$t("home.ontologyVersioningDescription")}}</v-list-item-subtitle>
+              <v-list-item-title>{{$t("ontology.versioningTitle")}}</v-list-item-title>
+              <v-list-item-subtitle>{{$t("ontology.versioningSubtitle")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
 
@@ -119,8 +117,8 @@
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
-              <v-list-item-title>{{$t("home.ontologyUpdate")}}</v-list-item-title>
-              <v-list-item-subtitle>{{$t("home.ontologyUpdateDescription")}}</v-list-item-subtitle>
+              <v-list-item-title>{{$t("ontology.updateTitle")}}</v-list-item-title>
+              <v-list-item-subtitle>{{$t("ontology.updateDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
 
@@ -132,7 +130,7 @@
           :ripple="{class:'list-ripple'}"
         >
           <template v-slot:activator>
-            <v-list-item-title>{{$t("home.dataManagement")}}</v-list-item-title>
+            <v-list-item-title>{{$t("general.dataManagement")}}</v-list-item-title>
           </template>
           <v-list-item
             two-line
@@ -143,8 +141,8 @@
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
-              <v-list-item-title>{{$t("home.dataSources")}}</v-list-item-title>
-              <v-list-item-subtitle>{{$t("home.dataSourcesDescription")}}</v-list-item-subtitle>
+              <v-list-item-title>{{$t("dataSources.dataSources")}}</v-list-item-title>
+              <v-list-item-subtitle>{{$t("dataSources.description")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
           <v-list-item
@@ -156,8 +154,8 @@
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
-              <v-list-item-title>{{$t("home.dataImports")}}</v-list-item-title>
-              <v-list-item-subtitle>{{$t("home.dataImportsDescription")}}</v-list-item-subtitle>
+              <v-list-item-title>{{$t("imports.data")}}</v-list-item-title>
+              <v-list-item-subtitle>{{$t("imports.description")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
           <v-list-item
@@ -169,21 +167,8 @@
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
-              <v-list-item-title>{{$t("home.dataMapping")}}</v-list-item-title>
-              <v-list-item-subtitle>{{$t("home.dataMappingDescription")}}</v-list-item-subtitle>
-            </v-list-item-content>
-          </v-list-item>
-          <v-list-item
-            two-line
-            link
-            v-if="$auth.Auth('data', 'write', containerID) && dataEditorEnabled"
-            @click="setActiveComponent('data-editor')"
-            :input-value="currentMainComponent === 'DataEditor'"
-            :ripple="{class:'list-ripple'}"
-          >
-            <v-list-item-content>
-              <v-list-item-title>{{$t("home.dataEditor")}}-<small>{{$t("home.beta")}}</small></v-list-item-title>
-              <v-list-item-subtitle>{{$t("home.dataEditorDescription")}}</v-list-item-subtitle>
+              <v-list-item-title>{{$t("typeMappings.typeMappings")}}</v-list-item-title>
+              <v-list-item-subtitle>{{$t("typeMappings.description")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
           <v-list-item
@@ -194,8 +179,8 @@
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
-              <v-list-item-title>{{$t("home.dataExport")}}-<small>{{$t("home.beta")}}</small></v-list-item-title>
-              <v-list-item-subtitle>{{$t("home.dataExportDescription")}}</v-list-item-subtitle>
+              <v-list-item-title>{{$t("exports.graph")}}-<small>{{$t("general.beta")}}</small></v-list-item-title>
+              <v-list-item-subtitle>{{$t("exports.graphDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
           <v-list-item
@@ -207,8 +192,8 @@
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
-              <v-list-item-title>{{$t("home.eventAction")}}</v-list-item-title>
-              <v-list-item-subtitle>{{$t("home.eventActionDescription")}}</v-list-item-subtitle>
+              <v-list-item-title>{{$t("events.title")}}</v-list-item-title>
+              <v-list-item-subtitle>{{$t("events.actionDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
           <v-list-item
@@ -220,8 +205,8 @@
               :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
-              <v-list-item-title>{{$t("home.fileManager")}}</v-list-item-title>
-              <v-list-item-subtitle>{{$t("home.fileManagerDescription")}}</v-list-item-subtitle>
+              <v-list-item-title>{{$t("modelExplorer.title")}}</v-list-item-title>
+              <v-list-item-subtitle>{{$t("modelExplorer.description")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
         </v-list-group>
@@ -233,7 +218,7 @@
           :ripple="{class:'list-ripple'}"
         >
           <template v-slot:activator>
-            <v-list-item-title>{{$t("home.containerAdministration")}}</v-list-item-title>
+            <v-list-item-title>{{$t("containers.administration")}}</v-list-item-title>
           </template>
           <v-list-item
             two-line
@@ -244,8 +229,8 @@
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
-              <v-list-item-title>{{$t("home.containerUsers")}}</v-list-item-title>
-              <v-list-item-subtitle>{{$t("home.containerUsersDescription")}}</v-list-item-subtitle>
+              <v-list-item-title>{{$t("users.containerTitle")}}</v-list-item-title>
+              <v-list-item-subtitle>{{$t("users.containerDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
 
@@ -258,8 +243,8 @@
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
-              <v-list-item-title>{{$t("home.containerExport")}}</v-list-item-title>
-              <v-list-item-subtitle>{{$t("home.containerExportDescription")}}</v-list-item-subtitle>
+              <v-list-item-title>{{$t("containers.export")}}</v-list-item-title>
+              <v-list-item-subtitle>{{$t("exports.containerDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
 
@@ -272,8 +257,8 @@
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
-              <v-list-item-title>{{$t("home.containerImport")}}</v-list-item-title>
-              <v-list-item-subtitle>{{$t("home.containerImportDescription")}}</v-list-item-subtitle>
+              <v-list-item-title>{{$t("containers.import")}}</v-list-item-title>
+              <v-list-item-subtitle>{{$t("imports.containerTitle")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
 
@@ -286,8 +271,8 @@
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
-              <v-list-item-title>{{$t("home.settings")}}</v-list-item-title>
-              <v-list-item-subtitle>{{$t("home.settingsDescription")}}</v-list-item-subtitle>
+              <v-list-item-title>{{$t("general.settings")}}</v-list-item-title>
+              <v-list-item-subtitle>{{$t("containers.settings")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
         </v-list-group>
@@ -298,7 +283,7 @@
           :ripple="{class:'list-ripple'}"
         >
           <template v-slot:activator>
-            <v-list-item-title >{{$t("home.administration")}}</v-list-item-title>
+            <v-list-item-title >{{$t("general.deepLynxAdministration")}}</v-list-item-title>
           </template>
 
           <v-list-item
@@ -309,8 +294,8 @@
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
-              <v-list-item-title>{{$t("home.containers")}}</v-list-item-title>
-              <v-list-item-subtitle >{{$t("home.containersDescription")}}</v-list-item-subtitle>
+              <v-list-item-title>{{$t("containers.containers")}}</v-list-item-title>
+              <v-list-item-subtitle >{{$t("containers.description")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
 
@@ -322,8 +307,8 @@
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
-              <v-list-item-title>{{$t("home.users")}}</v-list-item-title>
-              <v-list-item-subtitle >{{$t("home.usersDescription")}}</v-list-item-subtitle>
+              <v-list-item-title>{{$t("users.users")}}</v-list-item-title>
+              <v-list-item-subtitle >{{$t("users.description")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
         </v-list-group>
@@ -333,7 +318,7 @@
           :ripple="{class:'list-ripple'}"
         >
           <template v-slot:activator>
-            <v-list-item-title >{{$t("home.accessManagement")}}</v-list-item-title>
+            <v-list-item-title >{{$t("general.accessManagement")}}</v-list-item-title>
           </template>
 
           <v-list-item
@@ -344,8 +329,8 @@
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
-              <v-list-item-title>{{$t("home.apiKeys")}}</v-list-item-title>
-              <v-list-item-subtitle >{{$t("home.apiKeysDescription")}}</v-list-item-subtitle>
+              <v-list-item-title>{{$t("apiKeys.personalKeys")}}</v-list-item-title>
+              <v-list-item-subtitle >{{$t("apiKeys.description")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
 
@@ -357,8 +342,8 @@
               :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
-              <v-list-item-title>{{$t("home.serviceUsers")}}</v-list-item-title>
-              <v-list-item-subtitle >{{$t("home.serviceUsersDescription")}}</v-list-item-subtitle>
+              <v-list-item-title>{{$t("serviceUsers.title")}}</v-list-item-title>
+              <v-list-item-subtitle >{{$t("serviceUsers.description")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
         </v-list-group>
@@ -369,7 +354,7 @@
           :ripple="{class:'list-ripple'}"
         >
           <v-list-item-content>
-            <v-list-item-title>{{$t("home.changeContainer")}}</v-list-item-title>
+            <v-list-item-title>{{$t("containers.change")}}</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
 
@@ -379,7 +364,7 @@
           :ripple="{class:'list-ripple'}"
         >
           <v-list-item-content>
-            <v-list-item-title>{{$t("home.logout")}}</v-list-item-title>
+            <v-list-item-title>{{$t("general.logout")}}</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
       </v-list>
@@ -399,9 +384,9 @@
           </v-card>
         </v-container>
         <v-container class="justify-end">
-          <span class="d-block text-h6" style="margin-bottom: 10px">{{$t('home.bugs')}} <a href="mailto:GRP-deeplynx-team@inl.gov">{{$t('home.contactUs')}}</a> </span>
-          <span class="d-block text-h6" style="margin-bottom: 10px">{{$t('containerSelect.needHelp')}} <a :href="helpLink()">{{$t('containerSelect.wiki')}}</a> </span>
-          <span class="d-block text-h6" style="margin-bottom: 10px">&copy; {{ new Date().getFullYear() }} Idaho National Laboratory</span>
+          <span class="d-block text-h6" style="margin-bottom: 10px">{{$t('help.foundBugs')}} <a :href="emailLink()">{{$t('help.tellUs')}}</a> </span>
+          <span class="d-block text-h6" style="margin-bottom: 10px">{{$t('help.needHelp')}} <a :href="helpLink()">{{$t('general.wiki')}}</a> </span>
+          <span class="d-block text-h6" style="margin-bottom: 10px">&copy; {{ new Date().getFullYear() }} {{$t('general.inl')}}</span>
           <span class="d-block text-h6" v-if="$auth.IsAdmin() && stats ">{{ stats.version }}</span>
         </v-container>
       </template>
@@ -436,7 +421,7 @@
           <!-- DeepLynx Admin Statistics (only include if admin and exists) -->
           <v-col :cols="12" :md="6" :lg="6" v-if="$auth.IsAdmin() && stats.statistics.migrations">
             <v-card class="d-flex flex-column height-full">
-              <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('home.migrations')}}</v-card-title>
+              <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('statistics.migrations')}}</v-card-title>
               <v-card-text>
                 <v-col :cols="12"><json-viewer :value="stats.statistics.migrations"></json-viewer></v-col>
               </v-card-text>
@@ -445,7 +430,7 @@
 
           <v-col :cols="12" :md="6" :lg="6" v-if="$auth.IsAdmin() && stats.statistics">
             <v-card class="d-flex flex-column height-full">
-              <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('home.recordCounts')}}</v-card-title>
+              <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('statistics.recordCounts')}}</v-card-title>
               <v-card-text>
                 <v-list disabled>
                   <v-list-item-group
@@ -468,7 +453,7 @@
 
           <v-col :cols="12" :md="6" :lg="6" v-if="$auth.IsAdmin() && stats.long_running_transactions">
             <v-card class="d-flex flex-column height-full">
-              <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('home.longRunningTransactions')}}</v-card-title>
+              <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('statistics.longRunningTransactions')}}</v-card-title>
               <v-data-table
                   :headers="transactionHeaders()"
                   :items="stats.long_running_transactions"
@@ -480,7 +465,7 @@
 
           <v-col :cols="12" :md="6" :lg="6" v-if="$auth.IsAdmin() && stats.mean_execution_time">
             <v-card class="d-flex flex-column height-full">
-              <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('home.meanExecutionTime')}}</v-card-title>
+              <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('statistics.meanExecutionTime')}}</v-card-title>
               <v-data-table
                   :headers="meanExecHeaders()"
                   :items="stats.mean_execution_time"
@@ -490,13 +475,13 @@
             </v-card>
           </v-col>
 
-          <!-- Dashboard Landing Page Card: Welcome to Deep Lynx! -->
+          <!-- Dashboard Landing Page Card: Welcome to DeepLynx! -->
           <v-col cols="12" :md="6" :lg="6">
             <v-card class="d-flex flex-column height-full">
-              <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('home.welcomeCardTitle')}}</v-card-title>
+              <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('general.welcome')}}</v-card-title>
               <v-card-text>
-                <p>{{$t('home.welcomeCardText')}}</p>
-                <p><a :href="welcomeLink">{{$t('home.welcomeCardLinkText')}}</a></p>
+                <p>{{$t('help.welcomeCard')}}</p>
+                <p><a :href="welcomeLink()">{{$t('general.wiki')}}</a></p>
               </v-card-text>
             </v-card>
           </v-col>
@@ -504,14 +489,14 @@
           <!-- Dashboard Landing Page Card: Ontology -->
           <v-col cols="12" :md="6" :lg="6">
             <v-card class="d-flex flex-column height-full">
-              <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('home.ontologyCardTitle')}}</v-card-title>
+              <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('ontology.ontology')}}</v-card-title>
 
               <!-- If Condition: If Ontology is not populated, show default text -->
               <template v-if="!ontologyPopulated">
                 <!-- <template> -->
                 <v-card-text>
-                  <p>{{$t('home.ontologyCardText')}}</p>
-                  <p><a :href="ontologyLinkOne">{{$t('home.ontologyCardLinkText1')}}</a></p>
+                  <p>{{$t('ontology.description')}}</p>
+                  <p><a :href="ontologyLink()">{{$t('ontology.loading')}}</a></p>
                 </v-card-text>
               </template>
 
@@ -521,17 +506,17 @@
                   <v-row>
                     <v-col :cols="6" class="text-center">
                       <p class="text-h2 ma-2" style="line-height: unset">{{metatypesCount}}</p>
-                      <h3 class="text-h3" style="line-height: unset">{{$t('home.metatypes')}}</h3>
+                      <h3 class="text-h3" style="line-height: unset">{{$t('classes.classes')}}</h3>
                     </v-col>
                     <v-col :cols="6" class="text-center">
                       <p class="text-h2 ma-2" style="line-height: unset">{{relationshipCount}}</p>
-                      <h3 class="text-h3" style="line-height: unset">{{$t('home.relationships')}}</h3>
+                      <h3 class="text-h3" style="line-height: unset">{{$t('relationships.relationships')}}</h3>
                     </v-col>
                   </v-row>
                 </v-card-text>
               <v-card-actions class="d-flex flex-grow-1 pa-4 justify-center align-end">
                   <v-btn color="primary" @click="currentMainComponent = 'Metatypes'">
-                    {{$t('home.ontologyCardLinkText2')}}
+                    {{$t('ontology.manage')}}
                   </v-btn>
                 </v-card-actions>
               </template>
@@ -541,8 +526,8 @@
           <!-- Dashboard Landing Page Card: Data Sources -->
           <v-col cols="12" :md="6" :lg="6">
             <v-card class="d-flex flex-column height-full">
-              <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('home.setupDataSourceCardTitle')}}</v-card-title>
-              <v-card-text v-if="dataSources.length <= 0">{{$t('home.setupDataSourceCardText')}}</v-card-text>
+              <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('dataSources.dataSources')}}</v-card-title>
+              <v-card-text v-if="dataSources.length <= 0">{{$t('help.dataSourceCard')}}</v-card-text>
               <v-card-text v-else>
                 <v-carousel
                     :cycle="true"
@@ -556,14 +541,14 @@
                       v-for="(dataSource, i) in dataSources"
                       :key="i"
                   >
-                    <p class="text-h4">{{dataSource.name}} {{$t('home.imported')}}</p>
+                    <p class="text-h4">{{dataSource.name}} {{$t('events.dataImported')}}</p>
                     <p>{{dataSource.data_imported}}</p>
                   </v-carousel-item>
                 </v-carousel>
               </v-card-text>
               <v-card-actions class="d-flex flex-grow-1 pa-4 justify-center align-end">
                 <v-btn color="primary" @click="currentMainComponent='DataSources'">
-                  {{$t('home.setupDataSourceCardLinkText')}}
+                  {{$t('dataSources.description')}}
                 </v-btn>
               </v-card-actions>
             </v-card>
@@ -572,11 +557,11 @@
           <!-- Dashboard Landing Page Card: Invite Users to Your Container -->
           <v-col cols="12" :md="6" :lg="6">
             <v-card class="d-flex flex-column height-full">
-              <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('home.inviteUserCardTitle')}}</v-card-title>
-              <v-card-text>{{$t('home.inviteUserCardText')}}</v-card-text>
+              <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('containers.inviteUsers')}}</v-card-title>
+              <v-card-text>{{$t('help.inviteCard')}}</v-card-text>
               <v-card-actions class="d-flex flex-grow-1 pa-4 justify-center align-end">
                 <v-btn color="primary" @click="currentMainComponent='ContainerUsers'">
-                  {{$t('home.inviteUserCardLinkText')}}
+                  {{$t('users.manage')}}
                 </v-btn>
               </v-card-actions>
             </v-card>
@@ -609,13 +594,10 @@ import Metatypes from "@/views/Metatypes.vue"
 import MetatypeRelationships from "@/views/MetatypeRelationships.vue"
 import MetatypeRelationshipPairs from "@/views/MetatypeRelationshipPairs.vue"
 import OntologyUpdate from "@/views/OntologyUpdate.vue"
-import TaxonomyImport from "@/views/TaxonomyImport.vue"
-import DataExplorer from "@/views/DataExplorer.vue"
 import DataExport from "@/views/DataExport.vue"
 import DataImports from "@/views/DataImports.vue"
 import DataQuery from "@/views/DataQuery.vue"
 import DataSources from "@/views/DataSources.vue"
-import DataEditor from "@/views/DataEditor.vue"
 import DataMapping from "@/views/DataMapping.vue"
 import EventSystem from "@/views/EventSystem.vue"
 import Settings from "@/views/Settings.vue"
@@ -646,12 +628,9 @@ import OverviewGraph from "@/views/OverviewGraph.vue";
     MetatypeRelationships,
     MetatypeRelationshipPairs,
     OntologyUpdate,
-    TaxonomyImport,
-    DataExplorer,
     DataExport,
     DataQuery,
     DataSources,
-    DataEditor,
     DataMapping,
     EventSystem,
     Settings,
@@ -679,7 +658,6 @@ export default class Home extends Vue {
   componentName: string | TranslateResult = 'Home'
   argument: string = this.arguments
   componentKey = 0 // this is so we can force a re-render of certain components on component change - assign as key
-  dataEditorEnabled = Config.dataEditorEnabled
   stats: FullStatistics | null = null;
 
   metatypesCount = 0
@@ -688,20 +666,20 @@ export default class Home extends Vue {
 
   transactionHeaders() {
     return [
-      {text: this.$t('home.pid'), value: 'pid'},
-      {text: this.$t('home.userName'), value: 'usename'},
-      {text: this.$t('home.databaseName'), value: 'datname'},
-      {text: this.$t('home.query'), value: 'query'},
-      {text: this.$t('home.duration'), value: 'duration.milliseconds'},
+      {text: this.$t('statistics.pid'), value: 'pid'},
+      {text: this.$t('statistics.username'), value: 'usename'},
+      {text: this.$t('general.database'), value: 'datname'},
+      {text: this.$t('query.query'), value: 'query'},
+      {text: this.$t('statistics.duration'), value: 'duration.milliseconds'},
     ]
   }
 
   meanExecHeaders() {
     return [
-      {text: this.$t('home.userID'), value: 'user_id'},
-      {text: this.$t('home.databaseID'), value: 'dbid'},
-      {text: this.$t('home.query'), value: 'query'},
-      {text: this.$t('home.meanExecTime'), value: 'mean_exec_time'},
+      {text: this.$t('users.id'), value: 'user_id'},
+      {text: this.$t('statistics.dbID'), value: 'dbid'},
+      {text: this.$t('query.query'), value: 'query'},
+      {text: this.$t('statistics.meanExecutionTime'), value: 'mean_exec_time'},
     ]
   }
 
@@ -766,175 +744,147 @@ export default class Home extends Vue {
     switch(menuIndex) {
       case "dashboard": {
         this.currentMainComponent = null
-        this.componentName = this.$t('home.dashboard')
+        this.componentName = this.$t('general.dashboard')
         this.$router.replace(`/containers/${this.containerID}`)
         break;
       }
 
       case "metatypes": {
         this.currentMainComponent = "Metatypes";
-        this.componentName = this.$t('home.metatypes')
+        this.componentName = this.$t('classes.classes')
         this.$router.replace(`/containers/${this.containerID}/metatypes`)
         break;
       }
 
       case "metatype-relationships": {
         this.currentMainComponent = "MetatypeRelationships";
-        this.componentName = this.$t('home.metatypeRelationships')
+        this.componentName = this.$t('relationshipTypes.relTypes')
         this.$router.replace(`/containers/${this.containerID}/metatype-relationships`)
         break;
       }
 
       case "metatype-relationship-pairs": {
         this.currentMainComponent = "MetatypeRelationshipPairs";
-        this.componentName = this.$t('home.metatypeRelationshipPairs')
+        this.componentName = this.$t('relationships.relationships')
         this.$router.replace(`/containers/${this.containerID}/metatype-relationship-pairs`)
         break;
       }
 
       case "ontology-update": {
         this.currentMainComponent = "OntologyUpdate";
-        this.componentName = this.$t('home.ontologyUpdate')
+        this.componentName = this.$t('ontology.updateTitle')
         this.$router.replace(`/containers/${this.containerID}/ontology-update`)
-        break;
-      }
-
-      case "taxonomy-import": {
-        this.currentMainComponent = "TaxonomyImport";
-        this.componentName = this.$t('home.import')
-        this.$router.replace(`/containers/${this.containerID}/taxonomy-import`)
         break;
       }
 
       case "data-query": {
         this.currentMainComponent = "DataQuery";
-        this.componentName = this.$t('home.dataQuery')
+        this.componentName = this.$t('query.viewer')
         this.$router.replace(`/containers/${this.containerID}/data-query`)
         break;
       }
 
       case "data-sources": {
         this.currentMainComponent = "DataSources";
-        this.componentName = this.$t('home.dataSources')
+        this.componentName = this.$t('dataSources.dataSources')
         this.$router.replace(`/containers/${this.containerID}/data-sources`)
-        break;
-      }
-
-      case "data-editor": {
-        this.currentMainComponent = "DataEditor";
-        this.componentName = "Data Editor"
-        this.$router.replace(`/containers/${this.containerID}/data-editor`)
         break;
       }
 
       case "data-export": {
         this.currentMainComponent = "DataExport";
-        this.componentName = this.$t('home.dataExport')
+        this.componentName = this.$t('exports.graph')
         this.$router.replace(`/containers/${this.containerID}/data-export`)
         break;
       }
 
       case "file-manager": {
         this.currentMainComponent = "FileManager";
-        this.componentName = this.$t('home.fileManager')
+        this.componentName = this.$t('modelExplorer.title')
         this.$router.replace(`/containers/${this.containerID}/file-manager`)
-        break;
-      }
-
-      case "data-explorer": {
-        this.currentMainComponent = "DataExplorer";
-        this.componentName = this.$t('home.dataExplorer')
-        this.$router.replace(`/containers/${this.containerID}/data-explorer`)
         break;
       }
 
       case "data-mapping": {
         this.currentMainComponent = "DataMapping";
-        this.componentName = this.$t('home.dataMapping')
+        this.componentName = this.$t('typeMappings.typeMappings')
         this.$router.replace(`/containers/${this.containerID}/data-mapping`)
         break;
       }
 
       case "data-imports": {
         this.currentMainComponent = "DataImports"
-        this.componentName = this.$t('home.dataImports')
+        this.componentName = this.$t('imports.data')
         this.$router.replace(`/containers/${this.containerID}/data-imports/${this.arguments}`)
         break;
       }
 
       case "settings": {
         this.currentMainComponent = "Settings";
-        this.componentName = this.$t('home.settings')
+        this.componentName = this.$t('general.settings')
         this.$router.replace(`/containers/${this.containerID}/settings`)
         break;
       }
 
       case "users": {
         this.currentMainComponent = "Users";
-        this.componentName = this.$t('home.users')
+        this.componentName = this.$t('users.users')
         this.$router.replace(`/containers/${this.containerID}/users`)
         break;
       }
 
       case "container-users": {
         this.currentMainComponent = "ContainerUsers";
-        this.componentName = this.$t('home.containerUsers')
+        this.componentName = this.$t('users.containerTitle')
         this.$router.replace(`/containers/${this.containerID}/container-users`)
         break;
       }
 
       case "containers": {
         this.currentMainComponent = "Containers"
-        this.componentName = this.$t('home.containers')
+        this.componentName = this.$t('containers.containers')
         this.$router.replace(`/containers/${this.containerID}/containers`)
-        break;
-      }
-
-      case "access-keys": {
-        this.currentMainComponent = "AccessKeys"
-        this.componentName = this.$t('home.accessKeys')
-        this.$router.replace(`/containers/${this.containerID}/access-keys`)
         break;
       }
 
       case "api-keys": {
         this.currentMainComponent = "ApiKeys"
-        this.componentName = this.$t('home.apiKeys')
+        this.componentName = this.$t('apiKeys.personalKeys')
         this.$router.replace(`/containers/${this.containerID}/api-keys`)
         break;
       }
 
       case "ontology-versioning": {
         this.currentMainComponent = "OntologyVersioning"
-        this.componentName = this.$t('home.ontologyVersioning')
+        this.componentName = this.$t('ontology.versioningTitle')
         this.$router.replace(`/containers/${this.containerID}/ontology-versioning`)
         break;
       }
 
       case "service-users": {
         this.currentMainComponent = "ServiceUsers"
-        this.componentName = this.$t('home.serviceUsers')
+        this.componentName = this.$t('serviceUsers.title')
         this.$router.replace(`/containers/${this.containerID}/service-users`)
         break;
       }
 
       case "container-export": {
         this.currentMainComponent = "ContainerExport"
-        this.componentName = this.$t('home.containerExport')
+        this.componentName = this.$t('containers.export')
         this.$router.replace(`/containers/${this.containerID}/container-export`)
         break;
       }
 
       case "container-import": {
         this.currentMainComponent = "ContainerImport"
-        this.componentName = this.$t('home.containerImport')
+        this.componentName = this.$t('containers.import')
         this.$router.replace(`/containers/${this.containerID}/container-import`)
         break;
       }
 
       case "event-actions": {
         this.currentMainComponent = "EventSystem";
-        this.componentName = this.$t('home.eventAction')
+        this.componentName = this.$t('events.title')
         this.$router.replace(`/containers/${this.containerID}/event-actions`)
         break;
       }
@@ -956,11 +906,11 @@ export default class Home extends Vue {
   }
 
   get welcomeLink() {
-    return this.$t('home.welcomeCardLink')
+    return this.$t('links.wiki')
   }
 
-  get ontologyLinkOne() {
-    return this.$t('home.ontologyCardLink1')
+  get ontologyLink() {
+    return this.$t('links.createOntology')
   }
 
   get ontologyPopulated(): boolean {
@@ -968,7 +918,11 @@ export default class Home extends Vue {
   }
 
   helpLink() {
-    return this.$t('containerSelect.wikiLink')
+    return this.$t('links.wiki')
+  }
+
+  emailLink() {
+    return this.$t('links.email')
   }
 }
 </script>

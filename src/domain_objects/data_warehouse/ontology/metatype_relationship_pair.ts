@@ -6,7 +6,7 @@ import MetatypeRelationship, {MetatypeRelationshipID} from './metatype_relations
 
 /*
     MetatypeRelationshipPair  represents a metatype relationship pair  record in
-    the Deep Lynx database and the various validations required for said record
+    the DeepLynx database and the various validations required for said record
     to be considered valid. It also contain operations for managing the pair's
     origin/destination and pair type.
  */

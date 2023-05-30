@@ -67,7 +67,7 @@ export class Authentication {
 
     // Verifies that a user has the proper permissions for performing a given action on
     // a resource. Keep in mind that this DOES NOT dictate what the user is authorized to do
-    // on the Deep Lynx backend. This is purely for display control purposes and should always
+    // on the DeepLynx backend. This is purely for display control purposes and should always
     // be taken with a grain of salt because as of July 2020 we do not have an auto-renew on
     // JWTs in place
     Auth(resource: string, action: string, containerID: string): boolean {

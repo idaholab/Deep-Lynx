@@ -8,7 +8,7 @@ import {expect} from 'chai';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
 import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
-import DataSourceRecord from '../../../domain_objects/data_warehouse/import/data_source';
+import DataSourceRecord, { TimeseriesBucketDataSourceConfig } from '../../../domain_objects/data_warehouse/import/data_source';
 import DataSourceRepository, {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import StandardDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/standard_data_source_impl';
 import HttpDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/http_data_source_impl';
@@ -19,6 +19,7 @@ import DataStagingRepository from '../../../data_access_layer/repositories/data_
 import {toStream} from '../../../services/utilities';
 import Import, {DataStaging} from '../../../domain_objects/data_warehouse/import/import';
 import TimeseriesDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/timeseries_data_source';
+import TimeseriesBucketDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/timeseries_bucket_data_source';
 
 const csv = require('csvtojson');
 
@@ -27,7 +28,14 @@ const csv = require('csvtojson');
 describe('A Standard DataSource Implementation can', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let user: User;
-    let dataSource: StandardDataSourceImpl | HttpDataSourceImpl | AvevaDataSourceImpl | JazzDataSourceImpl | TimeseriesDataSourceImpl | undefined;
+    let dataSource:
+        StandardDataSourceImpl
+        | HttpDataSourceImpl
+        | AvevaDataSourceImpl
+        | JazzDataSourceImpl
+        | TimeseriesDataSourceImpl
+        | TimeseriesBucketDataSourceImpl
+        | undefined;
 
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === '') {
@@ -80,7 +88,7 @@ describe('A Standard DataSource Implementation can', async () => {
         );
 
         expect(exp.isError).false;
-        dataSource = new DataSourceFactory().fromDataSourceRecord(exp.value);
+        dataSource = await new DataSourceFactory().fromDataSourceRecord(exp.value);
 
         return Promise.resolve();
     });
@@ -95,7 +103,7 @@ describe('A Standard DataSource Implementation can', async () => {
         // build the data source first
         const sourceRepo = new DataSourceRepository();
 
-        const source = new DataSourceFactory().fromDataSourceRecord(
+        const source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -126,46 +134,11 @@ describe('A Standard DataSource Implementation can', async () => {
         return Promise.resolve();
     });
 
-    it('can receive data from an array of objects, and return data staging records', async () => {
-        // build the data source first
-        const sourceRepo = new DataSourceRepository();
-
-        const source = new DataSourceFactory().fromDataSourceRecord(
-            new DataSourceRecord({
-                container_id: containerID,
-                name: 'Test Data Source',
-                active: false,
-                adapter_type: 'standard',
-                data_format: 'json',
-            }),
-        );
-
-        let results = await sourceRepo.save(source!, user);
-        expect(results.isError).false;
-        expect(source!.DataSourceRecord?.id).not.undefined;
-
-        // now we create an import through the datasource
-        const newImport = await source!.ReceiveData(toStream([sampleObject]), user, {overrideJsonStream: true, returnStagingRecords: true, bufferSize: 1});
-        expect(newImport.isError).false;
-        expect((newImport.value as DataStaging[]).length === 1).true;
-
-        // verify the data actually wrote - should be a total of 1 record
-        const stagingRepo = new DataStagingRepository();
-        const result = await stagingRepo.where().dataSourceID('eq', source?.DataSourceRecord?.id).list();
-
-        expect(result.isError).false;
-        expect(result.value.length).eq(1);
-
-        expect((newImport.value as DataStaging[])[0].id).eq(result.value[0].id);
-
-        return Promise.resolve();
-    });
-
     it('can receive data from a valid JSON file stream', async () => {
         // build the data source first
         const sourceRepo = new DataSourceRepository();
 
-        const source = new DataSourceFactory().fromDataSourceRecord(
+        const source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
@@ -205,7 +178,7 @@ describe('A Standard DataSource Implementation can', async () => {
         // build the data source first
         const sourceRepo = new DataSourceRepository();
 
-        const source = new DataSourceFactory().fromDataSourceRecord(
+        const source = await new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',

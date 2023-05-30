@@ -22,7 +22,7 @@ import Result from '../../common_classes/result';
 const validator = require('validator');
 
 /*
- User represents a registered Deep Lynx user along with their registered API
+ User represents a registered DeepLynx user along with their registered API
  KeyPairs and information regarding password reset and email validation
 */
 export class User extends BaseDomainClass {
@@ -204,7 +204,7 @@ export function UserToReturnUser(user: User): ReturnUser {
 
 /*
  KeyPair represents an API Key/Secret combination used by outside services to
- gain an access token for authentication against Deep Lynx
+ gain an access token for authentication against DeepLynx
 */
 export class KeyPair extends BaseDomainClass {
     @IsString()
@@ -339,7 +339,7 @@ export class ContainerUserInvite extends BaseDomainClass {
 }
 
 // use wisely as the ID is generated each time it's called - this is mainly used
-// in testing and if, for whatever reason, you're running Deep Lynx with only
+// in testing and if, for whatever reason, you're running DeepLynx with only
 // basic authentication or no authentication on the http_server
 export const SuperUser = new User({
     id: '0',

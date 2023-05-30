@@ -9,7 +9,7 @@
 
       <template v-slot:top>
         <v-toolbar flat color="white">
-          <v-toolbar-title>{{$t("home.containersDescription")}}</v-toolbar-title>
+          <v-toolbar-title>{{$t("containers.description")}}</v-toolbar-title>
           <v-spacer></v-spacer>
           <create-container-dialog @containerCreated="refreshContainers"></create-container-dialog>
         </v-toolbar>
@@ -35,7 +35,7 @@
     <v-dialog v-model="editDialog" max-width="900px">
       <v-card class="pt-1 pb-3 px-2">
         <v-card-title>
-          <span class="headline text-h3">{{$t("containers.editContainersTitle")}}</span>
+          <span class="headline text-h3">{{$t("containers.edit")}}</span>
         </v-card-title>   
         <v-card-text>
           <v-row>
@@ -49,7 +49,7 @@
                 <v-col :cols="6">
                   <v-text-field
                     v-model="toEdit.name"
-                    :label="$t('containers.name')"
+                    :label="$t('general.name')"
                     required
                   ></v-text-field>
                 </v-col>
@@ -57,7 +57,7 @@
                 <v-col :cols="6">
                   <v-text-field
                     v-model="toEdit.description"
-                    :label="$t('containers.description')"
+                    :label="$t('general.description')"
                     required
                   ></v-text-field>
                 </v-col>
@@ -69,8 +69,8 @@
 
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="editDialog = false">{{$t("home.cancel")}}</v-btn>
-          <v-btn color="blue darken-1" text @click="saveContainer">{{$t("home.save")}}</v-btn>
+          <v-btn color="primary" text @click="editDialog = false">{{$t("general.cancel")}}</v-btn>
+          <v-btn color="primary" text @click="saveContainer">{{$t("general.save")}}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -95,9 +95,9 @@
 
       get headers() {
          return  [
-            { text: this.$t("containers.name"), value: 'name' },
-            { text: this.$t("containers.description"), value: 'description'},
-            { text: this.$t("containers.actions"), value: 'actions', sortable: false }
+            { text: this.$t("general.name"), value: 'name' },
+            { text: this.$t("general.description"), value: 'description'},
+            { text: this.$t("general.actions"), value: 'actions', sortable: false }
          ]
       }
 

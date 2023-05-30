@@ -356,10 +356,6 @@ export default class TypeMappingMapper extends Mapper {
                                                             modified_by,
                                                             archived,
                                                             config,
-                                                            tab_data_source_id,
-                                                            tab_metatype_id,
-                                                            tab_node_id,
-                                                            tab_node_key,
                                                             type,
                                                             name)
                    SELECT $3,
@@ -379,10 +375,6 @@ export default class TypeMappingMapper extends Mapper {
                           $1,
                           t.archived,
                           t.config,
-                          t.tab_data_source_id,
-                          t.tab_metatype_id,
-                          t.tab_node_id,
-                          t.tab_node_key,
                           t.type,
                           t.name
                    FROM type_mapping_transformations t

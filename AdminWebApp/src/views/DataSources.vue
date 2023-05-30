@@ -5,7 +5,7 @@
         {{ $t('dataSources.dataSources') }}
       </v-tab>
       <v-tab @click="activeTab = 'timeseriesDatasources'; refreshTimeseriesDataSources()">
-        {{ $t('dataSources.timeseries') }}
+        {{ $t('timeseries.timeseries') }}
       </v-tab>
     </v-tabs>
     <error-banner :message="errorMessage"></error-banner>
@@ -18,7 +18,7 @@
     >
       <template v-slot:top>
         <v-toolbar flat color="white">
-          <v-toolbar-title>{{$t('home.dataSourcesDescription')}}</v-toolbar-title>
+          <v-toolbar-title>{{$t('dataSources.description')}}</v-toolbar-title>
           <v-spacer></v-spacer>
           <create-data-source-dialog 
             :containerID="containerID" 
@@ -31,7 +31,7 @@
           <template v-slot:activator="{on, attrs}">
             <v-icon v-bind="attrs" v-on="on" @click="copyID(item.id)">{{copy}}</v-icon>
           </template>
-          <span>{{$t('dataSources.copyID')}}</span>
+          <span>{{$t('general.copyID')}}</span>
           <span>{{item.id}}</span>
         </v-tooltip>
       </template>
@@ -97,7 +97,7 @@
     >
       <template v-slot:top>
         <v-toolbar flat color="white">
-          <v-toolbar-title>{{$t('home.dataSourcesDescription')}}</v-toolbar-title>
+          <v-toolbar-title>{{$t('dataSources.description')}}</v-toolbar-title>
           <v-spacer></v-spacer>
           <create-data-source-dialog 
             :timeseries="true" 
@@ -112,7 +112,7 @@
           <template v-slot:activator="{on, attrs}">
             <v-icon v-bind="attrs" v-on="on" @click="copyID(item.id)">{{copy}}</v-icon>
           </template>
-          <span>{{$t('dataSources.copyID')}}</span>
+          <span>{{$t('general.copyID')}}</span>
           <span>{{item.id}}</span>
         </v-tooltip>
       </template>
@@ -144,13 +144,13 @@
         />
       </template>
       <template v-slot:[`item.actions`]="{ item }">
-        <timeseries-source-dialog v-if="activeTab === 'timeseriesDatasources'"
+        <timeseries-viewer-dialog v-if="activeTab === 'timeseriesDatasources'"
           :containerID="containerID"
           :dataSourceID="item.id"
           :icon="true"
           :key="timeseriesKey"
           @timeseriesDialogClose="incrementKey"
-        ></timeseries-source-dialog>
+        ></timeseries-viewer-dialog>
         <edit-data-source-dialog
             :containerID="containerID"
             :dataSource="item"
@@ -184,14 +184,14 @@ import DeleteDataSourceDialog from "@/components/dataSources/deleteDataSourceDia
 import {mdiFileDocumentMultiple} from "@mdi/js";
 import ReprocessDataSourceDialog from "@/components/dataImport/reprocessDataSourceDialog.vue";
 import EditDataSourceDialog from "@/components/dataSources/editDataSourceDialog.vue";
-import TimeseriesSourceDialog from '@/components/data/timeseriesSourceDialog.vue';
+import TimeseriesViewerDialog from '@/components/data/timeseriesViewerDialog.vue';
 
 @Component({components:{
     CreateDataSourceDialog,
     EditDataSourceDialog,
     DeleteDataSourceDialog,
     ReprocessDataSourceDialog,
-    TimeseriesSourceDialog
+    TimeseriesViewerDialog
   }})
 export default class DataSources extends Vue {
   @Prop({required: true})
@@ -210,15 +210,15 @@ export default class DataSources extends Vue {
   headers() {
     const headers = [
       { text: '', value: 'copy'},
-      { text: this.$t('dataSources.id'), value: 'id'},
-      { text: this.$t('dataSources.name'), value: 'name' },
+      { text: this.$t('general.id'), value: 'id'},
+      { text: this.$t('general.name'), value: 'name' },
       { text: this.$t('dataSources.adapterType'), value: 'adapter_type'},
-      { text: this.$t('dataSources.active'), value: 'active'},
-      { text: this.$t('dataSources.actions'), value: 'actions', sortable: false }
+      { text: this.$t('general.active'), value: 'active'},
+      { text: this.$t('general.actions'), value: 'actions', sortable: false }
     ]
 
     if (this.activeTab === 'timeseriesDatasources') {
-      headers.splice(4, 0, {text: 'Fast Load Enabled', value: 'fastload'})
+      headers.splice(4, 0, {text: this.$t('timeseries.fastloadEnabled'), value: 'fastload'})
     }
 
     return headers;

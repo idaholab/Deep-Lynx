@@ -7,12 +7,12 @@
         class="mr-2"
         v-on="on"
       >mdi-send</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("sendEventAction.formTitle")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("events.sendAction")}}</v-btn>
     </template>
     
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline text-h3">{{$t('sendEventAction.formTitle')}}</span>
+        <span class="headline text-h3">{{$t('events.sendAction')}}</span>
       </v-card-title>
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
@@ -23,7 +23,7 @@
               type="warning"
               elevation="2"
             >
-              {{$t('sendEventAction.sendQuestion')}}
+              {{$t('events.confirmSend')}}
             </v-alert>
           </v-col>
         </v-row>
@@ -31,15 +31,15 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn 
-          color="blue darken-1" 
+          color="primary" 
           text
           @click="reset(); dialog = false" 
-        >{{successMessage === '' ? $t("home.cancel") : "Close"}}</v-btn>
+        >{{successMessage === '' ? $t("general.cancel") : $t('general.close')}}</v-btn>
         <v-btn v-if="successMessage === ''"
-          color="blue darken-1" 
+          color="primary" 
           text 
           @click="sendEvent()" 
-        >{{$t("sendEventAction.send")}}</v-btn>
+        >{{$t("general.send")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -78,10 +78,10 @@ export default class SendEventActionDialog extends Vue {
       const resp: AxiosResponse = await axios.post(this.eventAction.destination!, {id: 'test', event: 'test'}, config)
 
       if (resp.status < 200 || resp.status > 299) {
-        this.errorMessage = `Request unsuccessful. Status code ${resp.status}. ${resp.statusText}`
+        this.errorMessage = `${this.$t('errors.statusCode')} ${resp.status}. ${resp.statusText}`
       }
       else {
-        this.successMessage = 'Request was successful!'
+        this.successMessage = (this.$t('general.success') as string)
         this.errorMessage = ''
       }
     } catch(e: any) {

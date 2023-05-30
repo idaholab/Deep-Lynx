@@ -23,13 +23,13 @@ import {PoolClient} from 'pg';
 import {Transform} from 'stream';
 import {DataRetentionDays} from '../../validators/data_retention_validator';
 import {WebSocket} from 'ws';
+import { Bucket, ChangeBucketPayload } from 'deeplynx-timeseries';
 
 // ReceiveDataOptions will allow us to grow the potential options needed by the ReceiveData
 // function of various implementations without having to grow the parameter list
 export class ReceiveDataOptions {
     transaction?: PoolClient;
     importID?: string;
-    returnStagingRecords? = false; // needed if you'd rather return the individual staging records over the import, useful if needing to attach files
     overrideJsonStream? = false; // needed if you're passing raw json objects or an object stream
     transformStream?: Transform; // streams to pipe to, prior to piping to the JSONStream
     bufferSize = 1000; // buffer size for timeseries records to be inserted into the db, modify this at runtime if needed
@@ -47,7 +47,7 @@ export class ReceiveDataOptions {
  validate against
 */
 export class BaseDataSourceConfig extends NakedDomainClass {
-    kind: 'http' | 'standard' | 'manual' | 'jazz' | 'aveva' | 'timeseries' | 'p6' = 'standard';
+    kind: 'http' | 'standard' | 'manual' | 'jazz' | 'aveva' | 'timeseries' | 'p6' | 'timeseries_bucket' = 'standard';
 
     // advanced configuration, while we allow the user to set these it's generally
     // assumed that only those with technical knowledge or experience would be modifying
@@ -401,8 +401,21 @@ export class TimeseriesDataSourceConfig extends BaseDataSourceConfig {
     }
 }
 
+export class TimeseriesBucketDataSourceConfig extends BaseDataSourceConfig {
+    kind: 'timeseries_bucket' = 'timeseries_bucket';
+
+    change_bucket_payload: ChangeBucketPayload | undefined;
+
+    bucket: Bucket | undefined;
+
+    constructor(input?: {change_bucket_payload?: ChangeBucketPayload}) {
+        super();
+        if (input?.change_bucket_payload) this.change_bucket_payload = input.change_bucket_payload;
+    }
+}
+
 /*
-    DataSourceRecord represents a data source record in the Deep Lynx database and the various
+    DataSourceRecord represents a data source record in the DeepLynx database and the various
     validations required for said record to be considered valid.
  */
 export default class DataSourceRecord extends BaseDomainClass {
@@ -416,7 +429,7 @@ export default class DataSourceRecord extends BaseDomainClass {
     name?: string;
 
     @IsString()
-    @IsIn(['http', 'standard', 'manual', 'jazz', 'aveva', 'timeseries', 'p6'])
+    @IsIn(['http', 'standard', 'manual', 'jazz', 'aveva', 'timeseries', 'p6', 'timeseries_bucket'])
     adapter_type = 'standard';
 
     @IsString()
@@ -441,20 +454,27 @@ export default class DataSourceRecord extends BaseDomainClass {
     @Type(() => BaseDataSourceConfig, {
         keepDiscriminatorProperty: true,
         discriminator: {
-            property: 'kind',
-            subTypes: [
-                {value: StandardDataSourceConfig, name: 'standard'},
-                {value: StandardDataSourceConfig, name: 'manual'},
-                {value: JazzDataSourceConfig, name: 'jazz'},
-                {value: HttpDataSourceConfig, name: 'http'},
-                {value: AvevaDataSourceConfig, name: 'aveva'},
-                {value: TimeseriesDataSourceConfig, name: 'timeseries'},
-                {value: P6DataSourceConfig, name: 'p6'},
-            ],
+        property: 'kind',
+        subTypes: [
+        {value: StandardDataSourceConfig, name: 'standard'},
+        {value: StandardDataSourceConfig, name: 'manual'},
+        {value: JazzDataSourceConfig, name: 'jazz'},
+        {value: HttpDataSourceConfig, name: 'http'},
+        {value: AvevaDataSourceConfig, name: 'aveva'},
+        {value: TimeseriesDataSourceConfig, name: 'timeseries'},
+        {value: P6DataSourceConfig, name: 'p6'},
+        {value: TimeseriesBucketDataSourceConfig, name: 'timeseries_bucket'}
+        ],
         },
-    })
-    config?: StandardDataSourceConfig | HttpDataSourceConfig | JazzDataSourceConfig | AvevaDataSourceConfig | TimeseriesDataSourceConfig | P6DataSourceConfig =
-        new StandardDataSourceConfig();
+        })
+    config?: StandardDataSourceConfig
+    | HttpDataSourceConfig
+    | JazzDataSourceConfig
+    | AvevaDataSourceConfig
+    | TimeseriesDataSourceConfig
+    | P6DataSourceConfig
+    | TimeseriesBucketDataSourceConfig =
+    new StandardDataSourceConfig();
 
     constructor(input: {
         container_id: string;
@@ -462,12 +482,13 @@ export default class DataSourceRecord extends BaseDomainClass {
         adapter_type: string;
         active?: boolean;
         config?:
-            | StandardDataSourceConfig
-            | HttpDataSourceConfig
-            | JazzDataSourceConfig
-            | AvevaDataSourceConfig
-            | TimeseriesDataSourceConfig
-            | P6DataSourceConfig;
+        | StandardDataSourceConfig
+        | HttpDataSourceConfig
+        | JazzDataSourceConfig
+        | AvevaDataSourceConfig
+        | TimeseriesDataSourceConfig
+        | P6DataSourceConfig
+        | TimeseriesBucketDataSourceConfig;
         data_format?: string;
         status?: 'ready' | 'polling' | 'error';
         status_message?: string;

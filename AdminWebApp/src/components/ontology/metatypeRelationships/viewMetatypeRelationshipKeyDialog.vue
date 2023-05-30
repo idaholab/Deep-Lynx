@@ -7,14 +7,14 @@
           class="mr-2"
           v-on="on"
       >mdi-eye</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("viewMetatypeRelationshipKey.viewMetatypeKey")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("relationships.viewProperty")}}</v-btn>
     </template>
 
     <v-card v-if="selectedMetatypeRelationshipKey">
       <v-card-text>
         <v-container>
           <error-banner :message="errorMessage"></error-banner>
-          <span class="headline">{{ $t('viewMetatypeRelationshipKey.edit') }} {{ selectedMetatypeRelationshipKey.name }}</span>
+          <span class="headline">{{ $t('general.view') }} {{ selectedMetatypeRelationshipKey.name }}</span>
           <v-row>
             <v-col :cols="12">
 
@@ -27,7 +27,7 @@
                     :disabled="true"
                     class="disabled"
                 >
-                  <template v-slot:label>{{$t('viewMetatypeRelationshipKey.name')}}</template>
+                  <template v-slot:label>{{$t('general.name')}}</template>
                 </v-text-field>
 
                 <v-text-field
@@ -35,8 +35,8 @@
                     :disabled="true"
                     class="disabled"
                 >
-                  <template v-slot:label>{{$t('viewMetatypeRelationshipKey.propertyName')}} </template>
-                  <template slot="append-outer"><info-tooltip :message="$t('ontology.propertyName')"></info-tooltip> </template>
+                  <template v-slot:label>{{$t('properties.name')}} </template>
+                  <template slot="append-outer"><info-tooltip :message="$t('help.propertyName')"></info-tooltip> </template>
                 </v-text-field>
                 <v-select
                     v-model="selectedMetatypeRelationshipKey.data_type"
@@ -45,14 +45,14 @@
                     :disabled="true"
                     class="disabled"
                 >
-                  <template v-slot:label>{{$t('viewMetatypeRelationshipKey.dataType')}} </template>
+                  <template v-slot:label>{{$t('general.dataType')}} </template>
                 </v-select>
                 <v-checkbox
                     v-model="selectedMetatypeRelationshipKey.required"
                     :disabled="true"
                     class="disabled"
                 >
-                  <template v-slot:label>{{$t('viewMetatypeRelationshipKey.required')}} </template>
+                  <template v-slot:label>{{$t('validation.required')}} </template>
                 </v-checkbox>
                 <v-textarea
                     v-model="selectedMetatypeRelationshipKey.description"
@@ -60,36 +60,36 @@
                     :disabled="true"
                     class="disabled"
                 >
-                  <template v-slot:label>{{$t('viewMetatypeRelationshipKey.description')}} </template>
+                  <template v-slot:label>{{$t('general.description')}} </template>
                 </v-textarea>
 
                 <div v-if="selectedMetatypeRelationshipKey.validation">
-                  <h3>{{$t('viewMetatypeRelationshipKey.validation')}}</h3>
+                  <h3>{{$t('validation.validation')}}</h3>
                   <v-text-field
                       v-model="selectedMetatypeRelationshipKey.validation.regex"
-                      :label="$t('viewMetatypeRelationshipKey.regex')"
+                      :label="$t('validation.regex')"
                       :disabled="true"
                       class="disabled"
                   >
-                    <template slot="append-outer"> <info-tooltip :message="$t('viewMetatypeRelationshipKey.regexHelp')"></info-tooltip></template>
+                    <template slot="append-outer"> <info-tooltip :message="$t('help.regex')"></info-tooltip></template>
                   </v-text-field>
                   <v-text-field
                       v-model.number="selectedMetatypeRelationshipKey.validation.max"
                       type="number"
-                      :label="$t('viewMetatypeRelationshipKey.max')"
+                      :label="$t('validation.max')"
                       :disabled="true"
                       class="disabled"
                   >
-                    <template slot="append-outer"> <info-tooltip :message="$t('viewMetatypeRelationshipKey.maxHelp')"></info-tooltip></template>
+                    <template slot="append-outer"> <info-tooltip :message="$t('help.max')"></info-tooltip></template>
                   </v-text-field>
                   <v-text-field
                       v-model.number="selectedMetatypeRelationshipKey.validation.min"
                       type="number"
-                      :label="$t('viewMetatypeRelationshipKey.min')"
+                      :label="$t('validation.min')"
                       :disabled="true"
                       class="disabled"
                   >
-                    <template slot="append-outer"> <info-tooltip :message="$t('viewMetatypeRelationshipKey.minHelp')"></info-tooltip></template>
+                    <template slot="append-outer"> <info-tooltip :message="$t('help.min')"></info-tooltip></template>
                   </v-text-field>
                 </div>
 
@@ -108,7 +108,7 @@
 
                 <v-combobox
                     v-model="selectedMetatypeRelationshipKey.options"
-                    :label="$t('viewMetatypeRelationshipKey.options')"
+                    :label="$t('general.options')"
                     multiple
                     clearable
                     deletable-chips
@@ -117,7 +117,7 @@
                     class="disabled"
                 ></v-combobox>
               </v-form>
-              <p><span style="color:red">*</span> = {{$t('viewMetatypeRelationshipKey.requiredField')}}</p>
+              <p><span style="color:red">*</span> = {{$t('validation.required')}}</p>
             </v-col>
           </v-row>
         </v-container>
@@ -125,7 +125,7 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="dialog = false" >{{$t("viewMetatypeRelationshipKey.close")}}</v-btn>
+        <v-btn color="primary" text @click="dialog = false" >{{$t("general.close")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -190,27 +190,27 @@ export default class ViewMetatypeRelationshipKeyDialog extends Vue {
 
 .edited-field {
   input {
-    background: #CD7F32;
+    background: $warning;
     color: white !important;
-    box-shadow: -5px 0 0 #CD7F32;
+    box-shadow: -5px 0 0 $warning;
   }
 
   textarea {
-    background: #CD7F32;
+    background: $warning;
     color: white !important;
-    box-shadow: -5px 0 0 #CD7F32;
+    box-shadow: -5px 0 0 $warning;
   }
 
   .v-select__slot {
-    background: #CD7F32;
+    background: $warning;
     color: white !important;
-    box-shadow: -5px 0 0 #CD7F32;
+    box-shadow: -5px 0 0 $warning;
   }
 
   .v-select__selection {
-    background: #CD7F32;
+    background: $warning;
     color: white !important;
-    box-shadow: -5px 0 0 #CD7F32;
+    box-shadow: -5px 0 0 $warning;
   }
 }
 </style>

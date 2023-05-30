@@ -13,29 +13,29 @@
             </v-col>
             <v-col cols="7">
               <v-container class="py-9 pl-6 pr-9" v-if="$auth.IsLoggedIn() && !inviteSuccessful">
-                <h2 class="text-h2 text-center">{{$t('containerInvite.acceptTitle')}} {{$route.query.containerName}}</h2>
-                <p>{{$t("containerInvite.acceptDescription")}} {{$route.query.containerName}}</p>
+                <h2 class="text-h2 text-center">{{$t('containers.acceptInviteLong')}} {{$route.query.containerName}}</h2>
+                <p>{{$t("containers.acceptDescription")}} {{$route.query.containerName}}</p>
                 <error-banner :message="errorMessage"></error-banner>
                 <success-banner :message="successMessage"></success-banner>
                 <div v-if="successful">
-                  <p>{{$t('containerInvite.successful')}}</p>
-                  <v-btn large block @click="home" style="margin-top: 25px" >{{$t('containerInvite.containerSelect')}}</v-btn>
+                  <p>{{$t('containers.acceptSuccess')}}</p>
+                  <v-btn large block @click="home" style="margin-top: 25px" >{{$t('containers.selection')}}</v-btn>
                 </div>
-                <v-btn large block color="primary" @click="acceptInvite" ><span v-if="!loading">{{$t('containerInvite.acceptInvite')}}</span> <v-progress-circular indeterminate v-if="loading"></v-progress-circular> </v-btn>
+                <v-btn large block color="primary" @click="acceptInvite" ><span v-if="!loading">{{$t('containers.acceptInvite')}}</span> <v-progress-circular indeterminate v-if="loading"></v-progress-circular> </v-btn>
 
               </v-container>
 
               <v-container class="py-9 pl-6 pr-9" v-if="inviteSuccessful">
-                <h2 class="text-h2 text-center">{{$t('containerInvite.inviteSuccessful')}}</h2>
-                <p>{{$t("containerInvite.inviteSuccessfulDescription")}}</p>
+                <h2 class="text-h2 text-center">{{$t('containers.acceptSuccess')}}</h2>
+                <p>{{$t("containers.chooseNow")}}</p>
                 <error-banner :message="errorMessage"></error-banner>
                 <success-banner :message="successMessage"></success-banner>
-                <v-btn large block @click="containerSelect" style="margin-top: 25px" >{{$t('containerInvite.containerSelect')}}</v-btn>
+                <v-btn large block @click="containerSelect" style="margin-top: 25px" >{{$t('containers.selection')}}</v-btn>
 
               </v-container>
               <v-container class="py-9 pl-6 pr-9" v-if="!$auth.IsLoggedIn()">
-                <h2 class="text-h2 text-center">{{$t('containerInvite.loginToAccept')}}</h2>
-                <v-btn large block @click="home" style="margin-top: 25px" >{{$t('register.home')}}</v-btn>
+                <h2 class="text-h2 text-center">{{$t('containers.loginToAccept')}}</h2>
+                <v-btn large block @click="home" style="margin-top: 25px" >{{$t('general.returnToLogin')}}</v-btn>
               </v-container>
             </v-col>
           </v-row>
@@ -79,7 +79,7 @@
 
     emailRules() {
       return [
-        (v: any) => !v || /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v) || this.$t('resetPassword.validEmail')
+        (v: any) => !v || /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v) || this.$t('validation.validEmail')
       ]
     }
 
@@ -124,7 +124,7 @@
         }
 
         &:first-child .container {
-            background-color: $secondary;
+            background-color: $primary;
             border-top-left-radius: 4px;
             border-bottom-left-radius: 4px;
         }

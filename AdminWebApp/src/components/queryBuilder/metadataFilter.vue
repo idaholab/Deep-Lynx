@@ -3,7 +3,7 @@
     <v-row>
       <v-col :cols="4">
         <v-text-field
-          :label="$t('dataQuery.metadataKey')"
+          :label="$t('query.metadataProperty')"
           clearable
           v-model="key"
           :disabled="disabled"
@@ -17,12 +17,12 @@
           :disabled="disabled"
           multiple
           clearable
-          :placeholder="$t('queryBuilder.typeToAdd')"
+          :placeholder="$t('general.typeToAdd')"
           @change="setValue"
           v-model="value"
         />
         <v-text-field v-else
-          :placeholder="$t('queryBuilder.typeToAdd')"
+          :placeholder="$t('general.typeToAdd')"
           clearable
           v-model="value"
           :disabled="disabled"

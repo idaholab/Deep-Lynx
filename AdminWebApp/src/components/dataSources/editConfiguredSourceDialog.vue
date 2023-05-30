@@ -6,7 +6,7 @@
 
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline text-h3">{{$t('configuredSource.edit')}}</span>
+        <span class="headline text-h3">{{$t('dataSources.editConfigured')}}</span>
       </v-card-title>
 
       <v-card-text>
@@ -16,7 +16,7 @@
             <v-text-field
               disabled
               :value="config.type"
-              :label="$t('createDataSource.sourceType')"
+              :label="$t('dataSources.selectType')"
               required
             />
           </v-col>
@@ -25,7 +25,7 @@
           <v-col :cols="12">
             <v-text-field
               disabled
-              :label="$t('createDataSource.p6alias')"
+              :label="$t('dataSources.alias')"
               v-model="config.name"
             />
           </v-col>
@@ -33,13 +33,13 @@
         <v-row>
           <v-col :cols="6">
             <v-text-field
-              :label="$t('createDataSource.p6endpoint')"
+              :label="$t('general.endpoint')"
               v-model="config.endpoint"
             />
           </v-col>
           <v-col :cols="6">
             <v-text-field
-              :label="$t('createDataSource.p6projectID')"
+              :label="$t('general.projectID')"
               v-model="config.projectID"
             />
           </v-col>
@@ -48,13 +48,13 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="clearConfig()">{{$t('home.cancel')}}</v-btn>
+        <v-btn color="primary" text @click="clearConfig()">{{$t('general.cancel')}}</v-btn>
         <v-btn
           :disabled="config.name === ''"
           color="primary"
           dark
           @click="editConfig"
-        >{{$t('home.save')}}</v-btn>
+        >{{$t('general.save')}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

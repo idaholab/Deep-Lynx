@@ -1,10 +1,18 @@
 import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_domain_class';
 import {IsDate, IsDefined, IsNumber, IsOptional, IsString, IsUUID} from 'class-validator';
 import {Type} from 'class-transformer';
-import {AvevaDataSourceConfig, BaseDataSourceConfig, HttpDataSourceConfig, JazzDataSourceConfig, StandardDataSourceConfig, P6DataSourceConfig} from './data_source';
+import {
+    AvevaDataSourceConfig,
+    BaseDataSourceConfig,
+    HttpDataSourceConfig,
+    JazzDataSourceConfig,
+    StandardDataSourceConfig,
+    P6DataSourceConfig,
+    TimeseriesBucketDataSourceConfig
+} from './data_source';
 
 /*
-    Import represents an import record in the Deep Lynx database and the various
+    Import represents an import record in the DeepLynx database and the various
     validations required for said record to be considered valid.
  */
 export default class Import extends BaseDomainClass {
@@ -95,18 +103,26 @@ export class DataStaging extends NakedDomainClass {
     @Type(() => BaseDataSourceConfig, {
         keepDiscriminatorProperty: true,
         discriminator: {
-            property: 'kind',
-            subTypes: [
-                {value: StandardDataSourceConfig, name: 'standard'},
-                {value: StandardDataSourceConfig, name: 'manual'},
-                {value: JazzDataSourceConfig, name: 'jazz'},
-                {value: HttpDataSourceConfig, name: 'http'},
-                {value: AvevaDataSourceConfig, name: 'aveva'},
-                {value: P6DataSourceConfig, name: 'p6'}
-            ],
+        property: 'kind',
+        subTypes: [
+        {value: StandardDataSourceConfig, name: 'standard'},
+        {value: StandardDataSourceConfig, name: 'manual'},
+        {value: JazzDataSourceConfig, name: 'jazz'},
+        {value: HttpDataSourceConfig, name: 'http'},
+        {value: AvevaDataSourceConfig, name: 'aveva'},
+        {value: P6DataSourceConfig, name: 'p6'},
+        {value: TimeseriesBucketDataSourceConfig, name: 'timeseries_bucket'}
+        ],
         },
-    })
-    data_source_config?: StandardDataSourceConfig | HttpDataSourceConfig | JazzDataSourceConfig | AvevaDataSourceConfig | P6DataSourceConfig = new StandardDataSourceConfig();
+        })
+    data_source_config?:
+    StandardDataSourceConfig
+    | HttpDataSourceConfig
+    | JazzDataSourceConfig
+    | AvevaDataSourceConfig
+    | P6DataSourceConfig
+    | TimeseriesBucketDataSourceConfig =
+    new StandardDataSourceConfig();
 
     constructor(input: {data_source_id: string; import_id: string; data: any; shape_hash?: string; container_id?: string; file_attached?: boolean}) {
         super();

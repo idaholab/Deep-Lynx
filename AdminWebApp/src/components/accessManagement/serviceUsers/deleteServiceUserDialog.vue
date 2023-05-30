@@ -8,19 +8,19 @@
           v-on="on"
           @click="startCountdown()"
       >mdi-delete</v-icon>
-      <v-btn v-if="!displayIcon" color="error" dark class="mt-2" v-on="on" @click="startCountdown()">{{$t("deleteServiceUser.deleteServiceUser")}}</v-btn>
+      <v-btn v-if="!displayIcon" color="error" dark class="mt-2" v-on="on" @click="startCountdown()">{{$t("serviceUsers.delete")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline text-h3">{{$t('deleteServiceUser.deleteTitle')}}</span>
+        <span class="headline text-h3">{{$t('serviceUsers.delete')}}</span>
       </v-card-title>
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
         <v-row>
           <v-col :cols="12">
               <v-alert type="error">
-                {{$t('deleteServiceUser.warning')}}
+                {{$t('warnings.deleteServiceUser')}}
               </v-alert>
           </v-col>
         </v-row>
@@ -28,10 +28,10 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="reset()">{{$t("deleteServiceUser.cancel")}}</v-btn>
-        <v-btn color="red darken-1" text :disabled="countDown > 0" @click="deleteServiceUser()">
-          <span>{{$t("deleteServiceUser.delete")}}</span>
-          <span v-if="countDown > 0">{{$t('deleteServiceUser.in')}} {{countDown}}</span>
+        <v-btn color="primary" text @click="reset()">{{$t("general.cancel")}}</v-btn>
+        <v-btn color="error" text :disabled="countDown > 0" @click="deleteServiceUser()">
+          <span>{{$t("general.remove")}}</span>
+          <span v-if="countDown > 0">{{$t('operators.in')}} {{countDown}}</span>
         </v-btn>
       </v-card-actions>
     </v-card>

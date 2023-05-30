@@ -8,12 +8,12 @@
         v-on="on"
         @click="isDelete = true; initiate()"
       >mdi-delete</v-icon>
-      <v-btn v-if="!displayIcon" color="primary" dark class="mb-1" v-on="on">{{$t("deleteDataImport.deleteTypeMapping")}}</v-btn>
+      <v-btn v-if="!displayIcon" color="primary" dark class="mb-1" v-on="on">{{$t("imports.deleteTitle")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline text-h3">{{$t('deleteDataImport.deleteTitle')}}</span>
+        <span class="headline text-h3">{{$t('imports.deleteTitle')}}</span>
       </v-card-title>   
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
@@ -21,10 +21,10 @@
           <v-col :cols="12">
             <div>
               <v-alert type="warning">
-                {{$t('deleteDataImport.deleteWarning')}}
+                {{$t('warnings.deleteImport')}}
                 <v-checkbox
                     v-model="withData"
-                    :label="$t('deleteDataImport.withData')"
+                    :label="$t('imports.deleteData')"
                 ></v-checkbox>
               </v-alert>
             </div>
@@ -34,10 +34,10 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="reset()">{{$t("deleteDataImport.cancel")}}</v-btn>
-        <v-btn color="red darken-1" text :disabled="countDown > 0" @click="deleteImport()">
-          <span>{{$t("deleteDataImport.delete")}}</span>
-          <span v-if="countDown > 0">{{$t('deleteDataImport.in')}} {{countDown}}</span>
+        <v-btn color="primary" text @click="reset()">{{$t("general.cancel")}}</v-btn>
+        <v-btn color="error" text :disabled="countDown > 0" @click="deleteImport()">
+          <span>{{$t("general.delete")}}</span>
+          <span v-if="countDown > 0">{{$t('operators.in')}} {{countDown}}</span>
         </v-btn>
       </v-card-actions>
     </v-card>

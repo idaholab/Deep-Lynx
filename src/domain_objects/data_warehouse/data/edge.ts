@@ -5,7 +5,6 @@ import Container from '../ontology/container';
 import MetatypeRelationshipPair, {MetatypeRelationshipPairID} from '../ontology/metatype_relationship_pair';
 import Node from './node';
 import {Conversion, EdgeConnectionParameter} from '../etl/type_transformation';
-import TimeseriesEntry from './timeseries';
 
 export class EdgeMetadata {
     @IsOptional()
@@ -26,7 +25,7 @@ export class EdgeMetadata {
     }
 }
 /*
-    Edge represents an edge record in the Deep Lynx database and the various
+    Edge represents an edge record in the DeepLynx database and the various
     validations required for said record to be considered valid.
  */
 export default class Edge extends BaseDomainClass {
@@ -197,7 +196,7 @@ export default class Edge extends BaseDomainClass {
 }
 
 // type guard for differentiating an array of edges from either array of nodes or edges
-export function IsEdges(set: Node[] | Edge[] | TimeseriesEntry[]): set is Edge[] {
+export function IsEdges(set: Node[] | Edge[]): set is Edge[] {
     // technically an empty array could be a set of EdgeT
     if (Array.isArray(set) && set.length === 0) return true;
 

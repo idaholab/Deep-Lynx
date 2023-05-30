@@ -23,7 +23,7 @@ export default function Header(props: any) {
       <Box>
         <AppBar position="fixed" elevation={0} color={"secondary"}>
           <Toolbar>
-            <img alt="Deep Lynx Logo" width="100" src="assets/lynx-white.png" style={{ marginLeft: '-8px', marginRight: '20px' }} />
+            <img alt="DeepLynx Logo" width="100" src="assets/lynx-white.png" style={{ marginLeft: '-8px', marginRight: '20px' }} />
             <Typography variant="h6" noWrap component="div">
               WebGL Viewer
             </Typography>

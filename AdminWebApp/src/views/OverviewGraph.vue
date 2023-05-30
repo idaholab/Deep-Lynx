@@ -2,7 +2,7 @@
   <div>
     <v-card class="d-flex flex-column height-full mb-6">
       <error-banner :message="errorMessage"></error-banner>
-      <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">DeepLynx Container Overview</v-card-title>
+      <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('containers.overviewGraph')}}</v-card-title>
       <v-progress-circular indeterminate v-if="loading" style="width: auto;"></v-progress-circular>
       <div ref="forcegraph" ></div>
     </v-card>
@@ -261,36 +261,36 @@ export default class OverviewGraph extends Vue {
   determineNodeContent(node: any, defaultFontSize: number): any[] {
     if (node.nodeType === 'Container') {
       return [
-        {label: 'DeepLynx', fontSize: defaultFontSize},
+        {label: this.$t('general.deepLynx'), fontSize: defaultFontSize},
         {label: `${node.name} (${node.id})`, fontSize: this.largeFontSize},
-        {label: 'View Data', fontSize: this.smallFontSize, link: buildURL(Config.appUrl, {path: `/containers/${this.container?.id!}/data-query`})},
-        {label: '3D Models', fontSize: this.smallFontSize, link: buildURL(Config.appUrl, {path: `/containers/${this.container?.id!}/file-manager`})},
-        {label: 'Ontology', fontSize: this.smallFontSize, link: buildURL(Config.appUrl, {path: `/containers/${this.container?.id!}/metatypes`})}
+        {label: this.$t('query.viewer'), fontSize: this.smallFontSize, link: buildURL(Config.appUrl, {path: `/containers/${this.container?.id!}/data-query`})},
+        {label: this.$t('modelExplorer.models3D'), fontSize: this.smallFontSize, link: buildURL(Config.appUrl, {path: `/containers/${this.container?.id!}/file-manager`})},
+        {label: this.$t('ontology.ontology'), fontSize: this.smallFontSize, link: buildURL(Config.appUrl, {path: `/containers/${this.container?.id!}/metatypes`})}
       ]
     } else if (node.nodeType === 'DataSource') {
       return [
         {label: `${node.config.kind}`, fontSize: this.smallFontSize},
         {label: `${node.name} (${node.id})`, fontSize: defaultFontSize, link: buildURL(Config.appUrl, {path: `/containers/${this.container?.id!}/data-sources`})},
         {label: '', fontSize: 1},
-        {label: `Latest: ${node.latestImport}`, fontSize: this.smallFontSize},
+        {label: `${this.$t('general.latest')}: ${node.latestImport}`, fontSize: this.smallFontSize},
       ]
     }  else if (node.nodeType === 'TSDataSource') {
       return [
         {label: `${node.config.kind}`, fontSize: this.smallFontSize},
         {label: `${node.name} (${node.id})`, fontSize: defaultFontSize, link: buildURL(Config.appUrl, {path: `/containers/${this.container?.id!}/data-sources`})},
         {label: '', fontSize: 1},
-        {label: `Latest: ${node.latestImport}`, fontSize: this.smallFontSize},
-        {label: `Rows: ${node.rowCount}`, fontSize: this.smallFontSize},
+        {label: `${this.$t('general.latest')}: ${node.latestImport}`, fontSize: this.smallFontSize},
+        {label: `${this.$t('general.rows')}: ${node.rowCount}`, fontSize: this.smallFontSize},
       ]
     }  else if (node.nodeType === 'TypeMapping') {
-      const mappingText = node.count === 1 ? 'Mapping' : 'Mappings'
+      const mappingText = node.count === 1 ? this.$t('typeMappings.mapping') : this.$t('typeMappings.mappings')
       let text = [
         {label: `${node.count} ${mappingText}`, fontSize: defaultFontSize, link: buildURL(Config.appUrl, {path: `/containers/${this.container?.id!}/data-mapping/${node.dataSourceID}`})},
         {label: '', fontSize: this.smallFontSize},
       ]
-      if (node.needsTransformations) text.push({label: 'Needs Transformations', fontSize: this.smallFontSize})
+      if (node.needsTransformations) text.push({label: this.$t('typeMappings.needsTransformations') as string, fontSize: this.smallFontSize})
       text = text.concat([
-          {label: `${node.metatypes.length} metatypes`, fontSize: this.smallFontSize},
+          {label: `${node.metatypes.length} classes`, fontSize: this.smallFontSize},
           {label: `${node.relationshipPairs.length} relationships`, fontSize: this.smallFontSize}
       ])
 
@@ -314,7 +314,7 @@ export default class OverviewGraph extends Vue {
     if (importList.length > 0) {
       latestImportTime = new Date(importList[0].created_at)
     } else {
-      return 'Never'
+      return this.$t('general.never') as string
     }
 
     for (const eachImport of importList) {

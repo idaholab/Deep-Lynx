@@ -2,7 +2,7 @@ import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_do
 import {IsIn, IsNumber, IsObject, IsOptional, IsString} from 'class-validator';
 
 /*
-    File represents a file record in the Deep Lynx database and the various
+    File represents a file record in the DeepLynx database and the various
     validations required for said record to be considered valid.
  */
 export default class File extends BaseDomainClass {

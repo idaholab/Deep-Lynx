@@ -102,8 +102,12 @@ export default class DataStagingMapper extends Mapper {
         });
     }
 
-    public AddFile(id: string, fileID: string): Promise<Result<boolean>> {
-        return super.runStatement(this.addFile(id, fileID));
+    public AddFile(stagingID: string, fileID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.addFile(stagingID, fileID));
+    }
+
+    public AddFileWithImport(importID: string, fileID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.addFileWithImport(importID, fileID));
     }
 
     public RemoveFile(id: string, fileID: string): Promise<Result<boolean>> {
@@ -259,10 +263,18 @@ export default class DataStagingMapper extends Mapper {
         };
     }
 
-    private addFile(id: string, fileID: string): QueryConfig {
+    private addFile(stagingID: string, fileID: string): QueryConfig {
         return {
             text: `INSERT INTO data_staging_files(data_staging_id, file_id) VALUES ($1, $2)`,
-            values: [id, fileID],
+            values: [stagingID, fileID],
+        };
+    }
+
+    private addFileWithImport(importID: string, fileID: string): QueryConfig {
+        return {
+            text: `INSERT INTO data_staging_files(data_staging_id, file_id)
+                    SELECT id, $1 FROM data_staging WHERE import_id = $2`,
+            values: [fileID, importID],
         };
     }
 

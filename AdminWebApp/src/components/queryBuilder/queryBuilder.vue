@@ -3,12 +3,12 @@
     <v-row>
       <v-col :cols="3">
         <v-card class="mx-auto">
-          <v-card-title class="query-results-title">{{$t('queryBuilder.previousQueries')}}</v-card-title>
+          <v-card-title class="query-results-title">{{$t('query.previous')}}</v-card-title>
           <v-list style="max-height: 400px" class="overflow-y-auto">
             <v-list-item
               v-if="previousResults.length === 0">
               <v-list-item-content>
-                <v-list-item-subtitle>No queries to display</v-list-item-subtitle>
+                <v-list-item-subtitle>{{$t('query.noneToDisplay')}}</v-list-item-subtitle>
               </v-list-item-content>
             </v-list-item>
             <v-list-item
@@ -19,7 +19,7 @@
               two-line>
               <v-list-item-content>
                 <v-list-item-title>{{$utils.formatISODate(result.ran.toISOString())}}</v-list-item-title>
-                <v-list-item-subtitle>{{result.nodes.length}} {{$t('queryBuilder.results')}}</v-list-item-subtitle>
+                <v-list-item-subtitle>{{result.nodes.length}} {{$t('query.results')}}</v-list-item-subtitle>
               </v-list-item-content>
             </v-list-item>
           </v-list>
@@ -29,11 +29,11 @@
         <error-banner :message="errorMessage"></error-banner>
         <v-card>
           <v-tabs v-model="activeTab" background-color="lightgray" class="data-query-tabs">
-            <v-tab @click="activeTab = 'queryBuilder'">{{$t('queryBuilder.queryBuilder')}}</v-tab>
-            <v-tab @click="setRawEditor">{{$t('queryBuilder.rawEditor')}}</v-tab>
+            <v-tab @click="activeTab = 'queryBuilder'">{{$t('query.builder')}}</v-tab>
+            <v-tab @click="setRawEditor">{{$t('query.rawEditor')}}</v-tab>
             <v-spacer />
-            <v-btn v-if="!results" color="warning" style="margin: 6px;" @click="resetQuery">{{$t('queryBuilder.resetQuery')}}</v-btn>
-            <v-btn v-if="results" color="success" style="margin: 6px;" @click="resetQuery">{{$t('queryBuilder.newQuery')}}</v-btn>
+            <v-btn v-if="!results" color="warning" style="margin: 6px;" @click="resetQuery">{{$t('query.reset')}}</v-btn>
+            <v-btn v-if="results" color="primary" style="margin: 6px;" @click="resetQuery">{{$t('query.new')}}</v-btn>
           </v-tabs>
           <v-tabs-items v-model="activeTab">
             <v-tab-item class="mx-5">
@@ -42,13 +42,13 @@
                   <v-card style="margin-top: 10px" class="pa-4">
                     <v-checkbox
                       v-model="rawMetadataEnabled"
-                      :label="$t('queryBuilder.includeRawMetadata')"
+                      :label="$t('query.includeRaw')"
                       :disabled="results !== null"
                     ></v-checkbox>
                   </v-card>
                   <v-card v-for="part in queryParts" :key="part.id" style="margin-top: 10px">
                     <v-card-title>
-                      {{$t(`queryBuilder.${part.componentName}`)}}
+                      {{$t(`query.${part.componentName}`)}}
                       <v-flex class="text-right">
                         <v-icon v-if="!results" class="justify-right" @click="removeQueryPart(part)">mdi-window-close</v-icon>
                       </v-flex>
@@ -62,7 +62,7 @@
                     />
                   </v-card>
                   <v-card v-if="!results" style="margin-top: 10px" class="pa-4">
-                    <p class="mb-2">{{$t('queryBuilder.clickToAdd')}}</p>
+                    <p class="mb-2">{{$t('query.clickToAdd')}}</p>
                     <add-dialog @selected="addQueryPart"></add-dialog>
                   </v-card>
                 </v-col>
@@ -74,7 +74,7 @@
                     <v-combobox
                       :items="limitOptions"
                       v-model="limit"
-                      :label="$t('queryBuilder.recordLimit')"
+                      :label="$t('general.limit')"
                       @change="setLimit"
                       style="max-width: 90px;"
                     >
@@ -83,11 +83,11 @@
                   <div>
                     <v-btn v-if="!results" @click="submitQuery" style="margin-top: 15px">
                       <v-progress-circular indeterminate v-if="loading"></v-progress-circular>
-                      <span v-if="!loading">{{$t('queryBuilder.runQuery')}}</span>
+                      <span v-if="!loading">{{$t('query.run')}}</span>
                     </v-btn>
                     <v-btn v-if="results" @click="submitQuery" style="margin-top: 15px">
                       <v-progress-circular indeterminate v-if="loading"></v-progress-circular>
-                      <span v-if="!loading">{{$t('queryBuilder.resubmitQuery')}}</span>
+                      <span v-if="!loading">{{$t('query.rerun')}}</span>
                     </v-btn>
                   </div>
                 </v-col>
@@ -109,48 +109,45 @@
                         </template>
                         <v-card max-width="364" style="justify-content: left;">
                           <v-card-text>
-                          Need help writing your query? Consult the detailed documentation <a :href="helpLink()">here</a>.<br/><br/>
+                          {{$t('help.queryDocs')}} <a :href="helpLink()">{{$t('general.here')}}</a>.<br/><br/>
 
                           <v-divider></v-divider><br/>
 
-                          To get started, try selecting one of the sample query templates below.
-                          Be sure to remove any comments and replace text in CAPS before running the query!
+                          {{$t('help.querySample')}}<br/>
+                          {{$t('help.queryComments')}}
 
                           <br/>
                           <v-select
                             v-model="selectedSampleQuery"
                             :items="sampleQueries"
                             @input="updateSelectedQuery"
-                            label="Sample Query"
-                            hint="Select a sample query to load a template"
+                            :label="$t('query.sample')"
+                            :hint="$t('query.sampleSelect')"
                             persistent-hint
                           >
                           </v-select>
 
                           <br/>
 
-                          While writing your query, hit "Ctrl-Space" to bring up the autocompletion menu.
-                          This menu provides some of the available schema from which to query. <br/><br/>
+                          {{$t('help.queryAutocomplete')}} <br/><br/>
 
-                          In the results window you can hold down the "Alt" key and click on an the arrow for
-                          an object or array to fully expand the contents.
+                          {{$t('help.queryAlt')}}
                           </v-card-text>
-
                         </v-card>
                       </v-menu>
 
                     </template>
-                    <span>Need Help?</span>
+                    <span>{{$t('general.needHelp')}}</span>
                   </v-tooltip>
                 </v-col>
                 <v-spacer />
                 <v-checkbox class="mr-5"
                   v-model="rawMetadataEnabled"
-                  :label="$t('queryBuilder.includeRaw')"
+                  :label="$t('query.includeRaw')"
                 ></v-checkbox>
                 <v-btn @click="submitRawQuery" style="margin-top: 15px; margin-right: 15px">
                   <v-progress-circular indeterminate v-if="loading"></v-progress-circular>
-                  <span v-if="!loading">{{$t('queryBuilder.runQuery')}}</span>
+                  <span v-if="!loading">{{$t('query.run')}}</span>
                 </v-btn>
               </v-row>
 
@@ -171,7 +168,7 @@
                       :expand-depth="7"
                       style="overflow-y: auto; overflow-x: auto"
                     />
-                    <p v-else style="padding: 10px">Results will be displayed here</p>
+                    <p v-else style="padding: 10px">{{$t('query.resultsDisplayedHere')}}</p>
                   </v-card>
                 </v-col>
               </v-row>
@@ -235,7 +232,7 @@ export default class QueryBuilder extends Vue {
 // hardcoded, format and indentation matters
 
   metatypeSampleQuery =
-`{
+`{ # note that classes are referred to as metatypes in GraphQL
   metatypes {
     YOUR_METATYPE_HERE # optionally add desired filters within ()
     {
@@ -396,11 +393,11 @@ relationshipSampleQuery =
 
   selectedSampleQuery = {text: 'Metatype Query', value: this.metatypeSampleQuery}
   sampleQueries = [
-    {text: 'Metatype Query', value: this.metatypeSampleQuery},
-    {text: 'Relationship Query', value: this.relationshipSampleQuery},
-    {text: 'Introspection Query', value: this.introspectiveQuery},
-    {text: 'Graph Query', value: this.graphSampleQuery},
-    {text: 'Simple Graph Query', value: this.simpleGraphQuery},
+    {text: this.$t('query.sampleClass'), value: this.metatypeSampleQuery},
+    {text: this.$t('query.sampleRelationship'), value: this.relationshipSampleQuery},
+    {text: this.$t('query.sampleIntrospect'), value: this.introspectiveQuery},
+    {text: this.$t('query.sampleGraph'), value: this.graphSampleQuery},
+    {text: this.$t('query.sampleGraphSimple'), value: this.simpleGraphQuery},
   ]
 
   mounted() {
@@ -474,7 +471,7 @@ relationshipSampleQuery =
 
       // ensure all comments are removed
       if (this.codeMirror?.getValue().indexOf('#') !== -1) {
-        this.errorMessage = 'Please remove all comments before submitting the query'
+        this.errorMessage = this.$t('warnings.graphqlComments') as string;
         return
       } else {
         // reset error message
@@ -495,7 +492,7 @@ relationshipSampleQuery =
           this.rawMetadataEnabled = false
         })
         .catch((err: string) => {
-          this.errorMessage = 'There is a problem with the GraphQL query or server error. Please see the result tab.'
+          this.errorMessage = this.$t('errors.graphQL') as string;
 
           this.rawQueryResult = {'error': err}
           this.loading = false
@@ -505,7 +502,7 @@ relationshipSampleQuery =
   }
 
   helpLink() {
-    return 'https://github.com/idaholab/Deep-Lynx/wiki/Querying-Data-With-GraphQL'
+    return this.$t('links.graphQL');
   }
 
   addQueryPart(componentName: string) {
@@ -533,7 +530,7 @@ relationshipSampleQuery =
 
     // reset raw query if applicable
     if (this.codeMirror !== null) {
-      this.selectedSampleQuery = {text: 'Metatype Query', value: this.metatypeSampleQuery}
+      this.selectedSampleQuery = {text: this.$t('query.sampleClass') as string, value: this.metatypeSampleQuery}
       this.updateSelectedQuery(this.metatypeSampleQuery)
       this.rawQueryResult = {}
     }

@@ -15,12 +15,12 @@
           v-on="on"
           @click="isDelete = true; initiate()"
       >mdi-delete</v-icon>
-      <v-btn v-if="displayIcon ==='none'" color="primary" dark class="mt-2" v-on="on">{{$t("deleteDataSource.deleteDataSource")}}</v-btn>
+      <v-btn v-if="displayIcon ==='none'" color="primary" dark class="mt-2" v-on="on">{{$t("dataSources.delete")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2" v-if="isDelete">
       <v-card-title>
-        <span class="headline text-h3">{{$t('deleteDataSource.deleteTitle')}}</span>
+        <span class="headline text-h3">{{$t('dataSources.deletePermanently')}}</span>
       </v-card-title>   
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
@@ -29,18 +29,18 @@
             <v-progress-linear v-if="importsLoading" indeterminate></v-progress-linear>
             <div v-else>
               <v-alert type="warning">
-                {{$t('deleteDataSource.deleteWarning')}}
+                {{$t('warnings.deleteSource')}}
               </v-alert>
 
               <v-alert type="error" v-if="importCount > 0">
-                {{$t('deleteDataSource.forceDeleteWarning')}}
+                {{$t('warnings.forceDeleteSource')}}
               </v-alert>
 
               <v-alert type="error" v-if="importCount > 0">
-                {{$t('deleteDataSource.withDataWarning')}}
+                {{$t('warnings.dataDeleteSource')}}
                 <v-checkbox
                     v-model="withData"
-                    :label="$t('deleteDataSource.withData')"
+                    :label="$t('dataSources.deleteWithData')"
                 ></v-checkbox>
               </v-alert>
             </div>
@@ -50,30 +50,30 @@
 
       <v-card-actions v-if="!importsLoading">
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="reset()">{{$t("deleteDataSource.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" text @click="archiveSource()" v-if="!dataSource.archived">
+        <v-btn color="primary" text @click="reset()">{{$t("general.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="archiveSource()" v-if="!dataSource.archived">
           <v-progress-circular v-if="archiveLoading" indeterminate></v-progress-circular>
-          {{$t("deleteDataSource.archive")}}
+          {{$t("general.archive")}}
         </v-btn>
-        <v-btn color="red darken-1" text :disabled="countDown > 0" @click="deleteSource()">
+        <v-btn color="error" text :disabled="countDown > 0" @click="deleteSource()">
           <v-progress-circular v-if="deleteLoading" indeterminate></v-progress-circular>
-          <span v-if="importCount <= 0">{{$t("deleteDataSource.delete")}}</span>
-          <span v-else>{{$t("deleteDataSource.forceDelete")}}</span>
-          <span v-if="countDown > 0">{{$t('deleteDataSource.in')}} {{countDown}}</span>
+          <span v-if="importCount <= 0">{{$t("general.delete")}}</span>
+          <span v-else>{{$t("general.forceDelete")}}</span>
+          <span v-if="countDown > 0">{{$t('operators.in')}} {{countDown}}</span>
         </v-btn>
       </v-card-actions>
     </v-card>
 
     <v-card class="pt-1 pb-3 px-2" v-if="isArchive">
       <v-card-title>
-        <span class="headline text-h3">{{$t('deleteDataSource.archiveTitle')}}</span>
+        <span class="headline text-h3">{{$t('dataSources.archive')}}</span>
       </v-card-title>   
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
         <v-row>
           <v-col :cols="12">
             <v-alert type="warning">
-              {{$t('deleteDataSource.archiveWarning')}}
+              {{$t('warnings.archiveSource')}}
             </v-alert>
           </v-col>
         </v-row>
@@ -81,8 +81,8 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="reset()">{{$t("deleteDataSource.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" text @click="archiveSource()">{{$t("deleteDataSource.archive")}}</v-btn>
+        <v-btn color="primary" text @click="reset()">{{$t("general.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="archiveSource()">{{$t("general.archive")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

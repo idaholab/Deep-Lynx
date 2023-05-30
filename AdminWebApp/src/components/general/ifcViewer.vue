@@ -8,40 +8,40 @@
           class="mr-2"
           v-on="on"
       >mdi-eye</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mb-2" v-on="on">{{$t("ifcViewer.IfcViewer")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mb-2" v-on="on">{{$t("modelExplorer.viewIfc")}}</v-btn>
     </template>
     <v-card>
       <v-container>
         <v-row>
           <v-alert v-if="!loaded" type="warning">
-            {{$t('ifcViewer.loadWarning')}}
+            {{$t('modelExplorer.ifcWarn')}}
           </v-alert>
 
           <v-progress-linear indeterminate v-if="loading"></v-progress-linear>
           <v-col :cols="7">
-            <h3 v-if="loaded">{{$t('ifcViewer.Model')}}</h3>
+            <h3 v-if="loaded">{{$t('modelExplorer.model')}}</h3>
             <canvas v-show="!loading" :id="file.id" style="position: sticky; top: 0px;"></canvas>
           </v-col>
           <v-col :cols="5">
-            <h3 v-if="loaded">{{$t('ifcViewer.Properties')}}</h3>
+            <h3 v-if="loaded">{{$t('properties.properties')}}</h3>
 
             <v-card v-if="loaded && selected">
               <div style="margin-left: 5px">
-                <h4>{{$t('ifcViewer.name')}}</h4>
+                <h4>{{$t('general.name')}}</h4>
                 <p>{{selected.Name.value}}</p>
-                <h4>{{$t('ifcViewer.description')}}</h4>
+                <h4>{{$t('general.description')}}</h4>
                 <p v-if="selected.Description">{{selected.Description.value}}</p>
               </div>
-              <h4 style="margin-left: 5px">{{$t('ifcViewer.rawProperties')}}</h4>
+              <h4 style="margin-left: 5px">{{$t('properties.raw')}}</h4>
               <json-viewer v-if="selected" :max-depth="0" :value="selected" style="overflow-y: scroll"></json-viewer>
             </v-card>
           </v-col>
         </v-row>
       </v-container>
       <v-card-actions>
-        <v-btn v-if="!loaded" @click="load()">{{$t('ifcViewer.loadModel')}}</v-btn>
-        <v-btn v-if="loaded" @click="load()">{{$t('ifcViewer.resetModel')}}</v-btn>
-        <v-btn v-if="loaded" @click="dialog = false">{{$t('ifcViewer.close')}}</v-btn>
+        <v-btn v-if="!loaded" @click="load()">{{$t('modelExplorer.loadIfc')}}</v-btn>
+        <v-btn v-if="loaded" @click="load()">{{$t('modelExplorer.resetIfc')}}</v-btn>
+        <v-btn v-if="loaded" @click="dialog = false">{{$t('general.close')}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -193,7 +193,7 @@ export default class IfcViewer extends Vue {
     // the web assembly package - must be served locally
     ifcLoader.ifcManager.setWasmPath("../files/");
 
-    // without the authorization header you will fail when attempting to load the file from Deep Lynx
+    // without the authorization header you will fail when attempting to load the file from DeepLynx
     ifcLoader.setRequestHeader({
       'Authorization': `Bearer ${RetrieveJWT()}`,
     })

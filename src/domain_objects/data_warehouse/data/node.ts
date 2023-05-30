@@ -5,7 +5,6 @@ import Metatype, {MetatypeID} from '../ontology/metatype';
 import Container from '../ontology/container';
 import Edge from './edge';
 import {Conversion} from '../etl/type_transformation';
-import TimeseriesEntry from './timeseries';
 
 export class NodeMetadata {
     @IsOptional()
@@ -27,7 +26,7 @@ export class NodeMetadata {
 }
 
 /*
-    Node represents a node record in the Deep Lynx database and the various
+    Node represents a node record in the DeepLynx database and the various
     validations required for said record to be considered valid.
  */
 export default class Node extends BaseDomainClass {
@@ -168,7 +167,7 @@ export class NodeIDPayload extends NakedDomainClass {
 }
 
 // type guard for differentiating an array of nodes from either array of nodes or edges
-export function IsNodes(set: Node[] | Edge[] | TimeseriesEntry[]): set is Node[] {
+export function IsNodes(set: Node[] | Edge[]): set is Node[] {
     // technically an empty array could be a set of NodeT
     if (Array.isArray(set) && set.length === 0) return true;
 
