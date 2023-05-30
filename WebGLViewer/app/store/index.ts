@@ -2,6 +2,14 @@ import { createSlice, configureStore } from '@reduxjs/toolkit';
 import { webGLReducer } from './slices/webGLSlice';
 
 const initialState = {
+  // Refactor Begin
+  query: false,
+  host: '',
+  container: '',
+  token: '',
+  metadata: '',
+  tagRefactor: '',
+  // Refactor End
   openDrawerLeft: false,
   openDrawerLeftWidth: 64,
   openDrawerRight: false,
@@ -24,6 +32,32 @@ const appStateSlice = createSlice({
   name: 'appState',
   initialState,
   reducers: {
+    // Refactor Reducers Begin
+    setQuery: (state, action) => {
+      const store = state;
+      store.query = action.payload;
+    },
+    setHost: (state, action) => {
+      const store = state;
+      store.host = action.payload;
+    },
+    setContainer: (state, action) => {
+      const store = state;
+      store.container = action.payload;
+    },
+    setToken: (state, action) => {
+      const store = state;
+      store.token = action.payload;
+    },
+    setMetadata: (state, action) => {
+      const store = state;
+      store.metadata = action.payload;
+    },
+    setTagRefactor: (state, action) => {
+      const store = state;
+      store.tagRefactor = action.payload;
+    },
+    // Refactor Reducers End
     // App functions
     toggleDrawerLeft: (state) => {
       const store = state;

@@ -3,7 +3,7 @@ const wasm_ext = /^[^.]+.wasm$/;
 const framework_ext = /^[^.]+.framework.js$/;
 const loader_ext = /^[^.]+.loader.js$/;
 
-function regex(arr) {
+export default function ParseWebGL(arr) {
   // This function takes an array of files, and uses regex to organize them by file extension, returning an object:
   //   {
   //     data: { id: '1', container_id: '1', file_name: 'WebGL.data', tag_name: 'tag' },
@@ -56,5 +56,3 @@ function regex(arr) {
 
   return results;
 }
-
-export default regex;
