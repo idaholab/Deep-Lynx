@@ -1,16 +1,16 @@
 <template>
   <div>
-    <v-tabs grow>
-      <v-tab @click="activeTab = 'datasources'; refreshDataSources()">
+    <v-tabs grow v-model="activeTab">
+      <v-tab @click="activeTab = 0; refreshDataSources()" ref="datasources">
         {{ $t('dataSources.dataSources') }}
       </v-tab>
-      <v-tab @click="activeTab = 'timeseriesDatasources'; refreshTimeseriesDataSources()">
+      <v-tab @click="activeTab = 1; refreshTimeseriesDataSources()" ref="timeseriesDatasources">
         {{ $t('timeseries.timeseries') }}
       </v-tab>
     </v-tabs>
     <error-banner :message="errorMessage"></error-banner>
     <v-data-table
-        v-if="activeTab ==='datasources'"
+        v-if="activeTab === 0"
         :headers="headers()"
         :items="dataSources"
         :loading="dataSourcesLoading"
@@ -20,8 +20,8 @@
         <v-toolbar flat color="white">
           <v-toolbar-title>{{$t('dataSources.description')}}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <create-data-source-dialog 
-            :containerID="containerID" 
+          <create-data-source-dialog
+            :containerID="containerID"
             @dataSourceCreated="refreshDataSources(); refreshTimeseriesDataSources()"
           />
         </v-toolbar>
@@ -90,7 +90,7 @@
     </v-data-table>
 
     <v-data-table
-        v-if="activeTab ==='timeseriesDatasources'"
+        v-if="activeTab === 1"
         :headers="headers()"
         :items="timeseriesDataSources"
         class="elevation-1"
@@ -99,11 +99,11 @@
         <v-toolbar flat color="white">
           <v-toolbar-title>{{$t('dataSources.description')}}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <create-data-source-dialog 
-            :timeseries="true" 
-            :containerID="containerID" 
-            @dataSourceCreated="refreshDataSources(); refreshTimeseriesDataSources()" 
-            @timeseriesSourceCreated="activeTab === 'timeseriesDatasources'"
+          <create-data-source-dialog
+            :timeseries="true"
+            :containerID="containerID"
+            @dataSourceCreated="refreshDataSources(); refreshTimeseriesDataSources()"
+            @timeseriesSourceCreated="activeTab === 1"
           />
         </v-toolbar>
       </template>
@@ -144,12 +144,13 @@
         />
       </template>
       <template v-slot:[`item.actions`]="{ item }">
-        <timeseries-viewer-dialog v-if="activeTab === 'timeseriesDatasources'"
+        <timeseries-viewer-dialog v-if="activeTab === 1"
           :containerID="containerID"
           :dataSourceID="item.id"
           :icon="true"
           :key="timeseriesKey"
           @timeseriesDialogClose="incrementKey"
+          :ref="`${item.id}viewer`"
         ></timeseries-viewer-dialog>
         <edit-data-source-dialog
             :containerID="containerID"
@@ -197,6 +198,15 @@ export default class DataSources extends Vue {
   @Prop({required: true})
   readonly containerID!: string;
 
+  @Prop({required: false, default: ""})
+  readonly argument!: string;
+
+  activeTab = 0
+  tabs = [
+    { id: 0, name: 'datasources' },
+    { id: 1, name: 'timeseriesDatasources' },
+  ]
+
   select = ""
   dataSourcesLoading = false
   timeseriesLoading = false
@@ -204,7 +214,6 @@ export default class DataSources extends Vue {
   timeseriesDataSources: DataSourceT[] = []
   errorMessage = ""
   copy = mdiFileDocumentMultiple
-  activeTab = 'datasources'
   timeseriesKey = 0
 
   headers() {
@@ -217,7 +226,7 @@ export default class DataSources extends Vue {
       { text: this.$t('general.actions'), value: 'actions', sortable: false }
     ]
 
-    if (this.activeTab === 'timeseriesDatasources') {
+    if (this.activeTab === 1) {
       headers.splice(4, 0, {text: this.$t('timeseries.fastloadEnabled'), value: 'fastload'})
     }
 
@@ -226,7 +235,18 @@ export default class DataSources extends Vue {
 
   mounted() {
     this.refreshDataSources()
-    this.refreshTimeseriesDataSources()
+    this.refreshTimeseriesDataSources(true)
+    if (this.argument.length > 0) {
+      this.activeTab = 1;
+    }
+  }
+
+  loadViewer() {
+    // checks for the optional datasource ID argument and loads the timeseries viewer if found
+    if (this.argument.length > 0) {
+      const viewer = this.$refs[`${this.argument}viewer`];
+      (viewer as TimeseriesViewerDialog).dialog = true;
+    }
   }
 
   refreshDataSources() {
@@ -239,14 +259,17 @@ export default class DataSources extends Vue {
         .finally(() => this.dataSourcesLoading = false)
   }
 
-  refreshTimeseriesDataSources() {
+  refreshTimeseriesDataSources(loadViewer = false) {
     this.timeseriesLoading = true
     this.$client.listDataSources(this.containerID, true, true)
         .then(dataSources => {
           this.timeseriesDataSources= dataSources
         })
         .catch(e => this.errorMessage = e)
-        .finally(() => this.timeseriesLoading = false)
+        .finally(() => {
+          this.timeseriesLoading = false
+          if (loadViewer) this.loadViewer()
+        })
   }
 
   toggleDataSourceActive(dataSource: DataSourceT) {
@@ -267,6 +290,7 @@ export default class DataSources extends Vue {
 
   incrementKey() {
     this.timeseriesKey += 1
+    this.$router.replace(`/containers/${this.containerID}/data-sources`)
   }
 
   copyID(id: string) {

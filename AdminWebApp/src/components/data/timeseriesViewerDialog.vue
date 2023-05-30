@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="dialog" fullscreen hide-overlay transition="dialog-bottom-transition" persistent no-click-animation ref="dialog">
+    <v-dialog v-model="dialog" fullscreen hide-overlay transition="dialog-bottom-transition" persistent no-click-animation>
         <template v-slot:activator="{on}">
             <v-icon v-if="icon" small class="mr-2" v-on="on">mdi-eye</v-icon>
         </template>
@@ -402,6 +402,8 @@ export default class TimeseriesViewerDialog extends Vue {
     }
 
     setDatePickers() {
+        this.$router.replace(`/containers/${this.containerID}/data-sources/${this.dataSourceID}`)
+
         const startPickr = flatpickr('#startDate', {
             altInput: true,
             altFormat: 'F j, y h:i:S K',

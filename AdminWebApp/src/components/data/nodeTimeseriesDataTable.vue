@@ -48,6 +48,7 @@ export default class NodeTimeseriesDataTable extends Vue {
   }
 
   incrementKey() {
+    this.$router.replace(`/containers/${this.containerID}/data-query`)
     this.key += 1
   }
 

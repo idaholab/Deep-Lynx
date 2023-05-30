@@ -214,7 +214,7 @@ export default class DataSourceRepository extends Repository implements Reposito
             savedRecord = created.value;
         }
 
-        const newDataSource = this.#factory.fromDataSourceRecord(savedRecord);
+        const newDataSource = await this.#factory.fromDataSourceRecord(savedRecord);
         if (!newDataSource) return Promise.resolve(Result.Failure(`unable to instantiate new data source from saved data source record`));
 
         Object.assign(t, newDataSource);

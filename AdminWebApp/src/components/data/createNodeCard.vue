@@ -55,7 +55,7 @@
                           ></v-select>
                         </div>
                         <div v-if="item['data_type'] !== 'enumeration' && item['data_type'] !== 'boolean'">
-                          <v-text-field 
+                          <v-text-field
                               v-if="item['data_type'] === 'number'||item['data_type'] === 'float'"
                               v-model="item['default_value']"
                               type="number"
@@ -97,16 +97,12 @@ export default class CreateNodeCard extends Vue {
   @Prop({required: true})
   dataSourceID!: string;
 
-  @Prop({required: false, default: false})
-  dialog!: boolean;
-
   errorMessage = ""
   metatypesLoading = false
   valid = false
   optional = false
   originSearch = ""
   metatype: any = {}
-  propertyValue = ""
   booleanOptions = [true, false]
 
   property = {}
@@ -161,7 +157,7 @@ export default class CreateNodeCard extends Vue {
   setProperties() {
     const property: { [key: string]: any } = {}
     this.metatype.keys.forEach( (key: MetatypeKeyT) => {
-      
+
       if (String(key.default_value).toLowerCase() === "true") {
         key.default_value = true
       } else if (String(key.default_value).toLowerCase() === "false" ) {
