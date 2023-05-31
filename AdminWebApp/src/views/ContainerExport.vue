@@ -17,7 +17,7 @@
                   {{$t('ontology.ontology')}} <p class="text-caption" style="margin-left: 5px"> {{$t('general.beta')}}</p>
                 </template>
 
-                <template slot="prepend"><info-tooltip :message="$t('help.exportOntology')"></info-tooltip> </template>
+                <template v-slot:prepend><info-tooltip :message="$t('help.exportOntology')"></info-tooltip> </template>
               </v-checkbox>
 
             <v-checkbox v-model="exportDataSources">
@@ -25,13 +25,15 @@
                   {{$t('dataSources.dataSources')}} <p class="text-caption" style="margin-left: 5px"> {{$t('general.beta')}}</p>
                 </template>
 
-                <template slot="prepend"><info-tooltip :message="$t('help.exportDataSource')"></info-tooltip> </template>
+                <template v-slot:prepend><info-tooltip :message="$t('help.exportDataSource')"></info-tooltip> </template>
               </v-checkbox>
 
-            <v-checkbox v-model="exportTypeMappings">
+            <v-checkbox v-model="exportTypeMappings" :disabled="!exportDataSources">
                 <template v-slot:label>
-                  {{$t('typeMappings.transformations')}} <p class="text-caption" style="margin-left: 5px"> {{$t('general.comingSoon')}}</p>
+                  {{$t('typeMappings.transformations')}} <p class="text-caption" style="margin-left: 5px"> {{$t('general.beta')}}</p>
                 </template>
+
+              <template v-slot:prepend><info-tooltip :message="$t('help.exportTypeMapping')"></info-tooltip> </template>
               </v-checkbox>
           </v-col>
         </v-row>
@@ -73,6 +75,11 @@ export default class ContainerExport extends Vue {
   @Watch('exportTypeMappings')
   updateImportSelected() {
     this.exportSelected = this.exportOntology || this.exportDataSources || this.exportTypeMappings;
+  }
+
+  @Watch('exportDataSources')
+  updateDataSourcesExport() {
+    if (this.exportDataSources === false) this.exportTypeMappings = false;
   }
 
   beforeMount() {

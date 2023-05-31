@@ -10,6 +10,8 @@ import FileRepository from '../../../../data_access_layer/repositories/data_ware
 import DataSourceRepository from '../../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import {DataSource} from '../../../../interfaces_and_impl/data_warehouse/import/data_source';
 import pAll from 'p-all';
+import TypeMappingRepository from '../../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository';
+import TypeMapping from '../../../../domain_objects/data_warehouse/etl/type_mapping';
 
 const Busboy = require('busboy');
 const Buffer = require('buffer').Buffer;
@@ -324,6 +326,9 @@ export default class ContainerRoutes {
         }
         if (String(req.query.exportTypeMappings).toLowerCase() === 'true') {
             // Implement in future update
+            const typeRepo = new TypeMappingRepository().where().containerID('eq', req.container?.id);
+            const mappings = await typeRepo.list(true);
+            containerExport.type_mappings = mappings.value;
         }
 
         repository
@@ -383,26 +388,81 @@ export default class ContainerRoutes {
 
         busboy.on('finish', async () => {
             // check query params supplied and attempt to import
-            const importPromises: (() => Promise<Result<string>>)[] = [];
-            const importReturn: Result<string> = new Result('', false);
+            let importErrors = '';
+            let ontologyResult = '';
+            let dataSourceMap: Map<string, string> | null = null;
+            const typeMappingMap: Map<string, string> = new Map();
+
+            const jsonImport = JSON.parse(fileBuffer.toString('utf8').trim());
 
             if (String(req.query.importOntology).toLowerCase() === 'true') {
-                importPromises.push(() => repository.importOntology(req.container!.id!, req.currentUser!, fileBuffer));
+                const ontologyImport = await repository.importOntology(req.container!.id!, req.currentUser!, jsonImport);
+                if (ontologyImport.isError) {
+                    importErrors += ontologyImport.error;
+                } else {
+                    ontologyResult = ontologyImport.value;
+                }
             }
             if (String(req.query.importDataSources).toLowerCase() === 'true') {
                 const dsRepository = new DataSourceRepository();
-                // importPromises.push(() => dsRepository.importDataSources(req.container!.id!, req.currentUser!, fileBuffer));
+                const dataSourceImport = await dsRepository.importDataSources(req.container!.id!, req.currentUser!, jsonImport);
+                if (dataSourceImport.isError) {
+                    importErrors += dataSourceImport.error;
+                } else {
+                    dataSourceMap = dataSourceImport.value;
+                }
             }
             if (String(req.query.importTypeMappings).toLowerCase() === 'true') {
-                // Implement in future update
+                // dependent on successful data source import
+                if (dataSourceMap === null) {
+                    importErrors +=
+                        ' Tye mapping import is dependent on a successful data source import. ' +
+                        'Fix data source import errors to enable type mapping import.';
+                } else {
+                    console.log(dataSourceMap);
+                    if (!('type_mappings' in jsonImport)) {
+                        importErrors += 'Container export file does not contain all necessary sections for a type mapping import.';
+                    }
+                    const mappings = jsonImport.type_mappings as TypeMapping[];
+                    const mappingRepo = new TypeMappingRepository();
+
+                    const importedMappings: Promise<Result<TypeMapping>[]>[] = [];
+
+                    // for each data source, grab associated type mappings and attempt import
+                    for (const [originalID, newID] of dataSourceMap.entries()) {
+                        const sourceMappings = mappings.filter((m) => m.data_source_id === originalID);
+                        if (sourceMappings.length < 1) continue;
+
+                        importedMappings.push(mappingRepo.importToDataSource(newID, req.currentUser!, false, ...sourceMappings));
+                    }
+
+                    const mappingImport = await Promise.all(importedMappings);
+
+                    for (const mappingResult of mappingImport) {
+                        for (const mapping of mappingResult) {
+                            if (mapping.isError) {
+                                importErrors += mapping.error;
+                            } else {
+                                typeMappingMap.set(mapping.value.id!, 'success');
+                            }
+                        }
+                    }
+                }
             }
 
-            const importResults: Result<string>[] = await pAll(importPromises, {concurrency: 2});
-            importResults.forEach((result: Result<string>) => {
-                importReturn.value = importReturn.value.concat(result.value, ' ');
-            });
+            const resultMessage = () => {
+                let result = 'Container Import Result:';
+                if (ontologyResult.length > 0) result += '\n' + ontologyResult;
+                if (dataSourceMap) result += `\nData Sources imported: ${dataSourceMap.size}`;
+                if (typeMappingMap) result += `\nType Mappings imported: ${typeMappingMap.size}`;
+                return result;
+            };
 
-            importReturn.asResponse(res);
+            if (importErrors.length > 0) {
+                Result.Failure(importErrors + resultMessage()).asResponse(res);
+            } else {
+                Result.Success(resultMessage()).asResponse(res);
+            }
 
             next();
         });

@@ -7,17 +7,18 @@
 
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
-        <success-banner :message="successMessage"></success-banner>
+        <success-banner :message="successMessage" :timeout="25000"></success-banner>
         <v-row>
           <v-col :cols="12">
             <p>{{$t('imports.containerDescription')}}</p>
+            <p>{{$t('imports.containerDescriptionCaution')}}</p>
 
               <v-checkbox v-model="importOntology">
                 <template v-slot:label>
                   {{$t('ontology.ontology')}} <p class="text-caption" style="margin-left: 5px"> {{$t('general.beta')}}</p>
                 </template>
 
-                <template slot="prepend"><info-tooltip :message="$t('help.importOntology')"></info-tooltip> </template>
+                <template v-slot:prepend><info-tooltip :message="$t('help.importOntology')"></info-tooltip> </template>
               </v-checkbox>
 
             <v-checkbox v-model="importDataSources">
@@ -25,13 +26,15 @@
                   {{$t('dataSources.dataSources')}} <p class="text-caption" style="margin-left: 5px"> {{$t('general.beta')}}</p>
                 </template>
 
-                <template slot="prepend"><info-tooltip :message="$t('help.importDataSource')"></info-tooltip> </template>
+                <template v-slot:prepend><info-tooltip :message="$t('help.importDataSource')"></info-tooltip> </template>
               </v-checkbox>
 
-            <v-checkbox v-model="importTypeMappings">
+            <v-checkbox v-model="importTypeMappings" :disabled="!importDataSources">
                 <template v-slot:label>
-                  {{$t('typeMappings.transformations')}} <p class="text-caption" style="margin-left: 5px"> {{$t('general.comingSoon')}}</p>
+                  {{$t('typeMappings.transformations')}} <p class="text-caption" style="margin-left: 5px"> {{$t('general.beta')}}</p>
                 </template>
+
+                <template v-slot:prepend><info-tooltip :message="$t('help.importTypeMapping')"></info-tooltip> </template>
               </v-checkbox>
 
           </v-col>
@@ -85,6 +88,11 @@ export default class ContainerImport extends Vue {
     this.importSelected = this.importOntology || this.importDataSources || this.importTypeMappings;
   }
 
+  @Watch('importDataSources')
+  updateDataSourcesExport() {
+    if (this.importDataSources === false) this.importTypeMappings = false;
+  }
+
   beforeMount() {
     this.container = this.$store.getters.activeContainer;
   }
@@ -126,7 +134,7 @@ export default class ContainerImport extends Vue {
             const error = JSON.parse(response.data.error).error;
             this.errorMessage = `${this.$t('imports.containerError')}. ${error}`;
           } else {
-            this.successMessage = response.data.value;
+            this.successMessage = response.data.value + '\nPlease note that any data sources or type mappings imported are set as inactive.';
           }
         })
         .catch((e: any) => {

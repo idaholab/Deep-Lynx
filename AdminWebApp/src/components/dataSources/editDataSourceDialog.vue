@@ -475,7 +475,7 @@
                     {{$t('dataSources.attachStaging')}}<p class="text-caption" style="margin-left: 5px"></p>
                   </template>
 
-                  <template slot="prepend"><info-tooltip :message="$t('help.attachStaging')"></info-tooltip></template>
+                  <template v-slot:prepend><info-tooltip :message="$t('help.attachStaging')"></info-tooltip></template>
                 </v-checkbox>
 
                 <small>{{$t('help.dataRetention')}}</small>

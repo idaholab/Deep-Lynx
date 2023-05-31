@@ -496,7 +496,7 @@
                 <!-- <template> -->
                 <v-card-text>
                   <p>{{$t('ontology.description')}}</p>
-                  <p><a :href="ontologyLink()">{{$t('ontology.loading')}}</a></p>
+                  <p><a :href="ontologyLink">{{$t('ontology.loading')}}</a></p>
                 </v-card-text>
               </template>
 

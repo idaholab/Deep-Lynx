@@ -222,8 +222,8 @@ export default class DataSourceRepository extends Repository implements Reposito
         return Promise.resolve(Result.Success(newDataSource));
     }
 
-    async importDataSources(containerID: string, user: User, fileBuffer: Buffer): Promise<Result<Map<string, string>>> {
-        const jsonImport = JSON.parse(fileBuffer.toString('utf8').trim());
+    async importDataSources(containerID: string, user: User, jsonImport: any): Promise<Result<Map<string, string>>> {
+        // declare the return object which will be a map of the incoming data source id and existing or new data source id
         const sourceIDMapping: Map<string, string> = new Map();
 
         if (!('data_sources' in jsonImport)) {
