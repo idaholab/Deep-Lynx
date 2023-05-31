@@ -91,9 +91,15 @@ function App() {
   const theme = useTheme();
 
   // Hooks 
-  useCallback(() => {
-    AttachDeepLynx();
+  const dispatch = useAppDispatch();
+
+  const init = useCallback(() => {
+    AttachDeepLynx().then(() =>{
+      dispatch(appStateActions.setQuery(true));
+    });
   }, []);
+
+  init();
 
   theme.typography.h1 = {
     fontFamily: [

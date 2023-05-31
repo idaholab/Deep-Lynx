@@ -31,9 +31,13 @@ type Props = {
 const NodeInfoTimeSeries: React.FC<Props> = ({
   data
 }) => {
+
+  // DeepLynx
+  const host: string = useAppSelector((state: any) => state.appState.host);
+  const token: string = useAppSelector((state: any) => state.appState.token);
+  const container: string = useAppSelector((state: any) => state.appState.container);
   const nodeId = data.id
 
-  const containerId = useAppSelector((state: any) => state.appState.containerId);
 
   const [tableRowData, setTableRowData] = useState(Array<{ [key: string]: any; }>);
 
@@ -52,11 +56,9 @@ const NodeInfoTimeSeries: React.FC<Props> = ({
 
   useEffect(() => {
     async function getTimeseriesData() {
-      const token = localStorage.getItem('user.token');
-      
       // First Axios API Call
       try {
-        const response = await axios.get(`${location.origin}/containers/${containerId}/graphs/nodes/${nodeId}/timeseries`,   
+        const response = await axios.get(`${host}/containers/${container}/graphs/nodes/${nodeId}/timeseries`,   
         {
           headers: {
             Authorization: `bearer ${token}`
@@ -71,7 +73,7 @@ const NodeInfoTimeSeries: React.FC<Props> = ({
 
         for (const property in firstResponse) {
           // Second Axios API Call
-          const secondResponse = await axios.get(`${location.origin}/containers/${containerId}/import/datasources/${firstResponse[property][1]}/timeseries/count`,
+          const secondResponse = await axios.get(`${host}/containers/${container}/import/datasources/${firstResponse[property][1]}/timeseries/count`,
           {
             headers: {
               Authorization: `bearer ${token}`
@@ -81,7 +83,7 @@ const NodeInfoTimeSeries: React.FC<Props> = ({
           count = secondResponse.data.value;
 
             // Third Axios API Call
-          const thirdResponse = await  axios.get(`${location.origin}/containers/${containerId}/import/datasources/${firstResponse[property][1]}/timeseries/range`,
+          const thirdResponse = await  axios.get(`${host}/containers/${container}/import/datasources/${firstResponse[property][1]}/timeseries/range`,
             {
               headers: {
                 Authorization: `bearer ${token}`

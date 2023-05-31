@@ -9,6 +9,7 @@ const initialState = {
   token: '',
   metadata: '',
   tagRefactor: '',
+  tagId: null,
   // Refactor End
   openDrawerLeft: false,
   openDrawerLeftWidth: 64,
@@ -25,7 +26,6 @@ const initialState = {
   unityNodes: [],
   deepLynxNodes: [],
   tag: [],
-  tagId: null,
 };
 
 const appStateSlice = createSlice({
@@ -56,6 +56,10 @@ const appStateSlice = createSlice({
     setTagRefactor: (state, action) => {
       const store = state;
       store.tagRefactor = action.payload;
+    },
+    setTagId: (state, action) => {
+      const store = state;
+      store.tagId = action.payload;
     },
     // Refactor Reducers End
     // App functions
@@ -110,10 +114,6 @@ const appStateSlice = createSlice({
       const store = state;
       store.tag = action.payload;
     },
-    setTagId: (state, action) => {
-      const store = state;
-      store.tagId = action.payload;
-    },
 
     // DeepLynx data
     setContainerId: (state, action) => {
@@ -129,20 +129,20 @@ const appStateSlice = createSlice({
     setUnityNodes: (state, action) => {
       const store = state;
       store.unityNodes = action.payload;
-    }
+    },
   },
 });
 
 export const store = configureStore({
   reducer: {
     appState: appStateSlice.reducer,
-    webGL: webGLReducer
+    webGL: webGLReducer,
   },
 });
 
 export const appStateActions = appStateSlice.actions;
 
 // Infer the `RootState` and `AppDispatch` types from the store itself
-export type RootState = ReturnType<typeof store.getState>
+export type RootState = ReturnType<typeof store.getState>;
 // Inferred type: {posts: PostsState, comments: CommentsState, users: UsersState}
-export type AppDispatch = typeof store.dispatch
+export type AppDispatch = typeof store.dispatch;

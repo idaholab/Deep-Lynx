@@ -82,40 +82,24 @@ const DrawerLeft: React.FC<Props> = ({}) => {
   // Store
   const dispatch = useAppDispatch();
 
-  const [host, setHost] = useState<string>();
-  const [token, setToken] = useState<string>();
-  const [container, setContainer] = useState<string>();
-  const [query, setQuery] = useState<Boolean>(false);
+  // DeepLynx
+  const host: string = useAppSelector((state: any) => state.appState.host);
+  const token: string = useAppSelector((state: any) => state.appState.token);
+  const metadata: string = useAppSelector((state: any) => state.appState.metadata);
+  const container: string = useAppSelector((state: any) => state.appState.container);
+  const query: boolean = useAppSelector((state: any) => state.appState.query);
+  const tagId: string = useAppSelector((state: any) => state.appState.tagId);
 
   const [selected, setSelected] = useState('nodeList');
   const [searchQuery, setSearchQuery] = useState("");
   const [nodes, setNodes] = useState(Array<{ [key: string]: any; }>);
   const [filteredData, setFilteredData] = useState(); 
 
-  // Tag
-  type tag_id = number;
-  const tag_id: tag_id = useAppSelector((state: any) => state.appState.tagId);
-
-  useEffect(() => {
-    if(import.meta.env.MODE == "development") {
-        setHost(import.meta.env.VITE_DEEPLYNX_HOST);
-        setToken(import.meta.env.VITE_DEEPLYNX_TOKEN);
-        setContainer(import.meta.env.VITE_DEEPLYNX_CONTAINER);
-      }
-      else {
-        setHost(location.origin);
-        setToken(localStorage.getItem('user.token')!);
-        setContainer(localStorage.getItem('container')!);
-      }
-
-      setQuery(true);
-  }, [tag_id]);
-
   useEffect(() => {
     async function getNodes() {
       dispatch(appStateActions.setContainerId(container));
 
-      await axios.get ( `${host}/containers/${container}/graphs/tags/${tag_id}/nodes`,
+      await axios.get ( `${host}/containers/${container}/graphs/tags/${tagId}/nodes`,
         {
           headers: {
             Authorization: `bearer ${token}`
@@ -127,10 +111,10 @@ const DrawerLeft: React.FC<Props> = ({}) => {
         )
     }
 
-    if(tag_id && query) {
+    if(tagId && query) {
       getNodes();
     }
-  }, [query]);
+  }, [query, tagId]);
 
   type openDrawerLeftState = boolean;
   const openDrawerLeftState: openDrawerLeftState = useAppSelector((state: any) => state.appState.openDrawerLeft);
@@ -188,11 +172,6 @@ const DrawerLeft: React.FC<Props> = ({}) => {
   // Component display switching
   const menuItemMatchesComponent = (pane: string) => selected === pane;
 
-  
-  function printVariables() {
-    console.log(import.meta.env);
-  }
-
   return (
     <Drawer variant="permanent" open={openDrawerLeftState}
       sx={{
@@ -220,8 +199,6 @@ const DrawerLeft: React.FC<Props> = ({}) => {
       <Box sx={{ display: 'flex', height: '100%', marginTop: '64px', alignItems: 'stretch' }}>
         <Box sx={{ display: 'flex', height: '100%', backgroundColor: COLORS.colorLightgray3 }}>
           <List sx={{ p: 0 }}>
-            
-      <Button sx={{color: "black"}} onClick={printVariables}>.env</Button>
             {/* Hamburger menu icon to open and close Drawer */}
             <ListItem key={uuidv4()} disablePadding>
               <ListItemButton

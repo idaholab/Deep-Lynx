@@ -23,11 +23,14 @@ type Props = {
 const NodeInfoNearbyNodes: React.FC<Props> = ({
   data
 }) => {
+
+  // DeepLynx
+  const host: string = useAppSelector((state: any) => state.appState.host);
+  const token: string = useAppSelector((state: any) => state.appState.token);
+  const container: string = useAppSelector((state: any) => state.appState.container);
+
   const nodeId = data.id
   const [tableRowData, setTableRowData] = useState([]);
-
-  // type containerId = Array<{ [key: string]: any; }>;
-  const containerId = useAppSelector((state: any) => state.appState.containerId);
 
   const tableHeaders = [
     {title: 'Id', optionalWidth: '50px', alignment: 'left'},
@@ -39,9 +42,7 @@ const NodeInfoNearbyNodes: React.FC<Props> = ({
 
   useEffect(() => {
     async function getNearbyNodes() {
-      const token = localStorage.getItem('user.token');
-      
-      await axios.get ( `${location.origin}/containers/${containerId}/graphs/nodes/${nodeId}/graph?depth=1`,
+      await axios.get ( `${host}/containers/${container}/graphs/nodes/${nodeId}/graph?depth=1`,
         {
           headers: {
             Authorization: `bearer ${token}`

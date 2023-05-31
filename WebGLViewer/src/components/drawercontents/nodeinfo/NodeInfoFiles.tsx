@@ -22,17 +22,16 @@ type Props = {
 const NodeInfoFiles: React.FC<Props> = ({
   data
 }) => {
+  // DeepLynx
+  const host: string = useAppSelector((state: any) => state.appState.host);
+  const token: string = useAppSelector((state: any) => state.appState.token);
+  const container: string = useAppSelector((state: any) => state.appState.container);
   const nodeId = data.id
   const [tableRowData, setTableRowData] = useState([]);
 
-  // type containerId = Array<{ [key: string]: any; }>;
-  const containerId = useAppSelector((state: any) => state.appState.containerId);
-
   useEffect(() => {
     async function getNodeFiles() {
-      const token = localStorage.getItem('user.token');
-     
-      await axios.get ( `${location.origin}/containers/${containerId}/graphs/nodes/${nodeId}/files`,   
+      await axios.get ( `${host}/containers/${container}/graphs/nodes/${nodeId}/files`,   
         {
           headers: {
             Authorization: `bearer ${token}`

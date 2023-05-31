@@ -4,12 +4,7 @@ import React from "react";
 // Hooks
 import { useEffect, useState } from "react";
 
-// Helpers
-import ParseWebGL from "../../../helpers/regex";
-import ParseTag from "../../../helpers/tags";
-
 // Store
-import { appStateActions } from '../../../../app/store/index';
 import { useAppSelector, useAppDispatch } from '../../../../app/hooks/reduxTypescriptHooks';
 
 // Material
@@ -20,27 +15,13 @@ import {
 // Components 
 import UnityInstance from "./UnityInstance";
 
-// Axios
-import axios from "axios";
-
 export default function WebGL() {
-
-  // Store
-  const dispatch = useAppDispatch();
 
   // DeepLynx
   const host: string = useAppSelector((state: any) => state.appState.host);
   const token: string = useAppSelector((state: any) => state.appState.token);
-  const container: string = useAppSelector((state: any) => state.appState.container);
   const metadata: string = useAppSelector((state: any) => state.appState.metadata);
-  const tag: string = useAppSelector((state: any) => state.appState.tag);
   const query: boolean = useAppSelector((state: any) => state.appState.query);
-
-  // const [host, setHost] = useState<string>();
-  // const [token, setToken] = useState<string>();
-  // const [container, setContainer] = useState<string>();
-  // const [webgl, setWebgl] = useState<object>();
-  // const [tag, setTag] = useState<string>();
   
   // WebGL Urls
   const [loaderUrl, setLoaderUrl] = useState<URL>();
@@ -74,28 +55,9 @@ export default function WebGL() {
       }
     }
 
-    async function tag() {
-      await axios.get(`${host}/containers/${container}/graphs/tags`,
-      {
-        headers: {
-            Authorization: `bearer ${token}`
-          }
-        }
-      ).then((response) => {
-        let tags = response.data.value;
-        tags.forEach((record: any) => {
-          if (record.tag_name == tag)
-          {
-            dispatch(appStateActions.setTagId(record.id));
-          }
-        })
-      })
-    }
-
     // If the environment has been established, we're ready to query for filesets and the tag id
     if(query) {
       query();
-      tag();
     }
     
   }, [query]);

@@ -31,8 +31,11 @@ type Props = {
 const NodeInfoTags: React.FC<Props> = ({
   data
 }) => {
-  const nodeId = data.id
-  const containerId = useAppSelector((state: any) => state.appState.containerId);
+  // DeepLynx
+  const host: string = useAppSelector((state: any) => state.appState.host);
+  const token: string = useAppSelector((state: any) => state.appState.token);
+  const container: string = useAppSelector((state: any) => state.appState.container);
+  const nodeId = data.id;
 
   const [tableRowData, setTableRowData] = useState(Array<{ [key: string]: any; }>);
 
@@ -43,9 +46,8 @@ const NodeInfoTags: React.FC<Props> = ({
 
   useEffect(() => {
     async function getTagList() {
-      const token = localStorage.getItem('user.token');
      
-      await axios.get ( `${location.origin}/containers/${containerId}/graphs/tags/nodes/${nodeId}`,
+      await axios.get ( `${host}/containers/${container}/graphs/tags/nodes/${nodeId}`,
         {
           headers: {
             Authorization: `bearer ${token}`
