@@ -184,7 +184,7 @@
             </v-list-item-content>
           </v-list-item>
           <v-list-item
-            two-line 
+            two-line
             link
             v-if="$auth.Auth('data', 'write', containerID)"
             @click="setActiveComponent('event-actions')"
@@ -481,7 +481,7 @@
               <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('general.welcome')}}</v-card-title>
               <v-card-text>
                 <p>{{$t('help.welcomeCard')}}</p>
-                <p><a :href="welcomeLink()">{{$t('general.wiki')}}</a></p>
+                <p><a :href="welcomeLink">{{$t('general.wiki')}}</a></p>
               </v-card-text>
             </v-card>
           </v-col>
@@ -496,7 +496,7 @@
                 <!-- <template> -->
                 <v-card-text>
                   <p>{{$t('ontology.description')}}</p>
-                  <p><a :href="ontologyLink()">{{$t('ontology.loading')}}</a></p>
+                  <p><a :href="ontologyLink">{{$t('ontology.loading')}}</a></p>
                 </v-card-text>
               </template>
 
@@ -740,6 +740,7 @@ export default class Home extends Vue {
 
   setActiveComponent(menuIndex: string) {
     this.componentKey += 1 // increment so we force a re-render
+    this.argument = this.arguments
 
     switch(menuIndex) {
       case "dashboard": {
@@ -787,7 +788,7 @@ export default class Home extends Vue {
       case "data-sources": {
         this.currentMainComponent = "DataSources";
         this.componentName = this.$t('dataSources.dataSources')
-        this.$router.replace(`/containers/${this.containerID}/data-sources`)
+        this.$router.replace(`/containers/${this.containerID}/data-sources/${this.arguments}`)
         break;
       }
 
