@@ -1,13 +1,13 @@
 <template>
   <div>
     <error-banner :message="errorMessage"></error-banner>
-    <v-select
+    <v-autocomplete
       :items="containers"
       item-text="name"
       :label="$t('containers.select')"
       return-object
       @input="setActiveContainer"
-    ></v-select>
+    ></v-autocomplete>
   </div>
 </template>
 
