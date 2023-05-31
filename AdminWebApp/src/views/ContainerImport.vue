@@ -11,7 +11,7 @@
         <v-row>
           <v-col :cols="12">
             <p>{{$t('imports.containerDescription')}}</p>
-            <p>{{$t('imports.containerDescriptionCaution')}}</p>
+            <p>{{$t('warnings.importContainer')}}</p>
 
               <v-checkbox v-model="importOntology">
                 <template v-slot:label>
@@ -134,7 +134,7 @@ export default class ContainerImport extends Vue {
             const error = JSON.parse(response.data.error).error;
             this.errorMessage = `${this.$t('imports.containerError')}. ${error}`;
           } else {
-            this.successMessage = response.data.value + '\nPlease note that any data sources or type mappings imported are set as inactive.';
+            this.successMessage = `${response.data.value} ${this.$t('warnings.inactiveMappings')}`;
           }
         })
         .catch((e: any) => {

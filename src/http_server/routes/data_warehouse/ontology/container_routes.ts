@@ -419,7 +419,6 @@ export default class ContainerRoutes {
                         ' Tye mapping import is dependent on a successful data source import. ' +
                         'Fix data source import errors to enable type mapping import.';
                 } else {
-                    console.log(dataSourceMap);
                     if (!('type_mappings' in jsonImport)) {
                         importErrors += 'Container export file does not contain all necessary sections for a type mapping import.';
                     }
