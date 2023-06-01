@@ -8,13 +8,16 @@
         {{ $t('timeseries.timeseries') }}
       </v-tab>
     </v-tabs>
+
     <error-banner :message="errorMessage"></error-banner>
+
     <v-data-table
         v-if="activeTab === 0"
         :headers="headers()"
         :items="dataSources"
         :loading="dataSourcesLoading"
         class="elevation-1"
+        :search="search"
     >
       <template v-slot:top>
         <v-toolbar flat color="white">
@@ -24,6 +27,17 @@
             :containerID="containerID"
             @dataSourceCreated="refreshDataSources(); refreshTimeseriesDataSources()"
           />
+
+          <template v-slot:extension>
+            <v-text-field
+                v-model="search"
+                prepend-icon="mdi-magnify"
+                label="Search"
+                single-line
+                hide-details
+            ></v-text-field>
+          </template>
+
         </v-toolbar>
       </template>
       <template v-slot:[`item.copy`]="{ item }">
@@ -94,6 +108,7 @@
         :headers="headers()"
         :items="timeseriesDataSources"
         class="elevation-1"
+        :search="search"
     >
       <template v-slot:top>
         <v-toolbar flat color="white">
@@ -105,6 +120,17 @@
             @dataSourceCreated="refreshDataSources(); refreshTimeseriesDataSources()"
             @timeseriesSourceCreated="activeTab === 1"
           />
+
+          <template v-slot:extension>
+            <v-text-field
+                v-model="search"
+                prepend-icon="mdi-magnify"
+                label="Search"
+                single-line
+                hide-details
+            ></v-text-field>
+          </template>
+
         </v-toolbar>
       </template>
       <template v-slot:[`item.copy`]="{ item }">
@@ -215,6 +241,7 @@ export default class DataSources extends Vue {
   errorMessage = ""
   copy = mdiFileDocumentMultiple
   timeseriesKey = 0
+  search = ''
 
   headers() {
     const headers = [
@@ -222,12 +249,14 @@ export default class DataSources extends Vue {
       { text: this.$t('general.id'), value: 'id'},
       { text: this.$t('general.name'), value: 'name' },
       { text: this.$t('dataSources.adapterType'), value: 'adapter_type'},
-      { text: this.$t('general.active'), value: 'active'},
-      { text: this.$t('general.actions'), value: 'actions', sortable: false }
+      { text: this.$t('general.active'), value: 'active', filterable: false},
+      { text: this.$t('general.actions'), value: 'actions', sortable: false, filterable: false }
     ]
 
     if (this.activeTab === 1) {
-      headers.splice(4, 0, {text: this.$t('timeseries.fastloadEnabled'), value: 'fastload'})
+      headers.splice(4, 0, {
+        text: this.$t('timeseries.fastloadEnabled'), value: 'fastload', filterable: false
+      })
     }
 
     return headers;
