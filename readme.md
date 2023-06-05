@@ -1,4 +1,4 @@
-![img.png](lynx.png)
+![img.png](lynx_blue.png)
 
 ## What is DeepLynx?
 
