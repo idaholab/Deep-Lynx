@@ -4,7 +4,7 @@ import {User} from '../user';
 import PostgresAdapter from 'casbin-pg-adapter';
 
 /*
- Authorization in Deep Lynx uses the https://casbin.org/ library. Please use
+ Authorization in DeepLynx uses the https://casbin.org/ library. Please use
  their documentation when attempting to make changes to the authorization layer.
 */
 export class Authorization {

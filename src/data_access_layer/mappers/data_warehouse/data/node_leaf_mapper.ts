@@ -6,7 +6,7 @@ import NodeLeaf, {getNodeLeafQuery} from '../../../../domain_objects/data_wareho
 /*
     NodeLeafMapper extends the Postgres database Mapper class and allows the
     NodeLeaf structure to be fetched from the database. Unlike other mapper
-    structures in Deep Lynx, the NodeLeafMapper is used exclusively to fetch
+    structures in DeepLynx, the NodeLeafMapper is used exclusively to fetch
     data instead of creating, updating, or deleting it, as its structure does
     not represent any one table in the database but a complex fetched result
     that combines data from several tables. The mapper's primary function is

@@ -7,7 +7,7 @@
           class="mr-2"
           v-on="on"
       >mdi-key</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("serviceUserKeys.manageKeys")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("apiKeys.manage")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
@@ -22,7 +22,7 @@
             >
               <template v-slot:top>
                 <v-toolbar flat color="white">
-                  <v-toolbar-title>{{$t('home.apiKeysDescription')}}</v-toolbar-title>
+                  <v-toolbar-title>{{$t('apiKeys.description')}}</v-toolbar-title>
                   <v-spacer></v-spacer>
                   <create-api-key-dialog :containerID="containerID" :serviceUserID="serviceUserID" @apiKeyCreated="refreshKeys()"></create-api-key-dialog>
                 </v-toolbar>
@@ -62,9 +62,9 @@ export default class ServiceUserApiKeyDialog extends Vue {
 
   headers() {
     return [
-      { text: this.$t('apiKeys.key'), value: 'key'},
-      { text: this.$t('apiKeys.note'), value: 'note'},
-      { text: this.$t('apiKeys.actions'), value: 'actions', sortable: false }
+      { text: this.$t('general.key'), value: 'key'},
+      { text: this.$t('general.note'), value: 'note'},
+      { text: this.$t('general.actions'), value: 'actions', sortable: false }
     ]
   }
 

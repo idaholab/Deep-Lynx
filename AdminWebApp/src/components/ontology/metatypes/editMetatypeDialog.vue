@@ -7,12 +7,12 @@
           class="mr-2"
           v-on="on"
       >mdi-pencil</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on" style="margin-top: 0px !important;" >{{$t("editMetatype.editMetatype")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on" style="margin-top: 0px !important;" >{{$t("classes.edit")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2" v-if="selectedMetatype">
       <v-card-title>
-        <span class="headline text-h3">{{$t('editMetatype.edit')}} {{selectedMetatype.name}}</span>
+        <span class="headline text-h3">{{$t('general.edit')}} {{selectedMetatype.name}}</span>
       </v-card-title>   
       <v-card-text>
         <v-row>
@@ -26,7 +26,7 @@
                   :disabled="true"
                   class="disabled"
               >
-                <template v-slot:label>{{$t('editMetatype.name')}} <small style="color:red" >*</small></template>
+                <template v-slot:label>{{$t('general.name')}} <small style="color:red" >*</small></template>
               </v-text-field>
               <v-textarea
                   v-model="comparisonMetatype.description"
@@ -34,10 +34,10 @@
                   :disabled="true"
                   class="disabled"
               >
-                <template v-slot:label>{{$t('editMetatype.description')}} <small style="color:red" >*</small></template>
+                <template v-slot:label>{{$t('general.description')}} <small style="color:red" >*</small></template>
               </v-textarea>
             </v-form>
-            <p><span style="color:red">*</span> = {{$t('editMetatype.requiredField')}}</p>
+            <p><span style="color:red">*</span> = {{$t('validation.required')}}</p>
 
 
             <v-progress-linear v-if="keysLoading" indeterminate></v-progress-linear>
@@ -53,7 +53,7 @@
             >
               <template v-slot:top>
                 <v-toolbar flat color="white">
-                  <v-toolbar-title>{{$t("editMetatype.keys")}}</v-toolbar-title>
+                  <v-toolbar-title>{{$t("properties.properties")}}</v-toolbar-title>
                   <v-divider
                       class="mx-4"
                       inset
@@ -77,22 +77,22 @@
             >
               <v-text-field
                   v-model="selectedMetatype.name"
-                  :rules="[v => !!v || $t('editMetatype.nameRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
                   required
                   :class="(comparisonMetatype && selectedMetatype.name !== comparisonMetatype.name) ? 'edited-field' : ''"
               >
-                <template v-slot:label>{{$t('editMetatype.name')}} <small style="color:red" >*</small></template>
+                <template v-slot:label>{{$t('general.name')}} <small style="color:red" >*</small></template>
               </v-text-field>
               <v-textarea
                   v-model="selectedMetatype.description"
-                  :rules="[v => !!v || $t('editMetatype.descriptionRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
                   required
                   :class="(comparisonMetatype && selectedMetatype.description !== comparisonMetatype.description) ? 'edited-field' : ''"
               >
-                <template v-slot:label>{{$t('editMetatype.description')}} <small style="color:red" >*</small></template>
+                <template v-slot:label>{{$t('general.description')}} <small style="color:red" >*</small></template>
               </v-textarea>
             </v-form>
-            <p><span style="color:red">*</span> = {{$t('editMetatype.requiredField')}}</p>
+            <p><span style="color:red">*</span> = {{$t('validation.required')}}</p>
 
             <v-progress-linear v-if="keysLoading" indeterminate></v-progress-linear>
             <v-data-table
@@ -109,7 +109,7 @@
 
               <template v-slot:top>
                 <v-toolbar flat color="white">
-                  <v-toolbar-title>{{$t("editMetatype.keys")}}</v-toolbar-title>
+                  <v-toolbar-title>{{$t("properties.properties")}}</v-toolbar-title>
                   <v-divider
                       class="mx-4"
                       inset
@@ -145,9 +145,9 @@
               </template>
             </v-data-table>
             <v-row v-if="$store.getters.isEditMode" style="margin-top: 15px">
-              <v-col :cols="3"><div class="box created mr-2"></div><p>{{$t('metatypes.created')}}</p></v-col>
-              <v-col :cols="3"><div class="box edited mr-2"></div><p>{{$t('metatypes.edited')}}</p></v-col>
-              <v-col :cols="3"><div class="box removed mr-2"></div><p>{{$t('metatypes.removed')}}</p></v-col>
+              <v-col :cols="3"><div class="box created mr-2"></div><p>{{$t('general.created')}}</p></v-col>
+              <v-col :cols="3"><div class="box edited mr-2"></div><p>{{$t('general.edited')}}</p></v-col>
+              <v-col :cols="3"><div class="box removed mr-2"></div><p>{{$t('general.removed')}}</p></v-col>
             </v-row>
           </v-col>
         </v-row>
@@ -155,8 +155,8 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" text @click="dialog = false" >{{$t("editMetatype.cancel")}}</v-btn>
-        <v-btn color="primary" :disabled="!valid" text @click="editMetatype()">{{$t("editMetatype.save")}}</v-btn>
+        <v-btn color="primary" text @click="dialog = false" >{{$t("general.cancel")}}</v-btn>
+        <v-btn color="primary" :disabled="!valid" text @click="editMetatype()">{{$t("general.save")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -203,10 +203,10 @@ export default class EditMetatypeDialog extends Vue {
 
   headers() {
     return  [
-      { text: this.$t('editMetatype.keyName'), value: 'name' },
-      { text: this.$t('editMetatype.keyDescription'), value: 'description'},
-      { text: this.$t('editMetatype.keyType'), value: 'data_type'},
-      { text: this.$t('editMetatype.actions'), value: 'actions', sortable: false }
+      { text: this.$t('general.name'), value: 'name' },
+      { text: this.$t('general.description'), value: 'description'},
+      { text: this.$t('general.dataType'), value: 'data_type'},
+      { text: this.$t('general.actions'), value: 'actions', sortable: false }
     ]
   }
 
@@ -220,13 +220,13 @@ export default class EditMetatypeDialog extends Vue {
         {"name": this.selectedMetatype?.name, "description": this.selectedMetatype?.description})
         .then(result => {
           if(!result) {
-            this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string
+            this.errorMessage = this.$t('errors.errorCommunicating') as string
           } else {
             this.dialog = false
             this.$emit('metatypeEdited')
           }
         })
-        .catch(e => this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string + e)
+        .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
   }
 
   loadKeys() {
@@ -251,21 +251,21 @@ export default class EditMetatypeDialog extends Vue {
   deleteKey(key: MetatypeKeyT) {
     this.$client.deleteMetatypeKey(this.selectedMetatype?.container_id!, this.selectedMetatype?.id!, key.id!, {permanent: !this.$store.getters.isEditMode})
     .then(result => {
-      if(!result) this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string
+      if(!result) this.errorMessage = this.$t('errors.errorCommunicating') as string
 
       this.loadKeys()
     })
-    .catch(e => this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string + e)
+    .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
   }
 
   undeleteKey(key: MetatypeKeyT) {
     this.$client.deleteMetatypeKey(this.selectedMetatype?.container_id!, this.selectedMetatype?.id!, key.id!, {reverse: true})
         .then(result => {
-          if(!result) this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string
+          if(!result) this.errorMessage = this.$t('errors.errorCommunicating') as string
 
           this.loadKeys()
         })
-        .catch(e => this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string + e)
+        .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
   }
 
   keyItemRowBackground(item: any) {

@@ -1,22 +1,22 @@
-import DataSourceRepository, { DataSourceFactory } from "../../../data_access_layer/repositories/data_warehouse/import/data_source_repository";
-import { expect } from "chai";
-import TimeseriesBucketDataSourceImpl from "../../../interfaces_and_impl/data_warehouse/import/timeseries_bucket_data_source";
-import DataSourceRecord, { TimeseriesBucketDataSourceConfig } from "../../../domain_objects/data_warehouse/import/data_source";
+import DataSourceRepository, {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
+import {expect} from 'chai';
+import TimeseriesBucketDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/timeseries_bucket_data_source';
+import DataSourceRecord, {TimeseriesBucketDataSourceConfig} from '../../../domain_objects/data_warehouse/import/data_source';
 import {User} from '../../../domain_objects/access_management/user';
-import TimeseriesService from "../../../services/timeseries/timeseries";
+import TimeseriesService from '../../../services/timeseries/timeseries';
 import Logger from '../../../services/logger';
-import PostgresAdapter from "../../../data_access_layer/mappers/db_adapters/postgres/postgres";
-import ContainerMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
-import Container from "../../../domain_objects/data_warehouse/ontology/container";
+import PostgresAdapter from '../../../data_access_layer/mappers/db_adapters/postgres/postgres';
+import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
+import Container from '../../../domain_objects/data_warehouse/ontology/container';
 import faker from 'faker';
-import UserMapper from "../../../data_access_layer/mappers/access_management/user_mapper";
-import { Bucket } from "deeplynx-timeseries";
+import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
+import {Bucket} from 'deeplynx-timeseries';
 
 describe('A Timeseries Bucket Data Source', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let user: User;
     let dataSource: TimeseriesBucketDataSourceImpl | undefined;
-    const bucketRepo = TimeseriesService.Instance;
+    const bucketRepo = TimeseriesService.GetInstance();
     let sourceRepo: DataSourceRepository | undefined;
 
     before(async function () {
@@ -74,12 +74,14 @@ describe('A Timeseries Bucket Data Source', async () => {
                 adapter_type: 'timeseries_bucket',
                 config: new TimeseriesBucketDataSourceConfig({
                     change_bucket_payload: {
-                        name: "Test Bucket",
-                        columns: [{
-                            name: "test column",
-                            shortName: "test",
-                            dataType: "INT"
-                        }],
+                        name: 'Test Bucket',
+                        columns: [
+                            {
+                                name: 'test column',
+                                shortName: 'test',
+                                dataType: 'INT',
+                            },
+                        ],
                     },
                 }),
             }),
@@ -88,11 +90,11 @@ describe('A Timeseries Bucket Data Source', async () => {
         expect(saved.isError, saved.error?.error).false;
         expect(source!.DataSourceRecord?.id).not.undefined;
 
-        const config = (source?.DataSourceRecord?.config as TimeseriesBucketDataSourceConfig);
+        const config = source?.DataSourceRecord?.config as TimeseriesBucketDataSourceConfig;
         expect(config.bucket?.id).not.undefined;
         expect(config.bucket?.name).eq('Test Bucket');
 
-        const column = (config.bucket?.structure[0]);
+        const column = config.bucket?.structure[0];
         expect(column?.name).eq('test column');
         expect(column?.shortName).eq('test');
         expect(column?.dataType).eq('INT');
@@ -113,12 +115,14 @@ describe('A Timeseries Bucket Data Source', async () => {
                 adapter_type: 'timeseries_bucket',
                 config: new TimeseriesBucketDataSourceConfig({
                     change_bucket_payload: {
-                        name: "Test Bucket",
-                        columns: [{
-                            name: "test column",
-                            shortName: "test",
-                            dataType: "INT"
-                        }],
+                        name: 'Test Bucket',
+                        columns: [
+                            {
+                                name: 'test column',
+                                shortName: 'test',
+                                dataType: 'INT',
+                            },
+                        ],
                     },
                 }),
             }),
@@ -141,12 +145,14 @@ describe('A Timeseries Bucket Data Source', async () => {
                 adapter_type: 'timeseries_bucket',
                 config: new TimeseriesBucketDataSourceConfig({
                     change_bucket_payload: {
-                        name: "Test Bucket",
-                        columns: [{
-                            name: "test column",
-                            shortName: "test",
-                            dataType: "INT"
-                        }],
+                        name: 'Test Bucket',
+                        columns: [
+                            {
+                                name: 'test column',
+                                shortName: 'test',
+                                dataType: 'INT',
+                            },
+                        ],
                     },
                 }),
             }),
@@ -182,12 +188,14 @@ describe('A Timeseries Bucket Data Source', async () => {
                 adapter_type: 'timeseries_bucket',
                 config: new TimeseriesBucketDataSourceConfig({
                     change_bucket_payload: {
-                        name: "Test Bucket",
-                        columns: [{
-                            name: "test column",
-                            shortName: "test",
-                            dataType: "INT"
-                        }],
+                        name: 'Test Bucket',
+                        columns: [
+                            {
+                                name: 'test column',
+                                shortName: 'test',
+                                dataType: 'INT',
+                            },
+                        ],
                     },
                 }),
             }),
@@ -197,7 +205,7 @@ describe('A Timeseries Bucket Data Source', async () => {
         expect(source!.DataSourceRecord?.id).not.undefined;
         const sourceId = source?.DataSourceRecord?.id!;
 
-        const config = (source?.DataSourceRecord?.config as TimeseriesBucketDataSourceConfig);
+        const config = source?.DataSourceRecord?.config as TimeseriesBucketDataSourceConfig;
         expect(config.bucket?.id).not.undefined;
         const bucketId = config.bucket?.id!;
 
@@ -225,23 +233,25 @@ describe('A Timeseries Bucket Data Source', async () => {
                 adapter_type: 'timeseries_bucket',
                 config: new TimeseriesBucketDataSourceConfig({
                     change_bucket_payload: {
-                        name: "Test Bucket",
-                        columns: [{
-                            name: "test column",
-                            shortName: "test",
-                            dataType: "INT"
-                        }],
+                        name: 'Test Bucket',
+                        columns: [
+                            {
+                                name: 'test column',
+                                shortName: 'test',
+                                dataType: 'INT',
+                            },
+                        ],
                     },
                 }),
             }),
         );
         const saved = await sourceRepo.save(source!, user);
         expect(saved.isError, saved.error?.error).false;
-        
+
         // check source values
         expect(source!.DataSourceRecord?.id).not.undefined;
         const sourceId = source?.DataSourceRecord?.id!;
-        expect(source?.DataSourceRecord?.name).eq('Test Bucket Source')
+        expect(source?.DataSourceRecord?.name).eq('Test Bucket Source');
 
         // check bucket values
         const bucket = (source?.DataSourceRecord?.config as TimeseriesBucketDataSourceConfig).bucket;
@@ -252,14 +262,16 @@ describe('A Timeseries Bucket Data Source', async () => {
 
         // change source name, bucket name, and bucket column datatype
         source!.DataSourceRecord!.name = 'Updated Bucket Source';
-        const config = (source?.DataSourceRecord?.config as TimeseriesBucketDataSourceConfig);
+        const config = source?.DataSourceRecord?.config as TimeseriesBucketDataSourceConfig;
         config.change_bucket_payload = {
-            name: "New Bucket",
-            columns: [{
-                name: "test column",
-                shortName: "test",
-                dataType: "TEXT"
-            }],
+            name: 'New Bucket',
+            columns: [
+                {
+                    name: 'test column',
+                    shortName: 'test',
+                    dataType: 'TEXT',
+                },
+            ],
         };
 
         // update source
@@ -293,12 +305,14 @@ describe('A Timeseries Bucket Data Source', async () => {
                 adapter_type: 'timeseries_bucket',
                 config: new TimeseriesBucketDataSourceConfig({
                     change_bucket_payload: {
-                        name: "Test Bucket",
-                        columns: [{
-                            name: "test column",
-                            shortName: "test",
-                            dataType: "INT"
-                        }],
+                        name: 'Test Bucket',
+                        columns: [
+                            {
+                                name: 'test column',
+                                shortName: 'test',
+                                dataType: 'INT',
+                            },
+                        ],
                     },
                 }),
             }),
@@ -308,7 +322,7 @@ describe('A Timeseries Bucket Data Source', async () => {
         expect(source!.DataSourceRecord?.id).not.undefined;
         const sourceId = source?.DataSourceRecord?.id;
 
-        const config = (source?.DataSourceRecord?.config as TimeseriesBucketDataSourceConfig);
+        const config = source?.DataSourceRecord?.config as TimeseriesBucketDataSourceConfig;
         expect(config.bucket?.id).not.undefined;
         const bucketId = config.bucket?.id;
 
@@ -317,17 +331,17 @@ describe('A Timeseries Bucket Data Source', async () => {
 
         // ensure source was deleted
         const fetchedSource = await sourceRepo.findByID(sourceId!);
-        expect(fetchedSource.isError).true
+        expect(fetchedSource.isError).true;
 
         // ensure bucket was also deleted
         let error: object | undefined;
         try {
-            await (await TimeseriesService.Instance).retrieveBucket(bucketId!);
-        } catch(e) {
-            error = (e as object);
+            await (await TimeseriesService.GetInstance()).retrieveBucket(bucketId!);
+        } catch (e) {
+            error = e as object;
         }
         expect(error).not.undefined;
 
         return Promise.resolve();
     });
-})
+});

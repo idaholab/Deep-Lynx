@@ -12,7 +12,7 @@
     <success-banner :message="successMessage"></success-banner>
     <div class="mx-2" v-if="activeTab === 'datasources'">
       <v-toolbar flat color="white">
-        <v-toolbar-title>{{$t('home.dataImportsDescription')}}</v-toolbar-title>
+        <v-toolbar-title>{{$t('imports.description')}}</v-toolbar-title>
       </v-toolbar>
       <select-data-source
         :containerID="containerID"
@@ -25,7 +25,7 @@
 
     <div class="mx-2" v-if="activeTab === 'timeseries'">
       <v-toolbar flat color="white">
-        <v-toolbar-title>{{$t('home.timeseriesImportsDescription')}}</v-toolbar-title>
+        <v-toolbar-title>{{$t('imports.timeseriesDescription')}}</v-toolbar-title>
       </v-toolbar>
       <select-data-source
         :containerID="containerID"
@@ -50,7 +50,7 @@
       >
         <template v-slot:top>
           <v-col class="d-flex flex-row">
-            <h3 class="text-h3">{{$t('dataImports.tableTitle')}}</h3>
+            <h3 class="text-h3">{{$t('imports.imports')}}</h3>
             <v-spacer></v-spacer>
             <div v-if="selectedDataSource.adapter_type === 'standard' || selectedDataSource.adapter_type === 'manual' || selectedDataSource.adapter_type === 'timeseries'">
               <import-data-dialog
@@ -65,11 +65,11 @@
         </template>
 
         <template v-slot:item.percentage_processed="{ item }">
-          {{ item.total_records == 0 ? $t('dataImports.noData') : (Math.round((item.records_inserted / item.total_records) * 100) * 100 / 100).toFixed(2) + "%" }}
+          {{ item.total_records == 0 ? $t('general.noData') : (Math.round((item.records_inserted / item.total_records) * 100) * 100 / 100).toFixed(2) + "%" }}
         </template>
 
         <template v-slot:item.status="{ item }">
-          <div v-if="item.records_inserted === item.total_records">{{$t('dataImports.completed')}}</div>
+          <div v-if="item.records_inserted === item.total_records">{{$t('general.completed')}}</div>
           <div v-else>{{item.status}}</div>
         </template>
 
@@ -108,7 +108,7 @@
           <v-btn icon dark @click="dialog = false">
             <v-icon>mdi-close</v-icon>
           </v-btn>
-          <v-toolbar-title>{{$t("dataImports.dataView")}}</v-toolbar-title>
+          <v-toolbar-title>{{$t("imports.data")}}</v-toolbar-title>
           <v-spacer></v-spacer>
         </v-toolbar>
         <v-divider></v-divider>
@@ -131,13 +131,13 @@
               <template v-slot:activator="{on, attrs}">
                 <v-icon v-bind="attrs" v-on="on" @click="copyID(item.id)">{{copy}}</v-icon>
               </template>
-              <span>{{$t('dataImports.copyID')}}-</span>
+              <span>{{$t('general.copyID')}}-</span>
               <span>{{item.id}}</span>
             </v-tooltip>
           </template>
 
           <template v-slot:item.mapping="{ item }">
-            <v-btn @click="toTypeMapping(item.shape_hash)">{{$t('dataImports.toTypeMapping')}}</v-btn>
+            <v-btn @click="toTypeMapping(item.shape_hash)">{{$t('typeMappings.mapping')}}</v-btn>
           </template>
 
           <template v-slot:item.actions="{ item }">
@@ -155,7 +155,7 @@
     <v-dialog v-model="dataDialog" width="60%" scrollable>
       <v-card class="d-flex flex-column">
         <v-card-title class="grey lighten-2 flex-shrink-1">
-          <span class="headline text-h3">{{$t('dataImports.viewData')}}</span>
+          <span class="headline text-h3">{{$t('general.rawData')}}</span>
         </v-card-title>
 
         <json-viewer
@@ -167,7 +167,7 @@
 
         <v-card-actions class="flex-shrink-1">
           <v-spacer></v-spacer>
-          <v-btn color="primary" text @click="dataDialog = false" >{{$t("dataImports.done")}}</v-btn>
+          <v-btn color="primary" text @click="dataDialog = false" >{{$t("general.done")}}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -175,7 +175,7 @@
     <v-dialog v-model="mappingDialog" width="90%" scrollable>
       <v-card class="d-flex flex-column">
         <v-card-title class="grey lighten-2 flex-shrink-1">
-          <span class="headline text-h3">{{$t('dataImports.editTypeMapping')}}</span>
+          <span class="headline text-h3">{{$t('typeMappings.typeMapping')}}</span>
           <v-flex class="text-right">
             <v-icon class="justify-right"  @click="mappingDialog = false">mdi-window-close</v-icon>
           </v-flex>
@@ -186,7 +186,7 @@
         </div>
         <v-card-actions class="flex-shrink-1">
           <v-spacer></v-spacer>
-          <v-btn color="primary" text @click="mappingDialog = false" >{{$t("dataMapping.done")}}</v-btn>
+          <v-btn color="primary" text @click="mappingDialog = false" >{{$t("general.done")}}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -271,24 +271,24 @@ export default class DataImports extends Vue {
   headers() {
     const headers = [
       {
-        text: this.$t('dataImports.createdAt'),
+        text: this.$t('general.createdAt'),
         value: "created_at",
       },
       {
-        text: this.$t('dataImports.status'),
+        text: this.$t('general.status'),
         value: "status",
       },
       {
-        text: this.$t('dataImports.totalErrors'),
+        text: this.$t('imports.totalErrors'),
         value: "total_errors",
         sortable: false
       },
       {
-        text: this.$t('dataImports.message'),
+        text: this.$t('general.statusMessage'),
         value: "status_message",
         sortable: false
       },
-      { text: this.$t('dataImports.viewEditData'),
+      { text: this.$t('general.viewEdit'),
         value: 'actions',
         sortable: false
       }
@@ -296,7 +296,7 @@ export default class DataImports extends Vue {
 
     if (this.activeTab === 'datasources') {
       headers.splice(1, 0, {
-        text: this.$t('dataImports.percentageProcessed'),
+        text: this.$t('imports.percentageProcessed'),
         value: "percentage_processed"
       })
     }
@@ -313,33 +313,33 @@ export default class DataImports extends Vue {
 
   importDataHeaders() {
     return  [{
-      text: this.$t('dataImports.id'),
+      text: this.$t('general.id'),
       value: "id",
     },
       {
-        text: this.$t('dataImports.createdAt'),
+        text: this.$t('general.createdAt'),
         value: "created_at",
       },
       {
-        text: this.$t('dataImports.processedAt'),
+        text: this.$t('general.processedAt'),
         value: "inserted_at",
       },
       {
-        text: this.$t('dataImports.errors'),
+        text: this.$t('errors.errors'),
         value: "errors"
       },
-      {  text: this.$t('dataImports.mapping'), value: 'mapping', sortable: false },
-      {  text: this.$t('dataImports.viewDeleteData'), value: 'actions', sortable: false },]
+      {  text: this.$t('typeMappings.typeMapping'), value: 'mapping', sortable: false },
+      {  text: this.$t('general.viewDelete'), value: 'actions', sortable: false },]
   }
 
   timeseriesHeaders() {
     return [
       { text: '', value: 'copy'},
-      { text: this.$t('dataSources.id'), value: 'id'},
-      { text: this.$t('dataSources.name'), value: 'name'},
-      { text: 'Index Type', value: 'type'},
-      { text: this.$t('dataSources.active'), value: 'active'},
-      { text: 'Actions', value: 'actions'},
+      { text: this.$t('general.id'), value: 'id'},
+      { text: this.$t('general.name'), value: 'name'},
+      { text: this.$t('timeseries.indexType'), value: 'type'},
+      { text: this.$t('general.active'), value: 'active'},
+      { text: this.$t('general.actions'), value: 'actions'},
     ]
   }
 
@@ -423,7 +423,7 @@ export default class DataImports extends Vue {
     this.$client.deleteImport(this.containerID, importT.id)
         .then(()=> {
           this.listImports()
-          this.successMessage = this.$t('dataImports.successfullyDeleted') as string
+          this.successMessage = this.$t('imports.successfullyDeleted') as string
         })
         .catch((e: any) => this.errorMessage = e)
   }
@@ -494,7 +494,7 @@ export default class DataImports extends Vue {
 
   deleteImportData(importData: ImportDataT) {
     if(importData.inserted_at) {
-      this.dataErrorMessage= "Unable to delete data that has already been inserted"
+      this.dataErrorMessage= this.$t('imports.deleteError') as string
       return
     }
 

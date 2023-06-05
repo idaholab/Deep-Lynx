@@ -2,7 +2,7 @@
   <div>
     <v-card style="width: 100%; height: 100%; position: relative">
       <v-toolbar style="z-index: 4;" flat color="lightgray" >
-        <v-toolbar-title>Graph</v-toolbar-title>
+        <v-toolbar-title>{{$t('graph.graph')}}</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-progress-circular indeterminate v-if="loading"  style="margin-right: 16px"></v-progress-circular>
         <div class="mr-5">
@@ -10,7 +10,7 @@
               @click="resetGraph"
               :disabled="graph.nodes.length < 1"
           >
-            Reset Graph
+            {{$t('graph.reset')}}
           </v-btn>
         </div>
 
@@ -38,17 +38,17 @@
                 </v-btn>
 
               </template>
-              <span>Help & Display</span>
+              <span>{{$t('graph.help')}}</span>
             </v-tooltip>
           </template>
           <v-card max-width="364" :style="'justify-content: left; overflow-y: scroll; overflow-x: hidden; max-height: ' + graphHeight + 'px;'">
 
             <v-card-text class="text-h5 font-weight-bold">
-            Hover over the blue "+" icon in the top left of the graph view to find graph edit tools!
+              {{$t('help.graphHover')}}
             </v-card-text>
 
             <v-list style="padding: 0">
-              <v-subheader>Graph Display</v-subheader>
+              <v-subheader>{{$t('graph.display')}}</v-subheader>
               <v-divider></v-divider>
 
               <v-tooltip bottom nudge-top=135>
@@ -60,13 +60,13 @@
                       thumb-label
                       :max="maxChargeStrength"
                       :min="minChargeStrength"
-                      label="Node Distance"
+                      :label="$t('graph.nodeDistance')"
                       step=1
                     ></v-slider>
 
                   </v-list-item>
                 </template>
-                <span>Higher values move the nodes closer together</span>
+                <span>{{$t('help.nodeDistance')}}</span>
               </v-tooltip>
 
               <v-tooltip bottom nudge-top=135>
@@ -77,12 +77,12 @@
                         thumb-label
                         :max="maxLinkDistance"
                         :min="minLinkDistance"
-                        label="Link Distance"
+                        :label="$t('graph.edgeDistance')"
                         step=1
                     ></v-slider>
                   </v-list-item>
                 </template>
-                <span>Higher values move the edges farther apart</span>
+                <span>{{$t('help.edgeDistance')}}</span>
               </v-tooltip>
 
               <v-list-item>
@@ -93,7 +93,7 @@
                       color="primary"
                       dark
                   >
-                    Update Graph
+                    {{$t('graph.update')}}
                   </v-btn>
                 </v-list-item-action>
               </v-list-item>
@@ -101,7 +101,7 @@
             </v-list>
 
             <v-list style="padding: 0">
-              <v-subheader>Zoom</v-subheader>
+              <v-subheader>{{$t('graph.zoom')}}</v-subheader>
               <v-divider></v-divider>
               <v-list-item>
                 <v-slider
@@ -109,7 +109,7 @@
                     thumb-label
                     :max="maxMinZoom < maxZoom ? maxMinZoom : maxZoom"
                     :min="minMinZoom"
-                    label="Min Zoom"
+                    :label="$t('graph.minZoom')"
                     step=0.1
                 ></v-slider>
               </v-list-item>
@@ -119,7 +119,7 @@
                     thumb-label
                     :max="maxMaxZoom"
                     :min="minMaxZoom > minZoom ? minMaxZoom : minZoom"
-                    label="Max Zoom"
+                    :label="$t('graph.maxZoom')"
                     step=1
                 ></v-slider>
               </v-list-item>
@@ -134,7 +134,7 @@
                           color="primary"
                           dark
                       >
-                        Update Zoom
+                      {{$t('graph.updateZoom')}}
                       </v-btn>
                     </v-list-item-action>
                   </v-list-item>
@@ -148,7 +148,7 @@
                           color="primary"
                           dark
                       >
-                        Reset Zoom
+                      {{$t('graph.resetZoom')}}
                       </v-btn>
                     </v-list-item-action>
                   </v-list-item>
@@ -157,7 +157,7 @@
 
             </v-list>
 
-              <v-subheader>Controls</v-subheader>
+              <v-subheader>{{$t('graph.controls')}}</v-subheader>
               <v-spacer></v-spacer>
 
             <v-expand-transition>
@@ -165,15 +165,16 @@
                 <v-divider></v-divider>
 
                 <v-card-text>
-                  - Pan : Left click drag on open area of graph <br>
-                  - Zoom : Mousewheel scroll <br>
-                  - Center on node: Double click node <br>
-                  - New graph with node and connections: Right click node<br>
-                  - View node information: Left click node (hover to see metatype & ID)<br>
-                  - Move node: Left click and drag node<br>
-                  - Highlight node/edge and related nodes/edges: Hover over node or edge <br><br>
-                  Node labels show the "name" property (if present) or else the node ID.<br>
-                  Node color is automatically set based on metatype name or data source.
+                  - {{$t('help.graphPan')}} <br>
+                  - {{$t('help.graphZoom')}}<br>
+                  - {{$t('help.graphCenter')}}<br>
+                  - {{$t('help.graphNearby')}}<br>
+                  - {{$t('help.nodeInfo')}}<br>
+                  - {{$t('help.edgeInfo')}}<br>
+                  - {{$t('help.graphMove')}}<br>
+                  - {{$t('help.graphHighlight')}}<br><br>
+                  {{$t('help.graphLabels')}}<br>
+                  {{$t('help.graphColor')}}
                 </v-card-text>
               </div>
             </v-expand-transition>
@@ -184,21 +185,21 @@
       <!-- Node Card -->
       <v-card v-if="nodeDialog" :style="'height: 100%; max-height: ' + graphHeight + 'px; z-index: 4; position: absolute; min-width: 400px; max-width: 50%; overflow-y: scroll;'">
         <div class="mt-2 pt-3 px-5 pb-5 height-full">
-          <h4 class="primary--text">{{$t('dataQuery.nodeInformation')}}</h4>
+          <h4 class="primary--text">{{$t('nodes.info')}}</h4>
 
           <div v-if="currentNodeInfo !== null">
             <v-row>
               <v-col>
-                <div><span class="text-overline">{{$t('dataQuery.nodeID')}}:</span> {{currentNodeInfo.id}}</div>
-                <div><span class="text-overline">{{$t('dataQuery.nodeType')}}:</span> {{currentNodeInfo.metatype.name}}</div>
-                <div><span class="text-overline">DataSource:</span> {{datasources[currentNodeInfo.data_source_id]?.name}} ({{currentNodeInfo.data_source_id}})</div>
-                <div><span class="text-overline">Created At:</span> {{currentNodeInfo.created_at}}</div>
-                <div><span class="text-overline">Modified At:</span> {{currentNodeInfo.modified_at}}</div>
+                <div><span class="text-overline">{{$t('general.id')}}:</span> {{currentNodeInfo.id}}</div>
+                <div><span class="text-overline">{{$t('classes.class')}}:</span> {{currentNodeInfo.metatype.name}}</div>
+                <div><span class="text-overline">{{$t('dataSources.dataSource')}}:</span> {{datasources[currentNodeInfo.data_source_id]?.name}} ({{currentNodeInfo.data_source_id}})</div>
+                <div><span class="text-overline">{{$t('general.createdAt')}}:</span> {{currentNodeInfo.created_at}}</div>
+                <div><span class="text-overline">{{$t('general.modifiedAt')}}:</span> {{currentNodeInfo.modified_at}}</div>
                 <v-expansion-panels multiple v-model="openPanels">
                   <!-- Properties -->
                   <v-expansion-panel>
                     <v-expansion-panel-header>
-                      <div><span class="text-overline">{{$t('dataQuery.nodeProperties')}}:</span></div>
+                      <div><span class="text-overline">{{$t('properties.properties')}}:</span></div>
 
                       <edit-node-dialog
                         :node="currentNodeInfo"
@@ -223,7 +224,7 @@
                   <!-- Node History View -->
                   <v-expansion-panel>
                     <v-expansion-panel-header>
-                      <div><span class="text-overline">{{$t('dataQuery.nodeHistory')}}:</span></div>
+                      <div><span class="text-overline">{{$t('nodes.history')}}:</span></div>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
                       <v-list>
@@ -245,7 +246,7 @@
 
                             <v-list-item-content>
                               <v-list-item-title>{{$utils.formatISODate(item.created_at)}}</v-list-item-title>
-                              <v-list-item-subtitle>{{$t('dataQuery.createdBy')}}: {{users[item.created_by]?.display_name}} ({{item.created_by }})</v-list-item-subtitle>
+                              <v-list-item-subtitle>{{$t('general.createdBy')}}: {{users[item.created_by]?.display_name}} ({{item.created_by }})</v-list-item-subtitle>
                             </v-list-item-content>
                           </v-list-item>
                         </v-list-item-group>
@@ -255,7 +256,7 @@
                   <!-- Timeseries -->
                   <v-expansion-panel>
                     <v-expansion-panel-header>
-                      <div><span class="text-overline">{{$t('dataQuery.nodeTimeseries')}}:</span></div>
+                      <div><span class="text-overline">{{$t('timeseries.data')}}:</span></div>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
                       <node-timeseries-data-table :nodeID="currentNodeInfo.id" :containerID="containerID"></node-timeseries-data-table>
@@ -264,7 +265,7 @@
                   <!-- Metadata Properties -->
                   <v-expansion-panel v-if="currentNodeInfo.metadata_properties !== null">
                     <v-expansion-panel-header>
-                      <div><span class="text-overline">{{$t('dataQuery.metadataProperties')}}:</span></div>
+                      <div><span class="text-overline">{{$t('query.metadataProperties')}}:</span></div>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
                       <v-container fluid>
@@ -279,7 +280,7 @@
                   <!-- Raw Data -->
                   <v-expansion-panel v-if="results.rawMetadataEnabled && currentNodeInfo.raw_data && currentNodeInfo.raw_data !== null">
                     <v-expansion-panel-header>
-                      <div><span class="text-overline">{{$t('dataQuery.rawData')}}:</span></div>
+                      <div><span class="text-overline">{{$t('query.rawData')}}:</span></div>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
                       <v-container fluid>
@@ -294,7 +295,7 @@
                   <!-- Node Files -->
                   <v-expansion-panel>
                     <v-expansion-panel-header>
-                      <div><span class="text-overline">{{$t('dataQuery.nodeFiles')}}:</span></div>
+                      <div><span class="text-overline">{{$t('files.files')}}:</span></div>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
                       <node-files-dialog :icon="true" :node="currentNodeInfo" @nodeFilesDialogClose="refreshFiles" :key="fileKey"></node-files-dialog>
@@ -303,7 +304,7 @@
                   <!-- Node Tags -->
                   <v-expansion-panel>
                     <v-expansion-panel-header>
-                      <div><span class="text-overline">{{$t('dataQuery.nodeTags')}}:</span></div>
+                      <div><span class="text-overline">{{$t('tags.tags')}}:</span></div>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
                       <node-tags-dialog :icon="true" :node="currentNodeInfo"></node-tags-dialog>
@@ -316,10 +317,10 @@
 
           </div>
 
-          <p v-if="currentNodeInfo === null">{{$t('dataQuery.selectNode')}}</p>
+          <p v-if="currentNodeInfo === null">{{$t('help.selectNodeInfo')}}</p>
           <v-row>
             <v-col :cols="12">
-              <v-btn color="error" style="color: white" @click="deleteNode(currentNodeInfo)">{{$t('dataQuery.deleteNode')}}</v-btn>
+              <v-btn color="error" style="color: white" @click="deleteNode(currentNodeInfo)">{{$t('nodes.delete')}}</v-btn>
             </v-col>
           </v-row>
 
@@ -329,15 +330,15 @@
       <!-- Edge Card -->
       <v-card v-if="edgeDialog" :style="'height: 100%; max-height: ' + graphHeight + 'px; z-index: 4; position: absolute; min-width: 400px; max-width: 50%; overflow-y: scroll;'">
         <div class="mt-2 pt-3 px-5 pb-5 height-full">
-          <h4 class="primary--text">{{$t('dataQuery.edgeInformation')}}</h4>
+          <h4 class="primary--text">{{$t('edges.info')}}</h4>
           <div v-if="currentEdgeInfo !== null">
             <v-row>
               <v-col>
-                <div><span class="text-overline">{{$t('dataQuery.edgeID')}}:</span> {{currentEdgeInfo.id}}</div>
-                <div><span class="text-overline">{{$t('dataQuery.relType')}}:</span> {{currentEdgeInfo.metatype_relationship.name}}</div>
-                <div><span class="text-overline">DataSource:</span> {{datasources[currentEdgeInfo.data_source_id]?.name}} ({{currentEdgeInfo.data_source_id}})</div>
-                <div><span class="text-overline">Created At:</span> {{currentEdgeInfo.created_at}}</div>
-                <div><span class="text-overline">Modified At:</span> {{currentEdgeInfo.modified_at}}</div>
+                <div><span class="text-overline">{{$t('general.id')}}:</span> {{currentEdgeInfo.id}}</div>
+                <div><span class="text-overline">{{$t('relationshipTypes.relType')}}:</span> {{currentEdgeInfo.metatype_relationship.name}}</div>
+                <div><span class="text-overline">{{$t('dataSources.dataSource')}}:</span> {{datasources[currentEdgeInfo.data_source_id]?.name}} ({{currentEdgeInfo.data_source_id}})</div>
+                <div><span class="text-overline">{{$t('general.createdAt')}}:</span> {{currentEdgeInfo.created_at}}</div>
+                <div><span class="text-overline">{{$t('general.modifiedAt')}}:</span> {{currentEdgeInfo.modified_at}}</div>
                 <v-expansion-panels
                   multiple v-model="openPanels"
                   v-if="currentEdgeInfo.properties !== null"
@@ -345,7 +346,7 @@
                   <!-- Properties -->
                   <v-expansion-panel>
                     <v-expansion-panel-header>
-                      <div><span class="text-overline">{{$t('dataQuery.edgeProperties')}}:</span></div>
+                      <div><span class="text-overline">{{$t('properties.properties')}}:</span></div>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
                       <v-data-table
@@ -359,7 +360,7 @@
                   <!-- Edge History View -->
                   <v-expansion-panel>
                     <v-expansion-panel-header>
-                      <div><span class="text-overline">{{$t('dataQuery.edgeHistory')}}:</span></div>
+                      <div><span class="text-overline">{{$t('edges.history')}}:</span></div>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
                       <v-list>
@@ -379,7 +380,7 @@
 
                             <v-list-item-content>
                               <v-list-item-title>{{$utils.formatISODate(item.created_at)}}</v-list-item-title>
-                              <v-list-item-subtitle>{{$t('dataQuery.createdBy')}}: {{users[item.created_by]?.display_name}} ({{item.created_by}})</v-list-item-subtitle>
+                              <v-list-item-subtitle>{{$t('general.createdBy')}}: {{users[item.created_by]?.display_name}} ({{item.created_by}})</v-list-item-subtitle>
                             </v-list-item-content>
                           </v-list-item>
                         </v-list-item-group>
@@ -389,7 +390,7 @@
                   <!-- Metadata Properties -->
                   <v-expansion-panel v-if="currentEdgeInfo.metadata_properties !== null">
                     <v-expansion-panel-header>
-                      <div><span class="text-overline">{{$t('dataQuery.metadataProperties')}}:</span></div>
+                      <div><span class="text-overline">{{$t('query.metadataProperties')}}:</span></div>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
                       <json-viewer
@@ -402,7 +403,7 @@
                   <!-- Raw Data -->
                   <v-expansion-panel v-if="results.rawMetadataEnabled && currentEdgeInfo.raw_data && currentEdgeInfo.raw_data !== null">
                     <v-expansion-panel-header>
-                      <div><span class="text-overline">{{$t('dataQuery.rawData')}}:</span></div>
+                      <div><span class="text-overline">{{$t('query.rawData')}}:</span></div>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
                       <v-container fluid>
@@ -417,7 +418,7 @@
                   <!-- Edge Tags -->
                   <v-expansion-panel>
                     <v-expansion-panel-header>
-                      <div><span class="text-overline">{{$t('dataQuery.nodeTags')}}:</span></div>
+                      <div><span class="text-overline">{{$t('tags.tags')}}:</span></div>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
                       <edge-tags-dialog :icon="true" :edge="currentEdgeInfo"></edge-tags-dialog>
@@ -428,11 +429,9 @@
             </v-row>
 
           </div>
-
-          <p v-if="currentEdgeID === null">{{$t('dataQuery.selectEdge')}}</p>
           <v-row>
             <v-col :cols="12">
-              <v-btn color="error" style="color: white" @click="deleteEdge(currentEdgeID)">{{$t('dataQuery.deleteEdge')}}</v-btn>
+              <v-btn color="error" style="color: white" @click="deleteEdge(currentEdgeID)">{{$t('edges.delete')}}</v-btn>
             </v-col>
           </v-row>
         </div>
@@ -473,8 +472,8 @@
               </v-btn>
             </template>
             <span>
-              Drag a node towards other nodes to create new edges. <br/>
-              Release the node once the desired edge is indicated to bring up the dialog for edge creation.
+              {{$t('help.dragNode')}} <br/>
+              {{$t('help.releaseNode')}}
             </span>
           </v-tooltip>
         </template>
@@ -493,7 +492,7 @@
               <v-icon>mdi-plus-circle</v-icon>
             </v-btn>
           </template>
-          <span>Create a node</span>
+          <span>{{$t('nodes.create')}}</span>
         </v-tooltip>
 
         <!-- Future: Implement multinode creation -->
@@ -527,7 +526,7 @@
               <v-icon>mdi-vector-circle</v-icon>
             </v-btn>
           </template>
-          <span>Enable/disable edge creation</span>
+          <span>{{$t('graph.toggleEdge')}}</span>
         </v-tooltip>
       </v-speed-dial>
 
@@ -556,15 +555,15 @@
               </v-btn>
 
             </template>
-            <span>Search</span>
+            <span>{{$t('general.search')}}</span>
           </v-tooltip>
         </template>
 
         <v-text-field
           style="width: max-content; margin-top: 35px"
           background-color="white"
-          label="Search"
-          placeholder="Type and hit enter"
+          :label="$t('general.search')"
+          :placeholder="$t('general.typeToSearch')"
           outlined
           v-model="searchInput"
           autofocus
@@ -601,7 +600,7 @@
               </v-btn>
 
             </template>
-            <span>View graph at point in time</span>
+            <span>{{$t('graph.pointInTime')}}</span>
           </v-tooltip>
         </template>
 
@@ -656,7 +655,7 @@
           :min="then.getTime()"
           step=1000
           :label="new Date(pointInTime).toLocaleString()"
-          :hint="'Earliest date: ' + then.toLocaleString()"
+          :hint="$t('query.earliestDate') + then.toLocaleString()"
           persistent-hint
           style="width: 600px; margin-top: 20px"
           @click.stop
@@ -691,7 +690,7 @@
             <v-icon v-else>mdi-chevron-left</v-icon>
           </v-btn>
 
-          <v-list-item-title>Legend</v-list-item-title>
+          <v-list-item-title>{{$t('graph.legend')}}</v-list-item-title>
         </v-list-item>
 
         <v-list-item>
@@ -699,7 +698,7 @@
               hide-details
               class="d-flex justify-center"
               v-model="edgeLabelFlag"
-              label="Toggle edge labels"
+              :label="$t('graph.toggleEdgeLabels')"
               v-if="!mini"
           ></v-switch>
         </v-list-item>
@@ -709,7 +708,7 @@
               hide-details
               class="d-flex justify-center"
               v-model="nodeLabelFlag"
-              label="Extend node labels"
+              :label="$t('graph.extendNodeLabels')"
               v-if="!mini"
           ></v-switch>
         </v-list-item>
@@ -720,7 +719,7 @@
               :items="colorGroupOptions"
               @input="updateColorGroup"
               hide-selected
-              hint="Choose how to group node color"
+              :hint="$t('graph.groupNodeColor')"
               persistent-hint
               v-if="!mini"
           >
@@ -761,21 +760,21 @@
       <v-card v-if="newGraphNode !== null">
 
         <v-card-title>
-        Selected Node: {{newGraphNode.id}} ({{newGraphNode.metatype_name}})
+        {{$t('nodes.selected')}}: {{newGraphNode.id}} ({{newGraphNode.metatype_name}})
         </v-card-title>
 
         <v-text-field
           class="px-6"
-          label="Depth"
+          :label="$t('graph.depth')"
           v-model="newGraphDepth"
-          hint="Depth of graph to travel from selected node"
+          :hint="$t('graph.nthDepth')"
           :rules="[rules.newGraphDepthRule]"
           maxlength="2"
         ></v-text-field>
 
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" text @click="newGraphDialog = false" >{{$t("createNode.cancel")}}</v-btn>
+          <v-btn color="primary" text @click="newGraphDialog = false" >{{$t("general.cancel")}}</v-btn>
           <v-btn color="primary" text @click="openNodeGraph(newGraphNode, newGraphDepth)">Go</v-btn>
         </v-card-actions>
 
@@ -820,7 +819,7 @@
               v-model="validEdge"
           >
             <v-card-title>
-              <span class="headline text-h3">{{$t("createEdge.formTitle")}}</span>
+              <span class="headline text-h3">{{$t("edges.create")}}</span>
             </v-card-title>
 
             <v-col cols="12">
@@ -828,14 +827,14 @@
                 <v-col cols="6">
                   <v-text-field
                       :value="interimLink.source.metatype_name"
-                      label="Origin Metatype"
+                      :label="$t('edges.originClass')"
                       readonly
                   ></v-text-field>
                 </v-col>
                 <v-col cols="6">
                   <v-text-field
                       :value="interimLink.target.metatype_name"
-                      label="Destination Metatype"
+                      :label="$t('edges.destinationClass')"
                       readonly
                   ></v-text-field>
                 </v-col>
@@ -853,14 +852,14 @@
                   <v-col cols="6">
                     <v-text-field
                         :value="interimLink.source.id"
-                        label="Origin ID"
+                        :label="$t('edges.originID')"
                         readonly
                     ></v-text-field>
                   </v-col>
                   <v-col cols="6">
                     <v-text-field
                         :value="interimLink.target.id"
-                        label="Destination ID"
+                        :label="$t('edges.destinationID')"
                         readonly
                     ></v-text-field>
                   </v-col>
@@ -872,13 +871,13 @@
                     :single-line="false"
                     item-text="name"
                     clearable
-                    :label="$t('dataMapping.chooseRelationship')"
+                    :label="$t('relationships.choose')"
                     return-object
-                    :rules="[v => !!v || $t('createEdge.relationshipRequired')]"
+                    :rules="[v => !!v || $t('validation.required')]"
                     required
                     @change="listRelationshipKeys(selectedRelationshipPair.relationship_id)"
                 >
-                  <template slot="append-outer"><info-tooltip :message="$t('dataMapping.relationshipPairSearchHelp')"></info-tooltip></template>
+                  <template slot="append-outer"><info-tooltip :message="$t('help.relationshipSearch')"></info-tooltip></template>
 
                   <template slot="item" slot-scope="data">
                     {{data.item.origin_metatype_name}} - {{data.item.relationship_name}} - {{data.item.destination_metatype_name}}
@@ -890,7 +889,7 @@
                     <v-col :cols="12" v-if="relationshipKeys && relationshipKeys.length !== 0">
                         <v-checkbox
                             v-model="optional"
-                            :label="'Show Optional Fields'"
+                            :label="$t('general.showOptional')"
                         ></v-checkbox>
                         <v-col :cols="12">
                             <v-data-table
@@ -953,8 +952,8 @@
 
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn color="primary" text @click="closeEdgeDialog()" >{{$t("createNode.cancel")}}</v-btn>
-              <v-btn v-if="relationshipPairs.length > 0" color="primary" text :disabled="!validEdge" @click="createEdge()">{{$t("createNode.save")}}</v-btn>
+              <v-btn color="primary" text @click="closeEdgeDialog()" >{{$t("general.cancel")}}</v-btn>
+              <v-btn v-if="relationshipPairs.length > 0" color="primary" text :disabled="!validEdge" @click="createEdge()">{{$t("general.save")}}</v-btn>
             </v-card-actions>
           </v-form>
         </template>
@@ -968,7 +967,6 @@ import NodeFilesDialog from "@/components/data/nodeFilesDialog.vue";
 import NodeTimeseriesDataTable from "@/components/data/nodeTimeseriesDataTable.vue";
 import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
 import CreateNodeCard from "@/components/data/createNodeCard.vue";
-import CreateEdgeDialog from "@/components/data/createEdgeDialog.vue";
 import EditNodeDialog from "@/components/data/editNodeDialog.vue";
 import NodeTagsDialog from "@/components/data/nodeTagsDialog.vue";
 import EdgeTagsDialog from "@/components/data/edgeTagsDialog.vue";
@@ -984,7 +982,6 @@ import {mdiInformation} from "@mdi/js";
     NodeFilesDialog,
     NodeTimeseriesDataTable,
     CreateNodeCard,
-    CreateEdgeDialog,
     SelectDataSource,
     EditNodeDialog,
     NodeTagsDialog,
@@ -1028,8 +1025,8 @@ export default class GraphViewer extends Vue {
   nodesById: any = {}
   nodeColorsArray: any = []
 
-  colorGroup = 'metatype'
-  colorGroupOptions = ['metatype', 'data source']
+  colorGroup = 'class'
+  colorGroupOptions = ['class', 'data source']
   colorGroupFilter: any = []
   selectedFilters: any = []
   errorMessage = ""
@@ -1103,7 +1100,7 @@ export default class GraphViewer extends Vue {
   rules = {
     newGraphDepthRule: ((value: string) => {
       const pattern = /^\d+$/
-      return pattern.test(value) || 'Invalid depth. Must be a number.'
+      return pattern.test(value) || this.$t('validation.nan') as string
     })
   }
 
@@ -1202,8 +1199,8 @@ export default class GraphViewer extends Vue {
 
   propertyHeaders() {
     return [
-      {text: this.$t('dataQuery.name'), value: 'key'},
-      {text: this.$t('dataQuery.value'), value: 'value'}
+      {text: this.$t('general.name'), value: 'key'},
+      {text: this.$t('general.value'), value: 'value'}
     ]
   }
 
@@ -1419,7 +1416,7 @@ export default class GraphViewer extends Vue {
           }) // add text over nodes
           .nodeCanvasObjectMode(node => highlightNodes.has(node) ? 'after' : 'after') // this format required for correctly displaying styles and text for both highlighted and non-highlighted states
           .nodeAutoColorBy((node: any) => {
-            if (this.colorGroup === 'metatype') {
+            if (this.colorGroup === 'class') {
               return `${node.metatype_name}`
             } else if (this.colorGroup === 'data source') {
               return `${node.data_source_id}`
@@ -1973,7 +1970,7 @@ export default class GraphViewer extends Vue {
       delete node.color
     });
 
-    if (groupSelection === 'metatype') {
+    if (groupSelection === 'class') {
       this.canvas!.nodeAutoColorBy((node: any) => `${node.metatype_name}`) // auto color by metatype
     } else if (groupSelection === 'data source') {
       this.canvas!.nodeAutoColorBy((node: any) => `${node.data_source_id}`) // auto color by data source
@@ -2243,7 +2240,7 @@ export default class GraphViewer extends Vue {
           const refinedEdge = {
             collapsed: false,
             id: results[0].id,
-            name: (this.selectedRelationshipPair) ? this.selectedRelationshipPair.relationship_name : "Name missing",
+            name: (this.selectedRelationshipPair) ? this.selectedRelationshipPair.relationship_name : this.$t('query.queryMissing') as string,
             nodePairId: this.interimLink.source.id + '_' + this.interimLink.target.id,
             source: this.interimLink.source,
             target: this.interimLink.target
@@ -2325,7 +2322,7 @@ export default class GraphViewer extends Vue {
 
       } else {
         this.loading = false
-        this.errorMessage = `Node containing label '${label}' not found`
+        this.errorMessage = `${this.$t('query.nodeContaining')}${label}${this.$t('query.labelNotFound')}`
       }
 
     }

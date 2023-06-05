@@ -12,13 +12,16 @@ import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
        @Prop({required: true})
        message!: string
 
+      @Prop({required: false, default: 5000})
+      timeout?: number
+
        internalMessage = ""
 
       @Watch('message', {immediate: true})
       onMessageChange() {
          // we do this so the message disappears eventually
          this.internalMessage = this.message
-        setTimeout(() => {this.internalMessage = ""}, 5000)
+        setTimeout(() => {this.internalMessage = ""}, this.timeout)
       }
     }
 </script>

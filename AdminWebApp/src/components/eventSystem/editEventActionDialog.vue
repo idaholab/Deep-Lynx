@@ -7,12 +7,12 @@
         class="mr-2"
         v-on="on"
       >mdi-pencil</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("editEventAction.formTitle")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("events.editAction")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline text-h3">{{$t("editEventAction.formTitle")}}</span>
+        <span class="headline text-h3">{{$t("events.editAction")}}</span>
       </v-card-title>
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
@@ -25,16 +25,16 @@
               <v-select
                   v-model="eventAction.action_type"
                   :items="actionType()"
-                  :label="$t('editEventAction.actionType')"
-                  :rules="[v => !!v || $t('dataMapping.required')]"
+                  :label="$t('events.actionType')"
+                  :rules="[v => !!v || $t('validation.required')]"
               >
               </v-select>
 
               <v-select
                     v-model="eventAction.event_type"
                     :items="eventType()"
-                    :label="$t('editEventAction.eventType')"
-                    :rules="[v => !!v || $t('dataMapping.required')]"
+                    :label="$t('events.eventType')"
+                    :rules="[v => !!v || $t('validation.required')]"
               >
               </v-select>
 
@@ -51,26 +51,26 @@
               <template>
                 <v-text-field v-if="eventAction.action_type === 'email_user'"
                     v-model="eventAction.destination"
-                    :label="$t('createEventAction.emailAddress')"
-                    :rules="[v => !!v || $t('dataMapping.required')]"
+                    :label="$t('events.destinationEmail')"
+                    :rules="[v => !!v || $t('validation.required')]"
                 ></v-text-field>
                 <v-text-field v-else
                     v-model="eventAction.destination"
                     :append-icon="send ? 'mdi-send' : 'mdi-send-check'"
                     @click:append="sendEvent"
-                    :label="$t('createEventAction.destination')"
-                    :rules="[v => !!v || $t('dataMapping.required')]"
+                    :label="$t('edges.destination')"
+                    :rules="[v => !!v || $t('validation.required')]"
                 ></v-text-field>
               </template>
 
               <v-text-field v-if="eventAction.event_type === 'manual'"
                 v-model="eventAction.destination_data_source_id"
-                :label="$t('createEventAction.destinationSource')"
+                :label="$t('events.destinationDataSource')"
               ></v-text-field>
 
               <v-checkbox
                     v-model="eventAction.active"
-                    :label="$t('createEventAction.enable')"
+                    :label="$t('general.enable')"
               ></v-checkbox>
             </v-form>
           </v-col>
@@ -79,8 +79,8 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" text @click="editReset()" >{{$t("home.cancel")}}</v-btn>
-        <v-btn color="primary" text @click="updateEventAction()" >{{$t("home.save")}}</v-btn>
+        <v-btn color="primary" text @click="editReset()" >{{$t("general.cancel")}}</v-btn>
+        <v-btn color="primary" text @click="updateEventAction()" >{{$t("general.save")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -107,8 +107,8 @@ export default class EditEventActionDialog extends Vue {
   @Prop({required: true})
   eventAction!: EventActionT
   
-  dataSourceLabel = "Data Source"
-  destinationLabel = "Destination Data Source"
+  dataSourceLabel = (this.$t('dataSources.dataSource') as string)
+  destinationLabel = (this.$t('events.destinationDataSource') as string)
   errorMessage = ""
   dialog = false
   valid = false
@@ -128,7 +128,7 @@ export default class EditEventActionDialog extends Vue {
       const resp: AxiosResponse = await axios.post(this.eventAction.destination!, {id: 'test', event: 'test'}, config)
 
       if (resp.status < 200 || resp.status > 299) {
-        this.errorMessage = `Request unsuccessful. Status code ${resp.status}. ${resp.statusText}`
+        this.errorMessage = `${this.$t('errors.statusCode')} ${resp.status}. ${resp.statusText}`
       }
       else {
         this.send = !this.send
@@ -145,22 +145,22 @@ export default class EditEventActionDialog extends Vue {
 
   eventType() {
         return  [
-            {text: this.$t('createEventAction.dataImported'), value: 'data_imported'},
-            {text: this.$t('createEventAction.dataIngested'), value: 'data_ingested'},
-            {text: this.$t('createEventAction.fileCreated'), value: 'file_created'},
-            {text: this.$t('createEventAction.fileModified'), value: 'file_modified'},
-            {text: this.$t('createEventAction.dataSourceCreated'), value: 'data_source_created'},
-            {text: this.$t('createEventAction.dataSourceModified'), value: 'data_source_modified'},
-            {text: this.$t('createEventAction.dataExported'), value: 'data_exported'},
-            {text: this.$t('createEventAction.manual'), value: 'manual'},
+            {text: this.$t('events.dataImported'), value: 'data_imported'},
+            {text: this.$t('events.dataIngested'), value: 'data_ingested'},
+            {text: this.$t('events.fileCreated'), value: 'file_created'},
+            {text: this.$t('events.fileModified'), value: 'file_modified'},
+            {text: this.$t('events.dataSourceCreated'), value: 'data_source_created'},
+            {text: this.$t('events.dataSourceModified'), value: 'data_source_modified'},
+            {text: this.$t('events.dataExported'), value: 'data_exported'},
+            {text: this.$t('events.manual'), value: 'manual'},
         ]
   }
 
   actionType() {
         return  [
-            {text: this.$t('createEventAction.default'), value: 'default'},
-            {text: this.$t('createEventAction.sendData'), value: 'send_data'},
-            {text: this.$t('createEventAction.emailUser'), value: 'email_user'},
+            {text: this.$t('general.default'), value: 'default'},
+            {text: this.$t('events.sendData'), value: 'send_data'},
+            {text: this.$t('events.emailUser'), value: 'email_user'},
         ]
   }
 

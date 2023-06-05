@@ -4,7 +4,7 @@
       v-model="selected"
       @change="setOperator"
       :disabled="disabled"
-      :label="$t('queryBuilder.selectOperator')"
+      :label="$t('operators.select')"
   ></v-select>
 </template>
 
@@ -24,12 +24,12 @@ export default class OperatorsSelect extends Vue {
   custom_operators?: {[key: string]: any}[]
 
   default_operators = [
-    {text: 'equals', value: 'eq'},
-    {text: 'not equals', value: 'neq'},
-    {text: 'like', value: 'like'},
-    {text: 'in', value: 'in'},
-    {text: 'less than', value: '<'},
-    {text: 'greater than', value: '>'},
+    {text: this.$t('operators.equals'), value: 'eq'},
+    {text: this.$t('operators.notEquals'), value: 'neq'},
+    {text: this.$t('operators.like'), value: 'like'},
+    {text: this.$t('operators.in'), value: 'in'},
+    {text: this.$t('operators.lessThan'), value: '<'},
+    {text: this.$t('operators.greaterThan'), value: '>'},
   ]
 
   // override default operators if specified

@@ -84,7 +84,7 @@ export class GremlinExportConfig extends BaseExporterConfig {
 }
 
 /*
-    ExportRecord represents an export record in the Deep Lynx database and the various
+    ExportRecord represents an export record in the DeepLynx database and the various
     validations required for said record to be considered valid.
  */
 export default class ExportRecord extends BaseDomainClass {

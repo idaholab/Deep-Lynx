@@ -9,7 +9,7 @@
 
       <template v-slot:top>
         <v-toolbar flat color="white">
-          <v-toolbar-title>{{$t("home.usersDescription")}}</v-toolbar-title>
+          <v-toolbar-title>{{$t("users.description")}}</v-toolbar-title>
         </v-toolbar>
 
       </template>
@@ -33,7 +33,7 @@
     <v-dialog v-model="editDialog" max-width="900px" @click:outside="clear()">
       <v-card class="pt-1 pb-3 px-2">
         <v-card-title>
-          <span class="headline text-h3">{{$t("users.editUserTitle")}}</span>
+          <span class="headline text-h3">{{$t("users.edit")}}</span>
         </v-card-title>   
         <v-card-text>
           <v-row>
@@ -47,7 +47,7 @@
                   <v-col :cols="6">
                     <v-text-field
                       v-model="toEdit.display_name"
-                      :label="$t('users.name')"
+                      :label="$t('general.name')"
                       required
                     ></v-text-field>
                   </v-col>
@@ -55,7 +55,7 @@
                   <v-col :cols="6">
                     <v-text-field
                       v-model="toEdit.email"
-                      :label="$t('users.email')"
+                      :label="$t('general.email')"
                       required
                     ></v-text-field>
                   </v-col>
@@ -65,7 +65,7 @@
           </v-row>
           <v-row>
             <v-col :cols="3">
-              <h3>{{$t("users.assignContainerRoles")}}</h3>
+              <h3>{{$t("containers.roles")}}</h3>
               <v-list dense :nav="true">
                 <v-list-item  v-for="container in containers"
                   v-bind:key="container.id"
@@ -93,8 +93,8 @@
 
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" text @click="editDialog = false">{{$t("users.cancel")}}</v-btn>
-          <v-btn color="primary" text @click="saveUser">{{$t("home.save")}}</v-btn>
+          <v-btn color="primary" text @click="editDialog = false">{{$t("general.cancel")}}</v-btn>
+          <v-btn color="primary" text @click="saveUser">{{$t("general.save")}}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -124,10 +124,10 @@
 
     get headers() {
       return  [
-        { text: this.$t("users.name"), value: 'display_name' },
-        { text: this.$t("users.email"), value: 'email'},
+        { text: this.$t("general.name"), value: 'display_name' },
+        { text: this.$t("general.email"), value: 'email'},
         { text: this.$t("users.admin"), value: 'admin'},
-        { text: this.$t("users.actions"), value: 'actions', sortable: false }
+        { text: this.$t("general.actions"), value: 'actions', sortable: false }
       ]
     }
 

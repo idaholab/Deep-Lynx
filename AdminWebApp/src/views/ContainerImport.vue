@@ -2,36 +2,39 @@
   <div>
     <v-card>
       <v-toolbar flat color="white">
-        <v-toolbar-title>{{$t('containerImport.pageTitle')}}</v-toolbar-title>
+        <v-toolbar-title>{{$t('imports.containerTitle')}}</v-toolbar-title>
       </v-toolbar>
 
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
-        <success-banner :message="successMessage"></success-banner>
+        <success-banner :message="successMessage" :timeout="25000"></success-banner>
         <v-row>
           <v-col :cols="12">
-            <p>{{$t('containerImport.pageDescription')}}</p>
+            <p>{{$t('imports.containerDescription')}}</p>
+            <p>{{$t('warnings.importContainer')}}</p>
 
               <v-checkbox v-model="importOntology">
                 <template v-slot:label>
-                  {{$t('containerImport.importOntology')}} <p class="text-caption" style="margin-left: 5px"> {{$t('beta')}}</p>
+                  {{$t('ontology.ontology')}} <p class="text-caption" style="margin-left: 5px"> {{$t('general.beta')}}</p>
                 </template>
 
-                <template slot="prepend"><info-tooltip :message="$t('containerImport.importOntologyHelp')"></info-tooltip> </template>
+                <template v-slot:prepend><info-tooltip :message="$t('help.importOntology')"></info-tooltip> </template>
               </v-checkbox>
 
             <v-checkbox v-model="importDataSources">
                 <template v-slot:label>
-                  {{$t('containerImport.importDataSources')}} <p class="text-caption" style="margin-left: 5px"> {{$t('beta')}}</p>
+                  {{$t('dataSources.dataSources')}} <p class="text-caption" style="margin-left: 5px"> {{$t('general.beta')}}</p>
                 </template>
 
-                <template slot="prepend"><info-tooltip :message="$t('containerImport.importDataSourceHelp')"></info-tooltip> </template>
+                <template v-slot:prepend><info-tooltip :message="$t('help.importDataSource')"></info-tooltip> </template>
               </v-checkbox>
 
-            <v-checkbox v-model="importTypeMappings" disabled>
+            <v-checkbox v-model="importTypeMappings" :disabled="!importDataSources">
                 <template v-slot:label>
-                  {{$t('containerImport.importTypeMappings')}} <p class="text-caption" style="margin-left: 5px"> {{$t('comingSoon')}}</p>
+                  {{$t('typeMappings.transformations')}} <p class="text-caption" style="margin-left: 5px"> {{$t('general.beta')}}</p>
                 </template>
+
+                <template v-slot:prepend><info-tooltip :message="$t('help.importTypeMapping')"></info-tooltip> </template>
               </v-checkbox>
 
           </v-col>
@@ -47,7 +50,7 @@
           </template>
         </v-file-input>
 
-        <v-btn color="primary" class="mt-2" text @click="importContainer" :disabled="!importSelected || !importFile"><span v-if="!loading">{{$t("containerImport.import")}}</span>
+        <v-btn color="primary" class="mt-2" text @click="importContainer" :disabled="!importSelected || !importFile"><span v-if="!loading">{{$t("imports.fromFile")}}</span>
           <span v-if="loading"><v-progress-circular indeterminate></v-progress-circular></span>
         </v-btn>
       </v-card-actions>
@@ -83,6 +86,11 @@ export default class ContainerImport extends Vue {
   @Watch('importTypeMappings')
   updateImportSelected() {
     this.importSelected = this.importOntology || this.importDataSources || this.importTypeMappings;
+  }
+
+  @Watch('importDataSources')
+  updateDataSourcesExport() {
+    if (this.importDataSources === false) this.importTypeMappings = false;
   }
 
   beforeMount() {
@@ -124,9 +132,9 @@ export default class ContainerImport extends Vue {
         .then((response: AxiosResponse) => {
           if(response.status > 299 || response.status < 200) {
             const error = JSON.parse(response.data.error).error;
-            this.errorMessage = `Unable to import container. ${error}`;
+            this.errorMessage = `${this.$t('imports.containerError')}. ${error}`;
           } else {
-            this.successMessage = response.data.value;
+            this.successMessage = `${response.data.value} ${this.$t('warnings.inactiveMappings')}`;
           }
         })
         .catch((e: any) => {

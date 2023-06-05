@@ -14,7 +14,7 @@
     >
       <template v-slot:top>
         <v-toolbar flat color="white">
-          <v-toolbar-title>{{$t('home.fileManagerDescription')}}</v-toolbar-title>
+          <v-toolbar-title>{{$t('modelExplorer.description')}}</v-toolbar-title>
           <v-spacer></v-spacer>
           <create-file-set-dialog :containerID="containerID" @fileSetCreated="refreshFileSets()"></create-file-set-dialog>
         </v-toolbar>
@@ -41,7 +41,7 @@
               @click='open3DViewer(items)'
               style="float: right"
           >
-            {{$t('fileManager.fileManager3DViewer')}}
+            {{$t('modelExplorer.viewIn3d')}}
           </v-btn>
         </td>
       </template>
@@ -52,7 +52,7 @@
           <template v-slot:activator="{on, attrs}">
             <v-icon v-bind="attrs" v-on="on" @click="copyID(item.file_id)">{{copy}}</v-icon>
           </template>
-          <span>{{$t('dataSources.copyID')}}</span>
+          <span>{{$t('general.copyID')}}</span>
           <span>{{item.file_id}}</span>
         </v-tooltip>
       </template>
@@ -116,12 +116,12 @@ export default class FileManager extends Vue {
   headers() {
     return [
       { text: '', value: 'copy', groupable: false,},
-      { text: this.$t('fileManager.id'), value: 'file_id', groupable: false,},
-      { text: this.$t('fileManager.tagName'), value: 'tag_name'},
-      { text: this.$t('fileManager.file'), value: 'file_name', groupable: false,},
-      { text: this.$t('fileManager.fileSize'), value: 'file_size', groupable: false,},
-      { text: this.$t('fileManager.modifiedAt'), value: 'file_modified_at', groupable: false,},
-      { text: this.$t('dataSources.actions'), value: 'actions', sortable: false, groupable: false,}
+      { text: this.$t('general.id'), value: 'file_id', groupable: false,},
+      { text: this.$t('tags.name'), value: 'tag_name'},
+      { text: this.$t('files.file'), value: 'file_name', groupable: false,},
+      { text: this.$t('files.fileSize'), value: 'file_size', groupable: false,},
+      { text: this.$t('general.modifiedAt'), value: 'file_modified_at', groupable: false,},
+      { text: this.$t('general.actions'), value: 'actions', sortable: false, groupable: false,}
     ]
   }
 

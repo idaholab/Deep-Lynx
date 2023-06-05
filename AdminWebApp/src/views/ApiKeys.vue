@@ -8,7 +8,7 @@
     >
       <template v-slot:top>
         <v-toolbar flat color="white">
-          <v-toolbar-title>{{$t('home.apiKeysDescription')}}</v-toolbar-title>
+          <v-toolbar-title>{{$t('apiKeys.description')}}</v-toolbar-title>
           <v-spacer></v-spacer>
         <create-api-key-dialog @apiKeyCreated="refreshKeys()"></create-api-key-dialog>
         </v-toolbar>
@@ -36,9 +36,9 @@ export default class ApiKeys extends Vue {
 
   headers() {
     return [
-      { text: this.$t('apiKeys.key'), value: 'key'},
-      { text: this.$t('apiKeys.note'), value: 'note'},
-      { text: this.$t('apiKeys.actions'), value: 'actions', sortable: false }
+      { text: this.$t('general.key'), value: 'key'},
+      { text: this.$t('general.note'), value: 'note'},
+      { text: this.$t('general.actions'), value: 'actions', sortable: false }
     ]
   }
 

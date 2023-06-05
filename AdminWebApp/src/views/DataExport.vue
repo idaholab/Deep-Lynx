@@ -17,7 +17,7 @@
         <success-banner :message="successMessage"></success-banner>
 
         <v-toolbar flat color="white">
-          <v-toolbar-title>{{$t("exports.title")}}</v-toolbar-title>
+          <v-toolbar-title>{{$t("exports.graph")}}</v-toolbar-title>
           <v-spacer></v-spacer>
           <create-export-dialog :containerID="containerID" @exportCreated="loadExports()"></create-export-dialog>
         </v-toolbar>
@@ -57,12 +57,12 @@
     >
       <v-card class="pt-1 pb-3 px-2">
         <v-card-title class="grey lighten-2">
-          <span class="headline text-h3">{{$t('exports.warningStopTitle')}}</span>
+          <span class="headline text-h3">{{$t('exports.stop')}}</span>
         </v-card-title>   
         <v-card-text>
           <v-row>
             <v-col>
-              {{$t('exports.warningStopBody')}}
+              {{$t('warnings.stopExport')}}
             </v-col>
           </v-row>
         </v-card-text>
@@ -76,7 +76,7 @@
               text
               @click="stopDialog = false"
           >
-           {{$t('exports.ok')}}
+           {{$t('general.ok')}}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -87,12 +87,12 @@
     >
       <v-card class="pt-1 pb-3 px-2">
         <v-card-title class="grey lighten-2">
-          <span class="headline text-h3">{{$t('exports.warningResetTitle')}}</span>
+          <span class="headline text-h3">{{$t('exports.reset')}}</span>
         </v-card-title>   
         <v-card-text>
           <v-row>
             <v-col>
-              {{$t('exports.warningResetBody')}}
+              {{$t('warnings.resetExport')}}
             </v-col>
           </v-row>
         </v-card-text>
@@ -106,14 +106,14 @@
               text
               @click="resetDialog = false"
           >
-            {{$t('exports.cancel')}}
+            {{$t('general.cancel')}}
           </v-btn>
           <v-btn
               color="primary"
               text
               @click="resetExport()"
           >
-            {{$t('exports.understandReset')}}
+            {{$t('exports.resetConfirm')}}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -124,12 +124,12 @@
     >
       <v-card class="pt-1 pb-3 px-2">
         <v-card-title class="grey lighten-2">
-          <span class="headline text-h3">{{$t('exports.warningDeleteTitle')}}</span>
+          <span class="headline text-h3">{{$t('exports.delete')}}</span>
         </v-card-title>   
         <v-card-text>
           <v-row>
             <v-col>
-              {{$t('exports.warningDeleteBody')}}
+              {{$t('warnings.deleteExport')}}
             </v-col>
           </v-row>
         </v-card-text>
@@ -143,14 +143,14 @@
               text
               @click="deleteDialog = false"
           >
-            {{$t('exports.cancel')}}
+            {{$t('general.cancel')}}
           </v-btn>
           <v-btn
               color="primary"
               text
               @click="deleteExport()"
           >
-            {{$t('exports.understandDelete')}}
+            {{$t('exports.deleteConfirm')}}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -199,10 +199,10 @@ export default class DataExport extends Vue {
   headers() {
     return  [
       { text: this.$t('exports.destinationType'), value: 'destination_type'},
-      { text: this.$t('exports.createdAt'), value: 'created_at'},
-      { text: this.$t('exports.status'), value: 'status'},
-      { text: this.$t('exports.statusMessage'), value: 'status_message'},
-      { text: this.$t('exports.actions'), value: 'actions', sortable: false }
+      { text: this.$t('general.createdAt'), value: 'created_at'},
+      { text: this.$t('general.status'), value: 'status'},
+      { text: this.$t('general.statusMessage'), value: 'status_message'},
+      { text: this.$t('general.actions'), value: 'actions', sortable: false }
     ]
   }
 
@@ -244,7 +244,7 @@ export default class DataExport extends Vue {
     this.$client.stopExport(this.containerID, dataExport.id)
         .then(result => {
           if(!result) {
-            this.errorMessage = this.$t('exports.errorStoppingAPI') as string
+            this.errorMessage = this.$t('errors.errorCommunicating') as string
           }
 
           this.loadExports()
@@ -255,7 +255,7 @@ export default class DataExport extends Vue {
     this.$client.startExport(this.containerID, dataExport.id)
         .then(result => {
           if(!result) {
-            this.errorMessage = this.$t('exports.errorStartingAPI') as string
+            this.errorMessage = this.$t('errors.errorCommunicating') as string
           }
 
           this.loadExports()
@@ -273,7 +273,7 @@ export default class DataExport extends Vue {
       this.$client.startExport(this.containerID, this.selectedExportID, true)
           .then(result => {
             if (!result) {
-              this.errorMessage = this.$t('exports.errorRestartingAPI') as string
+              this.errorMessage = this.$t('errors.errorCommunicating') as string
             }
 
             this.resetDialog = false
@@ -292,7 +292,7 @@ export default class DataExport extends Vue {
     this.$client.deleteExport(this.containerID, this.selectedExportID!)
         .then(result => {
           if (!result) {
-            this.errorMessage = this.$t('exports.errorDeletingAPI') as string
+            this.errorMessage = this.$t('errors.errorCommunicating') as string
           }
 
           this.loadExports()

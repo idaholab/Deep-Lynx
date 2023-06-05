@@ -1,17 +1,16 @@
-import DataSourceRecord, {ReceiveDataOptions} from '../../../domain_objects/data_warehouse/import/data_source';
+import DataSourceRecord, {ReceiveDataOptions, TimeseriesDataSourceConfig} from '../../../domain_objects/data_warehouse/import/data_source';
 import {DataSource} from './data_source';
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
 import {PassThrough, Readable, Writable, Transform} from 'stream';
 import {User} from '../../../domain_objects/access_management/user';
 import Result from '../../../common_classes/result';
-import Import, {DataStaging} from '../../../domain_objects/data_warehouse/import/import';
+import Import from '../../../domain_objects/data_warehouse/import/import';
 const JSONStream = require('JSONStream');
-const fastLoad = require('dl-fast-load');
-import Config from '../../../services/config';
 const devnull = require('dev-null');
 
 import pLimit from 'p-limit';
-import ImportMapper from '../../../data_access_layer/mappers/data_warehouse/import/import_mapper';
+import TimeseriesService from '../../../services/timeseries/timeseries';
+import {LegacyTimeseriesColumn} from 'deeplynx-timeseries';
 
 const limit = pLimit(50);
 
@@ -28,39 +27,36 @@ export default class TimeseriesDataSourceImpl implements DataSource {
         }
     }
 
-    async fastLoad(payloadStream: Readable, user: User, dataSourceImport: Import): Promise<Result<Import | boolean>> {
-        let loader = fastLoad.new({
-            connectionString: Config.core_db_connection_string as string,
-            dataSource: this.DataSourceRecord as object,
-            importID: dataSourceImport.id as string,
+    async fastLoad(payloadStream: Readable): Promise<void> {
+        let timeseriesService = await TimeseriesService.GetInstance();
+
+        return new Promise((resolve, reject) => {
+            timeseriesService.beginLegacyCsvIngestion(
+                this.DataSourceRecord?.id!,
+                (this.DataSourceRecord?.config as TimeseriesDataSourceConfig).columns as LegacyTimeseriesColumn[],
+            );
+
+            let pass = new PassThrough();
+
+            pass.on('data', (chunk: any) => {
+                timeseriesService.readData(chunk);
+            });
+
+            pass.on('error', (e: any) => {
+                return Promise.resolve(Result.Failure(JSON.stringify(e)));
+            });
+
+            pass.on('finish', () => {
+                timeseriesService
+                    .completeIngestion()
+                    .then(() => resolve())
+                    .catch((e) => {
+                        reject(e.message);
+                    });
+            });
+
+            payloadStream.pipe(pass);
         });
-
-        const pass = new PassThrough();
-
-        pass.on('data', (chunk) => {
-            fastLoad.read(loader, chunk);
-        });
-
-        pass.on('error', (e: any) => {
-            return Promise.resolve(Result.Failure(JSON.stringify(e)));
-        });
-
-        pass.on('finish', () => {
-            fastLoad.finish(loader);
-        });
-
-        payloadStream.pipe(pass);
-
-        let i = 0;
-        while (true) {
-            let retrieved = await ImportMapper.Instance.Retrieve(dataSourceImport.id!);
-            if ((!retrieved.isError && retrieved.value.status === 'completed') || i > 100) {
-                return Promise.resolve(retrieved);
-            }
-
-            await this.timer(100);
-            i++;
-        }
     }
 
     // see the interface declaration's explanation of ReceiveData
@@ -74,28 +70,9 @@ export default class TimeseriesDataSourceImpl implements DataSource {
             );
         }
 
-        // we're not making the import as part of the transaction because even if we error, we want to record the
-        // problem - and if we have 0 data retention on the source we need the import created prior to loading up
-        // the data as messages for the process queue
-        const newImport = await ImportMapper.Instance.CreateImport(
-            user.id!,
-            new Import({
-                data_source_id: this.DataSourceRecord.id,
-                reference: 'manual upload',
-            }),
-        );
-
-        if (newImport.isError) {
-            if (options?.transaction) await this.#mapper.rollbackTransaction(options?.transaction);
-            return Promise.resolve(Result.Failure(`unable to create import for data ${newImport.error?.error}`));
-        }
-
-        if (options?.websocket) {
-            options.websocket.send(JSON.stringify(newImport.value));
-        }
-
         if (options?.fast_load) {
-            return this.fastLoad(payloadStream, user, newImport.value);
+            await this.fastLoad(payloadStream);
+            return Promise.resolve(Result.Success(true));
         }
 
         // a buffer, once it's full we'll write these records to the database and wipe to start again

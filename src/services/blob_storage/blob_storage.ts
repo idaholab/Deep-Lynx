@@ -8,7 +8,7 @@ import File from '../../domain_objects/data_warehouse/data/file';
 import MinioBlobImpl from './minio_impl';
 
 /*
-    BlobStorage is an interface that Deep Lynx uses to accept and store user uploads.
+    BlobStorage is an interface that DeepLynx uses to accept and store user uploads.
     Implementations should be able to handle any file type.
  */
 export interface BlobStorage {

@@ -2,7 +2,7 @@
   <div>
     <v-card>
       <v-toolbar flat color="white">
-        <v-toolbar-title>{{$t('containerExport.pageTitle')}}</v-toolbar-title>
+        <v-toolbar-title>{{$t('exports.containerTitle')}}</v-toolbar-title>
       </v-toolbar>
 
       <v-card-text>
@@ -10,38 +10,37 @@
         <success-banner :message="successMessage"></success-banner>
         <v-row>
           <v-col :cols="12">
-            <p>{{$t('containerExport.pageDescription')}}</p>
+            <p>{{$t('exports.containerDescription')}}</p>
 
               <v-checkbox v-model="exportOntology">
                 <template v-slot:label>
-                  {{$t('containerExport.exportOntology')}} <p class="text-caption" style="margin-left: 5px"> {{$t('beta')}}</p>
+                  {{$t('ontology.ontology')}} <p class="text-caption" style="margin-left: 5px"> {{$t('general.beta')}}</p>
                 </template>
 
-                <template slot="prepend"><info-tooltip :message="$t('containerExport.exportOntologyHelp')"></info-tooltip> </template>
+                <template v-slot:prepend><info-tooltip :message="$t('help.exportOntology')"></info-tooltip> </template>
               </v-checkbox>
 
             <v-checkbox v-model="exportDataSources">
                 <template v-slot:label>
-                  {{$t('containerExport.exportDataSources')}} <p class="text-caption" style="margin-left: 5px"> {{$t('beta')}}</p>
+                  {{$t('dataSources.dataSources')}} <p class="text-caption" style="margin-left: 5px"> {{$t('general.beta')}}</p>
                 </template>
 
-                <template slot="prepend"><info-tooltip :message="$t('containerExport.exportDataSourceHelp')"></info-tooltip> </template>
+                <template v-slot:prepend><info-tooltip :message="$t('help.exportDataSource')"></info-tooltip> </template>
               </v-checkbox>
 
-            <v-checkbox v-model="exportTypeMappings" disabled>
+            <v-checkbox v-model="exportTypeMappings" :disabled="!exportDataSources">
                 <template v-slot:label>
-                  {{$t('containerExport.exportTypeMappings')}} <p class="text-caption" style="margin-left: 5px"> {{$t('comingSoon')}}</p>
+                  {{$t('typeMappings.transformations')}} <p class="text-caption" style="margin-left: 5px"> {{$t('general.beta')}}</p>
                 </template>
-              </v-checkbox>
 
+              <template v-slot:prepend><info-tooltip :message="$t('help.exportTypeMapping')"></info-tooltip> </template>
+              </v-checkbox>
           </v-col>
         </v-row>
-
-
       </v-card-text>
 
       <v-card-actions>
-        <v-btn color="primary" class="mt-2" text @click="exportContainer" :disabled="!exportSelected"><span v-if="!loading">{{$t("containerExport.export")}}</span>
+        <v-btn color="primary" class="mt-2" text @click="exportContainer" :disabled="!exportSelected"><span v-if="!loading">{{$t("exports.toFile")}}</span>
           <span v-if="loading"><v-progress-circular indeterminate></v-progress-circular></span>
         </v-btn>
       </v-card-actions>
@@ -78,6 +77,11 @@ export default class ContainerExport extends Vue {
     this.exportSelected = this.exportOntology || this.exportDataSources || this.exportTypeMappings;
   }
 
+  @Watch('exportDataSources')
+  updateDataSourcesExport() {
+    if (this.exportDataSources === false) this.exportTypeMappings = false;
+  }
+
   beforeMount() {
     this.container = this.$store.getters.activeContainer
   }
@@ -106,7 +110,7 @@ export default class ContainerExport extends Vue {
     axios.get(url, config)
         .then((response: AxiosResponse) => {
           if(response.status > 299 || response.status < 200) {
-            this.errorMessage = `Unable to download exported container`
+            this.errorMessage = this.$t('exports.downloadError') as string
           } else {
             const fetchedURL = window.URL.createObjectURL(new Blob([response.data]))
             const link = document.createElement('a')

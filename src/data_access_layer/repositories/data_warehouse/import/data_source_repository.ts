@@ -2,7 +2,7 @@ import RepositoryInterface, {DeleteOptions, FileOptions, QueryOptions, Repositor
 import DataSourceRecord, {
     TimeseriesBucketDataSourceConfig,
     TimeseriesColumn,
-    TimeseriesDataSourceConfig
+    TimeseriesDataSourceConfig,
 } from '../../../../domain_objects/data_warehouse/import/data_source';
 import DataSourceMapper, {TimeseriesRange} from '../../../mappers/data_warehouse/import/data_source_mapper';
 import HttpDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/http_data_source_impl';
@@ -22,7 +22,7 @@ import Logger from '../../../../services/logger';
 import {plainToClass} from 'class-transformer';
 import TimeseriesService from '../../../../services/timeseries/timeseries';
 import TimeseriesBucketDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/timeseries_bucket_data_source';
-import { Bucket, ChangeBucketPayload } from 'deeplynx-timeseries';
+import {Bucket, ChangeBucketPayload} from 'deeplynx-timeseries';
 
 /*
     DataSourceRepository contains methods for persisting and retrieving data sources
@@ -38,16 +38,16 @@ export default class DataSourceRepository extends Repository implements Reposito
     #importRepo = new ImportRepository();
     #factory = new DataSourceFactory();
     #groupBy?: string[];
-    #timeseriesBucket = TimeseriesService.Instance;
+    #timeseriesBucket = TimeseriesService.GetInstance;
 
     async delete(t: DataSource, options?: DeleteOptions): Promise<Result<boolean>> {
         if (!t.DataSourceRecord || !t.DataSourceRecord.id)
             return Promise.resolve(Result.Failure(`cannot delete data source: no data source record or record lacking id`));
         const hasImports = await ImportMapper.Instance.ExistForDataSource(t.DataSourceRecord.id);
 
-        const config = (t.DataSourceRecord.config as TimeseriesBucketDataSourceConfig);
+        const config = t.DataSourceRecord.config as TimeseriesBucketDataSourceConfig;
         if (t.DataSourceRecord.adapter_type === 'timeseries_bucket' && config.bucket!.id) {
-            await (await this.#timeseriesBucket).deleteBucket(config.bucket!.id);
+            await (await this.#timeseriesBucket()).deleteBucket(config.bucket!.id);
         }
 
         if (options) {
@@ -101,15 +101,15 @@ export default class DataSourceRepository extends Repository implements Reposito
             const originalToSave = await original.value.ToSave();
 
             // only attempt to update bucket if changeBucketPayload is present, else assume there are no changes to the bucket
-            const config = (toSave.config as TimeseriesBucketDataSourceConfig);
-            const originalConfig = (originalToSave.config as TimeseriesBucketDataSourceConfig);
+            const config = toSave.config as TimeseriesBucketDataSourceConfig;
+            const originalConfig = originalToSave.config as TimeseriesBucketDataSourceConfig;
             if (toSave.adapter_type === 'timeseries_bucket' && config.change_bucket_payload) {
-                const changeBucketPayload = config.change_bucket_payload!;
+                const changeBucketPayload = config.change_bucket_payload;
                 // bucket ID must come from the fetched data source
                 const bucketId = originalConfig.bucket!.id;
 
                 // update bucket according to the payload
-                const bucket = await (await this.#timeseriesBucket).updateBucket(bucketId, changeBucketPayload);
+                const bucket = await (await this.#timeseriesBucket()).updateBucket(bucketId, changeBucketPayload);
                 config.bucket = bucket;
 
                 // reset changeBucketPayload to undefined in case future updates don't require bucket update
@@ -117,7 +117,7 @@ export default class DataSourceRepository extends Repository implements Reposito
             }
 
             Object.assign(originalToSave, toSave);
-            
+
             const updated = await this.#mapper.Update(user.id!, originalToSave);
             if (updated.isError) return Promise.resolve(Result.Pass(updated));
 
@@ -130,10 +130,10 @@ export default class DataSourceRepository extends Repository implements Reposito
             // we need a transaction so that a hypertable failure can delete data source as well
             const transaction = await this.#mapper.startTransaction();
 
-            const config = (toSave.config as TimeseriesBucketDataSourceConfig);
+            const config = toSave.config as TimeseriesBucketDataSourceConfig;
             if (toSave.adapter_type === 'timeseries_bucket') {
                 const changeBucketPayload = config.change_bucket_payload!;
-                const bucket = await (await this.#timeseriesBucket).createBucket(changeBucketPayload);
+                const bucket = await (await this.#timeseriesBucket()).createBucket(changeBucketPayload);
                 config.bucket = bucket;
                 // reset changeBucketPayload to undefined in case future updates don't require bucket update
                 config.change_bucket_payload = undefined;
@@ -163,8 +163,68 @@ export default class DataSourceRepository extends Repository implements Reposito
         return Promise.resolve(Result.Success(true));
     }
 
-    async importDataSources(containerID: string, user: User, fileBuffer: Buffer): Promise<Result<string>> {
-        const jsonImport = JSON.parse(fileBuffer.toString('utf8').trim());
+    // attempts to create a new data source and returns the newly created data source
+    async createDataSource(t: DataSource, user: User): Promise<Result<DataSource>> {
+        if (!t.DataSourceRecord) return Promise.resolve(Result.Failure(`Data Source must have a data source record instantiated`));
+
+        const errors = await t.DataSourceRecord.validationErrors();
+        if (errors) return Promise.resolve(Result.Failure(`attached data source record does not pass validation ${errors.join(',')}`));
+
+        const toSave = await t.ToSave();
+        let savedRecord: DataSourceRecord;
+
+        if (toSave.id) {
+            // check for unique source name within container scope
+            const sources = await new DataSourceRepository().where().containerID('eq', toSave.container_id).and().id('neq', toSave.id).list();
+            if (sources.isError) return Promise.resolve(Result.Failure(`unable to list data sources for container ${sources.error}`));
+
+            // to allow partial updates we must first fetch the original object
+            const original = await this.findByID(toSave.id);
+            if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
+
+            const originalToSave = await original.value.ToSave();
+
+            Object.assign(originalToSave, toSave);
+
+            const updated = await this.#mapper.Update(user.id!, originalToSave);
+            if (updated.isError) return Promise.resolve(Result.Pass(updated));
+
+            savedRecord = updated.value;
+        } else {
+            // check for unique source name within container scope
+            const sources = await new DataSourceRepository().where().containerID('eq', toSave.container_id).list();
+            if (sources.isError) return Promise.resolve(Result.Failure(`unable to list data sources for container ${sources.error}`));
+
+            // we need a transaction so that a hypertable failure can delete data source as well
+            const transaction = await this.#mapper.startTransaction();
+
+            const created = await this.#mapper.Create(user.id!, toSave, transaction.value);
+            if (created.isError) return Promise.resolve(Result.Pass(created));
+
+            if (created.value.adapter_type === 'timeseries') {
+                const hypertable_created = await this.#mapper.CreateHypertable(created.value);
+                if (hypertable_created.isError) {
+                    await this.#mapper.rollbackTransaction(transaction.value);
+                    return Promise.resolve(Result.Failure(`unable to create hypertable for timeseries data source ${hypertable_created.error?.error}`));
+                }
+            }
+
+            await this.#mapper.completeTransaction(transaction.value);
+
+            savedRecord = created.value;
+        }
+
+        const newDataSource = await this.#factory.fromDataSourceRecord(savedRecord);
+        if (!newDataSource) return Promise.resolve(Result.Failure(`unable to instantiate new data source from saved data source record`));
+
+        Object.assign(t, newDataSource);
+
+        return Promise.resolve(Result.Success(newDataSource));
+    }
+
+    async importDataSources(containerID: string, user: User, jsonImport: any): Promise<Result<Map<string, string>>> {
+        // declare the return object which will be a map of the incoming data source id and existing or new data source id
+        const sourceIDMapping: Map<string, string> = new Map();
 
         if (!('data_sources' in jsonImport)) {
             return Promise.resolve(Result.Failure('Container export file does not contain all necessary sections for a data source export.'));
@@ -187,6 +247,7 @@ export default class DataSourceRepository extends Repository implements Reposito
             const existingDataSource = currentDataSources.value.find((ds) => ds?.DataSourceRecord?.name === dataSource.DataSourceRecord!.name);
             if (existingDataSource) {
                 dataSource.DataSourceRecord.id = existingDataSource.DataSourceRecord?.id;
+                sourceIDMapping.set(source.DataSourceRecord.id, existingDataSource.DataSourceRecord?.id!);
             } else {
                 dataSource.DataSourceRecord.id = undefined;
             }
@@ -194,10 +255,13 @@ export default class DataSourceRepository extends Repository implements Reposito
             dataSource.DataSourceRecord.container_id = containerID;
             dataSource.DataSourceRecord.active = false;
 
-            void (await this.save(dataSource, user));
+            const newDataSource = await this.createDataSource(dataSource, user);
+            if (newDataSource.isError) return Promise.resolve(Result.Failure('Unable to save data source'));
+
+            sourceIDMapping.set(source.DataSourceRecord.id, newDataSource.value.DataSourceRecord?.id!);
         }
 
-        return Promise.resolve(Result.Success('Successful data source import.'));
+        return Promise.resolve(Result.Success(sourceIDMapping));
     }
 
     // setting a data source to inactive will automatically stop the process loop
@@ -291,9 +355,7 @@ export default class DataSourceRepository extends Repository implements Reposito
         });
         if (results.isError) return Promise.resolve(Result.Pass(results));
 
-        return Promise.resolve(Result.Success(await Promise.all(
-            results.value.map(async (record) => await this.#factory.fromDataSourceRecord(record))
-        )));
+        return Promise.resolve(Result.Success(await Promise.all(results.value.map(async (record) => await this.#factory.fromDataSourceRecord(record)))));
     }
 
     async listForExport(containerID: string, options?: QueryOptions, transaction?: PoolClient): Promise<Result<(DataSource | undefined)[]>> {
@@ -305,9 +367,7 @@ export default class DataSourceRepository extends Repository implements Reposito
 
         const dsResults = await Promise.all(dataSources);
 
-        return Promise.resolve(Result.Success(await Promise.all(
-            dsResults.map(async (record) => await this.#factory.fromDataSourceRecord(record))
-        )));
+        return Promise.resolve(Result.Success(await Promise.all(dsResults.map(async (record) => await this.#factory.fromDataSourceRecord(record)))));
     }
 
     // you will see errors chaining this method with any of the query functions except timeseries query. I debated throwing
@@ -379,16 +439,16 @@ export default class DataSourceRepository extends Repository implements Reposito
 export class DataSourceFactory {
     async fromDataSourceRecord(
         sourceRecord: DataSourceRecord,
-    ): Promise<(
-            StandardDataSourceImpl
-            | HttpDataSourceImpl
-            | JazzDataSourceImpl
-            | AvevaDataSourceImpl
-            | TimeseriesDataSourceImpl
-            | P6DataSourceImpl
-            | TimeseriesBucketDataSourceImpl
-            | undefined
-        )> {
+    ): Promise<
+        | StandardDataSourceImpl
+        | HttpDataSourceImpl
+        | JazzDataSourceImpl
+        | AvevaDataSourceImpl
+        | TimeseriesDataSourceImpl
+        | P6DataSourceImpl
+        | TimeseriesBucketDataSourceImpl
+        | undefined
+    > {
         switch (sourceRecord.adapter_type) {
             case 'http': {
                 return Promise.resolve(new HttpDataSourceImpl(sourceRecord));
@@ -420,14 +480,14 @@ export class DataSourceFactory {
             }
 
             case 'timeseries_bucket': {
-                const config = (sourceRecord.config as TimeseriesBucketDataSourceConfig)
+                const config = sourceRecord.config as TimeseriesBucketDataSourceConfig;
                 let bucket: Bucket | undefined;
                 // if there is a bucketId, fetch the bucket
                 if (config.bucket && config.bucket.id) {
-                    bucket = await (await TimeseriesService.Instance).retrieveBucket(config.bucket.id);
-                } else if (config.change_bucket_payload) { 
+                    bucket = await (await TimeseriesService.GetInstance()).retrieveBucket(config.bucket.id);
+                } else if (config.change_bucket_payload) {
                     // otherwise, use changeBucketPayload to make a new bucket
-                    bucket = await (await TimeseriesService.Instance).createBucket(config.change_bucket_payload);
+                    bucket = await (await TimeseriesService.GetInstance()).createBucket(config.change_bucket_payload);
                 }
                 config.bucket = bucket;
                 sourceRecord.config = config;

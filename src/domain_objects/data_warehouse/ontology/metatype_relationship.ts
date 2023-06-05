@@ -8,7 +8,7 @@ import {fold} from 'fp-ts/Either';
 import {Type} from 'class-transformer';
 
 /*
-    MetatypeRelationship represents a metatype relationship record in the Deep Lynx database and the various
+    MetatypeRelationship represents a metatype relationship record in the DeepLynx database and the various
     validations required for said record to be considered valid. It also contains
     operations for managing the metatype relationship's keys and validating an
     unknown object against all keys.

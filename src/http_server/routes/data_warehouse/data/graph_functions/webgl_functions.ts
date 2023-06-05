@@ -86,7 +86,7 @@ export default class WebGLFunctions {
 
         busboy.on('finish', () => {
             // if there is no additional metadata we do not not create information
-            // to be processed by Deep Lynx, simply store the file and make it available
+            // to be processed by DeepLynx, simply store the file and make it available
             // via the normal file querying channels
             void Promise.all(files)
                 .then((results) => {

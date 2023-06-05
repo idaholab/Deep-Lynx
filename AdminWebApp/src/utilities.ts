@@ -2,7 +2,7 @@ import _Vue from 'vue';
 
 export class Utilities {
 
-    // this function is fully tested inside the main Deep Lynx repository. I've only
+    // this function is fully tested inside the main DeepLynx repository. I've only
     // pulled it out into this file for ease of use when importing the function from
     // inside the UI.
     getNestedValue(key: string, payload: any, index?: number[]): any {

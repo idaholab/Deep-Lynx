@@ -7,7 +7,7 @@ import {User} from '../user';
 import {Exclude} from 'class-transformer';
 
 /*
- OAuthApplication represents the registration of an application in Deep Lynx's
+ OAuthApplication represents the registration of an application in DeepLynx's
  OAuth2 compliant identity service.
 */
 export class OAuthApplication extends BaseDomainClass {
@@ -64,7 +64,7 @@ export class OAuthApplication extends BaseDomainClass {
 }
 
 /*
- OAuthRequest represents both authorization request and response from Deep Lynx's
+ OAuthRequest represents both authorization request and response from DeepLynx's
  OAuth2 compliant identity service. See - https://www.oauth.com/oauth2-servers/authorization/the-authorization-request/
  for more information regarding OAuth2 and the request/response structure
 */
@@ -126,7 +126,7 @@ export class OAuthRequest extends BaseDomainClass {
 /*
  OAuthTokenExchangeRequest represents a user's request to exchange a previously
  obtained authorization code for the final authorization token to be used as a
- JWT in the case of Deep Lynx. See - https://www.oauth.com/oauth2-servers/accessing-data/obtaining-an-access-token/
+ JWT in the case of DeepLynx. See - https://www.oauth.com/oauth2-servers/accessing-data/obtaining-an-access-token/
 */
 export class OAuthTokenExchangeRequest extends BaseDomainClass {
     @IsString()

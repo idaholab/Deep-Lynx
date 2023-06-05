@@ -29,7 +29,7 @@ import Logger from '../../../services/logger';
 
 /*
     OAuthRoutes contain all routes pertaining to oauth application management and
-    the OAuth2 compliant identity provider system of Deep Lynx's http server. These
+    the OAuth2 compliant identity provider system of DeepLynx's http server. These
     are the only routes in the application which serve actual web pages.
  */
 export default class OAuthRoutes {

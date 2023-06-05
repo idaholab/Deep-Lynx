@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-row>
-      <v-col :cols="3" style="padding-top:30px" class="text-right">{{$t('queryBuilder.dataSource')}}</v-col>
+      <v-col :cols="3" style="padding-top:30px" class="text-right">{{$t('dataSources.dataSource')}}</v-col>
       <v-col :cols="3">
         <operators-select
             :disabled="disabled"
@@ -40,9 +40,9 @@ export default class DataSourceFilter extends Vue {
   disabled?: boolean
 
   operators = [
-    {text: 'equals', value: 'eq'},
-    {text: 'not equals', value: 'neq'},
-    {text: 'in', value: 'in'},
+    {text: this.$t('operators.equals'), value: 'eq'},
+    {text: this.$t('operators.notEquals'), value: 'neq'},
+    {text: this.$t('operators.in'), value: 'in'},
   ]
 
   operator = ""

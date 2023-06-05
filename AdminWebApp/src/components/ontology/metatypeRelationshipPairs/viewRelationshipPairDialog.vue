@@ -7,12 +7,12 @@
           class="mr-2"
           v-on="on"
       >mdi-eye</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("viewMetatypeRelationshipPair.editMetatypeRelationshipPair")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("relationships.view")}}</v-btn>
     </template>
 
-    <v-card class="pt-1 pb-3 px-2">
+    <v-card class="pt-1 pb-3 px-2" v-if="selectedPair">
       <v-card-title>
-        <span class="headline text-h3">View Metatype Relationship Pair</span>
+        <span class="headline text-h3">{{ $t('general.view') }} {{ selectedPair.name }}</span>
       </v-card-title>
       <v-card-text v-if="selectedPair">
         <error-banner :message="errorMessage"></error-banner>
@@ -26,18 +26,18 @@
                   disabled
                   class="disabled"
               >
-                <template v-slot:label>{{$t('viewMetatypeRelationshipPair.name')}}</template>
+                <template v-slot:label>{{$t('general.name')}}</template>
               </v-text-field>
               <v-textarea
                   v-model="selectedPair.description"
                   disabled
                   class="disabled"
               >
-                <template v-slot:label>{{$t('viewMetatypeRelationshipPair.description')}}</template>
+                <template v-slot:label>{{$t('general.description')}}</template>
               </v-textarea>
               <v-autocomplete
                   v-model="selectedPair.origin_metatype_id"
-                  :rules="[v => !!v || $t('viewMetatypeRelationshipPair.originRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
                   :single-line="false"
                   :items="originMetatypes"
                   :search-input.sync="originSearch"
@@ -48,11 +48,11 @@
                   disabled
                   class="disabled"
               >
-                <template v-slot:label>{{$t('viewMetatypeRelationshipPair.originMetatype')}}</template>
+                <template v-slot:label>{{$t('edges.originClass')}}</template>
               </v-autocomplete>
               <v-autocomplete
                   v-model="selectedPair.relationship_id"
-                  :rules="[v => !!v || $t('viewMetatypeRelationshipPair.relationshipRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
                   :single-line="false"
                   :items="metatypeRelationships"
                   :search-input.sync="relationshipSearch"
@@ -63,11 +63,11 @@
                   disabled
                   class="disabled"
               >
-                <template v-slot:label>{{$t('viewMetatypeRelationshipPair.relationship')}}</template>
+                <template v-slot:label>{{$t('relationshipTypes.relType')}}</template>
               </v-autocomplete>
               <v-autocomplete
                   v-model="selectedPair.destination_metatype_id"
-                  :rules="[v => !!v || $t('viewMetatypeRelationshipPair.destinationRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
                   :single-line="false"
                   :items="destinationMetatypes"
                   :search-input.sync="destinationSearch"
@@ -78,17 +78,17 @@
                   disabled
                   class="disabled"
               >
-                <template v-slot:label>{{$t('viewMetatypeRelationshipPair.destinationMetatype')}}</template>
+                <template v-slot:label>{{$t('edges.destinationClass')}}</template>
               </v-autocomplete>
               <v-select
                   v-model="selectedPair.relationship_type"
-                  :rules="[v => !!v || $t('viewMetatypeRelationshipPair.relationshipTypeRequired')]"
+                  :rules="[v => !!v || $t('validation.required')]"
                   :items="relationshipTypeChoices"
                   required
                   disabled
                   class="disabled"
               >
-                <template v-slot:label>{{$t('viewMetatypeRelationshipPair.relationshipType')}}</template>
+                <template v-slot:label>{{$t('relationships.cardinality')}}</template>
               </v-select>
             </v-form>
           </v-col>
@@ -96,7 +96,7 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" text @click="dialog = false" >{{$t("viewMetatypeRelationshipPair.close")}}</v-btn>
+        <v-btn color="primary" text @click="dialog = false" >{{$t("general.close")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

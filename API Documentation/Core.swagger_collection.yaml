@@ -2,10 +2,10 @@ openapi: 3.0.1
 x-stoplight:
   id: tnc6hl9b9eimk
 info:
-  title: Deep Lynx
+  title: DeepLynx
   description: |-
-    The construction of megaprojects has consistently demonstrated challenges for project managers in regard to meeting cost, schedule, and performance requirements. Megaproject construction challenges are common place within megaprojects with many active projects in the United States failing to meet cost and schedule efforts by significant margins. Currently, engineering teams operate in siloed tools and disparate teams where connections across design, procurement, and construction systems are translated manually or over brittle point-to-point integrations. The manual nature of data exchange increases the risk of silent errors in the reactor design, with each silent error cascading across the design. These cascading errors lead to uncontrollable risk during construction, resulting in significant delays and cost overruns. Deep Lynx allows for an integrated platform during design and operations of mega projects.
-    The Deep Lynx Core API delivers a few main features.
+    The construction of megaprojects has consistently demonstrated challenges for project managers in regard to meeting cost, schedule, and performance requirements. Megaproject construction challenges are common place within megaprojects with many active projects in the United States failing to meet cost and schedule efforts by significant margins. Currently, engineering teams operate in siloed tools and disparate teams where connections across design, procurement, and construction systems are translated manually or over brittle point-to-point integrations. The manual nature of data exchange increases the risk of silent errors in the reactor design, with each silent error cascading across the design. These cascading errors lead to uncontrollable risk during construction, resulting in significant delays and cost overruns. DeepLynx allows for an integrated platform during design and operations of mega projects.
+    The DeepLynx Core API delivers a few main features.
     1. Provides a set of methods and endpoints for manipulating data in an object oriented database. This allows us to store complex datatypes as records and then to compile them into actual, modifiable objects at run-time. Users can store taxonomies or ontologies in a readable format.
     2. Provides methods for storing and retrieving data in a graph database. This data is structured and validated against the aformentioned object oriented database before storage.
   contact: {}
@@ -20,7 +20,7 @@ tags:
   - name: Containers
     description: 'Containers are considered a root object with only users and organizations as potential parents. Containers separate object defintions (as declared in Metatypes) from each other and allow for versioning and access control. '
   - name: Data Query
-    description: 'Deep Lynx gives you the ability to query data using a GraphQL enabled endpoint. Please see the documentation on GraphQL and run a schema query to learn more about what search methods, query arguments, and fields are available to you.'
+    description: 'DeepLynx gives you the ability to query data using a GraphQL enabled endpoint. Please see the documentation on GraphQL and run a schema query to learn more about what search methods, query arguments, and fields are available to you.'
   - name: Graph
     description: 'These endpoints give you the ability to add nodes and edges to the graph manually as well as perform some basic queries. For all advanced queries, please use the GraphQL query endpoint.'
   - name: Metatypes
@@ -46,9 +46,9 @@ tags:
   - name: Imports
     description: These endpoints allow for retrieving or deleting the data associated with  a given import from a Data Source.
   - name: Events
-    description: 'An application may create a Registered Event with Deep Lynx in order to  receive messages from Deep Lynx concerning the event type registered. This  system may be used to receive alerts when other Data Sources have ingested data, a new data source is created, etc.'
+    description: 'An application may create a Registered Event with DeepLynx in order to  receive messages from DeepLynx concerning the event type registered. This  system may be used to receive alerts when other Data Sources have ingested data, a new data source is created, etc.'
   - name: Authentication
-    description: These endpoints provide users and applications the ability to authenticate with Deep Lynx.
+    description: These endpoints provide users and applications the ability to authenticate with DeepLynx.
   - name: Tasks
     description: 'These endpoints provide functionality for the creation, retrieval, and updating of tasks.'
   - name: Tags
@@ -1196,7 +1196,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Edge'
-      description: 'This endpoint will attempt to create a connection between two nodes. You can either pass in the node''s Deep Lynx IDs, or the node''s original id, metatype id, and data source id to create these edges.'
+      description: 'This endpoint will attempt to create a connection between two nodes. You can either pass in the node''s DeepLynx IDs, or the node''s original id, metatype id, and data source id to create these edges.'
       requestBody:
         content:
           application/json:
@@ -2931,9 +2931,9 @@ paths:
         - Data Sources
       summary: Upload File
       description: |-
-        Uploads a file and it's metadata to Deep Lynx. All additional fields on the multipart form will be processed and added as metadata to the file upload itself. 
-        This should be a collection of files and normal fields. If you include a file field and call that "metadata" - you can include a normal metadata upload as either a json, csv, or xml file. This data will be processed like a normal import and the files attached to the processed data. Once Deep Lynx generates nodes and edges from that data, any files attached will automatically be attached to the resulting nodes/edges as well.
-        NOTE: The metadata file you upload, if json, must be wrapped in an array. If you do not pass in an array of objects, even if it's a single object, then Deep Lynx will attempt to split up your metadata into its parts instead of treating it like a whole object.
+        Uploads a file and it's metadata to DeepLynx. All additional fields on the multipart form will be processed and added as metadata to the file upload itself. 
+        This should be a collection of files and normal fields. If you include a file field and call that "metadata" - you can include a normal metadata upload as either a json, csv, or xml file. This data will be processed like a normal import and the files attached to the processed data. Once DeepLynx generates nodes and edges from that data, any files attached will automatically be attached to the resulting nodes/edges as well.
+        NOTE: The metadata file you upload, if json, must be wrapped in an array. If you do not pass in an array of objects, even if it's a single object, then DeepLynx will attempt to split up your metadata into its parts instead of treating it like a whole object.
       operationId: UploadFile
       parameters:
         - name: container_id
@@ -2972,8 +2972,8 @@ paths:
                   type: string
                   format: binary
         description: |-
-          This should be a collection of files and normal fields. If you include a file field and call that "metadata" - you can include a normal metadata upload as either a json, csv, or xml file. This data will be processed like a normal import and the files attached to the processed data. Once Deep Lynx generates nodes and edges from that data, any files attached will automatically be attached to the resulting nodes/edges as well.
-          NOTE: The metadata file you upload, if json, must be wrapped in an array. If you do not pass in an array of objects, even if it's a single object, then Deep Lynx will attempt to split up your metadata into its parts instead of treating it like a whole object.
+          This should be a collection of files and normal fields. If you include a file field and call that "metadata" - you can include a normal metadata upload as either a json, csv, or xml file. This data will be processed like a normal import and the files attached to the processed data. Once DeepLynx generates nodes and edges from that data, any files attached will automatically be attached to the resulting nodes/edges as well.
+          NOTE: The metadata file you upload, if json, must be wrapped in an array. If you do not pass in an array of objects, even if it's a single object, then DeepLynx will attempt to split up your metadata into its parts instead of treating it like a whole object.
   '/containers/{container_id}/files/{file_id}/download':
     get:
       tags:
@@ -4576,7 +4576,7 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/TokenExchangeRequest'
-      description: 'Exchanges credentials for a JSON Web Token (JWT). Multiple authentication flows are supported, see Deep Lynx documentation for details.'
+      description: 'Exchanges credentials for a JSON Web Token (JWT). Multiple authentication flows are supported, see DeepLynx documentation for details.'
   /health:
     get:
       tags:
