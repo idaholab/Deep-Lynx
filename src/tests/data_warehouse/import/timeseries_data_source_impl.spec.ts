@@ -25,7 +25,6 @@ import {LegacyTimeseriesColumn} from 'deeplynx-timeseries';
 
 const promiseExec = promisify(exec);
 const csv = require('csvtojson');
-const fastLoad = require('dl-fast-load');
 
 // Generally testing the standard implementation to verify that the ReceiveData and other underlying functions that most
 // other implementations rely on function ok.
