@@ -11,15 +11,6 @@
       <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
       <v-toolbar-title class="pl-0">{{componentName}}</v-toolbar-title>
       <v-spacer></v-spacer>
-      <BasicDialog :title="$t('general.view')">
-        <template v-slot:content>
-          <!-- content such as forms and tables -->
-        </template>
-        <template v-slot:actions>
-          <!-- Additional actions besides cancel -->
-          <v-btn color="primary" text @click="save">{{$t("general.save")}}</v-btn>
-        </template>
-      </BasicDialog>
 
       <language-select class="pt-2" style="max-width:125px;"></language-select>
     </v-app-bar>
