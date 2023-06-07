@@ -11,6 +11,15 @@
       <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
       <v-toolbar-title class="pl-0">{{componentName}}</v-toolbar-title>
       <v-spacer></v-spacer>
+      <BasicDialog :title="$t('general.view')">
+        <template v-slot:content>
+          <!-- content such as forms and tables -->
+        </template>
+        <template v-slot:actions>
+          <!-- Additional actions besides cancel -->
+          <v-btn color="primary" text @click="save">{{$t("general.save")}}</v-btn>
+        </template>
+      </BasicDialog>
 
       <language-select class="pt-2" style="max-width:125px;"></language-select>
     </v-app-bar>
@@ -618,6 +627,7 @@
   import ContainerImport from "@/views/ContainerImport.vue";
   import FileManager from "@/views/FileManager.vue";
   import OverviewGraph from "@/views/OverviewGraph.vue";
+  import BasicDialog from '@/components/dialogs/BasicDialog.vue'
 
   interface HomeModel {
     errorMessage: string
@@ -637,7 +647,7 @@
   export default Vue.extend ({
     name: 'HomePage',
 
-    components: { ContainerSelect, ApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, DataExport, DataQuery, DataSources, DataMapping, EventSystem, Settings, ContainerUsers, Users, Containers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ContainerExport, ContainerImport, FileManager, OverviewGraph },
+    components: { BasicDialog, ContainerSelect, ApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, DataExport, DataQuery, DataSources, DataMapping, EventSystem, Settings, ContainerUsers, Users, Containers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ContainerExport, ContainerImport, FileManager, OverviewGraph },
 
     props: {
       containerID: {
