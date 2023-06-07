@@ -78,105 +78,84 @@
 </template>
 
 <script lang="ts">
-  import Vue, { PropType } from 'vue'
-  import LanguageSelect from '@/components/general/languageSelect.vue'
-  import {ContainerT, UserContainerInviteT} from "@/api/types";
-  import ContainerSelect from "@/components/ontology/containers/containerSelect.vue"
-  import CreateContainerDialog from "@/components/ontology/containers/createContainerDialog.vue";
-  import Logout from "@/components/accessManagement/logout.vue";
-  import {RefreshPermissions} from "@/auth/authentication_service";
+import {Component, Vue} from 'vue-property-decorator'
+import LanguageSelect from '@/components/general/languageSelect.vue'
+import {ContainerT, UserContainerInviteT} from "@/api/types";
+import ContainerSelect from "@/components/ontology/containers/containerSelect.vue"
+import CreateContainerDialog from "@/components/ontology/containers/createContainerDialog.vue";
+import Logout from "@/components/accessManagement/logout.vue";
+import {RefreshPermissions} from "@/auth/authentication_service";
 
-  interface ContainerSelectionModel {
-    errorMessage: string
-    selectedContainer: ContainerT | null
-    outstandingInvites: UserContainerInviteT[]
+@Component({components: {
+    LanguageSelect,
+    ContainerSelect,
+    CreateContainerDialog,
+    Logout
+  }})
+export default class ContainerSelection extends Vue {
+  errorMessage = ""
+  selectedContainer: ContainerT | null = null
+  outstandingInvites: UserContainerInviteT[] = []
+
+  mounted() {
+    this.$client.listOutstandingContainerInvites()
+        .then(invites => {
+          this.outstandingInvites = invites
+        })
+        .catch(e => this.errorMessage = e)
   }
 
-  export default Vue.extend ({
-    name: 'ContainerSelection',
+  containerSelected(container: ContainerT) {
+    this.selectedContainer = container
+    this.$store.commit('setActiveContainer', container)
+    this.$store.commit('setEditMode', false)
 
-    components: { LanguageSelect, ContainerSelect, CreateContainerDialog, Logout },
+    this.toContainerHome()
+  }
 
-    data: (): ContainerSelectionModel => ({
-      errorMessage: "",
-      selectedContainer: null,
-      outstandingInvites: []
-    }),
+  toContainerHome() {
+    this.$store.commit('setEditMode', false)
 
-    methods: {
-      containerSelected(container: ContainerT) {
-        this.selectedContainer = container
-        this.$store.commit('setActiveContainer', container)
-        this.$store.commit('setEditMode', false)
+    // @ts-ignore
+    RefreshPermissions()
+        .then(() => {
+          this.$router.push({name: 'Home', params: {containerID: this.selectedContainer?.id!}})
+        })
+        .catch(e => this.errorMessage = e)
+  }
 
-        this.toContainerHome()
-      },
-      toContainerHome() {
-        this.$store.commit('setEditMode', false)
+  newContainer(containerID: string) {
+    this.$store.commit('setEditMode', false)
 
-        // @ts-ignore
-        RefreshPermissions()
-            .then(() => {
-              this.$router.push({name: 'Home', params: {containerID: this.selectedContainer?.id!}})
-            })
-            .catch(e => this.errorMessage = e)
-      },
-      newContainer(containerID: string) {
-        this.$store.commit('setEditMode', false)
+    RefreshPermissions()
+        .then(() => {
+          this.$router.push({name: 'Home', params: {containerID: containerID}})
+        })
+        .catch(e => this.errorMessage = e)
+  }
 
-        RefreshPermissions()
-            .then(() => {
-              this.$router.push({name: 'Home', params: {containerID: containerID}})
-            })
-            .catch(e => this.errorMessage = e)
-      },
-      onError(error: string) {
-        this.errorMessage = error
-      },
-      acceptInvite(token: string, containerName: string) {
-        this.$store.commit('setEditMode', false)
+  onError(error: string) {
+    this.errorMessage = error
+  }
 
-        RefreshPermissions()
-            .then(() => {
-              this.$router.push({name: 'ContainerInvite', query: {token, containerName}})
-            })
-            .catch(e => this.errorMessage = e)
-      },
+  acceptInvite(token: string, containerName: string) {
+    this.$store.commit('setEditMode', false)
 
-      helpLink() {
-        // Use the $t function to get the translated value
-        const translatedLink = this.$t('links.wiki');
-        
-        // Ensure it's a string before returning
-        if (typeof translatedLink === 'string') {
-          return translatedLink;
-        }
-        
-        // Return a default value or handle the error as per requirements
-        return '';
-      },
-      email() {
-        // Use the $t function to get the translated value
-        const translatedLink = this.$t('links.email');
-        
-        // Ensure it's a string before returning
-        if (typeof translatedLink === 'string') {
-          return translatedLink;
-        }
-        
-        // Return a default value or handle the error as per requirements
-        return '';
-      }
-    },
+    RefreshPermissions()
+        .then(() => {
+          this.$router.push({name: 'ContainerInvite', query: {token, containerName}})
+        })
+        .catch(e => this.errorMessage = e)
+  }
 
-    mounted() {
-      this.$client.listOutstandingContainerInvites()
-          .then(invites => {
-            this.outstandingInvites = invites
-          })
-          .catch(e => this.errorMessage = e)
-    }
-  })
+  helpLink() {
+    return this.$t('links.wiki')
+  }
+
+  email() {
+    return this.$t('links.email')
+  }
+}
 </script>
 
 <style lang="scss" scoped>
