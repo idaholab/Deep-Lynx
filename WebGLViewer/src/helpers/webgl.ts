@@ -1,9 +1,12 @@
+// Types
+import { WebGLFile, WebGLFileset } from './types';
+
 const data_ext = /^[^.]+.data$/;
 const wasm_ext = /^[^.]+.wasm$/;
 const framework_ext = /^[^.]+.framework.js$/;
 const loader_ext = /^[^.]+.loader.js$/;
 
-export default function ParseWebGL(arr) {
+export function ParseWebGL(arr: Array<WebGLFile>): WebGLFileset {
   // This function takes an array of files, and uses regex to organize them by file extension, returning an object:
   //   {
   //     data: { id: '1', container_id: '1', file_name: 'WebGL.data', tag_name: 'tag' },
@@ -12,14 +15,14 @@ export default function ParseWebGL(arr) {
   //     wasm: { id: '4', container_id: '1', file_name: 'WebGL.wasm', tag_name: 'tag' }
   //   }
 
-  let results = {};
+  let results: any = {};
 
   for (let obj of arr) {
     for (let [key, value] of Object.entries(obj)) {
       if (key === 'file_name') {
         if (data_ext.test(value) === true) {
           results.data = {
-            id: obj.file_id,
+            file_id: obj.file_id,
             container: obj.container_id,
             file_name: value,
             tag_name: obj.tag_name,
@@ -28,7 +31,7 @@ export default function ParseWebGL(arr) {
 
         if (wasm_ext.test(value) === true) {
           results.wasm = {
-            id: obj.file_id,
+            file_id: obj.file_id,
             container: obj.container_id,
             file_name: value,
             tag_name: obj.tag_name,
@@ -36,7 +39,7 @@ export default function ParseWebGL(arr) {
         }
         if (framework_ext.test(value) === true) {
           results.framework = {
-            id: obj.file_id,
+            file_id: obj.file_id,
             container: obj.container_id,
             file_name: value,
             tag_name: obj.tag_name,
@@ -44,7 +47,7 @@ export default function ParseWebGL(arr) {
         }
         if (loader_ext.test(value) === true) {
           results.loader = {
-            id: obj.file_id,
+            file_id: obj.file_id,
             container: obj.container_id,
             file_name: value,
             tag_name: obj.tag_name,
@@ -55,4 +58,16 @@ export default function ParseWebGL(arr) {
   }
 
   return results;
+}
+
+export function ParseTag(obj: WebGLFileset): string {
+  let tag: string = '';
+
+  for (let [file, metadata] of Object.entries(obj)) {
+    Object.entries(metadata).forEach((entry) => {
+      if (entry[0] == 'tag_name') tag = entry[1];
+    });
+  }
+
+  return tag;
 }

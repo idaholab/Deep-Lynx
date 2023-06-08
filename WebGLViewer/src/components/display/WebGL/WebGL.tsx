@@ -15,12 +15,15 @@ import {
 // Components 
 import UnityInstance from "./UnityInstance";
 
+// Types
+import { WebGLFile, WebGLFileset } from '../../../helpers/types';
+
 export default function WebGL() {
 
   // DeepLynx
   const host: string = useAppSelector((state: any) => state.appState.host);
   const token: string = useAppSelector((state: any) => state.appState.token);
-  const metadata: string = useAppSelector((state: any) => state.appState.metadata);
+  const metadata: WebGLFileset = useAppSelector((state: any) => state.appState.metadata);
   const query: boolean = useAppSelector((state: any) => state.appState.query);
   
   // WebGL Urls
@@ -36,16 +39,16 @@ export default function WebGL() {
   useEffect(() => {
     async function query() {
       if(metadata) {
-        let loaderUrl = new URL(`${host}/containers/${metadata.loader.container}/files/${metadata.loader.id}/download`);
+        let loaderUrl = new URL(`${host}/containers/${metadata.loader.container_id}/files/${metadata.loader.file_id}/download`);
         loaderUrl.searchParams.append("auth_token", token!);
 
-        let dataUrl = new URL(`${host}/containers/${metadata.data.container}/files/${metadata.data.id}/download`);
+        let dataUrl = new URL(`${host}/containers/${metadata.data.container_id}/files/${metadata.data.file_id}/download`);
         dataUrl.searchParams.append("auth_token", token!);
 
-        let frameworkUrl = new URL(`${host}/containers/${metadata.framework.container}/files/${metadata.framework.id}/download`);
+        let frameworkUrl = new URL(`${host}/containers/${metadata.framework.container_id}/files/${metadata.framework.file_id}/download`);
         frameworkUrl.searchParams.append("auth_token", token!);
 
-        let codeUrl = new URL(`${host}/containers/${metadata.wasm.container}/files/${metadata.wasm.id}/download`);
+        let codeUrl = new URL(`${host}/containers/${metadata.wasm.container_id}/files/${metadata.wasm.file_id}/download`);
         codeUrl.searchParams.append("auth_token", token!);
 
         setLoaderUrl(loaderUrl);

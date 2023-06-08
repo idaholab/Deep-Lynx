@@ -1,6 +1,8 @@
+// Types
+import { WebGLFile, WebGLFileset } from './types';
+
 // Helpers
-import ParseWebGL from './regex';
-import ParseTag from './tags';
+import { ParseWebGL, ParseTag } from './webgl';
 
 // Axios
 import axios from 'axios';
@@ -30,7 +32,7 @@ export async function AttachDeepLynx() {
     // Fileset
     const fileset: any = JSON.parse(import.meta.env.VITE_DEEPLYNX_WEBGL_FILES);
 
-    const metadata: any = ParseWebGL(fileset);
+    const metadata: WebGLFileset = ParseWebGL(fileset);
     console.log(metadata);
     const tag: string = ParseTag(metadata);
 
