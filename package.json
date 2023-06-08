@@ -23,6 +23,7 @@
         "build:docker": "tsc -p ./tsconfig.json && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && copyfiles -u 1 \"src/http_server/assets/**\" ./dist",
         "build:web": "cd ./AdminWebApp && npm install && npm run build -- --dest ./../dist/http_server/web_gui --mode bundled",
         "build:web-gl": "npm --prefix ./WebGLViewer install && npm --prefix ./WebGLViewer run build -- --base=/viewer/ --config=./vite.config.ts",
+        "timeseries-setup": "cd ./NodeLibraries/deeplynx-timeseries && npm upgrade && npm ci && npm run build",
         "watch": "nodemon",
         "start": "tsc && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && copyfiles -u 1 \"./src/http_server/assets/**\" ./dist && node -r dotenv/config ./dist/main.js",
         "start:docker": "node ./dist/main.js",
