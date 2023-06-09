@@ -43,6 +43,7 @@ export default {
             exportUsername: 'Gremlin username or username as specified by your destination',
             exportWrites: 'This determines how many times DeepLynx can write to the Gremlin enabled destination each second.',
             foundBugs: 'Run into some bugs?',
+            findHelp: 'Find help',
             graphCenter: 'Center on node: Double click node',
             graphColor: 'Node color is automatically set based on class name or data source.',
             graphHighlight: 'Highlight node/edge and related nodes/edges: Hover over node or edge',

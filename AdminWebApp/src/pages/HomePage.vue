@@ -558,7 +558,7 @@
           <v-col cols="12" :md="6" :lg="6">
             <v-card class="d-flex flex-column height-full">
               <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('containers.inviteUsers')}}</v-card-title>
-              <v-card-text>{{$t('help.inviteCard')}}</v-card-text>
+              <v-card-text>{{$t('containers.inviteUsers')}}</v-card-text>
               <v-card-actions class="d-flex flex-grow-1 pa-4 justify-center align-end">
                 <v-btn color="primary" @click="currentMainComponent='ContainerUsers'">
                   {{$t('users.manage')}}
