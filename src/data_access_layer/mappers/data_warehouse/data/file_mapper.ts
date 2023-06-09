@@ -125,6 +125,10 @@ export default class FileMapper extends Mapper {
         return super.runStatement(this.deleteStatement(fileID));
     }
 
+    public async DetachFileFromNodes(fileID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.detachFileFromNodesStatement(fileID));
+    }
+
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
@@ -200,11 +204,18 @@ export default class FileMapper extends Mapper {
         return format(text, values);
     }
 
-    private deleteStatement(containerID: string): QueryConfig {
+    private deleteStatement(fileID: string): QueryConfig {
         return {
             text: `DELETE FROM files WHERE id = $1`,
-            values: [containerID],
+            values: [fileID],
         };
+    }
+
+    private detachFileFromNodesStatement(fileID: string): QueryConfig {
+        return {
+            text: `DELETE FROM node_files WHERE file_id = $1`,
+            values: [fileID],
+        }
     }
 
     private retrieveByIdStatement(id: string): QueryConfig {
