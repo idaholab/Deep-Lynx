@@ -43,52 +43,58 @@
 </template>
 
 <script lang="ts">
-  import {Component, Vue} from 'vue-property-decorator'
+  import Vue from 'vue'
   import Config from '@/config'
   import LanguageSelect from '@/components/general/languageSelect.vue'
   import buildURL from "build-url"
 
-  @Component({components: {
-    LanguageSelect,
-  }})
-  export default class Login extends Vue {
-    errorMessage = ""
+  export default Vue.extend ({
+    name: 'LoginPage',
+
+    data() {
+      return {
+        errorMessage: ""
+      }
+    },
+
+    components: { LanguageSelect,  },
+
+    computed: {
+      loginURL(): string {
+        let state = localStorage.getItem('state')
+        let code_challenge = localStorage.getItem('code_challenge')
+
+        if(!state || !code_challenge) {
+          code_challenge = btoa(Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15))
+          state = btoa(Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15))
+
+          localStorage.setItem("state", state)
+          localStorage.setItem("code_challenge", code_challenge)
+        }
+
+        return buildURL(`${Config.deepLynxApiUri}/oauth/authorize`,
+          {
+            queryParams: {
+              response_type: "code",
+              client_id: Config.deepLynxAppID,
+              redirect_uri: `${Config.appUrl}`,
+              state,
+              scope: "all",
+              code_challenge,
+              code_challenge_method: "plain"
+            }
+          })
+      }
+    },
 
     created() {
       window.location.href = this.loginURL
-    }
-
-    get loginURL(): string {
-      let state = localStorage.getItem('state')
-      let code_challenge = localStorage.getItem('code_challenge')
-
-      if(!state || !code_challenge) {
-        code_challenge = btoa(Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15))
-        state = btoa(Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15))
-
-        localStorage.setItem("state", state)
-        localStorage.setItem("code_challenge", code_challenge)
-      }
-
-
-      return buildURL(`${Config.deepLynxApiUri}/oauth/authorize`,
-        {
-          queryParams: {
-            response_type: "code",
-            client_id: Config.deepLynxAppID,
-            redirect_uri: `${Config.appUrl}`,
-            state,
-            scope: "all",
-            code_challenge,
-            code_challenge_method: "plain"
-          }
-        })
-    }
+    },
 
     mounted() {
       if(this.$route.query.error) this.errorMessage = this.$route.query.error as string
     }
-  }
+  })
 </script>
 
 <style lang="scss" scoped>

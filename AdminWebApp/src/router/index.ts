@@ -1,8 +1,8 @@
 import Vue from 'vue';
 import VueRouter, {Route} from 'vue-router';
-import Home from '@/pages/Home.vue';
+import HomePage from '@/pages/HomePage.vue';
 import ContainerSelect from '@/pages/ContainerSelect.vue';
-import Login from '@/pages/Login.vue';
+import LoginPage from '@/pages/LoginPage.vue';
 import {IsLoggedIn, LoginFromToken} from '@/auth/authentication_service';
 import ContainerInvite from '@/pages/ContainerInvite.vue';
 import {RawLocation} from 'vue-router/types/router';
@@ -45,19 +45,19 @@ const routes = [
     {
         path: '/containers/:containerID',
         name: 'Home',
-        component: Home,
+        component: HomePage,
         props: true,
     },
     {
         path: '/containers/:containerID/:view/',
         name: 'Home View',
-        component: Home,
+        component: HomePage,
         props: true,
     },
     {
         path: '/containers/:containerID/:view/:arguments',
         name: 'Home View Arguments',
-        component: Home,
+        component: HomePage,
         props: true,
     },
     {
@@ -68,7 +68,7 @@ const routes = [
     {
         path: '/login',
         name: 'Login',
-        component: Login,
+        component: LoginPage,
     },
     {
         path: '*',

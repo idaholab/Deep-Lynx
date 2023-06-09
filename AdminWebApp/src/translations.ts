@@ -1,147 +1,122 @@
 export default {
     en: {
         languages: {
-            english: "English",
-            spanish: "Spanish",
+            english: 'English',
+            spanish: 'Spanish',
             language: 'Language',
         },
         help: {
             annotation: 'Location of annotation in relation to data point',
-            attachStaging: 
-                "Toggle whether or not this data source will preserve data indefinitely and display original data records for nodes and edges",
-            attachmentParams: 
-                "These parameters dictate which nodes should display this timeseries data. More information can be found on the wiki.",
+            attachStaging: 'Toggle whether or not this data source will preserve data indefinitely and display original data records for nodes and edges',
+            attachmentParams: 'These parameters dictate which nodes should display this timeseries data. More information can be found on the wiki.',
             chooseContainer:
                 'Please choose an initial container to get started. A container is like a project, and it consists of an ontology and the data stored under that ontology.',
-            chunkInterval: "Help Deciding Chunk Interval",
-            classEdgeParam: "Choose the Class that the parent or child record belongs to.",
-            classSearch: "Select the Class this data transformation will result in",
-            columnNameRegex: 
-                "Column Names must start with a lowercase letter or underscore and contain only lowercase letters, numbers and underscores. Spaces are not allowed and it must be between 2 and 30 characters in length.",
-            conditions: "Your transformation will only be applied to the data when these conditions are met.",
-            tellUs: "Tell Us!",
-            dataRetention: 
-                "This controls how many days DeepLynx will retain the raw data you import. A value of 0 will retain no raw data after processing and a value of -1 will retain raw data indefinitely.",
-            dateFormatString: 
-                "Formatting your date/time - if you do not include a timezone, we will assume UTC time.",
-            dataSourceCard: 
-                "Data Sources allow DeepLynx to retrieve or be sent data from outside sources. Managing Data Sources is essential to successful usage of DeepLynx. Manage your Data Sources by clicking below.",
-            dataSourceEdgeParam: "Choose the Data Source the parent or child record belongs to.",
-            deprecatedParams: 
-                "These refer to transformations whose types and keys no longer use the current ontology version. Any data resulting from these transformations will refer to a previous ontology version and not the current one. Consider updating them.",
-            dragNode: "Drag a node towards other nodes to create new edges.",
+            chunkInterval: 'Help Deciding Chunk Interval',
+            classEdgeParam: 'Choose the Class that the parent or child record belongs to.',
+            classSearch: 'Select the Class this data transformation will result in',
+            columnNameRegex:
+                'Column Names must start with a lowercase letter or underscore and contain only lowercase letters, numbers and underscores. Spaces are not allowed and it must be between 2 and 30 characters in length.',
+            conditions: 'Your transformation will only be applied to the data when these conditions are met.',
+            tellUs: 'Tell Us!',
+            dataRetention:
+                'This controls how many days DeepLynx will retain the raw data you import. A value of 0 will retain no raw data after processing and a value of -1 will retain raw data indefinitely.',
+            dateFormatString: 'Formatting your date/time - if you do not include a timezone, we will assume UTC time.',
+            dataSourceCard:
+                'Data Sources allow DeepLynx to retrieve or be sent data from outside sources. Managing Data Sources is essential to successful usage of DeepLynx. Manage your Data Sources by clicking below.',
+            dataSourceEdgeParam: 'Choose the Data Source the parent or child record belongs to.',
+            deprecatedParams:
+                'These refer to transformations whose types and keys no longer use the current ontology version. Any data resulting from these transformations will refer to a previous ontology version and not the current one. Consider updating them.',
+            dragNode: 'Drag a node towards other nodes to create new edges.',
             edgeDistance: 'Higher values move the edges farther apart',
             edgeInfo: 'View edge information: Left click edge (hover to see relationship type & edge ID)',
-            enumOptions: 
-                "This value represents the valid options if the enumeration data type is choosen. This is not required on any other data type.",
-            exportDataSource: "Selects all non-archived data sources to be exported to your container file.",
+            enumOptions: 'This value represents the valid options if the enumeration data type is choosen. This is not required on any other data type.',
+            exportDataSource: 'Selects all non-archived data sources to be exported to your container file.',
             exportDestination: 'The type of database or data source your data will be exported to',
             exportEndpoint: 'The HTTP/S endpoint of your Gremlin enabled destination.',
-            exportOntology: "Selects the entire ontology to be exported to your container file.",
+            exportOntology: 'Selects the entire ontology to be exported to your container file.',
             exportPassword: "User's password or access key as specified by your destination",
             exportPath: 'Optional path to include after the root endpoint.',
             exportPort: 'Port on which to contact the Gremlin enabled destination.',
-            exportProtocol:
-                'The communication protocol DeepLynx will use to export the data to the destination.',
-            exportTraversal:
-                "Name of the primary traversal source to export to, typically 'g' for Graph Traversal Source",
+            exportProtocol: 'The communication protocol DeepLynx will use to export the data to the destination.',
+            exportTraversal: "Name of the primary traversal source to export to, typically 'g' for Graph Traversal Source",
+            exportTypeMapping: 'Selects all type mappings in the container to be exported to your container file.',
             exportUsername: 'Gremlin username or username as specified by your destination',
-            exportWrites:
-                'This determines how many times DeepLynx can write to the Gremlin enabled destination each second.',
-            foundBugs: "Run into some bugs?",
+            exportWrites: 'This determines how many times DeepLynx can write to the Gremlin enabled destination each second.',
+            foundBugs: 'Run into some bugs?',
             graphCenter: 'Center on node: Double click node',
             graphColor: 'Node color is automatically set based on class name or data source.',
             graphHighlight: 'Highlight node/edge and related nodes/edges: Hover over node or edge',
-            graphHover: 
-                'Hover over the blue "+" icon in the top left of the graph view to find graph edit tools!',
+            graphHover: 'Hover over the blue "+" icon in the top left of the graph view to find graph edit tools!',
             graphLabels: 'Node labels show the "name" property (if present) or else the node ID.',
             graphMove: 'Move node: Left click and drag node',
             graphNearby: 'New graph of nearby nodes: Right click node',
             graphPan: 'Pan : Left click drag on open area of graph',
             graphZoom: 'Zoom : Mousewheel scroll',
-            help: "Need Help? Learn more on our ",
-            importDataSource: "Imports new or updated data sources from the supplied container file.",
-            importOntology: "Imports a new ontology from the supplied container file.",
-            mapKey: "Key on original payload to which the operator will be applied",
+            help: 'Need Help? Learn more on our ',
+            importDataSource: 'Imports new or updated data sources from the supplied container file.',
+            importOntology: 'Imports a new ontology from the supplied container file.',
+            importTypeMapping: 'Imports new or updated type mappings from the supplied container file.',
+            mapKey: 'Key on original payload to which the operator will be applied',
             mapping:
-                "Mapping allows you to specify what kind of record this transformation should produce. Each transformation can produce either a relationship or node. Further information will be requested as you work through the form.",
-            max: "Maximum matches",
-            metadataMapping: 
-                "Select any additional relevant payload keys to be included as supplementary data. These are properties that may not fit into the ontology but are still important to hold on to.",
-            min: "Minimum matches",
-            nameRegex: 
-                "Names must start with a letter or underscore and contain only letters, numbers and underscores. Spaces are not allowed and it must be between 2 and 30 characters in length.",
-            needHelp: 
-                "Need Help? Details on creating or updating a container via an ontology file can be found on our",
+                'Mapping allows you to specify what kind of record this transformation should produce. Each transformation can produce either a relationship or node. Further information will be requested as you work through the form.',
+            max: 'Maximum matches',
+            metadataMapping:
+                'Select any additional relevant payload keys to be included as supplementary data. These are properties that may not fit into the ontology but are still important to hold on to.',
+            min: 'Minimum matches',
+            nameRegex:
+                'Names must start with a letter or underscore and contain only letters, numbers and underscores. Spaces are not allowed and it must be between 2 and 30 characters in length.',
+            needHelp: 'Need Help? Details on creating or updating a container via an ontology file can be found on our',
             nodeDistance: 'Higher values move the nodes closer together',
             nodeInfo: 'View node information: Left click node (hover to see class & node ID)',
-            ontologyVersioning: 
-                "Toggle whether or not this container will maintain historical versions of the ontology.",
-            operator: "Operators denote a logical operation",
-            owlFile: "An .owl file - used to auto-populate the ontology",
-            owlUrl: "A URL to an .owl file - used to auto-populate the ontology",
-            parentChildKeys: 
-                "By selecting a Parent Key you determine that this record is a child of the value of that Parent Key, opposite is true of selecting a Child Key.",
+            ontologyVersioning: 'Toggle whether or not this container will maintain historical versions of the ontology.',
+            operator: 'Operators denote a logical operation',
+            owlFile: 'An .owl file - used to auto-populate the ontology',
+            owlUrl: 'A URL to an .owl file - used to auto-populate the ontology',
+            parentChildKeys:
+                'By selecting a Parent Key you determine that this record is a child of the value of that Parent Key, opposite is true of selecting a Child Key.',
             postgresDate: 'Date String should be in postgres datetime format',
-            propertyMapping: 
-                "Select the payload keys which correspond with the resulting class or relationship properties",
-            propertyName: 
-                'This is the JSON compliant property name your data will be stored under inside the database schema.',
-            queryAlt: 
-                "In the results window you can hold down the \"Alt\" key and click on the arrow for an object or array to fully expand the contents.",
-            queryAutocomplete: 
-                "While writing your query, hit \"Ctrl-Space\" to bring up the autocompletion menu. \nThis menu provides some of the available schema from which to query.",
-            queryComments: "Be sure to remove any comments and replace text in CAPS before running the query!",
-            queryDocs: "Need help writing your query? Consult the detailed documentation",
-            querySample: "To get started, try selecting one of the sample query templates below.",
-            regex: "Enter a valid regular expression for matching against future value",
-            releaseNode: 
-                "Release the node once the desired edge is indicated to bring up the dialog for edge creation.",
-            relationshipSearch: "Select the Relationship this data transformation will result in",
-            rootArray: 
-                "Selecting a root array means this transformation will be applied for every object contained in the selected root array.",
-            samplePayload: "This is an example of the data this transformation will be applied to.",
+            propertyMapping: 'Select the payload keys which correspond with the resulting class or relationship properties',
+            propertyName: 'This is the JSON compliant property name your data will be stored under inside the database schema.',
+            queryAlt: 'In the results window you can hold down the "Alt" key and click on the arrow for an object or array to fully expand the contents.',
+            queryAutocomplete:
+                'While writing your query, hit "Ctrl-Space" to bring up the autocompletion menu. \nThis menu provides some of the available schema from which to query.',
+            queryComments: 'Be sure to remove any comments and replace text in CAPS before running the query!',
+            queryDocs: 'Need help writing your query? Consult the detailed documentation',
+            querySample: 'To get started, try selecting one of the sample query templates below.',
+            regex: 'Enter a valid regular expression for matching against future value',
+            releaseNode: 'Release the node once the desired edge is indicated to bring up the dialog for edge creation.',
+            relationshipSearch: 'Select the Relationship this data transformation will result in',
+            rootArray: 'Selecting a root array means this transformation will be applied for every object contained in the selected root array.',
+            samplePayload: 'This is an example of the data this transformation will be applied to.',
             selectChangelist:
                 'Select or create a changelist in order to use edit mode. Note that newly created changelists may take a few minutes to generate fully before they are able to be selected.',
-            selectNodeInfo: "Select Node for more information",
-            stopNodes: 
-                "Ignored Properties tell DeepLynx what JSON properties, CSV columns, or XML types to ignore when creating the type mapping. For example if you have a two identical payloads, but one has an additional field, you could tell DeepLynx to ignore the additional field and the resulting type mapping would continue to match.",    
+            selectNodeInfo: 'Select Node for more information',
+            stopNodes:
+                'Ignored Properties tell DeepLynx what JSON properties, CSV columns, or XML types to ignore when creating the type mapping. For example if you have a two identical payloads, but one has an additional field, you could tell DeepLynx to ignore the additional field and the resulting type mapping would continue to match.',
             strftimeDate: 'Date String should be in strftime datetime format',
-            subexpressions: 
-                "Subexpressions allow for more complicated conditions to be created by enabling the use of AND/OR expressions when applying conditions.",
-            timeseriesTableDesign: 
-                "You must design a database table in which to store this timeseries data. More information can be found on our wiki.",
-            transformationConfig: 
-                "Transformation configuration options, generally how to deal with errors on key mapping and conversion.",
-            typeMapping: 
-                "The Type Mapping record and Transformation records are the workhorses of the type mapping system. A Type Mapping contains information as to which container and data source the type mapping belongs, a shape hash which is used to determine which objects to apply the type mapping to, and information denoting status. A Transformation belongs to a Type Mapping, and a Type Mapping can have as many Transformations as it wants. These are the individual actions that DeepLynx should perform on an object matching a certain Type Mapping. Transformations are applied to an object to produce either a node or edge record, ready to be inserted into the DeepLynx database.",
-            uniqueID: 
-                "The payload key which denotes an ID or otherwise unique identifier for the created node/edge",
-            valueNodes: 
+            subexpressions:
+                'Subexpressions allow for more complicated conditions to be created by enabling the use of AND/OR expressions when applying conditions.',
+            timeseriesTableDesign: 'You must design a database table in which to store this timeseries data. More information can be found on our wiki.',
+            transformationConfig: 'Transformation configuration options, generally how to deal with errors on key mapping and conversion.',
+            typeMapping:
+                'The Type Mapping record and Transformation records are the workhorses of the type mapping system. A Type Mapping contains information as to which container and data source the type mapping belongs, a shape hash which is used to determine which objects to apply the type mapping to, and information denoting status. A Transformation belongs to a Type Mapping, and a Type Mapping can have as many Transformations as it wants. These are the individual actions that DeepLynx should perform on an object matching a certain Type Mapping. Transformations are applied to an object to produce either a node or edge record, ready to be inserted into the DeepLynx database.',
+            uniqueID: 'The payload key which denotes an ID or otherwise unique identifier for the created node/edge',
+            valueNodes:
                 "Property Value vs. Type tells DeepLynx that a JSON property, CSV column, or XML type should have it's value examined as well as examining its type. This allows you to send in identical payload structures but create a different type mapping depending on the value of a property. ",
-            welcomeCard: 
-                "DeepLynx is a unique data warehouse designed to provide easy collaboration on large projects. DeepLynx allows users to define an ontology and then store data under it. Find more information on our wiki below."
+            welcomeCard:
+                'DeepLynx is a unique data warehouse designed to provide easy collaboration on large projects. DeepLynx allows users to define an ontology and then store data under it. Find more information on our wiki below.',
         },
         links: {
-            timeseriesQuickStart:
-                'https://github.com/idaholab/Deep-Lynx/wiki/Timeseries-Quick-Start-Guide',
-            chunkInterval:
-                'https://docs.timescale.com/use-timescale/latest/hypertables/about-hypertables/#hypertable-partitioning',
-            rustTime:
-                'https://docs.rs/chrono/0.4.24/chrono/format/strftime/index.html',
-            postgresTime:
-                'https://www.postgresql.org/docs/current/functions-formatting.html#FUNCTIONS-FORMATTING-DATETIME-TABLE',
+            timeseriesQuickStart: 'https://github.com/idaholab/Deep-Lynx/wiki/Timeseries-Quick-Start-Guide',
+            chunkInterval: 'https://docs.timescale.com/use-timescale/latest/hypertables/about-hypertables/#hypertable-partitioning',
+            rustTime: 'https://docs.rs/chrono/0.4.24/chrono/format/strftime/index.html',
+            postgresTime: 'https://www.postgresql.org/docs/current/functions-formatting.html#FUNCTIONS-FORMATTING-DATETIME-TABLE',
             wiki: 'https://github.com/idaholab/Deep-Lynx/wiki/',
-            importOntology: 
-                'https://github.com/idaholab/Deep-Lynx/wiki/Creating-an-Ontology#importing-an-ontology',
-            createOntology: 
-                'https://github.com/idaholab/Deep-Lynx/wiki/creating-an-ontology',
-            jsTime: 
-                'https://date-fns.org/v2.28.0/docs/parse',
-            graphQL: 
-                'https://github.com/idaholab/Deep-Lynx/wiki/Querying-Data-With-GraphQL',
-            email: 
-                'mailto:GRP-deeplynx-team@inl.gov',
+            importOntology: 'https://github.com/idaholab/Deep-Lynx/wiki/Creating-an-Ontology#importing-an-ontology',
+            createOntology: 'https://github.com/idaholab/Deep-Lynx/wiki/creating-an-ontology',
+            jsTime: 'https://date-fns.org/v2.28.0/docs/parse',
+            graphQL: 'https://github.com/idaholab/Deep-Lynx/wiki/Querying-Data-With-GraphQL',
+            email: 'mailto:GRP-deeplynx-team@inl.gov',
         },
         errors: {
             errorCommunicating: 'Error communicating with DeepLynx: ',
@@ -155,8 +130,7 @@ export default {
                 'Container created successfully but unable to load ontology from OWL file or OWL file URL. Navigate to your container and attempt to upload the ontology again, or delete the newly created container and use this dialog again. Error:',
             endDate: 'Please enter an end date that is greater than the start date',
             xCol: 'Please select an x column',
-            timestampType: 
-                'Some data could not be displayed due to incompatible primary timestamp types. Type selected:',
+            timestampType: 'Some data could not be displayed due to incompatible primary timestamp types. Type selected:',
             unrecognizedTimestamp: 'Unrecognized primary timestamp type',
             importMappings: 'Errors importing type mappings: check type mapping file or logs for more information',
             deleteMappings:
@@ -172,8 +146,7 @@ export default {
                 'Everything associated with this container - such as data, mappings and ontology versions - will be completely removed. This cannot be undone. Please verify that all users of the container are ready for its deletion.',
             changelist:
                 'Changelist creation may take upwards of 5 minutes to complete. Your changelist will have a status of "generating" until it is ready to be edited. Please be patient.',
-            className:
-                "If you edit a Class's name, it may appear as if you created a new Class, as we can no longer match it to the original ontology.",
+            className: "If you edit a Class's name, it may appear as if you created a new Class, as we can no longer match it to the original ontology.",
             relName:
                 "If you edit a Relationship Type's name, it may appear as if you created a new Relationship Type, as we can no longer match it to the original ontology.",
             reprocessSource:
@@ -215,7 +188,9 @@ export default {
                 'Deleting this key will cause any integration which uses it to no longer be able to authenticate with DeepLynx. Only delete a key that you know is not in use or has been compromised. Deleting a key/pair cannot be undone.',
             deleteEvent:
                 'Deleting an Event Action means it will be unrecoverable to even administrative users. Only delete Event Actions you know are no longer needed or that were created in error.',
-            
+            importContainer:
+                'Note that importing type mappings requires also importing data sources, and type mappings may require certain ontology elements in order to transfer completely.',
+            inactiveMappings: 'Please note that any data sources or type mappings imported are set as inactive.',
         },
         general: {
             default: 'Default',
@@ -374,8 +349,7 @@ export default {
         containers: {
             roles: 'Container Roles',
             settings: 'Container Level Settings',
-            settingsDescription: 
-                "This page allows you to make changes to your currently selected container. Note that you cannot change your container's name",
+            settingsDescription: "This page allows you to make changes to your currently selected container. Note that you cannot change your container's name",
             settingsSaved: 'Settings saved successfully',
             containers: 'Containers',
             container: 'Container',
@@ -417,7 +391,7 @@ export default {
             versioningDescription:
                 "Use this page to manage your Ontology's versioning and changelist system. You can browse your published versions, as well as manage pending and approved changelists for publishing.",
             versions: 'Ontology Versions',
-            
+
             rollbackDescription: 'Rollback to this Ontology Version (creates changelist for further approval)',
             publishedAt: 'Published At',
             rollbackStarted: 'Ontology Rollback Started - Check Changelists',
@@ -557,17 +531,14 @@ export default {
             standardDescription:
                 'This is the standard, passive data source for DeepLynx. Data is uploaded to this data source either manually or from external programs.',
             jazzName: 'Jazz',
-            jazzDescription: 
-                'This is the Jazz/Doors Next Generation data source. This allows you to pull in artifacts automatically from the Jazz/DNG server.',
+            jazzDescription: 'This is the Jazz/Doors Next Generation data source. This allows you to pull in artifacts automatically from the Jazz/DNG server.',
             p6Name: 'P6',
-            p6Description:
-                'This is a wrapper over the standard data source, but contains Oracle Primavera P6 specific configuration values.',
+            p6Description: 'This is a wrapper over the standard data source, but contains Oracle Primavera P6 specific configuration values.',
             httpName: 'HTTP Poller',
-            httpDescription: 
+            httpDescription:
                 'This data source is an active poller against a user provided HTTP endpoint. Each poll will take the response and create an import for it, passing a query parameter with the last successful poll time.',
             avevaName: 'Aveva',
-            avevaDescription: 
-                'This is a wrapper over the standard data source, but contains Aveva Everything3D specific configuration values.',
+            avevaDescription: 'This is a wrapper over the standard data source, but contains Aveva Everything3D specific configuration values.',
             authMethod: 'Authentication Method',
             useHttps: 'Use HTTPS',
             pollInterval: 'Poll Interval (in minutes)',
@@ -614,8 +585,7 @@ export default {
             newConfigured: 'New Configured Source',
             editConfigured: 'Edit Configured Source',
             deleteConfigured: 'Delete Configured Source',
-            deleteConfiguredConfirm: 
-                'Would you like to delete this pre-set Data Source configuration?',
+            deleteConfiguredConfirm: 'Would you like to delete this pre-set Data Source configuration?',
             selectEnabled: 'Select Enabled Data Source Types',
             reprocess: 'Reprocess Data Source',
             selected: 'Selected Data Sources',
@@ -867,8 +837,7 @@ export default {
                 'Loading an IFC file into the browser can be a resource and time consuming process. If the file is large, or your connection to DeepLynx is slow, it may take several minutes for the file to load and render. Please be patient.',
             loadIfc: 'Load IFC File',
             resetIfc: 'Reset IFC File',
-            fileDeleteWarn: 
-                'Are you sure you want to delete this file? If it is associated with a WebGL build, it may break the ability to view the 3D model.',
+            fileDeleteWarn: 'Are you sure you want to delete this file? If it is associated with a WebGL build, it may break the ability to view the 3D model.',
             models3D: '3D Models',
             model: 'Model',
         },
@@ -954,9 +923,9 @@ export default {
     },
     es: {
         languages: {
-            english: "Inglés",
-            spanish: "Español",
-            language: "Idioma",
+            english: 'Inglés',
+            spanish: 'Español',
+            language: 'Idioma',
         },
         home: {
             domainSelect: 'Seleccionar Dominio',

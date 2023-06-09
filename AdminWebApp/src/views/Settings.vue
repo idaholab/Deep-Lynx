@@ -33,7 +33,7 @@
                       {{$t('ontology.versioningEnabled')}}<p class="text-caption" style="margin-left: 5px">{{$t('general.beta')}}</p>
                     </template>
 
-                    <template slot="prepend"><info-tooltip :message="$t('help.ontologyVersioning')"></info-tooltip></template>
+                    <template v-slot:prepend><info-tooltip :message="$t('help.ontologyVersioning')"></info-tooltip></template>
                   </v-checkbox>
                 </v-col>
               </v-row>

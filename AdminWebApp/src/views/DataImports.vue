@@ -87,7 +87,7 @@
             :dataImport="item" :icon="true"
             @dataImportDeleted="listImports"
           ></delete-data-import-dialog>
-          <reprocess-data-import-dialog v-if="activeTab === 'dataSources'"
+          <reprocess-data-import-dialog v-if="activeTab === 'datasources'"
             :containerID="containerID"
             :dataImport="item"
             :icon="true"

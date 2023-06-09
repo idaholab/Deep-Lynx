@@ -475,7 +475,7 @@
                     {{$t('dataSources.attachStaging')}}<p class="text-caption" style="margin-left: 5px"></p>
                   </template>
 
-                  <template slot="prepend"><info-tooltip :message="$t('help.attachStaging')"></info-tooltip></template>
+                  <template v-slot:prepend><info-tooltip :message="$t('help.attachStaging')"></info-tooltip></template>
                 </v-checkbox>
 
                 <small>{{$t('help.dataRetention')}}</small>
@@ -608,7 +608,7 @@ export default class EditDataSourceDialog extends Vue {
     ]
   }
 
-  // for some reason calling the variable itself in the validation always results 
+  // for some reason calling the variable itself in the validation always results
   // in the default "true". this getter is a workaround for that
   getFastload() {
     return this.fastload
@@ -624,7 +624,7 @@ export default class EditDataSourceDialog extends Vue {
   // to ensure date string format passes validation
   @Watch('dataSource.config', {deep: true})
   checkDateString() {
-    if (this.dataSource.adapter_type === 'timeseries' && (this.dataSource.config as TimeseriesDataSourceConfig).columns.length > 0) {
+    if (this.dataSource.adapter_type === 'timeseries' && (this.dataSource.config as TimeseriesDataSourceConfig).columns.length > 0 && this.valid) {
       // @ts-ignore
       this.$refs.form!.validate()
     }
@@ -673,7 +673,7 @@ export default class EditDataSourceDialog extends Vue {
   timeseriesHelpLink(): string {
     if (this.fastload) {
       return this.$t('links.rustTime') as string
-    } 
+    }
     return this.$t('links.postgresTime') as string
   }
 

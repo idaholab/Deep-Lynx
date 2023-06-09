@@ -184,7 +184,7 @@
             </v-list-item-content>
           </v-list-item>
           <v-list-item
-            two-line 
+            two-line
             link
             v-if="$auth.Auth('data', 'write', containerID)"
             @click="setActiveComponent('event-actions')"
@@ -481,7 +481,7 @@
               <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('general.welcome')}}</v-card-title>
               <v-card-text>
                 <p>{{$t('help.welcomeCard')}}</p>
-                <p><a :href="welcomeLink()">{{$t('general.wiki')}}</a></p>
+                <p><a :href="welcomeLink">{{$t('general.wiki')}}</a></p>
               </v-card-text>
             </v-card>
           </v-col>
@@ -496,7 +496,7 @@
                 <!-- <template> -->
                 <v-card-text>
                   <p>{{$t('ontology.description')}}</p>
-                  <p><a :href="ontologyLink()">{{$t('ontology.loading')}}</a></p>
+                  <p><a :href="ontologyLink">{{$t('ontology.loading')}}</a></p>
                 </v-card-text>
               </template>
 
@@ -589,342 +589,384 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from 'vue-property-decorator'
-import Metatypes from "@/views/Metatypes.vue"
-import MetatypeRelationships from "@/views/MetatypeRelationships.vue"
-import MetatypeRelationshipPairs from "@/views/MetatypeRelationshipPairs.vue"
-import OntologyUpdate from "@/views/OntologyUpdate.vue"
-import DataExport from "@/views/DataExport.vue"
-import DataImports from "@/views/DataImports.vue"
-import DataQuery from "@/views/DataQuery.vue"
-import DataSources from "@/views/DataSources.vue"
-import DataMapping from "@/views/DataMapping.vue"
-import EventSystem from "@/views/EventSystem.vue"
-import Settings from "@/views/Settings.vue"
-import Users from "@/views/Users.vue"
-import ContainerUsers from "@/views/ContainerUsers.vue"
-import Containers from "@/views/Containers.vue"
-import ApiKeys from "@/views/ApiKeys.vue";
-import LanguageSelect from "@/components/general/languageSelect.vue";
-import ContainerSelect from "@/components/ontology/containers/containerSelect.vue"
-import {TranslateResult} from "vue-i18n";
-import {UserT} from "@/auth/types";
-import {ContainerT, DataSourceT, FullStatistics} from "@/api/types";
-import Config from "@/config";
-import OntologyVersioning from "@/views/OntologyVersioning.vue";
-import ContainerAlertBanner from "@/components/ontology/containers/containerAlertBanner.vue";
-import ServiceUsers from "@/views/ServiceUsers.vue";
-import ContainerExport from "@/views/ContainerExport.vue";
-import ContainerImport from "@/views/ContainerImport.vue";
-import FileManager from "@/views/FileManager.vue";
-import OverviewGraph from "@/views/OverviewGraph.vue";
+  import Vue, { PropType } from 'vue'
+  import Metatypes from "@/views/Metatypes.vue"
+  import MetatypeRelationships from "@/views/MetatypeRelationships.vue"
+  import MetatypeRelationshipPairs from "@/views/MetatypeRelationshipPairs.vue"
+  import OntologyUpdate from "@/views/OntologyUpdate.vue"
+  import DataExport from "@/views/DataExport.vue"
+  import DataImports from "@/views/DataImports.vue"
+  import DataQuery from "@/views/DataQuery.vue"
+  import DataSources from "@/views/DataSources.vue"
+  import DataMapping from "@/views/DataMapping.vue"
+  import EventSystem from "@/views/EventSystem.vue"
+  import Settings from "@/views/Settings.vue"
+  import Users from "@/views/Users.vue"
+  import ContainerUsers from "@/views/ContainerUsers.vue"
+  import Containers from "@/views/Containers.vue"
+  import ApiKeys from "@/views/ApiKeys.vue";
+  import LanguageSelect from "@/components/general/languageSelect.vue";
+  import ContainerSelect from "@/components/ontology/containers/containerSelect.vue"
+  import {TranslateResult} from "vue-i18n";
+  import {UserT} from "@/auth/types";
+  import {ContainerT, DataSourceT, FullStatistics} from "@/api/types";
+  import Config from "@/config";
+  import OntologyVersioning from "@/views/OntologyVersioning.vue";
+  import ContainerAlertBanner from "@/components/ontology/containers/containerAlertBanner.vue";
+  import ServiceUsers from "@/views/ServiceUsers.vue";
+  import ContainerExport from "@/views/ContainerExport.vue";
+  import ContainerImport from "@/views/ContainerImport.vue";
+  import FileManager from "@/views/FileManager.vue";
+  import OverviewGraph from "@/views/OverviewGraph.vue";
+  import BasicDialog from '@/components/dialogs/BasicDialog.vue'
 
-@Component({components: {
-    ContainerSelect,
-    ApiKeys,
-    LanguageSelect,
-    DataImports,
-    Metatypes,
-    MetatypeRelationships,
-    MetatypeRelationshipPairs,
-    OntologyUpdate,
-    DataExport,
-    DataQuery,
-    DataSources,
-    DataMapping,
-    EventSystem,
-    Settings,
-    ContainerUsers,
-    Users,
-    Containers,
-    OntologyVersioning,
-    ContainerAlertBanner,
-    ServiceUsers,
-    ContainerExport,
-    ContainerImport,
-    FileManager,
-    OverviewGraph
-  }})
-export default class Home extends Vue {
-  @Prop(String) readonly containerID: string | undefined
-  @Prop(String) readonly view: string | undefined
-  @Prop({default: ""}) readonly arguments!: string
-
-  errorMessage = ""
-  drawer = null
-  user: UserT | null = null
-  container: ContainerT | null = null
-  currentMainComponent: string | null = ''
-  componentName: string | TranslateResult = 'Home'
-  argument: string = this.arguments
-  componentKey = 0 // this is so we can force a re-render of certain components on component change - assign as key
-  stats: FullStatistics | null = null;
-
-  metatypesCount = 0
-  relationshipCount = 0
-  dataSources: DataSourceT[] = []
-
-  transactionHeaders() {
-    return [
-      {text: this.$t('statistics.pid'), value: 'pid'},
-      {text: this.$t('statistics.username'), value: 'usename'},
-      {text: this.$t('general.database'), value: 'datname'},
-      {text: this.$t('query.query'), value: 'query'},
-      {text: this.$t('statistics.duration'), value: 'duration.milliseconds'},
-    ]
+  interface HomeModel {
+    errorMessage: string
+    drawer: boolean
+    user: UserT | null
+    container: ContainerT | null
+    currentMainComponent: string | null
+    componentName: string | TranslateResult
+    argument: string | null
+    componentKey: number
+    stats: FullStatistics | null
+    metatypesCount: number,
+    relationshipCount: number,
+    dataSources: DataSourceT[]
   }
 
-  meanExecHeaders() {
-    return [
-      {text: this.$t('users.id'), value: 'user_id'},
-      {text: this.$t('statistics.dbID'), value: 'dbid'},
-      {text: this.$t('query.query'), value: 'query'},
-      {text: this.$t('statistics.meanExecutionTime'), value: 'mean_exec_time'},
-    ]
-  }
+  export default Vue.extend ({
+    name: 'HomePage',
 
-  beforeMount() {
-    this.$store.dispatch('refreshCurrentOntologyVersions');
+    components: { BasicDialog, ContainerSelect, ApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, DataExport, DataQuery, DataSources, DataMapping, EventSystem, Settings, ContainerUsers, Users, Containers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ContainerExport, ContainerImport, FileManager, OverviewGraph },
 
-    if(this.$auth.IsAdmin()) {
-      this.$client.retrieveStats()
-          .then(stats => this.stats = stats)
-          .catch(e => this.errorMessage = e)
-    }
-  }
+    props: {
+      containerID: {
+        type: String,
+        default: undefined,
+      },
+      view: {
+        type: String,
+        default: undefined,
+      },
+      arguments: {default: ""}, // as PropType<string>
+    },
 
+    computed: {
+      ontologyPopulated(): boolean {
+        return this.metatypesCount > 0 && this.relationshipCount > 0
+      }
+    },
 
-  mounted() {
-    this.user = this.$auth.CurrentUser();
+    data: (): HomeModel => ({
+      errorMessage: '',
+      drawer: true,
+      user: null,
+      container: null,
+      currentMainComponent: '',
+      componentName: 'HomePage',
+      argument: null,
+      componentKey: 0, // this is so we can force a re-render of certain components on component change - assign as key
+      stats: null,
 
-    this.$client.retrieveContainer(this.containerID!)
-        .then(container => {
-          this.container = container
-          this.$store.commit('setActiveContainer', this.container)
+      metatypesCount: 0,
+      relationshipCount: 0,
+      dataSources: [],
+    }),
 
-          if(this.view) {
-            this.setActiveComponent(this.view)
+    methods: {
+      transactionHeaders() {
+        return [
+          {text: this.$t('statistics.pid'), value: 'pid'},
+          {text: this.$t('statistics.username'), value: 'usename'},
+          {text: this.$t('general.database'), value: 'datname'},
+          {text: this.$t('query.query'), value: 'query'},
+          {text: this.$t('statistics.duration'), value: 'duration.milliseconds'},
+        ]
+      },
+      meanExecHeaders() {
+        return [
+          {text: this.$t('users.id'), value: 'user_id'},
+          {text: this.$t('statistics.dbID'), value: 'dbid'},
+          {text: this.$t('query.query'), value: 'query'},
+          {text: this.$t('statistics.meanExecutionTime'), value: 'mean_exec_time'},
+        ]
+      },
+      setActiveComponent(menuIndex: string) {
+        this.componentKey += 1 // increment so we force a re-render
+        this.argument = this.arguments
+
+        switch(menuIndex) {
+          case "dashboard": {
+            this.currentMainComponent = null
+            this.componentName = this.$t('general.dashboard')
+            this.$router.replace(`/containers/${this.containerID}`)
+            break;
           }
-        })
-        .catch(() =>this.$router.push({name: "ContainerSelect"})
-)
 
-    this.$client.listMetatypes(this.containerID as string, {
-      count: true,
-      ontologyVersion: this.$store.getters.currentOntologyVersionID
-    })
-        .then(metatypesCount => {
-          this.metatypesCount = metatypesCount as number
-        })
+          case "metatypes": {
+            this.currentMainComponent = "Metatypes";
+            this.componentName = this.$t('classes.classes')
+            this.$router.replace(`/containers/${this.containerID}/metatypes`)
+            break;
+          }
 
-    this.$client.listMetatypeRelationshipPairs(this.containerID as string, {
-      count: true,
-      ontologyVersion: this.$store.getters.currentOntologyVersionID
-    })
-        .then(relationshipCount => {
-          this.relationshipCount = relationshipCount as number
-        })
+          case "metatype-relationships": {
+            this.currentMainComponent = "MetatypeRelationships";
+            this.componentName = this.$t('relationshipTypes.relTypes')
+            this.$router.replace(`/containers/${this.containerID}/metatype-relationships`)
+            break;
+          }
 
-    this.$client.listDataSources(this.containerID as string)
-        .then(dataSources => {
-          this.dataSources = dataSources
+          case "metatype-relationship-pairs": {
+            this.currentMainComponent = "MetatypeRelationshipPairs";
+            this.componentName = this.$t('relationships.relationships')
+            this.$router.replace(`/containers/${this.containerID}/metatype-relationship-pairs`)
+            break;
+          }
 
-          this.dataSources.forEach((source, i) => {
-            this.$client.countDataForSource(this.containerID as string, source.id as string)
-            .then(count => {
-              this.dataSources[i].data_imported = count
+          case "ontology-update": {
+            this.currentMainComponent = "OntologyUpdate";
+            this.componentName = this.$t('ontology.updateTitle')
+            this.$router.replace(`/containers/${this.containerID}/ontology-update`)
+            break;
+          }
+
+          case "data-query": {
+            this.currentMainComponent = "DataQuery";
+            this.componentName = this.$t('query.viewer')
+            this.$router.replace(`/containers/${this.containerID}/data-query`)
+            break;
+          }
+
+          case "data-sources": {
+            this.currentMainComponent = "DataSources";
+            this.componentName = this.$t('dataSources.dataSources')
+            this.$router.replace(`/containers/${this.containerID}/data-sources/${this.arguments}`)
+            break;
+          }
+
+          case "data-export": {
+            this.currentMainComponent = "DataExport";
+            this.componentName = this.$t('exports.graph')
+            this.$router.replace(`/containers/${this.containerID}/data-export`)
+            break;
+          }
+
+          case "file-manager": {
+            this.currentMainComponent = "FileManager";
+            this.componentName = this.$t('modelExplorer.title')
+            this.$router.replace(`/containers/${this.containerID}/file-manager`)
+            break;
+          }
+
+          case "data-mapping": {
+            this.currentMainComponent = "DataMapping";
+            this.componentName = this.$t('typeMappings.typeMappings')
+            this.$router.replace(`/containers/${this.containerID}/data-mapping`)
+            break;
+          }
+
+          case "data-imports": {
+            this.currentMainComponent = "DataImports"
+            this.componentName = this.$t('imports.data')
+            this.$router.replace(`/containers/${this.containerID}/data-imports/${this.arguments}`)
+            break;
+          }
+
+          case "settings": {
+            this.currentMainComponent = "Settings";
+            this.componentName = this.$t('general.settings')
+            this.$router.replace(`/containers/${this.containerID}/settings`)
+            break;
+          }
+
+          case "users": {
+            this.currentMainComponent = "Users";
+            this.componentName = this.$t('users.users')
+            this.$router.replace(`/containers/${this.containerID}/users`)
+            break;
+          }
+
+          case "container-users": {
+            this.currentMainComponent = "ContainerUsers";
+            this.componentName = this.$t('users.containerTitle')
+            this.$router.replace(`/containers/${this.containerID}/container-users`)
+            break;
+          }
+
+          case "containers": {
+            this.currentMainComponent = "Containers"
+            this.componentName = this.$t('containers.containers')
+            this.$router.replace(`/containers/${this.containerID}/containers`)
+            break;
+          }
+
+          case "api-keys": {
+            this.currentMainComponent = "ApiKeys"
+            this.componentName = this.$t('apiKeys.personalKeys')
+            this.$router.replace(`/containers/${this.containerID}/api-keys`)
+            break;
+          }
+
+          case "ontology-versioning": {
+            this.currentMainComponent = "OntologyVersioning"
+            this.componentName = this.$t('ontology.versioningTitle')
+            this.$router.replace(`/containers/${this.containerID}/ontology-versioning`)
+            break;
+          }
+
+          case "service-users": {
+            this.currentMainComponent = "ServiceUsers"
+            this.componentName = this.$t('serviceUsers.title')
+            this.$router.replace(`/containers/${this.containerID}/service-users`)
+            break;
+          }
+
+          case "container-export": {
+            this.currentMainComponent = "ContainerExport"
+            this.componentName = this.$t('containers.export')
+            this.$router.replace(`/containers/${this.containerID}/container-export`)
+            break;
+          }
+
+          case "container-import": {
+            this.currentMainComponent = "ContainerImport"
+            this.componentName = this.$t('containers.import')
+            this.$router.replace(`/containers/${this.containerID}/container-import`)
+            break;
+          }
+
+          case "event-actions": {
+            this.currentMainComponent = "EventSystem";
+            this.componentName = this.$t('events.title')
+            this.$router.replace(`/containers/${this.containerID}/event-actions`)
+            break;
+          }
+
+          default : {
+            this.currentMainComponent = "";
+            break;
+          }
+        }
+      },
+      logout() {
+        this.$auth.Logout()
+        window.location.href = `${Config.deepLynxApiUri}/logout?redirect_uri=${Config.appUrl}`
+      },
+      containerSelect() {
+        this.$router.push({name: "ContainerSelect"})
+      },
+      helpLink() {
+        // Use the $t function to get the translated value
+        const translatedLink = this.$t('links.wiki');
+        
+        // Ensure it's a string before returning
+        if (typeof translatedLink === 'string') {
+          return translatedLink;
+        }
+        
+        // Return a default value or handle the error as per requirements
+        return '';
+      },
+      emailLink() {
+        // Use the $t function to get the translated value
+        const translatedLink = this.$t('links.email');
+        
+        // Ensure it's a string before returning
+        if (typeof translatedLink === 'string') {
+          return translatedLink;
+        }
+        
+        // Return a default value or handle the error as per requirements
+        return '';
+      },
+      welcomeLink() {
+        // Use the $t function to get the translated value
+        const translatedLink = this.$t('links.wiki');
+        
+        // Ensure it's a string before returning
+        if (typeof translatedLink === 'string') {
+          return translatedLink;
+        }
+        
+        // Return a default value or handle the error as per requirements
+        return '';
+      },
+      ontologyLink() {
+        // Use the $t function to get the translated value
+        const translatedLink = this.$t('links.createOntology');
+        
+        // Ensure it's a string before returning
+        if (typeof translatedLink === 'string') {
+          return translatedLink;
+        }
+        
+        // Return a default value or handle the error as per requirements
+        return '';
+      },
+    },
+
+    created() {
+      if (typeof this.arguments !== 'undefined') {
+        this.argument = this.arguments;
+      }
+    },
+
+    beforeMount() {
+      this.$store.dispatch('refreshCurrentOntologyVersions');
+
+      if(this.$auth.IsAdmin()) {
+        this.$client.retrieveStats()
+            .then(stats => this.stats = stats)
+            .catch(e => this.errorMessage = e)
+      }
+    },
+
+    mounted() {
+      this.user = this.$auth.CurrentUser();
+
+      this.$client.retrieveContainer(this.containerID!)
+          .then(container => {
+            this.container = container
+            this.$store.commit('setActiveContainer', this.container)
+
+            if(this.view) {
+              this.setActiveComponent(this.view)
+            }
+          })
+          .catch(() =>this.$router.push({name: "ContainerSelect"})
+    )
+
+      this.$client.listMetatypes(this.containerID as string, {
+        count: true,
+        ontologyVersion: this.$store.getters.currentOntologyVersionID
+      })
+          .then(metatypesCount => {
+            this.metatypesCount = metatypesCount as number
+          })
+
+      this.$client.listMetatypeRelationshipPairs(this.containerID as string, {
+        count: true,
+        ontologyVersion: this.$store.getters.currentOntologyVersionID
+      })
+          .then(relationshipCount => {
+            this.relationshipCount = relationshipCount as number
+          })
+
+      this.$client.listDataSources(this.containerID as string)
+          .then(dataSources => {
+            this.dataSources = dataSources
+
+            this.dataSources.forEach((source, i) => {
+              this.$client.countDataForSource(this.containerID as string, source.id as string)
+              .then(count => {
+                this.dataSources[i].data_imported = count
+              })
             })
           })
-        })
-  }
-
-  setActiveComponent(menuIndex: string) {
-    this.componentKey += 1 // increment so we force a re-render
-
-    switch(menuIndex) {
-      case "dashboard": {
-        this.currentMainComponent = null
-        this.componentName = this.$t('general.dashboard')
-        this.$router.replace(`/containers/${this.containerID}`)
-        break;
-      }
-
-      case "metatypes": {
-        this.currentMainComponent = "Metatypes";
-        this.componentName = this.$t('classes.classes')
-        this.$router.replace(`/containers/${this.containerID}/metatypes`)
-        break;
-      }
-
-      case "metatype-relationships": {
-        this.currentMainComponent = "MetatypeRelationships";
-        this.componentName = this.$t('relationshipTypes.relTypes')
-        this.$router.replace(`/containers/${this.containerID}/metatype-relationships`)
-        break;
-      }
-
-      case "metatype-relationship-pairs": {
-        this.currentMainComponent = "MetatypeRelationshipPairs";
-        this.componentName = this.$t('relationships.relationships')
-        this.$router.replace(`/containers/${this.containerID}/metatype-relationship-pairs`)
-        break;
-      }
-
-      case "ontology-update": {
-        this.currentMainComponent = "OntologyUpdate";
-        this.componentName = this.$t('ontology.updateTitle')
-        this.$router.replace(`/containers/${this.containerID}/ontology-update`)
-        break;
-      }
-
-      case "data-query": {
-        this.currentMainComponent = "DataQuery";
-        this.componentName = this.$t('query.viewer')
-        this.$router.replace(`/containers/${this.containerID}/data-query`)
-        break;
-      }
-
-      case "data-sources": {
-        this.currentMainComponent = "DataSources";
-        this.componentName = this.$t('dataSources.dataSources')
-        this.$router.replace(`/containers/${this.containerID}/data-sources`)
-        break;
-      }
-
-      case "data-export": {
-        this.currentMainComponent = "DataExport";
-        this.componentName = this.$t('exports.graph')
-        this.$router.replace(`/containers/${this.containerID}/data-export`)
-        break;
-      }
-
-      case "file-manager": {
-        this.currentMainComponent = "FileManager";
-        this.componentName = this.$t('modelExplorer.title')
-        this.$router.replace(`/containers/${this.containerID}/file-manager`)
-        break;
-      }
-
-      case "data-mapping": {
-        this.currentMainComponent = "DataMapping";
-        this.componentName = this.$t('typeMappings.typeMappings')
-        this.$router.replace(`/containers/${this.containerID}/data-mapping`)
-        break;
-      }
-
-      case "data-imports": {
-        this.currentMainComponent = "DataImports"
-        this.componentName = this.$t('imports.data')
-        this.$router.replace(`/containers/${this.containerID}/data-imports/${this.arguments}`)
-        break;
-      }
-
-      case "settings": {
-        this.currentMainComponent = "Settings";
-        this.componentName = this.$t('general.settings')
-        this.$router.replace(`/containers/${this.containerID}/settings`)
-        break;
-      }
-
-      case "users": {
-        this.currentMainComponent = "Users";
-        this.componentName = this.$t('users.users')
-        this.$router.replace(`/containers/${this.containerID}/users`)
-        break;
-      }
-
-      case "container-users": {
-        this.currentMainComponent = "ContainerUsers";
-        this.componentName = this.$t('users.containerTitle')
-        this.$router.replace(`/containers/${this.containerID}/container-users`)
-        break;
-      }
-
-      case "containers": {
-        this.currentMainComponent = "Containers"
-        this.componentName = this.$t('containers.containers')
-        this.$router.replace(`/containers/${this.containerID}/containers`)
-        break;
-      }
-
-      case "api-keys": {
-        this.currentMainComponent = "ApiKeys"
-        this.componentName = this.$t('apiKeys.personalKeys')
-        this.$router.replace(`/containers/${this.containerID}/api-keys`)
-        break;
-      }
-
-      case "ontology-versioning": {
-        this.currentMainComponent = "OntologyVersioning"
-        this.componentName = this.$t('ontology.versioningTitle')
-        this.$router.replace(`/containers/${this.containerID}/ontology-versioning`)
-        break;
-      }
-
-      case "service-users": {
-        this.currentMainComponent = "ServiceUsers"
-        this.componentName = this.$t('serviceUsers.title')
-        this.$router.replace(`/containers/${this.containerID}/service-users`)
-        break;
-      }
-
-      case "container-export": {
-        this.currentMainComponent = "ContainerExport"
-        this.componentName = this.$t('containers.export')
-        this.$router.replace(`/containers/${this.containerID}/container-export`)
-        break;
-      }
-
-      case "container-import": {
-        this.currentMainComponent = "ContainerImport"
-        this.componentName = this.$t('containers.import')
-        this.$router.replace(`/containers/${this.containerID}/container-import`)
-        break;
-      }
-
-      case "event-actions": {
-        this.currentMainComponent = "EventSystem";
-        this.componentName = this.$t('events.title')
-        this.$router.replace(`/containers/${this.containerID}/event-actions`)
-        break;
-      }
-
-      default : {
-        this.currentMainComponent = "";
-        break;
-      }
     }
-  }
-
-  logout() {
-    this.$auth.Logout()
-    window.location.href = `${Config.deepLynxApiUri}/logout?redirect_uri=${Config.appUrl}`
-  }
-
-  containerSelect() {
-    this.$router.push({name: "ContainerSelect"})
-  }
-
-  get welcomeLink() {
-    return this.$t('links.wiki')
-  }
-
-  get ontologyLink() {
-    return this.$t('links.createOntology')
-  }
-
-  get ontologyPopulated(): boolean {
-    return this.metatypesCount > 0 && this.relationshipCount > 0
-  }
-
-  helpLink() {
-    return this.$t('links.wiki')
-  }
-
-  emailLink() {
-    return this.$t('links.email')
-  }
-}
+  });
 </script>
 
 <style lang="scss" scoped>
