@@ -23,7 +23,7 @@ export function ParseWebGL(arr: Array<WebGLFile>): WebGLFileset {
         if (data_ext.test(value) === true) {
           results.data = {
             file_id: obj.file_id,
-            container: obj.container_id,
+            container_id: obj.container_id,
             file_name: value,
             tag_name: obj.tag_name,
           };
@@ -32,7 +32,7 @@ export function ParseWebGL(arr: Array<WebGLFile>): WebGLFileset {
         if (wasm_ext.test(value) === true) {
           results.wasm = {
             file_id: obj.file_id,
-            container: obj.container_id,
+            container_id: obj.container_id,
             file_name: value,
             tag_name: obj.tag_name,
           };
@@ -40,7 +40,7 @@ export function ParseWebGL(arr: Array<WebGLFile>): WebGLFileset {
         if (framework_ext.test(value) === true) {
           results.framework = {
             file_id: obj.file_id,
-            container: obj.container_id,
+            container_id: obj.container_id,
             file_name: value,
             tag_name: obj.tag_name,
           };
@@ -48,7 +48,7 @@ export function ParseWebGL(arr: Array<WebGLFile>): WebGLFileset {
         if (loader_ext.test(value) === true) {
           results.loader = {
             file_id: obj.file_id,
-            container: obj.container_id,
+            container_id: obj.container_id,
             file_name: value,
             tag_name: obj.tag_name,
           };

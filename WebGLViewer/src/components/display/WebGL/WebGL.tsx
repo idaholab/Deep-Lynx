@@ -38,6 +38,7 @@ export default function WebGL() {
 
   useEffect(() => {
     async function query() {
+      console.log(metadata);
       if(metadata) {
         let loaderUrl = new URL(`${host}/containers/${metadata.loader.container_id}/files/${metadata.loader.file_id}/download`);
         loaderUrl.searchParams.append("auth_token", token!);
