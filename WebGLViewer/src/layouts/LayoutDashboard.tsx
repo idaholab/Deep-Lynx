@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 
 // Custom Components
-import WebGL from '../components/display/WebGL';
+import WebGL from '../components/display/WebGL/WebGL';
 
 function LayoutDashboard() {
 

@@ -30,6 +30,10 @@ type Props = {
 const NodeInfoDetailsHistory: React.FC<Props> = ({
   data
 }) => {
+  // DeepLynx
+  const host: string = useAppSelector((state: any) => state.appState.host);
+  const token: string = useAppSelector((state: any) => state.appState.token);
+  const container: string = useAppSelector((state: any) => state.appState.container);
   const nodeData = data;
   const nodeId = data.id;
 
@@ -59,13 +63,9 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
   });
   const [nodeHistory, setNodeHistory] = useState([]);
 
-  const containerId = useAppSelector((state: any) => state.appState.containerId);
-
   useEffect(() => {
     async function getNodeHistory() {
-      const token = localStorage.getItem('user.token');
-      
-      await axios.get( `${location.origin}/containers/${containerId}/graphs/nodes/${nodeId}/`,
+      await axios.get( `${host}/containers/${container}/graphs/nodes/${nodeId}/`,
         {
           params: { history: 'true' },
           headers: {

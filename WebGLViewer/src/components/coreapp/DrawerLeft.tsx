@@ -12,7 +12,7 @@ import axios from 'axios';
 // Import Redux Actions
 import { appStateActions } from '../../../app/store/index';
 
-// MUI Components
+// Material
 import {
   Box,
   Button,
@@ -27,7 +27,6 @@ import {
   Typography,
 } from '@mui/material';
 
-
 // MUI Icons
 import MenuIcon from '@mui/icons-material/Menu';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
@@ -36,7 +35,7 @@ import ImageIcon from '@mui/icons-material/Image';
 import InfoIcon from '@mui/icons-material/Info';
 import SettingsIcon from '@mui/icons-material/Settings';
 
-// Custom Components
+// Components
 import DrawerContentsNodeList from '../drawercontents/DrawerContentsNodeList';
 import DrawerContentsNodeInfo from '../drawercontents/DrawerContentsNodeInfo';
 import DrawerContentsSceneList from '../drawercontents/DrawerContentsSceneList';
@@ -47,6 +46,7 @@ import ButtonIconText from '../elements/ButtonIconText';
 import '../../styles/App.scss';
 // @ts-ignore
 import COLORS from '../../../src/styles/variables';
+import { unstable_renderSubtreeIntoContainer } from 'react-dom';
 
 const queryFilterData = (query: any, data: any) => {
   if (!query) {
@@ -79,25 +79,27 @@ type Props = {};
 
 const DrawerLeft: React.FC<Props> = ({}) => {
 
+  // Store
   const dispatch = useAppDispatch();
+
+  // DeepLynx
+  const host: string = useAppSelector((state: any) => state.appState.host);
+  const token: string = useAppSelector((state: any) => state.appState.token);
+  const metadata: string = useAppSelector((state: any) => state.appState.metadata);
+  const container: string = useAppSelector((state: any) => state.appState.container);
+  const query: boolean = useAppSelector((state: any) => state.appState.query);
+  const tagId: string = useAppSelector((state: any) => state.appState.tagId);
 
   const [selected, setSelected] = useState('nodeList');
   const [searchQuery, setSearchQuery] = useState("");
   const [nodes, setNodes] = useState(Array<{ [key: string]: any; }>);
   const [filteredData, setFilteredData] = useState(); 
 
-  // Tag
-  type tag_id = number;
-  const tag_id: tag_id = useAppSelector((state: any) => state.appState.tagId);
-
   useEffect(() => {
     async function getNodes() {
-      const token = localStorage.getItem('user.token');
-      const containerId = localStorage.getItem('container');
+      dispatch(appStateActions.setContainerId(container));
 
-      dispatch(appStateActions.setContainerId(containerId));
-
-      await axios.get ( `${location.origin}/containers/${containerId}/graphs/tags/${tag_id}/nodes`,
+      await axios.get ( `${host}/containers/${container}/graphs/tags/${tagId}/nodes`,
         {
           headers: {
             Authorization: `bearer ${token}`
@@ -109,8 +111,10 @@ const DrawerLeft: React.FC<Props> = ({}) => {
         )
     }
 
-    if(tag_id) getNodes();
-  }, [tag_id]);
+    if(tagId && query) {
+      getNodes();
+    }
+  }, [query, tagId]);
 
   type openDrawerLeftState = boolean;
   const openDrawerLeftState: openDrawerLeftState = useAppSelector((state: any) => state.appState.openDrawerLeft);
