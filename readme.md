@@ -63,12 +63,19 @@ You must follow these steps in the exact order given. Failure to do so will caus
 2. Clone the DeepLynx [repository](https://github.inl.gov/Digital-Engineering/DeepLynx/tree/main).
 
 3. Run `npm run timeseries-setup`. This command will prepare the deeplynx-timeseries library to be used as one of DeepLynx's dependencies.
+* NOTE: If you are on some sort of encrypted network, you may encounter an error similar to the following when attempting to set up any rust libraries: `warning: spurious network error... SSL connect error... The revocation function was unable to check revocation for the certificate.` This can be solved by navigating to your root cargo config file (`~/.cargo/config.toml`) file and adding the following lines. If you do not have an existing config.toml file at your root `.cargo` directory, you will need to make one:
 
-4. Return to the root DeepLynx directory with `cd ../../` and run `npm upgrade && npm ci`.
+```
+# in ~/.cargo/config.toml
+[http]
+check-revoke = false
+```
+
+4. Run `npm upgrade && npm ci` to set up all the node library dependencies.
 
 5. Copy and rename `.env-sample` to `.env`.
 
-6. Update `.env` file. See the `readme` or comments in the file itself for details. 
+6. Update `.env` file. See the `readme` or comments in the file itself for details. The main setting people usually change is setting `TIMESCALEDB_ENABLED=true` if they plan on ever working with timeseries data.
 
 7. To build the database using docker, follow step **a**. To use a dedicated PostgreSQL database, follow step **b**. Then continue to step 8.   
 
