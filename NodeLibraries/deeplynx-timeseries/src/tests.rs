@@ -3,14 +3,14 @@ mod main_tests {
   use crate::config::Configuration;
   use crate::data_types::DataTypes;
   use crate::errors::{DataError, TestError};
-  use crate::{BucketColumn, BucketRepository, ChangeBucketPayload, QueryOption};
+  use crate::{ingestion, BucketColumn, BucketRepository, ChangeBucketPayload, QueryOption};
   use bytes::Buf;
   use futures::StreamExt;
   use serial_test::serial;
   use sqlx::{FromRow, PgPool};
-  use std::fs::File;
   use std::future;
   use std::io::Write;
+  use tokio::fs::File;
   use validator::HasLen;
 
   #[derive(Debug, Clone, FromRow)]
@@ -259,15 +259,15 @@ mod main_tests {
     }
 
     // now let's do our ingestion tests
-    let file = File::open("./test_files/sparse_ingestion_test.csv")?;
-    BucketRepository::ingest_csv(pool.clone(), file, bucket.id).await?;
+    let file = File::open("./test_files/sparse_ingestion_test.csv").await?;
+    ingestion::ingest_csv(pool.clone(), file, bucket.id).await?;
 
-    let file = File::open("./test_files/non_matching_csv")?;
-    let result = BucketRepository::ingest_csv(pool.clone(), file, bucket.id).await;
+    let file = File::open("./test_files/non_matching_csv").await?;
+    let result = ingestion::ingest_csv(pool.clone(), file, bucket.id).await;
     assert!(result.is_err());
 
-    let file = File::open("./test_files/full_ingestion_test.csv")?;
-    BucketRepository::ingest_csv(pool.clone(), file, bucket.id).await?;
+    let file = File::open("./test_files/full_ingestion_test.csv").await?;
+    ingestion::ingest_csv(pool.clone(), file, bucket.id).await?;
 
     // now let's make sure our async ingestion pathway works
     let buff = std::fs::read("./test_files/sparse_ingestion_test.csv")?;
@@ -276,7 +276,7 @@ mod main_tests {
     bucket_repo.read_data(buff)?;
     bucket_repo.complete_ingestion().await?;
 
-    let mut out_file = File::create("./test_files/out.csv")?;
+    let mut out_file = std::fs::File::create("./test_files/out.csv")?;
 
     let download_stream = bucket_repo
       .download_data_simple(
