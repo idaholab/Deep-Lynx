@@ -10,7 +10,7 @@ mod ingestion;
 mod tests;
 
 use crate::config::Configuration;
-use crate::data_types::DataTypes;
+use crate::data_types::{DataTypes, LegacyDataTypes};
 use crate::errors::DataError;
 use bytes::Bytes;
 use chrono::NaiveDateTime;
@@ -485,6 +485,33 @@ impl JsBucketRepository {
   }
 }
 
+#[napi]
+pub fn infer_legacy_schema(csv: Buffer) -> Result<Vec<LegacyTimeseriesColumn>, napi::Error> {
+  match BucketRepository::infer_legacy_schema(csv.to_vec().as_slice()) {
+    Ok(results) => Ok(results),
+    Err(e) => Err(napi::Error::new(
+      napi::Status::GenericFailure,
+      e.to_string(),
+    )),
+  }
+}
+
+#[napi]
+pub fn infer_bucket_schema(csv: Buffer) -> Result<Vec<JsBucketColumn>, napi::Error> {
+  match BucketRepository::infer_bucket_schema(csv.to_vec().as_slice()) {
+    Ok(results) => Ok(
+      results
+        .iter()
+        .map(|b| JsBucketColumn::from(b.clone()))
+        .collect(),
+    ),
+    Err(e) => Err(napi::Error::new(
+      napi::Status::GenericFailure,
+      e.to_string(),
+    )),
+  }
+}
+
 /// BucketRepository contains all interactions with Buckets and the database layer of the application.
 impl BucketRepository {
   /// Create a new BucketRepository, the base for all functions related to Buckets and their
@@ -953,6 +980,132 @@ impl BucketRepository {
     // if we're here it's because we had no tables that matched or had enough columns left
     // so now we make one
     self.create_data_table_from(transaction, bucket).await
+  }
+
+  /// `infer_bucket_schema` takes a csv file and attempts to guess what the correct bucket column
+  /// data types should be - this should not be used without user input to validate and accept the
+  /// results as this is a rough estimate at best and will not handle things like timestamps
+  pub fn infer_bucket_schema<T: Read>(reader: T) -> Result<Vec<BucketColumn>, DataError> {
+    let mut csv_reader = csv::ReaderBuilder::new().from_reader(reader);
+
+    let mut results: Vec<BucketColumn> = csv_reader
+      .headers()?
+      .iter()
+      .map(|h| BucketColumn {
+        name: h.to_string(),
+        short_name: "".to_string(),
+        id: None,
+        data_type: DataTypes::Bool,
+        column_assignment: None,
+        format_string: None,
+      })
+      .collect();
+
+    while let Some(record) = csv_reader.records().next() {
+      let record = record?;
+
+      for (i, column) in results.iter_mut().enumerate() {
+        let value = match record.get(i) {
+          None => continue,
+          Some(v) => v,
+        };
+
+        if value.is_empty() {
+          continue;
+        }
+
+        if value.to_lowercase() == "true" || value.to_lowercase() == "false" {
+          column.data_type = DataTypes::Bool;
+          continue;
+        }
+
+        if value.starts_with('{') && value.ends_with('}') {
+          column.data_type = DataTypes::Jsonb;
+          continue;
+        }
+
+        if value.replace(',', "").parse::<i32>().is_ok() {
+          column.data_type = DataTypes::Int;
+          continue;
+        }
+
+        if value.replace(',', "").parse::<i64>().is_ok() {
+          column.data_type = DataTypes::BigInt;
+          continue;
+        }
+
+        // we can't do the same stripping on floats because of european number notation with commas
+        if value.parse::<f64>().is_ok() {
+          column.data_type = DataTypes::Double;
+          continue;
+        }
+
+        column.data_type = DataTypes::Text;
+      }
+    }
+
+    Ok(results)
+  }
+
+  pub fn infer_legacy_schema<T: Read>(reader: T) -> Result<Vec<LegacyTimeseriesColumn>, DataError> {
+    let mut csv_reader = csv::ReaderBuilder::new().from_reader(reader);
+
+    let mut results: Vec<LegacyTimeseriesColumn> = csv_reader
+      .headers()?
+      .iter()
+      .map(|h| LegacyTimeseriesColumn {
+        column_name: h.to_string(),
+        property_name: "".to_string(),
+        is_primary_timestamp: false,
+        data_type: "".to_string(),
+        date_conversion_format_string: None,
+      })
+      .collect();
+
+    while let Some(record) = csv_reader.records().next() {
+      let record = record?;
+
+      for (i, column) in results.iter_mut().enumerate() {
+        let value = match record.get(i) {
+          None => continue,
+          Some(v) => v,
+        };
+
+        if value.is_empty() {
+          continue;
+        }
+
+        if value.to_lowercase() == "true" || value.to_lowercase() == "false" {
+          column.data_type = LegacyDataTypes::Boolean.into();
+          continue;
+        }
+
+        if value.starts_with('{') && value.ends_with('}') {
+          column.data_type = LegacyDataTypes::Json.into();
+          continue;
+        }
+
+        if value.replace(',', "").parse::<i32>().is_ok() {
+          column.data_type = LegacyDataTypes::Number.into();
+          continue;
+        }
+
+        if value.replace(',', "").parse::<i64>().is_ok() {
+          column.data_type = LegacyDataTypes::Number64.into();
+          continue;
+        }
+
+        // we can't do the same stripping on floats because of european number notation with commas
+        if value.parse::<f64>().is_ok() {
+          column.data_type = LegacyDataTypes::Float64.into();
+          continue;
+        }
+
+        column.data_type = LegacyDataTypes::String.into();
+      }
+    }
+
+    Ok(results)
   }
 
   /// `download_data_simple` is a simple data download function to bring this microservice into

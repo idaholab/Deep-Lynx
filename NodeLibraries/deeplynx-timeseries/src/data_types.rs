@@ -108,3 +108,18 @@ impl From<String> for LegacyDataTypes {
     }
   }
 }
+
+impl From<LegacyDataTypes> for String {
+  fn from(value: LegacyDataTypes) -> Self {
+    match value {
+      LegacyDataTypes::Number => "number".to_string(),
+      LegacyDataTypes::Number64 => "number64".to_string(),
+      LegacyDataTypes::Float => "float".to_string(),
+      LegacyDataTypes::Float64 => "float64".to_string(),
+      LegacyDataTypes::Date => "date".to_string(),
+      LegacyDataTypes::String => "string".to_string(),
+      LegacyDataTypes::Boolean => "boolean".to_string(),
+      LegacyDataTypes::Json => "json".to_string(),
+    }
+  }
+}

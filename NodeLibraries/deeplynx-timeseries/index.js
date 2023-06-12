@@ -252,6 +252,8 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { BucketRepository } = nativeBinding
+const { BucketRepository, inferLegacySchema, inferBucketSchema } = nativeBinding
 
 module.exports.BucketRepository = BucketRepository
+module.exports.inferLegacySchema = inferLegacySchema
+module.exports.inferBucketSchema = inferBucketSchema

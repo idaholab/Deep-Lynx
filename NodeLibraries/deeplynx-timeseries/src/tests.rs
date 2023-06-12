@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod main_tests {
   use crate::config::Configuration;
-  use crate::data_types::DataTypes;
+  use crate::data_types::{DataTypes, LegacyDataTypes};
   use crate::errors::{DataError, TestError};
   use crate::{ingestion, BucketColumn, BucketRepository, ChangeBucketPayload, QueryOption};
   use bytes::Buf;
@@ -865,6 +865,47 @@ mod main_tests {
         .await?;
     }
 
+    Ok(())
+  }
+
+  #[serial]
+  #[tokio::test]
+  async fn legacy_csv_inference() -> Result<(), TestError> {
+    let file = std::fs::File::open("./test_files/inference.csv")?;
+    let results = BucketRepository::infer_legacy_schema(file)?;
+
+    assert_eq!(results.len(), 9);
+    assert_eq!(results[0].data_type, String::from(LegacyDataTypes::String));
+    assert_eq!(results[1].data_type, String::from(LegacyDataTypes::String));
+    assert_eq!(results[2].data_type, String::from(LegacyDataTypes::Number));
+    assert_eq!(
+      results[3].data_type,
+      String::from(LegacyDataTypes::Number64)
+    );
+    assert_eq!(results[4].data_type, String::from(LegacyDataTypes::Float64));
+    assert_eq!(results[5].data_type, String::from(LegacyDataTypes::Float64));
+    assert_eq!(results[6].data_type, String::from(LegacyDataTypes::Json));
+    assert_eq!(results[7].data_type, String::from(LegacyDataTypes::Boolean));
+    assert_eq!(results[8].data_type, String::from(LegacyDataTypes::Boolean));
+    Ok(())
+  }
+
+  #[serial]
+  #[tokio::test]
+  async fn csv_inference() -> Result<(), TestError> {
+    let file = std::fs::File::open("./test_files/inference.csv")?;
+    let results = BucketRepository::infer_bucket_schema(file)?;
+
+    assert_eq!(results.len(), 9);
+    assert_eq!(results[0].data_type, DataTypes::Text);
+    assert_eq!(results[1].data_type, DataTypes::Text);
+    assert_eq!(results[2].data_type, DataTypes::Int);
+    assert_eq!(results[3].data_type, DataTypes::BigInt);
+    assert_eq!(results[4].data_type, DataTypes::Double);
+    assert_eq!(results[5].data_type, DataTypes::Double);
+    assert_eq!(results[6].data_type, DataTypes::Jsonb);
+    assert_eq!(results[7].data_type, DataTypes::Bool);
+    assert_eq!(results[8].data_type, DataTypes::Bool);
     Ok(())
   }
 

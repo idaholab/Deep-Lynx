@@ -6,7 +6,7 @@ use futures::StreamExt;
 use sqlx::{Pool, Postgres};
 use tokio::io::AsyncRead;
 
-/// `ingest_bucket_data` takes a readable stream of CSV formatted data and attempts to ingest that
+/// `ingest_csv` takes a readable stream of CSV formatted data and attempts to ingest that
 /// data into the given bucket by ID. Note that if your CSV data does not implement all columns
 /// of your bucket, only the columns you've included in the csv will be ingested and no error
 /// given. If your CSV data has too many columns, only those columns defined in the bucket will
@@ -146,6 +146,7 @@ pub async fn ingest_csv<T: AsyncRead + Send + Unpin>(
 }
 
 /// ingest_csv_legacy allows us to use the same paradigm as all other bucket ingestion patterns here
+/// to ingest csv data formatted for the original DeepLynx timeseries integration
 pub async fn ingest_csv_legacy<T: AsyncRead + Send + Unpin>(
   db: Pool<Postgres>,
   reader: T,
