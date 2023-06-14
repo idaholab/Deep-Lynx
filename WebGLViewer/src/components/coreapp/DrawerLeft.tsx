@@ -90,6 +90,7 @@ const DrawerLeft: React.FC<Props> = ({}) => {
   const container: string = useAppSelector((state: any) => state.appState.container);
   const query: boolean = useAppSelector((state: any) => state.appState.query);
   const tagId: string = useAppSelector((state: any) => state.appState.tagId);
+
   const openDrawerLeftState: boolean = useAppSelector((state: any) => state.appState.openDrawerLeft);
   const openDrawerLeftWidth: number = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);
   const selectedAssetObject: any = useAppSelector((state: any) => state.appState.selectedAssetObject);
@@ -98,7 +99,6 @@ const DrawerLeft: React.FC<Props> = ({}) => {
 
   const [selected, setSelected] = useState('nodeList');
   const [searchQuery, setSearchQuery] = useState("");
-  // const [nodes, setNodes] = useState(Array<{ [key: string]: any; }>);
   const [filteredData, setFilteredData] = useState(); 
 
   console.log('tagId', tagId)
@@ -306,7 +306,6 @@ const DrawerLeft: React.FC<Props> = ({}) => {
                 <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
               }
               {(selected === 'nodeList' && (Object.keys(selectedAssetObject).length !== 0)) &&
-                // <Box sx={{ flex: '1, 1, auto', display: 'flex', flexDirection: 'row', alignItems: 'center', margin: '12px 0px 12px auto' }}>
                 <Box sx={{ position: 'absolute', right: '0px', paddingRight: '16px' }}>
                   <ButtonIconText text='Back To List' handleClick={() => handleDeselectAssetObject()} type="close" color="error" />
                 </Box>

@@ -16,12 +16,7 @@ import {
 import WebGL from '../components/display/WebGL/WebGL';
 
 function LayoutDashboard() {
-
-  type openDrawerLeftState = boolean;
-  const openDrawerLeftState: openDrawerLeftState = useAppSelector((state: any) => state.appState.openDrawerLeft);
-
-  type openDrawerLeftWidth = number;
-  const openDrawerLeftWidth: openDrawerLeftWidth = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);
+  const openDrawerLeftWidth: number = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);
 
   return (
     <Box sx={{ position: 'absolute', right: 0}} className={classNames(

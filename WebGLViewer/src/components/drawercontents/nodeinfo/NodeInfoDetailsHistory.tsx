@@ -62,7 +62,6 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
       nodeDetailsList
     )
   });
-  // const [nodeHistory, setNodeHistory] = useState([]);
 
   const { data } = useGetSingleNodeHistoryQuery(
     {
@@ -77,29 +76,6 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
 
   const nodeHistory = data?.value || [];
   const isLoading = !data;
-
-  // useEffect(() => {
-  //   setNodeHistory(nodeInfo)
-  // }, [nodeInfo])
-
-  // useEffect(() => {
-  //   async function getNodeHistory() {
-  //     await axios.get( `${host}/containers/${container}/graphs/nodes/${nodeId}/`,
-  //       {
-  //         params: { history: 'true' },
-  //         headers: {
-  //           Authorization: `bearer ${token}`
-  //         }
-  //       }).then (
-  //         (response: any) => {
-  //           console.log(response.data.value);
-  //           setNodeHistory(response.data.value);
-  //         }
-  //       )
-  //   }
-
-  //   getNodeHistory();
-  // }, []);
 
   return (
     <>
