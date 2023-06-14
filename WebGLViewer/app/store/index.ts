@@ -1,5 +1,8 @@
 import { createSlice, configureStore } from '@reduxjs/toolkit';
+import { setupListeners } from '@reduxjs/toolkit/query';
 import { webGLReducer } from './slices/webGLSlice';
+
+import { nodesDataApi } from '../services/nodesDataApi';
 
 const initialState = {
   // Refactor Begin
@@ -137,6 +140,11 @@ export const store = configureStore({
   reducer: {
     appState: appStateSlice.reducer,
     webGL: webGLReducer,
+    [nodesDataApi.reducerPath]: nodesDataApi.reducer,
+  },
+  middleware: (getDefaultMiddleware) => {
+    return getDefaultMiddleware()
+      .concat(nodesDataApi.middleware)
   },
 });
 
