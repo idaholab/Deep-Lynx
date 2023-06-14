@@ -128,6 +128,8 @@ const DrawerContentsNodeList: React.FC<Props> = ({
 
   console.log(nodeList)
 
+  const skeletonLoaderElements = 10;
+
   return (
     <>
       <Box sx={{ display: 'flex', flexDirection: 'row', fontSize: '14px', margin: '0px 16px 6px 16px' }}>
@@ -143,13 +145,13 @@ const DrawerContentsNodeList: React.FC<Props> = ({
           // '-webkit-mask-image': 'linear-gradient(to bottom, black 0%, transparent 100%)',
           maskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)'
         }}>
-          <Skeleton variant="rectangular" width={'100%'} height={36} sx={{ marginBottom: '2px'}} />
-          <Skeleton variant="rectangular" width={'100%'} height={36} sx={{ marginBottom: '2px'}} />
-          <Skeleton variant="rectangular" width={'100%'} height={36} sx={{ marginBottom: '2px'}} />
-          <Skeleton variant="rectangular" width={'100%'} height={36} sx={{ marginBottom: '2px'}} />
-          <Skeleton variant="rectangular" width={'100%'} height={36} sx={{ marginBottom: '2px'}} />
-          <Skeleton variant="rectangular" width={'100%'} height={36} sx={{ marginBottom: '2px'}} />
-          <Skeleton variant="rectangular" width={'100%'} height={36} />
+          {[...Array(skeletonLoaderElements)].map((e, i) => {
+            return (
+              <Box sx={{ padding: '1px'}} key={i}>
+                <Skeleton variant="rectangular" width={'100%'} height={36} />
+              </Box>
+            )
+          })}
         </Box>
       ) :(
         <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0', borderTop: `1px solid ${COLORS.colorDarkgray}` }}>

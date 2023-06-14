@@ -41,15 +41,15 @@ const BasicTimeline: React.FC<Props> = ({
   return (
     <>
       {isLoading || data.length === 0 ? (
-        <Box sx={{}}>
+        <>
           {[...Array(skeletonLoaderElements)].map((e, i) => {
             return (
-              <Box sx={{ padding: '15px'}}>
+              <Box sx={{ padding: '15px'}} key={i}>
                 <Skeleton variant="rectangular" width={'100%'} height={25} />
               </Box>
             )
           })}
-        </Box>
+        </>
       ) :(
         <Timeline>
           {nodeHistory.map((nodeHistoryItem, index) => {
