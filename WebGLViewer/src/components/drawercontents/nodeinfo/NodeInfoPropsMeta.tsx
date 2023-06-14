@@ -20,11 +20,11 @@ import DataTableBasic from '../../display/DataTableBasic';
 import ButtonIconText from '../../elements/ButtonIconText';
 
 type Props = {
-  data: any
+  selectedAssetObject: any
 };
 
 const NodeInfoPropsMeta: React.FC<Props> = ({
-  data
+  selectedAssetObject
 }) => {
   const convertDataToArray = (obj: any) => {
     if (obj !== null) {
@@ -41,7 +41,7 @@ const NodeInfoPropsMeta: React.FC<Props> = ({
     // {title: 'Actions', alignment: 'center'},
   ];
 
-  const PropertiesTableRowData = convertDataToArray(data.properties);
+  const PropertiesTableRowData = convertDataToArray(selectedAssetObject.properties);
 
   const PropertiesTableRowActions: any = [
     // {type: 'edit',},
@@ -54,7 +54,7 @@ const NodeInfoPropsMeta: React.FC<Props> = ({
     // {title: 'Actions', alignment: 'center'},
   ];
 
-  const MetadataTableRowData = convertDataToArray(data.metadata_properties);
+  const MetadataTableRowData = convertDataToArray(selectedAssetObject.metadata_properties);
 
   const MetadataTableRowActions: any = [
     // {type: 'view',},

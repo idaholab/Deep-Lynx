@@ -24,18 +24,18 @@ import InfoHeader from '../../elements/InfoHeader';
 import Timeline from '../../display/Timeline';
 
 type Props = {
-  data: any
+  selectedAssetObject: any
 };
 
 const NodeInfoDetailsHistory: React.FC<Props> = ({
-  data
+  selectedAssetObject
 }) => {
   // DeepLynx
   const host: string = useAppSelector((state: any) => state.appState.host);
   const token: string = useAppSelector((state: any) => state.appState.token);
   const container: string = useAppSelector((state: any) => state.appState.container);
-  const nodeData = data;
-  const nodeId = data.id;
+  const nodeData = selectedAssetObject;
+  const nodeId = selectedAssetObject.id;
 
   const [nodeDetails, setNodeDetails] = useState(()=> {
     const isValidDate = (datetime: any) => {
@@ -51,9 +51,9 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
       }
     }
     let nodeDetailsList = {
-      id: data.id,
-      metatype_name: data.metatype_name,
-      data_source_id: data.data_source_id,
+      id: selectedAssetObject.id,
+      metatype_name: selectedAssetObject.metatype_name,
+      data_source_id: selectedAssetObject.data_source_id,
       created_at: isValidDate(nodeData.created_at),
       modified_at: isValidDate(nodeData.modified_at),
     }

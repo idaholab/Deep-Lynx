@@ -17,11 +17,11 @@ import InfoHeader from '../../elements/InfoHeader';
 import DataTableBasic from '../../display/DataTableBasic';
 
 type Props = {
-  data: any
+  selectedAssetObject: any
 };
 
 const NodeInfoNearbyNodes: React.FC<Props> = ({
-  data
+  selectedAssetObject
 }) => {
 
   // DeepLynx
@@ -29,7 +29,7 @@ const NodeInfoNearbyNodes: React.FC<Props> = ({
   const token: string = useAppSelector((state: any) => state.appState.token);
   const container: string = useAppSelector((state: any) => state.appState.container);
 
-  const nodeId = data.id
+  const nodeId = selectedAssetObject.id
   const [tableRowData, setTableRowData] = useState([]);
 
   const tableHeaders = [

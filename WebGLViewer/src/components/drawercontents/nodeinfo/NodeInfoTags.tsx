@@ -25,17 +25,17 @@ import ButtonIconText from '../../elements/ButtonIconText';
 import DataTableBasic from '../../display/DataTableBasic';
 
 type Props = {
-  data: any
+  selectedAssetObject: any
 };
 
 const NodeInfoTags: React.FC<Props> = ({
-  data
+  selectedAssetObject
 }) => {
   // DeepLynx
   const host: string = useAppSelector((state: any) => state.appState.host);
   const token: string = useAppSelector((state: any) => state.appState.token);
   const container: string = useAppSelector((state: any) => state.appState.container);
-  const nodeId = data.id;
+  const nodeId = selectedAssetObject.id;
 
   const [tableRowData, setTableRowData] = useState(Array<{ [key: string]: any; }>);
 

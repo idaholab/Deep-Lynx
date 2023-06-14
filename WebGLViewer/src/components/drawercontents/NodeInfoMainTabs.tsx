@@ -24,11 +24,11 @@ function a11yProps(index: number) {
 }
 
 type Props = {
-  data: object;
+  selectedAssetObject: object;
 };
 
 const NodeInfoMainTabs: React.FC<Props> = ({
-  data
+  selectedAssetObject
 }) => {
   const [value, setValue] = React.useState(0);
 
@@ -120,7 +120,7 @@ const NodeInfoMainTabs: React.FC<Props> = ({
           >
             {value === index && (
               <Box sx={{ p: 0, background: 'white', display: 'flex', flex: '1 0 100%', flexDirection: 'column', marginTop: '-1px', padding: '16px' }}>
-                <DynamicTag data={data} />
+                <DynamicTag selectedAssetObject={selectedAssetObject} />
               </Box>
             )}
           </Box>
