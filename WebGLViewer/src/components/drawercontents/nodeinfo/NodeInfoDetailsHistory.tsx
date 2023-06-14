@@ -3,6 +3,7 @@ import * as React from 'react';
 
 // Hooks
 import { useState, useEffect } from 'react';
+import { useGetSingleNodeHistoryQuery } from '../../../../app/services/nodesDataApi';
 import { useAppSelector } from '../../../../app/hooks/reduxTypescriptHooks';
 
 // Import Packages
@@ -61,26 +62,44 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
       nodeDetailsList
     )
   });
-  const [nodeHistory, setNodeHistory] = useState([]);
+  // const [nodeHistory, setNodeHistory] = useState([]);
 
-  useEffect(() => {
-    async function getNodeHistory() {
-      await axios.get( `${host}/containers/${container}/graphs/nodes/${nodeId}/`,
-        {
-          params: { history: 'true' },
-          headers: {
-            Authorization: `bearer ${token}`
-          }
-        }).then (
-          (response: any) => {
-            console.log(response.data.value);
-            setNodeHistory(response.data.value);
-          }
-        )
+  const { data } = useGetSingleNodeHistoryQuery(
+    {
+      host, 
+      token,
+      container,
+      nodeId
     }
+  );
 
-    getNodeHistory();
-  }, []);
+  console.log("data returned", data)
+
+  const nodeHistory = data?.value || [];
+  const isLoading = !data;
+
+  // useEffect(() => {
+  //   setNodeHistory(nodeInfo)
+  // }, [nodeInfo])
+
+  // useEffect(() => {
+  //   async function getNodeHistory() {
+  //     await axios.get( `${host}/containers/${container}/graphs/nodes/${nodeId}/`,
+  //       {
+  //         params: { history: 'true' },
+  //         headers: {
+  //           Authorization: `bearer ${token}`
+  //         }
+  //       }).then (
+  //         (response: any) => {
+  //           console.log(response.data.value);
+  //           setNodeHistory(response.data.value);
+  //         }
+  //       )
+  //   }
+
+  //   getNodeHistory();
+  // }, []);
 
   return (
     <>
@@ -120,7 +139,7 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
           History
         </InfoHeader>
 
-        <Timeline data={nodeHistory} />
+        <Timeline data={nodeHistory} isLoading={isLoading} />
       </Box>
 
     </>

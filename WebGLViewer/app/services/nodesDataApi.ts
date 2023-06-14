@@ -18,20 +18,13 @@ export const nodesDataApi = createApi({
       query: ({ host, container, tagId }) =>
         `${host}/containers/${container}/graphs/tags/${tagId}/nodes`,
     }),
-    getSingleNode: builder.query({
-      query: ({ host, container, nodeId }) =>
-        `${host}/containers/${container}/graphs/nodes/${nodeId}/`,
-      async onQueryStarted({ requestId, queryFulfilled, getState, dispatch }) {
-        const baseQueryAction = queryFulfilled.match(requestId);
-        if (baseQueryAction) {
-          const { endpointName, arg: { params } } = baseQueryAction.payload;
-          if (endpointName === 'getSingleNode') {
-            params.history = 'true';
-          }
-        }
-      },
+    getSingleNodeHistory: builder.query({
+      query: ({ host, container, nodeId }) => ({
+        url: `${host}/containers/${container}/graphs/nodes/${nodeId}/`,
+        params: { history: 'true' },
+      })
     }),
   }),
 });
 
-export const { useGetNodesQuery, useGetSingleNodeQuery } = nodesDataApi;
+export const { useGetNodesQuery, useGetSingleNodeHistoryQuery } = nodesDataApi;
