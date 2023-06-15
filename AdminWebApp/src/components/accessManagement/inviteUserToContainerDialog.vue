@@ -39,47 +39,60 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from 'vue-property-decorator'
+  import Vue from 'vue'
 
-    @Component
-    export default class InviteUserToContainerDialog extends Vue {
-        @Prop({required: true})
-        readonly containerID!: string;
+  interface InviteUserToContainerDialogModel {
+    errorMessage: string
+    dialog: boolean
+    formValid: boolean
+    loading: boolean
+    email: string
+  }
 
-        errorMessage = ""
-        dialog = false
-        formValid = false
-        loading = false
-        email = ""
+  export default Vue.extend ({
+    name: 'InviteUserToContainerDialog',
 
-        clearNew() {
-            this.email = ""
-            this.dialog = false
-        }
+    props: {
+      containerID: {
+        type: String,
+        required: true
+      },
+    },
 
-        sendInvite() {
-          this.loading = true
-            this.$client.inviteUserToContainer(this.containerID, this.email)
-                .then(() => {
-                    this.loading = false
-                    this.clearNew()
-                    this.$emit("userInvited")
+    data: (): InviteUserToContainerDialogModel => ({
+      errorMessage: "",
+      dialog: false,
+      formValid: false,
+      loading: false,
+      email: ""
+    }),
 
-                    this.dialog = false
-                    this.errorMessage = ""
-                })
-                .catch(e => {
-                  this.errorMessage = e
+    methods: {
+      clearNew() {
+          this.email = ""
+          this.dialog = false
+      },
+      sendInvite() {
+        this.loading = true
+          this.$client.inviteUserToContainer(this.containerID, this.email)
+              .then(() => {
                   this.loading = false
-                })
+                  this.clearNew()
+                  this.$emit("userInvited")
 
-
-        }
-
+                  this.dialog = false
+                  this.errorMessage = ""
+              })
+              .catch(e => {
+                this.errorMessage = e
+                this.loading = false
+              })
+      },
       emailRules() {
         return [
           (v: any) => !v || /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v) || this.$t('validation.validEmail')
         ]
       }
     }
+  });
 </script>

@@ -24,12 +24,12 @@
                 <v-toolbar flat color="white">
                   <v-toolbar-title>{{$t('apiKeys.description')}}</v-toolbar-title>
                   <v-spacer></v-spacer>
-                  <create-api-key-dialog :containerID="containerID" :serviceUserID="serviceUserID" @apiKeyCreated="refreshKeys()"></create-api-key-dialog>
+                  <CreateApiKeyDialog :containerID="containerID" :serviceUserID="serviceUserID" @apiKeyCreated="refreshKeys()"></CreateApiKeyDialog>
                 </v-toolbar>
               </template>
 
               <template v-slot:[`item.actions`]="{ item }">
-                <delete-api-key-dialog :key-pair="item" :icon="true" :containerID="containerID" :serviceUserID="serviceUserID" @apiKeyDeleted="refreshKeys()"></delete-api-key-dialog>
+                <DeleteApiKeyDialog :key-pair="item" :icon="true" :containerID="containerID" :serviceUserID="serviceUserID" @apiKeyDeleted="refreshKeys()"></DeleteApiKeyDialog>
               </template>
             </v-data-table>
           </v-col>
@@ -40,46 +40,62 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from 'vue-property-decorator'
-import {KeyPairT} from "@/api/types";
-import CreateApiKeyDialog from "@/components/accessManagement/createApiKeyDialog.vue";
-import DeleteApiKeyDialog from "@/components/accessManagement/deleteApiKeyDialog.vue";
+  import Vue from 'vue'
+  import {KeyPairT} from "@/api/types";
+  import CreateApiKeyDialog from "@/components/accessManagement/CreateApiKeyDialog.vue";
+  import DeleteApiKeyDialog from "@/components/accessManagement/DeleteApiKeyDialog.vue";
 
-@Component({components: {CreateApiKeyDialog, DeleteApiKeyDialog}})
-export default class ServiceUserApiKeyDialog extends Vue {
-  @Prop({required: true})
-  containerID!: string;
-
-  @Prop({required: true})
-  serviceUserID!: string;
-
-  @Prop({required: false})
-  readonly icon!: boolean
-
-  errorMessage = ""
-  dialog = false
-  keyPairs: KeyPairT[] = []
-
-  headers() {
-    return [
-      { text: this.$t('general.key'), value: 'key'},
-      { text: this.$t('general.note'), value: 'note'},
-      { text: this.$t('general.actions'), value: 'actions', sortable: false }
-    ]
+  interface ServiceUserApiKeyDialogModel {
+    keyPairs: KeyPairT[]
+    errorMessage: string
+    dialog: boolean
   }
 
-  mounted() {
-    this.refreshKeys()
-  }
+  export default Vue.extend ({
+    name: 'ServiceUserApiKeyDialog',
 
-  refreshKeys() {
-    this.$client.listKeyPairsForServiceUser(this.containerID, this.serviceUserID)
-        .then(keys => {
-          this.keyPairs = keys
-        })
-        .catch((e) => this.errorMessage = e)
-  }
+    components: { CreateApiKeyDialog, DeleteApiKeyDialog },
 
-}
+    props: {
+      containerID: {
+        type: String,
+        required: true
+      },
+      serviceUserID: {
+        type: String,
+        required: true
+      },
+      icon: {
+        type: Boolean,
+        required: false
+      },
+    },
 
+    data: (): ServiceUserApiKeyDialogModel => ({
+      keyPairs: [],
+      errorMessage: "",
+      dialog: false
+    }),
+
+    methods: {
+      headers() {
+        return [
+          { text: this.$t('general.key'), value: 'key'},
+          { text: this.$t('general.note'), value: 'note'},
+          { text: this.$t('general.actions'), value: 'actions', sortable: false }
+        ]
+      },
+      refreshKeys() {
+        this.$client.listKeyPairsForServiceUser(this.containerID, this.serviceUserID)
+            .then(keys => {
+              this.keyPairs = keys
+            })
+            .catch((e) => this.errorMessage = e)
+      }
+    },
+
+    mounted() {
+      this.refreshKeys()
+    }
+  });
 </script>

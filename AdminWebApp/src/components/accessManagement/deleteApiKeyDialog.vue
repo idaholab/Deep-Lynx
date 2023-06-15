@@ -9,7 +9,7 @@
       >
         mdi-delete
       </v-icon>
-      <v-btn v-if="!displayIcon" color="primary" dark class="mt-2" v-on="on">{{$t("apiKeys.delete")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("apiKeys.delete")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
@@ -39,47 +39,60 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from 'vue-property-decorator'
-import {KeyPairT} from "@/api/types";
+  import Vue, { PropType } from 'vue'
+  import {KeyPairT} from "@/api/types";
 
-@Component
-export default class DeleteApiKeyDialog extends Vue {
-  @Prop({required: false})
-  containerID?: string
-
-  @Prop({required: false})
-  serviceUserID?: string
-
-  @Prop({required: true})
-  readonly keyPair!: KeyPairT
-
-  @Prop({required: false, default: false})
-  readonly icon!: boolean
-
-  errorMessage = ""
-  dialog = false
-
-  get displayIcon() {
-    return this.icon
+  interface DeleteApiKeyDialogModel {
+    errorMessage: string
+    dialog: boolean
   }
 
-  deleteApiKey() {
-    if(this.serviceUserID) {
-      this.$client.deleteKeyPairForServiceUser(this.containerID!, this.serviceUserID, this.keyPair.key)
-          .then(() => {
-            this.dialog = false
-            this.$emit('apiKeyDeleted')
-          })
-          .catch(e => this.errorMessage = e)
-    } else {
-      this.$client.deleteKeyPairForUser(this.keyPair.key)
-          .then(() => {
-            this.dialog = false
-            this.$emit('apiKeyDeleted')
-          })
-          .catch(e => this.errorMessage = e)
+  export default Vue.extend ({
+    name: 'DeleteApiKeyDialog',
+
+    props: {
+      containerID: {
+        type: String,
+        required: false
+      },
+      serviceUserID: {
+        type: String,
+        required: false
+      },
+      keyPair: {
+        type: Object as PropType<KeyPairT>,
+        required: true
+      },
+      icon: {
+        type: Boolean,
+        required: false,
+        default: false
+      },
+    },
+
+    data: (): DeleteApiKeyDialogModel => ({
+      errorMessage: "",
+      dialog: false
+    }),
+
+    methods: {
+      deleteApiKey() {
+        if(this.serviceUserID) {
+          this.$client.deleteKeyPairForServiceUser(this.containerID!, this.serviceUserID, this.keyPair.key)
+              .then(() => {
+                this.dialog = false
+                this.$emit('apiKeyDeleted')
+              })
+              .catch(e => this.errorMessage = e)
+        } else {
+          this.$client.deleteKeyPairForUser(this.keyPair.key)
+              .then(() => {
+                this.dialog = false
+                this.$emit('apiKeyDeleted')
+              })
+              .catch(e => this.errorMessage = e)
+        }
+      }
     }
-  }
-
-}
+  })
 </script>

@@ -589,7 +589,7 @@
 </template>
 
 <script lang="ts">
-  import Vue, { PropType } from 'vue'
+  import Vue from 'vue'
   import Metatypes from "@/views/Metatypes.vue"
   import MetatypeRelationships from "@/views/MetatypeRelationships.vue"
   import MetatypeRelationshipPairs from "@/views/MetatypeRelationshipPairs.vue"

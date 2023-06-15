@@ -8,7 +8,7 @@
           v-on="on"
           @click="startCountdown()"
       >mdi-delete</v-icon>
-      <v-btn v-if="!displayIcon" color="error" dark class="mt-2" v-on="on" @click="startCountdown()">{{$t("serviceUsers.delete")}}</v-btn>
+      <v-btn v-if="!icon" color="error" dark class="mt-2" v-on="on" @click="startCountdown()">{{$t("serviceUsers.delete")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
@@ -39,61 +39,79 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from 'vue-property-decorator'
+  import Vue from 'vue'
 
-@Component
-export default class DeleteServiceUserDialog extends Vue {
-  @Prop({required: true})
-  containerID!: string
-
-  @Prop({required: true})
-  serviceUserID!: string
-
-  @Prop({required: false, default: false})
-  readonly icon!: boolean
-
-  errorMessage = ""
-  dialog = false
-  deleteLoading = false
-  timerRunning = false
-  countDown = 5
-
-  get displayIcon() {
-    return this.icon
+  interface DeleteServiceUserDialogModel {
+    errorMessage: string
+    dialog: boolean
+    deleteLoading: boolean
+    timerRunning: boolean
+    countDown: number
   }
 
-  startCountdown() {
-    this.countDown = 5
+  export default Vue.extend({
+    name: 'DeleteServiceUserDialog',
 
-    if(!this.timerRunning) this.countdown()
-  }
+    props: {
+      containerID: {
+        type: String,
+        required: true
+      },
+      serviceUserID: {
+        type: String,
+        required: true
+      },
+      icon: {
+        type: Boolean,
+        required: false,
+        default: false
+      }
+    },
 
-  countdown() {
-    if(this.countDown > 0) {
-      setTimeout(() => {
-        this.countDown -= 1
-        this.timerRunning = true
-        this.countdown()
-      }, 1000)
-    } else {
-      this.timerRunning = false
+    data: (): DeleteServiceUserDialogModel => ({
+      errorMessage: "",
+      dialog: false,
+      deleteLoading: false,
+      timerRunning: false,
+      countDown: 5
+    }),
+
+    methods: {
+      startCountdown() {
+        this.countDown = 5;
+
+        if (!this.timerRunning) {
+          this.countdown();
+        }
+      },
+
+      countdown() {
+        if (this.countDown > 0) {
+          setTimeout(() => {
+            this.countDown -= 1
+            this.timerRunning = true
+            this.countdown()
+          }, 1000)
+        } else {
+          this.timerRunning = false
+        }
+      },
+
+      deleteServiceUser() {
+        this.deleteLoading = true
+        this.$client.deleteServiceUser(this.containerID, this.serviceUserID)
+          .then(() => {
+            this.deleteLoading = false
+            this.dialog = false
+            this.$emit('serviceUserDeleted')
+          })
+          .catch(e => this.errorMessage = e)
+      },
+
+      reset() {
+        this.dialog = false
+        this.timerRunning = false
+      }
     }
-  }
-
-  deleteServiceUser() {
-    this.deleteLoading = true
-    this.$client.deleteServiceUser(this.containerID, this.serviceUserID)
-        .then(() => {
-          this.deleteLoading = false
-          this.dialog = false
-          this.$emit('serviceUserDeleted')
-        })
-        .catch(e => this.errorMessage = e)
-  }
-
-  reset() {
-    this.dialog = false
-    this.timerRunning = false
-  }
-}
+  });
 </script>
