@@ -374,8 +374,8 @@
           <v-card class=" pa-3 signed-in-info elevation-0">
             <div class="mb-3">
               <h2 class="d-block title">User</h2>
-              <span class="d-block sub-title">{{user.display_name}}</span>
-              <span class="d-block sub-title">{{user.email}}</span>
+              <span class="d-block sub-title">{{user?.display_name}}</span>
+              <span class="d-block sub-title">{{user?.email}}</span>
             </div>
             <div>
               <h2 class="d-block title">Current Container</h2>
@@ -419,7 +419,7 @@
 
         <v-row v-if="$auth.IsAdmin() && stats !== null">
           <!-- DeepLynx Admin Statistics (only include if admin and exists) -->
-          <v-col :cols="12" :md="6" :lg="6" v-if="$auth.IsAdmin() && stats.statistics.migrations">
+          <v-col :cols="12" :md="6" :lg="6" v-if="$auth.IsAdmin() && stats.statistics?.migrations">
             <v-card class="d-flex flex-column height-full">
               <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('statistics.migrations')}}</v-card-title>
               <v-card-text>
@@ -434,15 +434,18 @@
               <v-card-text>
                 <v-list disabled>
                   <v-list-item-group
-                      color="primary"
+                    color="primary"
                   >
                     <v-list-item
-                        v-for="(item, i) in Object.keys(stats.statistics)"
-                        :key="i"
+                      v-for="(value, name, index) in stats.statistics"
+                      :key="index"
                     >
-                      <v-list-item-content v-if="item !== 'migrations'">
-                        <p>{{item}}</p>
-                        {{stats.statistics[item]}}
+                      <v-list-item-content v-if="name !== 'migrations'">
+                        <p style="line-height: 1.5">
+                          <strong style="">{{name}}</strong>
+                          <br />
+                          {{value}}
+                        </p>
                       </v-list-item-content>
                     </v-list-item>
                   </v-list-item-group>
@@ -455,8 +458,8 @@
             <v-card class="d-flex flex-column height-full">
               <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('statistics.longRunningTransactions')}}</v-card-title>
               <v-data-table
-                  :headers="transactionHeaders()"
-                  :items="stats.long_running_transactions"
+                :headers="transactionHeaders()"
+                :items="stats.long_running_transactions"
               ></v-data-table>
               <v-card-text>
               </v-card-text>
@@ -467,8 +470,8 @@
             <v-card class="d-flex flex-column height-full">
               <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('statistics.meanExecutionTime')}}</v-card-title>
               <v-data-table
-                  :headers="meanExecHeaders()"
-                  :items="stats.mean_execution_time"
+                :headers="meanExecHeaders()"
+                :items="stats.mean_execution_time"
               ></v-data-table>
               <v-card-text>
               </v-card-text>
@@ -530,16 +533,16 @@
               <v-card-text v-if="dataSources.length <= 0">{{$t('help.dataSourceCard')}}</v-card-text>
               <v-card-text v-else>
                 <v-carousel
-                    :cycle="true"
-                    :continuous="true"
-                    :hide-delimiters="true"
-                    :next-icon="false"
-                    :prev-icon="false"
-                    :height="100"
+                  :cycle="true"
+                  :continuous="true"
+                  :hide-delimiters="true"
+                  :next-icon="false"
+                  :prev-icon="false"
+                  :height="100"
                 >
                   <v-carousel-item
-                      v-for="(dataSource, i) in dataSources"
-                      :key="i"
+                    v-for="(dataSource, i) in dataSources"
+                    :key="i"
                   >
                     <p class="text-h4">{{dataSource.name}} {{$t('events.dataImported')}}</p>
                     <p>{{dataSource.data_imported}}</p>
@@ -618,7 +621,6 @@
   import ContainerImport from "@/views/ContainerImport.vue";
   import FileManager from "@/views/FileManager.vue";
   import OverviewGraph from "@/views/OverviewGraph.vue";
-  import BasicDialog from '@/components/dialogs/BasicDialog.vue'
 
   interface HomeModel {
     errorMessage: string
@@ -638,7 +640,7 @@
   export default Vue.extend ({
     name: 'HomePage',
 
-    components: { BasicDialog, ContainerSelect, ApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, DataExport, DataQuery, DataSources, DataMapping, EventSystem, Settings, ContainerUsers, Users, Containers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ContainerExport, ContainerImport, FileManager, OverviewGraph },
+    components: { ContainerSelect, ApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, DataExport, DataQuery, DataSources, DataMapping, EventSystem, Settings, ContainerUsers, Users, Containers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ContainerExport, ContainerImport, FileManager, OverviewGraph },
 
     props: {
       containerID: {
