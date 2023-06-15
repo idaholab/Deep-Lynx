@@ -34,6 +34,7 @@ import CategoryIcon from '@mui/icons-material/Category';
 import ImageIcon from '@mui/icons-material/Image';
 import InfoIcon from '@mui/icons-material/Info';
 import SettingsIcon from '@mui/icons-material/Settings';
+import GroupIcon from '@mui/icons-material/Group';
 
 // Components
 import DrawerContentsNodeList from '../drawercontents/DrawerContentsNodeList';
@@ -47,6 +48,8 @@ import '../../styles/App.scss';
 // @ts-ignore
 import COLORS from '../../../src/styles/variables';
 import { unstable_renderSubtreeIntoContainer } from 'react-dom';
+import DrawerContentsUserInfo from '../drawercontents/DrawerContentsUserInfo';
+import DrawerContentsUserList from '../drawercontents/DrawerContentsUserList';
 
 const queryFilterData = (query: any, data: any) => {
   if (!query) {
@@ -93,8 +96,9 @@ const DrawerLeft: React.FC<Props> = ({}) => {
   const [selected, setSelected] = useState('nodeList');
   const [searchQuery, setSearchQuery] = useState("");
   const [nodes, setNodes] = useState(Array<{ [key: string]: any; }>);
-  const [filteredData, setFilteredData] = useState(); 
+  const [filteredData, test11] = useState();
 
+ let test1=[{"id":"1", "properties":{"id":"1","description": "This is a user description", "name": "lily"}},{"id":"2", "properties":{"id":"2","description": "This is a user description", "name": "lolo"}},{"id":"3", "properties":{"id":"3","description": "This is a user description", "name": "lulu"}}]
   useEffect(() => {
     async function getNodes() {
       dispatch(appStateActions.setContainerId(container));
@@ -106,16 +110,32 @@ const DrawerLeft: React.FC<Props> = ({}) => {
           }
         }).then (
           (response: any) => {
+            console.log(response)
             setNodes(queryFilterData(searchQuery, response.data.value));
           }
         )
     }
-
     if(tagId && query) {
       getNodes();
     }
   }, [query, tagId]);
 
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const result = await axios('http://0.0.0.0:8091/containers/1/sessions/063f52d1-ef03-4e51-a66e-acc67d9d5bb3/objects');
+
+  //       setData(result.data);
+  //     } catch (error) {
+  //       console.error('Error:', error);
+  //     }
+  //   };
+
+  //   fetchData();
+  // }, []); // Empty array means this effect runs once on mount
+
+
+  
   type openDrawerLeftState = boolean;
   const openDrawerLeftState: openDrawerLeftState = useAppSelector((state: any) => state.appState.openDrawerLeft);
 
@@ -158,6 +178,11 @@ const DrawerLeft: React.FC<Props> = ({}) => {
       icon: SettingsIcon,
       pane: 'settings'
     },
+    {
+      title: 'Sections',
+      icon: GroupIcon,
+      pane: 'userList'
+    }
   ]
 
   const handleSelectMenuLink = (selectedLink: string) => {
@@ -279,6 +304,7 @@ const DrawerLeft: React.FC<Props> = ({}) => {
               {selected === 'nodeList' && (Object.keys(selectedAssetObject).length === 0) ? 'Nodes'
                 : selected === 'sceneList' ? 'Scenes'
                 : selected === 'settings' ? 'Settings'
+                :selected === 'userList' && (Object.keys(selectedAssetObject).length === 0) ? 'Users'
                 : `Node ${selectedAssetObject.id}`
               }
               {(Object.keys(selectedAssetObject).length !== 0) && 
@@ -297,6 +323,7 @@ const DrawerLeft: React.FC<Props> = ({}) => {
               selected === 'nodeList' ? 'View scene asset/object information. Select and Highlight objects. Show on Graph. View Data.'
               : selected === 'sceneList' ? 'View and change Scenes'
               : selected === 'settings' ? 'View and edit Settings'
+              : selected === 'userList' ? 'View and edit Users'
               : null
             }>
               <InfoIcon
@@ -330,6 +357,12 @@ const DrawerLeft: React.FC<Props> = ({}) => {
           }
           {selected === 'settings' && 
             <DrawerContentsSettings />
+          }
+          {selected === 'userList' && 
+             <>
+             {(Object.keys(selectedAssetObject).length === 0) && <DrawerContentsUserList data={test1} />}
+             {(Object.keys(selectedAssetObject).length !== 0) && <DrawerContentsUserInfo />}
+           </>
           }
         </Box>
       </Box>

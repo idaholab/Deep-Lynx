@@ -78,7 +78,7 @@ const appStateSlice = createSlice({
 
     // Asset functions
     selectAssetObject: (state, action) => {
-      console.log(action.payload);
+      // console.log(action.payload);
       const store = state;
       store.selectedAssetObject = action.payload;
     },
