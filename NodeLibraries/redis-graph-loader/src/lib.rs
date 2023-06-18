@@ -56,7 +56,7 @@ impl JsRedisGraphLoader {
   #[napi]
   pub async fn generate_redis_graph(
     &self,
-    container_id: i64,
+    container_id: String,
     timestamp: Option<String>,
   ) -> Result<(), napi::Error> {
     let inner = self.inner.clone().ok_or(napi::Error::new(
@@ -64,11 +64,17 @@ impl JsRedisGraphLoader {
       "must call init before calling functions",
     ))?;
 
+    // we convert to a u64 here because js can't handle 64bit numbers
     match inner
-      .generate_redis_graph(container_id as u64, timestamp) // to u64 is a safe cast because container_id isn't negative
+      .generate_redis_graph(
+        container_id
+          .parse::<u64>()
+          .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?,
+        timestamp,
+      ) // to u64 is a safe cast because container_id isn't negative
       .await
     {
-      Ok(r) => Ok(()),
+      Ok(_) => Ok(()),
       Err(e) => Err(napi::Error::new(
         napi::Status::GenericFailure,
         e.to_string(),
@@ -80,7 +86,7 @@ impl JsRedisGraphLoader {
 impl RedisGraphLoader {
   pub async fn new(config: Configuration) -> Result<Self, LoaderError> {
     let db = PgPool::connect(config.db_connection_string.as_str()).await?;
-    let redis_client = redis::Client::open(config.redis_connection_string.as_str())?;
+    let redis_client = Client::open(config.redis_connection_string.as_str())?;
 
     Ok(RedisGraphLoader {
       db,
@@ -322,7 +328,22 @@ TO STDOUT WITH (FORMAT csv);"#
       }
 
       // now that we know we have the header, and because the db call ensures we're ordered by
-      // metatype name correctly, we can simply add this node's properties to the current buffer
+      // metatype name correctly, we can simply add this edge's properties to the current buffer
+      // along with the correct ids
+      let origin_id = match node_ids.get(&edge.origin_id) {
+        // if we don't have the id, we can't add this edge
+        None => continue,
+        Some(i) => i,
+      };
+
+      let destination_id = match node_ids.get(&edge.destination_id) {
+        // if we don't have the id, we can't add this edge
+        None => continue,
+        Some(i) => i,
+      };
+
+      current_buffer.extend(origin_id.to_ne_bytes());
+      current_buffer.extend(destination_id.to_ne_bytes());
       current_buffer.extend(properties);
 
       edge_count += 1;
@@ -533,7 +554,7 @@ impl Node {
               property_final.extend(formatted);
               property_final.extend("\0".as_bytes());
             }
-            Value::Array(a) => {
+            Value::Array(_) => {
               //TODO: handles arrays
             }
             Value::Object(_) => panic!("can't handle nested objects yet"),
@@ -686,7 +707,7 @@ impl Edge {
               property_final.extend(formatted);
               property_final.extend("\0".as_bytes());
             }
-            Value::Array(a) => {
+            Value::Array(_) => {
               //TODO: handles arrays
             }
             Value::Object(_) => panic!("can't handle nested objects yet"),

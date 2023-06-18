@@ -1,5 +1,6 @@
 use napi::Error;
 use std::io;
+use std::num::ParseIntError;
 use thiserror::Error;
 
 // Project specific errors and wrappers of other libraries errors so we can always return ours but
@@ -20,6 +21,8 @@ pub enum LoaderError {
   Yaml(#[from] serde_yaml::Error),
   #[error("sql error {0}")]
   Sql(#[from] sqlx::Error),
+  #[error("parse int error {0}")]
+  ParseInt(#[from] ParseIntError),
 }
 
 impl Into<napi::Error> for LoaderError {

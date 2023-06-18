@@ -10,7 +10,7 @@ test('graph creation', async (t) => {
 
   try {
     // TODO: CHANGE ME TO VALID CONTAINER
-    await loader.generateRedisGraph(45);
+    await loader.generateRedisGraph("45");
     t.assert(true);
   } catch (e) {
     return Promise.reject(e)
