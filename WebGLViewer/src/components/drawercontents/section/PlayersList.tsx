@@ -77,13 +77,13 @@ type Props = {
 };
 
 const PlayerList: React.FC<Props> = ({ data }) => {
-  // const [nodeList, setNodeList] = React.useState([
-  //   { id: '1', properties: { id: '1', description: 'This is a user description', name: 'Player 1' } },
-  //   { id: '2', properties: { id: '2', description: 'This is a user description', name: 'Player 2' } },
-  //   { id: '3', properties: { id: '3', description: 'This is a user description', name: 'Player 3' } },
-  // ]);
-  const [nodeList, setNodeList] = React.useState<any[]>([]);
-  const API_URL = 'http://0.0.0.0:8091/containers/:container_id/sessions/:session_id/players'; 
+  const [nodeList, setNodeList] = React.useState([
+    { id: '1', properties: { id: '1', description: 'This is a user description', name: 'Player 1' } },
+    { id: '2', properties: { id: '2', description: 'This is a user description', name: 'Player 2' } },
+    { id: '3', properties: { id: '3', description: 'This is a user description', name: 'Player 3' } },
+  ]);
+  // const [nodeList, setNodeList] = React.useState<any[]>([]);
+  
   const [selectedPlayer, setSelectedPlayer] = React.useState<any>(null);
   const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
 
@@ -96,19 +96,18 @@ const PlayerList: React.FC<Props> = ({ data }) => {
   const openDrawerLeftWidth: openDrawerLeftWidth = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);
 
   const [selected, setSelected] = React.useState<string | false>(false);
- 
+
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchSessions = async () => {
       try {
-        const response = await fetch(API_URL);
-        const data = await response.json();
-        setNodeList(data);
+        const response = await axios.get(`http://0.0.0.0:8091/containers/${1}/sessions`);
+        console.log(response.data);
       } catch (error) {
-        console.error('Error:', error);
+        console.error('Error fetching sessions', error);
       }
     };
-
-    fetchData();
+  
+    fetchSessions();
   }, []);
 
 
