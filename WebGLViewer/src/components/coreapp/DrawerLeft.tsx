@@ -50,6 +50,8 @@ import COLORS from '../../../src/styles/variables';
 import { unstable_renderSubtreeIntoContainer } from 'react-dom';
 import DrawerContentsUserInfo from '../drawercontents/DrawerContentsUserInfo';
 import DrawerContentsUserList from '../drawercontents/DrawerContentsUserList';
+import DrawerContentsSectionList from '../drawercontents/DrawerContentsSectionList';
+import DrawerContentsSectionInfo from '../drawercontents/DrawerContentsSectionInfo';
 
 const queryFilterData = (query: any, data: any) => {
   if (!query) {
@@ -98,7 +100,7 @@ const DrawerLeft: React.FC<Props> = ({}) => {
   const [nodes, setNodes] = useState(Array<{ [key: string]: any; }>);
   const [filteredData, test11] = useState();
 
- let test1=[{"id":"1", "properties":{"id":"1","description": "This is a user description", "name": "lily"}},{"id":"2", "properties":{"id":"2","description": "This is a user description", "name": "lolo"}},{"id":"3", "properties":{"id":"3","description": "This is a user description", "name": "lulu"}}]
+ let test1=[{"id":"1", "properties":{"id":"1","description": "This is a user description", "name": "section 1"}},{"id":"2", "properties":{"id":"2","description": "This is a user description", "name": "section 2"}},{"id":"3", "properties":{"id":"3","description": "This is a user description", "name": "section 3"}}]
   useEffect(() => {
     async function getNodes() {
       dispatch(appStateActions.setContainerId(container));
@@ -178,10 +180,16 @@ const DrawerLeft: React.FC<Props> = ({}) => {
       icon: SettingsIcon,
       pane: 'settings'
     },
+    // {
+    //   title: 'Users',
+    //   icon: GroupIcon,
+    //   pane: 'userList'
+    // }
+    // ,
     {
       title: 'Sections',
       icon: GroupIcon,
-      pane: 'userList'
+      pane: 'sectionList'
     }
   ]
 
@@ -305,6 +313,7 @@ const DrawerLeft: React.FC<Props> = ({}) => {
                 : selected === 'sceneList' ? 'Scenes'
                 : selected === 'settings' ? 'Settings'
                 :selected === 'userList' && (Object.keys(selectedAssetObject).length === 0) ? 'Users'
+                :selected === 'sectionList' && (Object.keys(selectedAssetObject).length === 0) ? 'Sections'
                 : `Node ${selectedAssetObject.id}`
               }
               {(Object.keys(selectedAssetObject).length !== 0) && 
@@ -324,6 +333,7 @@ const DrawerLeft: React.FC<Props> = ({}) => {
               : selected === 'sceneList' ? 'View and change Scenes'
               : selected === 'settings' ? 'View and edit Settings'
               : selected === 'userList' ? 'View and edit Users'
+              : selected === 'sectionList' ? 'View and edit Sections'
               : null
             }>
               <InfoIcon
@@ -362,6 +372,16 @@ const DrawerLeft: React.FC<Props> = ({}) => {
              <>
              {(Object.keys(selectedAssetObject).length === 0) && <DrawerContentsUserList data={test1} />}
              {(Object.keys(selectedAssetObject).length !== 0) && <DrawerContentsUserInfo />}
+           </>
+          }
+          {selected === 'sectionList' && 
+             <>
+             {(Object.keys(selectedAssetObject).length === 0) && <DrawerContentsSectionList data={test1} /> } <div className='m-2'>
+              <Box sx={{ position: 'absolute', right: '0px', paddingRight: '16px' }}>
+                <ButtonIconText text='Back To List' handleClick={() => handleDeselectAssetObject()} type="close" color="error" />
+              </Box>
+                </div> 
+             {(Object.keys(selectedAssetObject).length !== 0) && <DrawerContentsSectionInfo />}
            </>
           }
         </Box>

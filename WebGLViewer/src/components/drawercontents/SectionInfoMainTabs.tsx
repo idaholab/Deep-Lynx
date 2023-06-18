@@ -15,6 +15,8 @@ import NodeInfoTimeSeries from '../drawercontents/nodeinfo/NodeInfoTimeSeries';
 import NodeInfoNearbyNodes from '../drawercontents/nodeinfo/NodeInfoNearbyNodes';
 import NodeInfoFiles from '../drawercontents/nodeinfo/NodeInfoFiles';
 import NodeInfoTags from '../drawercontents/nodeinfo/NodeInfoTags';
+import PlayersList from './section/PlayersList';
+import ObjectList from './section/ObjectList';
 
 function a11yProps(index: number) {
   return {
@@ -27,41 +29,25 @@ type Props = {
   data: object;
 };
 
-const NodeInfoMainTabs: React.FC<Props> = ({
+const SectionInfoMainTabs: React.FC<Props> = ({
   data
 }) => {
-  console.log(data)
   const [value, setValue] = React.useState(0);
-
+  console.log(data)
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
 
   const tabInfo = [
     {
-      title: 'Information',
-      component: NodeInfoDetailsHistory
+      title: 'Players',
+      component: PlayersList
     },
     {
-      title: 'Properties/Metadata',
-      component: NodeInfoPropsMeta
-    },
-    {
-      title: 'Timeseries Data',
-      component: NodeInfoTimeSeries
-    },
-    {
-      title: 'Nearby Nodes',
-      component: NodeInfoNearbyNodes
-    },
-    {
-      title: 'Attached Files',
-      component: NodeInfoFiles
-    },
-    {
-      title: 'Tags',
-      component: NodeInfoTags
-    },
+      title: 'Objects',
+      component: ObjectList
+    }
+   
   ]
 
   return (
@@ -131,4 +117,4 @@ const NodeInfoMainTabs: React.FC<Props> = ({
   );
 }
 
-export default NodeInfoMainTabs;
+export default SectionInfoMainTabs;
