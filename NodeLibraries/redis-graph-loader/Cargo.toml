@@ -1,0 +1,31 @@
+[package]
+edition = "2021"
+name = "redis_graph_loader"
+version = "0.0.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+# Default enable napi4 feature, see https://nodejs.org/api/n-api.html#node-api-version-matrix
+napi = { version = "2.13.2", default-features = false, features = ["napi4", "chrono", "tokio_rt", "async", "chrono_date", "serde", "serde_json", "tokio_io_util", "tokio_full"] }
+napi-derive = "2.13.0"
+sqlx = {version = "0.6.3", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid", "macros"]}
+serde = {version = "1.0.164", features =["derive"]}
+serde_json = "1.0.96"
+tokio = {version = "1.28.2", features = ["full", ] }
+thiserror = "1.0.40"
+redis = { version = "0.23.0", features = ["tokio-comp", "tokio-rustls-comp"] }
+serde_yaml = "0.9.21"
+csv-async = {version = "1.2.6", features = ["tokio", "tokio-stream"]}
+futures = {version = "0.3.28", features = []}
+futures-util = "0.3.28"
+tokio-util = {version  = "0.7.8", features = ['compat'] }
+serial_test = "2.0.0"
+indexmap = "1.9.3"
+
+[build-dependencies]
+napi-build = "2.0.1"
+
+[profile.release]
+lto = true

@@ -131,7 +131,7 @@ test('legacy ingestion async test', async (t) => {
     })
     // should create a new bucket as names are not unique
     try {
-        repo.beginLegacyCsvIngestion('CHANGE ME', [
+        repo.beginLegacyCsvIngestion('46', [
             {
                 is_primary_timestamp: true,
                 column_name: "time",
@@ -175,7 +175,7 @@ test('legacy ingestion async test', async (t) => {
                     .catch((e) => reject(e))
             });
 
-            let stream = fs.createReadStream('./test_files/sparse_legacy.csv');
+            let stream = fs.createReadStream('./test_files/1milliontestlegacy.csv');
             stream.pipe(pass);
         })
     } catch (e) {
