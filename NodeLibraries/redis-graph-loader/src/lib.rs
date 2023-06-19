@@ -267,7 +267,7 @@ TO STDOUT WITH (FORMAT csv, HEADER true) ;
      LEFT JOIN metatypes destination ON ((edges.destination_metatype_id = destination.id)))
   WHERE (edges.deleted_at IS NULL) AND (edges.container_id = {container_id}::bigint)
   ORDER BY edges.origin_id, edges.destination_id, edges.data_source_id, edges.relationship_pair_id, edges.id, edges.created_at DESC) as q ORDER BY metatype_relationship_name)
-TO STDOUT WITH (FORMAT csv);"#
+TO STDOUT WITH (FORMAT csv, HEADER true);"#
           )
               .as_str(),
         )
