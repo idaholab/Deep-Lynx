@@ -1069,43 +1069,38 @@ export default class GraphQLRunner {
 
     resolverForMetatype(containerID: string, metatype: Metatype, resolverOptions?: ResolverOptions): (_: any, {input}: {input: any}) => any {
         return async (_, input: {[key: string]: any}) => {
-            const nodeRepo = new NodeRepository();
-            let repo: NodeRepository;
+            // create a subquery of current nodes before filters are applied
+            const sub = new NodeRepository().where()
+                .containerID('eq', containerID)
+                .and()
+                .metatypeUUID('eq', metatype.uuid);
+            // select all fields from the subquery
+            let repo = new NodeRepository(true)
+                .from(new NodeRepository().subquery(sub), 'sub')
+                .select('*', 'sub');
 
-            // apply subquery if looking at historical view
+            // select most current nodes before a given point in time, if specified
             if (resolverOptions?.pointInTime) {
-                // filter on provided pointInTime
-                const sub = nodeRepo.subquery(
-                    new Repository('nodes')
-                        .select(['id', 'MAX(created_at) AS created_at'], 'sub_nodes')
-                        .from('nodes', 'sub_nodes')
-                        .where()
-                        .query('created_at', '<', new Date(resolverOptions.pointInTime), {dataType: 'date'})
-                        .and()
-                        .query('container_id', 'eq', containerID)
-                        .and(new Repository('nodes')
-                            .query('deleted_at', '>', new Date(resolverOptions.pointInTime), {dataType: 'date'})
-                            .or()
-                            .query('deleted_at', 'is null'))
-                        .groupBy('id', 'nodes'));
-
-                repo = nodeRepo
-                    .join(sub, [
-                        {origin_col: 'id', destination_col: 'id'},
-                        {origin_col: 'created_at', destination_col: 'created_at'}
-                    ], {destination_alias: 'sub', join_type: 'INNER'})
-                    .join('metatypes', {origin_col: 'metatype_id', destination_col: 'id'})
-                    .addFields({name: 'metatype_name', uuid: 'metatype_uuid'}, 'metatypes')
+                // custom subquery with point in time filters
+                const pointInTime = new Repository('nodes')
+                    .distinctOn('id', 'n').select('*', 'n').from('nodes', 'n')
+                    .addFields({uuid: 'metatype_uuid', name: 'metatype_name'}, 'm')
+                    .join('metatypes', {origin_col: 'metatype_id', destination_col: 'id'}, {destination_alias: 'm'})
                     .where()
-                    .containerID('eq', containerID)
-                    .and()
-                    .metatypeUUID('eq', metatype.uuid);
+                    .query('created_at', '<=', resolverOptions.pointInTime, {dataType: 'date', tableAlias: 'n'})
+                    .and(new Repository('nodes')
+                        .query('deleted_at', '>', resolverOptions.pointInTime, {dataType: 'date', tableAlias: 'n'})
+                        .or()
+                        .query('deleted_at', 'is null', undefined, {tableAlias: 'n'})
+                    )
+                    .and().query('container_id', 'eq', containerID, {tableAlias: 'n'})
+                    .and().query('uuid', 'eq', metatype.uuid, {tableAlias: 'm'})
+                    .sortBy('id')
+                    .sortBy('created_at', undefined, true);
 
-            } else {
-                repo = nodeRepo.where()
-                    .containerID('eq', containerID)
-                    .and()
-                    .metatypeUUID('eq', metatype.uuid);
+                repo = new NodeRepository(true)
+                .from(new NodeRepository().subquery(pointInTime), 'sub')
+                .select('*', 'sub');
             }
 
             // you might notice that metatype_id and metatype_name are missing as filters - these are not
@@ -1299,13 +1294,13 @@ export default class GraphQLRunner {
                 // subquery for historical raw data
                 const history = repo.subquery(
                     new Repository('nodes')
-                        .select('id', 'sub_nodes')
+                        .select('id', 'historical_nodes')
                         .addFields('jsonb_agg(data) AS history', 'raw_data')
-                        .from('nodes', 'sub_nodes')
+                        .from('nodes', 'historical_nodes')
                         .join('data_staging',
                             {origin_col: 'data_staging_id', destination_col: 'id'},
                             {destination_alias: 'raw_data'})
-                        .groupBy('id', 'sub_nodes')
+                        .groupBy('id', 'historical_nodes')
                 )
 
                 // join to subquery
@@ -1386,9 +1381,7 @@ export default class GraphQLRunner {
                             parquet_schema,
                             containerID}, {
                             sortBy,
-                            sortDesc: input._record?.sortDesc,
-                            distinct: true,
-                            distinct_on: {table: 'current_nodes', column: 'id'}
+                            sortDesc: input._record?.sortDesc
                         })
                         .then((result) => {
                             if (result.isError) {
@@ -1409,9 +1402,7 @@ export default class GraphQLRunner {
                             limit: input._record?.limit ? input._record.limit : 10000,
                             offset: input._record?.page ? input._record.limit * (input._record.page > 0 ? input._record.page - 1 : 0) : undefined,
                             sortBy,
-                            sortDesc: input._record?.sortDesc,
-                            distinct: true,
-                            distinct_on: {table: 'current_nodes', column: 'id'}
+                            sortDesc: input._record?.sortDesc
                         })
                         .then((results) => {
                             if (results.isError) {
@@ -1472,38 +1463,35 @@ export default class GraphQLRunner {
 
     resolverForNodes(containerID: string, resolverOptions?: ResolverOptions): (_: any, {input}: {input: any}) => any {
         return async (_, input: {[key: string]: any}) => {
-            const nodeRepo = new NodeRepository();
-            let repo: NodeRepository;
+            // create a subquery of current nodes before filters are applied
+            const sub = new NodeRepository().where()
+                .containerID('eq', containerID);
+            // select all fields from the subquery
+            let repo = new NodeRepository(true)
+                .from(new NodeRepository().subquery(sub), 'sub')
+                .select('*', 'sub');
 
-            // apply subquery if looking at historical view
+            // select most current nodes before a given point in time, if specified
             if (resolverOptions?.pointInTime) {
-                // filter on provided pointInTime
-                const sub = nodeRepo.subquery(
-                    new Repository('nodes')
-                        .select(['id', 'MAX(created_at) AS created_at'], 'sub_nodes')
-                        .from('nodes', 'sub_nodes')
-                        .where()
-                        .query('created_at', '<', new Date(resolverOptions.pointInTime), {dataType: 'date'})
-                        .and()
-                        .query('container_id', 'eq', containerID)
-                        .and(new Repository('nodes')
-                            .query('deleted_at', '>', new Date(resolverOptions.pointInTime), {dataType: 'date'})
-                            .or()
-                            .query('deleted_at', 'is null'))
-                        .groupBy('id', 'nodes'));
+                // custom subquery with point in time filters
+                const pointInTime = new Repository('nodes')
+                    .distinctOn('id', 'n').select('*', 'n').from('nodes', 'n')
+                    .addFields({uuid: 'metatype_uuid', name: 'metatype_name'}, 'm')
+                    .join('metatypes', {origin_col: 'metatype_id', destination_col: 'id'}, {destination_alias: 'm'})
+                    .where()
+                    .query('created_at', '<=', resolverOptions.pointInTime, {dataType: 'date', tableAlias: 'n'})
+                    .and(new Repository('nodes')
+                        .query('deleted_at', '>', resolverOptions.pointInTime, {dataType: 'date', tableAlias: 'n'})
+                        .or()
+                        .query('deleted_at', 'is null', undefined, {tableAlias: 'n'})
+                    )
+                    .and().query('container_id', 'eq', containerID, {tableAlias: 'n'})
+                    .sortBy('id')
+                    .sortBy('created_at', undefined, true);
 
-                repo = nodeRepo
-                    .join(sub,
-                        [
-                            {origin_col: 'id', destination_col: 'id'},
-                            {origin_col: 'created_at', destination_col: 'created_at'}
-                        ],
-                        {destination_alias: 'sub', join_type: 'INNER', origin: 'nodes'})
-                    .join('metatypes', {origin_col: 'metatype_id', destination_col: 'id'})
-                    .where().containerID('eq', containerID)
-
-            } else {
-                repo = nodeRepo.where().containerID('eq', containerID);
+                repo = new NodeRepository(true)
+                .from(new NodeRepository().subquery(pointInTime), 'sub')
+                .select('*', 'sub');
             }
 
             if (input.id) {
@@ -1535,7 +1523,7 @@ export default class GraphQLRunner {
                     input.metatype_uuid.value = input.metatype_uuid.value[0];
                 }
 
-                repo = repo.and().metatypeUUID(input.metatype_uuid.operator, input.metatype_uuid.value);
+                repo = repo.and().query('metatype_uuid', input.metatype_uuid.operator, input.metatype_uuid.value);
             }
 
             if (input.metatype_name) {
@@ -1543,7 +1531,7 @@ export default class GraphQLRunner {
                     input.metatype_name.value = input.metatype_name.value[0];
                 }
 
-                repo = repo.and().metatypeName(input.metatype_name.operator, input.metatype_name.value);
+                repo = repo.and().query('metatype_name', input.metatype_name.operator, input.metatype_name.value);
             }
 
             if (input.original_id) {
@@ -1629,15 +1617,15 @@ export default class GraphQLRunner {
                 // subquery for historical raw data
                 const history = repo.subquery(
                     new Repository('nodes')
-                        .select('id', 'sub_nodes')
+                        .select('id', 'historical_nodes')
                         .addFields('jsonb_agg(data) AS history', 'raw_data')
-                        .from('nodes', 'sub_nodes')
+                        .from('nodes', 'historical_nodes')
                         .join(
                             'data_staging',
                             {origin_col: 'data_staging_id', destination_col: 'id'},
                             {destination_alias: 'raw_data'}
                         )
-                        .groupBy('id', 'sub_nodes')
+                        .groupBy('id', 'historical_nodes')
                 )
 
                 repo = repo
@@ -1707,9 +1695,7 @@ export default class GraphQLRunner {
                             transformStreams: [transform],
                             containerID}, {
                             sortBy,
-                            sortDesc: input._records?.sortDesc,
-                            distinct: true,
-                            distinct_on: {table: 'current_nodes', column: 'id'}
+                            sortDesc: input._records?.sortDesc
                         })
                         .then((result) => {
                             if (result.isError) {
@@ -1730,9 +1716,7 @@ export default class GraphQLRunner {
                             limit: input.limit ? input.limit : 10000,
                             offset: input.page ? input.limit * (input.page > 0 ? input.page - 1 : 0) : undefined,
                             sortBy,
-                            sortDesc: input._record?.sortDesc,
-                            distinct: true,
-                            distinct_on: {table: 'current_nodes', column: 'id'}
+                            sortDesc: input._record?.sortDesc
                         })
                         .then((results) => {
                             if (results.isError) {
@@ -1822,7 +1806,6 @@ export default class GraphQLRunner {
                     };
                     break;
                 }
-
 
                 case 'boolean': {
                     fields[propertyName] = {
@@ -2025,15 +2008,15 @@ export default class GraphQLRunner {
                 // subquery for historical raw data
                 const history = repo.subquery(
                     new Repository('nodes')
-                        .select('id', 'sub_edges')
+                        .select('id', 'historical_edges')
                         .addFields('jsonb_agg(data) AS history', 'raw_data')
-                        .from('edges', 'sub_edges')
+                        .from('edges', 'historical_edges')
                         .join(
                             'data_staging',
                             {origin_col: 'data_staging_id', destination_col: 'id'},
                             {destination_alias: 'raw_data'}
                         )
-                        .groupBy('id', 'sub_edges')
+                        .groupBy('id', 'historical_edges')
                 )
 
                 repo = repo
