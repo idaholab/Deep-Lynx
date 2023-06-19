@@ -62,19 +62,13 @@ You must follow these steps in the exact order given. Failure to do so will caus
 
 2. Clone the DeepLynx [repository](https://github.inl.gov/Digital-Engineering/DeepLynx/tree/main).
 
-```
-# in ~/.cargo/config.toml
-[http]
-check-revoke = false
-```
-
 3. Run `npm upgrade && npm ci` to set up all the node library dependencies.
 
 4. Copy and rename `.env-sample` to `.env`.
 
 5. Update `.env` file. See the `readme` or comments in the file itself for details. The main setting people usually change is setting `TIMESCALEDB_ENABLED=true` if they plan on ever working with timeseries data.
 
-6. To build the database using docker, follow step **a**. To use a dedicated PostgreSQL database, follow step **b**. Then continue to step 8.   
+6. To build the database using docker, follow step **a**. To use a dedicated PostgreSQL database, follow step **b**. Then continue to step 7.   
 
 - 6a) Building the database using Docker:  
      - Ensure Docker is installed. You can find the download here: https://www.docker.com/products/docker-desktop.  
@@ -92,6 +86,12 @@ check-revoke = false
 7. Run `npm run build` to build the internal modules and bundled administration GUI. **Note** You must re-run this command  if you make changes to the administration GUI.
 
 * NOTE: If you are on some sort of encrypted network, you may encounter an error similar to the following when attempting to set up any rust libraries: `warning: spurious network error... SSL connect error... The revocation function was unable to check revocation for the certificate.` This can be solved by navigating to your root cargo config file (`~/.cargo/config.toml`) file and adding the following lines. If you do not have an existing config.toml file at your root `.cargo` directory, you will need to make one:
+
+```
+# in ~/.cargo/config.toml
+[http]
+check-revoke = false
+```
 
 ![image](uploads/72791227158a46ba389346566f745ccb/image.png)
 
