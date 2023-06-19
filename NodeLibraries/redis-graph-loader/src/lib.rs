@@ -156,8 +156,9 @@ TO STDOUT WITH (FORMAT csv, HEADER true) ;
     // map for the new redis id to the deeplynx id so that we can map the edges correctly
     let mut node_ids: HashMap<u64, u64> = HashMap::default();
     // buffer for sending to redis
-    let mut current_buffer: Vec<u8> = vec![];
+    let mut current_buffer: Vec<Vec<u8>> = vec![];
     let mut node_count = 0;
+    let mut current_label_index = 0;
     let mut has_txed = false;
     while let Some(record) = records.next().await {
       let node = record?;
@@ -168,7 +169,8 @@ TO STDOUT WITH (FORMAT csv, HEADER true) ;
         // save the index so we maintain property order across the import
         // TODO: handle cases in which we have the same metatype name but a different set of properties
         metatype_name_header.insert(node.metatype_name.clone(), index);
-        current_buffer.extend(header);
+        current_buffer.push(header);
+        current_label_index += 1;
       }
 
       // while this shouldn't error it's good practice to handle
@@ -202,7 +204,7 @@ TO STDOUT WITH (FORMAT csv, HEADER true) ;
 
       // now that we know we have the header, and because the db call ensures we're ordered by
       // metatype name correctly, we can simply add this node's properties to the current buffer
-      current_buffer.extend(properties);
+      current_buffer[current_label_index - 1].extend(properties);
 
       node_count += 1;
     }
@@ -285,8 +287,9 @@ TO STDOUT WITH (FORMAT csv);"#
     let mut relationship_name_header: IndexMap<String, Vec<String>> = IndexMap::default();
     // map for the new redis id to the deeplynx id so that we can map the edges correctly
     // buffer for sending to redis
-    let mut current_buffer: Vec<u8> = vec![];
+    let mut current_buffer: Vec<Vec<u8>> = vec![];
     let mut edge_count = 0;
+    let mut relationship_index = 0;
     while let Some(record) = records.next().await {
       let edge = record?;
 
@@ -295,7 +298,8 @@ TO STDOUT WITH (FORMAT csv);"#
         // save the index so we maintain property order across the import
         // TODO: handle cases in which we have the same metatype name but a different set of properties
         relationship_name_header.insert(edge.metatype_relationship_name.clone(), index);
-        current_buffer.extend(header);
+        current_buffer.push(header);
+        relationship_index += 1;
       }
 
       // while this shouldn't error it's good practice to handle
@@ -342,9 +346,9 @@ TO STDOUT WITH (FORMAT csv);"#
         Some(i) => i,
       };
 
-      current_buffer.extend(origin_id.to_ne_bytes());
-      current_buffer.extend(destination_id.to_ne_bytes());
-      current_buffer.extend(properties);
+      current_buffer[relationship_index - 1].extend(origin_id.to_ne_bytes());
+      current_buffer[relationship_index - 1].extend(destination_id.to_ne_bytes());
+      current_buffer[relationship_index - 1].extend(properties);
 
       edge_count += 1;
     }
@@ -370,7 +374,7 @@ TO STDOUT WITH (FORMAT csv);"#
 
   async fn transmit_to_redis(
     &self,
-    payload: &Vec<u8>,
+    payload: &Vec<Vec<u8>>,
     container_id: u64,
     timestamp: String,
     // we're doing tuples to stress the relationship between the labels and nodes (it also looks cool)
