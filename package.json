@@ -19,11 +19,12 @@
         "mac:docker:timescale:run": "docker run -p 5432:5432 -v $(pwd)/Dockerfiles/PostgreSQL/deeplynx.conf:/etc/postgresql/postgresql.conf -v /private/var/lib/docker/basedata:/private/var/lib/postgresql/data -e POSTGRES_PASSWORD=deeplynxcore -d -it timescale/timescaledb-ha:pg13-latest",
         "mac:docker:postgres:run": "docker run -p 5432:5432 -v $(pwd)/Dockerfiles/PostgreSQL/deeplynx.conf:/etc/postgresql/postgresql.conf -v /private/var/lib/docker/basedata:/private/var/lib/postgresql/data  -e POSTGRES_PASSWORD=deeplynxcore -d -it deep-lynx-postgres:latest -c config_file=/etc/postgresql/postgresql.conf",
         "docker:postgres:clean": "docker stop $(docker ps -q --filter ancestor=deep-lynx-postgres:latest) && docker rmi deep-lynx-postgres:latest -f",
-        "build": "tsc -p ./tsconfig.json && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && copyfiles -u 1 \"src/http_server/assets/**\" ./dist && npm run build:web",
+        "build": "tsc -p ./tsconfig.json && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && copyfiles -u 1 \"src/http_server/assets/**\" ./dist && npm run build:web && npm run timeseries-setup && npm run redis-loader-setup",
         "build:docker": "tsc -p ./tsconfig.json && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && copyfiles -u 1 \"src/http_server/assets/**\" ./dist",
         "build:web": "cd ./AdminWebApp && npm install && npm run build -- --dest ./../dist/http_server/web_gui --mode bundled",
         "build:webgl": "npm --prefix ./WebGLViewer install && npm --prefix ./WebGLViewer run build -- --base=/viewer/ --config=./vite.config.ts",
         "timeseries-setup": "cd ./NodeLibraries/deeplynx-timeseries && npm upgrade && npm ci && npm run build",
+        "redis-loader-setup": "cd ./NodeLibraries/redis-graph-loader && npm upgrade && npm ci && npm run build",
         "watch": "nodemon",
         "start": "tsc && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && copyfiles -u 1 \"./src/http_server/assets/**\" ./dist && node -r dotenv/config ./dist/main.js",
         "start:docker": "node ./dist/main.js",
@@ -100,6 +101,7 @@
         "@types/graphql-type-json": "^0.3.2",
         "@types/parquetjs": "^0.10.3",
         "@vue/cli-service": "~5.0.8",
+        "JSONStream": "^1.3.5",
         "amqplib": "^0.8.0",
         "axios": "^0.21.1",
         "base64url": "^3.0.1",
@@ -120,6 +122,7 @@
         "csvtojson": "^2.0.10",
         "date-fns": "^2.28.0",
         "deeplynx-timeseries": "file:NodeLibraries/deeplynx-timeseries",
+        "redis_graph_loader": "file:NodeLibraries/redis-graph-loader",
         "dev-null": "^0.1.1",
         "digest-stream": "^2.0.0",
         "dot-prop": "^5.3.0",
@@ -141,7 +144,6 @@
         "io-ts": "^2.2.16",
         "ioredis": "^4.24.2",
         "isomorphic-dompurify": "^0.15.0",
-        "JSONStream": "^1.3.5",
         "jsonwebtoken": "^9.0.0",
         "kind-of": "^6.0.3",
         "method-override": "^3.0.0",
@@ -180,5 +182,6 @@
     "lint-staged": {
         "*.js": "eslint --cache --fix",
         "*.{js,css,md}": "prettier --write"
-    }
+    },
+    "packageManager": "yarn@3.6.0"
 }
