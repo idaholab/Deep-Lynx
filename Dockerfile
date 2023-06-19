@@ -58,7 +58,7 @@ RUN npm run build:docker
 RUN cd /srv/core_api/AdminWebApp && npm ci --include=dev && npm run build -- --dest /srv/core_api/dist/http_server/web_gui
 RUN rm -rf /srv/core_api/AdminWebApp/node_modules
 # Build the Viewer
-RUN npm run build:web-gl
+RUN npm run build:webgl
 # catch any env file a user might have accidentally built into the container
 RUN rm -rf .env
 
