@@ -199,6 +199,8 @@ TO STDOUT WITH (FORMAT csv, HEADER true) ;
           .await?;
 
         current_buffer = vec![];
+        node_count = 0;
+        metatype_name_header = IndexMap::default();
         has_txed = true;
       }
 
@@ -328,6 +330,8 @@ TO STDOUT WITH (FORMAT csv, HEADER true);"#
           .await?;
 
         current_buffer = vec![];
+        edge_count = 0;
+        relationship_name_header = IndexMap::default();
         has_txed = true;
       }
 
