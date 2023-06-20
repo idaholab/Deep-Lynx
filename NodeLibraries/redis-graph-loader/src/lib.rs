@@ -189,7 +189,7 @@ TO STDOUT WITH (FORMAT csv, HEADER true) ;
       // 512mb. Technically we could go to a total of 1gb, but the nodes for a single label can't go
       // over 512mb as it's a single binary string. Much easier to just send every 512 then attempt
       // to manage the buffer size of each individual label.
-      if (current_size + properties.len()) > 496 * 1000000 {
+      if (current_size + properties.as_slice().len()) > 496 * 1000000 {
         self
           .transmit_to_redis(
             &current_buffer,
@@ -210,7 +210,7 @@ TO STDOUT WITH (FORMAT csv, HEADER true) ;
 
       // now that we know we have the header, and because the db call ensures we're ordered by
       // metatype name correctly, we can simply add this node's properties to the current buffer
-      current_size += properties.len();
+      current_size += properties.as_slice().len();
       current_buffer[current_label_index - 1].extend(properties);
 
       node_count += 1;
@@ -231,8 +231,6 @@ TO STDOUT WITH (FORMAT csv, HEADER true) ;
       )
       .await?;
     has_txed = true;
-
-    return Ok(());
 
     // now let's handle the edges TODO: move this into its own functions
     let stream = self
@@ -309,7 +307,7 @@ TO STDOUT WITH (FORMAT csv, HEADER true);"#
         // TODO: handle cases in which we have the same metatype name but a different set of properties
         relationship_name_header.insert(edge.metatype_relationship_name.clone(), index);
 
-        current_size += header.len();
+        current_size += header.as_slice().len();
         current_buffer.push(header);
         relationship_index += 1;
       }
@@ -327,7 +325,7 @@ TO STDOUT WITH (FORMAT csv, HEADER true);"#
       // 512mb. Technically we could go to a total of 1gb, but the nodes for a single label can't go
       // over 512mb as it's a single binary string. Much easier to just send every 512 then attempt
       // to manage the buffer size of each individual label.
-      if (current_size + properties.len() + 16) > 496 * 1000000 {
+      if (current_size + properties.as_slice().len() + 16) > 496 * 1000000 {
         self
           .transmit_to_redis(
             &current_buffer,
@@ -361,7 +359,7 @@ TO STDOUT WITH (FORMAT csv, HEADER true);"#
         Some(i) => i,
       };
 
-      current_size += 16 + properties.len();
+      current_size += 16 + properties.as_slice().len();
       current_buffer[relationship_index - 1].extend(origin_id.to_ne_bytes());
       current_buffer[relationship_index - 1].extend(destination_id.to_ne_bytes());
       current_buffer[relationship_index - 1].extend(properties);
