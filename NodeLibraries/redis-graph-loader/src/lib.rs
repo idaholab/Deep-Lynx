@@ -111,8 +111,7 @@ impl RedisGraphLoader {
       .copy_out_raw(
         format!(
           r#"
- COPY (SELECT q.* FROM (SELECT DISTINCT ON (nodes.id) nodes.id,
-    ROW_NUMBER () OVER(ORDER BY nodes.id) as new_id, 
+ COPY (SELECT q.*,  ROW_NUMBER () OVER(ORDER BY metatype_id) as new_id FROM (SELECT DISTINCT ON (nodes.id) nodes.id,
     nodes.container_id,
     nodes.metatype_id,
     nodes.data_source_id,
@@ -133,7 +132,7 @@ impl RedisGraphLoader {
    FROM (nodes
      LEFT JOIN metatypes ON ((metatypes.id = nodes.metatype_id)))
   WHERE (nodes.deleted_at IS NULL) AND (nodes.container_id = {container_id}::bigint)
-  ORDER BY nodes.id, nodes.created_at DESC) q ORDER BY metatype_id DESC)
+  ORDER BY nodes.id, nodes.created_at) q ORDER BY q.metatype_id)
 TO STDOUT WITH (FORMAT csv, HEADER true) ;
     "#
         )
