@@ -231,6 +231,8 @@ TO STDOUT WITH (FORMAT csv, HEADER true) ;
       .await?;
     has_txed = true;
 
+    return Ok(());
+
     // now let's handle the edges TODO: move this into its own functions
     let stream = self
         .db
