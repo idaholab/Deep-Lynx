@@ -111,7 +111,7 @@ impl RedisGraphLoader {
       .copy_out_raw(
         format!(
           r#"
- COPY (SELECT DISTINCT ON (nodes.id) nodes.id,
+ COPY (SELECT q.* FROM (SELECT DISTINCT ON (nodes.id) nodes.id,
     ROW_NUMBER () OVER(ORDER BY nodes.id) as new_id, 
     nodes.container_id,
     nodes.metatype_id,
@@ -133,7 +133,7 @@ impl RedisGraphLoader {
    FROM (nodes
      LEFT JOIN metatypes ON ((metatypes.id = nodes.metatype_id)))
   WHERE (nodes.deleted_at IS NULL) AND (nodes.container_id = {container_id}::bigint)
-  ORDER BY nodes.id, nodes.created_at DESC, metatype_id DESC)
+  ORDER BY nodes.id, nodes.created_at DESC) q ORDER BY metatype_id DESC)
 TO STDOUT WITH (FORMAT csv, HEADER true) ;
     "#
         )
@@ -189,7 +189,7 @@ TO STDOUT WITH (FORMAT csv, HEADER true) ;
       // 512mb. Technically we could go to a total of 1gb, but the nodes for a single label can't go
       // over 512mb as it's a single binary string. Much easier to just send every 512 then attempt
       // to manage the buffer size of each individual label.
-      if (current_size + properties.as_slice().len()) > 496 * 100_000 {
+      if (current_size + properties.as_slice().len()) > 496 * 1_000_000 {
         self
           .transmit_to_redis(
             &current_buffer,
@@ -325,7 +325,7 @@ TO STDOUT WITH (FORMAT csv, HEADER true);"#
       // 512mb. Technically we could go to a total of 1gb, but the nodes for a single label can't go
       // over 512mb as it's a single binary string. Much easier to just send every 512 then attempt
       // to manage the buffer size of each individual label.
-      if (current_size + properties.as_slice().len() + 16) > 496 * 100_000 {
+      if (current_size + properties.as_slice().len() + 16) > 496 * 1_00_000 {
         self
           .transmit_to_redis(
             &current_buffer,
