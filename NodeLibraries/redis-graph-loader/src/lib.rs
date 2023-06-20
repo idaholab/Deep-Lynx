@@ -189,7 +189,7 @@ TO STDOUT WITH (FORMAT csv, HEADER true) ;
       // 512mb. Technically we could go to a total of 1gb, but the nodes for a single label can't go
       // over 512mb as it's a single binary string. Much easier to just send every 512 then attempt
       // to manage the buffer size of each individual label.
-      if (current_size + properties.len()) > 496 + 1000000 {
+      if (current_size + properties.len()) > 496 * 1000000 {
         self
           .transmit_to_redis(
             &current_buffer,
@@ -327,7 +327,7 @@ TO STDOUT WITH (FORMAT csv, HEADER true);"#
       // 512mb. Technically we could go to a total of 1gb, but the nodes for a single label can't go
       // over 512mb as it's a single binary string. Much easier to just send every 512 then attempt
       // to manage the buffer size of each individual label.
-      if (current_size + properties.len() + 16) > 496 + 1000000 {
+      if (current_size + properties.len() + 16) > 496 * 1000000 {
         self
           .transmit_to_redis(
             &current_buffer,
