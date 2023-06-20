@@ -157,6 +157,7 @@ TO STDOUT WITH (FORMAT csv, HEADER true) ;
     let mut node_ids: HashMap<u64, u64> = HashMap::default();
     // buffer for sending to redis
     let mut current_buffer: Vec<Vec<u8>> = vec![];
+    let mut current_size = 0;
     let mut node_count = 0;
     let mut current_label_index = 0;
     let mut has_txed = false;
@@ -169,6 +170,8 @@ TO STDOUT WITH (FORMAT csv, HEADER true) ;
         // save the index so we maintain property order across the import
         // TODO: handle cases in which we have the same metatype name but a different set of properties
         metatype_name_header.insert(node.metatype_name.clone(), index);
+
+        current_size += header.len();
         current_buffer.push(header);
         current_label_index += 1;
       }
@@ -186,7 +189,7 @@ TO STDOUT WITH (FORMAT csv, HEADER true) ;
       // 512mb. Technically we could go to a total of 1gb, but the nodes for a single label can't go
       // over 512mb as it's a single binary string. Much easier to just send every 512 then attempt
       // to manage the buffer size of each individual label.
-      if (current_buffer.len() + properties.len()) > 512 + 1000000 {
+      if (current_size + properties.len()) > 496 + 1000000 {
         self
           .transmit_to_redis(
             &current_buffer,
@@ -201,11 +204,13 @@ TO STDOUT WITH (FORMAT csv, HEADER true) ;
         current_buffer = vec![];
         node_count = 0;
         metatype_name_header = IndexMap::default();
+        current_size = 0;
         has_txed = true;
       }
 
       // now that we know we have the header, and because the db call ensures we're ordered by
       // metatype name correctly, we can simply add this node's properties to the current buffer
+      current_size += properties.len();
       current_buffer[current_label_index - 1].extend(properties);
 
       node_count += 1;
@@ -292,6 +297,7 @@ TO STDOUT WITH (FORMAT csv, HEADER true);"#
     let mut current_buffer: Vec<Vec<u8>> = vec![];
     let mut edge_count = 0;
     let mut relationship_index = 0;
+    current_size = 0;
     while let Some(record) = records.next().await {
       let edge = record?;
 
@@ -300,6 +306,8 @@ TO STDOUT WITH (FORMAT csv, HEADER true);"#
         // save the index so we maintain property order across the import
         // TODO: handle cases in which we have the same metatype name but a different set of properties
         relationship_name_header.insert(edge.metatype_relationship_name.clone(), index);
+
+        current_size += header.len();
         current_buffer.push(header);
         relationship_index += 1;
       }
@@ -317,7 +325,7 @@ TO STDOUT WITH (FORMAT csv, HEADER true);"#
       // 512mb. Technically we could go to a total of 1gb, but the nodes for a single label can't go
       // over 512mb as it's a single binary string. Much easier to just send every 512 then attempt
       // to manage the buffer size of each individual label.
-      if (current_buffer.len() + properties.len()) > 512 + 1000000 {
+      if (current_size + properties.len() + 16) > 496 + 1000000 {
         self
           .transmit_to_redis(
             &current_buffer,
@@ -332,6 +340,7 @@ TO STDOUT WITH (FORMAT csv, HEADER true);"#
         current_buffer = vec![];
         edge_count = 0;
         relationship_name_header = IndexMap::default();
+        current_size = 0;
         has_txed = true;
       }
 
@@ -350,6 +359,7 @@ TO STDOUT WITH (FORMAT csv, HEADER true);"#
         Some(i) => i,
       };
 
+      current_size += 16 + properties.len();
       current_buffer[relationship_index - 1].extend(origin_id.to_ne_bytes());
       current_buffer[relationship_index - 1].extend(destination_id.to_ne_bytes());
       current_buffer[relationship_index - 1].extend(properties);
