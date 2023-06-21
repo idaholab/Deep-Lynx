@@ -11,7 +11,7 @@
         <v-toolbar flat color="white">
           <v-toolbar-title>{{$t("serviceUsers.description")}}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <create-service-user :containerID="containerID" @serviceUserCreated="refreshUsers()"></create-service-user>
+          <CreateServiceUser :containerID="containerID" @serviceUserCreated="refreshUsers()"></CreateServiceUser>
         </v-toolbar>
 
       </template>
@@ -19,13 +19,14 @@
         {{new Date(Date.parse(item.created_at)).toDateString()}}
       </template>
       <template v-slot:[`item.actions`]="{ item }">
-        <service-user-permissions-dialog :containerID="containerID" :serviceUserID="item.id" :icon="true"></service-user-permissions-dialog>
-        <service-user-api-key-dialog :containerID="containerID" :serviceUserID="item.id" :icon="true"></service-user-api-key-dialog>
-        <delete-service-user-dialog
-            :icon="true"
-            :containerID="containerID"
-            :serviceUserID="item.id"
-            @serviceUserDeleted="refreshUsers()"></delete-service-user-dialog>
+        <ServiceUserPermissionsDialog :containerID="containerID" :serviceUserID="item.id" :icon="true"></ServiceUserPermissionsDialog>
+        <ServiceUserApiKeyDialog :containerID="containerID" :serviceUserID="item.id" :icon="true"></ServiceUserApiKeyDialog>
+        <DeleteServiceUserDialog
+          :icon="true"
+          :containerID="containerID"
+          :serviceUserID="item.id"
+          @serviceUserDeleted="refreshUsers()"
+        />
       </template>
     </v-data-table>
   </div>
@@ -34,11 +35,11 @@
 <script lang="ts">
   import {Component, Prop, Vue} from 'vue-property-decorator'
   import {UserT} from "@/auth/types";
-  import CreateServiceUser from "@/components/accessManagement/serviceUsers/createServiceUser.vue";
-  import DeleteServiceUserDialog from "@/components/accessManagement/serviceUsers/deleteServiceUserDialog.vue";
+  import CreateServiceUser from "@/components/accessManagement/serviceUsers/CreateServiceUser.vue";
+  import DeleteServiceUserDialog from "@/components/accessManagement/serviceUsers/DeleteServiceUserDialog.vue";
   import ServiceUserPermissionsDialog
-    from "@/components/accessManagement/serviceUsers/serviceUserPermissionsDialog.vue";
-  import ServiceUserApiKeyDialog from "@/components/accessManagement/serviceUsers/serviceUserApiKeyDialog.vue";
+    from "@/components/accessManagement/serviceUsers/ServiceUserPermissionsDialog.vue";
+  import ServiceUserApiKeyDialog from "@/components/accessManagement/serviceUsers/ServiceUserApiKeyDialog.vue";
 
   @Component({components: {CreateServiceUser, DeleteServiceUserDialog, ServiceUserPermissionsDialog, ServiceUserApiKeyDialog}})
   export default class ServiceUsers extends Vue {

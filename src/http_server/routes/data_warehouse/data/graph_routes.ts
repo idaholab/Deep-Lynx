@@ -1,5 +1,5 @@
 // Express
-import express from 'express';
+import express, {NextFunction, Request, Response} from 'express';
 import {Application} from 'express';
 
 // Middleware
@@ -15,6 +15,8 @@ import WebGLFunctions from './graph_functions/webgl_functions';
 
 // Utilities
 import Config from '../../../../services/config';
+import Result from '../../../../common_classes/result';
+import ContainerRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
 
 export default class GraphRoutes {
     public static mount(app: Application, middleware: any[]) {
@@ -159,7 +161,24 @@ export default class GraphRoutes {
             WebGLFunctions.uploadFiles,
         );
         app.get('/containers/:containerID/graphs/webgl', ...middleware, authInContainer('read', 'data'), WebGLFunctions.listWebglFilesAndTags);
+        app.post('/containers/:containerID/graphs/load', ...middleware, authInContainer('read', 'data'), loadRedisGraph);
         app.put('/containers/:containerID/graphs/webgl/files/:fileID', ...middleware, authInContainer('write', 'data'), WebGLFunctions.updateWebglFiles);
         app.delete('/containers/:containerID/graphs/webgl/files/:fileID', ...middleware, authInContainer('write', 'data'), FileFunctions.deleteFile);
+    }
+}
+
+function loadRedisGraph(req: Request, res: Response, next: NextFunction) {
+    if (req.container) {
+        const containerRepo = new ContainerRepository();
+        containerRepo
+            .loadIntoRedis(req.container.id!)
+            .then((result) => {
+                result.asResponse(res);
+            })
+            .catch((e) => Result.Error(e).asResponse(res))
+            .finally(() => next());
+    } else {
+        Result.Failure('container not found', 404).asResponse(res);
+        next();
     }
 }

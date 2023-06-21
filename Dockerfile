@@ -13,6 +13,9 @@ ENV RUSTFLAGS="-C target-feature=-crt-static"
 WORKDIR /srv/core_api/NodeLibraries/deeplynx-timeseries
 RUN npm run build
 
+WORKDIR /srv/core_api/NodeLibraries/redis-graph-loader
+RUN npm run build
+
 
 FROM node:lts-alpine3.18 as production
 # these settings are needed for the admin web gui build, these variables are all baked into the Vue application and thus
@@ -45,16 +48,17 @@ RUN npm install cargo-cp-artifact --location=global
 
 # Bundle app source
 COPY . .
-RUN rm -rf /srv/core_api/NodeLibraries/dl-fast-load
 RUN rm -rf /srv/core_api/NodeLibraries/deeplynx-timeseries
+RUN rm -rf /srv/core_api/NodeLibraries/redis-graph-loader
 COPY --from=build-rust /srv/core_api/NodeLibraries/deeplynx-timeseries /srv/core_api/NodeLibraries/deeplynx-timeseries
+COPY --from=build-rust /srv/core_api/NodeLibraries/redis-graph-loader /srv/core_api/NodeLibraries/redis-graph-loader
 
 RUN npm ci --include=dev
 RUN npm run build:docker
 RUN cd /srv/core_api/AdminWebApp && npm ci --include=dev && npm run build -- --dest /srv/core_api/dist/http_server/web_gui
 RUN rm -rf /srv/core_api/AdminWebApp/node_modules
 # Build the Viewer
-RUN npm run build:web-gl
+RUN npm run build:webgl
 # catch any env file a user might have accidentally built into the container
 RUN rm -rf .env
 

@@ -50,7 +50,7 @@
                   <p style="margin-top: 10px">{{$t('help.foundBugs')}} <a :href="email()">{{$t('help.tellUs')}}</a> </p>
 
                   <v-row>
-                    <logout></logout>
+                    <LogoutPage></LogoutPage>
                   </v-row>
 
                 </div>
@@ -78,12 +78,12 @@
 </template>
 
 <script lang="ts">
-  import Vue, { PropType } from 'vue'
+  import Vue from 'vue'
   import LanguageSelect from '@/components/general/languageSelect.vue'
   import {ContainerT, UserContainerInviteT} from "@/api/types";
   import ContainerSelect from "@/components/ontology/containers/containerSelect.vue"
   import CreateContainerDialog from "@/components/ontology/containers/createContainerDialog.vue";
-  import Logout from "@/components/accessManagement/logout.vue";
+  import LogoutPage from "@/components/accessManagement/LogoutPage.vue";
   import {RefreshPermissions} from "@/auth/authentication_service";
 
   interface ContainerSelectionModel {
@@ -95,7 +95,7 @@
   export default Vue.extend ({
     name: 'ContainerSelection',
 
-    components: { LanguageSelect, ContainerSelect, CreateContainerDialog, Logout },
+    components: { LanguageSelect, ContainerSelect, CreateContainerDialog, LogoutPage },
 
     data: (): ContainerSelectionModel => ({
       errorMessage: "",

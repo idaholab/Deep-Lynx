@@ -9,6 +9,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@fontsource/montserrat": "^5.0.3",
     "@mdi/js": "^5.8.55",
     "@types/d3": "^7.1.0",
     "@types/jwt-decode": "^2.2.1",

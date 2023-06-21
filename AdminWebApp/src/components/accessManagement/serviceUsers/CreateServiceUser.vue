@@ -26,7 +26,7 @@
             >
               <v-text-field
                   v-model="name"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="validationRules"
                   required
               >
                 <template v-slot:label>{{$t('general.name')}} <small style="color:red" >*</small></template>
@@ -89,56 +89,77 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from 'vue-property-decorator'
-import {ServiceUserPermissionSetT} from "@/api/types";
+  import Vue from 'vue'
+  import {ServiceUserPermissionSetT} from "@/api/types";
 
-@Component
-export default class CreateServiceUser extends Vue {
-  @Prop({required: true})
-  containerID!: string;
-
-  @Prop({required: false})
-  readonly icon!: boolean
-
-  errorMessage = ""
-  dialog = false
-  name = ""
-  valid = false
-  options = ['read', 'write']
-  permissionSet: ServiceUserPermissionSetT = {
-    containers: [],
-    ontology: [],
-    users: [],
-    data: []
+  interface CreateServiceUserModel {
+    permissionSet: ServiceUserPermissionSetT
+    errorMessage: string
+    dialog: boolean
+    name: string
+    valid: boolean
+    options: string[]
   }
 
-  createServiceUser() {
-    this.$client.createServiceUser(this.containerID, {display_name: this.name})
-        .then(result => {
-          if(!result) {
-            this.errorMessage = this.$t('errors.errorCommunicating') as string
-          } else {
-            this.$client.setServiceUsersPermissions(this.containerID, result.id, this.permissionSet)
-                .then(()=> {
-                  this.dialog = false
-                })
-                .catch(e => {
-                  this.errorMessage = e
-                })
-                .finally(() => {
-                  this.dialog = false
-                  this.$emit('serviceUserCreated', result)
-                  this.reset()
-                })
-          }
-        })
-        .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
-  }
+  export default Vue.extend ({
+    name: 'CreateServiceUser',
 
-  reset() {
-    this.name = ""
-  }
+    props: {
+      containerID: {
+        type: String,
+        required: true
+      },
+      icon: {
+        type: Boolean,
+        required: false
+      },
+    },
 
-}
+    data: (): CreateServiceUserModel => ({
+      errorMessage: "",
+      dialog: false,
+      name: "",
+      valid: false,
+      options: ['read', 'write'],
+      permissionSet: {
+        containers: [],
+        ontology: [],
+        users: [],
+        data: []
+      },
+    }),
 
+    methods: {
+      createServiceUser() {
+        this.$client.createServiceUser(this.containerID, {display_name: this.name})
+            .then(result => {
+              if(!result) {
+                this.errorMessage = this.$t('errors.errorCommunicating') as string
+              } else {
+                this.$client.setServiceUsersPermissions(this.containerID, result.id, this.permissionSet)
+                    .then(()=> {
+                      this.dialog = false
+                    })
+                    .catch(e => {
+                      this.errorMessage = e
+                    })
+                    .finally(() => {
+                      this.dialog = false
+                      this.$emit('serviceUserCreated', result)
+                      this.reset()
+                    })
+              }
+            })
+            .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
+      },
+
+      reset() {
+        this.name = ""
+      },
+
+      validationRules(v: string) {
+        return !!v || this.$t('validation.required')
+      }
+    }
+  });
 </script>

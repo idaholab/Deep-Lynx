@@ -19,11 +19,12 @@
         "mac:docker:timescale:run": "docker run -p 5432:5432 -v $(pwd)/Dockerfiles/PostgreSQL/deeplynx.conf:/etc/postgresql/postgresql.conf -v /private/var/lib/docker/basedata:/private/var/lib/postgresql/data -e POSTGRES_PASSWORD=deeplynxcore -d -it timescale/timescaledb-ha:pg13-latest",
         "mac:docker:postgres:run": "docker run -p 5432:5432 -v $(pwd)/Dockerfiles/PostgreSQL/deeplynx.conf:/etc/postgresql/postgresql.conf -v /private/var/lib/docker/basedata:/private/var/lib/postgresql/data  -e POSTGRES_PASSWORD=deeplynxcore -d -it deep-lynx-postgres:latest -c config_file=/etc/postgresql/postgresql.conf",
         "docker:postgres:clean": "docker stop $(docker ps -q --filter ancestor=deep-lynx-postgres:latest) && docker rmi deep-lynx-postgres:latest -f",
-        "build": "tsc -p ./tsconfig.json && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && copyfiles -u 1 \"src/http_server/assets/**\" ./dist && npm run build:web",
+        "build": "tsc -p ./tsconfig.json && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && copyfiles -u 1 \"src/http_server/assets/**\" ./dist && npm run build:web && npm run timeseries-setup && npm run redis-loader-setup",
         "build:docker": "tsc -p ./tsconfig.json && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && copyfiles -u 1 \"src/http_server/assets/**\" ./dist",
         "build:web": "cd ./AdminWebApp && npm install && npm run build -- --dest ./../dist/http_server/web_gui --mode bundled",
         "build:webgl": "npm --prefix ./WebGLViewer install && npm --prefix ./WebGLViewer run build -- --base=/viewer/ --config=./vite.config.ts",
         "timeseries-setup": "cd ./NodeLibraries/deeplynx-timeseries && npm upgrade && npm ci && npm run build",
+        "redis-loader-setup": "cd ./NodeLibraries/redis-graph-loader && npm upgrade && npm ci && npm run build",
         "watch": "nodemon",
         "start": "tsc && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && copyfiles -u 1 \"./src/http_server/assets/**\" ./dist && node -r dotenv/config ./dist/main.js",
         "start:docker": "node ./dist/main.js",
@@ -165,6 +166,7 @@
         "pg-format": "^1.0.4",
         "pg-large-object": "^2.0.0",
         "pg-query-stream": "^4.2.1",
+        "redis_graph_loader": "file:NodeLibraries/redis-graph-loader",
         "reflect-metadata": "^0.1.13",
         "short-uuid": "^4.2.0",
         "tslib": "^2.3.0",
@@ -180,5 +182,6 @@
     "lint-staged": {
         "*.js": "eslint --cache --fix",
         "*.{js,css,md}": "prettier --write"
-    }
+    },
+    "packageManager": "yarn@3.6.0"
 }

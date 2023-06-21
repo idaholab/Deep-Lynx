@@ -1,5 +1,12 @@
 <template>
-  <v-dialog v-model="show" max-width="80%" transition="dialog-transition" @click:outside="close">
+  <v-dialog
+    v-model="show"
+    :max-width="maxWidth"
+    transition= "dialog-transition"
+    @click:outside="close()"
+    v-bind="$attrs"
+    v-on="$listeners"
+  >
     <template v-slot:activator="{ on, attrs }">
       <v-icon
         v-if="icon"
@@ -26,7 +33,7 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <slot name="actions" />
-        <v-btn color="error" text @click="close">{{$t("general.cancel")}}</v-btn>
+        <v-btn color="error" text @click="close()">{{$t("general.cancel")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -35,28 +42,27 @@
 <script lang="ts">
 import {
   defineComponent,
-  watch,
   SetupContext,
   ref
 } from "vue";
+
 export default defineComponent({
   name: 'BasicDialog',
 
   props: {
     title: String,
+    maxWidth: {type: String, required: false, default: '80%'},
     icon: {required: false, default: true}, // as PropType<boolean>
     iconName: {required: false, default: 'mdi-eye'},
   },
+
   setup(props: any, context: SetupContext) {
     const show = ref(props.value);
-    watch(show, (val: boolean) => {
-      if (!val) {
-        context.emit("input", val);
-      }
-    });
+
     function close() {
       show.value = !show.value
     }
+
     return {
       show,
       close

@@ -78,47 +78,66 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from 'vue-property-decorator'
-import {ServiceUserPermissionSetT} from "@/api/types";
+  import Vue from 'vue'
+  import {ServiceUserPermissionSetT} from "@/api/types";
 
-@Component
-export default class ServiceUserPermissionsDialog extends Vue {
-  @Prop({required: true})
-  containerID!: string;
-
-  @Prop({required: true})
-  serviceUserID!: string
-
-  @Prop({required: false})
-  readonly icon!: boolean
-
-  errorMessage = ""
-  dialog = false
-  name = ""
-  valid = false
-  options = ['read', 'write']
-  permissionSet: ServiceUserPermissionSetT = {
-    containers: [],
-    ontology: [],
-    users: [],
-    data: []
+  interface ServiceUserPermissionsDialogModel {
+    permissionSet: ServiceUserPermissionSetT
+    errorMessage: string
+    dialog: boolean
+    name: string
+    valid: boolean
+    options: string[]
   }
 
-  refreshPermissions() {
-    this.$client.getServiceUsersPermissions(this.containerID, this.serviceUserID)
-        .then(result => {
-          Object.assign(this.permissionSet, result)
-          })
-        .catch(e => this.errorMessage = e)
-  }
+  export default Vue.extend ({
+    name: 'ServiceUserPermissionsDialog',
 
-  savePermissions() {
-    this.$client.setServiceUsersPermissions(this.containerID, this.serviceUserID, this.permissionSet)
-        .then(()=> {
-          this.dialog = false
-          this.refreshPermissions()
-        })
-        .catch(e => this.errorMessage = e)
-  }
-}
+    props: {
+      containerID: {
+        type: String,
+        required: true
+      },
+      serviceUserID: {
+        type: String,
+        required: true
+      },
+      icon: {
+        type: Boolean,
+        required: false
+      },
+    },
+
+    data: (): ServiceUserPermissionsDialogModel => ({
+      permissionSet: {
+        containers: [],
+        ontology: [],
+        users: [],
+        data: []
+      },
+      errorMessage: "",
+      dialog: false,
+      name: "",
+      valid: false,
+      options: ['read', 'write']
+    }),
+
+    methods: {
+      refreshPermissions() {
+        this.$client.getServiceUsersPermissions(this.containerID, this.serviceUserID)
+            .then(result => {
+              Object.assign(this.permissionSet, result)
+              })
+            .catch(e => this.errorMessage = e)
+      },
+      savePermissions() {
+        this.$client.setServiceUsersPermissions(this.containerID, this.serviceUserID, this.permissionSet)
+            .then(()=> {
+              this.dialog = false
+              this.refreshPermissions()
+            })
+            .catch(e => this.errorMessage = e)
+      }
+    }
+  });
 </script>
