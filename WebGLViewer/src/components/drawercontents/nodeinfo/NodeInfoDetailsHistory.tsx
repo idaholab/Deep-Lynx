@@ -2,12 +2,11 @@
 import * as React from 'react';
 
 // Hooks
-import { useState, useEffect } from 'react';
-import { useGetSingleNodeHistoryQuery } from '../../../../app/services/nodesDataApi';
+import { useState } from 'react';
+import { useGetNodeHistoryQuery } from '../../../../app/services/nodesDataApi';
 import { useAppSelector } from '../../../../app/hooks/reduxTypescriptHooks';
 
 // Import Packages
-import axios from 'axios';
 import { DateTime } from 'luxon';
 
 // MUI Components
@@ -33,7 +32,6 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
 }) => {
   // DeepLynx
   const host: string = useAppSelector((state: any) => state.appState.host);
-  const token: string = useAppSelector((state: any) => state.appState.token);
   const container: string = useAppSelector((state: any) => state.appState.container);
   const nodeData = selectedAssetObject;
   const nodeId = selectedAssetObject.id;
@@ -63,19 +61,13 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
     )
   });
 
-  const { data } = useGetSingleNodeHistoryQuery(
-    {
-      host, 
-      token,
-      container,
-      nodeId
-    }
-  );
+  const { data: response = [], isLoading } = useGetNodeHistoryQuery({ host, container, nodeId });
 
-  console.log("data returned", data)
+  let nodeHistory = [];
 
-  const nodeHistory = data?.value || [];
-  const isLoading = !data;
+  if (!isLoading) {
+    nodeHistory = response?.value
+  }
 
   return (
     <>

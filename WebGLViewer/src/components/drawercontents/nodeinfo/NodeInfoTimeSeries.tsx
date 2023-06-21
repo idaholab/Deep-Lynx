@@ -3,6 +3,11 @@ import * as React from 'react';
 
 // Hooks
 import { useState, useEffect } from 'react';
+import {
+  useGetTimeseriesDataQuery,
+  useGetTimeseriesCountQuery,
+  useGetTimeseriesRangeQuery,
+} from '../../../../app/services/timeseriesDataApi';
 import { useAppSelector } from '../../../../app/hooks/reduxTypescriptHooks';
 
 // Import Packages
@@ -34,88 +39,75 @@ const NodeInfoTimeSeries: React.FC<Props> = ({
 
   // DeepLynx
   const host: string = useAppSelector((state: any) => state.appState.host);
-  const token: string = useAppSelector((state: any) => state.appState.token);
   const container: string = useAppSelector((state: any) => state.appState.container);
-  const nodeId = selectedAssetObject.id
-
-
-  const [tableRowData, setTableRowData] = useState(Array<{ [key: string]: any; }>);
+  const nodeId = selectedAssetObject.id;
 
   const isTimestamp = (entry: any) => {
     if (DateTime.fromISO(entry).isValid === true) {
-      return (
-        `
-        ${DateTime.fromISO(entry).toLocaleString(DateTime.DATE_SHORT)}, 
-        ${DateTime.fromISO(entry).toLocaleString(DateTime.TIME_WITH_SHORT_OFFSET)}
-        `
-      )
+      return `${DateTime.fromISO(entry).toLocaleString(DateTime.DATE_SHORT)}, ${DateTime.fromISO(entry).toLocaleString(DateTime.TIME_WITH_SHORT_OFFSET)}`;
     } else {
-      return entry
+      return entry;
     }
-  }
+  };
 
-  useEffect(() => {
-    async function getTimeseriesData() {
-      // First Axios API Call
-      try {
-        const response = await axios.get(`${host}/containers/${container}/graphs/nodes/${nodeId}/timeseries`,   
-        {
-          headers: {
-            Authorization: `bearer ${token}`
-          }
-        });
+  const { data: { value: firstResponse = [] } = {} } = useGetTimeseriesDataQuery({ host, container, nodeId });
+  const [tableRowData, setTableRowData] = useState<Array<any>>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-        // Extract the data from the response
-        let nodeTimeseriesData: any = [];
-        const firstResponse = response.data.value;
-        let count: any;
-        let range: any;
+  console.log(firstResponse)
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     if (firstResponse.length === 0) return;
 
-        for (const property in firstResponse) {
-          // Second Axios API Call
-          const secondResponse = await axios.get(`${host}/containers/${container}/import/datasources/${firstResponse[property][1]}/timeseries/count`,
-          {
-            headers: {
-              Authorization: `bearer ${token}`
-            }
-          });
-          
-          count = secondResponse.data.value;
+  //     const nodeTimeseriesData: Array<any> = [];
 
-            // Third Axios API Call
-          const thirdResponse = await  axios.get(`${host}/containers/${container}/import/datasources/${firstResponse[property][1]}/timeseries/range`,
-            {
-              headers: {
-                Authorization: `bearer ${token}`
-              }
-            });
-            
-            range = thirdResponse.data.value;
+  //     for (const property in firstResponse) {
+  //       const dataSource = firstResponse[property][1];
+  //       nodeTimeseriesData.push({
+  //         id: Number(dataSource),
+  //         name: property,
+  //         dataSource,
+  //       });
+  //     }
 
-          nodeTimeseriesData.push({
-            id: Number(firstResponse[property][1]),
-            name: property,
-            lastIndex: isTimestamp(range.end),
-            entries: count.count,
-          })
-        }
+  //     setTableRowData(nodeTimeseriesData);
+  //   };
 
-        setTableRowData(nodeTimeseriesData);
+  //   fetchData();
+  // }, [firstResponse]);
 
-      } catch (e) {
-        //
-      }
-    }
+  // useEffect(() => {
+  //   const fetchCountAndRange = async () => {
+  //     if (tableRowData.length === 0) return;
 
-    getTimeseriesData();
-  }, []);
+  //     const updatedTableRowData = await Promise.all(tableRowData.map(async (row) => {
+  //       const countResponse = await useGetTimeseriesCountQuery({ host, container, dataSource: row.dataSource });
+  //       const rangeResponse = await useGetTimeseriesRangeQuery({ host, container, dataSource: row.dataSource });
+
+  //       const count = countResponse.data.count;
+  //       const range = rangeResponse.data.value;
+
+  //       return {
+  //         ...row,
+  //         lastIndex: isTimestamp(range.end),
+  //         entries: count,
+  //       };
+  //     }));
+
+  //     setTableRowData(updatedTableRowData);
+  //     setIsLoading(false);
+  //   };
+
+  //   fetchCountAndRange();
+  // }, [tableRowData, host, container]);
+
+    // console.log(tableRowData)
 
   const tableHeaders = [
-    {title: 'Id', optionalWidth: '50px', alignment: 'left'},
-    {title: 'Name', optionalWidth: '', alignment: 'left'},
-    {title: 'Last Index', optionalWidth: '', alignment: 'left'},
-    {title: 'Entries', optionalWidth: '', alignment: 'left'},
-    // {title: 'Actions', alignment: 'center'}
+    { title: 'Id', optionalWidth: '50px', alignment: 'left' },
+    { title: 'Name', optionalWidth: '', alignment: 'left' },
+    { title: 'Last Index', optionalWidth: '', alignment: 'left' },
+    { title: 'Entries', optionalWidth: '', alignment: 'left' },
   ];
 
   const tableRowActions: any = [
@@ -124,13 +116,17 @@ const NodeInfoTimeSeries: React.FC<Props> = ({
     // {type: 'delete',}
   ];
 
+
+
   return (
     <>
-      <InfoHeader>
-        Data Sources
-      </InfoHeader>
-      {/* <ButtonIconText type="attach" handleClick={() => {console.log('yay!')}} text="Add New Data" color="primary" /> */}
-      <DataTableBasic tableHeaders={tableHeaders} tableRowData={tableRowData} tableRowActions={tableRowActions} />
+      <InfoHeader>Data Sources</InfoHeader>
+      {/* <DataTableBasic
+        tableHeaders={tableHeaders}
+        tableRowData={tableRowData}
+        tableRowActions={tableRowActions}
+        isLoading={isLoading}
+      /> */}
     </>
   );
 }

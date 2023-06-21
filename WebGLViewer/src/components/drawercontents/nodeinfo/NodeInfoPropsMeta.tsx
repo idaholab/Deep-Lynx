@@ -1,9 +1,6 @@
 // React
 import * as React from 'react';
 
-// Import Packages
-import Plot from 'react-plotly.js';
-
 // MUI Components
 import {
   Button
@@ -67,13 +64,23 @@ const NodeInfoPropsMeta: React.FC<Props> = ({
         Properties
       </InfoHeader>
       {/* <ButtonIconText type="add" handleClick={() => {console.log('yay!')}} text="Add Property" color="primary" /> */}
-      <DataTableBasic tableHeaders={PropertiesTableHeaders} tableRowData={PropertiesTableRowData} tableRowActions={PropertiesTableRowActions} />
+      <DataTableBasic
+        tableHeaders={PropertiesTableHeaders}
+        tableRowData={PropertiesTableRowData}
+        tableRowActions={PropertiesTableRowActions}
+        isLoading={false}
+      />
 
       <InfoHeader>
         Metadata
       </InfoHeader>
       {/* <ButtonIconText type="add" handleClick={() => {console.log('yay!')}} text="Add Metadata" color="primary"/> */}
-      <DataTableBasic tableHeaders={MetadataTableHeaders} tableRowData={MetadataTableRowData} tableRowActions={MetadataTableRowActions}  />
+      <DataTableBasic
+        tableHeaders={MetadataTableHeaders}
+        tableRowData={MetadataTableRowData}
+        tableRowActions={MetadataTableRowActions}
+        isLoading={false}
+      />
     </>
   );
 }

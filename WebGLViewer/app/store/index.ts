@@ -3,6 +3,7 @@ import { setupListeners } from '@reduxjs/toolkit/query';
 import { webGLReducer } from './slices/webGLSlice';
 
 import { nodesDataApi } from '../services/nodesDataApi';
+import { timeseriesDataApi } from '../services/timeseriesDataApi';
 
 const initialState = {
   // Refactor Begin
@@ -141,10 +142,12 @@ export const store = configureStore({
     appState: appStateSlice.reducer,
     webGL: webGLReducer,
     [nodesDataApi.reducerPath]: nodesDataApi.reducer,
+    [timeseriesDataApi.reducerPath]: timeseriesDataApi.reducer,
   },
   middleware: (getDefaultMiddleware) => {
     return getDefaultMiddleware()
       .concat(nodesDataApi.middleware)
+      .concat(timeseriesDataApi.middleware)
   },
 });
 

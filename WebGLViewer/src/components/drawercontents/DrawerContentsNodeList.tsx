@@ -2,8 +2,6 @@
 import * as React from 'react';
 
 // Hooks
-import { useState } from 'react';
-import { useGetNodesQuery } from '../../../app/services/nodesDataApi';
 import { useAppSelector, useAppDispatch } from '../../../app/hooks/reduxTypescriptHooks';
 
 // Import Redux Actions
@@ -114,7 +112,6 @@ const DrawerContentsNodeList: React.FC<Props> = ({
   }
 
   // Menu
-  // const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [anchorEl, setAnchorEl] = React.useState<any>(null);
   const open = Boolean(anchorEl);
 
@@ -125,8 +122,6 @@ const DrawerContentsNodeList: React.FC<Props> = ({
   const handleClose = () => {
     setAnchorEl(null);
   };
-
-  console.log(nodeList)
 
   const skeletonLoaderElements = 10;
 
@@ -142,7 +137,6 @@ const DrawerContentsNodeList: React.FC<Props> = ({
       </Box>
       {!nodeList || nodeList.length === 0 ? (
         <Box sx={{
-          // '-webkit-mask-image': 'linear-gradient(to bottom, black 0%, transparent 100%)',
           maskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)'
         }}>
           {[...Array(skeletonLoaderElements)].map((e, i) => {

@@ -14,17 +14,39 @@ export const nodesDataApi = createApi({
     },
   }),
   endpoints: (builder) => ({
-    getNodes: builder.query({
-      query: ({ host, container, tagId }) =>
-        `${host}/containers/${container}/graphs/tags/${tagId}/nodes`,
+    getAllNodes: builder.query({
+      query: ({ host, container, tagId }) => ({
+        url: `${host}/containers/${container}/graphs/tags/${tagId}/nodes`,
+      })
     }),
-    getSingleNodeHistory: builder.query({
+    getNodeHistory: builder.query({
       query: ({ host, container, nodeId }) => ({
         url: `${host}/containers/${container}/graphs/nodes/${nodeId}/`,
         params: { history: 'true' },
       })
     }),
+    getNodeFiles: builder.query({
+      query: ({ host, container, nodeId }) => ({
+        url: `${host}/containers/${container}/graphs/nodes/${nodeId}/files`,
+      })
+    }),
+    getNodeLinkedInformation: builder.query({
+      query: ({ host, container, nodeId }) => ({
+        url: `${host}/containers/${container}/graphs/nodes/${nodeId}/graph?depth=1`,
+      })
+    }),
+    getNodeTags: builder.query({
+      query: ({ host, container, nodeId }) => ({
+        url: `${host}/containers/${container}/graphs/tags/nodes/${nodeId}`,
+      })
+    }),
   }),
 });
 
-export const { useGetNodesQuery, useGetSingleNodeHistoryQuery } = nodesDataApi;
+export const {
+  useGetAllNodesQuery,
+  useGetNodeHistoryQuery,
+  useGetNodeFilesQuery,
+  useGetNodeLinkedInformationQuery,
+  useGetNodeTagsQuery
+} = nodesDataApi;

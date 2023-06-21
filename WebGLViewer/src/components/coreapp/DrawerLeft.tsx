@@ -3,12 +3,11 @@ import * as React from 'react';
 
 // Hooks
 import { useState } from 'react';
-import { useGetNodesQuery } from '../../../app/services/nodesDataApi';
+import { useGetAllNodesQuery } from '../../../app/services/nodesDataApi';
 import { useAppSelector, useAppDispatch } from '../../../app/hooks/reduxTypescriptHooks';
 
 // Import Packages
 import { v4 as uuidv4 } from 'uuid';
-import axios from 'axios';
 
 // Import Redux Actions
 import { appStateActions } from '../../../app/store/index';
@@ -95,13 +94,9 @@ const DrawerLeft: React.FC<Props> = ({}) => {
   const openDrawerLeftWidth: number = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);
   const selectedAssetObject: any = useAppSelector((state: any) => state.appState.selectedAssetObject);
 
-  console.log(tagId)
-
   const [selected, setSelected] = useState('nodeList');
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState(); 
-
-  console.log('tagId', tagId)
 
   const handleToggleOpenDrawerLeft = () => {
     dispatch(appStateActions.toggleDrawerLeft());
@@ -149,7 +144,7 @@ const DrawerLeft: React.FC<Props> = ({}) => {
   // Component display switching
   const menuItemMatchesComponent = (pane: string) => selected === pane;
 
-  const { data } = useGetNodesQuery(
+  const { data } = useGetAllNodesQuery(
     {
       host, 
       token,
