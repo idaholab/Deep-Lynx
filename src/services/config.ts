@@ -98,6 +98,8 @@ export class Config {
 
     private readonly _hpc_email: string;
 
+    private readonly _serval_url: string;
+
     private readonly _emit_events: boolean;
     private readonly _process_queue_name: string;
     private readonly _data_sources_queue_name: string;
@@ -226,6 +228,8 @@ export class Config {
         this._rsa_client_id = process.env.RSA_CLIENT_ID || 'DeepLynx';
 
         this._hpc_email = process.env.HPC_EMAIL || '';
+
+        this._serval_url = process.env.SERVAL_URL || '';
 
         this._log_db = process.env.LOG_DB === 'true' || false;
 
@@ -536,6 +540,10 @@ export class Config {
 
     get hpc_email(): string {
         return this._hpc_email;
+    }
+
+    get serval_url(): string {
+        return this._serval_url;
     }
 
     get process_queue(): string {

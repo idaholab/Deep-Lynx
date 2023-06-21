@@ -68,6 +68,7 @@ import {SuperUser} from '../../domain_objects/access_management/user';
 import ImportRoutes from './data_warehouse/import/import_routes';
 import DataQueryRoutes from './data_warehouse/data/data_query_routes';
 import TaskRoutes from './task_runner/task_routes';
+import ServalRoutes from './serval_routes';
 import OntologyVersionRoutes from './data_warehouse/ontology/versioning/ontology_version_routes';
 import StatsMapper from '../../data_access_layer/mappers/stats_mapper';
 import Result from '../../common_classes/result';
@@ -182,6 +183,7 @@ export class Router {
         EventRoutes.mount(this.app, [authenticateRoute(), containerContext(), eventActionContext(), eventActionStatusContext(), currentUser()]);
         DataQueryRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
         TaskRoutes.mount(this.app, [authenticateRoute(), containerContext(), taskContext(), currentUser()]);
+        ServalRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()])
         OntologyVersionRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser(), ontologyVersionContext()]);
 
         // OAuth and Identity Provider routes
