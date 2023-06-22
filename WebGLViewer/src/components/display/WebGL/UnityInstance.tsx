@@ -130,13 +130,13 @@ function UnityInstance(props: any) {
   useEffect(() => {
     if(selectedScene) handleSceneSelection(selectedScene);
   }, [selectedScene]);
-  
+
   // Rendering
   useEffect(() => {
       // Retrieve Scenes and Nodes from the WebGL Build;
       listUnityScenes();
       // listUnityNodes() is what takes GameObjects from Unity and will enable us to "link" them to the graph
-      listUnityNodes(); 
+      listUnityNodes();
   }, [selectedScene]);
 
   return (
@@ -144,6 +144,10 @@ function UnityInstance(props: any) {
       <Unity
           className="webgl-canvas"
           unityProvider={unityProvider}
+          tabIndex={0}
+          onClick={() => {
+            document.querySelector('.webgl-canvas').focus();
+          }}
         />
       <Button variant="contained" sx={{ position: 'absolute', top: '16px', right: '16px' }} onClick={() => reset()}>
         Reset
