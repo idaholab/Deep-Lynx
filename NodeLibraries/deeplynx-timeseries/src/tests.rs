@@ -260,14 +260,14 @@ mod main_tests {
 
     // now let's do our ingestion tests
     let file = File::open("./test_files/sparse_ingestion_test.csv").await?;
-    ingestion::ingest_csv(pool.clone(), file, bucket.id).await?;
+    ingestion::ingest_csv_async(pool.clone(), file, bucket.id).await?;
 
     let file = File::open("./test_files/non_matching_csv").await?;
-    let result = ingestion::ingest_csv(pool.clone(), file, bucket.id).await;
+    let result = ingestion::ingest_csv_async(pool.clone(), file, bucket.id).await;
     assert!(result.is_err());
 
     let file = File::open("./test_files/full_ingestion_test.csv").await?;
-    ingestion::ingest_csv(pool.clone(), file, bucket.id).await?;
+    ingestion::ingest_csv_async(pool.clone(), file, bucket.id).await?;
 
     // now let's make sure our async ingestion pathway works
     let buff = std::fs::read("./test_files/sparse_ingestion_test.csv")?;
