@@ -48,12 +48,12 @@ export default class ServalRoutes {
                     Result.Success(value).asResponse(res);
                 } 
             } catch (error) {
-                Result.Failure(`failed to create session: ${error}`, 404).asResponse(res);
+                Result.Failure(`failed to create session: ${error}`, 500).asResponse(res);
             }
 
             next();
         } else {
-            Result.Failure(`unable to find container`, 404).asResponse(res);
+            Result.Failure(`unable to find container`, 500).asResponse(res);
             next();
         }
     }
@@ -72,12 +72,12 @@ export default class ServalRoutes {
                     Result.Success(response.statusText).asResponse(res);
                 }
             } catch (error) {
-                Result.Failure(`failed to delete session: ${error}`, 404).asResponse(res);
+                Result.Failure(`failed to delete session: ${error}`, 500).asResponse(res);
             }
 
             next();
         } else {
-            Result.Failure(`unable to find container`, 404).asResponse(res);
+            Result.Failure(`unable to find container`, 500).asResponse(res);
             next();
         }
     }
@@ -96,12 +96,12 @@ export default class ServalRoutes {
                     Result.Success(value).asResponse(res);
                 } 
             } catch (error) {
-                Result.Failure(`failed to get session: ${error}`, 404).asResponse(res);
+                Result.Failure(`failed to get session: ${error}`, 500).asResponse(res);
             }
 
             next();
         } else {
-            Result.Failure(`unable to find container`, 404).asResponse(res);
+            Result.Failure(`unable to find container`, 500).asResponse(res);
             next();
         }
     }
@@ -121,12 +121,12 @@ export default class ServalRoutes {
                     Result.Success(value).asResponse(res);
                 } 
             } catch (error) {
-                Result.Failure(`failed to list sessions: ${error}`, 404).asResponse(res);
+                Result.Failure(`failed to list sessions: ${error}`, 500).asResponse(res);
             }
 
             next();
         } else {
-            Result.Failure(`unable to find container`, 404).asResponse(res);
+            Result.Failure(`unable to find container`, 500).asResponse(res);
             next();
         }
     }
@@ -145,12 +145,12 @@ export default class ServalRoutes {
                     Result.Success(value).asResponse(res);
                 } 
             } catch (error) {
-                Result.Failure(`failed to list objects: ${error}`, 404).asResponse(res);
+                Result.Failure(`failed to list objects: ${error}`, 500).asResponse(res);
             }
 
             next();
         } else {
-            Result.Failure(`unable to find container`, 404).asResponse(res);
+            Result.Failure(`unable to find container`, 500).asResponse(res);
             next();
         }
     }
@@ -170,12 +170,12 @@ export default class ServalRoutes {
                     Result.Success(value).asResponse(res);
                 } 
             } catch (error) {
-                Result.Failure(`failed to get object: ${error}`, 404).asResponse(res);
+                Result.Failure(`failed to get object: ${error}`, 500).asResponse(res);
             }
 
             next();
         } else {
-            Result.Failure(`unable to find container`, 404).asResponse(res);
+            Result.Failure(`unable to find container`, 500).asResponse(res);
             next();
         }
     }
@@ -194,12 +194,12 @@ export default class ServalRoutes {
                     Result.Success(response.statusText).asResponse(res);
                 }
             } catch (error) {
-                Result.Failure(`failed to delete object: ${error}`, 404).asResponse(res);
+                Result.Failure(`failed to delete object: ${error}`, 500).asResponse(res);
             }
 
             next();
         } else {
-            Result.Failure(`unable to find container`, 404).asResponse(res);
+            Result.Failure(`unable to find container`, 500).asResponse(res);
             next();
         }
     }
@@ -219,12 +219,12 @@ export default class ServalRoutes {
                     Result.Success(value).asResponse(res);
                 } 
             } catch (error) {
-                Result.Failure(`failed to list players: ${error}`, 404).asResponse(res);
+                Result.Failure(`failed to list players: ${error}`, 500).asResponse(res);
             }
 
             next();
         } else {
-            Result.Failure(`unable to find container`, 404).asResponse(res);
+            Result.Failure(`unable to find container`, 500).asResponse(res);
             next();
         }
     }
@@ -244,12 +244,12 @@ export default class ServalRoutes {
                     Result.Success(value).asResponse(res);
                 } 
             } catch (error) {
-                Result.Failure(`failed to get player: ${error}`, 404).asResponse(res);
+                Result.Failure(`failed to get player: ${error}`, 500).asResponse(res);
             }
 
             next();
         } else {
-            Result.Failure(`unable to find container`, 404).asResponse(res);
+            Result.Failure(`unable to find container`, 500).asResponse(res);
             next();
         }
     }
@@ -268,12 +268,12 @@ export default class ServalRoutes {
                     Result.Success(response.statusText).asResponse(res);
                 }
             } catch (error) {
-                Result.Failure(`failed to delete player: ${error}`, 404).asResponse(res);
+                Result.Failure(`failed to delete player: ${error}`, 500).asResponse(res);
             }
 
             next();
         } else {
-            Result.Failure(`unable to find container`, 404).asResponse(res);
+            Result.Failure(`unable to find container`, 500).asResponse(res);
             next();
         }
     }
