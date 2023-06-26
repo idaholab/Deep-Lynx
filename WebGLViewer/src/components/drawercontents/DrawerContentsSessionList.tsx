@@ -16,13 +16,15 @@ import {
   ListItemText,
   ListItemButton,
   MenuItem,
+  Modal,
+  TextField
 } from '@mui/material';
 import Menu, { MenuProps } from '@mui/material/Menu';
 import Divider from '@mui/material/Divider';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 // MUI Icons
-import EditIcon from '@mui/icons-material/Edit'; 
+import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 // Styles
@@ -30,6 +32,9 @@ import { styled, alpha } from '@mui/material/styles';
 import '../../styles/App.scss';
 // @ts-ignore
 import COLORS from '../../styles/variables';
+import axios from 'axios';
+import { Snackbar } from '@mui/material';
+import { useState } from 'react';
 
 const StyledMenu = styled((props: MenuProps) => (
   <Menu
@@ -80,7 +85,6 @@ const DrawerContentsSectionList: React.FC<Props> = ({
   data
 }) => {
   const nodeList = data;
-
   const dispatch = useAppDispatch();
 
   type openDrawerLeftState = boolean;
@@ -98,27 +102,53 @@ const DrawerContentsSectionList: React.FC<Props> = ({
   };
  
   const [selectedPlayer, setSelectedPlayer] = React.useState<any>(null);
-  const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
+  // const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
 
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
   const handleOpenDeleteModal = (player: any) => {
     setSelectedPlayer(player);
-    setDeleteModalOpen(true);
+    };
+
+  //  Handles Add section 
+  const [openModal, setOpenModal] = useState(false);
+  const [sessionName, setSessionName] = useState('');
+
+  const handleOpenModal = () => {
+    setOpenModal(true);
   };
 
-  // const handleSelectAssetOnScene = (payload: any) => {
-  //   handleClose()
-  //   dispatch(appStateActions.selectAssetOnScene(payload.properties.name))
-  // };
+  const handleCloseModal = () => {
+    setOpenModal(false);
+  };
 
-  // const handleHighlightAssetOnScene = (payload: any) => {
-  //   handleClose()
-  //   dispatch(appStateActions.highlightAssetOnScene(payload.properties.name))
-  // };
+  const handleSessionNameChange = (event:any) => {
+    setSessionName(event.target.value);
+  };
 
-  // const handleShowAssetOnGraph = (payload: any) => {
-  //   handleClose()
-  //   console.log('Action to \"Show On Graph\" clicked!')
-  // }
+  const handleAddSession = async () => {
+    try {
+      const response = await fetch(`http://0.0.0.0:8091/containers/1/sessions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name: sessionName })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      } else {
+        const jsonResponse = await response.json();
+        console.log(jsonResponse);
+      }
+    } catch (error) {
+      console.error('There was an error!', error);
+    }
+
+    handleCloseModal();
+  };
+
 
   // Menu
   // const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -132,17 +162,99 @@ const DrawerContentsSectionList: React.FC<Props> = ({
   const handleClose = () => {
     setAnchorEl(null);
   };
+  const AddSession = async () => {
+    const sessionName = "Session 4";  // replace this with the actual session name
+    const container_id = '1'; // replace with your container id
+    try {
+      const response = await fetch(`http://0.0.0.0:8091/containers/${container_id}/sessions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name: sessionName })
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      } else {
+        const jsonResponse = await response.json();
+        console.log(jsonResponse); // remove this line in production
+      }
+    } catch (error) {
+      console.error('There was an error!', error);
+      setSnackbarMessage(`Error: ${error}`);
+      setSnackbarOpen(true);
+    }
+  }
 
   return (
     <>
       <Box sx={{ display: 'flex', flexDirection: 'row', fontSize: '14px', margin: '0px 16px 6px 16px' }}>
         <Box sx={{ borderRight: `1px solid ${COLORS.colorDarkgray2}`, paddingRight: '6px', marginRight: '6px' }}>
-          Id
+          {/* Id */}
         </Box>
         <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           Title
         </Box>
+        <Button
+                  id="customized-button"
+                  // className={`menu-button-${index}`}
+                  aria-controls={open ? 'customized-menu' : undefined}
+                  aria-haspopup="true"
+                  aria-expanded={open ? 'true' : undefined}
+                  variant="contained"
+                  disableElevation
+                  onClick={handleOpenModal}
+                  endIcon={<AddIcon />}
+                  size="small"
+                  sx={{
+                    color: 'white',
+                    padding: '0px 8px 0 8px',
+                    marginLeft: 'auto',
+                    '& span': {
+                      fontSize: '14px',
+                      marginBottom: '1px',
+                      '&:first-of-type': {
+                        marginRight: '-6px'
+                      },
+                    }
+                  }}
+                >
+                  <span>Add Session</span>
+                </Button>
       </Box>
+      <Modal open={openModal} onClose={handleCloseModal}>
+        <div
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 400,
+            backgroundColor: 'white',
+            border: '2px solid black',
+            boxShadow: '24px',
+            padding: '16px'
+          }}
+        >
+          <TextField
+            id="session-name"
+            label="Session Name"
+            value={sessionName}
+            onChange={handleSessionNameChange}
+            fullWidth
+          />
+          <Button
+            variant="contained"
+            disableElevation
+            onClick={handleAddSession}
+            size="small"
+            style={{ marginTop: '16px' }}
+          >
+            Add Session
+          </Button>
+        </div>
+      </Modal>
       <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0', borderTop: `1px solid ${COLORS.colorDarkgray}` }}>
         <List dense sx={{ paddingTop: '0' }}>
           {nodeList.map((object: any, index: number) => (
@@ -152,7 +264,36 @@ const DrawerContentsSectionList: React.FC<Props> = ({
               sx={{ borderBottom: `1px solid ${COLORS.colorDarkgray}` }}
               secondaryAction={
                 <>
-                <Button
+                  <Button
+                  id="customized-button"
+                  // className={`menu-button-${index}`}
+                  aria-controls={open ? 'customized-menu' : undefined}
+                  aria-haspopup="true"
+                  aria-expanded={open ? 'true' : undefined}
+                  variant="contained"
+                  disableElevation
+                  onClick={(e) => AddSession()}
+                  // endIcon={<KeyboardArrowDownIcon />}
+                  size="small"
+                  sx={{
+                    color: 'white',
+                    padding: '0px 4px 0 4px',
+                    marginLeft: 'auto',
+                    '& span': {
+                      fontSize: '14px',
+                      marginBottom: '1px',
+                      '&:first-of-type': {
+                        marginRight: '-6px'
+                      },
+                    }
+                  }}
+                >
+                   <MenuItem onClick={() => handleOpenDeleteModal(object)}  disableRipple>
+                    <DeleteIcon />
+                   Delete
+                  </MenuItem>
+                </Button>
+                {/* <Button
                   id="customized-button"
                   className={`menu-button-${index}`}
                   aria-controls={open ? 'customized-menu' : undefined}
@@ -176,7 +317,7 @@ const DrawerContentsSectionList: React.FC<Props> = ({
                   }}
                 >
                   <span>Actions</span>
-                </Button>
+                </Button> */}
                 <StyledMenu
                   id="customized-menu"
                   MenuListProps={{
@@ -192,19 +333,11 @@ const DrawerContentsSectionList: React.FC<Props> = ({
                   }
                   onClose={handleClose}
                 >
-                  {/* <MenuItem onClick={() => handleSelectAssetOnScene(object)} disableRipple>
-                    <EditIcon />
-                    Edit
-                  </MenuItem> */}
                   <MenuItem onClick={() => handleOpenDeleteModal(object)}  disableRipple>
                     <DeleteIcon />
                    Delete
                   </MenuItem>
-                  <Divider sx={{ my: 0.5 }} />
-                  {/* <MenuItem onClick={() => handleShowAssetOnGraph(object)} disableRipple>
-                    <HubIcon />
-                    Show On Graph
-                  </MenuItem> */}
+                  {/* <Divider sx={{ my: 0.5 }} /> */}
                 </StyledMenu>
                 </>
               }
@@ -227,10 +360,12 @@ const DrawerContentsSectionList: React.FC<Props> = ({
                 <ListItemText>
                   <Box sx={{ display: 'flex', flexDirection: 'row' }}>
                     <Box sx={{ borderRight: `1px solid ${COLORS.colorDarkgray2}`, paddingRight: '6px', marginRight: '6px' }}>
-                      { object.id }
+                      {/* { object.id } */}
+                       {/* { object.id } */}
                     </Box>
                     <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      { object.properties?.name }
+                      {/* { object.properties?.name } */}
+                      { object.name }
                     </Box>
                   </Box>
                 </ListItemText>

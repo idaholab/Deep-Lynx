@@ -50,8 +50,8 @@ import COLORS from '../../../src/styles/variables';
 import { unstable_renderSubtreeIntoContainer } from 'react-dom';
 import DrawerContentsUserInfo from '../drawercontents/DrawerContentsUserInfo';
 import DrawerContentsUserList from '../drawercontents/DrawerContentsUserList';
-import DrawerContentsSectionList from '../drawercontents/DrawerContentsSectionList';
-import DrawerContentsSectionInfo from '../drawercontents/DrawerContentsSectionInfo';
+import DrawerContentsSectionList from '../drawercontents/DrawerContentsSessionList';
+import DrawerContentsSectionInfo from '../drawercontents/DrawerContentsSessionInfo';
 
 const queryFilterData = (query: any, data: any) => {
   if (!query) {
@@ -98,8 +98,147 @@ const DrawerLeft: React.FC<Props> = ({}) => {
   const [selected, setSelected] = useState('nodeList');
   const [searchQuery, setSearchQuery] = useState("");
   const [nodes, setNodes] = useState(Array<{ [key: string]: any; }>);
-  const [filteredData, test11] = useState();
-
+  const [sessionsData, setSessionsData] = useState([]);
+  let test123=[
+    {
+        "id": "b78dcf72-359e-46fa-808a-dd92af8bafd2",
+        "name": "Session 1",
+        "users": [
+            {
+                "state": {
+                    "id": "bX3L5P8KYe1",
+                    "state": null
+                },
+                "send_heartbeat": false
+            },
+            {
+              "state": {
+                  "id": "bX3L5P8KYe2",
+                  "state": null
+              },
+              "send_heartbeat": false
+          },
+          {
+            "state": {
+                "id": "bX3L5P8KYe3",
+                "state": null
+            },
+            "send_heartbeat": false
+        }
+        ],
+        "objects": [
+            {
+                "id": "object 1",
+                "state": "ruff"
+            },
+            {
+                "id": "object 2",
+                "state": "ruff"
+            },
+            {
+                "id": "object 3",
+                "state": "ruff2"
+            },
+            {
+                "id": "object 4",
+                "state": "ruff2"
+            }
+        ],
+        "session_start_time": "2023-06-22 21:54:40.938308 UTC"
+    },
+    {
+        "id": "331a49ba-b2e8-49ae-bbd6-190e0f4de984",
+        "name": "Session 2",
+        "users": [
+          {
+              "state": {
+                  "id": "bX3L5P8KYe1",
+                  "state": null
+              },
+              "send_heartbeat": false
+          },
+          {
+            "state": {
+                "id": "bX3L5P8KYe2",
+                "state": null
+            },
+            "send_heartbeat": false
+        },
+        {
+          "state": {
+              "id": "bX3L5P8KYe3",
+              "state": null
+          },
+          "send_heartbeat": false
+      }
+      ],
+      "objects": [
+          {
+              "id": "object 1",
+              "state": "ruff"
+          },
+          {
+              "id": "object 2",
+              "state": "ruff"
+          },
+          {
+              "id": "object 3",
+              "state": "ruff2"
+          },
+          {
+              "id": "object 4",
+              "state": "ruff2"
+          }
+      ],
+        "session_start_time": "2023-06-22 22:33:48.201260 UTC"
+    },
+    {
+      "id": "331a49ba-b2e8-49ae-bbd6-190e0f4de985",
+      "name": "Session 2",
+      "users": [
+        {
+            "state": {
+                "id": "bX3L5P8KYe1",
+                "state": null
+            },
+            "send_heartbeat": false
+        },
+        {
+          "state": {
+              "id": "bX3L5P8KYe2",
+              "state": null
+          },
+          "send_heartbeat": false
+      },
+      {
+        "state": {
+            "id": "bX3L5P8KYe3",
+            "state": null
+        },
+        "send_heartbeat": false
+    }
+    ],
+    "objects": [
+        {
+            "id": "object 1",
+            "state": "ruff"
+        },
+        {
+            "id": "object 2",
+            "state": "ruff"
+        },
+        {
+            "id": "object 3",
+            "state": "ruff2"
+        },
+        {
+            "id": "object 4",
+            "state": "ruff2"
+        }
+    ],
+      "session_start_time": "2023-06-22 22:33:48.201260 UTC"
+  }
+]
  let test1=[{"id":"1", "properties":{"id":"1","description": "This is a user description", "name": "section 1"}},{"id":"2", "properties":{"id":"2","description": "This is a user description", "name": "section 2"}},{"id":"3", "properties":{"id":"3","description": "This is a user description", "name": "section 3"}}]
   useEffect(() => {
     async function getNodes() {
@@ -122,22 +261,31 @@ const DrawerLeft: React.FC<Props> = ({}) => {
     }
   }, [query, tagId]);
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       const result = await axios('http://0.0.0.0:8091/containers/1/sessions/063f52d1-ef03-4e51-a66e-acc67d9d5bb3/objects');
-
-  //       setData(result.data);
-  //     } catch (error) {
-  //       console.error('Error:', error);
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, []); // Empty array means this effect runs once on mount
-
-
+   useEffect(() => {
+    const fetchSessions = async () => {
+      // try {
+      //   const response = await axios.get(`https://serval.azuredev.inl.gov/containers/${1}/sessions`);
+      //   console.log(response.data)
+      //   setSessionsData(response.data);
+      // } catch (error) {
+      //   console.error('Error fetching sessions', error);
+      // }
+      await axios
+      .get(`https://serval.azuredev.inl.gov/containers/${1}/sessions`)
+      .then((response: any) => {
+        console.log(response)
+        // let tags = response.data.value;
+        // tags.forEach((record: any) => {
+        //   if (record.tag_name == tag) {
+        //     dispatch(appStateActions.setTagId(record.id));
+        //   }
+        // });
+      });
+    };
   
+    fetchSessions();
+  }, []);
+
   type openDrawerLeftState = boolean;
   const openDrawerLeftState: openDrawerLeftState = useAppSelector((state: any) => state.appState.openDrawerLeft);
 
@@ -158,6 +306,8 @@ const DrawerLeft: React.FC<Props> = ({}) => {
   type selectedAssetObject = any;
   const selectedAssetObject: selectedAssetObject = useAppSelector((state: any) => state.appState.selectedAssetObject);
 
+  type selectedSessionObject=any;
+ const  selectedSessionObjec:selectedSessionObject= useAppSelector((state: any) => state.appState.selectedSessionObject);
   const handleDeselectAssetObject = () => {
     dispatch(appStateActions.selectAssetObject({}));
     dispatch(appStateActions.setDrawerLeftWidth(430));
@@ -194,6 +344,7 @@ const DrawerLeft: React.FC<Props> = ({}) => {
   ]
 
   const handleSelectMenuLink = (selectedLink: string) => {
+    // console.log(selectedAssetObject)
     setSelected(selectedLink);
     if (openDrawerLeftState === false) {
       dispatch(appStateActions.toggleDrawerLeft());
@@ -312,8 +463,9 @@ const DrawerLeft: React.FC<Props> = ({}) => {
               {selected === 'nodeList' && (Object.keys(selectedAssetObject).length === 0) ? 'Nodes'
                 : selected === 'sceneList' ? 'Scenes'
                 : selected === 'settings' ? 'Settings'
-                :selected === 'userList' && (Object.keys(selectedAssetObject).length === 0) ? 'Users'
-                :selected === 'sectionList' && (Object.keys(selectedAssetObject).length === 0) ? 'Sections'
+                // :selected === 'userList' && (Object.keys(selectedAssetObject).length === 0) ? 'Users'
+                :selected === 'sectionList' && (Object.keys(selectedAssetObject).length === 0) ? 'Sessions'
+                :selected === 'sectionList' && (Object.keys(selectedAssetObject).length !== 0) ?  `Session ${selectedAssetObject.id}`
                 : `Node ${selectedAssetObject.id}`
               }
               {(Object.keys(selectedAssetObject).length !== 0) && 
@@ -324,7 +476,7 @@ const DrawerLeft: React.FC<Props> = ({}) => {
                     borderLeft: `1px solid ${COLORS.colorDarkgray2}`
                   }}
                 >
-                  { selectedAssetObject.properties.name }
+                  { selectedAssetObject.name }
                 </span>
               }
             </Typography>
@@ -368,15 +520,11 @@ const DrawerLeft: React.FC<Props> = ({}) => {
           {selected === 'settings' && 
             <DrawerContentsSettings />
           }
-          {selected === 'userList' && 
-             <>
-             {(Object.keys(selectedAssetObject).length === 0) && <DrawerContentsUserList data={test1} />}
-             {(Object.keys(selectedAssetObject).length !== 0) && <DrawerContentsUserInfo />}
-           </>
-          }
+    
           {selected === 'sectionList' && 
              <>
-             {(Object.keys(selectedAssetObject).length === 0) && <DrawerContentsSectionList data={test1} /> } <div className='m-2'>
+             {/* sessionsData */}
+             {(Object.keys(selectedAssetObject).length === 0) && <DrawerContentsSectionList data={sessionsData} /> } <div className='m-2'>
               <Box sx={{ position: 'absolute', right: '0px', paddingRight: '16px' }}>
                 <ButtonIconText text='Back To List' handleClick={() => handleDeselectAssetObject()} type="close" color="error" />
               </Box>

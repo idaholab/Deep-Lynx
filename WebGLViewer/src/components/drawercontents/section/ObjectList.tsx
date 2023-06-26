@@ -79,16 +79,9 @@ type Props = {
 
 const ObjectList: React.FC<Props> = ({
   data
-}) => {
-//   const nodeList = data;
-// const nodeList=[{"id":"1", "properties":{"id":"1","description": "This is a user description", "name": "Object 1"}},{"id":"2", "properties":{"id":"2","description": "This is a user description", "name": "Object 2"}},{"id":"3", "properties":{"id":"3","description": "This is a user description", "name": "Object 3"}}]
-const [nodeList, setNodeList] = React.useState([
-    { id: '1', properties: { id: '1', description: 'This is a user description', name: 'Object 1' } },
-    { id: '2', properties: { id: '2', description: 'This is a user description', name: 'Object 2' } },
-    { id: '3', properties: { id: '3', description: 'This is a user description', name: 'Object 3' } },
-  ]);
- 
 
+}) => {
+const nodeList = data;
 const dispatch = useAppDispatch();
 
   type openDrawerLeftState = boolean;
@@ -104,22 +97,7 @@ const dispatch = useAppDispatch();
     dispatch(appStateActions.setDrawerLeftWidth(numPixels));
     setSelected(selectedItem);
   };
-
-  const handleSelectAssetOnScene = (payload: any) => {
-    handleClose()
-    dispatch(appStateActions.selectAssetOnScene(payload.properties.name))
-  };
-
-  const handleHighlightAssetOnScene = (payload: any) => {
-    handleClose()
-    dispatch(appStateActions.highlightAssetOnScene(payload.properties.name))
-  };
-
-  const handleShowAssetOnGraph = (payload: any) => {
-    handleClose()
-    console.log('Action to \"Show On Graph\" clicked!')
-  }
-
+ 
   // Menu
   // const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [anchorEl, setAnchorEl] = React.useState<any>(null);
@@ -136,14 +114,14 @@ const dispatch = useAppDispatch();
 // Handle delete
 const [selectedPlayer, setSelectedPlayer] = React.useState<any>(null);
 const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
-const handleDelete = () => {
-    if (selectedPlayer) {
-      const updatedList = nodeList.filter((player) => player.id !== selectedPlayer.id);
-      setNodeList(updatedList);
-      setSelectedPlayer(null);
-    }
-    setDeleteModalOpen(false);
-  };
+// const handleDelete = () => {
+//     if (selectedPlayer) {
+//       const updatedList = nodeList.filter((player) => player.id !== selectedPlayer.id);
+//       setNodeList(updatedList);
+//       setSelectedPlayer(null);
+//     }
+//     setDeleteModalOpen(false);
+//   };
 
   const handleOpenDeleteModal = (player: any) => {
     setSelectedPlayer(player);
@@ -168,7 +146,7 @@ const handleDelete = () => {
       </Box>
       <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0', borderTop: `1px solid ${COLORS.colorDarkgray}` }}>
         <List dense sx={{ paddingTop: '0' }}>
-          {nodeList.map((object: any, index: number) => (
+          {nodeList.objects.map((object: any, index: number) => (
             <ListItem
               key={object.id}
               disablePadding
@@ -215,25 +193,16 @@ const handleDelete = () => {
                   }
                   onClose={handleClose}
                 >
-                  <MenuItem onClick={() => handleSelectAssetOnScene(object)} disableRipple>
-                    <EditIcon />
-                  Edit
-                  </MenuItem>
                   <MenuItem onClick={() =>  handleOpenDeleteModal(object)} disableRipple>
                     <DeleteIcon />
                     Delete
                   </MenuItem>
-                  <Divider sx={{ my: 0.5 }} />
-                  {/* <MenuItem onClick={() => handleShowAssetOnGraph(object)} disableRipple>
-                    <HubIcon />
-                    Show On Graph
-                  </MenuItem> */}
-                </StyledMenu>
+               </StyledMenu>
                 </>
               }
             >
               <ListItemButton
-                onClick={() => handleSelectAssetObject(object, 800, `listItem${index+1}`)}
+                // onClick={() => handleSelectAssetObject(object, 800, `listItem${index+1}`)}
                 selected={selected === `listItem${index+1}`}
                 sx={{
                   '&.Mui-selected': {
@@ -253,7 +222,7 @@ const handleDelete = () => {
                       { object.id }
                     </Box>
                     <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      { object.properties?.name }
+                      { object.state }
                     </Box>
                   </Box>
                 </ListItemText>
@@ -289,9 +258,9 @@ const handleDelete = () => {
               <Button onClick={handleCloseDeleteModal} color="primary">
                 Cancel
               </Button>
-              <Button onClick={handleDelete} color="error">
+              {/* <Button onClick={handleDelete} color="error">
                 Delete
-              </Button>
+              </Button> */}
             </Box>
           </Box>
         </Modal>

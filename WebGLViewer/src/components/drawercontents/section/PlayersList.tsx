@@ -77,13 +77,8 @@ type Props = {
 };
 
 const PlayerList: React.FC<Props> = ({ data }) => {
-  const [nodeList, setNodeList] = React.useState([
-    { id: '1', properties: { id: '1', description: 'This is a user description', name: 'Player 1' } },
-    { id: '2', properties: { id: '2', description: 'This is a user description', name: 'Player 2' } },
-    { id: '3', properties: { id: '3', description: 'This is a user description', name: 'Player 3' } },
-  ]);
-  // const [nodeList, setNodeList] = React.useState<any[]>([]);
-  
+ const nodeList = data;
+
   const [selectedPlayer, setSelectedPlayer] = React.useState<any>(null);
   const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
 
@@ -109,18 +104,22 @@ const PlayerList: React.FC<Props> = ({ data }) => {
   
     fetchSessions();
   }, []);
-
-
-  // Handle delete
   const handleDelete = () => {
     if (selectedPlayer) {
-      const updatedList = nodeList.filter((player) => player.id !== selectedPlayer.id);
-      setNodeList(updatedList);
+      const deletePlayer = async () => {
+        try {
+          const response = await axios.delete(`http://0.0.0.0:8091/containers/${1}/users/${selectedPlayer.id}`);
+          console.log(response.data);
+        } catch (error) {
+          console.error('Error deleting player', error);
+        }
+      };
+
+      deletePlayer();
       setSelectedPlayer(null);
     }
     setDeleteModalOpen(false);
   };
-
   const handleOpenDeleteModal = (player: any) => {
     setSelectedPlayer(player);
     setDeleteModalOpen(true);
@@ -139,50 +138,6 @@ const PlayerList: React.FC<Props> = ({ data }) => {
     description: '',
   });
  
-  const handleOpenEditModal = (player: any) => {
-    setEditedPlayer({ 
-      id: player.id, 
-      name: player.properties.name, 
-      description: player.properties.description 
-    });
-    setEditModalOpen(true);
-  };
-  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setEditedPlayer((prevPlayer) => ({
-      ...prevPlayer,
-      [name]: value,
-    }));
-  };
-  const handleSaveEdit = () => {
-    const updatedList = nodeList.map((player) =>
-      player.id === editedPlayer.id 
-        ? {
-          ...player,
-          properties: {
-            ...player.properties,
-            name: editedPlayer.name,
-            description: editedPlayer.description
-          }
-        } 
-        : player
-    );
-    setNodeList(updatedList);
-    setEditedPlayer({ id: '', name: '', description: '' });
-    setEditModalOpen(false);
-  };
-  
-  // close the modal
-  const handleCloseEditModal = () => {
-    setEditedPlayer({ id: '', name: '', description: '' });
-    setEditModalOpen(false);
-  };
-
-  const handleSelectAssetObject = (obj: any, numPixels: number, selectedItem: string) => {
-    dispatch(appStateActions.selectAssetObject(obj));
-    dispatch(appStateActions.setDrawerLeftWidth(numPixels));
-    setSelected(selectedItem);
-  };
 
   // Menu
   const [anchorEl, setAnchorEl] = React.useState<any>(null);
@@ -202,15 +157,15 @@ const PlayerList: React.FC<Props> = ({ data }) => {
         <Box sx={{ borderRight: `1px solid ${COLORS.colorDarkgray2}`, paddingRight: '6px', marginRight: '6px' }}>
           Id
         </Box>
-        <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {/* <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           Player Name
-        </Box>
+        </Box> */}
       </Box>
       <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0', borderTop: `1px solid ${COLORS.colorDarkgray}` }}>
         <List dense sx={{ paddingTop: '0' }}>
-          {nodeList.map((object: any, index: number) => (
+          {nodeList.users.map((object: any, index: number) => (
             <ListItem
-              key={object.id}
+              key={object.state.id}
               disablePadding
               sx={{ borderBottom: `1px solid ${COLORS.colorDarkgray}` }}
               secondaryAction={
@@ -249,21 +204,15 @@ const PlayerList: React.FC<Props> = ({ data }) => {
                     open={Boolean(anchorEl && anchorEl[index])}
                     onClose={handleClose}
                   >
-                    <MenuItem onClick={() => handleOpenEditModal(object)} disableRipple>
-                      <EditIcon />
-                      Edit
-                    </MenuItem>
                     <MenuItem onClick={() => handleOpenDeleteModal(object)} disableRipple>
                       <DeleteIcon />
                       Delete
                     </MenuItem>
-                    <Divider sx={{ my: 0.5 }} />
                   </StyledMenu>
                 </>
               }
             >
               <ListItemButton
-                onClick={() => handleSelectAssetObject(object, 800, `listItem${index + 1}`)}
                 selected={selected === `listItem${index + 1}`}
                 sx={{
                   '&.Mui-selected': {
@@ -280,10 +229,7 @@ const PlayerList: React.FC<Props> = ({ data }) => {
                 <ListItemText>
                   <Box sx={{ display: 'flex', flexDirection: 'row' }}>
                     <Box sx={{ borderRight: `1px solid ${COLORS.colorDarkgray2}`, paddingRight: '6px', marginRight: '6px' }}>
-                      {object.id}
-                    </Box>
-                    <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {object.properties?.name}
+                      {object.state.id}
                     </Box>
                   </Box>
                 </ListItemText>
@@ -326,58 +272,7 @@ const PlayerList: React.FC<Props> = ({ data }) => {
           </Box>
         </Modal>
       </Box>
-      <Box>
-        <Modal
-          open={editModalOpen}
-          onClose={handleCloseEditModal}
-          aria-labelledby="edit-modal-title"
-          aria-describedby="edit-modal-description"
-        >
-          <Box
-            sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: 400,
-              bgcolor: 'background.paper',
-              border: '2px solid #000',
-              boxShadow: 24,
-              p: 4,
-            }}
-          >
-            <Typography id="edit-modal-title" variant="h6">
-              Edit Player
-            </Typography>
-            <Box sx={{ mt: 2 }}>
-              <TextField
-                label="Name"
-                name="name"
-                value={editedPlayer.name}
-                onChange={handleEditChange}
-                fullWidth
-              />
-            </Box>
-            <Box sx={{ mt: 2 }}>
-              <TextField
-                label="Description"
-                name="description"
-                value={editedPlayer.description}
-                onChange={handleEditChange}
-                fullWidth
-              />
-            </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-              <Button onClick={handleCloseEditModal} color="primary">
-                Cancel
-              </Button>
-              <Button onClick={handleSaveEdit} color="primary">
-                Save
-              </Button>
-            </Box>
-          </Box>
-        </Modal>
-      </Box>
+     
     </>
   );
 };
