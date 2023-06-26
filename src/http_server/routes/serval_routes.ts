@@ -53,7 +53,7 @@ export default class ServalRoutes {
 
             next();
         } else {
-            Result.Failure(`unable to find container`, 500).asResponse(res);
+            Result.Failure(`unable to find container`, 404).asResponse(res);
             next();
         }
     }
@@ -77,7 +77,7 @@ export default class ServalRoutes {
 
             next();
         } else {
-            Result.Failure(`unable to find container`, 500).asResponse(res);
+            Result.Failure(`unable to find container`, 404).asResponse(res);
             next();
         }
     }
@@ -101,7 +101,7 @@ export default class ServalRoutes {
 
             next();
         } else {
-            Result.Failure(`unable to find container`, 500).asResponse(res);
+            Result.Failure(`unable to find container`, 404).asResponse(res);
             next();
         }
     }
@@ -126,7 +126,7 @@ export default class ServalRoutes {
 
             next();
         } else {
-            Result.Failure(`unable to find container`, 500).asResponse(res);
+            Result.Failure(`unable to find container`, 404).asResponse(res);
             next();
         }
     }
@@ -150,7 +150,7 @@ export default class ServalRoutes {
 
             next();
         } else {
-            Result.Failure(`unable to find container`, 500).asResponse(res);
+            Result.Failure(`unable to find container`, 404).asResponse(res);
             next();
         }
     }
@@ -175,7 +175,7 @@ export default class ServalRoutes {
 
             next();
         } else {
-            Result.Failure(`unable to find container`, 500).asResponse(res);
+            Result.Failure(`unable to find container`, 404).asResponse(res);
             next();
         }
     }
@@ -199,7 +199,7 @@ export default class ServalRoutes {
 
             next();
         } else {
-            Result.Failure(`unable to find container`, 500).asResponse(res);
+            Result.Failure(`unable to find container`, 404).asResponse(res);
             next();
         }
     }
@@ -224,7 +224,7 @@ export default class ServalRoutes {
 
             next();
         } else {
-            Result.Failure(`unable to find container`, 500).asResponse(res);
+            Result.Failure(`unable to find container`, 404).asResponse(res);
             next();
         }
     }
@@ -249,7 +249,7 @@ export default class ServalRoutes {
 
             next();
         } else {
-            Result.Failure(`unable to find container`, 500).asResponse(res);
+            Result.Failure(`unable to find container`, 404).asResponse(res);
             next();
         }
     }
@@ -273,7 +273,7 @@ export default class ServalRoutes {
 
             next();
         } else {
-            Result.Failure(`unable to find container`, 500).asResponse(res);
+            Result.Failure(`unable to find container`, 404).asResponse(res);
             next();
         }
     }
