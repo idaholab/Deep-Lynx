@@ -35,10 +35,17 @@ describe('TagMapper', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let tagID: string = '';
     let tagName: string = '';
+    let nodes: Node[] = [];
+    let edges: Edge[] = [];
 
     const cMapper = ContainerStorage.Instance;
     const dsMapper = DataSourceMapper.Instance;
     const tMapper = TagMapper.Instance;
+    const mMapper = MetatypeMapper.Instance;
+    const rMapper = MetatypeRelationshipMapper.Instance;
+    const rpMapper = MetatypeRelationshipPairMapper.Instance;
+    const nMapper = NodeMapper.Instance;
+    const eMapper = EdgeMapper.Instance;
 
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === '') {
@@ -90,6 +97,101 @@ describe('TagMapper', async () => {
         tagID = tag.value.id!;
         tagName = tag.value.tag_name!;
 
+        // Create a metatype
+        const metatype = await mMapper.Create(
+            'test suite',
+            new Metatype({
+                container_id: containerID,
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric(),
+            }),
+        );
+
+        expect(metatype.isError).false;
+        expect(metatype.value).not.empty;
+
+        // Create a relationship type
+        const relationship = await rMapper.Create(
+            'test suite',
+            new MetatypeRelationship({
+                container_id: containerID,
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric(),
+            }),
+        );
+
+        expect(relationship.isError).false;
+        expect(relationship.value).not.empty;
+
+        // Create a relationship pair
+        const pair = await rpMapper.Create(
+            'test suite',
+            new MetatypeRelationshipPair({
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric(),
+                origin_metatype: metatype.value.id!,
+                destination_metatype: metatype.value.id!,
+                relationship: relationship.value.id!,
+                relationship_type: 'one:one',
+                container_id: containerID,
+            }),
+        );
+
+        expect(pair.isError).false;
+        expect(pair.value).not.empty;
+
+        // Create some test nodes
+        const nodeObjects = [
+            new Node({
+                container_id: containerID,
+                metatype: metatype.value,
+                properties: {name: "nodeA"},
+            }),
+            new Node({
+                container_id: containerID,
+                metatype: metatype.value,
+                properties: {name: "nodeB"},
+            }),
+            new Node({
+                container_id: containerID,
+                metatype: metatype.value,
+                properties: {name: "nodeC"},
+            }),
+        ];
+
+        const nodesCreated = await nMapper.BulkCreateOrUpdateByCompositeID('test suite', nodeObjects);
+        expect(nodesCreated.isError, nodesCreated.error?.error).false;
+        nodes = nodesCreated.value;
+
+        // Create some test edges
+        const edgeObjects = [
+            new Edge({
+                container_id: containerID,
+                metatype_relationship_pair: pair.value.id!,
+                properties: {name: "edgeA"},
+                origin_id: nodes[0].id,
+                destination_id: nodes[1].id,
+            }),
+            new Edge({
+                container_id: containerID,
+                metatype_relationship_pair: pair.value.id!,
+                properties: {name: "edgeB"},
+                origin_id: nodes[1].id,
+                destination_id: nodes[2].id,
+            }),
+            new Edge({
+                container_id: containerID,
+                metatype_relationship_pair: pair.value.id!,
+                properties: {name: "edgeC"},
+                origin_id: nodes[2].id,
+                destination_id: nodes[0].id,
+            }),
+        ];
+
+        const edgesCreated = await eMapper.BulkCreate('test suite', edgeObjects);
+        expect(edgesCreated.isError, edgesCreated.error?.error).false;
+        edges = edgesCreated.value;
+
         return Promise.resolve();
     });
 
@@ -130,41 +232,15 @@ describe('TagMapper', async () => {
         return Promise.resolve();
     });
 
-
     it('can tag a node', async () => {
-        const tMapper = TagMapper.Instance;
-        const nMapper = NodeMapper.Instance;
-        const mMapper = MetatypeMapper.Instance;
-
-        // Create the metatype
-        const metatype = await mMapper.Create(
-            'test suite',
-            new Metatype({
-                container_id: containerID,
-                name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
-            }),
-        );
-
-        expect(metatype.isError).false;
-        expect(metatype.value).not.empty;
-
-        // Create the node
-        const node = await nMapper.CreateOrUpdateByCompositeID(
-            'test suite',
-            new Node({
-                container_id: containerID,
-                metatype: metatype.value,
-                properties: {},
-            }),
-        );
-
-        expect(node.isError, metatype.error?.error).false;
-
-        // Tag the node
-        const tagNode = await tMapper.TagNode(tagID, node.value.id!);
+        const tagNode = await tMapper.TagNode(tagID, nodes[0].id!);
 
         expect(tagNode.value).true;
+
+        const tagged = await tMapper.NodesWithTag(tagID);
+        expect(tagged.isError, tagged.error?.error).false;
+        const taggedNodeIDs = tagged.value.map(n => n.id!);
+        expect(taggedNodeIDs.includes(nodes[0].id!));
 
         return Promise.resolve();
     });
@@ -196,101 +272,78 @@ describe('TagMapper', async () => {
     });
 
     it('can tag an edge', async () => {
-        const eMapper = EdgeMapper.Instance;
-        const nMapper = NodeMapper.Instance;
-        const mMapper = MetatypeMapper.Instance;
-        const rMapper = MetatypeRelationshipMapper.Instance;
-        const rpMapper = MetatypeRelationshipPairMapper.Instance;
-
-        // Create the Metatype
-        const metatype = await mMapper.Create(
-            'test suite',
-            new Metatype({
-                container_id: containerID,
-                name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
-            }),
-        );
-
-        expect(metatype.isError).false;
-        expect(metatype.value).not.empty;
-
-        // Create the Nodes
-        const node_a = await nMapper.CreateOrUpdateByCompositeID(
-            'test suite',
-            new Node({
-                container_id: containerID,
-                metatype: metatype.value,
-                properties: {
-                    node: 'a',
-                },
-            }),
-        );
-        const node_b = await nMapper.CreateOrUpdateByCompositeID(
-            'test suite',
-            new Node({
-                container_id: containerID!,
-                metatype: metatype.value,
-                properties: {
-                    node: 'b',
-                },
-            }),
-        );
-
-        expect(node_a.isError).false;
-        expect(node_b.isError).false;
-        expect(node_a.value).not.empty;
-        expect(node_b.value).not.empty;
-
-        // Create the Relationship
-        const relationship = await rMapper.Create(
-            'test suite',
-            new MetatypeRelationship({
-                container_id: containerID,
-                name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
-            }),
-        );
-
-        expect(relationship.isError).false;
-        expect(relationship.value).not.empty;
-
-        // Create the Relationship Metatype
-        const pair = await rpMapper.Create(
-            'test suite',
-            new MetatypeRelationshipPair({
-                name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
-                origin_metatype: metatype.value.id!,
-                destination_metatype: metatype.value.id!,
-                relationship: relationship.value.id!,
-                relationship_type: 'one:one',
-                container_id: containerID,
-            }),
-        );
-
-        expect(pair.isError).false;
-        expect(pair.value).not.empty;
-
-        // Create the Edge
-        const edge = await eMapper.Create(
-            'test suite',
-            new Edge({
-                container_id: containerID,
-                metatype_relationship_pair: pair.value.id!,
-                properties: {},
-                origin_id: node_a.value.id,
-                destination_id: node_b.value.id,
-            }),
-        );
-
-        expect(edge.isError).false;
-        expect(edge.value).not.empty;
-
-        // Tag the Edge
-        const tagEdge = await tMapper.TagEdge(tagID, edge.value.id!);
+        const tagEdge = await tMapper.TagEdge(tagID, edges[0].id!);
 
         expect(tagEdge.value).true;
+
+        const tagged = await tMapper.EdgesWithTag(tagID);
+        expect(tagged.isError, tagged.error?.error).false;
+        const taggedEdgeIDs = tagged.value.map(e => e.id!);
+        expect(taggedEdgeIDs.includes(edges[0].id!));
+
+        return Promise.resolve();
+    });
+
+    it('can bulk tag nodes', async () => {
+        const nodeIDs = nodes.map((n) => n.id!);
+        const tagNodes = await tMapper.BulkTagNode(tagID, nodeIDs);
+        expect(tagNodes.isError, tagNodes.error?.error).false;
+        expect(tagNodes.value).true;
+
+        const tagged = await tMapper.NodesWithTag(tagID);
+        expect(tagged.isError, tagged.error?.error).false;
+        const taggedNodeIDs = tagged.value.map(n => n.id!);
+        nodeIDs.forEach(id => {
+            expect(taggedNodeIDs.includes(id));
+        });
+
+        return Promise.resolve();
+    });
+
+    it('can bulk detach a tag from nodes', async () => {
+        const nodeIDs = nodes.map((n) => n.id!);
+        const detachTag = await tMapper.BulkDetachNodeTag(tagID, nodeIDs);
+        expect(detachTag.isError, detachTag.error?.error).false;
+        expect(detachTag.value).true;
+
+        const tagged = await tMapper.NodesWithTag(tagID);
+        expect(tagged.isError, tagged.error?.error).false;
+        const taggedNodeIDs = tagged.value.map(n => n.id!);
+        nodeIDs.forEach(id => {
+            expect(taggedNodeIDs.includes(id)).false;
+        });
+
+        return Promise.resolve();
+    });
+
+    it('can bulk tag edges', async () => {
+        const edgeIDs = edges.map((e) => e.id!);
+        const tagEdges = await tMapper.BulkTagEdge(tagID, edgeIDs);
+        expect(tagEdges.isError, tagEdges.error?.error).false;
+        expect(tagEdges.value).true;
+
+        const tagged = await tMapper.EdgesWithTag(tagID);
+        expect(tagged.isError, tagged.error?.error).false;
+        const taggedEdgeIDs = tagged.value.map(e => e.id!);
+        edgeIDs.forEach(id => {
+            expect(taggedEdgeIDs.includes(id));
+        });
+
+        return Promise.resolve();
+    });
+
+    it('can bulk detach a tag from edges', async () => {
+        const edgeIDs = edges.map((e) => e.id!);
+        const detachTag = await tMapper.BulkDetachEdgeTag(tagID, edgeIDs);
+        expect(detachTag.isError, detachTag.error?.error).false;
+        expect(detachTag.value).true;
+
+        const tagged = await tMapper.EdgesWithTag(tagID);
+        expect(tagged.isError, tagged.error?.error).false;
+        const taggedEdgeIDs = tagged.value.map(e => e.id!);
+        edgeIDs.forEach(id => {
+            expect(taggedEdgeIDs.includes(id)).false;
+        });
 
         return Promise.resolve();
     });

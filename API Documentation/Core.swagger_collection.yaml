@@ -5106,13 +5106,13 @@ paths:
                   type: string
                 metadata:
                   type: object
+                  properties:
+                    '':
+                      type: string
             examples:
               example-1:
-                value: {}
-          application/javascript:
-            schema:
-              type: object
-              properties: {}
+                value:
+                  tag_name: example tag
         description: ''
     get:
       tags:
@@ -5312,6 +5312,66 @@ paths:
           description: OK
       operationId: get-containers-container_id-graphs-tags-nodes-tag_id
       description: List all Nodes with a Tag
+    put:
+      summary: Bulk Add Tag to Nodes
+      operationId: put-containers-container_id-graphs-tags-tag_id-nodes
+      responses:
+        '200':
+          description: OK
+      description: Add Tag to Multiple Nodes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                node_ids:
+                  type: array
+                  items:
+                    type: string
+              x-examples:
+                Example 1:
+                  node_ids:
+                    - '123'
+                    - '456'
+                    - '789'
+            examples:
+              Example 1:
+                value:
+                  node_ids:
+                    - '123'
+                    - '456'
+                    - '789'
+    delete:
+      summary: Bulk Detach Tag from Nodes
+      operationId: delete-containers-container_id-graphs-tags-tag_id-nodes
+      responses:
+        '200':
+          description: OK
+      description: Detach Tag from Multiple Nodes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                node_ids:
+                  type: array
+                  items:
+                    type: string
+              x-examples:
+                Example 1:
+                  node_ids:
+                    - '123'
+                    - '456'
+                    - '789'
+            examples:
+              Example 1:
+                value:
+                  node_ids:
+                    - '123'
+                    - '456'
+                    - '789'
   '/containers/{container_id}/graphs/tags/{tag_id}/files':
     parameters:
       - schema:
@@ -5354,6 +5414,66 @@ paths:
           description: OK
       operationId: get-containers-container_id-graphs-tags-tag_id-edges
       description: List all Edges with Tag
+    put:
+      summary: Bulk Add Tag to Edge
+      operationId: put-containers-container_id-graphs-tags-tag_id-edges
+      responses:
+        '200':
+          description: OK
+      description: Add Tag to Multiple Edges
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                edge_ids:
+                  type: array
+                  items:
+                    type: string
+              x-examples:
+                Example 1:
+                  edge_ids:
+                    - '123'
+                    - '456'
+                    - '789'
+            examples:
+              Example 1:
+                value:
+                  edge_ids:
+                    - '123'
+                    - '456'
+                    - '789'
+    delete:
+      summary: Bulk Detach Tag from Edges
+      operationId: delete-containers-container_id-graphs-tags-tag_id-edges
+      responses:
+        '200':
+          description: OK
+      description: Detach Tag from Multiple Edges
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                edge_ids:
+                  type: array
+                  items:
+                    type: string
+              x-examples:
+                Example 1:
+                  edge_ids:
+                    - '123'
+                    - '456'
+                    - '789'
+            examples:
+              Example 1:
+                value:
+                  edge_ids:
+                    - '123'
+                    - '456'
+                    - '789'
   '/containers/{container_id}/graphs/tags/{tag_id}':
     parameters:
       - schema:

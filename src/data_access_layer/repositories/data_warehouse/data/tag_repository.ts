@@ -123,12 +123,44 @@ export default class TagRepository extends Repository implements RepositoryInter
         return this.#mapper.TagNode(tag.id!, node.id);
     }
 
+    async bulkTagNode(tag: Tag, nodeIDs: string[]): Promise<Result<boolean>> {
+        if (!nodeIDs || nodeIDs.length === 0) {
+            return Promise.resolve(Result.Failure('please specify at least one node ID'));
+        }
+
+        return this.#mapper.BulkTagNode(tag.id!, nodeIDs);
+    }
+
+    async bulkDetachNodeTag(tag: Tag, nodeIDs: string[]): Promise<Result<boolean>> {
+        if (!nodeIDs || nodeIDs.length === 0) {
+            return Promise.resolve(Result.Failure('please specify at least one node ID'));
+        }
+
+        return this.#mapper.BulkDetachNodeTag(tag.id!, nodeIDs);
+    }
+
     async tagEdge(tag: Tag, edge: Edge): Promise<Result<boolean>> {
         if (!edge.id) {
             return Promise.resolve(Result.Failure('edge must have id'));
         }
 
         return this.#mapper.TagEdge(tag.id!, edge.id);
+    }
+
+    async bulkTagEdge(tag: Tag, edgeIDs: string[]): Promise<Result<boolean>> {
+        if (!edgeIDs || edgeIDs.length === 0) {
+            return Promise.resolve(Result.Failure('please specify at least one edge ID'));
+        }
+
+        return this.#mapper.BulkTagEdge(tag.id!, edgeIDs);
+    }
+
+    async bulkDetachEdgeTag(tag: Tag, edgeIDs: string[]): Promise<Result<boolean>> {
+        if (!edgeIDs || edgeIDs.length === 0) {
+            return Promise.resolve(Result.Failure('please specify at least one edge ID'));
+        }
+
+        return this.#mapper.BulkDetachEdgeTag(tag.id!, edgeIDs);
     }
 
     async tagFile(tag: Tag, file: File): Promise<Result<boolean>> {
