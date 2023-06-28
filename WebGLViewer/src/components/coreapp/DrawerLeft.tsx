@@ -116,7 +116,7 @@ const DrawerLeft: React.FC<Props> = ({}) => {
   // Menu links and menu link selection
   const menuLinkList = [
     {
-      title: 'Nodes',
+      title: 'Objects',
       icon: CategoryIcon,
       pane: 'nodeList'
     },
@@ -264,7 +264,7 @@ const DrawerLeft: React.FC<Props> = ({}) => {
                   padding: '5px 0px'
                 }}
               >
-                {selected === 'nodeList' && (Object.keys(selectedAssetObject).length === 0) ? 'Nodes'
+                {selected === 'nodeList' && (Object.keys(selectedAssetObject).length === 0) ? 'Objects'
                   : selected === 'sceneList' ? 'Scenes'
                   : selected === 'settings' ? 'Settings'
                   : `Node ${selectedAssetObject.id}`

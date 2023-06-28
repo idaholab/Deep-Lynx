@@ -8,7 +8,7 @@ import { DateTime } from 'luxon';
 // Material
 import {
   Box,
-  Skeleton,
+  CircularProgress,
 } from '@mui/material';
 
 import {
@@ -41,15 +41,10 @@ const BasicTimeline: React.FC<Props> = ({
   return (
     <>
       {isLoading || data.length === 0 ? (
-        <>
-          {[...Array(skeletonLoaderElements)].map((e, i) => {
-            return (
-              <Box sx={{ padding: '15px'}} key={i}>
-                <Skeleton variant="rectangular" width={'100%'} height={25} />
-              </Box>
-            )
-          })}
-        </>
+        <Box sx={{ padding: '12px' }}>
+          <CircularProgress size={14} sx={{ marginRight: '8px' }} />
+          Loading Data
+        </Box>
       ) :(
         <Timeline>
           {nodeHistory.map((nodeHistoryItem, index) => {
