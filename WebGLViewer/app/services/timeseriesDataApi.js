@@ -1,3 +1,5 @@
+// Note that this is in JavaScript and not TypeScript due to the difficulty of typing everything in the file.
+
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { DateTime } from 'luxon';
 
@@ -17,6 +19,8 @@ export const timeseriesDataApi = createApi({
 
   endpoints: (build) => ({
     getTimeseriesData: build.query({
+
+      // Custom query since this is more complicated than a regular query
       queryFn: async ({ host, container, nodeId }, api, _extraOptions, fetchWithBQ) => {
         const fetchDatasources = await fetchWithBQ(
           `${host}/containers/${container}/graphs/nodes/${nodeId}/timeseries`
@@ -28,6 +32,7 @@ export const timeseriesDataApi = createApi({
 
         const dataSources = fetchDatasources.data;
 
+        // Check to see if data is a Timestamp
         const isTimestamp = (entry) => {
           if (DateTime.fromISO(entry).isValid === true) {
             return `${DateTime.fromISO(entry).toLocaleString(DateTime.DATE_SHORT)}, ${DateTime.fromISO(entry).toLocaleString(DateTime.TIME_WITH_SHORT_OFFSET)}`;
@@ -36,6 +41,7 @@ export const timeseriesDataApi = createApi({
           }
         };
 
+        // Loop through result and run count and range queries on each
         const result = await Object.entries(dataSources.value).reduce(async (
           acc,
           curr
@@ -52,6 +58,7 @@ export const timeseriesDataApi = createApi({
 
           const transformedData = await acc;
 
+          // Assign data to object and push to array
           transformedData.push({
             id: Number(val),
             name: key,
