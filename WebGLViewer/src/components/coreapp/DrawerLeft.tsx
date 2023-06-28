@@ -183,7 +183,7 @@ const DrawerLeft: React.FC<Props> = ({}) => {
           })
         }}
       >
-        <Box sx={{ display: 'flex', height: '100%', marginTop: '64px', alignItems: 'stretch' }}>
+        <Box sx={{ display: 'flex', height: '100%', paddingTop: '64px', alignItems: 'stretch' }}>
           <Box sx={{ display: 'flex', height: '100%', backgroundColor: COLORS.colorLightgray3 }}>
             <List sx={{ p: 0 }}>
               {/* Hamburger menu icon to open and close Drawer */}
