@@ -43,24 +43,6 @@ const UnityInstance: React.FC<Props> = ({
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  useEffect(() => {
-    const handleClick = () => {
-      if (canvasRef.current) {
-        canvasRef.current.focus();
-      }
-    };
-
-    if (canvasRef.current) {
-      canvasRef.current.addEventListener("click", handleClick);
-    }
-
-    return () => {
-      if (canvasRef.current) {
-        canvasRef.current.removeEventListener("click", handleClick);
-      }
-    };
-  }, []);
-
   // Unity
   const { unityProvider,
     isLoaded,
@@ -180,13 +162,21 @@ const UnityInstance: React.FC<Props> = ({
 
   return (
     <Box sx={{ position: 'relative' }}>
-     <Unity
-        style={{ visibility: isLoaded ? "visible" : "hidden" }}
-        className="webgl-canvas"
-        unityProvider={unityProvider}
-        tabIndex={0}
-        ref={canvasRef}
-      />
+      <Box
+        onClick={() => {
+          const element = document.querySelector('.webgl-canvas') as HTMLElement | null;
+          if (element !== null) {
+            element.focus();
+          }
+        }}
+      >
+        <Unity
+          style={{ visibility: isLoaded ? "visible" : "hidden" }}
+          className="webgl-canvas"
+          unityProvider={unityProvider}
+          tabIndex={0}
+        />
+      </Box>
       <Button variant="contained" sx={{ position: 'absolute', top: '16px', right: '16px' }} onClick={() => reset()}>
         Reset
       </Button>
