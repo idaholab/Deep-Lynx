@@ -10,6 +10,8 @@ import { useAppSelector, useAppDispatch } from '../../../../app/hooks/reduxTypes
 // Material
 import {
   Box,
+  CircularProgress,
+  Typography
 } from "@mui/material";
 
 // Components 
@@ -25,6 +27,14 @@ export default function WebGL() {
   const token: string = useAppSelector((state: any) => state.appState.token);
   const metadata: WebGLFileset = useAppSelector((state: any) => state.appState.metadata);
   const query: boolean = useAppSelector((state: any) => state.appState.query);
+
+  // Loaded State for Progress Loader
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  const handleLoadedState = (isLoaded: boolean) => {
+    setIsLoaded(isLoaded);
+    console.log("in webgl", isLoaded)
+  } 
   
   // WebGL Urls
   const [loaderUrl, setLoaderUrl] = useState<URL>();
@@ -68,14 +78,21 @@ export default function WebGL() {
 
   return (
     <Box sx={{ height: '100%', width: '100%', position: 'relative' }}>
-      { loaderUrl && dataUrl && frameworkUrl && codeUrl ?
+      {!isLoaded &&
+        <Box sx={{ position: 'relative', display: 'inline-flex', flexGrow: 1, alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+          <CircularProgress size={150} sx={{ position: 'absolute', zIndex: 1 }} />
+          <Typography sx={{ position: 'relative', zIndex: 2, textAlign: 'center' }}>Loading<br />Unity Files</Typography>
+        </Box>
+      }
+      {(loaderUrl && dataUrl && frameworkUrl && codeUrl) && (
         <UnityInstance
+          handleLoadedState={handleLoadedState}
           loaderUrl={loaderUrl}
           dataUrl={dataUrl}
           frameworkUrl={frameworkUrl}
           codeUrl={codeUrl}
         />
-      : null } 
+      )}
     </Box>
   );
 }

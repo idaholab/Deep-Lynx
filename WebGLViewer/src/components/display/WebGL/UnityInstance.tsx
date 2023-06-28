@@ -18,7 +18,21 @@ import {
 } from "@mui/material";
 import { appStateActions } from "../../../../app/store";
 
-function UnityInstance(props: any) {
+type Props = {
+  handleLoadedState: (isLoaded: boolean) => void;
+  loaderUrl: URL;
+  dataUrl: URL;
+  frameworkUrl: URL;
+  codeUrl: URL;
+};
+
+const UnityInstance: React.FC<Props> = ({
+  handleLoadedState,
+  loaderUrl,
+  dataUrl,
+  frameworkUrl,
+  codeUrl,
+}) => {
 
   // Store
   const dispatch = useAppDispatch();
@@ -29,22 +43,27 @@ function UnityInstance(props: any) {
 
   // Unity
   const { unityProvider,
+    isLoaded,
     sendMessage,
     addEventListener,
-    removeEventListener } = useUnityContext({
-    loaderUrl: props.loaderUrl.href,
-    dataUrl: props.dataUrl.href,
-    frameworkUrl: props.frameworkUrl.href,
-    codeUrl: props.codeUrl.href,
+    removeEventListener
+  } = useUnityContext({
+    loaderUrl: loaderUrl.href,
+    dataUrl: dataUrl.href,
+    frameworkUrl: frameworkUrl.href,
+    codeUrl: codeUrl.href,
   });
 
   // Variables
-  type selectedScene = string;
-  const selectedScene: selectedScene = useAppSelector((state: any) => state.appState.selectedSceneObject);
-  type selectedAssetOnScene = string;
-  const selectedAssetOnScene: selectedAssetOnScene = useAppSelector((state: any) => state.appState.selectAssetOnScene);
-  type highlightedGameObject = string;
-  const highlightedGameObject: highlightedGameObject = useAppSelector((state: any) => state.appState.highlightAssetOnScene);
+  const selectedScene: string = useAppSelector((state: any) => state.appState.selectedSceneObject);
+  const selectedAssetOnScene: string = useAppSelector((state: any) => state.appState.selectAssetOnScene);
+  const highlightedGameObject: string = useAppSelector((state: any) => state.appState.highlightAssetOnScene);
+
+  // Toggle loaded state in parent
+  useEffect(() => {
+    handleLoadedState(isLoaded);
+    console.log("in unity instance", isLoaded)
+  }, [isLoaded]);
 
   // Function Handlers
   const handleDimensions = () => {
@@ -142,9 +161,10 @@ function UnityInstance(props: any) {
   return (
     <Box sx={{ position: 'relative' }}>
       <Unity
-          className="webgl-canvas"
-          unityProvider={unityProvider}
-        />
+        style={{ visibility: isLoaded ? "visible" : "hidden" }}
+        className="webgl-canvas"
+        unityProvider={unityProvider}
+      />
       <Button variant="contained" sx={{ position: 'absolute', top: '16px', right: '16px' }} onClick={() => reset()}>
         Reset
       </Button>
