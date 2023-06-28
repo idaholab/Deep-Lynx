@@ -4,7 +4,6 @@ import * as React from 'react';
 // MUI Components
 import {
   Box,
-  CircularProgress,
   Table,
   TableBody,
   TableCell,
@@ -18,6 +17,9 @@ import {
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+
+// Custom Components
+import LoadingProgress from '../elements/LoadingProgress';
 
 // Styles
 // @ts-ignore
@@ -40,10 +42,6 @@ const DataTableBasic: React.FC<Props> = ({
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [selected, setSelected] = React.useState(1);
-
-  // React.useEffect(() => {
-  //   setLoading(true); // Set loading to true when data is being fetched
-  // }, [tableRowData]);
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -92,10 +90,6 @@ const DataTableBasic: React.FC<Props> = ({
   const isSelected = (id: number) => selected === id;
 
   return (
-    // <>
-    //   {isLoading ? ( // Conditional rendering based on the loading state
-    //     <CircularProgress /> // Loading indicator
-    //   ) : (
         <>
           <TableContainer>
             <Table size="small" sx={{ minWidth: 650 }} aria-label="simple table">
@@ -179,10 +173,7 @@ const DataTableBasic: React.FC<Props> = ({
             </Table>
           </TableContainer>
           {isLoading && 
-            <Box sx={{  display: 'flex', minHeight: '50px', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>
-              <CircularProgress size={14} sx={{ marginRight: '8px' }} />
-              Loading Data
-            </Box>
+            <LoadingProgress text={'Loading Data'}/>
           }
           {(!isLoading && tableRowData.length === 0) &&
             <Box sx={{  display: 'flex', minHeight: '50px', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>

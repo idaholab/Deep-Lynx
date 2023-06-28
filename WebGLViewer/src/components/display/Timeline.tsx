@@ -5,10 +5,10 @@ import * as React from 'react';
 import { DateTime } from 'luxon';
 
 // MUI Components
-// Material
 import {
   Box,
   CircularProgress,
+  Typography
 } from '@mui/material';
 
 import {
@@ -19,6 +19,9 @@ import {
   TimelineContent,
   TimelineDot,
 } from '@mui/lab';
+
+// Custom Components
+import LoadingProgress from '../elements/LoadingProgress';
 
 // Styles
 // @ts-ignore
@@ -41,10 +44,7 @@ const BasicTimeline: React.FC<Props> = ({
   return (
     <>
       {isLoading || data.length === 0 ? (
-        <Box sx={{ padding: '12px' }}>
-          <CircularProgress size={14} sx={{ marginRight: '8px' }} />
-          Loading Data
-        </Box>
+        <LoadingProgress text={'Loading Events'}/>
       ) :(
         <Timeline>
           {nodeHistory.map((nodeHistoryItem, index) => {

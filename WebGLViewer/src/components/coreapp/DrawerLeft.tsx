@@ -23,7 +23,6 @@ import {
   ListItemIcon,
   ListItemButton,
   OutlinedInput,
-  Skeleton,
   Tooltip,
   Typography,
 } from '@mui/material';

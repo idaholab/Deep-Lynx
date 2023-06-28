@@ -11,12 +11,13 @@ import { appStateActions } from '../../../app/store/index';
 import {
   Box,
   Button,
+  CircularProgress,
   List,
   ListItem,
   ListItemText,
   ListItemButton,
   MenuItem,
-  Skeleton,
+  Typography,
 } from '@mui/material';
 import Menu, { MenuProps } from '@mui/material/Menu';
 import Divider from '@mui/material/Divider';
@@ -26,6 +27,9 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import HubIcon from '@mui/icons-material/Hub';
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
 import HighlightIcon from '@mui/icons-material/Highlight';
+
+// Custom Components
+import LoadingProgress from '../elements/LoadingProgress';
 
 // Styles
 import { styled, alpha } from '@mui/material/styles';
@@ -123,8 +127,6 @@ const DrawerContentsNodeList: React.FC<Props> = ({
     setAnchorEl(null);
   };
 
-  const skeletonLoaderElements = 10;
-
   return (
     <>
       <Box sx={{ display: 'flex', flexDirection: 'row', fontSize: '14px', margin: '0px 16px 6px 16px' }}>
@@ -136,17 +138,7 @@ const DrawerContentsNodeList: React.FC<Props> = ({
         </Box>
       </Box>
       {!nodeList || nodeList.length === 0 ? (
-        <Box sx={{
-          maskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)'
-        }}>
-          {[...Array(skeletonLoaderElements)].map((e, i) => {
-            return (
-              <Box sx={{ padding: '1px'}} key={i}>
-                <Skeleton variant="rectangular" width={'100%'} height={36} />
-              </Box>
-            )
-          })}
-        </Box>
+        <LoadingProgress text={'Loading Game Objects'}/>
       ) :(
         <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0', borderTop: `1px solid ${COLORS.colorDarkgray}` }}>
           <List dense sx={{ paddingTop: '0' }}>
