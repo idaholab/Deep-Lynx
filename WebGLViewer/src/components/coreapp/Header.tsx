@@ -25,7 +25,7 @@ export default function Header(props: any) {
           <Toolbar>
             <img alt="DeepLynx Logo" width="100" src="assets/lynx-white.png" style={{ marginLeft: '-8px', marginRight: '20px' }} />
             <Typography variant="h6" noWrap component="div">
-              WebGL Viewer
+              DeepLynx 2D/3D Model Explorer
             </Typography>
           </Toolbar>
         </AppBar>
