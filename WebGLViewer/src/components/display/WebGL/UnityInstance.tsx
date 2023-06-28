@@ -40,26 +40,6 @@ const UnityInstance: React.FC<Props> = ({
   // Dynamic resizing
   const [width, setWidth] = useState(window.innerWidth);
   const [height, setHeight] = useState(window.innerHeight);
-  
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const handleClick = () => {
-      if (canvasRef.current) {
-        canvasRef.current.focus();
-      }
-    };
-
-    if (canvasRef.current) {
-      canvasRef.current.addEventListener("click", handleClick);
-    }
-
-    return () => {
-      if (canvasRef.current) {
-        canvasRef.current.removeEventListener("click", handleClick);
-      }
-    };
-  }, []);
 
   // Unity
   const { unityProvider,
