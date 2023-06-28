@@ -11,7 +11,7 @@ import Node from '../../../../domain_objects/data_warehouse/data/node';
 import Mapper from '../../mapper';
 
 // PostgreSQL
-import {PoolClient, QueryConfig} from 'pg';
+import {PoolClient, Query, QueryConfig} from 'pg';
 const format = require('pg-format');
 
 export default class TagMapper extends Mapper {
@@ -87,6 +87,22 @@ export default class TagMapper extends Mapper {
 
     public async TagNode(tagID: string, nodeID: string): Promise<Result<boolean>> {
         return super.runStatement(this.tagNodeStatement(tagID, nodeID));
+    }
+
+    public async BulkTagNode(tagID: string, nodeIDs: string[]): Promise<Result<boolean>> {
+        return super.runStatement(this.bulkTagNodeStatement(tagID, nodeIDs));
+    }
+
+    public async BulkDetachNodeTag(tagID: string, nodeIDs: string[]): Promise<Result<boolean>> {
+        return super.runStatement(this.bulkDetachNodeTagStatement(tagID, nodeIDs));
+    }
+
+    public async BulkTagEdge(tagID: string, edgeIDs: string[]): Promise<Result<boolean>> {
+        return super.runStatement(this.bulkTagEdgeStatement(tagID, edgeIDs));
+    }
+
+    public async BulkDetachEdgeTag(tagID: string, edgeIDs: string[]): Promise<Result<boolean>> {
+        return super.runStatement(this.bulkDetachEdgeTagStatement(tagID, edgeIDs));
     }
 
     public async TagEdge(tagID: string, edgeID: string): Promise<Result<boolean>> {
@@ -243,6 +259,42 @@ export default class TagMapper extends Mapper {
             text: `INSERT INTO node_tags(tag_id, node_id) VALUES ($1, $2) ON CONFLICT(tag_id, node_id) DO NOTHING`,
             values: [tagID, nodeID],
         };
+    }
+
+    private bulkTagNodeStatement(tagID: string, nodeIDs: string[]): QueryConfig {
+        const values = nodeIDs.map((nodeID) => [tagID, nodeID]);
+        return {
+            text: format(
+                `INSERT INTO node_tags (tag_id, node_id) VALUES %L ON CONFLICT(tag_id, node_id) DO NOTHING`,
+                values
+            ),
+            values: []
+        }
+    }
+
+    private bulkDetachNodeTagStatement(tagID: string, nodeIDs: string[]): QueryConfig {
+        return {
+            text: format(`DELETE FROM node_tags WHERE tag_id = %s AND node_id IN (%L)`, tagID, nodeIDs),
+            values: []
+        }
+    }
+
+    private bulkTagEdgeStatement(tagID: string, edgeIDs: string[]): QueryConfig {
+        const values = edgeIDs.map((edgeID) => [tagID, edgeID]);
+        return {
+            text: format(
+                `INSERT INTO edge_tags (tag_id, edge_id) VALUES %L ON CONFLICT(tag_id, edge_id) DO NOTHING`,
+                values
+            ),
+            values: []
+        }
+    }
+
+    private bulkDetachEdgeTagStatement(tagID: string, edgeIDs: string[]): QueryConfig {
+        return {
+            text: format(`DELETE FROM edge_tags WHERE tag_id = %s AND edge_id IN (%L)`, tagID, edgeIDs),
+            values: []
+        }
     }
 
     private tagEdgeStatement(tagID: string, edgeID: string): QueryConfig {

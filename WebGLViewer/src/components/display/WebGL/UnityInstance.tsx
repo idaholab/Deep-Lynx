@@ -2,7 +2,7 @@
 import React from "react";
 
 // Hooks
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useAppSelector, useAppDispatch } from '../../../../app/hooks/reduxTypescriptHooks';
 
 // Styles
@@ -40,6 +40,26 @@ const UnityInstance: React.FC<Props> = ({
   // Dynamic resizing
   const [width, setWidth] = useState(window.innerWidth);
   const [height, setHeight] = useState(window.innerHeight);
+  
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const handleClick = () => {
+      if (canvasRef.current) {
+        canvasRef.current.focus();
+      }
+    };
+
+    if (canvasRef.current) {
+      canvasRef.current.addEventListener("click", handleClick);
+    }
+
+    return () => {
+      if (canvasRef.current) {
+        canvasRef.current.removeEventListener("click", handleClick);
+      }
+    };
+  }, []);
 
   // Unity
   const { unityProvider,
@@ -149,21 +169,23 @@ const UnityInstance: React.FC<Props> = ({
   useEffect(() => {
     if(selectedScene) handleSceneSelection(selectedScene);
   }, [selectedScene]);
-  
+
   // Rendering
   useEffect(() => {
       // Retrieve Scenes and Nodes from the WebGL Build;
       listUnityScenes();
       // listUnityNodes() is what takes GameObjects from Unity and will enable us to "link" them to the graph
-      listUnityNodes(); 
+      listUnityNodes();
   }, [selectedScene]);
 
   return (
     <Box sx={{ position: 'relative' }}>
-      <Unity
+     <Unity
         style={{ visibility: isLoaded ? "visible" : "hidden" }}
         className="webgl-canvas"
         unityProvider={unityProvider}
+        tabIndex={0}
+        ref={canvasRef}
       />
       <Button variant="contained" sx={{ position: 'absolute', top: '16px', right: '16px' }} onClick={() => reset()}>
         Reset

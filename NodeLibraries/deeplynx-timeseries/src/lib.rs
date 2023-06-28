@@ -26,9 +26,11 @@ use sqlx::{Executor, Postgres, Transaction};
 use std::collections::HashMap;
 use std::io::Read;
 use std::pin::Pin;
-use std::sync::Arc;
+use std::sync;
+use std::sync::{Arc, RwLock};
 use std::task::{Context, Poll};
 use tokio::io::{AsyncRead, ReadBuf};
+use tokio::sync::mpsc::error::TryRecvError;
 use uuid::Uuid;
 use validator::{HasLen, Validate};
 
@@ -293,7 +295,7 @@ pub struct BucketRepository {
   db: PgPool,
   config: Configuration,
   // this is the channel that we pass data into once the data pipeline has been initiated
-  stream_reader_channel: Option<Arc<tokio::sync::broadcast::Sender<StreamMessage>>>,
+  stream_reader_channel: Option<Arc<tokio::sync::mpsc::UnboundedSender<StreamMessage>>>,
   // this is how we receive status updates from the reader
   reader_status_channel:
     Option<Arc<tokio::sync::RwLock<tokio::sync::mpsc::Receiver<StreamStatusMessage>>>>,
@@ -1232,14 +1234,13 @@ impl BucketRepository {
   /// and node.js - so we basically spin up a thread to handle ingestion and then stream the data from
   /// node.js to it
   pub async fn begin_csv_ingestion(&mut self, bucket_id: i32) -> Result<(), DataError> {
-    let (tx, rx) = tokio::sync::broadcast::channel::<StreamMessage>(2048);
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<StreamMessage>();
     let (status_tx, status_rx) = tokio::sync::mpsc::channel::<StreamStatusMessage>(2048);
     let db_connection = self.db.clone();
 
-    let inner_tx = tx.clone();
     // inner multithreaded loop to handle the copy from the csv file to the db
     tokio::task::spawn(async move {
-      let stream_reader = NodeStreamReader::new(rx, inner_tx);
+      let stream_reader = NodeStreamReader::new(rx);
 
       let result = ingestion::ingest_csv(db_connection, stream_reader, bucket_id).await;
       match result {
@@ -1269,14 +1270,12 @@ impl BucketRepository {
     data_source_id: String,
     columns: Vec<LegacyTimeseriesColumn>,
   ) -> Result<(), DataError> {
-    let (tx, rx) = tokio::sync::broadcast::channel::<StreamMessage>(4096);
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<StreamMessage>();
     let (status_tx, status_rx) = tokio::sync::mpsc::channel::<StreamStatusMessage>(4096);
     let db_connection = self.db.clone();
 
-    let tx_inner = tx.clone();
-
     tokio::spawn(async move {
-      let stream_reader = NodeStreamReader::new(rx, tx_inner);
+      let stream_reader = NodeStreamReader::new(rx);
 
       match ingestion::ingest_csv_legacy(db_connection, stream_reader, data_source_id, columns)
         .await
@@ -1394,107 +1393,17 @@ enum StreamStatusMessage {
 }
 
 pub struct NodeStreamReader {
-  rx: tokio::sync::broadcast::Receiver<StreamMessage>,
-  tx: tokio::sync::broadcast::Sender<StreamMessage>,
+  rx: tokio::sync::mpsc::UnboundedReceiver<StreamMessage>,
   buffer: Vec<u8>,
   is_closed: bool,
 }
 
 impl NodeStreamReader {
-  fn new(
-    rx: tokio::sync::broadcast::Receiver<StreamMessage>,
-    tx: tokio::sync::broadcast::Sender<StreamMessage>,
-  ) -> Self {
+  fn new(rx: tokio::sync::mpsc::UnboundedReceiver<StreamMessage>) -> Self {
     NodeStreamReader {
       rx,
-      tx,
       buffer: vec![],
       is_closed: false,
-    }
-  }
-}
-
-impl AsyncRead for NodeStreamReader {
-  fn poll_read(
-    mut self: Pin<&mut Self>,
-    cx: &mut Context<'_>,
-    buf: &mut ReadBuf<'_>,
-  ) -> Poll<std::io::Result<()>> {
-    if self.is_closed {
-      return Poll::Ready(Ok(()));
-    }
-
-    if self.buffer.len() >= buf.initialized().len() {
-      let send = self.buffer.clone();
-      self.buffer = vec![];
-
-      return if send.len() > buf.initialized().len() {
-        let (dest, overflow) = send.split_at(buf.initialized().len());
-
-        buf.put_slice(dest);
-        self.buffer.extend_from_slice(overflow);
-
-        Poll::Ready(Ok(()))
-      } else {
-        buf.put_slice(send.as_slice());
-        Poll::Ready(Ok(()))
-      };
-    }
-
-    loop {
-      let message = match self.rx.try_recv() {
-        Ok(m) => m,
-        Err(e) => match e {
-          tokio::sync::broadcast::error::TryRecvError::Empty => {
-            let waker = cx.waker().clone();
-            let sub = self.tx.subscribe();
-            tokio::spawn(async move {
-              loop {
-                if sub.is_empty() {
-                  continue;
-                } else {
-                  break;
-                }
-              }
-
-              waker.wake();
-            });
-            return Poll::Pending;
-          }
-          tokio::sync::broadcast::error::TryRecvError::Closed
-          | tokio::sync::broadcast::error::TryRecvError::Lagged(_) => break,
-        },
-      };
-
-      match message {
-        StreamMessage::Write(bytes) => self.buffer.extend_from_slice(bytes.as_slice()),
-        StreamMessage::Close => {
-          self.is_closed = true;
-          buf.put_slice(self.buffer.as_slice());
-          self.buffer = vec![];
-
-          return Poll::Ready(Ok(()));
-        }
-      }
-
-      if self.buffer.len() >= buf.initialized().len() {
-        break;
-      }
-    }
-
-    let send = self.buffer.clone();
-    self.buffer = vec![];
-
-    if send.len() > buf.initialized().len() {
-      let (dest, overflow) = send.split_at(buf.initialized().len());
-
-      buf.put_slice(dest);
-      self.buffer.extend_from_slice(overflow);
-
-      Poll::Ready(Ok(()))
-    } else {
-      buf.put_slice(send.as_slice());
-      Poll::Ready(Ok(()))
     }
   }
 }
@@ -1526,9 +1435,8 @@ impl Read for NodeStreamReader {
       let message = match self.rx.try_recv() {
         Ok(m) => m,
         Err(e) => match e {
-          tokio::sync::broadcast::error::TryRecvError::Empty => continue,
-          tokio::sync::broadcast::error::TryRecvError::Closed => break,
-          tokio::sync::broadcast::error::TryRecvError::Lagged(_) => break,
+          TryRecvError::Empty => continue,
+          TryRecvError::Disconnected => break,
         },
       };
 

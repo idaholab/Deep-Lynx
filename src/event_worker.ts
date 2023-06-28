@@ -33,10 +33,6 @@ async function Start(): Promise<any> {
                 name: 'metatype_keys_refresh', // will run metatype_keys_refresh.ts
                 interval: '1m',
             },
-            {
-                name: 'current_nodes_refresh', // will run current_nodes_refresh.ts
-                interval: '1m',
-            },
         ],
     });
 

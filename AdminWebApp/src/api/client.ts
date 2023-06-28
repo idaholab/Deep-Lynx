@@ -1273,6 +1273,42 @@ export class Client {
         return this.delete(`/containers/${containerID}/graphs/webgl/files/${fileID}`);
     }
 
+    createServalSession(containerID: string, body: object): Promise<any> {
+        return this.post(`/containers/${containerID}/serval/sessions`, body);
+    }
+
+    listServalSessions(containerID: string): Promise<any> {
+        return this.get(`/containers/${containerID}/serval/sessions`);
+    }
+
+    getServalSession(containerID: string, sessionID: string): Promise<any> {
+        return this.get(`/containers/${containerID}/serval/sessions/${sessionID}`);
+    }
+
+    deleteServalSession(containerID: string, sessionID: string): Promise<any> {
+        return this.delete(`/containers/${containerID}/serval/sessions/${sessionID}`);
+    }
+
+    listServalObjects(containerID: string, sessionID: string): Promise<any> {
+        return this.get(`/containers/${containerID}/serval/sessions/${sessionID}/objects`);
+    }
+
+    getServalObject(containerID: string, sessionID: string, objectID: string): Promise<any> {
+        return this.get(`/containers/${containerID}/serval/sessions/${sessionID}/objects/${objectID}`);
+    }
+
+    deleteServalObject(containerID: string, sessionID: string, objectID: string): Promise<any> {
+        return this.delete(`/containers/${containerID}/serval/sessions/${sessionID}/objects/${objectID}`);
+    }
+
+    listServalPlayers(containerID: string, sessionID: string): Promise<any> {
+        return this.get(`/containers/${containerID}/serval/sessions/${sessionID}/players`);
+    }
+
+    deleteServalPlayer(containerID: string, sessionID: string, playerID: string): Promise<any> {
+        return this.delete(`/containers/${containerID}/serval/sessions/${sessionID}/players/${playerID}`);
+    }
+
     private async get<T>(uri: string, queryParams?: {[key: string]: any}): Promise<T> {
         const config: AxiosRequestConfig = {};
         config.headers = {'Access-Control-Allow-Origin': '*'};

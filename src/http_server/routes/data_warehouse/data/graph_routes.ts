@@ -124,6 +124,10 @@ export default class GraphRoutes {
         app.post('/containers/:containerID/graphs/tags', ...middleware, authInContainer('write', 'data'), TagFunctions.createTag);
         app.put('/containers/:containerID/graphs/tags/:tagID', ...middleware, authInContainer('write', 'data'), TagFunctions.updateTag);
         app.put('/containers/:containerID/graphs/tags/:tagID/nodes/:nodeID', ...middleware, authInContainer('write', 'data'), TagFunctions.attachTagToNode);
+        app.put('/containers/:containerID/graphs/tags/:tagID/nodes', ...middleware, authInContainer('write', 'data'), TagFunctions.bulkTagNodes);
+        app.delete('/containers/:containerID/graphs/tags/:tagID/nodes', ...middleware, authInContainer('write', 'data'), TagFunctions.bulkDetachNodeTag);
+        app.put('/containers/:containerID/graphs/tags/:tagID/edges', ...middleware, authInContainer('write', 'data'), TagFunctions.bulkTagEdges);
+        app.delete('/containers/:containerID/graphs/tags/:tagID/edges', ...middleware, authInContainer('write', 'data'), TagFunctions.bulkDetachEdgeTag);
         app.put('/containers/:containerID/graphs/tags/:tagID/edges/:edgeID', ...middleware, authInContainer('write', 'data'), TagFunctions.attachTagToEdge);
         app.put('/containers/:containerID/graphs/tags/:tagID/files/:fileID', ...middleware, authInContainer('write', 'data'), TagFunctions.attachTagToFile);
         app.get('/containers/:containerID/graphs/tags/files', ...middleware, authInContainer('read', 'data'), TagFunctions.listFilesWithAnyTag);

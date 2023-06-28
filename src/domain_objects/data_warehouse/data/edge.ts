@@ -242,3 +242,8 @@ export class EdgeQueueItem extends NakedDomainClass {
         }
     }
 }
+
+export class EdgeIDPayload extends NakedDomainClass {
+    @IsArray()
+    edge_ids?: string[];
+}
