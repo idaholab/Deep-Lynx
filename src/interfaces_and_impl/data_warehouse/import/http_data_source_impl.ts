@@ -13,7 +13,6 @@ import StandardDataSourceImpl from './standard_data_source_impl';
 import {plainToClass} from 'class-transformer';
 import {toStream} from '../../../services/utilities';
 import {DataSource} from './data_source';
-
 const buildUrl = require('build-url');
 
 /*
@@ -148,7 +147,7 @@ export default class HttpDataSourceImpl extends StandardDataSourceImpl implement
 
         // configure and send http request
         let resp: AxiosResponse<any>;
-        const httpConfig: {[key: string]: any} = {};
+        const httpConfig: {headers: {[key: string]: any}, [key: string]: any} = {headers: {}};
         httpConfig.timeout = config.timeout;
 
         if (lastImport.value && lastImport.value.reference) httpConfig.headers.Reference = lastImport.value.reference;
@@ -162,7 +161,9 @@ export default class HttpDataSourceImpl extends StandardDataSourceImpl implement
             }
 
             case 'token': {
-                if (config.token) httpConfig.headers.Authorization = `Bearer ${config.token}`;
+                if (config.token) {
+                    httpConfig.headers.Authorization = `Bearer ${config.token}`;
+                };
             }
         }
 
