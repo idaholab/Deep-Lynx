@@ -130,7 +130,7 @@
         "express-handlebars": "^5.3.4",
         "express-validator": "^6.10.0",
         "express-winston": "^4.2.0",
-        "fast-xml-parser": "^3.19.0",
+        "fast-xml-parser": "^4.2.5",
         "flat": "^5.0.2",
         "fp-ts": "^2.11.3",
         "graphql": "^15.6.0",
