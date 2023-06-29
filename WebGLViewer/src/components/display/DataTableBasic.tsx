@@ -3,6 +3,7 @@ import * as React from 'react';
 
 // MUI Components
 import {
+  Box,
   Table,
   TableBody,
   TableCell,
@@ -17,6 +18,9 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
+// Custom Components
+import LoadingProgress from '../elements/LoadingProgress';
+
 // Styles
 // @ts-ignore
 import COLORS from '../../styles/variables';
@@ -25,12 +29,14 @@ type Props = {
   tableHeaders: Array<{ [key: string]: any; }>;
   tableRowData: Array<{ [key: string]: any; }>;
   tableRowActions: Array<{ [key: string]: any; }>;
+  isLoading: boolean
 };
 
 const DataTableBasic: React.FC<Props> = ({
   tableHeaders,
   tableRowData,
-  tableRowActions
+  tableRowActions,
+  isLoading
 }) => {
 
   const [page, setPage] = React.useState(0);
@@ -84,99 +90,112 @@ const DataTableBasic: React.FC<Props> = ({
   const isSelected = (id: number) => selected === id;
 
   return (
-    <>
-      <TableContainer>
-        <Table size="small" sx={{ minWidth: 650 }} aria-label="simple table">
-          <TableHead>
-            <TableRow>
-              {tableHeaders.map((tableHeader, index) => {
-                return (
-                  <TableCell
-                    sx={{ fontWeight: 'bold'}}
-                    width={tableHeader.optionalWidth}
-                    align={tableHeader.alignment}
-                    key={index}
-                  >
-                    { tableHeader.title }
-                  </TableCell>
-                )
-              })}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {tableRowData.map((tableRow: any, index) => {
-              const isItemSelected = isSelected(tableRow.id);
-              return (
-                <TableRow
-                  hover
-                  onClick={(event) => handleClick(event, tableRow.id)}
-                  key={index}
-                  tabIndex={-1}
-                  selected={isItemSelected}
-                  sx={{
-                    '&:last-child td, &:last-child th': {
-                      border: 0
-                    },
-                    '&:hover': {
-                      cursor: 'pointer'
-                    }
-                  }}
-                >
-                  <>
-                    {Object.entries(tableRow).map(([key, value]) => {     
-                      if (Array.isArray(value)) {
-                        return (
-                          <TableCell align="left" key={key}>{ value.length }</TableCell>
-                        )
-                      } else {
-                        return (
-                          // @ts-ignore
-                          <TableCell align="left" key={key}>{ value.toString() }</TableCell>
-                        )
-                      }
-                    })}
-                    {tableRowActions.length !== 0
-                      ? (
-                        <TableCell align="center">
-                          {tableRowActions.map((action, index) => {
-                            switch (action.type) {
-                              case 'view':
-                                return (
-                                  <VisibilityIcon key={index} sx={{ fill: COLORS.colorPrimary }} />
-                                );
-                              case 'edit':
-                                return (
-                                  <EditIcon key={index} sx={{ fill: COLORS.colorPrimary }} />
-                                );
-                              case 'delete':
-                                return (
-                                  <DeleteIcon key={index} sx={{ fill: COLORS.colorError }} />
-                                );
-                              default:
-                                break;
-                            }
-                          })}
-                        </TableCell>
-                      ) : null
-                    }
-                  </>
+        <>
+          <TableContainer>
+            <Table size="small" sx={{ minWidth: 650 }} aria-label="simple table">
+              <TableHead>
+                <TableRow>
+                  {tableHeaders.map((tableHeader, index) => {
+                    return (
+                      <TableCell
+                        sx={{ fontWeight: 'bold'}}
+                        width={tableHeader.optionalWidth}
+                        align={tableHeader.alignment}
+                        key={index}
+                      >
+                        { tableHeader.title }
+                      </TableCell>
+                    )
+                  })}
                 </TableRow>
-              )
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      <TablePagination
-        rowsPerPageOptions={[5, 10, 25]}
-        component="div"
-        count={tableRowData.length}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-      />
-    </>
-  );
-}
+              </TableHead>
+              <TableBody>
+                {tableRowData.map((tableRow: any, index) => {
+                  const isItemSelected = isSelected(tableRow.id);
+                  return (
+                    <TableRow
+                      hover
+                      onClick={(event) => handleClick(event, tableRow.id)}
+                      key={index}
+                      tabIndex={-1}
+                      selected={isItemSelected}
+                      sx={{
+                        '&:last-child td, &:last-child th': {
+                          border: 0
+                        },
+                        '&:hover': {
+                          cursor: 'pointer'
+                        }
+                      }}
+                    >
+                      <>
+                        {Object.entries(tableRow).map(([key, value]) => {     
+                          if (Array.isArray(value)) {
+                            return (
+                              <TableCell align="left" key={key}>{ value.length }</TableCell>
+                            )
+                          } else {
+                            return (
+                              // @ts-ignore
+                              <TableCell align="left" key={key}>{ value.toString() }</TableCell>
+                            )
+                          }
+                        })}
+                        {tableRowActions.length !== 0
+                          ? (
+                            <TableCell align="center">
+                              {tableRowActions.map((action, index) => {
+                                switch (action.type) {
+                                  case 'view':
+                                    return (
+                                      <VisibilityIcon key={index} sx={{ fill: COLORS.colorPrimary }} />
+                                    );
+                                  case 'edit':
+                                    return (
+                                      <EditIcon key={index} sx={{ fill: COLORS.colorPrimary }} />
+                                    );
+                                  case 'delete':
+                                    return (
+                                      <DeleteIcon key={index} sx={{ fill: COLORS.colorError }} />
+                                    );
+                                  default:
+                                    break;
+                                }
+                              })}
+                            </TableCell>
+                          ) : null
+                        }
+                      </>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          {isLoading && 
+            <LoadingProgress text={'Loading Data'}/>
+          }
+          {(!isLoading && tableRowData.length === 0) &&
+            <Box sx={{  display: 'flex', minHeight: '50px', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>
+              No data to display
+            </Box>
+          }
+          {(!isLoading && tableRowData.length > 0) &&
+            <TablePagination
+              rowsPerPageOptions={[5, 10, 25]}
+              component="div"
+              count={tableRowData.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+            />
+          }
+        </>
+      )
+    }
+//     </>
+//   );
+// }
 
 export default DataTableBasic;

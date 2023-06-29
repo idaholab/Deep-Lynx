@@ -2,11 +2,11 @@
 import * as React from 'react';
 
 // Hooks
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useGetNodeHistoryQuery } from '../../../../app/services/nodesDataApi';
 import { useAppSelector } from '../../../../app/hooks/reduxTypescriptHooks';
 
 // Import Packages
-import axios from 'axios';
 import { DateTime } from 'luxon';
 
 // MUI Components
@@ -24,18 +24,17 @@ import InfoHeader from '../../elements/InfoHeader';
 import Timeline from '../../display/Timeline';
 
 type Props = {
-  data: any
+  selectedAssetObject: any
 };
 
 const NodeInfoDetailsHistory: React.FC<Props> = ({
-  data
+  selectedAssetObject
 }) => {
   // DeepLynx
   const host: string = useAppSelector((state: any) => state.appState.host);
-  const token: string = useAppSelector((state: any) => state.appState.token);
   const container: string = useAppSelector((state: any) => state.appState.container);
-  const nodeData = data;
-  const nodeId = data.id;
+  const nodeData = selectedAssetObject;
+  const nodeId = selectedAssetObject.id;
 
   const [nodeDetails, setNodeDetails] = useState(()=> {
     const isValidDate = (datetime: any) => {
@@ -51,9 +50,9 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
       }
     }
     let nodeDetailsList = {
-      id: data.id,
-      metatype_name: data.metatype_name,
-      data_source_id: data.data_source_id,
+      id: selectedAssetObject.id,
+      metatype_name: selectedAssetObject.metatype_name,
+      data_source_id: selectedAssetObject.data_source_id,
       created_at: isValidDate(nodeData.created_at),
       modified_at: isValidDate(nodeData.modified_at),
     }
@@ -61,26 +60,14 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
       nodeDetailsList
     )
   });
-  const [nodeHistory, setNodeHistory] = useState([]);
 
-  useEffect(() => {
-    async function getNodeHistory() {
-      await axios.get( `${host}/containers/${container}/graphs/nodes/${nodeId}/`,
-        {
-          params: { history: 'true' },
-          headers: {
-            Authorization: `bearer ${token}`
-          }
-        }).then (
-          (response: any) => {
-            console.log(response.data.value);
-            setNodeHistory(response.data.value);
-          }
-        )
-    }
+  const { data: response = [], isLoading } = useGetNodeHistoryQuery({ host, container, nodeId });
 
-    getNodeHistory();
-  }, []);
+  let nodeHistory = [];
+
+  if (!isLoading) {
+    nodeHistory = response?.value
+  }
 
   return (
     <>
@@ -120,7 +107,7 @@ const NodeInfoDetailsHistory: React.FC<Props> = ({
           History
         </InfoHeader>
 
-        <Timeline data={nodeHistory} />
+        <Timeline data={nodeHistory} isLoading={isLoading} />
       </Box>
 
     </>
