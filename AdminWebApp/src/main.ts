@@ -18,6 +18,8 @@ import VueObserveVisibility from 'vue-observe-visibility';
 // @ts-ignore
 import JsonViewer from 'vue-json-viewer';
 import '@fontsource/montserrat';
+// import 'material-design-icons-iconfont/dist/material-design-icons.css'
+import '@mdi/font/css/materialdesignicons.css'
 
 Vue.config.productionTip = false;
 Vue.config.devtools = true;
