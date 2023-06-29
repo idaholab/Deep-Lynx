@@ -308,7 +308,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
         return this.#mapper.CopyTransformations(u.id!, sourceID, targetID);
     }
 
-    // importToDataSource will take type mappings transfer them and their transformations to a different data source
+    // importToDataSource will take type mappings and transfer them and their transformations to a different data source.
     // this data source can be within the same container, or a separate container - but keep in mind that exporting
     // to a different container means the transformations will attempt to match their relationships to metatype/relationships
     // by name instead of uuid - so there is potential for issues, use with caution. We return the newly modified/created
@@ -343,7 +343,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
                         // call the repo's save method on the modified mapping.
                         mapping.data_source_id = targetDataSource.value.id;
                         mapping.container_id = targetDataSource.value.container_id;
-                        mapping.active = active; 
+                        mapping.active = active;
 
                         // now we must iterate through the transformations and potentially back-fill the metatype/relationship
                         // ids and key ids if all that are present are the names - note that this will not modify the mapping if
@@ -383,7 +383,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
                 }),
                 SuperUser,
             );
-            if (alert.isError) Logger.error(`unable create container alert for new ontology ${alert.error?.error}`);
+            if (alert.isError) Logger.error(`unable to create container alert for new ontology ${alert.error?.error}`);
         }
 
         return Promise.resolve(results);
@@ -709,10 +709,11 @@ export default class TypeMappingRepository extends Repository implements Reposit
         // we must create a series of joins
 
         // select distinct on id
-        this._query.DISTINCT = [`${this._tableAlias}.id`]
+        this._query.DISTINCT = [`${this._tableAlias}.id`];
 
         // select these fields
-        this._query.SELECT = [`${this._tableAlias}.*`,
+        this._query.SELECT = [
+            `${this._tableAlias}.*`,
             `metatypes.name AS resulting_metatype_name`,
             `metatype_relationships.name AS resulting_metatype_relationship_name`,
         ];
@@ -761,12 +762,13 @@ export default class TypeMappingRepository extends Repository implements Reposit
         const results = await super.count();
 
         // reset the query
-        
+
         // select distinct on id
-        this._query.DISTINCT = [`${this._tableAlias}.id`]
+        this._query.DISTINCT = [`${this._tableAlias}.id`];
 
         // select these fields
-        this._query.SELECT = [`${this._tableAlias}.*`,
+        this._query.SELECT = [
+            `${this._tableAlias}.*`,
             `metatypes.name AS resulting_metatype_name`,
             `metatype_relationships.name AS resulting_metatype_relationship_name`,
         ];
@@ -791,10 +793,11 @@ export default class TypeMappingRepository extends Repository implements Reposit
         // reset the query
 
         // select distinct on id
-        this._query.DISTINCT = [`${this._tableAlias}.id`]
+        this._query.DISTINCT = [`${this._tableAlias}.id`];
 
         // select these fields
-        this._query.SELECT = [`${this._tableAlias}.*`,
+        this._query.SELECT = [
+            `${this._tableAlias}.*`,
             `metatypes.name AS resulting_metatype_name`,
             `metatype_relationships.name AS resulting_metatype_relationship_name`,
         ];

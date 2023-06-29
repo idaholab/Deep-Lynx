@@ -89,11 +89,6 @@ async function Start(): Promise<any> {
                     timeout: 0,
                 },
                 {
-                    name: 'current_nodes_refresh', // will run current_nodes_refresh.js
-                    interval: '1m',
-                    timeout: 0,
-                },
-                {
                     name: 'staging_clean', // will run staging_clean.ts
                     interval: '1 day',
                     timeout: 0,

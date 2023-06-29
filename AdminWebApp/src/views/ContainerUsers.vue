@@ -12,7 +12,7 @@
         <v-toolbar flat color="white">
           <v-toolbar-title>{{$t("users.containerDescription")}}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <invite-user-to-container-dialog :containerID="containerID" @userInvited="flashSuccess"></invite-user-to-container-dialog>
+          <InviteUserToContainerDialog :containerID="containerID" @userInvited="flashSuccess"></InviteUserToContainerDialog>
         </v-toolbar>
       </template>
       <template v-slot:[`item.role`]="{ item }">
@@ -111,7 +111,7 @@
   import {Component, Prop, Vue} from 'vue-property-decorator'
   import {UserT} from "@/auth/types";
   import {AssignRolePayloadT} from "@/api/types";
-  import InviteUserToContainerDialog from "@/components/accessManagement/inviteUserToContainerDialog.vue";
+  import InviteUserToContainerDialog from "@/components/accessManagement/InviteUserToContainerDialog.vue";
   @Component({
     components: {InviteUserToContainerDialog}
   })

@@ -43,6 +43,8 @@ export interface ChangeBucketPayload {
   name?: string
   columns: Array<BucketColumn>
 }
+export function inferLegacySchema(csv: Buffer): Array<LegacyTimeseriesColumn>
+export function inferBucketSchema(csv: Buffer): Array<BucketColumn>
 export type JsBucketRepository = BucketRepository
 export class BucketRepository {
   constructor()

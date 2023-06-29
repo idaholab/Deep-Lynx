@@ -2,9 +2,11 @@
 import * as React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
-// Import Packages
-import "@fontsource/source-sans-pro/400.css"; // Weight 400.
-import "@fontsource/source-sans-pro/600.css"; // Weight 600.
+// Hooks
+import { useState, useEffect, useCallback } from "react";
+
+// Helpers
+import { AttachDeepLynx } from "./helpers/init";
 
 // MUI Styles
 import {
@@ -24,9 +26,15 @@ import {
 // @ts-ignore
 import COLORS from './styles/variables';
 import './styles/App.scss';
+import "@fontsource/source-sans-pro/400.css"; // Weight 400.
+import "@fontsource/source-sans-pro/600.css"; // Weight 600.
 
 // Custom Components
 import Dashboard from './pages/Dashboard';
+
+// Store
+import { appStateActions } from '../app/store/index';
+import { useAppSelector, useAppDispatch } from '../app/hooks/reduxTypescriptHooks';
 
 const getDesignTokens = (mode: PaletteMode) => ({
   palette: {
@@ -79,8 +87,19 @@ const getDesignTokens = (mode: PaletteMode) => ({
 });
 
 function App() {
-
+  // Theme
   const theme = useTheme();
+
+  // Hooks 
+  const dispatch = useAppDispatch();
+
+  const init = useCallback(() => {
+    AttachDeepLynx().then(() =>{
+      dispatch(appStateActions.setQuery(true));
+    });
+  }, []);
+
+  init();
 
   theme.typography.h1 = {
     fontFamily: [

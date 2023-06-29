@@ -6,15 +6,15 @@ extern crate napi_derive;
 mod config;
 mod data_types;
 mod errors;
+mod ingestion;
 mod tests;
 
 use crate::config::Configuration;
 use crate::data_types::{DataTypes, LegacyDataTypes};
-use crate::errors::{DataError, ValidationError};
+use crate::errors::DataError;
 use bytes::Bytes;
-use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime};
+use chrono::NaiveDateTime;
 use futures::stream::BoxStream;
-use futures::StreamExt;
 use napi::bindgen_prelude::Buffer;
 use rand::distributions::Alphanumeric;
 use rand::Rng;
@@ -22,16 +22,15 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sqlx::postgres::PgPool;
 use sqlx::types::Json;
-use sqlx::{Executor, Pool, Postgres, Transaction};
+use sqlx::{Executor, Postgres, Transaction};
 use std::collections::HashMap;
 use std::io::Read;
-use std::ops::DerefMut;
 use std::pin::Pin;
-use std::sync::mpsc::{Receiver, Sender, TryRecvError};
-use std::sync::{mpsc, Arc, Mutex};
+use std::sync;
+use std::sync::{Arc, RwLock};
 use std::task::{Context, Poll};
-use std::thread;
 use tokio::io::{AsyncRead, ReadBuf};
+use tokio::sync::mpsc::error::TryRecvError;
 use uuid::Uuid;
 use validator::{HasLen, Validate};
 
@@ -296,7 +295,7 @@ pub struct BucketRepository {
   db: PgPool,
   config: Configuration,
   // this is the channel that we pass data into once the data pipeline has been initiated
-  stream_reader_channel: Option<Arc<tokio::sync::broadcast::Sender<StreamMessage>>>,
+  stream_reader_channel: Option<Arc<tokio::sync::mpsc::UnboundedSender<StreamMessage>>>,
   // this is how we receive status updates from the reader
   reader_status_channel:
     Option<Arc<tokio::sync::RwLock<tokio::sync::mpsc::Receiver<StreamStatusMessage>>>>,
@@ -485,6 +484,33 @@ impl JsBucketRepository {
         e.to_string(),
       )),
     }
+  }
+}
+
+#[napi]
+pub fn infer_legacy_schema(csv: Buffer) -> Result<Vec<LegacyTimeseriesColumn>, napi::Error> {
+  match BucketRepository::infer_legacy_schema(csv.to_vec().as_slice()) {
+    Ok(results) => Ok(results),
+    Err(e) => Err(napi::Error::new(
+      napi::Status::GenericFailure,
+      e.to_string(),
+    )),
+  }
+}
+
+#[napi]
+pub fn infer_bucket_schema(csv: Buffer) -> Result<Vec<JsBucketColumn>, napi::Error> {
+  match BucketRepository::infer_bucket_schema(csv.to_vec().as_slice()) {
+    Ok(results) => Ok(
+      results
+        .iter()
+        .map(|b| JsBucketColumn::from(b.clone()))
+        .collect(),
+    ),
+    Err(e) => Err(napi::Error::new(
+      napi::Status::GenericFailure,
+      e.to_string(),
+    )),
   }
 }
 
@@ -958,237 +984,130 @@ impl BucketRepository {
     self.create_data_table_from(transaction, bucket).await
   }
 
-  /// `ingest_bucket_data` takes a readable stream of CSV formatted data and attempts to ingest that
-  /// data into the given bucket by ID. Note that if your CSV data does not implement all columns
-  /// of your bucket, only the columns you've included in the csv will be ingested and no error
-  /// given. If your CSV data has too many columns, only those columns defined in the bucket will
-  /// be ingested, with no error given. If you have columns with duplicate names, only the first
-  /// instance of that name will be ingested if it doesnt error.
-  pub async fn ingest_csv<T: Read>(
-    db: Pool<Postgres>,
-    reader: T,
-    bucket_id: i32,
-  ) -> Result<(), DataError> {
-    // fetch the bucket first
-    let bucket: Bucket = sqlx::query_as("SELECT * FROM buckets WHERE id = $1")
-      .bind(bucket_id)
-      .fetch_optional(&db)
-      .await?
-      .ok_or(DataError::NotFound)?;
+  /// `infer_bucket_schema` takes a csv file and attempts to guess what the correct bucket column
+  /// data types should be - this should not be used without user input to validate and accept the
+  /// results as this is a rough estimate at best and will not handle things like timestamps
+  pub fn infer_bucket_schema<T: Read>(reader: T) -> Result<Vec<BucketColumn>, DataError> {
+    let mut csv_reader = csv::ReaderBuilder::new().from_reader(reader);
 
-    let mut csv_reader = csv::ReaderBuilder::new()
-      .flexible(false)
-      .from_reader(reader);
-    // let's fetch the headers - also a quick way to check if we're actually dealing with a csv
-    // they should stay in the order they are in the CSV - index, csv name, column name
-    #[derive(Clone)]
-    struct Position {
-      index: usize,
-      column_name: String,
-      data_type: DataTypes,
-      format_string: Option<String>,
-    }
-
-    let mut positions: Vec<Position> = vec![];
-    for (i, header) in csv_reader.headers()?.iter().enumerate() {
-      // check to see if that header exists in the bucket definition, if it does, record its
-      // spot and name
-      match bucket
-        .structure
-        .iter()
-        .find(|bc| bc.name.as_str() == header)
-      {
-        None => {}
-        Some(bc) => positions.push(Position {
-          index: i,
-          column_name: bc.column_assignment.clone().ok_or(DataError::Unwrap(
-            "column assignment not present".to_string(),
-          ))?,
-          data_type: bc.data_type.clone(),
-          format_string: bc.format_string.clone(),
-        }),
-      }
-    }
-
-    if positions.is_empty() {
-      return Err(DataError::CsvValidation(ValidationError::MissingColumns));
-    }
-
-    let column_names: Vec<String> = positions
-      .clone()
+    let mut results: Vec<BucketColumn> = csv_reader
+      .headers()?
       .iter()
-      .map(|pos| format!("\"{}\"", pos.column_name.clone()))
+      .map(|h| BucketColumn {
+        name: h.to_string(),
+        short_name: "".to_string(),
+        id: None,
+        data_type: DataTypes::Bool,
+        column_assignment: None,
+        format_string: None,
+      })
       .collect();
 
-    let mut copier = db
-        .copy_in_raw(
-          format!(
-            "COPY buckets.\"{}\"({},_bucket_id) FROM STDIN WITH (FORMAT csv, HEADER FALSE, DELIMITER \",\")",
-            bucket
-                .data_table_assignment
-                .ok_or(DataError::Unwrap("table name from bucket".to_string()))?,
-            column_names.join(",")
-          )
-              .as_str(),
-        )
-        .await?;
-
-    // in order to append the bucket_id we have to actually parse the csv row per row and send
-    // it into the copier - it's really not that slow since the underlying async reader has is
-    // buffered
     while let Some(record) = csv_reader.records().next() {
       let record = record?;
-      let mut new_record: Vec<String> = vec![];
 
-      for position in &positions {
-        let value = record.get(position.index).ok_or(DataError::Unwrap(format!(
-          "csv record field: {}, {:?}",
-          position.index, record
-        )))?;
-
-        match position.data_type {
-          DataTypes::TimestampWithTimezone => {
-            let format_string = match position.format_string.clone() {
-              None => "%Y-%m-%d %H:%M:%S%:::z".to_string(),
-              Some(s) => s,
-            };
-
-            let timestamptz = DateTime::parse_from_str(value, format_string.as_str())?;
-            new_record.push(timestamptz.to_string())
-          }
-          DataTypes::Timestamp => {
-            let format_string = match position.format_string.clone() {
-              None => "%Y-%m-%d %H:%M:%S".to_string(),
-              Some(s) => s,
-            };
-
-            let timestamp = NaiveDateTime::parse_from_str(value, format_string.as_str())?;
-            new_record.push(timestamp.to_string())
-          }
-          DataTypes::Date => {
-            let format_string = match position.format_string.clone() {
-              None => "%Y-%m-%d".to_string(),
-              Some(s) => s,
-            };
-
-            let date = NaiveDate::parse_from_str(value, format_string.as_str())?;
-            new_record.push(date.to_string())
-          }
-          DataTypes::Time => {
-            let format_string = match position.format_string.clone() {
-              None => "%H:%M:%S".to_string(),
-              Some(s) => s,
-            };
-
-            let time = NaiveTime::parse_from_str(value, format_string.as_str())?;
-            new_record.push(time.to_string())
-          }
-          _ => new_record.push(value.to_string()),
+      for (i, column) in results.iter_mut().enumerate() {
+        let value = match record.get(i) {
+          None => continue,
+          Some(v) => v,
         };
-      }
 
-      new_record.push(format!("{bucket_id}"));
-      copier
-        .send([new_record.join(",").as_bytes(), "\n".as_bytes()].concat())
-        .await?;
+        if value.is_empty() {
+          continue;
+        }
+
+        if value.to_lowercase() == "true" || value.to_lowercase() == "false" {
+          column.data_type = DataTypes::Bool;
+          continue;
+        }
+
+        if value.starts_with('{') && value.ends_with('}') {
+          column.data_type = DataTypes::Jsonb;
+          continue;
+        }
+
+        if value.replace(',', "").parse::<i32>().is_ok() {
+          column.data_type = DataTypes::Int;
+          continue;
+        }
+
+        if value.replace(',', "").parse::<i64>().is_ok() {
+          column.data_type = DataTypes::BigInt;
+          continue;
+        }
+
+        // we can't do the same stripping on floats because of european number notation with commas
+        if value.parse::<f64>().is_ok() {
+          column.data_type = DataTypes::Double;
+          continue;
+        }
+
+        column.data_type = DataTypes::Text;
+      }
     }
 
-    copier.finish().await?;
-    Ok(())
+    Ok(results)
   }
 
-  /// ingest_csv_legacy allows us to use the same paradigm as all other bucket ingestion patterns here
-  pub async fn ingest_csv_legacy<T: AsyncRead + Send + Unpin>(
-    db: Pool<Postgres>,
-    reader: T,
-    data_source_id: String,
-    columns: Vec<LegacyTimeseriesColumn>,
-  ) -> Result<(), DataError> {
-    let mut csv_reader = csv_async::AsyncReaderBuilder::new()
-      .flexible(true)
-      .create_reader(reader);
-    // let's fetch the headers - also a quick way to check if we're actually dealing with a csv
-    // they should stay in the order they are in the CSV - index, csv name, column name
-    #[derive(Clone)]
-    struct Position {
-      index: usize,
-      column_name: String,
-      data_type: LegacyDataTypes,
-      format_string: Option<String>,
-    }
+  pub fn infer_legacy_schema<T: Read>(reader: T) -> Result<Vec<LegacyTimeseriesColumn>, DataError> {
+    let mut csv_reader = csv::ReaderBuilder::new().from_reader(reader);
 
-    let mut positions: Vec<Position> = vec![];
-    for (i, header) in csv_reader.headers().await?.iter().enumerate() {
-      // check to see if that header exists in the bucket definition, if it does, record its
-      // spot and name
-      match columns
-        .iter()
-        .find(|bc| bc.property_name.as_str() == header)
-      {
-        None => {}
-        Some(bc) => positions.push(Position {
-          index: i,
-          column_name: bc.column_name.clone(),
-          data_type: bc.data_type.clone().into(),
-          format_string: bc.date_conversion_format_string.clone(),
-        }),
-      }
-    }
-
-    if positions.is_empty() {
-      return Err(DataError::CsvValidation(ValidationError::MissingColumns));
-    }
-
-    let column_names: Vec<String> = positions
-      .clone()
+    let mut results: Vec<LegacyTimeseriesColumn> = csv_reader
+      .headers()?
       .iter()
-      .map(|pos| format!("\"{}\"", pos.column_name.clone()))
+      .map(|h| LegacyTimeseriesColumn {
+        column_name: h.to_string(),
+        property_name: "".to_string(),
+        is_primary_timestamp: false,
+        data_type: "".to_string(),
+        date_conversion_format_string: None,
+      })
       .collect();
 
-    let mut copier = db
-      .copy_in_raw(
-        format!(
-          "COPY y_{}({}) FROM STDIN WITH (FORMAT csv, HEADER FALSE, DELIMITER \",\")",
-          data_source_id,
-          column_names.join(",")
-        )
-        .as_str(),
-      )
-      .await?;
-
-    // in order to append the bucket_id we have to actually parse the csv row per row and send
-    // it into the copier - it's really not that slow since the underlying async reader has is
-    // buffered
-    while let Some(record) = csv_reader.records().next().await {
+    while let Some(record) = csv_reader.records().next() {
       let record = record?;
-      let mut new_record: Vec<String> = vec![];
 
-      for position in &positions {
-        let value = record
-          .get(position.index)
-          .ok_or(DataError::Unwrap("csv record field".to_string()))?;
-
-        match position.data_type {
-          LegacyDataTypes::Date => {
-            let format_string = match position.format_string.clone() {
-              None => "%Y-%m-%d %H:%M:%S".to_string(),
-              Some(s) => s,
-            };
-
-            let timestamp = NaiveDateTime::parse_from_str(value, format_string.as_str())?;
-            new_record.push(timestamp.to_string())
-          }
-          _ => new_record.push(value.to_string()),
+      for (i, column) in results.iter_mut().enumerate() {
+        let value = match record.get(i) {
+          None => continue,
+          Some(v) => v,
         };
-      }
 
-      copier
-        .send([new_record.join(",").as_bytes(), "\n".as_bytes()].concat())
-        .await?;
+        if value.is_empty() {
+          continue;
+        }
+
+        if value.to_lowercase() == "true" || value.to_lowercase() == "false" {
+          column.data_type = LegacyDataTypes::Boolean.into();
+          continue;
+        }
+
+        if value.starts_with('{') && value.ends_with('}') {
+          column.data_type = LegacyDataTypes::Json.into();
+          continue;
+        }
+
+        if value.replace(',', "").parse::<i32>().is_ok() {
+          column.data_type = LegacyDataTypes::Number.into();
+          continue;
+        }
+
+        if value.replace(',', "").parse::<i64>().is_ok() {
+          column.data_type = LegacyDataTypes::Number64.into();
+          continue;
+        }
+
+        // we can't do the same stripping on floats because of european number notation with commas
+        if value.parse::<f64>().is_ok() {
+          column.data_type = LegacyDataTypes::Float64.into();
+          continue;
+        }
+
+        column.data_type = LegacyDataTypes::String.into();
+      }
     }
 
-    copier.finish().await?;
-    Ok(())
+    Ok(results)
   }
 
   /// `download_data_simple` is a simple data download function to bring this microservice into
@@ -1315,16 +1234,15 @@ impl BucketRepository {
   /// and node.js - so we basically spin up a thread to handle ingestion and then stream the data from
   /// node.js to it
   pub async fn begin_csv_ingestion(&mut self, bucket_id: i32) -> Result<(), DataError> {
-    let (tx, rx) = tokio::sync::broadcast::channel::<StreamMessage>(2048);
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<StreamMessage>();
     let (status_tx, status_rx) = tokio::sync::mpsc::channel::<StreamStatusMessage>(2048);
     let db_connection = self.db.clone();
 
-    let inner_tx = tx.clone();
     // inner multithreaded loop to handle the copy from the csv file to the db
     tokio::task::spawn(async move {
-      let stream_reader = NodeStreamReader::new(rx, inner_tx);
+      let stream_reader = NodeStreamReader::new(rx);
 
-      let result = BucketRepository::ingest_csv(db_connection, stream_reader, bucket_id).await;
+      let result = ingestion::ingest_csv(db_connection, stream_reader, bucket_id).await;
       match result {
         Ok(_) => match status_tx.send(StreamStatusMessage::Complete).await {
           Ok(_) => Ok(()),
@@ -1352,22 +1270,15 @@ impl BucketRepository {
     data_source_id: String,
     columns: Vec<LegacyTimeseriesColumn>,
   ) -> Result<(), DataError> {
-    let (tx, rx) = tokio::sync::broadcast::channel::<StreamMessage>(4096);
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<StreamMessage>();
     let (status_tx, status_rx) = tokio::sync::mpsc::channel::<StreamStatusMessage>(4096);
     let db_connection = self.db.clone();
 
-    let tx_inner = tx.clone();
-
     tokio::spawn(async move {
-      let stream_reader = NodeStreamReader::new(rx, tx_inner);
+      let stream_reader = NodeStreamReader::new(rx);
 
-      match BucketRepository::ingest_csv_legacy(
-        db_connection,
-        stream_reader,
-        data_source_id,
-        columns,
-      )
-      .await
+      match ingestion::ingest_csv_legacy(db_connection, stream_reader, data_source_id, columns)
+        .await
       {
         Ok(_) => match status_tx.send(StreamStatusMessage::Complete).await {
           Ok(_) => Ok(()),
@@ -1417,7 +1328,9 @@ impl BucketRepository {
     match channel.send(StreamMessage::Write(bytes)) {
       Ok(_) => Ok(()),
       Err(e) => {
-        channel.send(StreamMessage::Close);
+        if channel.send(StreamMessage::Close).is_err() {
+          eprintln!("cannot send close message on stream message channel")
+        }
         Err(DataError::Thread(e.to_string()))
       }
     }
@@ -1480,109 +1393,17 @@ enum StreamStatusMessage {
 }
 
 pub struct NodeStreamReader {
-  channel: tokio::sync::broadcast::Receiver<StreamMessage>,
-  test: tokio::sync::broadcast::Sender<StreamMessage>,
+  rx: tokio::sync::mpsc::UnboundedReceiver<StreamMessage>,
   buffer: Vec<u8>,
   is_closed: bool,
-  message: Option<StreamMessage>,
 }
 
 impl NodeStreamReader {
-  fn new(
-    rx: tokio::sync::broadcast::Receiver<StreamMessage>,
-    test: tokio::sync::broadcast::Sender<StreamMessage>,
-  ) -> Self {
+  fn new(rx: tokio::sync::mpsc::UnboundedReceiver<StreamMessage>) -> Self {
     NodeStreamReader {
-      channel: rx,
-      test,
+      rx,
       buffer: vec![],
       is_closed: false,
-      message: None,
-    }
-  }
-}
-
-impl AsyncRead for NodeStreamReader {
-  fn poll_read(
-    mut self: Pin<&mut Self>,
-    cx: &mut Context<'_>,
-    buf: &mut ReadBuf<'_>,
-  ) -> Poll<std::io::Result<()>> {
-    if self.is_closed {
-      return Poll::Ready(Ok(()));
-    }
-
-    if self.buffer.len() >= buf.initialized().len() {
-      let send = self.buffer.clone();
-      self.buffer = vec![];
-
-      return if send.len() > buf.initialized().len() {
-        let (dest, overflow) = send.split_at(buf.initialized().len());
-
-        buf.put_slice(dest);
-        self.buffer.extend_from_slice(overflow);
-
-        Poll::Ready(Ok(()))
-      } else {
-        buf.put_slice(send.as_slice());
-        Poll::Ready(Ok(()))
-      };
-    }
-
-    loop {
-      let message = match self.channel.try_recv() {
-        Ok(m) => m,
-        Err(e) => match e {
-          tokio::sync::broadcast::error::TryRecvError::Empty => {
-            let waker = cx.waker().clone();
-            let sub = self.test.subscribe();
-            tokio::spawn(async move {
-              loop {
-                if sub.is_empty() {
-                  continue;
-                } else {
-                  break;
-                }
-              }
-
-              waker.wake();
-            });
-            return Poll::Pending;
-          }
-          tokio::sync::broadcast::error::TryRecvError::Closed
-          | tokio::sync::broadcast::error::TryRecvError::Lagged(_) => break,
-        },
-      };
-
-      match message {
-        StreamMessage::Write(bytes) => self.buffer.extend_from_slice(bytes.as_slice()),
-        StreamMessage::Close => {
-          self.is_closed = true;
-          buf.put_slice(self.buffer.as_slice());
-          self.buffer = vec![];
-
-          return Poll::Ready(Ok(()));
-        }
-      }
-
-      if self.buffer.len() >= buf.initialized().len() {
-        break;
-      }
-    }
-
-    let send = self.buffer.clone();
-    self.buffer = vec![];
-
-    if send.len() > buf.initialized().len() {
-      let (dest, overflow) = send.split_at(buf.initialized().len());
-
-      buf.put_slice(dest);
-      self.buffer.extend_from_slice(overflow);
-
-      Poll::Ready(Ok(()))
-    } else {
-      buf.put_slice(send.as_slice());
-      Poll::Ready(Ok(()))
     }
   }
 }
@@ -1611,12 +1432,11 @@ impl Read for NodeStreamReader {
     }
 
     loop {
-      let message = match self.channel.try_recv() {
+      let message = match self.rx.try_recv() {
         Ok(m) => m,
         Err(e) => match e {
-          tokio::sync::broadcast::error::TryRecvError::Empty => continue,
-          tokio::sync::broadcast::error::TryRecvError::Closed => break,
-          tokio::sync::broadcast::error::TryRecvError::Lagged(_) => break,
+          TryRecvError::Empty => continue,
+          TryRecvError::Disconnected => break,
         },
       };
 

@@ -1,7 +1,20 @@
 import { createSlice, configureStore } from '@reduxjs/toolkit';
+import { setupListeners } from '@reduxjs/toolkit/query';
 import { webGLReducer } from './slices/webGLSlice';
 
+import { nodesDataApi } from '../services/nodesDataApi';
+import { timeseriesDataApi } from '../services/timeseriesDataApi';
+
 const initialState = {
+  // Refactor Begin
+  query: false,
+  host: '',
+  container: '',
+  token: '',
+  metadata: '',
+  tagRefactor: '',
+  tagId: null,
+  // Refactor End
   openDrawerLeft: false,
   openDrawerLeftWidth: 64,
   openDrawerRight: false,
@@ -17,13 +30,42 @@ const initialState = {
   unityNodes: [],
   deepLynxNodes: [],
   tag: [],
-  tagId: null,
 };
 
 const appStateSlice = createSlice({
   name: 'appState',
   initialState,
   reducers: {
+    // Refactor Reducers Begin
+    setQuery: (state, action) => {
+      const store = state;
+      store.query = action.payload;
+    },
+    setHost: (state, action) => {
+      const store = state;
+      store.host = action.payload;
+    },
+    setContainer: (state, action) => {
+      const store = state;
+      store.container = action.payload;
+    },
+    setToken: (state, action) => {
+      const store = state;
+      store.token = action.payload;
+    },
+    setMetadata: (state, action) => {
+      const store = state;
+      store.metadata = action.payload;
+    },
+    setTagRefactor: (state, action) => {
+      const store = state;
+      store.tagRefactor = action.payload;
+    },
+    setTagId: (state, action) => {
+      const store = state;
+      store.tagId = action.payload;
+    },
+    // Refactor Reducers End
     // App functions
     toggleDrawerLeft: (state) => {
       const store = state;
@@ -76,10 +118,6 @@ const appStateSlice = createSlice({
       const store = state;
       store.tag = action.payload;
     },
-    setTagId: (state, action) => {
-      const store = state;
-      store.tagId = action.payload;
-    },
 
     // DeepLynx data
     setContainerId: (state, action) => {
@@ -95,20 +133,27 @@ const appStateSlice = createSlice({
     setUnityNodes: (state, action) => {
       const store = state;
       store.unityNodes = action.payload;
-    }
+    },
   },
 });
 
 export const store = configureStore({
   reducer: {
     appState: appStateSlice.reducer,
-    webGL: webGLReducer
+    webGL: webGLReducer,
+    [nodesDataApi.reducerPath]: nodesDataApi.reducer,
+    [timeseriesDataApi.reducerPath]: timeseriesDataApi.reducer,
+  },
+  middleware: (getDefaultMiddleware) => {
+    return getDefaultMiddleware()
+      .concat(nodesDataApi.middleware)
+      .concat(timeseriesDataApi.middleware)
   },
 });
 
 export const appStateActions = appStateSlice.actions;
 
 // Infer the `RootState` and `AppDispatch` types from the store itself
-export type RootState = ReturnType<typeof store.getState>
+export type RootState = ReturnType<typeof store.getState>;
 // Inferred type: {posts: PostsState, comments: CommentsState, users: UsersState}
-export type AppDispatch = typeof store.dispatch
+export type AppDispatch = typeof store.dispatch;

@@ -31,6 +31,7 @@ import MetatypeRelationshipPairRepository from './metatype_relationship_pair_rep
 import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
 import TypeMappingRepository from '../etl/type_mapping_repository';
 import KeyPairMapper from '../../../mappers/access_management/keypair_mapper';
+import RedisGraphLoaderService from '../../../../services/cache/redis_graph_loader';
 
 /*
     ContainerRepository contains methods for persisting and retrieving a container
@@ -164,7 +165,7 @@ export default class ContainerRepository implements RepositoryInterface<Containe
             return this.#mapper.List();
         }
 
-        // listing containers for service users looks a little different 
+        // listing containers for service users looks a little different
         // than listing them for a regular user
         if (user.identity_provider === 'service') {
             return this.#mapper.ListForServiceUser(user.id!);
@@ -238,6 +239,18 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         return Promise.resolve(retrieved);
     }
 
+    async loadIntoRedis(id: string): Promise<Result<boolean>> {
+        const loader = await RedisGraphLoaderService.GetInstance();
+
+        try {
+            await loader.loadGraph(id);
+        } catch (e: any) {
+            return Promise.resolve(Result.Failure(e.toString()));
+        }
+
+        return Promise.resolve(Result.Success(true));
+    }
+
     async createAlert(alert: ContainerAlert, user?: User): Promise<Result<boolean>> {
         const errors = await alert.validationErrors();
         if (errors) {
@@ -267,19 +280,21 @@ export default class ContainerRepository implements RepositoryInterface<Containe
     async generateAuthAlert(container: Container): Promise<Result<boolean>> {
         const includesP6 = container.config?.enabled_data_sources?.includes('p6');
         const auth = await KeyPairMapper.Instance.ServiceKeysForContainer(container.id!, 'p6_adapter_auth');
-        const alerts = (await this.activeAlertsForContainer(container.id!)).value.map(a => a.message?.includes('P6'));
+        const alerts = (await this.activeAlertsForContainer(container.id!)).value.map((a) => a.message?.includes('P6'));
 
         // only generate the alert if P6 is enabled, not yet authorized, and there isn't an alert yet
         if (includesP6 && auth.value.length <= 0 && alerts.length === 0) {
-            this.createAlert(new ContainerAlert({
-                containerID: container.id!,
-                type: 'warning',
-                message: 
-                    // eslint-disable-next-line max-len
-                    'The P6 adapter must be authorized to access this container before P6 data sources can be activated. Click the Authorize button to authorize this container.'
-            })); 
+            void this.createAlert(
+                new ContainerAlert({
+                    containerID: container.id!,
+                    type: 'warning',
+                    message:
+                        // eslint-disable-next-line max-len
+                        'The P6 adapter must be authorized to access this container before P6 data sources can be activated. Click the Authorize button to authorize this container.',
+                }),
+            );
         }
-        
+
         return Promise.resolve(Result.Success(true));
     }
 
@@ -325,10 +340,8 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         );
     }
 
-    async importOntology(containerID: string, user: User, fileBuffer: Buffer): Promise<Result<string>> {
+    async importOntology(containerID: string, user: User, jsonImport: any): Promise<Result<string>> {
         // verify the expected ontology elements are present in the supplied file
-        const jsonImport = JSON.parse(fileBuffer.toString('utf8').trim());
-
         if (
             !('metatypes' in jsonImport) ||
             !('metatype_keys' in jsonImport) ||

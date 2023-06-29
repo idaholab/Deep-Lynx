@@ -1,5 +1,5 @@
 // Express
-import express from 'express';
+import express, {NextFunction, Request, Response} from 'express';
 import {Application} from 'express';
 
 // Middleware
@@ -15,6 +15,8 @@ import WebGLFunctions from './graph_functions/webgl_functions';
 
 // Utilities
 import Config from '../../../../services/config';
+import Result from '../../../../common_classes/result';
+import ContainerRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
 
 export default class GraphRoutes {
     public static mount(app: Application, middleware: any[]) {
@@ -122,6 +124,10 @@ export default class GraphRoutes {
         app.post('/containers/:containerID/graphs/tags', ...middleware, authInContainer('write', 'data'), TagFunctions.createTag);
         app.put('/containers/:containerID/graphs/tags/:tagID', ...middleware, authInContainer('write', 'data'), TagFunctions.updateTag);
         app.put('/containers/:containerID/graphs/tags/:tagID/nodes/:nodeID', ...middleware, authInContainer('write', 'data'), TagFunctions.attachTagToNode);
+        app.put('/containers/:containerID/graphs/tags/:tagID/nodes', ...middleware, authInContainer('write', 'data'), TagFunctions.bulkTagNodes);
+        app.delete('/containers/:containerID/graphs/tags/:tagID/nodes', ...middleware, authInContainer('write', 'data'), TagFunctions.bulkDetachNodeTag);
+        app.put('/containers/:containerID/graphs/tags/:tagID/edges', ...middleware, authInContainer('write', 'data'), TagFunctions.bulkTagEdges);
+        app.delete('/containers/:containerID/graphs/tags/:tagID/edges', ...middleware, authInContainer('write', 'data'), TagFunctions.bulkDetachEdgeTag);
         app.put('/containers/:containerID/graphs/tags/:tagID/edges/:edgeID', ...middleware, authInContainer('write', 'data'), TagFunctions.attachTagToEdge);
         app.put('/containers/:containerID/graphs/tags/:tagID/files/:fileID', ...middleware, authInContainer('write', 'data'), TagFunctions.attachTagToFile);
         app.get('/containers/:containerID/graphs/tags/files', ...middleware, authInContainer('read', 'data'), TagFunctions.listFilesWithAnyTag);
@@ -159,7 +165,24 @@ export default class GraphRoutes {
             WebGLFunctions.uploadFiles,
         );
         app.get('/containers/:containerID/graphs/webgl', ...middleware, authInContainer('read', 'data'), WebGLFunctions.listWebglFilesAndTags);
+        app.post('/containers/:containerID/graphs/load', ...middleware, authInContainer('read', 'data'), loadRedisGraph);
         app.put('/containers/:containerID/graphs/webgl/files/:fileID', ...middleware, authInContainer('write', 'data'), WebGLFunctions.updateWebglFiles);
         app.delete('/containers/:containerID/graphs/webgl/files/:fileID', ...middleware, authInContainer('write', 'data'), FileFunctions.deleteFile);
+    }
+}
+
+function loadRedisGraph(req: Request, res: Response, next: NextFunction) {
+    if (req.container) {
+        const containerRepo = new ContainerRepository();
+        containerRepo
+            .loadIntoRedis(req.container.id!)
+            .then((result) => {
+                result.asResponse(res);
+            })
+            .catch((e) => Result.Error(e).asResponse(res))
+            .finally(() => next());
+    } else {
+        Result.Failure('container not found', 404).asResponse(res);
+        next();
     }
 }

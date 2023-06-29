@@ -1,9 +1,6 @@
 // React
 import * as React from 'react';
 
-// Import Packages
-import Plot from 'react-plotly.js';
-
 // MUI Components
 import {
   Button
@@ -20,11 +17,11 @@ import DataTableBasic from '../../display/DataTableBasic';
 import ButtonIconText from '../../elements/ButtonIconText';
 
 type Props = {
-  data: any
+  selectedAssetObject: any
 };
 
 const NodeInfoPropsMeta: React.FC<Props> = ({
-  data
+  selectedAssetObject
 }) => {
   const convertDataToArray = (obj: any) => {
     if (obj !== null) {
@@ -41,7 +38,7 @@ const NodeInfoPropsMeta: React.FC<Props> = ({
     // {title: 'Actions', alignment: 'center'},
   ];
 
-  const PropertiesTableRowData = convertDataToArray(data.properties);
+  const PropertiesTableRowData = convertDataToArray(selectedAssetObject.properties);
 
   const PropertiesTableRowActions: any = [
     // {type: 'edit',},
@@ -54,7 +51,7 @@ const NodeInfoPropsMeta: React.FC<Props> = ({
     // {title: 'Actions', alignment: 'center'},
   ];
 
-  const MetadataTableRowData = convertDataToArray(data.metadata_properties);
+  const MetadataTableRowData = convertDataToArray(selectedAssetObject.metadata_properties);
 
   const MetadataTableRowActions: any = [
     // {type: 'view',},
@@ -67,13 +64,23 @@ const NodeInfoPropsMeta: React.FC<Props> = ({
         Properties
       </InfoHeader>
       {/* <ButtonIconText type="add" handleClick={() => {console.log('yay!')}} text="Add Property" color="primary" /> */}
-      <DataTableBasic tableHeaders={PropertiesTableHeaders} tableRowData={PropertiesTableRowData} tableRowActions={PropertiesTableRowActions} />
+      <DataTableBasic
+        tableHeaders={PropertiesTableHeaders}
+        tableRowData={PropertiesTableRowData}
+        tableRowActions={PropertiesTableRowActions}
+        isLoading={false}
+      />
 
       <InfoHeader>
         Metadata
       </InfoHeader>
       {/* <ButtonIconText type="add" handleClick={() => {console.log('yay!')}} text="Add Metadata" color="primary"/> */}
-      <DataTableBasic tableHeaders={MetadataTableHeaders} tableRowData={MetadataTableRowData} tableRowActions={MetadataTableRowActions}  />
+      <DataTableBasic
+        tableHeaders={MetadataTableHeaders}
+        tableRowData={MetadataTableRowData}
+        tableRowActions={MetadataTableRowActions}
+        isLoading={false}
+      />
     </>
   );
 }

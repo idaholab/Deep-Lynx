@@ -333,8 +333,9 @@ export class Repository {
     // changed to return AND ( x ). If chaining with further conditions, another and() or or()
     // is necessary.
     and(repo?: Repository) {
-        // check if there is a where clause yet;
-        // if there is not, use WHERE instead of AND
+        // create a where clause if there isn't one present
+        if (!this._query.WHERE) {this._query.WHERE = []}
+        // if where clause is empty, use WHERE instead of AND
         const conjunction = (this._query.WHERE?.length === 0) ? 'WHERE' : 'AND';
 
         if (repo?._query.WHERE) {
@@ -353,8 +354,9 @@ export class Repository {
     // changed to return OR ( x ). If chaining with further conditions, another and() or or()
     // is necessary.
     or(repo?: Repository) {
-        // check if there is a where clause yet;
-        // if there is not, use WHERE instead of OR
+        // create a where clause if there isn't one present
+        if (!this._query.WHERE) {this._query.WHERE = []}
+        // if where clause is empty, use WHERE instead of OR
         const conjunction = (this._query.WHERE?.length === 0) ? 'WHERE' : 'OR';
 
         if (repo?._query.WHERE) {
@@ -587,6 +589,14 @@ export class Repository {
             }
             case '>': {
                 this._query.WHERE?.push(format(`%s::${typeCast} > %L::${typeCast}`, fieldName, value));
+                break;
+            }
+            case '<=': {
+                this._query.WHERE?.push(format(`%s::${typeCast} <= %L::${typeCast}`, fieldName, value));
+                break;
+            }
+            case '>=': {
+                this._query.WHERE?.push(format(`%s::${typeCast} >= %L::${typeCast}`, fieldName, value));
                 break;
             }
             case '%': {
@@ -1054,7 +1064,6 @@ export type QueryOptions = {
     tableName?: string | null | undefined;
     // load from a materialized view if one is present
     loadFromView?: boolean;
-    print?: boolean;
 };
 
 export type JoinOptions = {

@@ -2,12 +2,8 @@
 import * as React from 'react';
 
 // Hooks
-import { useState, useEffect } from 'react';
+import { useGetNodeTagsQuery } from '../../../../app/services/nodesDataApi';
 import { useAppSelector } from '../../../../app/hooks/reduxTypescriptHooks';
-
-// Import Packages
-import Plot from 'react-plotly.js';
-import axios from 'axios';
 
 // MUI Components
 import {
@@ -25,51 +21,37 @@ import ButtonIconText from '../../elements/ButtonIconText';
 import DataTableBasic from '../../display/DataTableBasic';
 
 type Props = {
-  data: any
+  selectedAssetObject: any
 };
 
 const NodeInfoTags: React.FC<Props> = ({
-  data
+  selectedAssetObject
 }) => {
-  const nodeId = data.id
-  const containerId = useAppSelector((state: any) => state.appState.containerId);
-
-  const [tableRowData, setTableRowData] = useState(Array<{ [key: string]: any; }>);
+  // DeepLynx
+  const host: string = useAppSelector((state: any) => state.appState.host);
+  const token: string = useAppSelector((state: any) => state.appState.token);
+  const container: string = useAppSelector((state: any) => state.appState.container);
+  const nodeId = selectedAssetObject.id;
 
   const tableHeaders = [
     {title: 'Name', optionalWidth: '', alignment: 'left'},
     // {title: 'Actions', alignment: 'center'},
   ];
 
-  useEffect(() => {
-    async function getTagList() {
-      const token = localStorage.getItem('user.token');
-     
-      await axios.get ( `${location.origin}/containers/${containerId}/graphs/tags/nodes/${nodeId}`,
-        {
-          headers: {
-            Authorization: `bearer ${token}`
-          }
-        }).then (
-          (response: any) => {
-            const responseTagList = response.data.value;
-            responseTagList.map((obj: any) => {
-              let tagList: Array<{ [key: string]: any; }> = [];
-              if (typeof(obj.tag_name) === 'string') {
-                tagList = [{name: obj.tag_name}]
-              } else if (Array.isArray(obj.tag_name)) {
-                obj.tag_name.map((tag: string) => {
-                  responseTagList.push({name: tag})
-                })
-              }
-              setTableRowData(tagList);
-            })
-          }
-        )
-    }
+  const { data: response = [], isLoading } = useGetNodeTagsQuery({ host, container, nodeId });
 
-    getTagList();
-  }, []);
+  let tableRowData = [];
+
+  if (!isLoading) {
+    tableRowData = response?.value.flatMap((obj: any) => {
+      if (typeof obj.tag_name === 'string') {
+        return [{ name: obj.tag_name }];
+      } else if (Array.isArray(obj.tag_name)) {
+        return obj.tag_name.map((tag: string) => ({ name: tag }));
+      }
+      return [];
+    }) || [];
+  }
 
   const tableRowActions: any = [
     // {type: 'delete'}
@@ -81,7 +63,12 @@ const NodeInfoTags: React.FC<Props> = ({
         Attached Tags
       </InfoHeader>
       {/* <ButtonIconText type="add" handleClick={() => {console.log('yay!')}} text="Add New Tag" color="primary" /> */}
-      <DataTableBasic tableHeaders={tableHeaders} tableRowData={tableRowData} tableRowActions={tableRowActions} />
+      <DataTableBasic
+        tableHeaders={tableHeaders}
+        tableRowData={tableRowData}
+        tableRowActions={tableRowActions}
+        isLoading={isLoading}
+      />
     </>
   );
 }

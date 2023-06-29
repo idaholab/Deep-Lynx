@@ -63,7 +63,14 @@ export default function resolversRoot(containerID: string): any {
             }
 
             const nodeWhere = where as NodeWhereQL;
-            let filter = new NodeRepository().where().containerID('eq', containerID).and();
+
+            // create a subquery of current nodes before filters are applied
+            let sub = new NodeRepository().where().containerID('eq', containerID);
+            // select all fields from the subquery
+            let filter = new NodeRepository(true)
+                .from(new NodeRepository().subquery(sub), 'sub')
+                .select('*', 'sub')
+                .where();
 
             for (const n in nodeWhere.AND) {
                 // in order to utilize the GraphQL error handling we wrap everything
@@ -95,9 +102,6 @@ export default function resolversRoot(containerID: string): any {
                 } catch (e) {
                     throw e;
                 }
-
-                // limit all results to the currently selected container and unarchived
-                filter = filter.and().containerID('eq', containerID);
             }
 
             const results = await filter.list(false, {limit, offset});
@@ -455,7 +459,7 @@ function buildNodeFilter(f: NodeRepository, fql: NodeFilterQL): NodeRepository {
                 values.shift();
                 const query = values.join(' ');
 
-                f.metatypeName(operator, query);
+                f.query('metatype_name', operator, query);
                 break;
             }
 
