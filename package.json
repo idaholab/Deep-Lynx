@@ -1,6 +1,6 @@
 {
     "name": "deep-lynx",
-    "version": "1.3.8",
+    "version": "1.3.9",
     "description": "DeepLynx allows for an integrated platform during design and operations of mega projects.",
     "main": "./dist/main.js",
     "author": "John Darrington and Christopher Ritter",
