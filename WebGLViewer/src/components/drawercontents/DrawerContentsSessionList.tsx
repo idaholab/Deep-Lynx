@@ -84,12 +84,16 @@ type Props = {
 const DrawerContentsSectionList: React.FC<Props> = ({
   data
 }) => {
-  const nodeList = data;
+  // const nodeList = data;
+  const [nodeList, setNodeList] = useState<any[]>([]);
+  React.useEffect(() => {
+    setNodeList(data);
+  }, [data]);
+
   const dispatch = useAppDispatch();
 
   type openDrawerLeftState = boolean;
   const openDrawerLeftState: openDrawerLeftState = useAppSelector((state: any) => state.appState.openDrawerLeft);
-
   type openDrawerLeftWidth = number;
   const openDrawerLeftWidth: openDrawerLeftWidth = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);
 
@@ -102,90 +106,102 @@ const DrawerContentsSectionList: React.FC<Props> = ({
   };
  
   const [selectedPlayer, setSelectedPlayer] = React.useState<any>(null);
-  // const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
-
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const handleOpenDeleteModal = (player: any) => {
-    setSelectedPlayer(player);
-    };
-
-  //  Handles Add section 
-  const [openModal, setOpenModal] = useState(false);
-  const [sessionName, setSessionName] = useState('');
-
-  const handleOpenModal = () => {
-    setOpenModal(true);
-  };
-
-  const handleCloseModal = () => {
-    setOpenModal(false);
-  };
-
-  const handleSessionNameChange = (event:any) => {
-    setSessionName(event.target.value);
-  };
-
-  const handleAddSession = async () => {
-    try {
-      const response = await fetch(`http://0.0.0.0:8091/containers/1/sessions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ name: sessionName })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      } else {
-        const jsonResponse = await response.json();
-        console.log(jsonResponse);
-      }
-    } catch (error) {
-      console.error('There was an error!', error);
-    }
-
-    handleCloseModal();
-  };
-
-
+ 
   // Menu
-  // const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [anchorEl, setAnchorEl] = React.useState<any>(null);
   const open = Boolean(anchorEl);
-
-  const handleClick = (index: number, event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl({ [index]: event.currentTarget });
-  };
-
   const handleClose = () => {
     setAnchorEl(null);
   };
-  const AddSession = async () => {
-    const sessionName = "Session 4";  // replace this with the actual session name
-    const container_id = '1'; // replace with your container id
-    try {
-      const response = await fetch(`http://0.0.0.0:8091/containers/${container_id}/sessions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ name: sessionName })
-      });
   
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      } else {
-        const jsonResponse = await response.json();
-        console.log(jsonResponse); // remove this line in production
-      }
-    } catch (error) {
-      console.error('There was an error!', error);
-      setSnackbarMessage(`Error: ${error}`);
-      setSnackbarOpen(true);
+
+// Add session 
+ // DeepLynx
+ const host: string = useAppSelector((state: any) => state.appState.host);
+ const token: string = useAppSelector((state: any) => state.appState.token);
+ const container: string = useAppSelector((state: any) => state.appState.container);
+  const [openModal, setOpenModal] = useState(false);
+  const [sessionName, setSessionName] = useState('');
+
+  // Ref for the input element
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  // Function to focus on the input field when the modal is opened
+  React.useEffect(() => {
+    if (openModal && inputRef.current) {
+      inputRef.current.focus();
     }
+  }, [openModal]);
+
+const handleOpenModal = () => {
+  setOpenModal(true);
+};
+
+const handleCloseModal = () => {
+  setOpenModal(false);
+};
+
+const handleSessionNameChange = (event:any) => {
+  event.preventDefault()
+  console.log(event.target.value)
+  setSessionName(event.target.value);
+};
+
+const handleAddSession = async () => {
+  dispatch(appStateActions.setContainerId(container));
+  try{
+    await axios.post ( `${host}/containers/${container}/serval/sessions`,
+      {
+        name: sessionName,
+      },
+      {
+        headers: {
+          Authorization: `bearer ${token}`
+        },
+      }).then (
+        (response: any) => {
+        
+          const parsedValue = JSON.parse(response.data.value);
+          console.log(parsedValue)
+          dispatch(appStateActions.addSession(parsedValue));
+          setNodeList((prevNodeList) => [...prevNodeList, parsedValue] as any[]);
+        }
+      )
   }
+  catch (error) {
+      console.error('There was an error!', error);
+    }
+      
+  handleCloseModal();
+};
+
+// Delete session 
+const [openDeleteModal, setOpenDeleteModal] = React.useState<boolean>(false);
+const handleOpenDeleteModal = (player: any) => {
+  setSelectedPlayer(player);
+  setOpenDeleteModal(true); // open the delete modal
+};
+const handleCloseDeleteModal = () => {
+  setOpenDeleteModal(false); // close the delete modal
+};
+
+const handleDeleteSession = async (sessionId: string) => {
+  try {
+    await axios.delete(`${host}/containers/${container}/serval/sessions/${sessionId}`, {
+      headers: {
+        Authorization: `bearer ${token}`
+      },
+    }).then (
+      (response: any) => {
+        dispatch(appStateActions.deleteSession(sessionId));
+         setNodeList(prevNodeList => prevNodeList.filter(session => session.id !== sessionId));
+    
+        handleCloseDeleteModal();
+      })
+   
+  } catch (error) {
+    console.error('There was an error!', error);
+  }
+};
 
   return (
     <>
@@ -197,33 +213,32 @@ const DrawerContentsSectionList: React.FC<Props> = ({
           Title
         </Box>
         <Button
-                  id="customized-button"
-                  // className={`menu-button-${index}`}
-                  aria-controls={open ? 'customized-menu' : undefined}
-                  aria-haspopup="true"
-                  aria-expanded={open ? 'true' : undefined}
-                  variant="contained"
-                  disableElevation
-                  onClick={handleOpenModal}
-                  endIcon={<AddIcon />}
-                  size="small"
-                  sx={{
-                    color: 'white',
-                    padding: '0px 8px 0 8px',
-                    marginLeft: 'auto',
-                    '& span': {
-                      fontSize: '14px',
-                      marginBottom: '1px',
-                      '&:first-of-type': {
-                        marginRight: '-6px'
-                      },
-                    }
-                  }}
-                >
-                  <span>Add Session</span>
-                </Button>
+        id="customized-button"
+        aria-controls={openModal ? 'customized-menu' : undefined}
+        aria-haspopup="true"
+        aria-expanded={openModal ? 'true' : undefined}
+        variant="contained"
+        disableElevation
+        onClick={handleOpenModal}
+        endIcon={<AddIcon />}
+        size="small"
+        sx={{
+          color: 'white',
+          padding: '0px 8px 0 8px',
+          marginLeft: 'auto',
+          '& span': {
+            fontSize: '14px',
+            marginBottom: '1px',
+            '&:first-of-type': {
+              marginRight: '-6px',
+            },
+          },
+        }}
+      >
+        <span>Add Session</span>
+      </Button>
       </Box>
-      <Modal open={openModal} onClose={handleCloseModal}>
+      <Modal open={openModal} onClose={handleCloseModal} disableEnforceFocus>
         <div
           style={{
             position: 'absolute',
@@ -234,17 +249,17 @@ const DrawerContentsSectionList: React.FC<Props> = ({
             backgroundColor: 'white',
             border: '2px solid black',
             boxShadow: '24px',
-            padding: '16px'
+            padding: '16px',
           }}
         >
-          <TextField
-            id="session-name"
-            label="Session Name"
-            value={sessionName}
-            onChange={handleSessionNameChange}
-            fullWidth
-          />
+        <TextField
+        className='col-12'
+          id="session-name"
+          value={sessionName}
+          onChange={handleSessionNameChange}
+        />
           <Button
+          className='col-6'
             variant="contained"
             disableElevation
             onClick={handleAddSession}
@@ -255,6 +270,34 @@ const DrawerContentsSectionList: React.FC<Props> = ({
           </Button>
         </div>
       </Modal>
+          <Modal open={openDeleteModal} onClose={handleCloseDeleteModal} disableEnforceFocus>
+      <div
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 400,
+          backgroundColor: 'white',
+          border: '2px solid black',
+          boxShadow: '24px',
+          padding: '16px',
+        }}
+      >
+        <h5>Delete Session</h5>
+        <p>Are you sure you want to delete this session?</p>
+        <Button
+          variant="contained"
+          disableElevation
+          onClick={() => handleDeleteSession(selectedPlayer.id)}
+          size="small"
+          style={{ marginTop: '16px' }}
+        >
+          Delete Session
+        </Button>
+      </div>
+    </Modal>
+
       <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0', borderTop: `1px solid ${COLORS.colorDarkgray}` }}>
         <List dense sx={{ paddingTop: '0' }}>
           {nodeList.map((object: any, index: number) => (
@@ -272,7 +315,7 @@ const DrawerContentsSectionList: React.FC<Props> = ({
                   aria-expanded={open ? 'true' : undefined}
                   variant="contained"
                   disableElevation
-                  onClick={(e) => AddSession()}
+                  // onClick={(e) => AddSession()}
                   // endIcon={<KeyboardArrowDownIcon />}
                   size="small"
                   sx={{
@@ -293,31 +336,6 @@ const DrawerContentsSectionList: React.FC<Props> = ({
                    Delete
                   </MenuItem>
                 </Button>
-                {/* <Button
-                  id="customized-button"
-                  className={`menu-button-${index}`}
-                  aria-controls={open ? 'customized-menu' : undefined}
-                  aria-haspopup="true"
-                  aria-expanded={open ? 'true' : undefined}
-                  variant="contained"
-                  disableElevation
-                  onClick={(e) => handleClick(index, e)}
-                  endIcon={<KeyboardArrowDownIcon />}
-                  size="small"
-                  sx={{
-                    color: 'white',
-                    padding: '0px 4px 0 8px',
-                    '& span': {
-                      fontSize: '14px',
-                      marginBottom: '1px',
-                      '&:first-of-type': {
-                        marginRight: '-6px'
-                      },
-                    }
-                  }}
-                >
-                  <span>Actions</span>
-                </Button> */}
                 <StyledMenu
                   id="customized-menu"
                   MenuListProps={{

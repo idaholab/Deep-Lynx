@@ -26,6 +26,7 @@ const initialState = {
   unityNodes: [],
   deepLynxNodes: [],
   tag: [],
+  sessions:[]as any[],
 };
 
 const appStateSlice = createSlice({
@@ -60,6 +61,26 @@ const appStateSlice = createSlice({
     setTagId: (state, action) => {
       const store = state;
       store.tagId = action.payload;
+    },
+    // Sessions
+    deleteSession: (state, action) => {
+      const store=state
+      store.sessions = state.sessions.filter(session => session.id !== action.payload);
+    },
+    addSession: (state, action) => {
+      const store = state;
+      store.sessions.push(action.payload);;
+    },
+
+     // Delete player
+     removePlayer: (state, action) => {
+      const store = state;
+      store.sessions = state.sessions.map(session => {
+        if (session.id === action.payload.sessionId) {
+          session.players = session.players.filter((player:any) => player.id !== action.payload.playerId);
+        }
+        return session;
+      });
     },
     // Refactor Reducers End
     // App functions

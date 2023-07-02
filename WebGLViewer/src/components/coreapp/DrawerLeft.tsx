@@ -1,6 +1,5 @@
 // React
 import * as React from 'react';
-
 // Hooks
 import { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../../../app/hooks/reduxTypescriptHooks';
@@ -48,8 +47,8 @@ import '../../styles/App.scss';
 // @ts-ignore
 import COLORS from '../../../src/styles/variables';
 import { unstable_renderSubtreeIntoContainer } from 'react-dom';
-import DrawerContentsUserInfo from '../drawercontents/DrawerContentsUserInfo';
-import DrawerContentsUserList from '../drawercontents/DrawerContentsUserList';
+// import DrawerContentsUserInfo from '../drawercontents/DrawerContentsUserInfo';
+// import DrawerContentsUserList from '../drawercontents/DrawerContentsUserList';
 import DrawerContentsSectionList from '../drawercontents/DrawerContentsSessionList';
 import DrawerContentsSectionInfo from '../drawercontents/DrawerContentsSessionInfo';
 
@@ -99,188 +98,24 @@ const DrawerLeft: React.FC<Props> = ({}) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [nodes, setNodes] = useState(Array<{ [key: string]: any; }>);
   const [sessionsData, setSessionsData] = useState([]);
-  let test123=[
-    {
-        "id": "b78dcf72-359e-46fa-808a-dd92af8bafd2",
-        "name": "Session 1",
-        "users": [
-            {
-                "state": {
-                    "id": "bX3L5P8KYe1",
-                    "state": null
-                },
-                "send_heartbeat": false
-            },
-            {
-              "state": {
-                  "id": "bX3L5P8KYe2",
-                  "state": null
-              },
-              "send_heartbeat": false
-          },
-          {
-            "state": {
-                "id": "bX3L5P8KYe3",
-                "state": null
-            },
-            "send_heartbeat": false
-        }
-        ],
-        "objects": [
-            {
-                "id": "object 1",
-                "state": "ruff"
-            },
-            {
-                "id": "object 2",
-                "state": "ruff"
-            },
-            {
-                "id": "object 3",
-                "state": "ruff2"
-            },
-            {
-                "id": "object 4",
-                "state": "ruff2"
-            }
-        ],
-        "session_start_time": "2023-06-22 21:54:40.938308 UTC"
-    },
-    {
-        "id": "331a49ba-b2e8-49ae-bbd6-190e0f4de984",
-        "name": "Session 2",
-        "users": [
-          {
-              "state": {
-                  "id": "bX3L5P8KYe1",
-                  "state": null
-              },
-              "send_heartbeat": false
-          },
-          {
-            "state": {
-                "id": "bX3L5P8KYe2",
-                "state": null
-            },
-            "send_heartbeat": false
-        },
-        {
-          "state": {
-              "id": "bX3L5P8KYe3",
-              "state": null
-          },
-          "send_heartbeat": false
-      }
-      ],
-      "objects": [
-          {
-              "id": "object 1",
-              "state": "ruff"
-          },
-          {
-              "id": "object 2",
-              "state": "ruff"
-          },
-          {
-              "id": "object 3",
-              "state": "ruff2"
-          },
-          {
-              "id": "object 4",
-              "state": "ruff2"
-          }
-      ],
-        "session_start_time": "2023-06-22 22:33:48.201260 UTC"
-    },
-    {
-      "id": "331a49ba-b2e8-49ae-bbd6-190e0f4de985",
-      "name": "Session 2",
-      "users": [
-        {
-            "state": {
-                "id": "bX3L5P8KYe1",
-                "state": null
-            },
-            "send_heartbeat": false
-        },
-        {
-          "state": {
-              "id": "bX3L5P8KYe2",
-              "state": null
-          },
-          "send_heartbeat": false
-      },
-      {
-        "state": {
-            "id": "bX3L5P8KYe3",
-            "state": null
-        },
-        "send_heartbeat": false
-    }
-    ],
-    "objects": [
-        {
-            "id": "object 1",
-            "state": "ruff"
-        },
-        {
-            "id": "object 2",
-            "state": "ruff"
-        },
-        {
-            "id": "object 3",
-            "state": "ruff2"
-        },
-        {
-            "id": "object 4",
-            "state": "ruff2"
-        }
-    ],
-      "session_start_time": "2023-06-22 22:33:48.201260 UTC"
-  }
-]
- let test1=[{"id":"1", "properties":{"id":"1","description": "This is a user description", "name": "section 1"}},{"id":"2", "properties":{"id":"2","description": "This is a user description", "name": "section 2"}},{"id":"3", "properties":{"id":"3","description": "This is a user description", "name": "section 3"}}]
-  useEffect(() => {
-    async function getNodes() {
-      dispatch(appStateActions.setContainerId(container));
-
-      await axios.get ( `${host}/containers/${container}/graphs/tags/${tagId}/nodes`,
+  
+   useEffect(() => {
+    const fetchSessions = async () => {
+      await axios.get ( `${host}/containers/${container}/serval/sessions`,
         {
           headers: {
             Authorization: `bearer ${token}`
+            
           }
         }).then (
           (response: any) => {
-            console.log(response)
-            setNodes(queryFilterData(searchQuery, response.data.value));
+            console.log(response.data)
+            const parsedValue = JSON.parse(response.data.value);
+            console.log(parsedValue)
+            setSessionsData(parsedValue);
+          
           }
         )
-    }
-    if(tagId && query) {
-      getNodes();
-    }
-  }, [query, tagId]);
-
-   useEffect(() => {
-    const fetchSessions = async () => {
-      // try {
-      //   const response = await axios.get(`https://serval.azuredev.inl.gov/containers/${1}/sessions`);
-      //   console.log(response.data)
-      //   setSessionsData(response.data);
-      // } catch (error) {
-      //   console.error('Error fetching sessions', error);
-      // }
-      await axios
-      .get(`https://serval.azuredev.inl.gov/containers/${1}/sessions`)
-      .then((response: any) => {
-        console.log(response)
-        // let tags = response.data.value;
-        // tags.forEach((record: any) => {
-        //   if (record.tag_name == tag) {
-        //     dispatch(appStateActions.setTagId(record.id));
-        //   }
-        // });
-      });
     };
   
     fetchSessions();
@@ -330,12 +165,6 @@ const DrawerLeft: React.FC<Props> = ({}) => {
       icon: SettingsIcon,
       pane: 'settings'
     },
-    // {
-    //   title: 'Users',
-    //   icon: GroupIcon,
-    //   pane: 'userList'
-    // }
-    // ,
     {
       title: 'Sections',
       icon: GroupIcon,
@@ -344,7 +173,6 @@ const DrawerLeft: React.FC<Props> = ({}) => {
   ]
 
   const handleSelectMenuLink = (selectedLink: string) => {
-    // console.log(selectedAssetObject)
     setSelected(selectedLink);
     if (openDrawerLeftState === false) {
       dispatch(appStateActions.toggleDrawerLeft());
@@ -524,7 +352,7 @@ const DrawerLeft: React.FC<Props> = ({}) => {
           {selected === 'sectionList' && 
              <>
              {/* sessionsData */}
-             {(Object.keys(selectedAssetObject).length === 0) && <DrawerContentsSectionList data={sessionsData} /> } <div className='m-2'>
+             {(Object.keys(selectedAssetObject).length === 0) && <DrawerContentsSectionList data={test123} /> } <div className='m-2'>
               <Box sx={{ position: 'absolute', right: '0px', paddingRight: '16px' }}>
                 <ButtonIconText text='Back To List' handleClick={() => handleDeselectAssetObject()} type="close" color="error" />
               </Box>

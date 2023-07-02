@@ -21,11 +21,8 @@ import {
   TextField,
 } from '@mui/material';
 import Menu, { MenuProps } from '@mui/material/Menu';
-import Divider from '@mui/material/Divider';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 // MUI Icons
-import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 // Styles
 import { styled, alpha } from '@mui/material/styles';
@@ -80,7 +77,7 @@ const PlayerList: React.FC<Props> = ({ data }) => {
  const nodeList = data;
 
   const [selectedPlayer, setSelectedPlayer] = React.useState<any>(null);
-  const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
+  // const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
 
   const dispatch = useAppDispatch();
 
@@ -91,65 +88,50 @@ const PlayerList: React.FC<Props> = ({ data }) => {
   const openDrawerLeftWidth: openDrawerLeftWidth = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);
 
   const [selected, setSelected] = React.useState<string | false>(false);
+  const host: string = useAppSelector((state: any) => state.appState.host);
+  const token: string = useAppSelector((state: any) => state.appState.token);
+  const container: string = useAppSelector((state: any) => state.appState.container);
 
-  useEffect(() => {
-    const fetchSessions = async () => {
-      try {
-        const response = await axios.get(`http://0.0.0.0:8091/containers/${1}/sessions`);
-        console.log(response.data);
-      } catch (error) {
-        console.error('Error fetching sessions', error);
-      }
-    };
-  
-    fetchSessions();
-  }, []);
-  const handleDelete = () => {
-    if (selectedPlayer) {
-      const deletePlayer = async () => {
-        try {
-          const response = await axios.delete(`http://0.0.0.0:8091/containers/${1}/users/${selectedPlayer.id}`);
-          console.log(response.data);
-        } catch (error) {
-          console.error('Error deleting player', error);
-        }
-      };
+   // Selected Asset Object
+   type selectedAssetObject = any;
+  const selectedAssetObject: selectedAssetObject = useAppSelector((state: any) => state.appState.selectedAssetObject);
 
-      deletePlayer();
-      setSelectedPlayer(null);
-    }
-    setDeleteModalOpen(false);
-  };
-  const handleOpenDeleteModal = (player: any) => {
-    setSelectedPlayer(player);
-    setDeleteModalOpen(true);
-  };
-
-  const handleCloseDeleteModal = () => {
-    setSelectedPlayer(null);
-    setDeleteModalOpen(false);
-  };
-
-  // Handle edit
-  const [editModalOpen, setEditModalOpen] = React.useState(false);
-  const [editedPlayer, setEditedPlayer] = React.useState<{ id: string; name: string; description: string }>({
-    id: '',
-    name: '',
-    description: '',
-  });
+   // Menu
+   const [anchorEl, setAnchorEl] = React.useState<any>(null);
+   const open = Boolean(anchorEl);
  
-
-  // Menu
-  const [anchorEl, setAnchorEl] = React.useState<any>(null);
-  const open = Boolean(anchorEl);
-
-  const handleClick = (index: number, event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl({ [index]: event.currentTarget });
+   const handleClose = () => {
+     setAnchorEl(null);
+   };
+  
+  // Delete session 
+  const [openDeleteModal, setOpenDeleteModal] = React.useState<boolean>(false);
+  const handleOpenDeleteModal = (player: any) => {
+    console.log(player.state.id)
+    setSelectedPlayer(player);
+    setOpenDeleteModal(true);
   };
-
-  const handleClose = () => {
-    setAnchorEl(null);
+  const handleCloseDeleteModal = () => {
+    setOpenDeleteModal(false); 
   };
+  
+const handleDeleteSession = async (sessionId: string) => {
+  try {
+    await axios.delete(`${host}/containers/${container}/serval/sessions/${selectedAssetObject.id}/players/${selectedPlayer.state.id}`, {
+      headers: {
+        Authorization: `bearer ${token}`
+      },
+    }).then (
+      (response: any) => {
+        dispatch(appStateActions.removePlayer({ sessionId: selectedAssetObject.id, playerId: selectedPlayer.state.id }));
+        handleCloseDeleteModal();
+      })
+   
+  } catch (error) {
+    console.error('There was an error!', error);
+  }
+};
+
 
   return (
     <>
@@ -157,10 +139,34 @@ const PlayerList: React.FC<Props> = ({ data }) => {
         <Box sx={{ borderRight: `1px solid ${COLORS.colorDarkgray2}`, paddingRight: '6px', marginRight: '6px' }}>
           Id
         </Box>
-        {/* <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          Player Name
-        </Box> */}
       </Box>
+      <Modal open={openDeleteModal} onClose={handleCloseDeleteModal} disableEnforceFocus>
+      <div
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 400,
+          backgroundColor: 'white',
+          border: '2px solid black',
+          boxShadow: '24px',
+          padding: '16px',
+        }}
+      >
+        <h5>Delete Player</h5>
+        <p>Are you sure you want to delete this player?</p>
+        <Button
+          variant="contained"
+          disableElevation
+          onClick={() => handleDeleteSession(selectedPlayer.id)}
+          size="small"
+          style={{ marginTop: '16px' }}
+        >
+          Delete
+        </Button>
+      </div>
+    </Modal>
       <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0', borderTop: `1px solid ${COLORS.colorDarkgray}` }}>
         <List dense sx={{ paddingTop: '0' }}>
           {nodeList.users.map((object: any, index: number) => (
@@ -178,22 +184,24 @@ const PlayerList: React.FC<Props> = ({ data }) => {
                     aria-expanded={open ? 'true' : undefined}
                     variant="contained"
                     disableElevation
-                    onClick={(e) => handleClick(index, e)}
-                    endIcon={<KeyboardArrowDownIcon />}
                     size="small"
                     sx={{
                       color: 'white',
-                      padding: '0px 4px 0 8px',
+                      padding: '0px 4px 0 4px',
+                      marginLeft: 'auto',
                       '& span': {
                         fontSize: '14px',
                         marginBottom: '1px',
                         '&:first-of-type': {
-                          marginRight: '-6px',
+                          marginRight: '-6px'
                         },
-                      },
+                      }
                     }}
                   >
-                    <span>Actions</span>
+                    <MenuItem onClick={() => handleOpenDeleteModal(object)} disableRipple>
+                      <DeleteIcon />
+                      Delete
+                    </MenuItem>
                   </Button>
                   <StyledMenu
                     id="customized-menu"
@@ -204,7 +212,7 @@ const PlayerList: React.FC<Props> = ({ data }) => {
                     open={Boolean(anchorEl && anchorEl[index])}
                     onClose={handleClose}
                   >
-                    <MenuItem onClick={() => handleOpenDeleteModal(object)} disableRipple>
+                     <MenuItem onClick={() => handleOpenDeleteModal(object)} disableRipple>
                       <DeleteIcon />
                       Delete
                     </MenuItem>
@@ -238,41 +246,6 @@ const PlayerList: React.FC<Props> = ({ data }) => {
           ))}
         </List>
       </Box>
-      <Box>
-        <Modal
-          open={deleteModalOpen}
-          onClose={handleCloseDeleteModal}
-          aria-labelledby="delete-modal-title"
-          aria-describedby="delete-modal-description"
-        >
-          <Box
-            sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: 400,
-              bgcolor: 'background.paper',
-              border: '2px solid #000',
-              boxShadow: 24,
-              p: 4,
-            }}
-          >
-            <Typography id="delete-modal-title" variant="h6">
-              Are you sure you want to delete this player?
-            </Typography>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-              <Button onClick={handleCloseDeleteModal} color="primary">
-                Cancel
-              </Button>
-              <Button onClick={handleDelete} color="error">
-                Delete
-              </Button>
-            </Box>
-          </Box>
-        </Modal>
-      </Box>
-     
     </>
   );
 };
