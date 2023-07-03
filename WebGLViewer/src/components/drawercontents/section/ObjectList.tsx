@@ -79,7 +79,13 @@ const ObjectList: React.FC<Props> = ({
   data
 
 }) => {
-const nodeList = data;
+// const nodeList = data;
+const [nodeList, setNodeList] = React.useState(data);
+// const [nodeList, setNodeList] = React.useState<any[]>([]);
+// React.useEffect(() => {
+//   setNodeList(data);
+// }, [data]);
+
 const dispatch = useAppDispatch();
 
   type openDrawerLeftState = boolean;
@@ -130,13 +136,19 @@ const dispatch = useAppDispatch();
   
 const handleDeleteSession = async (sessionId: string) => {
   try {
-    await axios.delete(`${host}/containers/${container}/serval/sessions/${selectedAssetObject.id}/players/${selectedObject.id}`, {
+    await axios.delete(`${host}/containers/${container}/serval/sessions/${selectedAssetObject.id}/objects/${selectedObject.id}`, {
       headers: {
         Authorization: `bearer ${token}`
       },
     }).then (
       (response: any) => {
-        // dispatch(appStateActions.removePlayer({ sessionId: selectedAssetObject.id, playerId: selectedObject.state.id }));
+        dispatch(appStateActions.removeObject({ sessionId: selectedAssetObject.id, playerId: selectedObject.state.id }));
+        // / Update the object list by filtering out the deleted object
+        const updatedObjectList = nodeList.objects.filter((object:any) => object.id !== selectedObject.id);
+        setNodeList((prevNodeList: any) => ({
+          ...prevNodeList,
+          objects: updatedObjectList,
+        }));
         handleCloseDeleteModal();
       })
    

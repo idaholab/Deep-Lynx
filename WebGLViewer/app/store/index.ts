@@ -72,16 +72,26 @@ const appStateSlice = createSlice({
       store.sessions.push(action.payload);;
     },
 
-     // Delete player
-     removePlayer: (state, action) => {
+     // Delete object
+     removeObject: (state, action) => {
       const store = state;
       store.sessions = state.sessions.map(session => {
         if (session.id === action.payload.sessionId) {
-          session.players = session.players.filter((player:any) => player.id !== action.payload.playerId);
+          session.object = session.object.filter((object:any) => object.id !== action.payload.playerId);
         }
         return session;
       });
     },
+       // Delete player
+       removePlayer: (state, action) => {
+        const store = state;
+        store.sessions = state.sessions.map(session => {
+          if (session.id === action.payload.sessionId) {
+            session.players = session.players.filter((player:any) => player.state.id !== action.payload.playerId);
+          }
+          return session;
+        });
+      },
     // Refactor Reducers End
     // App functions
     toggleDrawerLeft: (state) => {

@@ -74,8 +74,8 @@ type Props = {
 };
 
 const PlayerList: React.FC<Props> = ({ data }) => {
- const nodeList = data;
-
+//  const nodeList = data;
+ const [nodeList, setNodeList] = React.useState(data);
   const [selectedPlayer, setSelectedPlayer] = React.useState<any>(null);
   // const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
 
@@ -114,7 +114,10 @@ const PlayerList: React.FC<Props> = ({ data }) => {
   const handleCloseDeleteModal = () => {
     setOpenDeleteModal(false); 
   };
-  
+  // Replace this with your actual sessions state
+  const sessions = useAppSelector(state => state.appState.sessions); 
+  const currentSession = sessions.find(session => session.id === selectedAssetObject.id);
+  const players = currentSession ? currentSession.players : [];
 const handleDeleteSession = async (sessionId: string) => {
   try {
     await axios.delete(`${host}/containers/${container}/serval/sessions/${selectedAssetObject.id}/players/${selectedPlayer.state.id}`, {
@@ -123,7 +126,16 @@ const handleDeleteSession = async (sessionId: string) => {
       },
     }).then (
       (response: any) => {
+        console.log(response)
         dispatch(appStateActions.removePlayer({ sessionId: selectedAssetObject.id, playerId: selectedPlayer.state.id }));
+        // const updatePlayerList = nodeList.users.filter((player:any) => player.id !== selectedPlayer.state.id);
+        const updatePlayerList = nodeList.users.filter((player: any) => player.state.id !== selectedPlayer.state.id);
+
+
+        setNodeList((prevNodeList: any) => ({
+          ...prevNodeList,
+          users: updatePlayerList,
+        }));
         handleCloseDeleteModal();
       })
    
@@ -159,7 +171,7 @@ const handleDeleteSession = async (sessionId: string) => {
         <Button
           variant="contained"
           disableElevation
-          onClick={() => handleDeleteSession(selectedPlayer.id)}
+          onClick={() => handleDeleteSession(selectedPlayer.state.id)}
           size="small"
           style={{ marginTop: '16px' }}
         >

@@ -98,7 +98,7 @@ const DrawerLeft: React.FC<Props> = ({}) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [nodes, setNodes] = useState(Array<{ [key: string]: any; }>);
   const [sessionsData, setSessionsData] = useState([]);
-  
+
    useEffect(() => {
     const fetchSessions = async () => {
       await axios.get ( `${host}/containers/${container}/serval/sessions`,
@@ -352,7 +352,7 @@ const DrawerLeft: React.FC<Props> = ({}) => {
           {selected === 'sectionList' && 
              <>
              {/* sessionsData */}
-             {(Object.keys(selectedAssetObject).length === 0) && <DrawerContentsSectionList data={test123} /> } <div className='m-2'>
+             {(Object.keys(selectedAssetObject).length === 0) && <DrawerContentsSectionList data={sessionsData} /> } <div className='m-2'>
               <Box sx={{ position: 'absolute', right: '0px', paddingRight: '16px' }}>
                 <ButtonIconText text='Back To List' handleClick={() => handleDeselectAssetObject()} type="close" color="error" />
               </Box>
