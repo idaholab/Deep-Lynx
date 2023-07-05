@@ -129,35 +129,6 @@
                       ></v-select>
                     </v-col>
 
-                    <!-- created at -->
-                    <v-col cols="12" md="6" lg="4">
-                      <v-autocomplete
-                          :items="payloadKeys"
-                          v-model="createdAt"
-                          item-text="name"
-                          :label="$t('general.createdAt')"
-                          clearable
-                      >
-                        <template slot="append-outer">
-                          <info-tooltip :message="$t('help.createdAtMapping')"></info-tooltip>
-                        </template>
-                      </v-autocomplete>
-                    </v-col>
-
-                    <v-col cols="12" md="6" lg="4" v-if="createdAt">
-                      <v-text-field
-                          :label="$t('general.createdAtFormatString')"
-                          v-model="createdAtFormatString"
-                          :rules="[v => !v.includes('%') || $t('help.postgresDate')]"
-                      >
-                        <template slot="append-outer">
-                          <a :href=dateString() target="_blank">
-                            {{$t('help.dateFormatStringSmall')}}
-                          </a>
-                        </template>
-                      </v-text-field>
-                    </v-col>
-
                     <!-- node -->
                     <template v-if="payloadType === 'node'">
                       <v-col cols="12" md="6" lg="4">
@@ -206,6 +177,36 @@
                             </template>
                           </v-combobox>
                         </v-col>
+
+                        <!-- created at -->
+                        <v-col cols="12" md="6" lg="4">
+                          <v-autocomplete
+                              :items="payloadKeys"
+                              v-model="createdAt"
+                              item-text="name"
+                              :label="$t('general.createdAt')"
+                              clearable
+                          >
+                            <template slot="append-outer">
+                              <info-tooltip :message="$t('help.createdAtMapping')"></info-tooltip>
+                            </template>
+                          </v-autocomplete>
+                        </v-col>
+
+                        <v-col cols="12" md="6" lg="4" v-if="createdAt">
+                          <v-text-field
+                              :label="$t('general.createdAtFormatString')"
+                              v-model="createdAtFormatString"
+                              :rules="[v => !v.includes('%') || $t('help.postgresDate')]"
+                          >
+                            <template slot="append-outer">
+                              <a :href=dateString() target="_blank">
+                                {{$t('help.dateFormatStringSmall')}}
+                              </a>
+                            </template>
+                          </v-text-field>
+                        </v-col>
+
                         <v-col cols="12" md="6" lg="4" v-if="keysLoading">
                           <v-progress-linear
                               indeterminate
