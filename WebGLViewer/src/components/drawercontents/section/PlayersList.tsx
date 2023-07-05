@@ -126,7 +126,6 @@ const handleDeleteSession = async (sessionId: string) => {
       },
     }).then (
       (response: any) => {
-        console.log(response)
         dispatch(appStateActions.removePlayer({ sessionId: selectedAssetObject.id, playerId: selectedPlayer.state.id }));
         // const updatePlayerList = nodeList.users.filter((player:any) => player.id !== selectedPlayer.state.id);
         const updatePlayerList = nodeList.users.filter((player: any) => player.state.id !== selectedPlayer.state.id);

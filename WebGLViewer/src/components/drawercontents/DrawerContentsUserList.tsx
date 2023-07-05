@@ -81,7 +81,6 @@ const DrawerContentsUserList: React.FC<Props> = ({
   data
 }) => {
   const nodeList = data;
-  console.log(nodeList)
   const dispatch = useAppDispatch();
 
   type openDrawerLeftState = boolean;

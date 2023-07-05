@@ -33,7 +33,6 @@ const SectionInfoMainTabs: React.FC<Props> = ({
   data
 }) => {
   const [value, setValue] = React.useState(0);
-  console.log(data)
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };

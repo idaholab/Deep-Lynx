@@ -126,7 +126,6 @@ const dispatch = useAppDispatch();
   const [openDeleteModal, setOpenDeleteModal] = React.useState<boolean>(false);
   const [selectedObject, setSelectedObject] = React.useState<any>(null);
   const handleOpenDeleteModal = (object: any) => {
-    console.log(object.id)
     setSelectedObject(object);
     setOpenDeleteModal(true);
   };

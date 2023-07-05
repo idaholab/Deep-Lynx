@@ -141,10 +141,13 @@ const handleCloseModal = () => {
 };
 
 const handleSessionNameChange = (event:any) => {
-  event.preventDefault()
+  // event.preventDefault()
   console.log(event.target.value)
   setSessionName(event.target.value);
 };
+React.useEffect(() => {
+  console.log('sessionName has changed:', sessionName);
+}, [sessionName]);
 
 const handleAddSession = async () => {
   dispatch(appStateActions.setContainerId(container));
@@ -252,12 +255,18 @@ const handleDeleteSession = async (sessionId: string) => {
             padding: '16px',
           }}
         >
-        <TextField
+        {/* <TextField
         className='col-12'
           id="session-name"
           value={sessionName}
           onChange={handleSessionNameChange}
-        />
+        /> */}
+      <input
+        className='col-12'
+        id="session-name"
+        value={sessionName}
+        onChange={handleSessionNameChange}
+      />
           <Button
           className='col-6'
             variant="contained"

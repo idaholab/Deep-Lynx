@@ -109,11 +109,14 @@ const DrawerLeft: React.FC<Props> = ({}) => {
           }
         }).then (
           (response: any) => {
-            console.log(response.data)
+            if (response.data.value.length === 0) {
+              setSessionsData([]); // Set sessionsData to an empty array
+            } else {
             const parsedValue = JSON.parse(response.data.value);
-            console.log(parsedValue)
             setSessionsData(parsedValue);
           
+            }
+           
           }
         )
     };
