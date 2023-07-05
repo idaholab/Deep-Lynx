@@ -363,12 +363,12 @@ const DrawerLeft: React.FC<Props> = ({}) => {
             {selected === 'sectionList' && 
               <>
               {/* sessionsData */}
-              {(Object.keys(selectedAssetObject).length === 0) && <DrawerContentsSectionList data={sessionsData} /> } <div className='m-2'>
+              {/* {(Object.keys(selectedAssetObject).length === 0) && <DrawerContentsSectionList data={sessionsData} /> } <div className='m-2'>
                 <Box sx={{ position: 'absolute', right: '0px', paddingRight: '16px' }}>
                   <ButtonIconText text='Back To List' handleClick={() => handleDeselectAssetObject()} type="close" color="error" />
                 </Box>
                   </div> 
-              {(Object.keys(selectedAssetObject).length !== 0) && <DrawerContentsSectionInfo />}
+              {(Object.keys(selectedAssetObject).length !== 0) && <DrawerContentsSectionInfo />} */}
             </>
             }
           </Box>

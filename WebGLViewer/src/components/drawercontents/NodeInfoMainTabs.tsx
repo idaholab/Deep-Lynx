@@ -30,7 +30,6 @@ type Props = {
 const NodeInfoMainTabs: React.FC<Props> = ({
   selectedAssetObject
 }) => {
-  console.log(data)
   const [value, setValue] = React.useState(0);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
