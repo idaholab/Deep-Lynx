@@ -14,9 +14,11 @@ import Config from '@/config';
 import ErrorBanner from '@/components/general/errorBanner.vue';
 import SuccessBanner from '@/components/general/successBanner.vue';
 import InfoTooltip from '@/components/general/infoTooltip.vue';
-import VueObserveVisibility from 'vue-observe-visibility'
+import VueObserveVisibility from 'vue-observe-visibility';
 // @ts-ignore
 import JsonViewer from 'vue-json-viewer';
+import '@fontsource/montserrat';
+import '@mdi/font/css/materialdesignicons.css'
 
 Vue.config.productionTip = false;
 Vue.config.devtools = true;

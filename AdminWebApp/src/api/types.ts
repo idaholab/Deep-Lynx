@@ -491,6 +491,8 @@ export type TypeMappingTransformationT = {
     archived: boolean;
     origin_parameters?: EdgeConfigKeyT[];
     destination_parameters?: EdgeConfigKeyT[];
+    created_at_key?: string;
+    created_at_format_string?: string;
 };
 
 export type TypeMappingTransformationPayloadT = {
@@ -507,6 +509,8 @@ export type TypeMappingTransformationPayloadT = {
     on_conflict?: 'create' | 'update' | 'ignore';
     keys: TypeMappingTransformationKeyMapping[];
     type_mapping_id: string;
+    created_at_key?: string;
+    created_at_format_string?: string;
 };
 
 export type TypeMappingUpgradePayloadT = {

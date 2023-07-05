@@ -7,6 +7,7 @@ import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/p
 import DataSourceRepository from '../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import {parentPort} from 'worker_threads';
 import BackedLogger from '../services/logger';
+process.setMaxListeners(0);
 
 // handle cache clears from parent IF memory cache
 if (Config.cache_provider === 'memory') {
@@ -28,7 +29,6 @@ process.on('unhandledRejection', (reason, promise) => {
     process.exit(1);
 });
 
-process.setMaxListeners(100);
 void PostgresAdapter.Instance.init()
     .then(() => {
         const dataSourceRepo = new DataSourceRepository();
@@ -51,12 +51,12 @@ void PostgresAdapter.Instance.init()
                                 source.value
                                     .Run()
                                     .catch((e) => {
-                                        Logger.error(`unable to process event from queue ${e}`);
+                                        Logger.error(`unable to process data source ${source.value.DataSourceRecord?.id} from queue ${e}`);
                                     })
                                     .finally(() => void Cache.set(`data_sources_queue_${chunk}`, {}, 6000));
                             })
                             .catch((e) => {
-                                Logger.error(`unable to process event from queue ${e}`);
+                                Logger.error(`unable to process data source ${chunk as string} from queue ${e}`);
                                 callback();
                             });
 

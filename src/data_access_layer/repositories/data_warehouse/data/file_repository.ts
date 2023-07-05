@@ -22,7 +22,7 @@ export default class FileRepository extends Repository implements RepositoryInte
     #mapper: FileMapper = FileMapper.Instance;
     #eventRepo: EventRepository = new EventRepository();
 
-    delete(f: File): Promise<Result<boolean>> {
+    async delete(f: File): Promise<Result<boolean>> {
         if (f.adapter) {
             const blobStorage = BlobStorageProvider(f.adapter);
             blobStorage?.deleteFile(f).then((result) => {
@@ -33,7 +33,12 @@ export default class FileRepository extends Repository implements RepositoryInte
         }
 
         if (f.id) {
-            return this.#mapper.Delete(f.id);
+            const detached = await this.#mapper.DetachFileFromNodes(f.id);
+            if (detached.isError) {
+                return Promise.resolve(Result.Failure(`unable to detach file from nodes`));
+            } else {
+                return this.#mapper.Delete(f.id);
+            }
         }
 
         return Promise.resolve(Result.Failure(`file must have id`));

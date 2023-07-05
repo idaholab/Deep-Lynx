@@ -152,6 +152,7 @@ jobs:
           SAML_ADFS_PUBLIC_CERT_PATH: ${{ secrets.SAML_ADFS_PUBLIC_CERT_PATH }}
           SAML_ADFS_CLAIMS_EMAIL: ${{ secrets.SAML_ADFS_CLAIMS_EMAIL }}
           SAML_ADFS_CLAIMS_NAME: ${{ secrets.SAML_ADFS_CLAIMS_NAME }}
+          SERVAL_URL: ${{secrets.SERVAL_URL}}
           PROCESS_QUEUE_NAME: ${{ secrets.PROCESS_QUEUE_NAME }}
           EVENTS_QUEUE_NAME: ${{ secrets.EVENTS_QUEUE_NAME }}
           DATA_SOURCES_QUEUE_NAME: ${{ secrets.DATA_SOURCES_QUEUE_NAME }}

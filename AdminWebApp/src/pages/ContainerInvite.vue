@@ -58,53 +58,57 @@
 </template>
 
 <script lang="ts">
-  import {Component, Vue} from 'vue-property-decorator'
+  import Vue from 'vue'
   import LanguageSelect from '@/components/general/languageSelect.vue'
 
-  @Component({components: {
-    LanguageSelect,
-  }})
-  export default class ContainerInvite extends Vue {
-    successMessage = ""
-    password = ""
-    errorMessage = ""
-    formValid = false
-    inviteSuccessful = false
-    successful = false
-    show1 = false
-    expired = false
-    loading = false
-    email = ""
-    name = ""
+  export default Vue.extend ({
+    name: 'ContainerInvite',
 
-    emailRules() {
-      return [
-        (v: any) => !v || /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v) || this.$t('validation.validEmail')
-      ]
+    data() {
+      return {
+        successMessage: "",
+        password: "",
+        errorMessage: "",
+        formValid: false,
+        inviteSuccessful: false,
+        successful: false,
+        show1: false,
+        expired: false,
+        loading: false,
+        email: "",
+        name: "",
+      }
+    },
+
+    components: { LanguageSelect,  },
+
+    methods: {
+      emailRules() {
+        return [
+          (v: any) => !v || /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v) || this.$t('validation.validEmail')
+        ]
+      },
+      home() {
+        this.$router.push({name: 'Login'})
+      },
+      containerSelect() {
+        this.$router.push({name: 'ContainerSelect'})
+      },
+      acceptInvite() {
+        this.loading = true
+
+        this.$client.acceptContainerInvite(this.$route.query.token as string)
+        .then(() => {
+          this.loading = false
+          this.inviteSuccessful = true
+        })
+        .catch((e: any) => {
+          this.errorMessage = e
+          this.loading = false
+        })
+      }
     }
-
-    home() {
-      this.$router.push({name: 'Login'})
-    }
-
-    containerSelect() {
-      this.$router.push({name: 'ContainerSelect'})
-    }
-
-    acceptInvite() {
-      this.loading = true
-
-      this.$client.acceptContainerInvite(this.$route.query.token as string)
-      .then(() => {
-        this.loading = false
-        this.inviteSuccessful = true
-      })
-      .catch((e: any) => {
-        this.errorMessage = e
-        this.loading = false
-      })
-    }
-  }
+  })
 </script>
 
 <style lang="scss" scoped>

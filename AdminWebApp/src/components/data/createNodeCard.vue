@@ -11,76 +11,91 @@
                 ref="form"
                 v-model="valid"
             >
-                <v-autocomplete
-                    v-model="metatype"
-                    :rules="[v => !!v || $t('validation.required')]"
-                    :single-line="false"
-                    :loading="metatypesLoading"
-                    :items="originMetatypes"
-                    :search-input.sync="originSearch"
-                    item-text="name"
-                    return-object
-                    persistent-hint
-                    required
-                    clearable
-                >
+              <v-autocomplete
+                  v-model="metatype"
+                  :rules="[v => !!v || $t('validation.required')]"
+                  :single-line="false"
+                  :loading="metatypesLoading"
+                  :items="originMetatypes"
+                  :search-input.sync="originSearch"
+                  item-text="name"
+                  return-object
+                  persistent-hint
+                  required
+                  clearable
+              >
                 <template v-slot:label>{{$t('classes.class')}} <small style="color:red" >*</small></template>
-                </v-autocomplete>
-                <v-col :cols="12" v-if="metatype && Object.keys(metatype).length !== 0">
-                <v-checkbox
-                    v-model="optional"
-                    :label="$t('general.showOptional')"
-                ></v-checkbox>
+              </v-autocomplete>
+              <div v-if="metatype && Object.keys(metatype).length !== 0">
                 <v-col :cols="12">
-                    <v-data-table
-                        :items="metatype.keys"
-                        :disable-pagination="true"
-                        :hide-default-footer="true"
-                        v-if="optional === true"
-                    >
-                    <template v-slot:[`item`]="{ item }">
-                        <div v-if="item['data_type'] === 'enumeration'">
-                          <v-combobox
-                              v-model="item['default_value']"
-                              :label="item['name']"
-                              :items="item['options']"
-                          ></v-combobox>
-                        </div>
+                  <v-checkbox
+                      v-model="optional"
+                      :label="$t('general.showOptional')"
+                  ></v-checkbox>
+                  <v-col :cols="12">
+                      <v-data-table
+                          :items="metatype.keys"
+                          :disable-pagination="true"
+                          :hide-default-footer="true"
+                          v-if="optional === true"
+                      >
+                      <template v-slot:[`item`]="{ item }">
+                          <div v-if="item['data_type'] === 'enumeration'">
+                            <v-combobox
+                                v-model="item['default_value']"
+                                :label="item['name']"
+                                :items="item['options']"
+                            ></v-combobox>
+                          </div>
 
-                        <div v-if="item['data_type'] === 'boolean'">
-                          <v-select
-                              v-model="item['default_value']"
-                              :label="item['name']"
-                              :items="booleanOptions"
-                          ></v-select>
-                        </div>
-                        <div v-if="item['data_type'] !== 'enumeration' && item['data_type'] !== 'boolean'">
-                          <v-text-field 
-                              v-if="item['data_type'] === 'number'||item['data_type'] === 'float'"
-                              v-model="item['default_value']"
-                              type="number"
-                              :label="item['name']"
-                          ></v-text-field>
-                          <v-text-field
-                              v-else
-                              v-model="item['default_value']"
-                              :label="item['name']"
-                              :disabled="item['data_type'] === 'file'"
-                          ></v-text-field>
-                        </div>
-                    </template>
-                    </v-data-table>
+                          <div v-if="item['data_type'] === 'boolean'">
+                            <v-select
+                                v-model="item['default_value']"
+                                :label="item['name']"
+                                :items="booleanOptions"
+                            ></v-select>
+                          </div>
+                          <div v-if="item['data_type'] !== 'enumeration' && item['data_type'] !== 'boolean'">
+                            <v-text-field
+                                v-if="item['data_type'] === 'number'||item['data_type'] === 'float'"
+                                v-model="item['default_value']"
+                                type="number"
+                                :label="item['name']"
+                            ></v-text-field>
+                            <v-text-field
+                                v-else
+                                v-model="item['default_value']"
+                                :label="item['name']"
+                                :disabled="item['data_type'] === 'file'"
+                            ></v-text-field>
+                          </div>
+                      </template>
+                      </v-data-table>
+                  </v-col>
                 </v-col>
+                <v-col :cols="12">
+                  <v-checkbox
+                      v-model="alterCreatedAt"
+                      :label="$t('general.alterCreatedAt')"
+                      v-observe-visibility="loadDatePickr"
+                  ></v-checkbox>
+                  <div  v-show="alterCreatedAt">
+                    <div class="d-block">
+                      <label for="createdAtDate" style="padding-right: 4px">{{$t('general.createdAt')}}: </label>
+                      <input type="text" :placeholder="$t('timeseries.selectDate')" id="createdAtDate" />
+                    </div>
+                  </div>
                 </v-col>
+              </div>
             </v-form>
             <p><span style="color:red">*</span> = {{$t('validation.required')}}</p>
             </v-col>
         </v-row>
         </v-card-text>
         <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn color="primary" text @click="close()" >{{$t("general.cancel")}}</v-btn>
-        <v-btn color="primary" text :disabled="!valid" @click="newNode()">{{$t("general.save")}}</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" text @click="close()" >{{$t("general.cancel")}}</v-btn>
+          <v-btn color="primary" text :disabled="!valid" @click="newNode()">{{$t("general.save")}}</v-btn>
         </v-card-actions>
     </v-card>
 </template>
@@ -88,6 +103,7 @@
 <script lang="ts">
 import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
 import {MetatypeT, PropertyT, NodeT, MetatypeKeyT} from "@/api/types";
+import flatpickr from "flatpickr";
 
 @Component
 export default class CreateNodeCard extends Vue {
@@ -97,22 +113,21 @@ export default class CreateNodeCard extends Vue {
   @Prop({required: true})
   dataSourceID!: string;
 
-  @Prop({required: false, default: false})
-  dialog!: boolean;
-
   errorMessage = ""
   metatypesLoading = false
   valid = false
   optional = false
   originSearch = ""
   metatype: any = {}
-  propertyValue = ""
   booleanOptions = [true, false]
 
   property = {}
 
   properties: PropertyT[] = []
   originMetatypes: MetatypeT[] = []
+
+  alterCreatedAt = false
+  createdAtDate = new Date().toISOString()
 
 
   @Watch('originSearch', {immediate: true})
@@ -128,24 +143,42 @@ export default class CreateNodeCard extends Vue {
   @Watch('metatype', {immediate: true})
   onMetatypeSelect(){
 
-    if (this.metatype?.id !== undefined && this.metatype?.id !== null)
+    if (this.metatype?.id !== undefined && this.metatype?.id !== null) {
       this.$client.listMetatypeKeys(this.containerID, this.metatype.id)
-      .then((keys) => {
-        this.metatype.keys = keys
-    })
+          .then((keys) => {
+            this.metatype.keys = keys
+          })
+    }
+  }
+
+  loadDatePickr() {
+    const createdAtPickr = flatpickr('#createdAtDate', {
+      altInput: true,
+      altFormat: 'F j, y h:i:S K',
+      dateFormat: 'Z',
+      enableTime: true,
+      enableSeconds: true,
+      allowInput: true,
+    }) as flatpickr.Instance;
+
+    (createdAtPickr as flatpickr.Instance).config.onChange.push((selectedDates, dateStr) => {
+      this.createdAtDate = dateStr;
+    });
+    (createdAtPickr as flatpickr.Instance).setDate(this.createdAtDate);
   }
 
   newNode() {
     if (this.metatype.id !== undefined && this.metatype.id !== null){
       this.setProperties()
-      this.$client.createOrUpdateNode(this.containerID,
-        {
-          "container_id": this.containerID,
-          "data_source_id": this.dataSourceID,
-          "metatype_id": this.metatype.id,
-          "properties": this.property,
-        }
-      )
+      const node: any = {
+        "container_id": this.containerID,
+        "data_source_id": this.dataSourceID,
+        "metatype_id": this.metatype.id,
+        "properties": this.property,
+      }
+      if (this.alterCreatedAt) node.created_at = this.createdAtDate
+
+      this.$client.createOrUpdateNode(this.containerID, node)
           .then((results: NodeT[]) => {
             const node = results[0]
             node.metatype_name = this.metatype.name
@@ -161,7 +194,7 @@ export default class CreateNodeCard extends Vue {
   setProperties() {
     const property: { [key: string]: any } = {}
     this.metatype.keys.forEach( (key: MetatypeKeyT) => {
-      
+
       if (String(key.default_value).toLowerCase() === "true") {
         key.default_value = true
       } else if (String(key.default_value).toLowerCase() === "false" ) {

@@ -87,7 +87,7 @@
             :dataImport="item" :icon="true"
             @dataImportDeleted="listImports"
           ></delete-data-import-dialog>
-          <reprocess-data-import-dialog v-if="activeTab === 'dataSources'"
+          <reprocess-data-import-dialog v-if="activeTab === 'datasources'"
             :containerID="containerID"
             :dataImport="item"
             :icon="true"
@@ -271,7 +271,7 @@ export default class DataImports extends Vue {
   headers() {
     const headers = [
       {
-        text: this.$t('general.createdAt'),
+        text: this.$t('general.dateCreated'),
         value: "created_at",
       },
       {
@@ -317,7 +317,7 @@ export default class DataImports extends Vue {
       value: "id",
     },
       {
-        text: this.$t('general.createdAt'),
+        text: this.$t('general.dateCreated'),
         value: "created_at",
       },
       {

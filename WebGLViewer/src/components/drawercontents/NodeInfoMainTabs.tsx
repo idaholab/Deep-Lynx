@@ -12,7 +12,7 @@ import {
 import NodeInfoDetailsHistory from '../drawercontents/nodeinfo/NodeInfoDetailsHistory';
 import NodeInfoPropsMeta from '../drawercontents/nodeinfo/NodeInfoPropsMeta';
 import NodeInfoTimeSeries from '../drawercontents/nodeinfo/NodeInfoTimeSeries';
-import NodeInfoNearbyNodes from '../drawercontents/nodeinfo/NodeInfoNearbyNodes';
+import NodeInfoLinkedInformation from './nodeinfo/NodeInfoLinkedInformation';
 import NodeInfoFiles from '../drawercontents/nodeinfo/NodeInfoFiles';
 import NodeInfoTags from '../drawercontents/nodeinfo/NodeInfoTags';
 
@@ -24,11 +24,11 @@ function a11yProps(index: number) {
 }
 
 type Props = {
-  data: object;
+  selectedAssetObject: object;
 };
 
 const NodeInfoMainTabs: React.FC<Props> = ({
-  data
+  selectedAssetObject
 }) => {
   console.log(data)
   const [value, setValue] = React.useState(0);
@@ -39,7 +39,7 @@ const NodeInfoMainTabs: React.FC<Props> = ({
 
   const tabInfo = [
     {
-      title: 'Information',
+      title: 'Info',
       component: NodeInfoDetailsHistory
     },
     {
@@ -51,8 +51,8 @@ const NodeInfoMainTabs: React.FC<Props> = ({
       component: NodeInfoTimeSeries
     },
     {
-      title: 'Nearby Nodes',
-      component: NodeInfoNearbyNodes
+      title: 'Linked Info',
+      component: NodeInfoLinkedInformation
     },
     {
       title: 'Attached Files',
@@ -121,7 +121,7 @@ const NodeInfoMainTabs: React.FC<Props> = ({
           >
             {value === index && (
               <Box sx={{ p: 0, background: 'white', display: 'flex', flex: '1 0 100%', flexDirection: 'column', marginTop: '-1px', padding: '16px' }}>
-                <DynamicTag data={data} />
+                <DynamicTag selectedAssetObject={selectedAssetObject} />
               </Box>
             )}
           </Box>

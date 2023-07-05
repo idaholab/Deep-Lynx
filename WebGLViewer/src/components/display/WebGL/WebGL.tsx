@@ -10,18 +10,31 @@ import { useAppSelector, useAppDispatch } from '../../../../app/hooks/reduxTypes
 // Material
 import {
   Box,
+  CircularProgress,
+  Typography
 } from "@mui/material";
 
 // Components 
 import UnityInstance from "./UnityInstance";
+
+// Types
+import { WebGLFile, WebGLFileset } from '../../../helpers/types';
 
 export default function WebGL() {
 
   // DeepLynx
   const host: string = useAppSelector((state: any) => state.appState.host);
   const token: string = useAppSelector((state: any) => state.appState.token);
-  const metadata: string = useAppSelector((state: any) => state.appState.metadata);
+  const metadata: WebGLFileset = useAppSelector((state: any) => state.appState.metadata);
   const query: boolean = useAppSelector((state: any) => state.appState.query);
+
+  // Loaded State for Progress Loader
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  const handleLoadedState = (isLoaded: boolean) => {
+    setIsLoaded(isLoaded);
+    console.log("in webgl", isLoaded)
+  } 
   
   // WebGL Urls
   const [loaderUrl, setLoaderUrl] = useState<URL>();
@@ -35,17 +48,18 @@ export default function WebGL() {
 
   useEffect(() => {
     async function query() {
+      console.log(metadata);
       if(metadata) {
-        let loaderUrl = new URL(`${host}/containers/${metadata.loader.container}/files/${metadata.loader.id}/download`);
+        let loaderUrl = new URL(`${host}/containers/${metadata.loader.container_id}/files/${metadata.loader.file_id}/download`);
         loaderUrl.searchParams.append("auth_token", token!);
 
-        let dataUrl = new URL(`${host}/containers/${metadata.data.container}/files/${metadata.data.id}/download`);
+        let dataUrl = new URL(`${host}/containers/${metadata.data.container_id}/files/${metadata.data.file_id}/download`);
         dataUrl.searchParams.append("auth_token", token!);
 
-        let frameworkUrl = new URL(`${host}/containers/${metadata.framework.container}/files/${metadata.framework.id}/download`);
+        let frameworkUrl = new URL(`${host}/containers/${metadata.framework.container_id}/files/${metadata.framework.file_id}/download`);
         frameworkUrl.searchParams.append("auth_token", token!);
 
-        let codeUrl = new URL(`${host}/containers/${metadata.wasm.container}/files/${metadata.wasm.id}/download`);
+        let codeUrl = new URL(`${host}/containers/${metadata.wasm.container_id}/files/${metadata.wasm.file_id}/download`);
         codeUrl.searchParams.append("auth_token", token!);
 
         setLoaderUrl(loaderUrl);
@@ -64,14 +78,21 @@ export default function WebGL() {
 
   return (
     <Box sx={{ height: '100%', width: '100%', position: 'relative' }}>
-      { loaderUrl && dataUrl && frameworkUrl && codeUrl ?
+      {!isLoaded &&
+        <Box sx={{ position: 'relative', display: 'inline-flex', flexGrow: 1, alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+          <CircularProgress size={150} sx={{ position: 'absolute', zIndex: 1 }} />
+          <Typography sx={{ position: 'relative', zIndex: 2, textAlign: 'center' }}>Loading<br />Unity Files</Typography>
+        </Box>
+      }
+      {(loaderUrl && dataUrl && frameworkUrl && codeUrl) && (
         <UnityInstance
+          handleLoadedState={handleLoadedState}
           loaderUrl={loaderUrl}
           dataUrl={dataUrl}
           frameworkUrl={frameworkUrl}
           codeUrl={codeUrl}
         />
-      : null } 
+      )}
     </Box>
   );
 }

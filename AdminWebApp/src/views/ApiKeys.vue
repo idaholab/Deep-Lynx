@@ -10,12 +10,12 @@
         <v-toolbar flat color="white">
           <v-toolbar-title>{{$t('apiKeys.description')}}</v-toolbar-title>
           <v-spacer></v-spacer>
-        <create-api-key-dialog @apiKeyCreated="refreshKeys()"></create-api-key-dialog>
+        <CreateApiKeyDialog @apiKeyCreated="refreshKeys()"></CreateApiKeyDialog>
         </v-toolbar>
       </template>
 
       <template v-slot:[`item.actions`]="{ item }">
-        <delete-api-key-dialog :key-pair="item" :icon="true" @apiKeyDeleted="refreshKeys()"></delete-api-key-dialog>
+        <DeleteApiKeyDialog :key-pair="item" :icon="true" @apiKeyDeleted="refreshKeys()"></DeleteApiKeyDialog>
       </template>
     </v-data-table>
   </div>
@@ -24,8 +24,8 @@
 <script lang="ts">
 import {Component,Vue} from 'vue-property-decorator'
 import {KeyPairT} from "@/api/types";
-import CreateApiKeyDialog from "@/components/accessManagement/createApiKeyDialog.vue";
-import DeleteApiKeyDialog from "@/components/accessManagement/deleteApiKeyDialog.vue";
+import CreateApiKeyDialog from "@/components/accessManagement/CreateApiKeyDialog.vue";
+import DeleteApiKeyDialog from "@/components/accessManagement/DeleteApiKeyDialog.vue";
 
 @Component({components:{CreateApiKeyDialog, DeleteApiKeyDialog}})
 export default class ApiKeys extends Vue {

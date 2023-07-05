@@ -6,12 +6,14 @@ import Result from '../../../../../common_classes/result';
 
 // Domain Objects
 import Tag from '../../../../../domain_objects/data_warehouse/data/tag';
+import {NodeIDPayload} from '../../../../../domain_objects/data_warehouse/data/node';
 
 // Express
 import {NextFunction, Request, Response} from 'express';
 
 // Repository
 import TagRepository from '../../../../../data_access_layer/repositories/data_warehouse/data/tag_repository';
+import { EdgeIDPayload } from '../../../../../domain_objects/data_warehouse/data/edge';
 const tagRepo = new TagRepository();
 
 export default class TagFunctions {
@@ -85,6 +87,82 @@ export default class TagFunctions {
                 .finally(() => next());
         } else {
             Result.Failure(`tag or node not found`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    public static bulkTagNodes(req: Request, res: Response, next: NextFunction) {
+        if (req.tag && req.body) {
+            const payload = plainToInstance(NodeIDPayload, req.body as object);
+
+            tagRepo
+                .bulkTagNode(req.tag, payload.node_ids!)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`tag not found or node IDs not supplied`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    public static bulkDetachNodeTag(req: Request, res: Response, next: NextFunction) {
+        if (req.tag && req.body) {
+            const payload = plainToInstance(NodeIDPayload, req.body as object);
+
+            tagRepo
+                .bulkDetachNodeTag(req.tag, payload.node_ids!)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`tag not found or node IDs not supplied`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    public static bulkTagEdges(req: Request, res: Response, next: NextFunction) {
+        if (req.tag && req.body) {
+            const payload = plainToInstance(EdgeIDPayload, req.body as object);
+
+            tagRepo
+                .bulkTagEdge(req.tag, payload.edge_ids!)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`tag not found or edge IDs not supplied`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    public static bulkDetachEdgeTag(req: Request, res: Response, next: NextFunction) {
+        if (req.tag && req.body) {
+            const payload = plainToInstance(EdgeIDPayload, req.body as object);
+
+            tagRepo
+                .bulkDetachEdgeTag(req.tag, payload.edge_ids!)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`tag not found or edge IDs not supplied`, 404).asResponse(res);
             next();
         }
     }

@@ -1,16 +1,16 @@
 #[cfg(test)]
 mod main_tests {
   use crate::config::Configuration;
-  use crate::data_types::DataTypes;
+  use crate::data_types::{DataTypes, LegacyDataTypes};
   use crate::errors::{DataError, TestError};
-  use crate::{BucketColumn, BucketRepository, ChangeBucketPayload, QueryOption};
+  use crate::{ingestion, BucketColumn, BucketRepository, ChangeBucketPayload, QueryOption};
   use bytes::Buf;
   use futures::StreamExt;
   use serial_test::serial;
   use sqlx::{FromRow, PgPool};
-  use std::fs::File;
   use std::future;
   use std::io::Write;
+  use tokio::fs::File;
   use validator::HasLen;
 
   #[derive(Debug, Clone, FromRow)]
@@ -259,15 +259,15 @@ mod main_tests {
     }
 
     // now let's do our ingestion tests
-    let file = File::open("./test_files/sparse_ingestion_test.csv")?;
-    BucketRepository::ingest_csv(pool.clone(), file, bucket.id).await?;
+    let file = File::open("./test_files/sparse_ingestion_test.csv").await?;
+    ingestion::ingest_csv_async(pool.clone(), file, bucket.id).await?;
 
-    let file = File::open("./test_files/non_matching_csv")?;
-    let result = BucketRepository::ingest_csv(pool.clone(), file, bucket.id).await;
+    let file = File::open("./test_files/non_matching_csv").await?;
+    let result = ingestion::ingest_csv_async(pool.clone(), file, bucket.id).await;
     assert!(result.is_err());
 
-    let file = File::open("./test_files/full_ingestion_test.csv")?;
-    BucketRepository::ingest_csv(pool.clone(), file, bucket.id).await?;
+    let file = File::open("./test_files/full_ingestion_test.csv").await?;
+    ingestion::ingest_csv_async(pool.clone(), file, bucket.id).await?;
 
     // now let's make sure our async ingestion pathway works
     let buff = std::fs::read("./test_files/sparse_ingestion_test.csv")?;
@@ -276,7 +276,7 @@ mod main_tests {
     bucket_repo.read_data(buff)?;
     bucket_repo.complete_ingestion().await?;
 
-    let mut out_file = File::create("./test_files/out.csv")?;
+    let mut out_file = std::fs::File::create("./test_files/out.csv")?;
 
     let download_stream = bucket_repo
       .download_data_simple(
@@ -865,6 +865,47 @@ mod main_tests {
         .await?;
     }
 
+    Ok(())
+  }
+
+  #[serial]
+  #[tokio::test]
+  async fn legacy_csv_inference() -> Result<(), TestError> {
+    let file = std::fs::File::open("./test_files/inference.csv")?;
+    let results = BucketRepository::infer_legacy_schema(file)?;
+
+    assert_eq!(results.len(), 9);
+    assert_eq!(results[0].data_type, String::from(LegacyDataTypes::String));
+    assert_eq!(results[1].data_type, String::from(LegacyDataTypes::String));
+    assert_eq!(results[2].data_type, String::from(LegacyDataTypes::Number));
+    assert_eq!(
+      results[3].data_type,
+      String::from(LegacyDataTypes::Number64)
+    );
+    assert_eq!(results[4].data_type, String::from(LegacyDataTypes::Float64));
+    assert_eq!(results[5].data_type, String::from(LegacyDataTypes::Float64));
+    assert_eq!(results[6].data_type, String::from(LegacyDataTypes::Json));
+    assert_eq!(results[7].data_type, String::from(LegacyDataTypes::Boolean));
+    assert_eq!(results[8].data_type, String::from(LegacyDataTypes::Boolean));
+    Ok(())
+  }
+
+  #[serial]
+  #[tokio::test]
+  async fn csv_inference() -> Result<(), TestError> {
+    let file = std::fs::File::open("./test_files/inference.csv")?;
+    let results = BucketRepository::infer_bucket_schema(file)?;
+
+    assert_eq!(results.len(), 9);
+    assert_eq!(results[0].data_type, DataTypes::Text);
+    assert_eq!(results[1].data_type, DataTypes::Text);
+    assert_eq!(results[2].data_type, DataTypes::Int);
+    assert_eq!(results[3].data_type, DataTypes::BigInt);
+    assert_eq!(results[4].data_type, DataTypes::Double);
+    assert_eq!(results[5].data_type, DataTypes::Double);
+    assert_eq!(results[6].data_type, DataTypes::Jsonb);
+    assert_eq!(results[7].data_type, DataTypes::Bool);
+    assert_eq!(results[8].data_type, DataTypes::Bool);
     Ok(())
   }
 

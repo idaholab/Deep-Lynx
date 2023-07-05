@@ -17,7 +17,7 @@ function isMusl() {
   // For Node 10
   if (!process.report || typeof process.report.getReport !== 'function') {
     try {
-      const lddPath = require('child_process').execSync('which ldd').toString().trim();
+      const lddPath = require('child_process').execSync('which ldd').toString().trim()
       return readFileSync(lddPath, 'utf8').includes('musl')
     } catch (e) {
       return true
@@ -252,6 +252,8 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { BucketRepository } = nativeBinding
+const { BucketRepository, inferLegacySchema, inferBucketSchema } = nativeBinding
 
 module.exports.BucketRepository = BucketRepository
+module.exports.inferLegacySchema = inferLegacySchema
+module.exports.inferBucketSchema = inferBucketSchema

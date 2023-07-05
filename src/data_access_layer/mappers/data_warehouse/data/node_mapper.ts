@@ -143,10 +143,6 @@ export default class NodeMapper extends Mapper {
         });
     }
 
-    public RefreshView(): Promise<Result<boolean>> {
-        return super.runStatement(this.refreshViewStatement());
-    }
-
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
@@ -223,7 +219,7 @@ export default class NodeMapper extends Mapper {
             JSON.stringify(n.metadata),
             userID,
             userID,
-            new Date().toISOString(),
+            n.created_at ? n.created_at : new Date().toISOString(),
         ]);
 
         return format(text, values);
@@ -369,12 +365,5 @@ export default class NodeMapper extends Mapper {
              WHERE node_id = $1`,
             values: [nodeID],
         };
-    }
-
-    private refreshViewStatement(): QueryConfig {
-        return {
-            text: `REFRESH MATERIALIZED VIEW current_nodes_cache;`,
-            values: [],
-        }
     }
 }

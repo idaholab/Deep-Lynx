@@ -513,7 +513,7 @@
                     {{$t('dataSources.attachStaging')}}<p class="text-caption" style="margin-left: 5px"></p>
                   </template>
 
-                  <template slot="prepend"><info-tooltip :message="$t('help.attachStaging')"></info-tooltip></template>
+                  <template v-slot:prepend><info-tooltip :message="$t('help.attachStaging')"></info-tooltip></template>
                 </v-checkbox>
 
                 <small>{{$t('help.dataRetention')}}</small>
@@ -687,7 +687,7 @@ export default class CreateDataSourceDialog extends Vue {
     }
   }
 
-  // for some reason calling the variable itself in the validation always results 
+  // for some reason calling the variable itself in the validation always results
   // in the default "true". this getter is a workaround for that
   getFastload() {
     return this.fastload
@@ -709,7 +709,7 @@ export default class CreateDataSourceDialog extends Vue {
         // if fastload enabled and no percent symbols, assume that string needs to be reformatted to rust format
         // similarly, if fastload disabled but percent symbols present, reformat string to pg format
         if (
-          (this.fastload && !col.date_conversion_format_string.includes('%')) 
+          (this.fastload && !col.date_conversion_format_string.includes('%'))
           || (!this.fastload && col.date_conversion_format_string.includes('%'))
         ) {
           col.date_conversion_format_string = this.defaultFormatString
@@ -765,7 +765,7 @@ export default class CreateDataSourceDialog extends Vue {
   timeseriesHelpLink(): string {
     if (this.fastload === true) {
       return this.$t('links.rustTime') as string
-    } 
+    }
     return this.$t('links.postgresTime') as string
   }
 
