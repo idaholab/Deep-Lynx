@@ -43,7 +43,7 @@ export default class EventActionStatusDialog extends Vue {
 
   @Prop({required: true})
   readonly actionID!: string;
-  
+
   errorMessage = ""
   dialog = false
   eventsLoading = false
@@ -55,14 +55,14 @@ export default class EventActionStatusDialog extends Vue {
         { text: this.$t('events.actionID'), value: 'event_action_id' },
         { text: this.$t('general.status'), value: 'status'},
         { text: this.$t('general.statusMessage'), value: 'status_message'},
-        { text: this.$t('general.createdAt'), value: 'created_at'},
+        { text: this.$t('general.dateCreated'), value: 'created_at'},
         { text: this.$t('events.event'), value: 'event'},
       ]
   }
 
   @Watch('dialog', {immediate: true})
   onDialogChange() {
-    if(this.dialog === true) {
+    if(this.dialog) {
       this.refreshEventActionStatus()
     }
   }

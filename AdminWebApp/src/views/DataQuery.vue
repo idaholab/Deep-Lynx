@@ -207,7 +207,7 @@ export default class DataQuery extends Vue {
     return [
       {text: this.$t('general.id'), value: 'id', sortable: false},
       {text: this.$t('classes.class'), value: 'metatype_name'},
-      {text: this.$t('general.createdAt'), value: 'created_at'},
+      {text: this.$t('general.dateCreated'), value: 'created_at'},
       {value: 'data-table-expand'}
     ]
   }

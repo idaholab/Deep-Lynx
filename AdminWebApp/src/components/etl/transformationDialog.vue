@@ -177,6 +177,36 @@
                             </template>
                           </v-combobox>
                         </v-col>
+
+                        <!-- created at -->
+                        <v-col cols="12" md="6" lg="4">
+                          <v-autocomplete
+                              :items="payloadKeys"
+                              v-model="createdAt"
+                              item-text="name"
+                              :label="$t('general.createdAt')"
+                              clearable
+                          >
+                            <template slot="append-outer">
+                              <info-tooltip :message="$t('help.createdAtMapping')"></info-tooltip>
+                            </template>
+                          </v-autocomplete>
+                        </v-col>
+
+                        <v-col cols="12" md="6" lg="4" v-if="createdAt">
+                          <v-text-field
+                              :label="$t('general.createdAtFormatString')"
+                              v-model="createdAtFormatString"
+                              :rules="[v => !v.includes('%') || $t('help.postgresDate')]"
+                          >
+                            <template slot="append-outer">
+                              <a :href=dateString() target="_blank">
+                                {{$t('help.dateFormatStringSmall')}}
+                              </a>
+                            </template>
+                          </v-text-field>
+                        </v-col>
+
                         <v-col cols="12" md="6" lg="4" v-if="keysLoading">
                           <v-progress-linear
                               indeterminate
@@ -1137,6 +1167,8 @@ export default class TransformationDialog extends Vue {
   mainFormValid = false
   requiredKeysMapped = true
   name = ""
+  createdAt: string | null = null
+  createdAtFormatString = 'yyyy-MM-dd HH:mm:ss.SSS'
 
   metatypes: MetatypeT[] = []
 
@@ -1353,6 +1385,11 @@ export default class TransformationDialog extends Vue {
             }
           })
           .catch(e => this.errorMessage = e)
+    }
+
+    if (this.transformation?.created_at_key) {
+      this.createdAt = this.transformation.created_at_key
+      this.createdAtFormatString = this.transformation.created_at_format_string || ''
     }
 
     this.name = this.transformation?.name!
@@ -1669,6 +1706,9 @@ export default class TransformationDialog extends Vue {
       payload.origin_parameters = this.originConfigKeys
     }
 
+    if (this.createdAt) payload.created_at_key = this.createdAt
+    if (this.createdAtFormatString) payload.created_at_format_string = this.createdAtFormatString
+
     payload.config.on_conversion_error = this.onConversionError
     payload.config.on_key_extraction_error = this.onKeyExtractionError
     payload.conditions = this.conditions
@@ -1717,6 +1757,9 @@ export default class TransformationDialog extends Vue {
     payload.type_mapping_id = this.typeMappingID
     if (this.uniqueIdentifierKey) payload.unique_identifier_key = this.uniqueIdentifierKey
     if (this.rootArray) payload.root_array = this.rootArray
+
+    if (this.createdAt) payload.created_at_key = this.createdAt
+    if (this.createdAtFormatString) payload.created_at_format_string = this.createdAtFormatString
 
     this.$client.updateTypeMappingTransformation(this.containerID, this.dataSourceID, this.typeMappingID, this.transformation?.id!, payload as TypeMappingTransformationPayloadT)
         .then((transformation) => {
@@ -2015,7 +2058,7 @@ export default class TransformationDialog extends Vue {
       return true
     }
 
-    // this regex should match only if the name starts with an underscore or letter, 
+    // this regex should match only if the name starts with an underscore or letter,
     // contains only alphanumerics and underscores with
     // no spaces and is between 1 and 30 characters in length
     const matches = /^[_a-zA-Z][a-zA-Z0-9_]{1,30}(?!\s)$/.exec(value)

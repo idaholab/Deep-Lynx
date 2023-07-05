@@ -58,7 +58,7 @@
       <v-card class="pt-1 pb-3 px-2">
         <v-card-title class="grey lighten-2">
           <span class="headline text-h3">{{$t('exports.stop')}}</span>
-        </v-card-title>   
+        </v-card-title>
         <v-card-text>
           <v-row>
             <v-col>
@@ -88,7 +88,7 @@
       <v-card class="pt-1 pb-3 px-2">
         <v-card-title class="grey lighten-2">
           <span class="headline text-h3">{{$t('exports.reset')}}</span>
-        </v-card-title>   
+        </v-card-title>
         <v-card-text>
           <v-row>
             <v-col>
@@ -125,7 +125,7 @@
       <v-card class="pt-1 pb-3 px-2">
         <v-card-title class="grey lighten-2">
           <span class="headline text-h3">{{$t('exports.delete')}}</span>
-        </v-card-title>   
+        </v-card-title>
         <v-card-text>
           <v-row>
             <v-col>
@@ -199,7 +199,7 @@ export default class DataExport extends Vue {
   headers() {
     return  [
       { text: this.$t('exports.destinationType'), value: 'destination_type'},
-      { text: this.$t('general.createdAt'), value: 'created_at'},
+      { text: this.$t('general.dateCreated'), value: 'created_at'},
       { text: this.$t('general.status'), value: 'status'},
       { text: this.$t('general.statusMessage'), value: 'status_message'},
       { text: this.$t('general.actions'), value: 'actions', sortable: false }

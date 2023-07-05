@@ -26,7 +26,7 @@
         <v-alert type="success" v-if="createdMetatypeRelationshipPair">
           {{$t('relationships.createdSuccessfully')}} -
           <span>
-            <edit-metatype-relationship-pair-dialog :pair="createdMetatypeRelationshipPair"></edit-metatype-relationship-pair-dialog>
+            <edit-relationship-pair-dialog :pair="createdMetatypeRelationshipPair"></edit-relationship-pair-dialog>
           </span>
         </v-alert>
         <v-toolbar flat color="white">

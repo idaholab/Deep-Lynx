@@ -12,7 +12,7 @@ import MetatypeRelationshipKey from '../ontology/metatype_relationship_key';
 import MetatypeKey from '../ontology/metatype_key';
 import {parse} from 'date-fns';
 import {PoolClient} from 'pg';
-import MetatypeKeyRepository from "../../../data_access_layer/repositories/data_warehouse/ontology/metatype_key_repository";
+import MetatypeKeyRepository from '../../../data_access_layer/repositories/data_warehouse/ontology/metatype_key_repository';
 
 /*
    Condition represents a logical operation which can determine whether or not
@@ -299,6 +299,14 @@ export default class TypeTransformation extends BaseDomainClass {
     config: TransformationConfiguration = new TransformationConfiguration();
 
     @IsOptional()
+    @IsString()
+    created_at_key?: string;
+
+    @IsOptional()
+    @IsString()
+    created_at_format_string?: string;
+
+    @IsOptional()
     transaction?: PoolClient;
 
     constructor(input: {
@@ -320,6 +328,8 @@ export default class TypeTransformation extends BaseDomainClass {
         data_source_id?: string;
         config?: TransformationConfiguration;
         name?: string;
+        created_at_key?: string;
+        created_at_format_string?: string;
         origin_parameters?: EdgeConnectionParameter[];
         destination_parameters?: EdgeConnectionParameter[];
     }) {
@@ -344,6 +354,8 @@ export default class TypeTransformation extends BaseDomainClass {
             if (input.container_id) this.container_id = input.container_id;
             if (input.data_source_id) this.data_source_id = input.data_source_id;
             if (input.config) this.config = input.config;
+            if (input.created_at_key) this.created_at_key = input.created_at_key;
+            if (input.created_at_format_string) this.created_at_format_string = input.created_at_format_string;
             if (input.destination_parameters) this.destination_parameters = input.destination_parameters;
             if (input.origin_parameters) this.origin_parameters = input.origin_parameters;
         }
@@ -607,8 +619,8 @@ export default class TypeTransformation extends BaseDomainClass {
                     }
                 }
 
-                if(k.is_metadata_key) {
-                    if(k.key) {
+                if (k.is_metadata_key) {
+                    if (k.key) {
                         const value = TypeTransformation.getNestedValue(k.key, data.data, index);
 
                         if (typeof value === 'undefined') {
@@ -657,6 +669,18 @@ export default class TypeTransformation extends BaseDomainClass {
 
             if (this.unique_identifier_key) {
                 node.original_data_id = `${TypeTransformation.getNestedValue(this.unique_identifier_key, data.data, index)}`;
+            }
+
+            if (this.created_at_key) {
+                const createdAtValue = `${TypeTransformation.getNestedValue(this.created_at_key, data.data, index)}`;
+                const convertedDate = this.created_at_format_string
+                    ? parse(createdAtValue, this.created_at_format_string, new Date())
+                    : new Date(createdAtValue);
+                if (Number.isNaN(convertedDate.getTime())) {
+                    Logger.info(`Unable to parse date for created_at_key for transformation ID ${this.id} for data source ${data.data_source_id}`);
+                } else {
+                    node.created_at = convertedDate;
+                }
             }
 
             return new Promise((resolve) => resolve(Result.Success([node])));
