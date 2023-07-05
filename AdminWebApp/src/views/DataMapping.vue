@@ -476,7 +476,7 @@ export default class DataMapping extends Vue {
       value: "active",
       align: 'center'
     },{
-      text: this.$t('general.createdAt'),
+      text: this.$t('general.dateCreated'),
       value: "created_at"
     },{
       text: this.$t('typeMappings.resultingName'),
@@ -519,7 +519,7 @@ export default class DataMapping extends Vue {
       value: "active",
       align: 'center'
     },{
-      text: this.$t('general.createdAt'),
+      text: this.$t('general.dateCreated'),
       value: "created_at"
     },{
       text: this.$t('typeMappings.samplePayload'),

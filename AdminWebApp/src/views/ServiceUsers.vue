@@ -53,7 +53,7 @@
     get headers() {
       return  [
         { text: this.$t("general.name"), value: 'display_name' },
-        { text: this.$t("general.createdAt"), value: 'created_at'},
+        { text: this.$t("general.dateCreated"), value: 'created_at'},
         { text: this.$t("general.actions"), value: 'actions', sortable: false }
       ]
     }

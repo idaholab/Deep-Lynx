@@ -219,7 +219,7 @@ export default class NodeMapper extends Mapper {
             JSON.stringify(n.metadata),
             userID,
             userID,
-            new Date().toISOString(),
+            n.created_at ? n.created_at : new Date().toISOString(),
         ]);
 
         return format(text, values);
