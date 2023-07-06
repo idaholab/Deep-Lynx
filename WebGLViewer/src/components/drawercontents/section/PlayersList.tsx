@@ -147,7 +147,7 @@ const handleDeleteSession = async (sessionId: string) => {
   return (
     <>
       <Box sx={{ display: 'flex', flexDirection: 'row', fontSize: '14px', margin: '0px 16px 6px 16px' }}>
-        <Box sx={{ borderRight: `1px solid ${COLORS.colorDarkgray2}`, paddingRight: '6px', marginRight: '6px' }}>
+        <Box sx={{ fontWeight: 'bold' }}>
           Id
         </Box>
       </Box>
@@ -247,7 +247,7 @@ const handleDeleteSession = async (sessionId: string) => {
               >
                 <ListItemText>
                   <Box sx={{ display: 'flex', flexDirection: 'row' }}>
-                    <Box sx={{ borderRight: `1px solid ${COLORS.colorDarkgray2}`, paddingRight: '6px', marginRight: '6px' }}>
+                    <Box sx={{  }}>
                       {object.state.id}
                     </Box>
                   </Box>

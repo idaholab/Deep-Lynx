@@ -3,11 +3,11 @@ import * as React from 'react';
 // Hooks
 import { useState, useEffect } from 'react';
 import { useGetAllNodesQuery } from '../../../app/services/nodesDataApi';
+import { useGetAllSessionsQuery } from '../../../app/services/sessionsDataApi';
 import { useAppSelector, useAppDispatch } from '../../../app/hooks/reduxTypescriptHooks';
 
 // Import Packages
 import { v4 as uuidv4 } from 'uuid';
-import axios from 'axios';
 
 // Import Redux Actions
 import { appStateActions } from '../../../app/store/index';
@@ -41,8 +41,8 @@ import DrawerContentsNodeList from '../drawercontents/DrawerContentsNodeList';
 import DrawerContentsNodeInfo from '../drawercontents/DrawerContentsNodeInfo';
 import DrawerContentsSceneList from '../drawercontents/DrawerContentsSceneList';
 import DrawerContentsSettings from '../drawercontents/DrawerContentsSettings';
-import DrawerContentsSectionList from '../drawercontents/DrawerContentsSessionList';
-import DrawerContentsSectionInfo from '../drawercontents/DrawerContentsSessionInfo';
+import DrawerContentsSessionList from '../drawercontents/DrawerContentsSessionList';
+import DrawerContentsSessionInfo from '../drawercontents/DrawerContentsSessionInfo';
 import ButtonIconText from '../elements/ButtonIconText';
 
 // Styles
@@ -98,36 +98,35 @@ const DrawerLeft: React.FC<Props> = ({}) => {
 
   // Selected Asset Object
   const selectedAssetObject: any = useAppSelector((state: any) => state.appState.selectedAssetObject);
-  const  selectedSessionObjec: any = useAppSelector((state: any) => state.appState.selectedSessionObject);
+  const selectedSessionObject: any = useAppSelector((state: any) => state.appState.selectedSessionObject);
 
   const [selected, setSelected] = useState('nodeList');
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sessionsData, setSessionsData] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
-   useEffect(() => {
-    const fetchSessions = async () => {
-      await axios.get ( `${host}/containers/${container}/serval/sessions`,
-        {
-          headers: {
-            Authorization: `bearer ${token}`
+  //  useEffect(() => {
+  //   const fetchSessions = async () => {
+  //     await axios.get ( `${host}/containers/${container}/serval/sessions`,
+  //       {
+  //         headers: {
+  //           Authorization: `bearer ${token}`
             
-          }
-        }).then (
-          (response: any) => {
-            if (response.data.value.length === 0) {
-              setSessionsData([]); // Set sessionsData to an empty array
-            } else {
-            const parsedValue = JSON.parse(response.data.value);
-            setSessionsData(parsedValue);
+  //         }
+  //       }).then (
+  //         (response: any) => {
+  //           if (response.data.value.length === 0) {
+  //             setSessionsData([]); // Set sessionsData to an empty array
+  //           } else {
+  //           const parsedValue = JSON.parse(response.data.value);
+  //           setSessionsData(parsedValue);
           
-            }
+  //           }
            
-          }
-        )
-    };
+  //         }
+  //       )
+  //   };
   
-    fetchSessions();
-  }, []);
+  //   fetchSessions();
+  // }, []);
 
 
   const [filteredData, setFilteredData] = useState(); 
@@ -147,6 +146,11 @@ const DrawerLeft: React.FC<Props> = ({}) => {
     dispatch(appStateActions.setDrawerLeftWidth(430));
   };
 
+  const handleDeselectSessionObject = () => {
+    dispatch(appStateActions.selectSessionObject({}));
+    dispatch(appStateActions.setDrawerLeftWidth(430));
+  };
+
   // Menu links and menu link selection
   const menuLinkList = [
     {
@@ -160,15 +164,15 @@ const DrawerLeft: React.FC<Props> = ({}) => {
       pane: 'sceneList'
     },
     {
+      title: 'Sessions',
+      icon: GroupIcon,
+      pane: 'sessionList'
+    },
+    {
       title: 'Settings',
       icon: SettingsIcon,
       pane: 'settings'
     },
-    {
-      title: 'Sections',
-      icon: GroupIcon,
-      pane: 'sectionList'
-    }
   ]
 
   const handleSelectMenuLink = (selectedLink: string) => {
@@ -183,7 +187,7 @@ const DrawerLeft: React.FC<Props> = ({}) => {
   // Component display switching
   const menuItemMatchesComponent = (pane: string) => selected === pane;
 
-  const { data } = useGetAllNodesQuery(
+  const { data: nodesDataResponse, isLoading: isLoadingNodesData } = useGetAllNodesQuery(
     {
       host, 
       token,
@@ -195,8 +199,27 @@ const DrawerLeft: React.FC<Props> = ({}) => {
     }
   );
 
-  const nodes = data?.value || [];
-  const isLoading = !data;
+  const nodesData = nodesDataResponse?.value || [];
+
+  const { data: sessionsDataResponse, isLoading: isLoadingSessionsData } = useGetAllSessionsQuery(
+    {
+      host, 
+      token,
+      container,
+    },
+  );
+
+  let sessionsData;
+
+  if (sessionsDataResponse?.value) {
+    try {
+      sessionsData = JSON.parse(sessionsDataResponse.value);
+    } catch (error) {
+      console.error('Error parsing JSON:', error);
+    }
+  }
+
+  console.log(sessionsData)
 
   return (
   <>
@@ -306,8 +329,8 @@ const DrawerLeft: React.FC<Props> = ({}) => {
                 {selected === 'nodeList' && (Object.keys(selectedAssetObject).length === 0) ? 'Objects'
                   : selected === 'sceneList' ? 'Scenes'
                   : selected === 'settings' ? 'Settings'
-                  : selected === 'sectionList' && (Object.keys(selectedAssetObject).length === 0) ? 'Sessions'
-                  : selected === 'sectionList' && (Object.keys(selectedAssetObject).length !== 0) ?  `Session ${selectedAssetObject.id}`
+                  : selected === 'sessionList' && (Object.keys(selectedAssetObject).length === 0) ? 'Sessions'
+                  : selected === 'sessionList' && (Object.keys(selectedAssetObject).length !== 0) ?  `Session ${selectedAssetObject.id}`
                   : `Node ${selectedAssetObject.id}`
                 }
                 {(Object.keys(selectedAssetObject).length !== 0) && 
@@ -326,7 +349,7 @@ const DrawerLeft: React.FC<Props> = ({}) => {
                 selected === 'nodeList' ? 'View scene asset/object information. Select and Highlight objects. Show on Graph. View Data.'
                 : selected === 'sceneList' ? 'View and change Scenes'
                 : selected === 'settings' ? 'View and edit Settings'
-                : selected === 'sectionList' ? 'View and edit Sections'
+                : selected === 'sessionList' ? 'View and edit Sessions'
                 : null
               }>
                 <InfoIcon
@@ -350,7 +373,7 @@ const DrawerLeft: React.FC<Props> = ({}) => {
             </Box>
             {selected === 'nodeList' && 
               <>
-                {(Object.keys(selectedAssetObject).length === 0) && <DrawerContentsNodeList data={nodes} />}
+                {(Object.keys(selectedAssetObject).length === 0) && <DrawerContentsNodeList data={nodesData} />}
                 {(Object.keys(selectedAssetObject).length !== 0) && <DrawerContentsNodeInfo />}
               </>
             }
@@ -360,15 +383,15 @@ const DrawerLeft: React.FC<Props> = ({}) => {
             {selected === 'settings' && 
               <DrawerContentsSettings />
             }
-            {selected === 'sectionList' && 
+            {selected === 'sessionList' && 
               <>
               {/* sessionsData */}
-              {/* {(Object.keys(selectedAssetObject).length === 0) && <DrawerContentsSectionList data={sessionsData} /> } <div className='m-2'>
+              {(Object.keys(selectedSessionObject).length === 0) && <DrawerContentsSessionList data={sessionsData} /> } <div className='m-2'>
                 <Box sx={{ position: 'absolute', right: '0px', paddingRight: '16px' }}>
-                  <ButtonIconText text='Back To List' handleClick={() => handleDeselectAssetObject()} type="close" color="error" />
+                  <ButtonIconText text='Back To List' handleClick={() => handleDeselectSessionObject()} type="close" color="error" />
                 </Box>
                   </div> 
-              {(Object.keys(selectedAssetObject).length !== 0) && <DrawerContentsSectionInfo />} */}
+              {(Object.keys(selectedSessionObject).length !== 0) && <DrawerContentsSessionInfo />}
             </>
             }
           </Box>

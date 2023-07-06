@@ -2,7 +2,9 @@
 import * as React from 'react';
 
 // Hooks
+import { useState } from 'react';
 import { useAppSelector, useAppDispatch } from '../../../app/hooks/reduxTypescriptHooks';
+import { useAddSessionMutation, useDeleteSessionMutation } from '../../../app/services/sessionsDataApi';
 
 // Import Redux Actions
 import { appStateActions } from '../../../app/store/index';
@@ -11,30 +13,32 @@ import { appStateActions } from '../../../app/store/index';
 import {
   Box,
   Button,
+  Grid,
+  Input,
   List,
   ListItem,
   ListItemText,
   ListItemButton,
   MenuItem,
   Modal,
-  TextField
+  Typography,
 } from '@mui/material';
 import Menu, { MenuProps } from '@mui/material/Menu';
 import Divider from '@mui/material/Divider';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 // MUI Icons
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+
+// Custom Components
+import LoadingProgress from '../elements/LoadingProgress';
 
 // Styles
 import { styled, alpha } from '@mui/material/styles';
 import '../../styles/App.scss';
 // @ts-ignore
 import COLORS from '../../styles/variables';
-import axios from 'axios';
-import { Snackbar } from '@mui/material';
-import { useState } from 'react';
 
 const StyledMenu = styled((props: MenuProps) => (
   <Menu
@@ -78,331 +82,286 @@ const StyledMenu = styled((props: MenuProps) => (
 }));
 
 type Props = {
-  data: any
+  data: Array<any>,
 };
 
-const DrawerContentsSectionList: React.FC<Props> = ({
-  data
+const DrawerContentsSessionList: React.FC<Props> = ({
+  data,
 }) => {
-  // const nodeList = data;
-  const [nodeList, setNodeList] = useState<any[]>([]);
-  React.useEffect(() => {
-    setNodeList(data);
-  }, [data]);
+  const sessionList = data;
 
   const dispatch = useAppDispatch();
 
-  type openDrawerLeftState = boolean;
-  const openDrawerLeftState: openDrawerLeftState = useAppSelector((state: any) => state.appState.openDrawerLeft);
-  type openDrawerLeftWidth = number;
-  const openDrawerLeftWidth: openDrawerLeftWidth = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);
+  // DeepLynx
+  const host: string = useAppSelector((state: any) => state.appState.host);
+  const token: string = useAppSelector((state: any) => state.appState.token);
+  const metadata: string = useAppSelector((state: any) => state.appState.metadata);
+  const container: string = useAppSelector((state: any) => state.appState.container);
+  const query: boolean = useAppSelector((state: any) => state.appState.query);
+  const tagId: string = useAppSelector((state: any) => state.appState.tagId);
+
+  const openDrawerLeftState: boolean = useAppSelector((state: any) => state.appState.openDrawerLeft);
+  const openDrawerLeftWidth: number = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);
 
   const [selected, setSelected] = React.useState<string | false>(false);
 
-  const handleSelectAssetObject = (obj: any, numPixels: number, selectedItem: string) => {
-    dispatch(appStateActions.selectAssetObject(obj));
+  const handleSelectSessionObject = (obj: any, numPixels: number, selectedItem: string) => {
+    dispatch(appStateActions.selectSessionObject(obj));
     dispatch(appStateActions.setDrawerLeftWidth(numPixels));
     setSelected(selectedItem);
   };
- 
-  const [selectedPlayer, setSelectedPlayer] = React.useState<any>(null);
- 
+
   // Menu
   const [anchorEl, setAnchorEl] = React.useState<any>(null);
   const open = Boolean(anchorEl);
-  const handleClose = () => {
+
+  const handleMenuClick = (index: number, event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl({ [index]: event.currentTarget });
+  };
+
+  const handleMenuClose = () => {
     setAnchorEl(null);
   };
-  
 
-// Add session 
- // DeepLynx
- const host: string = useAppSelector((state: any) => state.appState.host);
- const token: string = useAppSelector((state: any) => state.appState.token);
- const container: string = useAppSelector((state: any) => state.appState.container);
-  const [openModal, setOpenModal] = useState(false);
-  const [sessionName, setSessionName] = useState('');
+  // Modal
+  const [modalOpen, setModalOpen] = React.useState(false);
 
-  // Ref for the input element
-  const inputRef = React.useRef<HTMLInputElement>(null);
-  // Function to focus on the input field when the modal is opened
-  React.useEffect(() => {
-    if (openModal && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [openModal]);
-
-const handleOpenModal = () => {
-  setOpenModal(true);
-};
-
-const handleCloseModal = () => {
-  setOpenModal(false);
-};
-
-const handleSessionNameChange = (event:any) => {
-  // event.preventDefault()
-  console.log(event.target.value)
-  setSessionName(event.target.value);
-};
-React.useEffect(() => {
-  console.log('sessionName has changed:', sessionName);
-}, [sessionName]);
-
-const handleAddSession = async () => {
-  dispatch(appStateActions.setContainerId(container));
-  try{
-    await axios.post ( `${host}/containers/${container}/serval/sessions`,
-      {
-        name: sessionName,
-      },
-      {
-        headers: {
-          Authorization: `bearer ${token}`
-        },
-      }).then (
-        (response: any) => {
-        
-          const parsedValue = JSON.parse(response.data.value);
-          console.log(parsedValue)
-          dispatch(appStateActions.addSession(parsedValue));
-          setNodeList((prevNodeList) => [...prevNodeList, parsedValue] as any[]);
-        }
-      )
+  const handleToggleModal = () => {
+    setModalOpen(!modalOpen)
   }
-  catch (error) {
+
+  // Add a Session
+  const initialValue = { name: '' }
+  const [newSession, setNewSession] = useState(initialValue);
+  const [addNewSession, { isLoading: isLoadingAddNewSession }] = useAddSessionMutation();
+
+  const handleAddSessionInputChange = ({ target }: React.ChangeEvent<HTMLInputElement>) => {
+    setNewSession((prev) => ({
+      ...prev,
+      [target.name]: target.value,
+    }))
+  }
+
+  const handleAddNewSession = async () => {
+    try {
+      await addNewSession({
+        host: host,
+        container: container,
+        sessionData: newSession,
+      }).unwrap();
+      setNewSession(initialValue);
+    } catch (error) {
       console.error('There was an error!', error);
     }
-      
-  handleCloseModal();
-};
+    handleToggleModal();
+  };
 
-// Delete session 
-const [openDeleteModal, setOpenDeleteModal] = React.useState<boolean>(false);
-const handleOpenDeleteModal = (player: any) => {
-  setSelectedPlayer(player);
-  setOpenDeleteModal(true); // open the delete modal
-};
-const handleCloseDeleteModal = () => {
-  setOpenDeleteModal(false); // close the delete modal
-};
+  // Delete a Session
+  const [deleteSession, { isLoading: isLoadingDeleteSession }] = useDeleteSessionMutation();
 
-const handleDeleteSession = async (sessionId: string) => {
-  try {
-    await axios.delete(`${host}/containers/${container}/serval/sessions/${sessionId}`, {
-      headers: {
-        Authorization: `bearer ${token}`
-      },
-    }).then (
-      (response: any) => {
-        dispatch(appStateActions.deleteSession(sessionId));
-         setNodeList(prevNodeList => prevNodeList.filter(session => session.id !== sessionId));
-    
-        handleCloseDeleteModal();
-      })
-   
-  } catch (error) {
-    console.error('There was an error!', error);
-  }
-};
+  const handleDeleteSession = async (sessionId: string) => {
+    try {
+      const response = await deleteSession({
+        host: host,
+        container: container,
+        sessionId,
+      }).unwrap();
+      console.log('Response:', response);
+      dispatch(appStateActions.deleteSession(sessionId));
+    } catch (error) {
+      console.error('There was an error!', error);
+    }
+  };
 
   return (
     <>
       <Box sx={{ display: 'flex', flexDirection: 'row', fontSize: '14px', margin: '0px 16px 6px 16px' }}>
-        <Box sx={{ borderRight: `1px solid ${COLORS.colorDarkgray2}`, paddingRight: '6px', marginRight: '6px' }}>
-          {/* Id */}
-        </Box>
         <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          Title
+          Name
         </Box>
         <Button
-        id="customized-button"
-        aria-controls={openModal ? 'customized-menu' : undefined}
-        aria-haspopup="true"
-        aria-expanded={openModal ? 'true' : undefined}
-        variant="contained"
-        disableElevation
-        onClick={handleOpenModal}
-        endIcon={<AddIcon />}
-        size="small"
-        sx={{
-          color: 'white',
-          padding: '0px 8px 0 8px',
-          marginLeft: 'auto',
-          '& span': {
-            fontSize: '14px',
-            marginBottom: '1px',
-            '&:first-of-type': {
-              marginRight: '-6px',
-            },
-          },
-        }}
-      >
-        <span>Add Session</span>
-      </Button>
-      </Box>
-      <Modal open={openModal} onClose={handleCloseModal} disableEnforceFocus>
-        <div
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 400,
-            backgroundColor: 'white',
-            border: '2px solid black',
-            boxShadow: '24px',
-            padding: '16px',
-          }}
-        >
-        {/* <TextField
-        className='col-12'
-          id="session-name"
-          value={sessionName}
-          onChange={handleSessionNameChange}
-        /> */}
-      <input
-        className='col-12'
-        id="session-name"
-        value={sessionName}
-        onChange={handleSessionNameChange}
-      />
-          <Button
-          className='col-6'
-            variant="contained"
-            disableElevation
-            onClick={handleAddSession}
-            size="small"
-            style={{ marginTop: '16px' }}
-          >
-            Add Session
-          </Button>
-        </div>
-      </Modal>
-          <Modal open={openDeleteModal} onClose={handleCloseDeleteModal} disableEnforceFocus>
-      <div
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 400,
-          backgroundColor: 'white',
-          border: '2px solid black',
-          boxShadow: '24px',
-          padding: '16px',
-        }}
-      >
-        <h5>Delete Session</h5>
-        <p>Are you sure you want to delete this session?</p>
-        <Button
+          id="customized-button"
+          aria-controls={modalOpen ? 'customized-menu' : undefined}
+          aria-haspopup="true"
+          aria-expanded={modalOpen ? 'true' : undefined}
           variant="contained"
           disableElevation
-          onClick={() => handleDeleteSession(selectedPlayer.id)}
+          onClick={handleToggleModal}
+          endIcon={<AddIcon />}
           size="small"
-          style={{ marginTop: '16px' }}
+          sx={{
+            color: 'white',
+            padding: '0px 8px 0 8px',
+            marginLeft: 'auto',
+            '& span': {
+              fontSize: '14px',
+              marginBottom: '1px',
+              '&:first-of-type': {
+                marginRight: '-6px',
+              },
+            },
+          }}
         >
-          Delete Session
+          <span>Add Session</span>
         </Button>
-      </div>
-    </Modal>
-
-      <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0', borderTop: `1px solid ${COLORS.colorDarkgray}` }}>
-        <List dense sx={{ paddingTop: '0' }}>
-          {nodeList.map((object: any, index: number) => (
-            <ListItem
-              key={object.id}
-              disablePadding
-              sx={{ borderBottom: `1px solid ${COLORS.colorDarkgray}` }}
-              secondaryAction={
-                <>
-                  <Button
-                  id="customized-button"
-                  // className={`menu-button-${index}`}
-                  aria-controls={open ? 'customized-menu' : undefined}
-                  aria-haspopup="true"
-                  aria-expanded={open ? 'true' : undefined}
-                  variant="contained"
-                  disableElevation
-                  // onClick={(e) => AddSession()}
-                  // endIcon={<KeyboardArrowDownIcon />}
-                  size="small"
+      </Box>
+      {!sessionList || sessionList.length === 0 ? (
+        <LoadingProgress text={'Loading Sessions'}/>
+      ) :(
+        <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0', borderTop: `1px solid ${COLORS.colorDarkgray}` }}>
+          <List dense sx={{ paddingTop: '0' }}>
+            {sessionList.map((object: any, index: number) => (
+              <ListItem
+                key={object.id}
+                disablePadding
+                sx={{ borderBottom: `1px solid ${COLORS.colorDarkgray}` }}
+                secondaryAction={
+                  <>
+                    <Button
+                      id="customized-button"
+                      className={`menu-button-${index}`}
+                      aria-controls={open ? 'customized-menu' : undefined}
+                      aria-haspopup="true"
+                      aria-expanded={open ? 'true' : undefined}
+                      variant="contained"
+                      disableElevation
+                      onClick={(e) => handleMenuClick(index, e)}
+                      endIcon={<KeyboardArrowDownIcon />}
+                      size="small"
+                      sx={{
+                        color: 'white',
+                        padding: '0px 4px 0 8px',
+                        '& span': {
+                          fontSize: '14px',
+                          marginBottom: '1px',
+                          '&:first-of-type': {
+                            marginRight: '-6px'
+                          },
+                        }
+                      }}
+                    >
+                      <span>Actions</span>
+                    </Button>
+                    <StyledMenu
+                      id="customized-menu"
+                      MenuListProps={{
+                        'aria-labelledby': 'customized-button',
+                      }}
+                      anchorEl={
+                        // Check to see if the anchor is set.
+                        anchorEl && anchorEl[index]
+                      }
+                      open={
+                        // Check to see if the anchor is set.
+                        Boolean(anchorEl && anchorEl[index])
+                      }
+                      onClose={handleMenuClose}
+                    >
+                      <MenuItem onClick={() => handleDeleteSession(object.id)} disableRipple>
+                        <DeleteIcon />
+                        Delete Session
+                      </MenuItem>
+                    </StyledMenu>
+                  </>
+                }
+              >
+                <ListItemButton
+                  onClick={() => handleSelectSessionObject(object, 800, `listItem${index+1}`)}
+                  selected={selected === `listItem${index+1}`}
                   sx={{
-                    color: 'white',
-                    padding: '0px 4px 0 4px',
-                    marginLeft: 'auto',
-                    '& span': {
-                      fontSize: '14px',
-                      marginBottom: '1px',
-                      '&:first-of-type': {
-                        marginRight: '-6px'
-                      },
+                    '&.Mui-selected': {
+                      backgroundColor: `${COLORS.colorListSelectGray} !important`
+                    },
+                    '&.Mui-focusVisible': {
+                      backgroundColor: `${COLORS.colorListSelectGray} !important`
+                    },
+                    '&:hover': {
+                      backgroundColor: `${COLORS.colorListSelectGray} !important`
                     }
                   }}
                 >
-                   <MenuItem onClick={() => handleOpenDeleteModal(object)}  disableRipple>
-                    <DeleteIcon />
-                   Delete
-                  </MenuItem>
-                </Button>
-                <StyledMenu
-                  id="customized-menu"
-                  MenuListProps={{
-                    'aria-labelledby': 'customized-button',
-                  }}
-                  anchorEl={
-                    // Check to see if the anchor is set.
-                    anchorEl && anchorEl[index]
-                  }
-                  open={
-                    // Check to see if the anchor is set.
-                    Boolean(anchorEl && anchorEl[index])
-                  }
-                  onClose={handleClose}
-                >
-                  <MenuItem onClick={() => handleOpenDeleteModal(object)}  disableRipple>
-                    <DeleteIcon />
-                   Delete
-                  </MenuItem>
-                  {/* <Divider sx={{ my: 0.5 }} /> */}
-                </StyledMenu>
-                </>
-              }
+                  <ListItemText>
+                    <Box sx={{ display: 'flex', flexDirection: 'row' }}>
+                      <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        { object.name }
+                      </Box>
+                    </Box>
+                  </ListItemText>
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+          <Modal open={modalOpen} onClose={handleToggleModal} disableEnforceFocus>
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 400,
+                backgroundColor: 'white',
+                border: '2px solid black',
+                boxShadow: '24px',
+                padding: '16px',
+              }}
             >
-              <ListItemButton
-                onClick={() => handleSelectAssetObject(object, 800, `listItem${index+1}`)}
-                selected={selected === `listItem${index+1}`}
-                sx={{
-                  '&.Mui-selected': {
-                    backgroundColor: `${COLORS.colorListSelectGray} !important`
-                  },
-                  '&.Mui-focusVisible': {
-                    backgroundColor: `${COLORS.colorListSelectGray} !important`
-                  },
-                  '&:hover': {
-                    backgroundColor: `${COLORS.colorListSelectGray} !important`
-                  }
-                }}
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <Input
+                    id="session-name"
+                    name="name"
+                    placeholder="Enter session name"
+                    value={newSession.name}
+                    onChange={handleAddSessionInputChange}
+                  />
+                </Grid>
+                <Grid item xs={6}>
+                  <Button
+                    variant="contained"
+                    disableElevation
+                    onClick={handleAddNewSession}
+                    size="small"
+                    sx={{ marginTop: '16px' }}
+                  >
+                    Add Session
+                  </Button>
+                </Grid>
+              </Grid>
+            </Box>
+          </Modal>
+          {/* <Modal open={openDeleteModal} onClose={handleCloseDeleteModal} disableEnforceFocus>
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 400,
+                backgroundColor: 'white',
+                border: '2px solid black',
+                boxShadow: '24px',
+                padding: '16px',
+              }}
+            >
+              <Typography variant="h5">
+                Delete Session
+              </Typography>
+              <p>Are you sure you want to delete this session?</p>
+              <Button
+                variant="contained"
+                disableElevation
+                onClick={() => handleDeleteSession(selectedPlayer.id)}
+                size="small"
+                sx={{ marginTop: '16px' }}
               >
-                <ListItemText>
-                  <Box sx={{ display: 'flex', flexDirection: 'row' }}>
-                    <Box sx={{ borderRight: `1px solid ${COLORS.colorDarkgray2}`, paddingRight: '6px', marginRight: '6px' }}>
-                      {/* { object.id } */}
-                       {/* { object.id } */}
-                    </Box>
-                    <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {/* { object.properties?.name } */}
-                      { object.name }
-                    </Box>
-                  </Box>
-                </ListItemText>
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
-      </Box>
+                Delete Session
+              </Button>
+            </Box>
+          </Modal> */}
+        </Box>
+      )}
     </>
   );
 }
 
-export default DrawerContentsSectionList;
+export default DrawerContentsSessionList;

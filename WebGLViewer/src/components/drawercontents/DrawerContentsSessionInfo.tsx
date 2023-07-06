@@ -18,42 +18,19 @@ import {
 } from '@mui/material';
 
 // Custom Components 
-import SectionInfoMainTabs from './SectionInfoMainTabs';
+import SessionInfoMainTabs from './SessionInfoMainTabs';
 
 
 // Styles
 import '../../styles/App.scss';
 import ButtonIconText from '../elements/ButtonIconText';
 
-
 type Props = {};
 
 const DrawerContentsSectionInfo: React.FC<Props> = ({}) => {
   const dispatch = useAppDispatch();
 
-  type openDrawerLeftState = boolean;
-  const openDrawerLeftState: openDrawerLeftState = useAppSelector((state: any) => state.appState.openDrawerLeft);
-
-  type openDrawerLeftWidth = number;
-  const openDrawerLeftWidth: openDrawerLeftWidth = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);
-
-  type selectedAssetObject = any;
-  const selectedAssetObject: selectedAssetObject = useAppSelector((state: any) => state.appState.selectedAssetObject);
-
-  type highlightAssetObject = any;
-  const highlightAssetObject: highlightAssetObject = useAppSelector((state: any) => state.appState.highlightAssetObject);
-
-  const handleSelectAssetOnScene = (payload: any) => {
-    dispatch(appStateActions.selectAssetOnScene(payload.properties.name))
-  };
-
-  const handleHighlightAssetOnScene = (payload: any) => {
-    dispatch(appStateActions.highlightAssetOnScene(payload.properties.name))
-  };
-
-  const handleShowAssetOnGraph = (payload: any) => {
-    console.log('Action to \"Show On Graph\" clicked!')
-  }
+  const selectedSessionObject: any = useAppSelector((state: any) => state.appState.selectedSessionObject);
 
   return (
     <>
@@ -66,7 +43,7 @@ const DrawerContentsSectionInfo: React.FC<Props> = ({}) => {
         </Stack> */}
       </Box>
       <Box sx={{ padding: '16px', display: 'flex', flex: '1 1 100%', flexDirection: 'column'}}>
-        <SectionInfoMainTabs data={selectedAssetObject} />
+        <SessionInfoMainTabs data={selectedSessionObject} />
       </Box>
     </>
   );

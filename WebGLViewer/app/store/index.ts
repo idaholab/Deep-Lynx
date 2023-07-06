@@ -4,6 +4,7 @@ import { webGLReducer } from './slices/webGLSlice';
 
 import { nodesDataApi } from '../services/nodesDataApi';
 import { timeseriesDataApi } from '../services/timeseriesDataApi';
+import { sessionsDataApi } from '../services/sessionsDataApi';
 
 const initialState = {
   // Refactor Begin
@@ -21,6 +22,7 @@ const initialState = {
   openDrawerRightWidth: 425,
   selectedAssetObject: {},
   selectedSceneObject: {},
+  selectedSessionObject: {},
   selectedWebGLFileSetId: null,
   selectAssetOnScene: '',
   highlightAssetOnScene: '',
@@ -140,6 +142,13 @@ const appStateSlice = createSlice({
       store.sceneList = action.payload;
     },
 
+    // Asset functions
+    selectSessionObject: (state, action) => {
+      console.log(action.payload);
+      const store = state;
+      store.selectedSessionObject = action.payload;
+    },
+
     // WebGL File Set Functions
     setWebGLFileSetId: (state, action) => {
       const store = state;
@@ -174,11 +183,13 @@ export const store = configureStore({
     webGL: webGLReducer,
     [nodesDataApi.reducerPath]: nodesDataApi.reducer,
     [timeseriesDataApi.reducerPath]: timeseriesDataApi.reducer,
+    [sessionsDataApi.reducerPath]: sessionsDataApi.reducer,
   },
   middleware: (getDefaultMiddleware) => {
     return getDefaultMiddleware()
       .concat(nodesDataApi.middleware)
       .concat(timeseriesDataApi.middleware)
+      .concat(sessionsDataApi.middleware)
   },
 });
 

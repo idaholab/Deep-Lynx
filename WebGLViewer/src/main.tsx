@@ -16,9 +16,6 @@ import App from './App'
 
 // Styles
 import './styles/App.scss';
-//boostrap
-import 'bootstrap/dist/css/bootstrap.css';
-
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
