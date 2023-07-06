@@ -3,6 +3,7 @@ import * as React from 'react';
 
 // Hooks
 import { useAppSelector, useAppDispatch } from '../../../app/hooks/reduxTypescriptHooks';
+import { useDeleteSessionMutation } from '../../../app/services/sessionsDataApi';
 
 // Import Redux Actions
 import { appStateActions } from '../../../app/store/index';
@@ -31,16 +32,33 @@ const DrawerContentsSectionInfo: React.FC<Props> = ({}) => {
   const dispatch = useAppDispatch();
 
   const selectedSessionObject: any = useAppSelector((state: any) => state.appState.selectedSessionObject);
+  const host: string = useAppSelector((state: any) => state.appState.host);
+  const container: string = useAppSelector((state: any) => state.appState.container);
+
+    // Delete a Session
+    const [deleteSession, { isLoading: isLoadingDeleteSession }] = useDeleteSessionMutation();
+
+    const handleDeleteSession = async (sessionId: string) => {
+      try {
+        const response = await deleteSession({
+          host: host,
+          container: container,
+          sessionId,
+        }).unwrap();
+        console.log('Response:', response);
+        dispatch(appStateActions.deleteSession(sessionId));
+      } catch (error) {
+        console.error('There was an error!', error);
+      }
+    };
 
   return (
     <>
       <Box sx={{ display: 'flex', padding: '0 16px' }}>
-        {/* <Typography sx={{ marginRight: '8px' }}>Actions: </Typography> */}
-        {/* <Stack spacing={1} direction="row">
-          <ButtonIconText type="hub" handleClick={() => handleShowAssetOnGraph(selectedAssetObject)} text="Show On Graph" color="primary" />
-          <ButtonIconText type="select" handleClick={() => handleSelectAssetOnScene(selectedAssetObject)} text="Select On Scene" color="primary" />
-          <ButtonIconText type="highlight" handleClick={() => handleHighlightAssetOnScene(selectedAssetObject)} text="Highlight On Scene" color="primary" />
-        </Stack> */}
+        <Typography sx={{ marginRight: '8px' }}>Actions: </Typography>
+        <Stack spacing={1} direction="row">
+          <ButtonIconText type="delete" handleClick={() => handleDeleteSession(selectedSessionObject.id)} text="Delete Session" color="primary" />
+        </Stack>
       </Box>
       <Box sx={{ padding: '16px', display: 'flex', flex: '1 1 100%', flexDirection: 'column'}}>
         <SessionInfoMainTabs data={selectedSessionObject} />

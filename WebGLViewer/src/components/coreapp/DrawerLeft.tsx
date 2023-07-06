@@ -49,7 +49,6 @@ import ButtonIconText from '../elements/ButtonIconText';
 import '../../styles/App.scss';
 // @ts-ignore
 import COLORS from '../../../src/styles/variables';
-import { AnyAsyncThunk } from '@reduxjs/toolkit/dist/matchers';
 
 const queryFilterData = (query: any, data: any) => {
   if (!query) {
@@ -102,32 +101,6 @@ const DrawerLeft: React.FC<Props> = ({}) => {
 
   const [selected, setSelected] = useState('nodeList');
   const [searchQuery, setSearchQuery] = useState('');
-
-  //  useEffect(() => {
-  //   const fetchSessions = async () => {
-  //     await axios.get ( `${host}/containers/${container}/serval/sessions`,
-  //       {
-  //         headers: {
-  //           Authorization: `bearer ${token}`
-            
-  //         }
-  //       }).then (
-  //         (response: any) => {
-  //           if (response.data.value.length === 0) {
-  //             setSessionsData([]); // Set sessionsData to an empty array
-  //           } else {
-  //           const parsedValue = JSON.parse(response.data.value);
-  //           setSessionsData(parsedValue);
-          
-  //           }
-           
-  //         }
-  //       )
-  //   };
-  
-  //   fetchSessions();
-  // }, []);
-
 
   const [filteredData, setFilteredData] = useState(); 
 
@@ -182,6 +155,7 @@ const DrawerLeft: React.FC<Props> = ({}) => {
     }
     dispatch(appStateActions.setDrawerLeftWidth(430));
     dispatch(appStateActions.selectAssetObject({}));
+    dispatch(appStateActions.selectSessionObject({}));
   };
 
   // Component display switching
@@ -370,6 +344,11 @@ const DrawerLeft: React.FC<Props> = ({}) => {
                   <ButtonIconText text='Back To List' handleClick={() => handleDeselectAssetObject()} type="close" color="error" />
                 </Box>
               }
+              {(selected === 'sessionList' && (Object.keys(selectedSessionObject).length !== 0)) &&
+                <Box sx={{ position: 'absolute', right: '0px', paddingRight: '16px' }}>
+                  <ButtonIconText text='Back To List' handleClick={() => handleDeselectSessionObject()} type="close" color="error" />
+                </Box>
+              }
             </Box>
             {selected === 'nodeList' && 
               <>
@@ -385,14 +364,9 @@ const DrawerLeft: React.FC<Props> = ({}) => {
             }
             {selected === 'sessionList' && 
               <>
-              {/* sessionsData */}
-              {(Object.keys(selectedSessionObject).length === 0) && <DrawerContentsSessionList data={sessionsData} /> } <div className='m-2'>
-                <Box sx={{ position: 'absolute', right: '0px', paddingRight: '16px' }}>
-                  <ButtonIconText text='Back To List' handleClick={() => handleDeselectSessionObject()} type="close" color="error" />
-                </Box>
-                  </div> 
-              {(Object.keys(selectedSessionObject).length !== 0) && <DrawerContentsSessionInfo />}
-            </>
+                {(Object.keys(selectedSessionObject).length === 0) && <DrawerContentsSessionList data={sessionsData} /> }
+                {(Object.keys(selectedSessionObject).length !== 0) && <DrawerContentsSessionInfo />}
+              </>
             }
           </Box>
         </Box>

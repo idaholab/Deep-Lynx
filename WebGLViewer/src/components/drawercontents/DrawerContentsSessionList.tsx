@@ -28,7 +28,6 @@ import Divider from '@mui/material/Divider';
 
 // MUI Icons
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 // Custom Components
@@ -39,6 +38,7 @@ import { styled, alpha } from '@mui/material/styles';
 import '../../styles/App.scss';
 // @ts-ignore
 import COLORS from '../../styles/variables';
+import ButtonIconText from '../elements/ButtonIconText';
 
 const StyledMenu = styled((props: MenuProps) => (
   <Menu
@@ -175,35 +175,13 @@ const DrawerContentsSessionList: React.FC<Props> = ({
 
   return (
     <>
-      <Box sx={{ display: 'flex', flexDirection: 'row', fontSize: '14px', margin: '0px 16px 6px 16px' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', fontSize: '14px', margin: '0px 16px 6px 16px' }}>
         <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           Name
         </Box>
-        <Button
-          id="customized-button"
-          aria-controls={modalOpen ? 'customized-menu' : undefined}
-          aria-haspopup="true"
-          aria-expanded={modalOpen ? 'true' : undefined}
-          variant="contained"
-          disableElevation
-          onClick={handleToggleModal}
-          endIcon={<AddIcon />}
-          size="small"
-          sx={{
-            color: 'white',
-            padding: '0px 8px 0 8px',
-            marginLeft: 'auto',
-            '& span': {
-              fontSize: '14px',
-              marginBottom: '1px',
-              '&:first-of-type': {
-                marginRight: '-6px',
-              },
-            },
-          }}
-        >
-          <span>Add Session</span>
-        </Button>
+        <Box sx={{ marginTop: '-6px' }}>
+          <ButtonIconText type="add" handleClick={() => handleToggleModal()} text="Add Session" color="primary" />
+        </Box>
       </Box>
       {!sessionList || sessionList.length === 0 ? (
         <LoadingProgress text={'Loading Sessions'}/>
@@ -329,35 +307,6 @@ const DrawerContentsSessionList: React.FC<Props> = ({
               </Grid>
             </Box>
           </Modal>
-          {/* <Modal open={openDeleteModal} onClose={handleCloseDeleteModal} disableEnforceFocus>
-            <Box
-              sx={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: 400,
-                backgroundColor: 'white',
-                border: '2px solid black',
-                boxShadow: '24px',
-                padding: '16px',
-              }}
-            >
-              <Typography variant="h5">
-                Delete Session
-              </Typography>
-              <p>Are you sure you want to delete this session?</p>
-              <Button
-                variant="contained"
-                disableElevation
-                onClick={() => handleDeleteSession(selectedPlayer.id)}
-                size="small"
-                sx={{ marginTop: '16px' }}
-              >
-                Delete Session
-              </Button>
-            </Box>
-          </Modal> */}
         </Box>
       )}
     </>

@@ -8,13 +8,7 @@ import {
   Tabs
 } from '@mui/material';
 
-// Custom Components 
-import NodeInfoDetailsHistory from '../drawercontents/nodeinfo/NodeInfoDetailsHistory';
-import NodeInfoPropsMeta from '../drawercontents/nodeinfo/NodeInfoPropsMeta';
-import NodeInfoTimeSeries from '../drawercontents/nodeinfo/NodeInfoTimeSeries';
-import NodeInfoNearbyNodes from '../drawercontents/nodeinfo/NodeInfoNearbyNodes';
-import NodeInfoFiles from '../drawercontents/nodeinfo/NodeInfoFiles';
-import NodeInfoTags from '../drawercontents/nodeinfo/NodeInfoTags';
+// Custom Components
 import PlayersList from './section/PlayersList';
 import ObjectList from './section/ObjectList';
 
