@@ -3,6 +3,8 @@ import * as React from 'react';
 
 // Hooks
 import { useAppSelector, useAppDispatch } from '../../../../app/hooks/reduxTypescriptHooks';
+import { useGetAllPlayersQuery } from '../../../../app/services/sessionsDataApi';
+import { useDeletePlayerMutation } from '../../../../app/services/sessionsDataApi';
 
 // Import Redux Actions
 import { appStateActions } from '../../../../app/store/index';
@@ -27,8 +29,6 @@ import { styled, alpha } from '@mui/material/styles';
 import '../../../styles/App.scss';
 // @ts-ignore
 import COLORS from '../../../styles/variables';
-import { useEffect } from 'react';
-import { useDeletePlayerMutation } from '../../../../app/services/sessionsDataApi';
 
 // Custom Components
 import LoadingProgress from '../../elements/LoadingProgress';
@@ -71,18 +71,15 @@ const StyledMenu = styled((props: MenuProps) => (
 }));
 
 type Props = {
-  data: any;
+  // data: any;
 };
 
-const PlayerList: React.FC<Props> = ({ data }) => {
- const playerList = data;
- const dispatch = useAppDispatch();
+const PlayerList: React.FC<Props> = ({ }) => {
+  // const playerList = data;
+  const dispatch = useAppDispatch();
 
-  type openDrawerLeftState = boolean;
-  const openDrawerLeftState: openDrawerLeftState = useAppSelector((state: any) => state.appState.openDrawerLeft);
-
-  type openDrawerLeftWidth = number;
-  const openDrawerLeftWidth: openDrawerLeftWidth = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);
+  const openDrawerLeftState: boolean = useAppSelector((state: any) => state.appState.openDrawerLeft);
+  const openDrawerLeftWidth: number = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);
 
   const [selected, setSelected] = React.useState<string | false>(false);
   const host: string = useAppSelector((state: any) => state.appState.host);
@@ -114,6 +111,24 @@ const PlayerList: React.FC<Props> = ({ data }) => {
     sessionId = null;
   }
 
+  // Get all players
+  const { data: playersDataResponse, isLoading: isLoadingPlayersData } = useGetAllPlayersQuery(
+    {
+      host, 
+      container,
+      sessionId
+    },
+  );
+
+  let playerList =playersDataResponse?.value || [];
+  if (playersDataResponse?.value) {
+    try {
+      playerList = JSON.parse(playersDataResponse.value);
+    } catch (error) {
+      console.error('Error parsing JSON:', error);
+    }
+  }
+
   // Delete a Player
   const [deletePlayer, { isLoading: isLoadingDeleteSession }] = useDeletePlayerMutation();
   const handleDeletePlayer = async (playerId: string) => {
@@ -138,12 +153,28 @@ const PlayerList: React.FC<Props> = ({ data }) => {
           Id
         </Box>
       </Box>
-      {!playerList || playerList.length === 0 ? (
-        <LoadingProgress text={'Loading Sessions'}/>
-      ) :(
+      {isLoadingPlayersData &&
+      <LoadingProgress text={'Loading Selected Players'}/>
+    }
+
+    {(!isLoadingPlayersData && (playerList.length === 0)) &&
+      <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0', borderTop: `1px solid ${COLORS.colorDarkgray}` }}>
+      <List dense sx={{ paddingTop: '0' }}>
+        <ListItem
+          disablePadding
+        >
+          <ListItemText sx={{ padding: '6px 0px', textAlign: 'center' }}>
+            No data to display
+          </ListItemText>
+        </ListItem>
+      </List>
+    </Box>
+    }
+
+   {(!isLoadingPlayersData && (playerList.length !== 0)) &&
       <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0', borderTop: `1px solid ${COLORS.colorDarkgray}` }}>
         <List dense sx={{ paddingTop: '0' }}>
-          {playerList.users.map((object: any, index: number) => (
+          {playerList.map((object: any, index: number) => (
             <ListItem
               key={object.state.id}
               disablePadding
@@ -219,7 +250,7 @@ const PlayerList: React.FC<Props> = ({ data }) => {
           ))}
         </List>
       </Box>
-          )}
+          }
     </>
   );
 };

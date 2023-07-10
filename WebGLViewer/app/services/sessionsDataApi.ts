@@ -13,7 +13,7 @@ export const sessionsDataApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ['Session'],
+  tagTypes: ['Session', 'Player', 'Object'],
   endpoints: (build) => ({
     getAllSessions: build.query({
       query: ({ host, container }) => ({
@@ -36,19 +36,31 @@ export const sessionsDataApi = createApi({
       }),
       invalidatesTags: ['Session']
     }),
+    getAllPlayers: build.query({
+      query: ({ host, container, sessionId }) => ({
+        url: `${host}/containers/${container}/serval/sessions/${sessionId}/players/`,
+      }),
+      providesTags: ['Player']
+    }),
     deletePlayer:build.mutation({
       query: ({ host, container, sessionId, playerId }) => ({
         url: `${host}/containers/${container}/serval/sessions/${sessionId}/players/${playerId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Session']
+      invalidatesTags: ['Player']
+    }),
+    getAllObjects: build.query({
+      query: ({ host, container, sessionId }) => ({
+        url: `${host}/containers/${container}/serval/sessions/${sessionId}/objects/`,
+      }),
+      providesTags: ['Object']
     }),
     deleteObject:build.mutation({
       query: ({ host, container, sessionId, objectId }) => ({
         url: `${host}/containers/${container}/serval/sessions/${sessionId}/objects/${objectId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Session']
+      invalidatesTags: ['Object']
     })
   }),
 });
@@ -57,6 +69,8 @@ export const {
   useGetAllSessionsQuery,
   useAddSessionMutation,
   useDeleteSessionMutation,
+  useGetAllPlayersQuery,
   useDeletePlayerMutation,
+  useGetAllObjectsQuery,
   useDeleteObjectMutation
 } = sessionsDataApi;
