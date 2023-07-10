@@ -114,10 +114,17 @@ const dispatch = useAppDispatch();
   };
   // Replace this with your actual sessions state
   const sessions = useAppSelector(state => state.appState.sessions); 
-  const currentSession = sessions.find(session => session.id === selectedAssetObject.id);
+  const currentSession = useAppSelector(state=>state.appState.selectedSessionObject);
   const handleMenuClick = (index: number, event: React.MouseEvent<HTMLElement>) => {
   setAnchorEl({ [index]: event.currentTarget });
   };
+
+  let sessionId: any;
+  if ('id' in currentSession) {
+    sessionId = currentSession?.id;
+  } else {
+    sessionId = null;
+  }
 
   
    // Selected Asset Object
@@ -131,7 +138,7 @@ const handleDeleteObject  = async (objectId: string) => {
     const response = await deleteObject({
       host: host,
       container: container,
-      currentSession,
+      sessionId,
       objectId,
     }).unwrap();
     console.log('Response:', response);
