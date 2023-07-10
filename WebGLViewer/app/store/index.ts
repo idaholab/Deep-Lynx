@@ -144,7 +144,6 @@ const appStateSlice = createSlice({
 
     // Asset functions
     selectSessionObject: (state, action) => {
-      console.log(action.payload);
       const store = state;
       store.selectedSessionObject = action.payload;
     },

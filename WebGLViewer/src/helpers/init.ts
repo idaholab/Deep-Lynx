@@ -32,7 +32,7 @@ export async function AttachDeepLynx() {
     const fileset: any = JSON.parse(import.meta.env.VITE_DEEPLYNX_WEBGL_FILES);
 
     const metadata: WebGLFileset = ParseWebGL(fileset);
-    console.log(metadata);
+   
 
     const tag: string = ParseTag(metadata);
     dispatch(appStateActions.setMetadata(metadata));

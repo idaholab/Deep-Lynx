@@ -139,8 +139,6 @@ const PlayerList: React.FC<Props> = ({ }) => {
         sessionId,
         playerId,
       }).unwrap()
-      console.log('Response:', response);
-    
     } catch (error) {
       console.error('There was an error!', error);
     }

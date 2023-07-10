@@ -156,15 +156,11 @@ const dispatch = useAppDispatch();
         container: container,
         sessionId,
         objectId,
-      }).unwrap();
-      console.log('Response:', response);
-    
+      }).unwrap();  
     } catch (error) {
       console.error('There was an error!', error);
     }
   };
-
- console.log("objectList", objectList)
 
   return (
     <>

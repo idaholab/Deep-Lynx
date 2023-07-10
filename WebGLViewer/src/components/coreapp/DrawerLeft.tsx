@@ -194,7 +194,6 @@ const DrawerLeft: React.FC<Props> = ({}) => {
     }
   }
 
-  console.log(sessionsData)
 
   return (
   <>
