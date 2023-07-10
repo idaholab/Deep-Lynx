@@ -102,28 +102,34 @@ const PlayerList: React.FC<Props> = ({ data }) => {
   
   // Replace this with your actual sessions state
   const sessions = useAppSelector(state => state.appState.sessions); 
-  const currentSession = sessions.find(session => session.id === selectedAssetObject.id);
+  const currentSession = useAppSelector(state=>state.appState.selectedSessionObject);
   const handleMenuClick = (index: number, event: React.MouseEvent<HTMLElement>) => {
   setAnchorEl({ [index]: event.currentTarget });
   };
 
-
-  // Delete a Session
-  const [deletePlayer, { isLoading: isLoadingDeleteSession }] = useDeletePlayerMutation();
-const handleDeletePlayer = async (playerId: string) => {
-  try {
-    const response = await deletePlayer({
-      host: host,
-      container: container,
-      currentSession,
-      playerId,
-    }).unwrap();
-    console.log('Response:', response);
-  
-  } catch (error) {
-    console.error('There was an error!', error);
+  let sessionId: any;
+  if ('id' in currentSession) {
+    sessionId = currentSession?.id;
+  } else {
+    sessionId = null;
   }
-};
+
+  // Delete a Player
+  const [deletePlayer, { isLoading: isLoadingDeleteSession }] = useDeletePlayerMutation();
+  const handleDeletePlayer = async (playerId: string) => {
+    try {
+      const response = await deletePlayer({
+        host: host,
+        container: container,
+        sessionId,
+        playerId,
+      }).unwrap()
+      console.log('Response:', response);
+    
+    } catch (error) {
+      console.error('There was an error!', error);
+    }
+  };
 
   return (
     <>
@@ -167,7 +173,7 @@ const handleDeletePlayer = async (playerId: string) => {
                         }
                       }}
                     >
-                    <span>Actions</span>
+                         <span>Actions</span>
 
                   </Button>
                   <StyledMenu

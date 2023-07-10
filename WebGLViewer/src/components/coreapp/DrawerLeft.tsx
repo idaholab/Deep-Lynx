@@ -79,6 +79,7 @@ const SearchBar = ({setSearchQuery}: any) => (
 
 type Props = {};
 
+
 const DrawerLeft: React.FC<Props> = ({}) => {
 
   // Store

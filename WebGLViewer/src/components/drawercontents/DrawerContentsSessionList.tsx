@@ -183,7 +183,7 @@ const DrawerContentsSessionList: React.FC<Props> = ({
           <ButtonIconText type="add" handleClick={() => handleToggleModal()} text="Add Session" color="primary" />
         </Box>
       </Box>
-      {!sessionList || sessionList.length === 0 ? (
+      {!sessionList ? (
         <LoadingProgress text={'Loading Sessions'}/>
       ) :(
         <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0', borderTop: `1px solid ${COLORS.colorDarkgray}` }}>
