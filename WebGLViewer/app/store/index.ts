@@ -4,6 +4,7 @@ import { webGLReducer } from './slices/webGLSlice';
 
 import { nodesDataApi } from '../services/nodesDataApi';
 import { timeseriesDataApi } from '../services/timeseriesDataApi';
+import { sessionsDataApi } from '../services/sessionsDataApi';
 
 const initialState = {
   // Refactor Begin
@@ -21,6 +22,7 @@ const initialState = {
   openDrawerRightWidth: 425,
   selectedAssetObject: {},
   selectedSceneObject: {},
+  selectedSessionObject: {},
   selectedWebGLFileSetId: null,
   selectAssetOnScene: '',
   highlightAssetOnScene: '',
@@ -30,6 +32,7 @@ const initialState = {
   unityNodes: [],
   deepLynxNodes: [],
   tag: [],
+  sessions:[]as any[],
 };
 
 const appStateSlice = createSlice({
@@ -65,6 +68,36 @@ const appStateSlice = createSlice({
       const store = state;
       store.tagId = action.payload;
     },
+    // Sessions
+    deleteSession: (state, action) => {
+      const store=state
+      store.sessions = state.sessions.filter(session => session.id !== action.payload);
+    },
+    addSession: (state, action) => {
+      const store = state;
+      store.sessions.push(action.payload);;
+    },
+
+     // Delete object
+     removeObject: (state, action) => {
+      const store = state;
+      store.sessions = state.sessions.map(session => {
+        if (session.id === action.payload.sessionId) {
+          session.object = session.object.filter((object:any) => object.id !== action.payload.playerId);
+        }
+        return session;
+      });
+    },
+       // Delete player
+       removePlayer: (state, action) => {
+        const store = state;
+        store.sessions = state.sessions.map(session => {
+          if (session.id === action.payload.sessionId) {
+            session.players = session.players.filter((player:any) => player.state.id !== action.payload.playerId);
+          }
+          return session;
+        });
+      },
     // Refactor Reducers End
     // App functions
     toggleDrawerLeft: (state) => {
@@ -82,7 +115,7 @@ const appStateSlice = createSlice({
 
     // Asset functions
     selectAssetObject: (state, action) => {
-      console.log(action.payload);
+      // console.log(action.payload);
       const store = state;
       store.selectedAssetObject = action.payload;
     },
@@ -107,6 +140,12 @@ const appStateSlice = createSlice({
     setSceneList: (state, action) => {
       const store = state;
       store.sceneList = action.payload;
+    },
+
+    // Asset functions
+    selectSessionObject: (state, action) => {
+      const store = state;
+      store.selectedSessionObject = action.payload;
     },
 
     // WebGL File Set Functions
@@ -143,11 +182,13 @@ export const store = configureStore({
     webGL: webGLReducer,
     [nodesDataApi.reducerPath]: nodesDataApi.reducer,
     [timeseriesDataApi.reducerPath]: timeseriesDataApi.reducer,
+    [sessionsDataApi.reducerPath]: sessionsDataApi.reducer,
   },
   middleware: (getDefaultMiddleware) => {
     return getDefaultMiddleware()
       .concat(nodesDataApi.middleware)
       .concat(timeseriesDataApi.middleware)
+      .concat(sessionsDataApi.middleware)
   },
 });
 

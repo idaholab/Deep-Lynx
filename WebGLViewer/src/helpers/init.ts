@@ -25,7 +25,6 @@ export async function AttachDeepLynx() {
 
     const token: string = import.meta.env.VITE_DEEPLYNX_TOKEN;
     dispatch(appStateActions.setToken(token));
-
     const container: string = import.meta.env.VITE_DEEPLYNX_CONTAINER;
     dispatch(appStateActions.setContainer(container));
 
@@ -33,9 +32,9 @@ export async function AttachDeepLynx() {
     const fileset: any = JSON.parse(import.meta.env.VITE_DEEPLYNX_WEBGL_FILES);
 
     const metadata: WebGLFileset = ParseWebGL(fileset);
-    console.log(metadata);
-    const tag: string = ParseTag(metadata);
+   
 
+    const tag: string = ParseTag(metadata);
     dispatch(appStateActions.setMetadata(metadata));
     dispatch(appStateActions.setTagRefactor(tag));
 

@@ -26,15 +26,23 @@ import '../../styles/App.scss';
 
 type Props = {};
 
-const DrawerContentsNodeInfo: React.FC<Props> = ({}) => {
+const DrawerContentsUserInfo: React.FC<Props> = ({}) => {
   const dispatch = useAppDispatch();
 
-  const openDrawerLeftState: boolean = useAppSelector((state: any) => state.appState.openDrawerLeft);
-  const openDrawerLeftWidth: number = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);
-  const selectedAssetObject: any = useAppSelector((state: any) => state.appState.selectedAssetObject);
-  const highlightAssetObject: any = useAppSelector((state: any) => state.appState.highlightAssetObject);
+  type openDrawerLeftState = boolean;
+  const openDrawerLeftState: openDrawerLeftState = useAppSelector((state: any) => state.appState.openDrawerLeft);
+
+  type openDrawerLeftWidth = number;
+  const openDrawerLeftWidth: openDrawerLeftWidth = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);
+
+  type selectedAssetObject = any;
+  const selectedAssetObject: selectedAssetObject = useAppSelector((state: any) => state.appState.selectedAssetObject);
+
+  type highlightAssetObject = any;
+  const highlightAssetObject: highlightAssetObject = useAppSelector((state: any) => state.appState.highlightAssetObject);
 
   const handleSelectAssetOnScene = (payload: any) => {
+    console.log(payload.payload.properties.name)
     dispatch(appStateActions.selectAssetOnScene(payload.properties.name))
   };
 
@@ -45,8 +53,6 @@ const DrawerContentsNodeInfo: React.FC<Props> = ({}) => {
   const handleShowAssetOnGraph = (payload: any) => {
     console.log('Action to \"Show On Graph\" clicked!')
   }
-
-  console.log(selectedAssetObject)
 
   return (
     <>
@@ -59,10 +65,10 @@ const DrawerContentsNodeInfo: React.FC<Props> = ({}) => {
         </Stack>
       </Box>
       <Box sx={{ padding: '16px', display: 'flex', flex: '1 1 100%', flexDirection: 'column'}}>
-        <NodeInfoMainTabs selectedAssetObject={selectedAssetObject} />
+        <NodeInfoMainTabs data={selectedAssetObject} />
       </Box>
     </>
   );
 }
 
-export default DrawerContentsNodeInfo;
+export default DrawerContentsUserInfo;

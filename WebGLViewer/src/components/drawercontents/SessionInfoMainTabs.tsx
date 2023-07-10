@@ -8,13 +8,9 @@ import {
   Tabs
 } from '@mui/material';
 
-// Custom Components 
-import NodeInfoDetailsHistory from '../drawercontents/nodeinfo/NodeInfoDetailsHistory';
-import NodeInfoPropsMeta from '../drawercontents/nodeinfo/NodeInfoPropsMeta';
-import NodeInfoTimeSeries from '../drawercontents/nodeinfo/NodeInfoTimeSeries';
-import NodeInfoLinkedInformation from './nodeinfo/NodeInfoLinkedInformation';
-import NodeInfoFiles from '../drawercontents/nodeinfo/NodeInfoFiles';
-import NodeInfoTags from '../drawercontents/nodeinfo/NodeInfoTags';
+// Custom Components
+import PlayersList from './section/PlayersList';
+import ObjectList from './section/ObjectList';
 
 function a11yProps(index: number) {
   return {
@@ -24,43 +20,27 @@ function a11yProps(index: number) {
 }
 
 type Props = {
-  selectedAssetObject: object;
+  data: object;
 };
 
-const NodeInfoMainTabs: React.FC<Props> = ({
-  selectedAssetObject
+const SectionInfoMainTabs: React.FC<Props> = ({
+  data
 }) => {
   const [value, setValue] = React.useState(0);
-
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
 
   const tabInfo = [
     {
-      title: 'Info',
-      component: NodeInfoDetailsHistory
+      title: 'Players',
+      component: PlayersList
     },
     {
-      title: 'Properties/Metadata',
-      component: NodeInfoPropsMeta
-    },
-    {
-      title: 'Timeseries Data',
-      component: NodeInfoTimeSeries
-    },
-    {
-      title: 'Linked Info',
-      component: NodeInfoLinkedInformation
-    },
-    {
-      title: 'Attached Files',
-      component: NodeInfoFiles
-    },
-    {
-      title: 'Tags',
-      component: NodeInfoTags
-    },
+      title: 'Objects',
+      component: ObjectList
+    }
+   
   ]
 
   return (
@@ -120,7 +100,7 @@ const NodeInfoMainTabs: React.FC<Props> = ({
           >
             {value === index && (
               <Box sx={{ p: 0, background: 'white', display: 'flex', flex: '1 0 100%', flexDirection: 'column', marginTop: '-1px', padding: '16px' }}>
-                <DynamicTag selectedAssetObject={selectedAssetObject} />
+                <DynamicTag data={data} />
               </Box>
             )}
           </Box>
@@ -130,4 +110,4 @@ const NodeInfoMainTabs: React.FC<Props> = ({
   );
 }
 
-export default NodeInfoMainTabs;
+export default SectionInfoMainTabs;

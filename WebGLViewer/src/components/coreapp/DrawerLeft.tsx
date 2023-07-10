@@ -1,9 +1,9 @@
 // React
 import * as React from 'react';
-
 // Hooks
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGetAllNodesQuery } from '../../../app/services/nodesDataApi';
+import { useGetAllSessionsQuery } from '../../../app/services/sessionsDataApi';
 import { useAppSelector, useAppDispatch } from '../../../app/hooks/reduxTypescriptHooks';
 
 // Import Packages
@@ -34,12 +34,15 @@ import CategoryIcon from '@mui/icons-material/Category';
 import ImageIcon from '@mui/icons-material/Image';
 import InfoIcon from '@mui/icons-material/Info';
 import SettingsIcon from '@mui/icons-material/Settings';
+import GroupIcon from '@mui/icons-material/Group';
 
 // Components
 import DrawerContentsNodeList from '../drawercontents/DrawerContentsNodeList';
 import DrawerContentsNodeInfo from '../drawercontents/DrawerContentsNodeInfo';
 import DrawerContentsSceneList from '../drawercontents/DrawerContentsSceneList';
 import DrawerContentsSettings from '../drawercontents/DrawerContentsSettings';
+import DrawerContentsSessionList from '../drawercontents/DrawerContentsSessionList';
+import DrawerContentsSessionInfo from '../drawercontents/DrawerContentsSessionInfo';
 import ButtonIconText from '../elements/ButtonIconText';
 
 // Styles
@@ -76,6 +79,7 @@ const SearchBar = ({setSearchQuery}: any) => (
 
 type Props = {};
 
+
 const DrawerLeft: React.FC<Props> = ({}) => {
 
   // Store
@@ -91,10 +95,14 @@ const DrawerLeft: React.FC<Props> = ({}) => {
 
   const openDrawerLeftState: boolean = useAppSelector((state: any) => state.appState.openDrawerLeft);
   const openDrawerLeftWidth: number = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);
+
+  // Selected Asset Object
   const selectedAssetObject: any = useAppSelector((state: any) => state.appState.selectedAssetObject);
+  const selectedSessionObject: any = useAppSelector((state: any) => state.appState.selectedSessionObject);
 
   const [selected, setSelected] = useState('nodeList');
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
+
   const [filteredData, setFilteredData] = useState(); 
 
   const handleToggleOpenDrawerLeft = () => {
@@ -112,6 +120,11 @@ const DrawerLeft: React.FC<Props> = ({}) => {
     dispatch(appStateActions.setDrawerLeftWidth(430));
   };
 
+  const handleDeselectSessionObject = () => {
+    dispatch(appStateActions.selectSessionObject({}));
+    dispatch(appStateActions.setDrawerLeftWidth(430));
+  };
+
   // Menu links and menu link selection
   const menuLinkList = [
     {
@@ -123,6 +136,11 @@ const DrawerLeft: React.FC<Props> = ({}) => {
       title: 'Scenes',
       icon: ImageIcon,
       pane: 'sceneList'
+    },
+    {
+      title: 'Sessions',
+      icon: GroupIcon,
+      pane: 'sessionList'
     },
     {
       title: 'Settings',
@@ -138,12 +156,13 @@ const DrawerLeft: React.FC<Props> = ({}) => {
     }
     dispatch(appStateActions.setDrawerLeftWidth(430));
     dispatch(appStateActions.selectAssetObject({}));
+    dispatch(appStateActions.selectSessionObject({}));
   };
 
   // Component display switching
   const menuItemMatchesComponent = (pane: string) => selected === pane;
 
-  const { data } = useGetAllNodesQuery(
+  const { data: nodesDataResponse, isLoading: isLoadingNodesData } = useGetAllNodesQuery(
     {
       host, 
       token,
@@ -155,8 +174,26 @@ const DrawerLeft: React.FC<Props> = ({}) => {
     }
   );
 
-  const nodes = data?.value || [];
-  const isLoading = !data;
+  const nodesData = nodesDataResponse?.value || [];
+
+  const { data: sessionsDataResponse, isLoading: isLoadingSessionsData } = useGetAllSessionsQuery(
+    {
+      host, 
+      token,
+      container,
+    },
+  );
+
+  let sessionsData;
+
+  if (sessionsDataResponse?.value) {
+    try {
+      sessionsData = JSON.parse(sessionsDataResponse.value);
+    } catch (error) {
+      console.error('Error parsing JSON:', error);
+    }
+  }
+
 
   return (
   <>
@@ -266,6 +303,8 @@ const DrawerLeft: React.FC<Props> = ({}) => {
                 {selected === 'nodeList' && (Object.keys(selectedAssetObject).length === 0) ? 'Objects'
                   : selected === 'sceneList' ? 'Scenes'
                   : selected === 'settings' ? 'Settings'
+                  : selected === 'sessionList' && (Object.keys(selectedAssetObject).length === 0) ? 'Sessions'
+                  : selected === 'sessionList' && (Object.keys(selectedAssetObject).length !== 0) ?  `Session ${selectedAssetObject.id}`
                   : `Node ${selectedAssetObject.id}`
                 }
                 {(Object.keys(selectedAssetObject).length !== 0) && 
@@ -284,6 +323,7 @@ const DrawerLeft: React.FC<Props> = ({}) => {
                 selected === 'nodeList' ? 'View scene asset/object information. Select and Highlight objects. Show on Graph. View Data.'
                 : selected === 'sceneList' ? 'View and change Scenes'
                 : selected === 'settings' ? 'View and edit Settings'
+                : selected === 'sessionList' ? 'View and edit Sessions'
                 : null
               }>
                 <InfoIcon
@@ -304,10 +344,15 @@ const DrawerLeft: React.FC<Props> = ({}) => {
                   <ButtonIconText text='Back To List' handleClick={() => handleDeselectAssetObject()} type="close" color="error" />
                 </Box>
               }
+              {(selected === 'sessionList' && (Object.keys(selectedSessionObject).length !== 0)) &&
+                <Box sx={{ position: 'absolute', right: '0px', paddingRight: '16px' }}>
+                  <ButtonIconText text='Back To List' handleClick={() => handleDeselectSessionObject()} type="close" color="error" />
+                </Box>
+              }
             </Box>
             {selected === 'nodeList' && 
               <>
-                {(Object.keys(selectedAssetObject).length === 0) && <DrawerContentsNodeList data={nodes} />}
+                {(Object.keys(selectedAssetObject).length === 0) && <DrawerContentsNodeList data={nodesData} />}
                 {(Object.keys(selectedAssetObject).length !== 0) && <DrawerContentsNodeInfo />}
               </>
             }
@@ -316,6 +361,12 @@ const DrawerLeft: React.FC<Props> = ({}) => {
             }
             {selected === 'settings' && 
               <DrawerContentsSettings />
+            }
+            {selected === 'sessionList' && 
+              <>
+                {(Object.keys(selectedSessionObject).length === 0) && <DrawerContentsSessionList data={sessionsData} /> }
+                {(Object.keys(selectedSessionObject).length !== 0) && <DrawerContentsSessionInfo />}
+              </>
             }
           </Box>
         </Box>
