@@ -16,21 +16,22 @@ import {
   ListItemText,
   ListItemButton,
   MenuItem,
-  Typography,
-  Modal,
-  TextField,
 } from '@mui/material';
 import Menu, { MenuProps } from '@mui/material/Menu';
 
 // MUI Icons
 import DeleteIcon from '@mui/icons-material/Delete';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 // Styles
 import { styled, alpha } from '@mui/material/styles';
 import '../../../styles/App.scss';
 // @ts-ignore
 import COLORS from '../../../styles/variables';
-import axios from 'axios';
 import { useEffect } from 'react';
+import { useDeletePlayerMutation } from '../../../../app/services/sessionsDataApi';
+
+// Custom Components
+import LoadingProgress from '../../elements/LoadingProgress';
 
 const StyledMenu = styled((props: MenuProps) => (
   <Menu
@@ -74,12 +75,8 @@ type Props = {
 };
 
 const PlayerList: React.FC<Props> = ({ data }) => {
-//  const nodeList = data;
- const [nodeList, setNodeList] = React.useState(data);
-  const [selectedPlayer, setSelectedPlayer] = React.useState<any>(null);
-  // const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
-
-  const dispatch = useAppDispatch();
+ const playerList = data;
+ const dispatch = useAppDispatch();
 
   type openDrawerLeftState = boolean;
   const openDrawerLeftState: openDrawerLeftState = useAppSelector((state: any) => state.appState.openDrawerLeft);
@@ -89,7 +86,6 @@ const PlayerList: React.FC<Props> = ({ data }) => {
 
   const [selected, setSelected] = React.useState<string | false>(false);
   const host: string = useAppSelector((state: any) => state.appState.host);
-  const token: string = useAppSelector((state: any) => state.appState.token);
   const container: string = useAppSelector((state: any) => state.appState.container);
 
    // Selected Asset Object
@@ -104,45 +100,30 @@ const PlayerList: React.FC<Props> = ({ data }) => {
      setAnchorEl(null);
    };
   
-  // Delete session 
-  const [openDeleteModal, setOpenDeleteModal] = React.useState<boolean>(false);
-  const handleOpenDeleteModal = (player: any) => {
-    console.log(player.state.id)
-    setSelectedPlayer(player);
-    setOpenDeleteModal(true);
-  };
-  const handleCloseDeleteModal = () => {
-    setOpenDeleteModal(false); 
-  };
   // Replace this with your actual sessions state
   const sessions = useAppSelector(state => state.appState.sessions); 
   const currentSession = sessions.find(session => session.id === selectedAssetObject.id);
-  const players = currentSession ? currentSession.players : [];
-const handleDeleteSession = async (sessionId: string) => {
+  const handleMenuClick = (index: number, event: React.MouseEvent<HTMLElement>) => {
+  setAnchorEl({ [index]: event.currentTarget });
+  };
+
+
+  // Delete a Session
+  const [deletePlayer, { isLoading: isLoadingDeleteSession }] = useDeletePlayerMutation();
+const handleDeletePlayer = async (playerId: string) => {
   try {
-    await axios.delete(`${host}/containers/${container}/serval/sessions/${selectedAssetObject.id}/players/${selectedPlayer.state.id}`, {
-      headers: {
-        Authorization: `bearer ${token}`
-      },
-    }).then (
-      (response: any) => {
-        dispatch(appStateActions.removePlayer({ sessionId: selectedAssetObject.id, playerId: selectedPlayer.state.id }));
-        // const updatePlayerList = nodeList.users.filter((player:any) => player.id !== selectedPlayer.state.id);
-        const updatePlayerList = nodeList.users.filter((player: any) => player.state.id !== selectedPlayer.state.id);
-
-
-        setNodeList((prevNodeList: any) => ({
-          ...prevNodeList,
-          users: updatePlayerList,
-        }));
-        handleCloseDeleteModal();
-      })
-   
+    const response = await deletePlayer({
+      host: host,
+      container: container,
+      currentSession,
+      playerId,
+    }).unwrap();
+    console.log('Response:', response);
+  
   } catch (error) {
     console.error('There was an error!', error);
   }
 };
-
 
   return (
     <>
@@ -151,68 +132,43 @@ const handleDeleteSession = async (sessionId: string) => {
           Id
         </Box>
       </Box>
-      <Modal open={openDeleteModal} onClose={handleCloseDeleteModal} disableEnforceFocus>
-      <div
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 400,
-          backgroundColor: 'white',
-          border: '2px solid black',
-          boxShadow: '24px',
-          padding: '16px',
-        }}
-      >
-        <h5>Delete Player</h5>
-        <p>Are you sure you want to delete this player?</p>
-        <Button
-          variant="contained"
-          disableElevation
-          onClick={() => handleDeleteSession(selectedPlayer.state.id)}
-          size="small"
-          style={{ marginTop: '16px' }}
-        >
-          Delete
-        </Button>
-      </div>
-    </Modal>
+      {!playerList || playerList.length === 0 ? (
+        <LoadingProgress text={'Loading Sessions'}/>
+      ) :(
       <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0', borderTop: `1px solid ${COLORS.colorDarkgray}` }}>
         <List dense sx={{ paddingTop: '0' }}>
-          {nodeList.users.map((object: any, index: number) => (
+          {playerList.users.map((object: any, index: number) => (
             <ListItem
               key={object.state.id}
               disablePadding
               sx={{ borderBottom: `1px solid ${COLORS.colorDarkgray}` }}
               secondaryAction={
                 <>
-                  <Button
-                    id="customized-button"
-                    className={`menu-button-${index}`}
-                    aria-controls={open ? 'customized-menu' : undefined}
-                    aria-haspopup="true"
-                    aria-expanded={open ? 'true' : undefined}
-                    variant="contained"
-                    disableElevation
-                    size="small"
-                    sx={{
-                      color: 'white',
-                      padding: '0px 4px 0 4px',
-                      marginLeft: 'auto',
-                      '& span': {
-                        fontSize: '14px',
-                        marginBottom: '1px',
-                        '&:first-of-type': {
-                          marginRight: '-6px'
-                        },
-                      }
-                    }}
-                  >
-                    <MenuItem onClick={() => handleOpenDeleteModal(object)} disableRipple>
-                      <DeleteIcon />
-                      Delete
-                    </MenuItem>
+                       <Button
+                      id="customized-button"
+                      className={`menu-button-${index}`}
+                      aria-controls={open ? 'customized-menu' : undefined}
+                      aria-haspopup="true"
+                      aria-expanded={open ? 'true' : undefined}
+                      variant="contained"
+                      disableElevation
+                      onClick={(e) => handleMenuClick(index, e)}
+                      endIcon={<KeyboardArrowDownIcon />}
+                      size="small"
+                      sx={{
+                        color: 'white',
+                        padding: '0px 4px 0 8px',
+                        '& span': {
+                          fontSize: '14px',
+                          marginBottom: '1px',
+                          '&:first-of-type': {
+                            marginRight: '-6px'
+                          },
+                        }
+                      }}
+                    >
+                    <span>Actions</span>
+
                   </Button>
                   <StyledMenu
                     id="customized-menu"
@@ -223,7 +179,7 @@ const handleDeleteSession = async (sessionId: string) => {
                     open={Boolean(anchorEl && anchorEl[index])}
                     onClose={handleClose}
                   >
-                     <MenuItem onClick={() => handleOpenDeleteModal(object)} disableRipple>
+                     <MenuItem onClick={() => handleDeletePlayer(object.state.id)} disableRipple>
                       <DeleteIcon />
                       Delete
                     </MenuItem>
@@ -257,6 +213,7 @@ const handleDeleteSession = async (sessionId: string) => {
           ))}
         </List>
       </Box>
+          )}
     </>
   );
 };

@@ -131,7 +131,7 @@ const DrawerContentsSessionList: React.FC<Props> = ({
   }
 
   // Add a Session
-  const initialValue = { name: '' }
+  const initialValue = { name: 'Session' }
   const [newSession, setNewSession] = useState(initialValue);
   const [addNewSession, { isLoading: isLoadingAddNewSession }] = useAddSessionMutation();
 
@@ -167,7 +167,7 @@ const DrawerContentsSessionList: React.FC<Props> = ({
         sessionId,
       }).unwrap();
       console.log('Response:', response);
-      dispatch(appStateActions.deleteSession(sessionId));
+      // dispatch(appStateActions.deleteSession(sessionId));
     } catch (error) {
       console.error('There was an error!', error);
     }

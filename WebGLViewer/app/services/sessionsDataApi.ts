@@ -36,6 +36,20 @@ export const sessionsDataApi = createApi({
       }),
       invalidatesTags: ['Session']
     }),
+    deletePlayer:build.mutation({
+      query: ({ host, container, sessionId, playerId }) => ({
+        url: `${host}/containers/${container}/serval/sessions/${sessionId}/players/${playerId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Session']
+    }),
+    deleteObject:build.mutation({
+      query: ({ host, container, sessionId, objectId }) => ({
+        url: `${host}/containers/${container}/serval/sessions/${sessionId}/objects/${objectId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Session']
+    })
   }),
 });
 
@@ -43,4 +57,6 @@ export const {
   useGetAllSessionsQuery,
   useAddSessionMutation,
   useDeleteSessionMutation,
+  useDeletePlayerMutation,
+  useDeleteObjectMutation
 } = sessionsDataApi;

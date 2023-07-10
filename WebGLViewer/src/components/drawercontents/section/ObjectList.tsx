@@ -3,10 +3,10 @@ import * as React from 'react';
 
 // Hooks
 import { useAppSelector, useAppDispatch } from '../../../../app/hooks/reduxTypescriptHooks';
-import axios from 'axios';
+import{useDeleteObjectMutation, useDeletePlayerMutation} from '../../../../app/services/sessionsDataApi'
 // Import Redux Actions
 import { appStateActions } from '../../../../app/store/index';
-import { v4 as uuidv4 } from 'uuid';
+// import { v4 as uuidv4 } from 'uuid';
 // MUI Components
 import {
   Box,
@@ -23,12 +23,15 @@ import Menu, { MenuProps } from '@mui/material/Menu';
 
 // MUI Icons
 import DeleteIcon from '@mui/icons-material/Delete';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 // Styles
 import { styled, alpha } from '@mui/material/styles';
 import '../../../styles/App.scss';
 // @ts-ignore
 import COLORS from '../../../styles/variables';
 import ObjectName from './ObjectName';
+// Custom Components
+import LoadingProgress from '../../elements/LoadingProgress';
 
 const StyledMenu = styled((props: MenuProps) => (
   <Menu
@@ -79,13 +82,7 @@ const ObjectList: React.FC<Props> = ({
   data
 
 }) => {
-// const nodeList = data;
-const [nodeList, setNodeList] = React.useState(data);
-// const [nodeList, setNodeList] = React.useState<any[]>([]);
-// React.useEffect(() => {
-//   setNodeList(data);
-// }, [data]);
-
+const objectList = data;
 const dispatch = useAppDispatch();
 
   type openDrawerLeftState = boolean;
@@ -96,9 +93,8 @@ const dispatch = useAppDispatch();
 
   const [selected, setSelected] = React.useState<string | false>(false);
   const host: string = useAppSelector((state: any) => state.appState.host);
-  const token: string = useAppSelector((state: any) => state.appState.token);
   const container: string = useAppSelector((state: any) => state.appState.container);
- 
+
   // Menu
   // const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [anchorEl, setAnchorEl] = React.useState<any>(null);
@@ -116,121 +112,85 @@ const dispatch = useAppDispatch();
     setPopoverOpen(false);
     setPopoverText("");
   };
+  // Replace this with your actual sessions state
+  const sessions = useAppSelector(state => state.appState.sessions); 
+  const currentSession = sessions.find(session => session.id === selectedAssetObject.id);
+  const handleMenuClick = (index: number, event: React.MouseEvent<HTMLElement>) => {
+  setAnchorEl({ [index]: event.currentTarget });
+  };
 
   
    // Selected Asset Object
    type selectedAssetObject = any;
   const selectedAssetObject: selectedAssetObject = useAppSelector((state: any) => state.appState.selectedAssetObject);
 
-  // Delete session 
-  const [openDeleteModal, setOpenDeleteModal] = React.useState<boolean>(false);
-  const [selectedObject, setSelectedObject] = React.useState<any>(null);
-  const handleOpenDeleteModal = (object: any) => {
-    setSelectedObject(object);
-    setOpenDeleteModal(true);
-  };
-  const handleCloseDeleteModal = () => {
-    setOpenDeleteModal(false);
-  };
-  
-const handleDeleteSession = async (sessionId: string) => {
+  // Delete a Session
+  const [deleteObject, { isLoading: isLoadingDeleteSession }] = useDeleteObjectMutation();
+const handleDeleteObject  = async (objectId: string) => {
   try {
-    await axios.delete(`${host}/containers/${container}/serval/sessions/${selectedAssetObject.id}/objects/${selectedObject.id}`, {
-      headers: {
-        Authorization: `bearer ${token}`
-      },
-    }).then (
-      (response: any) => {
-        dispatch(appStateActions.removeObject({ sessionId: selectedAssetObject.id, playerId: selectedObject.state.id }));
-        // / Update the object list by filtering out the deleted object
-        const updatedObjectList = nodeList.objects.filter((object:any) => object.id !== selectedObject.id);
-        setNodeList((prevNodeList: any) => ({
-          ...prevNodeList,
-          objects: updatedObjectList,
-        }));
-        handleCloseDeleteModal();
-      })
-   
+    const response = await deleteObject({
+      host: host,
+      container: container,
+      currentSession,
+      objectId,
+    }).unwrap();
+    console.log('Response:', response);
+  
   } catch (error) {
     console.error('There was an error!', error);
   }
 };
+
  
 
   return (
     <>
-      <Box sx={{ display: 'flex', flexDirection: 'row', fontSize: '14px', margin: '0px 16px 6px 16px' }}>
-        <Box sx={{ borderRight: `1px solid ${COLORS.colorDarkgray2}`, paddingRight: '6px', marginRight: '6px', fontWeight: 'bold' }}>
-          Id
-        </Box>
-        <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 'bold' }}>
-          Player Name
-        </Box>
+    <Box sx={{ display: 'flex', flexDirection: 'row', fontSize: '14px', margin: '0px 16px 6px 16px' }}>
+      <Box sx={{ borderRight: `1px solid ${COLORS.colorDarkgray2}`, paddingRight: '6px', marginRight: '6px', fontWeight: 'bold' }}>
+        Id
       </Box>
-      <Modal open={openDeleteModal} onClose={handleCloseDeleteModal} disableEnforceFocus>
-      <div
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 400,
-          backgroundColor: 'white',
-          border: '2px solid black',
-          boxShadow: '24px',
-          padding: '16px',
-        }}
-      >
-        <h5>Delete Object</h5>
-        <p>Are you sure you want to delete this object?</p>
-        <Button
-          variant="contained"
-          disableElevation
-          onClick={() => handleDeleteSession(selectedObject.id)}
-          size="small"
-          style={{ marginTop: '16px' }}
-        >
-          Delete
-        </Button>
-      </div>
-    </Modal>
-      <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0', borderTop: `1px solid ${COLORS.colorDarkgray}` }}>
-        <List dense sx={{ paddingTop: '0' }}>
-          {nodeList.objects.map((object: any, index: number) => (
-            <ListItem
-              key={uuidv4()}
-              disablePadding
-              sx={{ borderBottom: `1px solid ${COLORS.colorDarkgray}` }}
-              secondaryAction={
-                <>
-                <Button
-                  id="customized-button"
-                  className={`menu-button-${index}`}
-                  aria-controls={open ? 'customized-menu' : undefined}
-                  aria-haspopup="true"
-                  aria-expanded={open ? 'true' : undefined}
-                  variant="contained"
-                  disableElevation
-                  size="small"
-                  sx={{
-                    color: 'white',
-                    padding: '0px 4px 0 4px',
-                    marginLeft: 'auto',
-                    '& span': {
-                      fontSize: '14px',
-                      marginBottom: '1px',
-                      '&:first-of-type': {
-                        marginRight: '-6px'
-                      },
-                    }
-                  }}
-                >
-                <MenuItem onClick={() => handleOpenDeleteModal(object)} disableRipple>
-                      <DeleteIcon />
-                      Delete
-                    </MenuItem>
-                  </Button>
-                  <StyledMenu
+      <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 'bold' }}>
+        Object Name
+      </Box>
+    </Box>
+    {!objectList || objectList.length === 0 ? (
+        <LoadingProgress text={'Loading Sessions'}/>
+      ) :(
+    <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0', borderTop: `1px solid ${COLORS.colorDarkgray}` }}>
+      <List dense sx={{ paddingTop: '0' }}>
+        {objectList.objects.map((object: any, index: number) => (
+          <ListItem
+            key={object.id}
+            disablePadding
+            sx={{ borderBottom: `1px solid ${COLORS.colorDarkgray}` }}
+            secondaryAction={
+              <>
+                     <Button
+                      id="customized-button"
+                      className={`menu-button-${index}`}
+                      aria-controls={open ? 'customized-menu' : undefined}
+                      aria-haspopup="true"
+                      aria-expanded={open ? 'true' : undefined}
+                      variant="contained"
+                      disableElevation
+                      onClick={(e) => handleMenuClick(index, e)}
+                      endIcon={<KeyboardArrowDownIcon />}
+                      size="small"
+                      sx={{
+                        color: 'white',
+                        padding: '0px 4px 0 8px',
+                        '& span': {
+                          fontSize: '14px',
+                          marginBottom: '1px',
+                          '&:first-of-type': {
+                            marginRight: '-6px'
+                          },
+                        }
+                      }}
+                    >
+                         <span>Actions</span>
+                </Button>
+                <StyledMenu
                     id="customized-menu"
                     MenuListProps={{
                       'aria-labelledby': 'customized-button',
@@ -239,46 +199,47 @@ const handleDeleteSession = async (sessionId: string) => {
                     open={Boolean(anchorEl && anchorEl[index])}
                     onClose={handleClose}
                   >
-                     <MenuItem onClick={() => handleOpenDeleteModal(object)} disableRipple>
+                     <MenuItem onClick={() => handleDeleteObject(object.id)} disableRipple>
                       <DeleteIcon />
                       Delete
                     </MenuItem>
                   </StyledMenu>
-                </>
-              }
+              </>
+            }
+          >
+            <ListItemButton
+              selected={selected === `listItem${index+1}`}
+              sx={{
+                '&.Mui-selected': {
+                  backgroundColor: `${COLORS.colorListSelectGray} !important`
+                },
+                '&.Mui-focusVisible': {
+                  backgroundColor: `${COLORS.colorListSelectGray} !important`
+                },
+                '&:hover': {
+                  backgroundColor: `${COLORS.colorListSelectGray} !important`
+                }
+              }}
             >
-              <ListItemButton
-                selected={selected === `listItem${index+1}`}
-                sx={{
-                  '&.Mui-selected': {
-                    backgroundColor: `${COLORS.colorListSelectGray} !important`
-                  },
-                  '&.Mui-focusVisible': {
-                    backgroundColor: `${COLORS.colorListSelectGray} !important`
-                  },
-                  '&:hover': {
-                    backgroundColor: `${COLORS.colorListSelectGray} !important`
-                  }
-                }}
-              >
-                <ListItemText>
-                  <Box sx={{ display: 'flex', flexDirection: 'row' }}>
-                    <Box sx={{ borderRight: `1px solid ${COLORS.colorDarkgray2}`, paddingRight: '6px', marginRight: '6px' }}>
-                      { object.id }
-                    </Box>
-                    <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    <ObjectName name={object.state} />
-                    </Box>
-                 
-            
+              <ListItemText>
+                <Box sx={{ display: 'flex', flexDirection: 'row' }}>
+                  <Box sx={{ borderRight: `1px solid ${COLORS.colorDarkgray2}`, paddingRight: '6px', marginRight: '6px' }}>
+                    { object.id }
                   </Box>
-                </ListItemText>
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
-      </Box>
-    </>
+                  <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <ObjectName name={object.state} />
+                  </Box>
+               
+          
+                </Box>
+              </ListItemText>
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+    </Box>
+        )}
+  </>
   );
 }
 
