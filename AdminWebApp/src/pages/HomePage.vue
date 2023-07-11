@@ -22,7 +22,7 @@
       width="260"
       class="grey--text text--darken-2"
     >
-      <div class="logo-div" style="display: flex; padding: 8px 12px;">
+      <div class="logo-div" style="display: flex; padding: 8px 12px;" @click="containerSelect">
         <img style="max-width:100%;" src="../assets/lynx-white.png">
       </div>
 
