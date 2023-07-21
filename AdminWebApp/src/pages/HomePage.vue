@@ -57,7 +57,7 @@
             link
             v-if="$auth.Auth('ontology', 'read', containerID)"
             @click="setActiveComponent('metatypes')"
-            :input-value="currentMainComponent === 'Metatypes'"
+            :input-value="currentMainComponent === 'ViewMetatypes'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -593,7 +593,7 @@
 
 <script lang="ts">
   import Vue from 'vue'
-  import Metatypes from "@/views/Metatypes.vue"
+  import ViewMetatypes from "@/views/ViewMetatypes.vue"
   import MetatypeRelationships from "@/views/MetatypeRelationships.vue"
   import MetatypeRelationshipPairs from "@/views/MetatypeRelationshipPairs.vue"
   import DataExport from "@/views/DataExport.vue"
@@ -640,7 +640,7 @@
   export default Vue.extend ({
     name: 'HomePage',
 
-    components: { ContainerSelect, ApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, DataExport, DataQuery, DataSources, DataMapping, EventSystem, ViewSettings, ContainerUsers, ViewUsers, Containers, ViewOntologyUpdate, ViewOntologyVersioning, ContainerAlertBanner, ViewServiceUsers, ContainerExport, ContainerImport, FileManager, OverviewGraph },
+    components: { ContainerSelect, ApiKeys, LanguageSelect, DataImports, ViewMetatypes, MetatypeRelationships, MetatypeRelationshipPairs, DataExport, DataQuery, DataSources, DataMapping, EventSystem, ViewSettings, ContainerUsers, ViewUsers, Containers, ViewOntologyUpdate, ViewOntologyVersioning, ContainerAlertBanner, ViewServiceUsers, ContainerExport, ContainerImport, FileManager, OverviewGraph },
 
     props: {
       containerID: {
@@ -707,7 +707,7 @@
           }
 
           case "metatypes": {
-            this.currentMainComponent = "Metatypes";
+            this.currentMainComponent = "ViewMetatypes";
             this.componentName = this.$t('classes.classes')
             this.$router.replace(`/containers/${this.containerID}/metatypes`)
             break;

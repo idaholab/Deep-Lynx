@@ -16,7 +16,8 @@
             >
               <v-file-input
                 @change="addFile"
-                :rules="[v => !!v || $t('validation.selectOne')]">
+                :rules="[selectionRule]"
+              >
                 <template v-slot:label>
                   .owl File
                 </template>
@@ -28,7 +29,8 @@
                 <v-divider></v-divider>
               </v-row>
               <v-text-field v-model="owlFilePath"
-                :rules="[v => !!v || $t('validation.selectOne')]">
+                :rules="[selectionRule]"
+              >
                 <template v-slot:label>
                   URL to .owl File
                 </template>
@@ -56,18 +58,26 @@
   import Vue, { PropType } from 'vue'
 
   interface OntologyUpdateModel {
-    owlFile: File
+    errorMessage: string,
+    successMessage: string,
+    loading: boolean,
+    owlFilePath: string,
+    owlFile: File | null
   }
 
   export default Vue.extend ({
     name: 'OntologyUpdate',
 
     props: {
-      containerID: {required: true}, // as PropType<string>
+      containerID: {type: String, required: true}, // as PropType<string>
     },
 
     data: (): OntologyUpdateModel => ({
-      owlFile: File | null = null
+      errorMessage: "",
+      successMessage: "",
+      loading: false,
+      owlFilePath: "",
+      owlFile: null
     }),
 
     methods: {
@@ -95,16 +105,10 @@
       },
       importHelpLink() {
         return this.$t('links.importOntology')
-      }
+      },
+      selectionRule(v: string | number | boolean | null | undefined) {
+        return !!v || this.$t('validation.selectOne');
+      },
     }
-
-    /****************** UNPROCESSED LINES FROM ORIGINAL COMPONENT: ******************
-
-      errorMessage = ""
-      successMessage = ""
-      loading = false
-      owlFilePath = ""
-
-     ********************************************************************************/
   });
 </script>
