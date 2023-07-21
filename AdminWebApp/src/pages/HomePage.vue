@@ -85,7 +85,7 @@
             link
             v-if="$auth.Auth('ontology', 'read', containerID)"
             @click="setActiveComponent('metatype-relationship-pairs')"
-            :input-value="currentMainComponent === 'MetatypeRelationshipPairs'"
+            :input-value="currentMainComponent === 'ViewMetatypeRelationshipPairs'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -595,7 +595,7 @@
   import Vue from 'vue'
   import ViewMetatypes from "@/views/ViewMetatypes.vue"
   import ViewMetatypeRelationships from "@/views/ViewMetatypeRelationships.vue"
-  import MetatypeRelationshipPairs from "@/views/MetatypeRelationshipPairs.vue"
+  import ViewMetatypeRelationshipPairs from "@/views/ViewMetatypeRelationshipPairs.vue"
   import DataExport from "@/views/DataExport.vue"
   import DataImports from "@/views/DataImports.vue"
   import DataQuery from "@/views/DataQuery.vue"
@@ -640,7 +640,7 @@
   export default Vue.extend ({
     name: 'HomePage',
 
-    components: { ContainerSelect, ApiKeys, LanguageSelect, DataImports, ViewMetatypes, ViewMetatypeRelationships, MetatypeRelationshipPairs, DataExport, DataQuery, DataSources, DataMapping, EventSystem, ViewSettings, ContainerUsers, ViewUsers, Containers, ViewOntologyUpdate, ViewOntologyVersioning, ContainerAlertBanner, ViewServiceUsers, ContainerExport, ContainerImport, FileManager, OverviewGraph },
+    components: { ContainerSelect, ApiKeys, LanguageSelect, DataImports, ViewMetatypes, ViewMetatypeRelationships, ViewMetatypeRelationshipPairs, DataExport, DataQuery, DataSources, DataMapping, EventSystem, ViewSettings, ContainerUsers, ViewUsers, Containers, ViewOntologyUpdate, ViewOntologyVersioning, ContainerAlertBanner, ViewServiceUsers, ContainerExport, ContainerImport, FileManager, OverviewGraph },
 
     props: {
       containerID: {
@@ -721,7 +721,7 @@
           }
 
           case "metatype-relationship-pairs": {
-            this.currentMainComponent = "MetatypeRelationshipPairs";
+            this.currentMainComponent = "ViewMetatypeRelationshipPairs";
             this.componentName = this.$t('relationships.relationships')
             this.$router.replace(`/containers/${this.containerID}/metatype-relationship-pairs`)
             break;
