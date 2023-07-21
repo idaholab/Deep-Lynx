@@ -604,7 +604,7 @@
   import DataMapping from "@/views/DataMapping.vue"
   import EventSystem from "@/views/EventSystem.vue"
   import Settings from "@/views/Settings.vue"
-  import Users from "@/views/Users.vue"
+  import ViewUsers from "@/views/ViewUsers.vue"
   import ContainerUsers from "@/views/ContainerUsers.vue"
   import Containers from "@/views/Containers.vue"
   import ApiKeys from "@/views/ApiKeys.vue";
@@ -640,7 +640,7 @@
   export default Vue.extend ({
     name: 'HomePage',
 
-    components: { ContainerSelect, ApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, DataExport, DataQuery, DataSources, DataMapping, EventSystem, Settings, ContainerUsers, Users, Containers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ContainerExport, ContainerImport, FileManager, OverviewGraph },
+    components: { ContainerSelect, ApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, DataExport, DataQuery, DataSources, DataMapping, EventSystem, Settings, ContainerUsers, ViewUsers, Containers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ContainerExport, ContainerImport, FileManager, OverviewGraph },
 
     props: {
       containerID: {
@@ -784,7 +784,7 @@
           }
 
           case "users": {
-            this.currentMainComponent = "Users";
+            this.currentMainComponent = "ViewUsers";
             this.componentName = this.$t('users.users')
             this.$router.replace(`/containers/${this.containerID}/users`)
             break;

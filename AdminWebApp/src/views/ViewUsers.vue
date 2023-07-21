@@ -102,110 +102,121 @@
 </template>
 
 <script lang="ts">
-  import {Component, Prop, Vue} from 'vue-property-decorator'
+  import Vue, { PropType } from 'vue'
   import {UserT} from "@/auth/types";
   import {AssignRolePayloadT, ContainerT} from "@/api/types";
 
-  @Component
-  export default class Users extends Vue {
-    @Prop({required: true})
-    readonly containerID!: string;
+  interface UsersModel {
+    errorMessage: string,
+    editDialog: boolean,
+    selectedRole: string,
+    selectedContainer: ContainerT | null
+    users: UserT[]
+    containers: ContainerT[]
+    toEdit: UserT | null,
+    roles: string[]
+  }
 
-    dialog = false
-    editDialog = false
-    selectedContainer: ContainerT | null = null
-    users: UserT[] = []
-    containers: ContainerT[] = []
-    errorMessage = ""
+  export default Vue.extend ({
+    name: 'ViewUsers',
 
-    toEdit: UserT | null = null
-    selectedRole = ""
-    roles = ["user", "editor", "admin"]
+    props: {
+      containerID: {required: true}, // as PropType<string>
+    },
 
-    get headers() {
-      return  [
-        { text: this.$t("general.name"), value: 'display_name' },
-        { text: this.$t("general.email"), value: 'email'},
-        { text: this.$t("users.admin"), value: 'admin'},
-        { text: this.$t("general.actions"), value: 'actions', sortable: false }
-      ]
-    }
+    computed: {
+      headers() {
+        return  [
+          { text: this.$t("general.name"), value: 'display_name' },
+          { text: this.$t("general.email"), value: 'email'},
+          { text: this.$t("users.admin"), value: 'admin'},
+          { text: this.$t("general.actions"), value: 'actions', sortable: false }
+        ]
+      }
+    },
+
+    data: (): UsersModel => ({
+      editDialog: false,
+
+      errorMessage: "",
+
+      selectedRole: "",
+      roles: ["user", "editor", "admin"],
+      selectedContainer: null,
+      users: [],
+      containers: [],
+      toEdit: null,
+    }),
+
+    methods: {
+      refreshUsers() {
+        this.$client.listUsers()
+        .then(users => {
+          this.users = users
+        })
+        .catch(e => this.errorMessage = e)
+      },
+      refreshContainers() {
+        this.$client.listContainers()
+        .then(containers => {
+          this.containers = containers
+        })
+        .catch(e => this.errorMessage = e)
+      },
+      retrieveUserRoles() {
+        if(this.selectedContainer && this.toEdit) {
+          this.$client.retrieveUserRoles(this.selectedContainer.id, this.toEdit.id)
+          .then(roles => {
+            if(roles.length > 0) {
+              this.selectedRole = roles[0]
+            }
+          })
+          .catch(e => this.errorMessage = e)
+        }
+      },
+      editUser(user: UserT) {
+        this.editDialog = true
+        this.toEdit = user
+        this.refreshContainers()
+      },
+      saveUser() {
+        this.$client.updateUser({"display_name": this.toEdit!.display_name, "email": this.toEdit!.email}, this.toEdit!.id)
+        this.editDialog = false
+      },
+      deleteUser(user: UserT) {
+        this.$client.deleteUser(user.id)
+        this.refreshUsers()
+      },
+      selectContainer(container: ContainerT) {
+        this.selectedRole = ""
+        this.selectedContainer = container
+        this.retrieveUserRoles()
+      },
+      assignRole(role: string) {
+        if(this.toEdit && this.selectedContainer) {
+          const assignRolePayload: AssignRolePayloadT = {
+            user_id: this.toEdit.id,
+            container_id: this.selectedContainer.id,
+            role_name: role
+          }
+
+          this.$client.assignRoleToUser(this.selectedContainer.id, assignRolePayload)
+          .then(() => {
+            this.retrieveUserRoles()
+          })
+          .catch(e => this.errorMessage = e)
+        }
+      },
+      clear() {
+        this.toEdit = null
+        this.selectedContainer = null
+        this.selectedRole = ""
+      }
+    },
 
     mounted() {
       this.refreshUsers()
       this.refreshContainers()
     }
-
-    refreshUsers() {
-      this.$client.listUsers()
-      .then(users => {
-        this.users = users
-      })
-      .catch(e => this.errorMessage = e)
-    }
-
-    refreshContainers() {
-      this.$client.listContainers()
-      .then(containers => {
-        this.containers = containers
-      })
-      .catch(e => this.errorMessage = e)
-    }
-
-    retrieveUserRoles() {
-      if(this.selectedContainer && this.toEdit) {
-        this.$client.retrieveUserRoles(this.selectedContainer.id, this.toEdit.id)
-        .then(roles => {
-          if(roles.length > 0) {
-            this.selectedRole = roles[0]
-          }
-        })
-        .catch(e => this.errorMessage = e)
-      }
-    }
-
-    editUser(user: UserT) {
-      this.editDialog = true
-      this.toEdit = user
-      this.refreshContainers()
-    }
-
-    saveUser() {
-      this.$client.updateUser({"display_name": this.toEdit!.display_name, "email": this.toEdit!.email}, this.toEdit!.id)
-      this.editDialog = false
-    }
-
-    deleteUser(user: UserT) {
-      this.$client.deleteUser(user.id)
-      this.refreshUsers()
-    }
-
-    selectContainer(container: ContainerT) {
-      this.selectedRole = ""
-      this.selectedContainer = container
-      this.retrieveUserRoles()
-    }
-
-    assignRole(role: string) {
-      if(this.toEdit && this.selectedContainer) {
-        const assignRolePayload: AssignRolePayloadT = {
-          user_id: this.toEdit.id,
-          container_id: this.selectedContainer.id,
-          role_name: role
-        }
-
-        this.$client.assignRoleToUser(this.selectedContainer.id, assignRolePayload)
-        .then(() => {
-          this.retrieveUserRoles()
-        })
-        .catch(e => this.errorMessage = e)
-      }
-    }
-
-    clear() {
-      this.toEdit = null
-      this.selectedContainer = null
-      this.selectedRole = ""
-    }
-  }
+  });
 </script>
