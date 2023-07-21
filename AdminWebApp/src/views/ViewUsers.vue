@@ -102,7 +102,7 @@
 </template>
 
 <script lang="ts">
-  import Vue, { PropType } from 'vue'
+  import Vue from 'vue'
   import {UserT} from "@/auth/types";
   import {AssignRolePayloadT, ContainerT} from "@/api/types";
 
@@ -121,7 +121,7 @@
     name: 'ViewUsers',
 
     props: {
-      containerID: {required: true}, // as PropType<string>
+      containerID: {required: true},
     },
 
     computed: {

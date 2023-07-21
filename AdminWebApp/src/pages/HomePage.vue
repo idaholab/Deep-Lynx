@@ -603,7 +603,7 @@
   import DataSources from "@/views/DataSources.vue"
   import DataMapping from "@/views/DataMapping.vue"
   import EventSystem from "@/views/EventSystem.vue"
-  import Settings from "@/views/Settings.vue"
+  import ViewSettings from "@/views/ViewSettings.vue"
   import ViewUsers from "@/views/ViewUsers.vue"
   import ContainerUsers from "@/views/ContainerUsers.vue"
   import Containers from "@/views/Containers.vue"
@@ -640,7 +640,7 @@
   export default Vue.extend ({
     name: 'HomePage',
 
-    components: { ContainerSelect, ApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, DataExport, DataQuery, DataSources, DataMapping, EventSystem, Settings, ContainerUsers, ViewUsers, Containers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ContainerExport, ContainerImport, FileManager, OverviewGraph },
+    components: { ContainerSelect, ApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, DataExport, DataQuery, DataSources, DataMapping, EventSystem, ViewSettings, ContainerUsers, ViewUsers, Containers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ContainerExport, ContainerImport, FileManager, OverviewGraph },
 
     props: {
       containerID: {
@@ -777,7 +777,7 @@
           }
 
           case "settings": {
-            this.currentMainComponent = "Settings";
+            this.currentMainComponent = "ViewSettings";
             this.componentName = this.$t('general.settings')
             this.$router.replace(`/containers/${this.containerID}/settings`)
             break;
