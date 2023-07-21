@@ -188,7 +188,7 @@
             link
             v-if="$auth.Auth('data', 'write', containerID)"
             @click="setActiveComponent('event-actions')"
-            :input-value="currentMainComponent === 'EventSystem'"
+            :input-value="currentMainComponent === 'ViewEventSystem'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -601,7 +601,7 @@
   import DataQuery from "@/views/DataQuery.vue"
   import DataSources from "@/views/DataSources.vue"
   import DataMapping from "@/views/DataMapping.vue"
-  import EventSystem from "@/views/EventSystem.vue"
+  import ViewEventSystem from "@/views/ViewEventSystem.vue"
   import ViewSettings from "@/views/ViewSettings.vue"
   import ViewUsers from "@/views/ViewUsers.vue"
   import ContainerUsers from "@/views/ContainerUsers.vue"
@@ -640,7 +640,7 @@
   export default Vue.extend ({
     name: 'HomePage',
 
-    components: { ContainerSelect, ApiKeys, LanguageSelect, DataImports, ViewMetatypes, ViewMetatypeRelationships, ViewMetatypeRelationshipPairs, DataExport, DataQuery, DataSources, DataMapping, EventSystem, ViewSettings, ContainerUsers, ViewUsers, Containers, ViewOntologyUpdate, ViewOntologyVersioning, ContainerAlertBanner, ViewServiceUsers, ContainerExport, ContainerImport, ViewFileManager, OverviewGraph },
+    components: { ContainerSelect, ApiKeys, LanguageSelect, DataImports, ViewMetatypes, ViewMetatypeRelationships, ViewMetatypeRelationshipPairs, DataExport, DataQuery, DataSources, DataMapping, ViewEventSystem, ViewSettings, ContainerUsers, ViewUsers, Containers, ViewOntologyUpdate, ViewOntologyVersioning, ContainerAlertBanner, ViewServiceUsers, ContainerExport, ContainerImport, ViewFileManager, OverviewGraph },
 
     props: {
       containerID: {
@@ -840,7 +840,7 @@
           }
 
           case "event-actions": {
-            this.currentMainComponent = "EventSystem";
+            this.currentMainComponent = "ViewEventSystem";
             this.componentName = this.$t('events.title')
             this.$router.replace(`/containers/${this.containerID}/event-actions`)
             break;
