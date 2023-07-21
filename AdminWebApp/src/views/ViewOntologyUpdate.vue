@@ -55,7 +55,7 @@
 </template>
 
 <script lang="ts">
-  import Vue, { PropType } from 'vue'
+  import Vue from 'vue'
 
   interface OntologyUpdateModel {
     errorMessage: string,
