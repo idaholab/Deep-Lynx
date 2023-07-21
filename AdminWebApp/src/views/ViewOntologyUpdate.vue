@@ -53,45 +53,58 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from 'vue-property-decorator'
+  import Vue, { PropType } from 'vue'
 
-@Component
-export default class OntologyUpdate extends Vue {
-  @Prop({required: true})
-  readonly containerID!: string;
-
-  errorMessage = ""
-  successMessage = ""
-  loading = false
-  owlFilePath = ""
-  owlFile: File | null = null
-
-  addFile(file: File) {
-    this.owlFile = file
+  interface OntologyUpdateModel {
+    owlFile: File
   }
 
-  updateContainer() {
-    this.loading = true
+  export default Vue.extend ({
+    name: 'OntologyUpdate',
 
-    if(this.owlFile || this.owlFilePath !== "") {
-      this.$client.updateContainerFromImport(this.containerID, this.owlFile, this.owlFilePath, this.$store.state.activeContainer?.name)
-          .then(() => {
-            this.loading = false
-            this.errorMessage = ""
-            this.$router.go(0)
-          })
-          .catch(e => {
-            this.loading = false
-            this.errorMessage = e
-          })
-    } else {
-      this.errorMessage = (this.$t('errors.owl') as string)
-      this.loading = false
+    props: {
+      containerID: {required: true}, // as PropType<string>
+    },
+
+    data: (): OntologyUpdateModel => ({
+      owlFile: File | null = null
+    }),
+
+    methods: {
+      addFile(file: File) {
+        this.owlFile = file
+      },
+      updateContainer() {
+        this.loading = true
+
+        if(this.owlFile || this.owlFilePath !== "") {
+          this.$client.updateContainerFromImport(this.containerID, this.owlFile, this.owlFilePath, this.$store.state.activeContainer?.name)
+              .then(() => {
+                this.loading = false
+                this.errorMessage = ""
+                this.$router.go(0)
+              })
+              .catch(e => {
+                this.loading = false
+                this.errorMessage = e
+              })
+        } else {
+          this.errorMessage = (this.$t('errors.owl') as string)
+          this.loading = false
+        }
+      },
+      importHelpLink() {
+        return this.$t('links.importOntology')
+      }
     }
-  }
 
-  importHelpLink() {
-    return this.$t('links.importOntology')
-  }
-}
+    /****************** UNPROCESSED LINES FROM ORIGINAL COMPONENT: ******************
+
+      errorMessage = ""
+      successMessage = ""
+      loading = false
+      owlFilePath = ""
+
+     ********************************************************************************/
+  });
 </script>

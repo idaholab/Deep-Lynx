@@ -113,7 +113,7 @@
             link
             v-if="$auth.Auth('ontology', 'read', containerID)"
             @click="setActiveComponent('ontology-update')"
-            :input-value="currentMainComponent === 'OntologyUpdate'"
+            :input-value="currentMainComponent === 'ViewOntologyUpdate'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -596,7 +596,6 @@
   import Metatypes from "@/views/Metatypes.vue"
   import MetatypeRelationships from "@/views/MetatypeRelationships.vue"
   import MetatypeRelationshipPairs from "@/views/MetatypeRelationshipPairs.vue"
-  import OntologyUpdate from "@/views/OntologyUpdate.vue"
   import DataExport from "@/views/DataExport.vue"
   import DataImports from "@/views/DataImports.vue"
   import DataQuery from "@/views/DataQuery.vue"
@@ -614,6 +613,7 @@
   import {UserT} from "@/auth/types";
   import {ContainerT, DataSourceT, FullStatistics} from "@/api/types";
   import Config from "@/config";
+  import ViewOntologyUpdate from "@/views/ViewOntologyUpdate.vue"
   import ViewOntologyVersioning from "@/views/ViewOntologyVersioning.vue";
   import ContainerAlertBanner from "@/components/ontology/containers/containerAlertBanner.vue";
   import ViewServiceUsers from "@/views/ViewServiceUsers.vue";
@@ -640,7 +640,7 @@
   export default Vue.extend ({
     name: 'HomePage',
 
-    components: { ContainerSelect, ApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, DataExport, DataQuery, DataSources, DataMapping, EventSystem, ViewSettings, ContainerUsers, ViewUsers, Containers, ViewOntologyVersioning, ContainerAlertBanner, ViewServiceUsers, ContainerExport, ContainerImport, FileManager, OverviewGraph },
+    components: { ContainerSelect, ApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, DataExport, DataQuery, DataSources, DataMapping, EventSystem, ViewSettings, ContainerUsers, ViewUsers, Containers, ViewOntologyUpdate, ViewOntologyVersioning, ContainerAlertBanner, ViewServiceUsers, ContainerExport, ContainerImport, FileManager, OverviewGraph },
 
     props: {
       containerID: {
@@ -727,13 +727,6 @@
             break;
           }
 
-          case "ontology-update": {
-            this.currentMainComponent = "OntologyUpdate";
-            this.componentName = this.$t('ontology.updateTitle')
-            this.$router.replace(`/containers/${this.containerID}/ontology-update`)
-            break;
-          }
-
           case "data-query": {
             this.currentMainComponent = "DataQuery";
             this.componentName = this.$t('query.viewer')
@@ -808,6 +801,13 @@
             this.currentMainComponent = "ApiKeys"
             this.componentName = this.$t('apiKeys.personalKeys')
             this.$router.replace(`/containers/${this.containerID}/api-keys`)
+            break;
+          }
+
+          case "ontology-update": {
+            this.currentMainComponent = "ViewOntologyUpdate";
+            this.componentName = this.$t('ontology.updateTitle')
+            this.$router.replace(`/containers/${this.containerID}/ontology-update`)
             break;
           }
 
