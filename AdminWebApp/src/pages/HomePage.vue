@@ -267,7 +267,7 @@
             link
             v-if="$auth.Auth('users', 'write', containerID)"
             @click="setActiveComponent('settings')"
-            :input-value="currentMainComponent === 'Settings'"
+            :input-value="currentMainComponent === 'ViewSettings'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -303,7 +303,7 @@
             two-line
             link
             @click="setActiveComponent('users')"
-            :input-value="currentMainComponent === 'Users'"
+            :input-value="currentMainComponent === 'ViewUsers'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -338,7 +338,7 @@
               two-line
               link
               @click="setActiveComponent('service-users')"
-              :input-value="currentMainComponent === 'ServiceUsers'"
+              :input-value="currentMainComponent === 'ViewServiceUsers'"
               :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -616,7 +616,7 @@
   import Config from "@/config";
   import OntologyVersioning from "@/views/OntologyVersioning.vue";
   import ContainerAlertBanner from "@/components/ontology/containers/containerAlertBanner.vue";
-  import ServiceUsers from "@/views/ServiceUsers.vue";
+  import ViewServiceUsers from "@/views/ViewServiceUsers.vue";
   import ContainerExport from "@/views/ContainerExport.vue";
   import ContainerImport from "@/views/ContainerImport.vue";
   import FileManager from "@/views/FileManager.vue";
@@ -640,7 +640,7 @@
   export default Vue.extend ({
     name: 'HomePage',
 
-    components: { ContainerSelect, ApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, DataExport, DataQuery, DataSources, DataMapping, EventSystem, ViewSettings, ContainerUsers, ViewUsers, Containers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ContainerExport, ContainerImport, FileManager, OverviewGraph },
+    components: { ContainerSelect, ApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, DataExport, DataQuery, DataSources, DataMapping, EventSystem, ViewSettings, ContainerUsers, ViewUsers, Containers, OntologyVersioning, ContainerAlertBanner, ViewServiceUsers, ContainerExport, ContainerImport, FileManager, OverviewGraph },
 
     props: {
       containerID: {
@@ -819,7 +819,7 @@
           }
 
           case "service-users": {
-            this.currentMainComponent = "ServiceUsers"
+            this.currentMainComponent = "ViewServiceUsers"
             this.componentName = this.$t('serviceUsers.title')
             this.$router.replace(`/containers/${this.containerID}/service-users`)
             break;

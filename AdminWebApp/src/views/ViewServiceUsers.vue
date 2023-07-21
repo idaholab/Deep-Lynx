@@ -33,41 +33,59 @@
 </template>
 
 <script lang="ts">
-  import {Component, Prop, Vue} from 'vue-property-decorator'
+  import Vue from 'vue'
   import {UserT} from "@/auth/types";
   import CreateServiceUser from "@/components/accessManagement/serviceUsers/CreateServiceUser.vue";
   import DeleteServiceUserDialog from "@/components/accessManagement/serviceUsers/DeleteServiceUserDialog.vue";
   import ServiceUserPermissionsDialog
-    from "@/components/accessManagement/serviceUsers/ServiceUserPermissionsDialog.vue";
+  from "@/components/accessManagement/serviceUsers/ServiceUserPermissionsDialog.vue";
   import ServiceUserApiKeyDialog from "@/components/accessManagement/serviceUsers/ServiceUserApiKeyDialog.vue";
 
-  @Component({components: {CreateServiceUser, DeleteServiceUserDialog, ServiceUserPermissionsDialog, ServiceUserApiKeyDialog}})
-  export default class ServiceUsers extends Vue {
-    @Prop({required: true})
-    readonly containerID!: string;
+  interface ServiceUsersModel {
+    errorMessage: string,
+    users: UserT[],
+  }
 
-    dialog = false
-    errorMessage = ""
-    users: UserT[] = []
+  export default Vue.extend ({
+    name: 'ViewServiceUsers',
 
-    get headers() {
-      return  [
-        { text: this.$t("general.name"), value: 'display_name' },
-        { text: this.$t("general.dateCreated"), value: 'created_at'},
-        { text: this.$t("general.actions"), value: 'actions', sortable: false }
-      ]
-    }
+    components: { CreateServiceUser, DeleteServiceUserDialog, ServiceUserPermissionsDialog, ServiceUserApiKeyDialog },
+
+    props: {
+      containerID: {required: true},
+    },
+
+    data: (): ServiceUsersModel => ({
+      errorMessage: "",
+      users: [],
+    }),
+
+    computed: {
+      headers(): { text: string; value: string; sortable?: boolean }[] {
+        return  [
+          { text: this.$t("general.name"), value: 'display_name' },
+          { text: this.$t("general.dateCreated"), value: 'created_at'},
+          { text: this.$t("general.actions"), value: 'actions', sortable: false }
+        ]
+      }
+    },
+
+
+
+    methods: {
+      refreshUsers() {
+        this.$client.listServiceUsers(this.containerID as string)
+          .then(users => {
+            this.users = users
+            this.errorMessage = "" // Reset the 'errorMessage' in case of a successful response
+
+          })
+          .catch(e => this.errorMessage = e.message)
+      }
+    },
 
     created() {
       this.refreshUsers()
     }
-
-    refreshUsers() {
-      this.$client.listServiceUsers(this.containerID)
-      .then(users => {
-        this.users = users
-      })
-      .catch(e => this.errorMessage = e)
-    }
-  }
+  });
 </script>
