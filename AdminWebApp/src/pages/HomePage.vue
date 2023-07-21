@@ -40,7 +40,7 @@
             link
             v-if="$auth.Auth('data', 'write', containerID)"
             @click="setActiveComponent('data-query')"
-            :input-value="currentMainComponent === 'DataQuery'"
+            :input-value="currentMainComponent === 'ViewDataQuery'"
             :ripple="{class:'list-ripple'}"
         >
           <v-list-item-content>
@@ -406,8 +406,8 @@
             :container="container"
             :argument="argument"
             :class="{
-              'main-content-component-constrained':(currentMainComponent !== 'DataQuery'),
-              'main-content-component-unconstrained':(currentMainComponent === 'DataQuery')
+              'main-content-component-constrained':(currentMainComponent !== 'ViewDataQuery'),
+              'main-content-component-unconstrained':(currentMainComponent === 'ViewDataQuery')
             }"
           />
         </transition>
@@ -598,7 +598,7 @@
   import ViewMetatypeRelationshipPairs from "@/views/ViewMetatypeRelationshipPairs.vue"
   import DataExport from "@/views/DataExport.vue"
   import DataImports from "@/views/DataImports.vue"
-  import DataQuery from "@/views/DataQuery.vue"
+  import ViewDataQuery from "@/views/ViewDataQuery.vue"
   import DataSources from "@/views/DataSources.vue"
   import DataMapping from "@/views/DataMapping.vue"
   import ViewEventSystem from "@/views/ViewEventSystem.vue"
@@ -640,7 +640,7 @@
   export default Vue.extend ({
     name: 'HomePage',
 
-    components: { ContainerSelect, ApiKeys, LanguageSelect, DataImports, ViewMetatypes, ViewMetatypeRelationships, ViewMetatypeRelationshipPairs, DataExport, DataQuery, DataSources, DataMapping, ViewEventSystem, ViewSettings, ContainerUsers, ViewUsers, Containers, ViewOntologyUpdate, ViewOntologyVersioning, ContainerAlertBanner, ViewServiceUsers, ContainerExport, ContainerImport, ViewFileManager, OverviewGraph },
+    components: { ContainerSelect, ApiKeys, LanguageSelect, DataImports, ViewMetatypes, ViewMetatypeRelationships, ViewMetatypeRelationshipPairs, DataExport, ViewDataQuery, DataSources, DataMapping, ViewEventSystem, ViewSettings, ContainerUsers, ViewUsers, Containers, ViewOntologyUpdate, ViewOntologyVersioning, ContainerAlertBanner, ViewServiceUsers, ContainerExport, ContainerImport, ViewFileManager, OverviewGraph },
 
     props: {
       containerID: {
@@ -728,7 +728,7 @@
           }
 
           case "data-query": {
-            this.currentMainComponent = "DataQuery";
+            this.currentMainComponent = "ViewDataQuery";
             this.componentName = this.$t('query.viewer')
             this.$router.replace(`/containers/${this.containerID}/data-query`)
             break;
