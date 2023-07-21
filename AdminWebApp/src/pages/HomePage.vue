@@ -201,7 +201,7 @@
               link
               v-if="$auth.Auth('data', 'write', containerID)"
               @click="setActiveComponent('file-manager')"
-              :input-value="currentMainComponent === 'FileManager'"
+              :input-value="currentMainComponent === 'ViewFileManager'"
               :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -619,7 +619,7 @@
   import ViewServiceUsers from "@/views/ViewServiceUsers.vue";
   import ContainerExport from "@/views/ContainerExport.vue";
   import ContainerImport from "@/views/ContainerImport.vue";
-  import FileManager from "@/views/FileManager.vue";
+  import ViewFileManager from "@/views/ViewFileManager.vue";
   import OverviewGraph from "@/views/OverviewGraph.vue";
 
   interface HomeModel {
@@ -640,7 +640,7 @@
   export default Vue.extend ({
     name: 'HomePage',
 
-    components: { ContainerSelect, ApiKeys, LanguageSelect, DataImports, ViewMetatypes, ViewMetatypeRelationships, ViewMetatypeRelationshipPairs, DataExport, DataQuery, DataSources, DataMapping, EventSystem, ViewSettings, ContainerUsers, ViewUsers, Containers, ViewOntologyUpdate, ViewOntologyVersioning, ContainerAlertBanner, ViewServiceUsers, ContainerExport, ContainerImport, FileManager, OverviewGraph },
+    components: { ContainerSelect, ApiKeys, LanguageSelect, DataImports, ViewMetatypes, ViewMetatypeRelationships, ViewMetatypeRelationshipPairs, DataExport, DataQuery, DataSources, DataMapping, EventSystem, ViewSettings, ContainerUsers, ViewUsers, Containers, ViewOntologyUpdate, ViewOntologyVersioning, ContainerAlertBanner, ViewServiceUsers, ContainerExport, ContainerImport, ViewFileManager, OverviewGraph },
 
     props: {
       containerID: {
@@ -749,7 +749,7 @@
           }
 
           case "file-manager": {
-            this.currentMainComponent = "FileManager";
+            this.currentMainComponent = "ViewFileManager";
             this.componentName = this.$t('modelExplorer.title')
             this.$router.replace(`/containers/${this.containerID}/file-manager`)
             break;
