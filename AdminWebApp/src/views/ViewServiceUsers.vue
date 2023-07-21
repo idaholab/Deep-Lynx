@@ -52,7 +52,7 @@
     components: { CreateServiceUser, DeleteServiceUserDialog, ServiceUserPermissionsDialog, ServiceUserApiKeyDialog },
 
     props: {
-      containerID: {required: true},
+      containerID: {type: String, required: true},
     },
 
     data: (): ServiceUsersModel => ({
@@ -69,8 +69,6 @@
         ]
       }
     },
-
-
 
     methods: {
       refreshUsers() {

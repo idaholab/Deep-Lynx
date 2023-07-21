@@ -99,7 +99,7 @@
             link
             v-if="$auth.Auth('ontology', 'read', containerID) && $store.getters.ontologyVersioningEnabled"
             @click="setActiveComponent('ontology-versioning')"
-            :input-value="currentMainComponent === 'OntologyVersioning'"
+            :input-value="currentMainComponent === 'ViewOntologyVersioning'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -614,7 +614,7 @@
   import {UserT} from "@/auth/types";
   import {ContainerT, DataSourceT, FullStatistics} from "@/api/types";
   import Config from "@/config";
-  import OntologyVersioning from "@/views/OntologyVersioning.vue";
+  import ViewOntologyVersioning from "@/views/ViewOntologyVersioning.vue";
   import ContainerAlertBanner from "@/components/ontology/containers/containerAlertBanner.vue";
   import ViewServiceUsers from "@/views/ViewServiceUsers.vue";
   import ContainerExport from "@/views/ContainerExport.vue";
@@ -640,7 +640,7 @@
   export default Vue.extend ({
     name: 'HomePage',
 
-    components: { ContainerSelect, ApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, DataExport, DataQuery, DataSources, DataMapping, EventSystem, ViewSettings, ContainerUsers, ViewUsers, Containers, OntologyVersioning, ContainerAlertBanner, ViewServiceUsers, ContainerExport, ContainerImport, FileManager, OverviewGraph },
+    components: { ContainerSelect, ApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, DataExport, DataQuery, DataSources, DataMapping, EventSystem, ViewSettings, ContainerUsers, ViewUsers, Containers, ViewOntologyVersioning, ContainerAlertBanner, ViewServiceUsers, ContainerExport, ContainerImport, FileManager, OverviewGraph },
 
     props: {
       containerID: {
@@ -812,7 +812,7 @@
           }
 
           case "ontology-versioning": {
-            this.currentMainComponent = "OntologyVersioning"
+            this.currentMainComponent = "ViewOntologyVersioning"
             this.componentName = this.$t('ontology.versioningTitle')
             this.$router.replace(`/containers/${this.containerID}/ontology-versioning`)
             break;

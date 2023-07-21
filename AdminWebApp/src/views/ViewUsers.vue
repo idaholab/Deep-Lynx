@@ -121,7 +121,7 @@
     name: 'ViewUsers',
 
     props: {
-      containerID: {required: true},
+      containerID: {type: String, required: true},
     },
 
     computed: {
