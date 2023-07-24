@@ -175,7 +175,7 @@
             two-line link
             v-if="$auth.Auth('data', 'write', containerID)"
             @click="setActiveComponent('data-export')"
-            :input-value="currentMainComponent === 'DataExport'"
+            :input-value="currentMainComponent === 'ViewDataExport'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -597,7 +597,7 @@
   import MetatypeRelationships from "@/views/MetatypeRelationships.vue"
   import MetatypeRelationshipPairs from "@/views/MetatypeRelationshipPairs.vue"
   import OntologyUpdate from "@/views/OntologyUpdate.vue"
-  import DataExport from "@/views/DataExport.vue"
+  import ViewDataExport from "@/views/ViewDataExport.vue"
   import DataImports from "@/views/DataImports.vue"
   import DataQuery from "@/views/DataQuery.vue"
   import DataSources from "@/views/DataSources.vue"
@@ -640,7 +640,7 @@
   export default Vue.extend ({
     name: 'HomePage',
 
-    components: { ContainerSelect, ViewApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, DataExport, DataQuery, DataSources, DataMapping, EventSystem, Settings, ViewContainerUsers, Users, ViewContainers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ViewContainerExport, ViewContainerImport, FileManager, OverviewGraph },
+    components: { ContainerSelect, ViewApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, ViewDataExport, DataQuery, DataSources, DataMapping, EventSystem, Settings, ViewContainerUsers, Users, ViewContainers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ViewContainerExport, ViewContainerImport, FileManager, OverviewGraph },
 
     props: {
       containerID: {
@@ -749,7 +749,7 @@
           }
 
           case "data-export": {
-            this.currentMainComponent = "DataExport";
+            this.currentMainComponent = "ViewDataExport";
             this.componentName = this.$t('exports.graph')
             this.$router.replace(`/containers/${this.containerID}/data-export`)
             break;
