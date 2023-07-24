@@ -290,7 +290,7 @@
             two-line
             link
             @click="setActiveComponent('containers')"
-            :input-value="currentMainComponent === 'Containers'"
+            :input-value="currentMainComponent === 'ViewContainers'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -606,7 +606,7 @@
   import Settings from "@/views/Settings.vue"
   import Users from "@/views/Users.vue"
   import ContainerUsers from "@/views/ContainerUsers.vue"
-  import Containers from "@/views/Containers.vue"
+  import ViewContainers from "@/views/ViewContainers.vue"
   import ViewApiKeys from "@/views/ViewApiKeys.vue";
   import LanguageSelect from "@/components/general/languageSelect.vue";
   import ContainerSelect from "@/components/ontology/containers/containerSelect.vue"
@@ -640,7 +640,7 @@
   export default Vue.extend ({
     name: 'HomePage',
 
-    components: { ContainerSelect, ViewApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, DataExport, DataQuery, DataSources, DataMapping, EventSystem, Settings, ContainerUsers, Users, Containers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ViewContainerExport, ViewContainerImport, FileManager, OverviewGraph },
+    components: { ContainerSelect, ViewApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, DataExport, DataQuery, DataSources, DataMapping, EventSystem, Settings, ContainerUsers, Users, ViewContainers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ViewContainerExport, ViewContainerImport, FileManager, OverviewGraph },
 
     props: {
       containerID: {
@@ -798,7 +798,7 @@
           }
 
           case "containers": {
-            this.currentMainComponent = "Containers"
+            this.currentMainComponent = "ViewContainers"
             this.componentName = this.$t('containers.containers')
             this.$router.replace(`/containers/${this.containerID}/containers`)
             break;

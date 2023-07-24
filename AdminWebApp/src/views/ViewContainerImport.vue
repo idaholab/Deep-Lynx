@@ -61,8 +61,6 @@
 <script lang="ts">
   import Vue from 'vue'
   import {ContainerT} from "@/api/types";
-  import DeleteContainerDialog from "@/components/ontology/containers/deleteContainerDialog.vue";
-  import SelectDataSourceTypes from "@/components/dataSources/selectDataSourceTypes.vue";
   import buildURL from "build-url";
   import Config from "@/config";
   import {AxiosBasicCredentials, AxiosRequestConfig, AxiosResponse, default as axios} from "axios";
@@ -83,8 +81,6 @@
 
   export default Vue.extend ({
     name: 'ViewContainerImport',
-
-    components: { DeleteContainerDialog, SelectDataSourceTypes },
 
     data: (): ContainerImportModel => ({
       errorMessage: "",
