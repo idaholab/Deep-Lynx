@@ -225,7 +225,7 @@
             link
             v-if="$auth.Auth('users', 'write', containerID)"
             @click="setActiveComponent('container-users')"
-            :input-value="currentMainComponent === 'ContainerUsers'"
+            :input-value="currentMainComponent === 'ViewContainerUsers'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -563,7 +563,7 @@
               <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('containers.inviteUsers')}}</v-card-title>
               <v-card-text>{{$t('containers.inviteUsers')}}</v-card-text>
               <v-card-actions class="d-flex flex-grow-1 pa-4 justify-center align-end">
-                <v-btn color="primary" @click="currentMainComponent='ContainerUsers'">
+                <v-btn color="primary" @click="currentMainComponent='ViewContainerUsers'">
                   {{$t('users.manage')}}
                 </v-btn>
               </v-card-actions>
@@ -605,7 +605,7 @@
   import EventSystem from "@/views/EventSystem.vue"
   import Settings from "@/views/Settings.vue"
   import Users from "@/views/Users.vue"
-  import ContainerUsers from "@/views/ContainerUsers.vue"
+  import ViewContainerUsers from "@/views/ViewContainerUsers.vue"
   import ViewContainers from "@/views/ViewContainers.vue"
   import ViewApiKeys from "@/views/ViewApiKeys.vue";
   import LanguageSelect from "@/components/general/languageSelect.vue";
@@ -640,7 +640,7 @@
   export default Vue.extend ({
     name: 'HomePage',
 
-    components: { ContainerSelect, ViewApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, DataExport, DataQuery, DataSources, DataMapping, EventSystem, Settings, ContainerUsers, Users, ViewContainers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ViewContainerExport, ViewContainerImport, FileManager, OverviewGraph },
+    components: { ContainerSelect, ViewApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, DataExport, DataQuery, DataSources, DataMapping, EventSystem, Settings, ViewContainerUsers, Users, ViewContainers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ViewContainerExport, ViewContainerImport, FileManager, OverviewGraph },
 
     props: {
       containerID: {
@@ -791,7 +791,7 @@
           }
 
           case "container-users": {
-            this.currentMainComponent = "ContainerUsers";
+            this.currentMainComponent = "ViewContainerUsers";
             this.componentName = this.$t('users.containerTitle')
             this.$router.replace(`/containers/${this.containerID}/container-users`)
             break;
