@@ -137,7 +137,7 @@
     components: { InviteUserToContainerDialog },
 
     props: {
-      containerID: {type: String, required: true}, // as PropType<string>
+      containerID: {type: String, required: true},
     },
 
     computed: {
