@@ -325,7 +325,7 @@
             two-line
             link
             @click="setActiveComponent('api-keys')"
-            :input-value="currentMainComponent === 'ApiKeys'"
+            :input-value="currentMainComponent === 'ViewApiKeys'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -607,7 +607,7 @@
   import Users from "@/views/Users.vue"
   import ContainerUsers from "@/views/ContainerUsers.vue"
   import Containers from "@/views/Containers.vue"
-  import ApiKeys from "@/views/ApiKeys.vue";
+  import ViewApiKeys from "@/views/ViewApiKeys.vue";
   import LanguageSelect from "@/components/general/languageSelect.vue";
   import ContainerSelect from "@/components/ontology/containers/containerSelect.vue"
   import {TranslateResult} from "vue-i18n";
@@ -640,7 +640,7 @@
   export default Vue.extend ({
     name: 'HomePage',
 
-    components: { ContainerSelect, ApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, DataExport, DataQuery, DataSources, DataMapping, EventSystem, Settings, ContainerUsers, Users, Containers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ContainerExport, ContainerImport, FileManager, OverviewGraph },
+    components: { ContainerSelect, ViewApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, DataExport, DataQuery, DataSources, DataMapping, EventSystem, Settings, ContainerUsers, Users, Containers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ContainerExport, ContainerImport, FileManager, OverviewGraph },
 
     props: {
       containerID: {
@@ -805,7 +805,7 @@
           }
 
           case "api-keys": {
-            this.currentMainComponent = "ApiKeys"
+            this.currentMainComponent = "ViewApiKeys"
             this.componentName = this.$t('apiKeys.personalKeys')
             this.$router.replace(`/containers/${this.containerID}/api-keys`)
             break;
