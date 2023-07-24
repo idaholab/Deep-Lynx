@@ -163,7 +163,7 @@
             link
             v-if="$auth.Auth('data','write', containerID)"
             @click="setActiveComponent('data-mapping')"
-            :input-value="currentMainComponent === 'DataMapping'"
+            :input-value="currentMainComponent === 'ViewDataMapping'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -601,7 +601,7 @@
   import ViewDataImports from "@/views/ViewDataImports.vue"
   import DataQuery from "@/views/DataQuery.vue"
   import DataSources from "@/views/DataSources.vue"
-  import DataMapping from "@/views/DataMapping.vue"
+  import ViewDataMapping from "@/views/ViewDataMapping.vue"
   import EventSystem from "@/views/EventSystem.vue"
   import Settings from "@/views/Settings.vue"
   import Users from "@/views/Users.vue"
@@ -640,7 +640,7 @@
   export default Vue.extend ({
     name: 'HomePage',
 
-    components: { ContainerSelect, ViewApiKeys, LanguageSelect, ViewDataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, ViewDataExport, DataQuery, DataSources, DataMapping, EventSystem, Settings, ViewContainerUsers, Users, ViewContainers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ViewContainerExport, ViewContainerImport, FileManager, OverviewGraph },
+    components: { ContainerSelect, ViewApiKeys, LanguageSelect, ViewDataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, ViewDataExport, DataQuery, DataSources, ViewDataMapping, EventSystem, Settings, ViewContainerUsers, Users, ViewContainers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ViewContainerExport, ViewContainerImport, FileManager, OverviewGraph },
 
     props: {
       containerID: {
@@ -763,7 +763,7 @@
           }
 
           case "data-mapping": {
-            this.currentMainComponent = "DataMapping";
+            this.currentMainComponent = "ViewDataMapping";
             this.componentName = this.$t('typeMappings.typeMappings')
             this.$router.replace(`/containers/${this.containerID}/data-mapping`)
             break;
