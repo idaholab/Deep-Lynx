@@ -129,6 +129,13 @@
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const diff = require('deep-diff').diff;
 
+  interface Options {
+    sortDesc: boolean[];
+    sortBy: string[];
+    page: number;
+    itemsPerPage: number;
+  }
+
   interface MetatypeRelationshipPairsModel {
     copy: typeof mdiFileDocumentMultiple,
     errorMessage: string,
@@ -143,6 +150,7 @@
     metatypeRelationships: MetatypeRelationshipT[]
     relationshipPairs: MetatypeRelationshipPairT[]
     comparisonPairs: MetatypeRelationshipPairT[]
+    options: Options
   }
 
   export default Vue.extend ({
@@ -154,21 +162,31 @@
       containerID: {type: String, required: true},
     },
 
-    data: (): MetatypeRelationshipPairsModel => ({
-      copy: mdiFileDocumentMultiple,
-      errorMessage: "",
-      successMessage: "",
-      loading: false,
-      relationshipPairCount: 0,
-      createdMetatypeRelationshipPair: null,
-      name: "",
-      description: "",
-      originName: "",
-      destinationName: "",
-      metatypeRelationships: [],
-      relationshipPairs: [],
-      comparisonPairs: []
-    }),
+    data(): MetatypeRelationshipPairsModel {
+      const options: Options = {
+        sortDesc: [false],
+        sortBy: [],
+        page: 1,
+        itemsPerPage: 100,
+      };
+    
+      return {
+        copy: mdiFileDocumentMultiple,
+        errorMessage: "",
+        successMessage: "",
+        loading: false,
+        relationshipPairCount: 0,
+        createdMetatypeRelationshipPair: null,
+        name: "",
+        description: "",
+        originName: "",
+        destinationName: "",
+        metatypeRelationships: [],
+        relationshipPairs: [],
+        comparisonPairs: [],
+        options
+      }
+    },
 
     watch: {
       options: 'onOptionChange',
@@ -179,17 +197,6 @@
     },
 
     methods: {
-      options: {
-        sortDesc: [false],
-        sortBy: [],
-        page: 1,
-        itemsPerPage: 100,
-      } as {
-        sortDesc: boolean[];
-        sortBy: string[];
-        page: number;
-        itemsPerPage: number;
-      },
       onOptionChange() {
         this.loadMetatypeRelationshipPairs()
       },

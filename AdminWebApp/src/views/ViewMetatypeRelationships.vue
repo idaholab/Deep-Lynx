@@ -130,6 +130,13 @@
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const diff = require('deep-diff').diff;
 
+  interface Options {
+    sortDesc: boolean[];
+    sortBy: string[];
+    page: number;
+    itemsPerPage: number;
+  }
+
   interface MetatypeRelationshipsModel {
     copy: typeof mdiFileDocumentMultiple,
     errorMessage: string,
@@ -141,6 +148,7 @@
     description: string,
     metatypeRelationships: MetatypeRelationshipT[],
     comparisonRelationships: MetatypeRelationshipT[]
+    options: Options
   }
 
   export default Vue.extend ({
@@ -152,18 +160,28 @@
       containerID: {type: String, required: true},
     },
 
-    data: (): MetatypeRelationshipsModel => ({
-      copy: mdiFileDocumentMultiple,
-      errorMessage: "",
-      successMessage: "",
-      loading: false,
-      createdRelationship: null,
-      metatypeRelationshipCount: 0,
-      name: "",
-      description: "",
-      metatypeRelationships: [],
-      comparisonRelationships: []
-    }),
+    data(): MetatypeRelationshipsModel {
+      const options: Options = {
+        sortDesc: [false],
+        sortBy: [],
+        page: 1,
+        itemsPerPage: 100,
+      }
+
+      return {  
+        copy: mdiFileDocumentMultiple,
+        errorMessage: "",
+        successMessage: "",
+        loading: false,
+        createdRelationship: null,
+        metatypeRelationshipCount: 0,
+        name: "",
+        description: "",
+        metatypeRelationships: [],
+        comparisonRelationships: [],
+        options
+      }
+    },
 
     watch: {
       options: 'onOptionChange',
@@ -172,17 +190,6 @@
     },
 
     methods: {
-      options: {
-        sortDesc: [false],
-        sortBy: [],
-        page: 1,
-        itemsPerPage: 100,
-      } as {
-        sortDesc: boolean[];
-        sortBy: string[];
-        page: number;
-        itemsPerPage: number;
-      },
       onOptionChange() {
         this.loadMetatypeRelationships()
       },

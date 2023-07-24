@@ -128,18 +128,26 @@
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const diff = require('deep-diff').diff;
 
-  interface MetatypesModel {
-    copy: typeof mdiFileDocumentMultiple,
-    errorMessage: string,
-    successMessage: string,
-    metatypesLoading: boolean,
+  interface Options {
+    sortDesc: boolean[];
+    sortBy: string[];
+    page: number;
+    itemsPerPage: number;
+  }
 
-    createdMetatype: MetatypeT | null,
-    metatypesCount: number,
-    name: string,
-    description: string,
-    metatypes: MetatypeT[]
-    comparisonMetatypes: MetatypeT[]
+  interface MetatypesModel {
+    copy: typeof mdiFileDocumentMultiple;
+    errorMessage: string;
+    successMessage: string;
+    metatypesLoading: boolean;
+
+    createdMetatype: MetatypeT | null;
+    metatypesCount: number;
+    name: string;
+    description: string;
+    metatypes: MetatypeT[];
+    comparisonMetatypes: MetatypeT[];
+    options: Options;
   }
 
   export default Vue.extend ({
@@ -151,19 +159,29 @@
       containerID: {type: String, required: true},
     },
 
-    data: (): MetatypesModel => ({
-      copy: mdiFileDocumentMultiple,
-      errorMessage: "",
-      successMessage: "",
-      metatypesLoading: false,
+    data(): MetatypesModel {
+      const options: Options = {
+        sortDesc: [false],
+        sortBy: [],
+        page: 1,
+        itemsPerPage: 100,
+      };
 
-      createdMetatype: null,
-      metatypesCount: 0,
-      name: "",
-      description: "",
-      metatypes: [],
-      comparisonMetatypes: []
-    }),
+      return {
+        copy: mdiFileDocumentMultiple,
+        errorMessage: '',
+        successMessage: '',
+        metatypesLoading: false,
+
+        createdMetatype: null,
+        metatypesCount: 0,
+        name: '',
+        description: '',
+        metatypes: [],
+        comparisonMetatypes: [],
+        options
+      };
+    },
 
     watch: {
       options: 'onOptionChange',
@@ -172,17 +190,14 @@
     },
 
     methods: {
-      options: {
-        sortDesc: [false],
-        sortBy: [],
-        page: 1,
-        itemsPerPage: 100,
-      } as {
-        sortDesc: boolean[];
-        sortBy: string[];
-        page: number;
-        itemsPerPage: number;
-      },
+      // options(): Options {
+      //   return {
+      //     sortDesc: [false],
+      //     sortBy: [],
+      //     page: 1,
+      //     itemsPerPage: 100
+      //   };
+      // },
       onOptionChange() {
         this.loadMetatypes()
       },
