@@ -253,7 +253,7 @@
             link
             v-if="$auth.Auth('ontology', 'write', containerID)"
             @click="setActiveComponent('container-import')"
-            :input-value="currentMainComponent === 'ContainerImport'"
+            :input-value="currentMainComponent === 'ViewContainerImport'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -618,7 +618,7 @@
   import ContainerAlertBanner from "@/components/ontology/containers/containerAlertBanner.vue";
   import ServiceUsers from "@/views/ServiceUsers.vue";
   import ViewContainerExport from "@/views/ViewContainerExport.vue";
-  import ContainerImport from "@/views/ContainerImport.vue";
+  import ViewContainerImport from "@/views/ViewContainerImport.vue";
   import FileManager from "@/views/FileManager.vue";
   import OverviewGraph from "@/views/OverviewGraph.vue";
 
@@ -640,7 +640,7 @@
   export default Vue.extend ({
     name: 'HomePage',
 
-    components: { ContainerSelect, ViewApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, DataExport, DataQuery, DataSources, DataMapping, EventSystem, Settings, ContainerUsers, Users, Containers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ViewContainerExport, ContainerImport, FileManager, OverviewGraph },
+    components: { ContainerSelect, ViewApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, DataExport, DataQuery, DataSources, DataMapping, EventSystem, Settings, ContainerUsers, Users, Containers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ViewContainerExport, ViewContainerImport, FileManager, OverviewGraph },
 
     props: {
       containerID: {
@@ -833,7 +833,7 @@
           }
 
           case "container-import": {
-            this.currentMainComponent = "ContainerImport"
+            this.currentMainComponent = "ViewContainerImport"
             this.componentName = this.$t('containers.import')
             this.$router.replace(`/containers/${this.containerID}/container-import`)
             break;
