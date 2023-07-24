@@ -620,7 +620,7 @@
   import ViewContainerExport from "@/views/ViewContainerExport.vue";
   import ViewContainerImport from "@/views/ViewContainerImport.vue";
   import FileManager from "@/views/FileManager.vue";
-  import OverviewGraph from "@/views/OverviewGraph.vue";
+  import ViewOverviewGraph from "@/views/ViewOverviewGraph.vue";
 
   interface HomeModel {
     errorMessage: string
@@ -640,7 +640,7 @@
   export default Vue.extend ({
     name: 'HomePage',
 
-    components: { ContainerSelect, ViewApiKeys, LanguageSelect, ViewDataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, ViewDataExport, DataQuery, DataSources, ViewDataMapping, EventSystem, Settings, ViewContainerUsers, Users, ViewContainers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ViewContainerExport, ViewContainerImport, FileManager, OverviewGraph },
+    components: { ContainerSelect, ViewApiKeys, LanguageSelect, ViewDataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, ViewDataExport, DataQuery, DataSources, ViewDataMapping, EventSystem, Settings, ViewContainerUsers, Users, ViewContainers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ViewContainerExport, ViewContainerImport, FileManager, ViewOverviewGraph },
 
     props: {
       containerID: {
