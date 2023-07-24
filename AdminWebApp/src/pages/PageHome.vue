@@ -638,7 +638,7 @@
   }
 
   export default Vue.extend ({
-    name: 'HomePage',
+    name: 'PageHome',
 
     components: { ContainerSelect, ViewApiKeys, LanguageSelect, ViewDataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, ViewDataExport, DataQuery, DataSources, ViewDataMapping, EventSystem, Settings, ViewContainerUsers, Users, ViewContainers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ViewContainerExport, ViewContainerImport, FileManager, ViewOverviewGraph },
 
@@ -666,7 +666,7 @@
       user: null,
       container: null,
       currentMainComponent: '',
-      componentName: 'HomePage',
+      componentName: 'PageHome',
       argument: null,
       componentKey: 0, // this is so we can force a re-render of certain components on component change - assign as key
       stats: null,
@@ -857,7 +857,7 @@
         window.location.href = `${Config.deepLynxApiUri}/logout?redirect_uri=${Config.appUrl}`
       },
       containerSelect() {
-        this.$router.push({name: "ContainerSelect"})
+        this.$router.push({name: "PageContainerSelect"})
       },
       helpLink() {
         // Use the $t function to get the translated value

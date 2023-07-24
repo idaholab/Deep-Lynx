@@ -1,10 +1,10 @@
 import Vue from 'vue';
 import VueRouter, {Route} from 'vue-router';
-import HomePage from '@/pages/HomePage.vue';
-import ContainerSelect from '@/pages/ContainerSelect.vue';
-import LoginPage from '@/pages/LoginPage.vue';
+import PageHome from '@/pages/PageHome.vue';
+import PageContainerSelect from '@/pages/PageContainerSelect.vue';
+import PageLogin from '@/pages/PageLogin.vue';
 import {IsLoggedIn, LoginFromToken} from '@/auth/authentication_service';
-import ContainerInvite from '@/pages/ContainerInvite.vue';
+import PageContainerInvite from '@/pages/PageContainerInvite.vue';
 import {RawLocation} from 'vue-router/types/router';
 
 Vue.use(VueRouter);
@@ -40,35 +40,35 @@ const routes = [
     {
         path: '/',
         name: 'ContainerSelect',
-        component: ContainerSelect,
+        component: PageContainerSelect,
     },
     {
         path: '/containers/:containerID',
         name: 'Home',
-        component: HomePage,
+        component: PageHome,
         props: true,
     },
     {
         path: '/containers/:containerID/:view/',
         name: 'Home View',
-        component: HomePage,
+        component: PageHome,
         props: true,
     },
     {
         path: '/containers/:containerID/:view/:arguments',
         name: 'Home View Arguments',
-        component: HomePage,
+        component: PageHome,
         props: true,
     },
     {
         path: '/container-invite',
         name: 'ContainerInvite',
-        component: ContainerInvite,
+        component: PageContainerInvite,
     },
     {
         path: '/login',
         name: 'Login',
-        component: LoginPage,
+        component: PageLogin,
     },
     {
         path: '*',
