@@ -239,7 +239,7 @@
             link
             v-if="$auth.Auth('ontology', 'read', containerID)"
             @click="setActiveComponent('container-export')"
-            :input-value="currentMainComponent === 'ContainerExport'"
+            :input-value="currentMainComponent === 'ViewContainerExport'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -617,7 +617,7 @@
   import OntologyVersioning from "@/views/OntologyVersioning.vue";
   import ContainerAlertBanner from "@/components/ontology/containers/containerAlertBanner.vue";
   import ServiceUsers from "@/views/ServiceUsers.vue";
-  import ContainerExport from "@/views/ContainerExport.vue";
+  import ViewContainerExport from "@/views/ViewContainerExport.vue";
   import ContainerImport from "@/views/ContainerImport.vue";
   import FileManager from "@/views/FileManager.vue";
   import OverviewGraph from "@/views/OverviewGraph.vue";
@@ -640,7 +640,7 @@
   export default Vue.extend ({
     name: 'HomePage',
 
-    components: { ContainerSelect, ViewApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, DataExport, DataQuery, DataSources, DataMapping, EventSystem, Settings, ContainerUsers, Users, Containers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ContainerExport, ContainerImport, FileManager, OverviewGraph },
+    components: { ContainerSelect, ViewApiKeys, LanguageSelect, DataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, DataExport, DataQuery, DataSources, DataMapping, EventSystem, Settings, ContainerUsers, Users, Containers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ViewContainerExport, ContainerImport, FileManager, OverviewGraph },
 
     props: {
       containerID: {
@@ -826,7 +826,7 @@
           }
 
           case "container-export": {
-            this.currentMainComponent = "ContainerExport"
+            this.currentMainComponent = "ViewContainerExport"
             this.componentName = this.$t('containers.export')
             this.$router.replace(`/containers/${this.containerID}/container-export`)
             break;
