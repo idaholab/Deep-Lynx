@@ -217,13 +217,7 @@
     },
 
     watch: {
-      options: {
-        handler() {
-          // Handler function that will be called when 'options' changes
-          this.loadExports();
-        },
-        deep: true, // Set deep to true if 'options' is an object or an array
-      },
+      options: 'loadExports'
     },
 
     methods: {

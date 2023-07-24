@@ -84,28 +84,9 @@
     }),
 
     watch: {
-      exportOntology: {
-        handler() {
-          // Handler function that will be called when 'options' changes
-          this.updateImportSelected()
-        },
-        deep: true, // Set deep to true if 'options' is an object or an array
-      },
-      exportDataSources: {
-        handler() {
-          // Handler function that will be called when 'options' changes
-          this.updateImportSelected()
-          this.updateDataSourcesExport()
-        },
-        deep: true, // Set deep to true if 'options' is an object or an array
-      },
-      exportTypeMappings: {
-        handler() {
-          // Handler function that will be called when 'options' changes
-          this.updateImportSelected()
-        },
-        deep: true, // Set deep to true if 'options' is an object or an array
-      }
+      exportOntology: 'updateImportSelected',
+      exportDataSources: ['updateImportSelected', 'updateDataSourcesExport'],
+      exportTypeMappings: 'updateImportSelected',
     },
 
     methods: {
