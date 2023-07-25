@@ -49,7 +49,7 @@
   import buildURL from "build-url"
 
   export default Vue.extend ({
-    name: 'LoginPage',
+    name: 'PageLogin',
 
     data() {
       return {

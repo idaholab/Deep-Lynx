@@ -150,7 +150,7 @@
             link
             v-if="$auth.Auth('data', 'read', containerID)"
             @click="setActiveComponent('data-imports')"
-            :input-value="currentMainComponent === 'DataImports'"
+            :input-value="currentMainComponent === 'ViewDataImports'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -163,7 +163,7 @@
             link
             v-if="$auth.Auth('data','write', containerID)"
             @click="setActiveComponent('data-mapping')"
-            :input-value="currentMainComponent === 'DataMapping'"
+            :input-value="currentMainComponent === 'ViewDataMapping'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -175,7 +175,7 @@
             two-line link
             v-if="$auth.Auth('data', 'write', containerID)"
             @click="setActiveComponent('data-export')"
-            :input-value="currentMainComponent === 'DataExport'"
+            :input-value="currentMainComponent === 'ViewDataExport'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -225,7 +225,7 @@
             link
             v-if="$auth.Auth('users', 'write', containerID)"
             @click="setActiveComponent('container-users')"
-            :input-value="currentMainComponent === 'ContainerUsers'"
+            :input-value="currentMainComponent === 'ViewContainerUsers'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -239,7 +239,7 @@
             link
             v-if="$auth.Auth('ontology', 'read', containerID)"
             @click="setActiveComponent('container-export')"
-            :input-value="currentMainComponent === 'ContainerExport'"
+            :input-value="currentMainComponent === 'ViewContainerExport'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -253,7 +253,7 @@
             link
             v-if="$auth.Auth('ontology', 'write', containerID)"
             @click="setActiveComponent('container-import')"
-            :input-value="currentMainComponent === 'ContainerImport'"
+            :input-value="currentMainComponent === 'ViewContainerImport'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -290,7 +290,7 @@
             two-line
             link
             @click="setActiveComponent('containers')"
-            :input-value="currentMainComponent === 'Containers'"
+            :input-value="currentMainComponent === 'ViewContainers'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -325,7 +325,7 @@
             two-line
             link
             @click="setActiveComponent('api-keys')"
-            :input-value="currentMainComponent === 'ApiKeys'"
+            :input-value="currentMainComponent === 'ViewApiKeys'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -563,7 +563,7 @@
               <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('containers.inviteUsers')}}</v-card-title>
               <v-card-text>{{$t('containers.inviteUsers')}}</v-card-text>
               <v-card-actions class="d-flex flex-grow-1 pa-4 justify-center align-end">
-                <v-btn color="primary" @click="currentMainComponent='ContainerUsers'">
+                <v-btn color="primary" @click="currentMainComponent='ViewContainerUsers'">
                   {{$t('users.manage')}}
                 </v-btn>
               </v-card-actions>
@@ -596,31 +596,31 @@
   import ViewMetatypes from "@/views/ViewMetatypes.vue"
   import ViewMetatypeRelationships from "@/views/ViewMetatypeRelationships.vue"
   import ViewMetatypeRelationshipPairs from "@/views/ViewMetatypeRelationshipPairs.vue"
-  import DataExport from "@/views/DataExport.vue"
-  import DataImports from "@/views/DataImports.vue"
+  import ViewDataExport from "@/views/ViewDataExport.vue"
+  import ViewDataImports from "@/views/ViewDataImports.vue"
   import ViewDataQuery from "@/views/ViewDataQuery.vue"
   import DataSources from "@/views/DataSources.vue"
-  import DataMapping from "@/views/DataMapping.vue"
+  import ViewDataMapping from "@/views/ViewDataMapping.vue"
   import ViewEventSystem from "@/views/ViewEventSystem.vue"
   import ViewSettings from "@/views/ViewSettings.vue"
   import ViewUsers from "@/views/ViewUsers.vue"
-  import ContainerUsers from "@/views/ContainerUsers.vue"
-  import Containers from "@/views/Containers.vue"
-  import ApiKeys from "@/views/ApiKeys.vue";
+  import ViewContainerUsers from "@/views/ViewContainerUsers.vue"
+  import ViewContainers from "@/views/ViewContainers.vue"
+  import ViewApiKeys from "@/views/ViewApiKeys.vue";
   import LanguageSelect from "@/components/general/languageSelect.vue";
   import ContainerSelect from "@/components/ontology/containers/containerSelect.vue"
   import {TranslateResult} from "vue-i18n";
   import {UserT} from "@/auth/types";
   import {ContainerT, DataSourceT, FullStatistics} from "@/api/types";
   import Config from "@/config";
-  import ViewOntologyUpdate from "@/views/ViewOntologyUpdate.vue"
+  import ViewOntologyUpdate from '@/views/ViewOntologyUpdate.vue'
   import ViewOntologyVersioning from "@/views/ViewOntologyVersioning.vue";
   import ContainerAlertBanner from "@/components/ontology/containers/containerAlertBanner.vue";
   import ViewServiceUsers from "@/views/ViewServiceUsers.vue";
-  import ContainerExport from "@/views/ContainerExport.vue";
-  import ContainerImport from "@/views/ContainerImport.vue";
+  import ViewContainerExport from "@/views/ViewContainerExport.vue";
+  import ViewContainerImport from "@/views/ViewContainerImport.vue";
   import ViewFileManager from "@/views/ViewFileManager.vue";
-  import OverviewGraph from "@/views/OverviewGraph.vue";
+  import ViewOverviewGraph from "@/views/ViewOverviewGraph.vue";
 
   interface HomeModel {
     errorMessage: string
@@ -638,9 +638,34 @@
   }
 
   export default Vue.extend ({
-    name: 'HomePage',
+    name: 'PageHome',
 
-    components: { ContainerSelect, ApiKeys, LanguageSelect, DataImports, ViewMetatypes, ViewMetatypeRelationships, ViewMetatypeRelationshipPairs, DataExport, ViewDataQuery, DataSources, DataMapping, ViewEventSystem, ViewSettings, ContainerUsers, ViewUsers, Containers, ViewOntologyUpdate, ViewOntologyVersioning, ContainerAlertBanner, ViewServiceUsers, ContainerExport, ContainerImport, ViewFileManager, OverviewGraph },
+    components: {
+      ContainerSelect,
+      ViewApiKeys,
+      LanguageSelect,
+      ViewDataImports,
+      ViewMetatypes,
+      ViewMetatypeRelationships,
+      ViewMetatypeRelationshipPairs,
+      ViewOntologyUpdate,
+      ViewDataExport,
+      ViewDataQuery,
+      DataSources,
+      ViewDataMapping,
+      ViewEventSystem,
+      ViewSettings,
+      ViewContainerUsers,
+      ViewUsers,
+      ViewContainers,
+      ViewOntologyVersioning,
+      ContainerAlertBanner,
+      ViewServiceUsers,
+      ViewContainerExport,
+      ViewContainerImport,
+      ViewFileManager,
+      ViewOverviewGraph
+    },
 
     props: {
       containerID: {
@@ -666,7 +691,7 @@
       user: null,
       container: null,
       currentMainComponent: '',
-      componentName: 'HomePage',
+      componentName: 'PageHome',
       argument: null,
       componentKey: 0, // this is so we can force a re-render of certain components on component change - assign as key
       stats: null,
@@ -742,7 +767,7 @@
           }
 
           case "data-export": {
-            this.currentMainComponent = "DataExport";
+            this.currentMainComponent = "ViewDataExport";
             this.componentName = this.$t('exports.graph')
             this.$router.replace(`/containers/${this.containerID}/data-export`)
             break;
@@ -756,14 +781,14 @@
           }
 
           case "data-mapping": {
-            this.currentMainComponent = "DataMapping";
+            this.currentMainComponent = "ViewDataMapping";
             this.componentName = this.$t('typeMappings.typeMappings')
             this.$router.replace(`/containers/${this.containerID}/data-mapping`)
             break;
           }
 
           case "data-imports": {
-            this.currentMainComponent = "DataImports"
+            this.currentMainComponent = "ViewDataImports"
             this.componentName = this.$t('imports.data')
             this.$router.replace(`/containers/${this.containerID}/data-imports/${this.arguments}`)
             break;
@@ -784,21 +809,21 @@
           }
 
           case "container-users": {
-            this.currentMainComponent = "ContainerUsers";
+            this.currentMainComponent = "ViewContainerUsers";
             this.componentName = this.$t('users.containerTitle')
             this.$router.replace(`/containers/${this.containerID}/container-users`)
             break;
           }
 
           case "containers": {
-            this.currentMainComponent = "Containers"
+            this.currentMainComponent = "ViewContainers"
             this.componentName = this.$t('containers.containers')
             this.$router.replace(`/containers/${this.containerID}/containers`)
             break;
           }
 
           case "api-keys": {
-            this.currentMainComponent = "ApiKeys"
+            this.currentMainComponent = "ViewApiKeys"
             this.componentName = this.$t('apiKeys.personalKeys')
             this.$router.replace(`/containers/${this.containerID}/api-keys`)
             break;
@@ -806,8 +831,8 @@
 
           case "ontology-update": {
             this.currentMainComponent = "ViewOntologyUpdate";
-            this.componentName = this.$t('ontology.updateTitle')
-            this.$router.replace(`/containers/${this.containerID}/ontology-update`)
+            this.componentName = this.$t('ontology.updateTitle');
+            this.$router.replace(`/containers/${this.containerID}/ontology-update`);
             break;
           }
 
@@ -826,14 +851,14 @@
           }
 
           case "container-export": {
-            this.currentMainComponent = "ContainerExport"
+            this.currentMainComponent = "ViewContainerExport"
             this.componentName = this.$t('containers.export')
             this.$router.replace(`/containers/${this.containerID}/container-export`)
             break;
           }
 
           case "container-import": {
-            this.currentMainComponent = "ContainerImport"
+            this.currentMainComponent = "ViewContainerImport"
             this.componentName = this.$t('containers.import')
             this.$router.replace(`/containers/${this.containerID}/container-import`)
             break;
@@ -857,7 +882,7 @@
         window.location.href = `${Config.deepLynxApiUri}/logout?redirect_uri=${Config.appUrl}`
       },
       containerSelect() {
-        this.$router.push({name: "ContainerSelect"})
+        this.$router.push({name: "PageContainerSelect"})
       },
       helpLink() {
         // Use the $t function to get the translated value
@@ -937,7 +962,7 @@
               this.setActiveComponent(this.view)
             }
           })
-          .catch(() =>this.$router.push({name: "ContainerSelect"})
+          .catch(() =>this.$router.push({name: "PageContainerSelect"})
     )
 
       this.$client.listMetatypes(this.containerID as string, {

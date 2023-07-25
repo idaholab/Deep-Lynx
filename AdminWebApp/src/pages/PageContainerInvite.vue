@@ -62,7 +62,7 @@
   import LanguageSelect from '@/components/general/languageSelect.vue'
 
   export default Vue.extend ({
-    name: 'ContainerInvite',
+    name: 'PageContainerInvite',
 
     data() {
       return {
