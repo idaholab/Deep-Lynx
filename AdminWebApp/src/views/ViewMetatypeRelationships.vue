@@ -61,7 +61,7 @@
           <template v-slot:activator="{on, attrs}">
             <v-icon v-bind="attrs" v-on="on" @click="copyID(item.id)">{{copy}}</v-icon>
           </template>
-          <span>{{$t('general.copyID')}}</span>
+          <span>{{$t('general.copyID')}}&nbsp;</span>
           <span>{{item.id}}</span>
         </v-tooltip>
       </template>
@@ -103,7 +103,7 @@
                 v-bind="attrs"
                 small
                 v-on="on"
-                @click="undeleteRelationship(item)"
+                @click="restoreDeletedRelationship(item)"
                 v-if="($store.getters.isEditMode && $store.getters.ontologyVersioningEnabled && item.deleted_at)"
             >
               mdi-restore
@@ -279,7 +279,7 @@
             })
             .catch(e => this.errorMessage = e)
       },
-      undeleteRelationship(item: any) {
+      restoreDeletedRelationship(item: any) {
         this.$client.deleteMetatypeRelationship(this.containerID, item.id, {reverse: true})
             .then(() => {
               this.loadMetatypeRelationships()
