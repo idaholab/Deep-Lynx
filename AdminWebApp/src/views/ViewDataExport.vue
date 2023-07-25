@@ -321,13 +321,5 @@
     mounted() {
       this.countExports()
     }
-
-    /****************** UNPROCESSED LINES FROM ORIGINAL COMPONENT: ******************
-
-      = {sortDesc: [false], sortBy: [], page: 1, itemsPerPage: 100}
-
-      @Watch('options')
-
-     ********************************************************************************/
   });
 </script>

@@ -56,7 +56,7 @@
               <import-data-dialog
                 :dataSourceID="selectedDataSource.id"
                 :containerID="containerID"
-                :fastload="isCustomDataSourceConfig(selectedDataSource.config) ? selectedDataSource.config.fast_load_enabled : false"
+                :fastload="isTimeseriesDataSourceConfig(selectedDataSource.config) ? selectedDataSource.config.fast_load_enabled : false"
                 :disabled="!selectedDataSource.active || selectedDataSource.archived"
                 @importUploaded="listImports"
               />
@@ -205,7 +205,7 @@
   import {mdiFileDocumentMultiple} from "@mdi/js";
   import TimeseriesViewerDialog from '@/components/data/timeseriesViewerDialog.vue';
 
-  interface CustomDataSourceConfig {
+  interface TimeseriesDataSourceConfig {
     fast_load_enabled: boolean;
   }
 
@@ -338,7 +338,7 @@
 
         return headers;
       },
-      isCustomDataSourceConfig(config: any): config is CustomDataSourceConfig {
+      isTimeseriesDataSourceConfig(config: any): config is TimeseriesDataSourceConfig {
         return config && config.fast_load_enabled !== undefined;
       },
       switchTabs(tab: string) {
