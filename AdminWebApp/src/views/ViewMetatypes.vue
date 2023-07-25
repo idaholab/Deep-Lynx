@@ -62,7 +62,7 @@
           <template v-slot:activator="{on, attrs}">
             <v-icon v-bind="attrs" v-on="on" @click="copyID(item.id)">{{copy}}</v-icon>
           </template>
-          <span>{{$t('general.copyID')}}</span>
+          <span>{{$t('general.copyID')}}&nbsp;</span>
           <span>{{item.id}}</span>
         </v-tooltip>
       </template>
@@ -104,7 +104,7 @@
                 v-on="on"
                 small
                 v-if="($store.getters.isEditMode && $store.getters.ontologyVersioningEnabled && item.deleted_at)"
-                @click="undeleteMetatype(item)"
+                @click="restoreDeletedMetatype(item)"
             >
               mdi-restore
             </v-icon>
@@ -190,14 +190,6 @@
     },
 
     methods: {
-      // options(): Options {
-      //   return {
-      //     sortDesc: [false],
-      //     sortBy: [],
-      //     page: 1,
-      //     itemsPerPage: 100
-      //   };
-      // },
       onOptionChange() {
         this.loadMetatypes()
       },
@@ -289,8 +281,8 @@
             })
             .catch(e => this.errorMessage = e)
       },
-      undeleteMetatype(item: any) {
-        // if we're in edit mode, set permanent falst
+      restoreDeletedMetatype(item: any) {
+        // if we're in edit mode, set permanent false
         this.$client.deleteMetatype(this.containerID, item.id, {reverse: true})
             .then(() => {
               this.loadMetatypes()

@@ -291,7 +291,7 @@
         this.countRelationships()
         this.loadMetatypeRelationships()
       },
-      // compareMetatypes takes two relationships and returns whether they are identical
+      // compareRelationships takes two relationships and returns whether they are identical
       // this is used to indicate when a metatype has been edited as part of the new ontology
       compareRelationships(original: MetatypeRelationshipT, target: MetatypeRelationshipT): boolean {
         if(typeof  original === 'undefined' || typeof target === 'undefined') return true
