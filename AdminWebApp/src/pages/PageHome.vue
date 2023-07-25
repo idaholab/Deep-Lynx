@@ -415,7 +415,7 @@
 
       <!-- Else: Dashboard Landing Page -->
       <v-container fluid v-else>
-        <overview-graph :container="container"></overview-graph>
+        <view-overview-graph :container="container"></view-overview-graph>
 
         <v-row v-if="$auth.IsAdmin() && stats !== null">
           <!-- DeepLynx Admin Statistics (only include if admin and exists) -->
