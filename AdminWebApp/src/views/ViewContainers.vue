@@ -78,59 +78,75 @@
 </template>
 
 <script lang="ts">
-   import {Component, Vue} from 'vue-property-decorator'
-   import {UserT} from "@/auth/types";
-   import {ContainerT} from "@/api/types";
-   import CreateContainerDialog from "@/components/ontology/containers/createContainerDialog.vue"
+  import Vue from 'vue'
+  import {UserT} from "@/auth/types";
+  import {ContainerT} from "@/api/types";
+  import CreateContainerDialog from "@/components/ontology/containers/createContainerDialog.vue"
 
-   @Component({components: {CreateContainerDialog}})
-   export default class Containers extends Vue {
-      dialog = false
-      editDialog = false
-      users: UserT[] = []
-      containers: ContainerT[] = []
-      toEdit: ContainerT | null = null
-      errorMessage = ''
-      newContainer = {name: null, description:null}
+  interface ContainersModel {
+    dialog: boolean,
+    editDialog: boolean,
+    errorMessage: string,
+    newContainer: {name: string | null, description: string | null},
+    users: UserT[]
+    containers: ContainerT[]
+    toEdit: ContainerT | null
+  }
 
-      get headers() {
+  export default Vue.extend ({
+    name: 'ViewContainers',
+
+    components: { CreateContainerDialog },
+
+    computed: {
+      headers() {
          return  [
             { text: this.$t("general.name"), value: 'name' },
             { text: this.$t("general.description"), value: 'description'},
             { text: this.$t("general.actions"), value: 'actions', sortable: false }
          ]
       }
+    },
 
-      mounted() {
-         this.refreshContainers()
-      }
+    data: (): ContainersModel => ({
+      dialog: false,
+      editDialog: false,
+      errorMessage: '',
+      newContainer: {name: null, description:null},
+      users: [],
+      containers: [],
+      toEdit: null
+    }),
 
+    methods: {
       refreshContainers() {
          this.$client.listContainers()
          .then(containers => {
             this.containers = containers
          })
          .catch(e => this.errorMessage = e)
-      }
-
+      },
       deleteContainer(container: ContainerT) {
          this.$client.deleteContainer(container.id)
          .then(() => {
             this.refreshContainers()
          })
          .catch(e => this.errorMessage = e)
-      }
-
+      },
       editContainer(container: ContainerT) {
          this.editDialog = true
          this.toEdit = container
          this.refreshContainers()
-      }
-
+      },
       saveContainer() {
          this.$client.updateContainer({"name": this.toEdit!.name, "description": this.toEdit!.description})
          this.editDialog = false
          this.refreshContainers()
       }
-   }
+    },
+
+    mounted() {
+        this.refreshContainers()
+    }
+  })
 </script>
