@@ -676,7 +676,7 @@
         type: String,
         default: undefined,
       },
-      arguments: {default: ""}, // as PropType<string>
+      arguments: {default: ""},
     },
 
     computed: {

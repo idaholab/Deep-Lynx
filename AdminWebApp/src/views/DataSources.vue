@@ -23,7 +23,9 @@
         <v-toolbar flat color="white">
           <v-toolbar-title>{{$t('dataSources.description')}}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <create-data-source-dialog
+          <DataSourceActions
+            :icon="false"
+            mode="create"
             :containerID="containerID"
             @dataSourceCreated="refreshDataSources(); refreshTimeseriesDataSources()"
           />
@@ -74,32 +76,36 @@
         />
       </template>
       <template v-slot:[`item.actions`]="{ item }">
-        <edit-data-source-dialog
-            :containerID="containerID"
-            :dataSource="item"
-            @dataSourceUpdated="refreshDataSources"
-        >
-        </edit-data-source-dialog>
-        <delete-data-source-dialog
-            v-if="!item.archived"
-            @dataSourceDeleted="refreshDataSources()"
-            @dataSourceArchived="refreshDataSources()"
-            :containerID="item.container_id"
-            :dataSource="item"
-            icon="both"></delete-data-source-dialog>
-        <delete-data-source-dialog
-            v-else
-            :containerID="item.container_id"
-            @dataSourceDeleted="refreshDataSources()"
-            @dataSourceArchived="refreshDataSources()"
-            :dataSource="item"
-            icon="trash"></delete-data-source-dialog>
-        <reprocess-data-source-dialog
-            :containerID="containerID"
-            :dataSource="item"
-            :icon="true"
-            @dataSourceReprocessed="refreshDataSources()"
-        ></reprocess-data-source-dialog>
+        <DataSourceActions
+          mode="edit"
+          :icon="true"
+          :containerID="containerID"
+          :dataSource="item"
+          @dataSourceUpdated="refreshDataSources"
+        />
+        <DataSourceActions
+          mode="delete"
+          :icon="true"
+          @dataSourceArchived="refreshDataSources()"
+          @dataSourceDeleted="refreshDataSources()"
+          :containerID="item.container_id"
+          :dataSource="item"
+        />
+        <DataSourceActions
+          v-if="!item.archived"
+          mode="archive"
+          :icon="true"
+          @dataSourceArchived="refreshDataSources()"
+          :containerID="item.container_id"
+          :dataSource="item"
+        />
+        <DataSourceActions
+          mode="reprocess"
+          :icon="true"
+          :containerID="containerID"
+          :dataSource="item"
+          @dataSourceReprocessed="refreshDataSources()"
+        />
       </template>
     </v-data-table>
 
@@ -114,12 +120,14 @@
         <v-toolbar flat color="white">
           <v-toolbar-title>{{$t('dataSources.description')}}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <create-data-source-dialog
+          <DataSourceActions
+            :icon="false"
+            mode="create"
             :timeseries="true"
             :containerID="containerID"
             @dataSourceCreated="refreshDataSources(); refreshTimeseriesDataSources()"
             @timeseriesSourceCreated="activeTab === 1"
-          />
+          ></DataSourceActions>
 
           <template v-slot:extension>
             <v-text-field
@@ -178,26 +186,27 @@
           @timeseriesDialogClose="incrementKey"
           :ref="`${item.id}viewer`"
         ></timeseries-viewer-dialog>
-        <edit-data-source-dialog
-            :containerID="containerID"
-            :dataSource="item"
-            @dataSourceUpdated="refreshTimeseriesDataSources"
-        >
-        </edit-data-source-dialog>
-        <delete-data-source-dialog
-            v-if="!item.archived"
-            @dataSourceDeleted="refreshTimeseriesDataSources()"
-            @dataSourceArchived="refreshTimeseriesDataSources()"
-            :containerID="item.container_id"
-            :dataSource="item"
-            icon="both"></delete-data-source-dialog>
-        <delete-data-source-dialog
-            v-else
-            :containerID="item.container_id"
-            @dataSourceDeleted="refreshTimeseriesDataSources()"
-            @dataSourceArchived="refreshTimeseriesDataSources()"
-            :dataSource="item"
-            icon="trash"></delete-data-source-dialog>
+        <DataSourceActions
+          mode="edit"
+          :icon="true"
+          :containerID="containerID"
+          :dataSource="item"
+          @dataSourceUpdated="refreshTimeseriesDataSources"
+        />
+        <DataSourceActions
+          mode="delete"
+          @dataSourceArchived="refreshTimeseriesDataSources()"
+          @dataSourceDeleted="refreshTimeseriesDataSources()"
+          :containerID="item.container_id"
+          :dataSource="item"
+        />
+        <DataSourceActions
+          v-if="!item.archived"
+          mode="archive"
+          @dataSourceArchived="refreshTimeseriesDataSources()"
+          :containerID="item.container_id"
+          :dataSource="item"
+        />
       </template>
     </v-data-table>
   </div>
@@ -206,19 +215,13 @@
 <script lang="ts">
 import {Component, Prop, Vue} from 'vue-property-decorator'
 import {DataSourceT} from "@/api/types";
-import CreateDataSourceDialog from "@/components/dataSources/createDataSourceDialog.vue"
-import DeleteDataSourceDialog from "@/components/dataSources/deleteDataSourceDialog.vue";
 import {mdiFileDocumentMultiple} from "@mdi/js";
-import ReprocessDataSourceDialog from "@/components/dataImport/reprocessDataSourceDialog.vue";
-import EditDataSourceDialog from "@/components/dataSources/editDataSourceDialog.vue";
 import TimeseriesViewerDialog from '@/components/data/timeseriesViewerDialog.vue';
+import DataSourceActions from '@/components/dataSources/DataSourceActions.vue';
 
 @Component({components:{
-    CreateDataSourceDialog,
-    EditDataSourceDialog,
-    DeleteDataSourceDialog,
-    ReprocessDataSourceDialog,
-    TimeseriesViewerDialog
+    TimeseriesViewerDialog,
+    DataSourceActions
   }})
 export default class DataSources extends Vue {
   @Prop({required: true})
@@ -264,18 +267,8 @@ export default class DataSources extends Vue {
 
   mounted() {
     this.refreshDataSources()
-    this.refreshTimeseriesDataSources(true)
-    if (this.argument.length > 0) {
-      this.activeTab = 1;
-    }
-  }
-
-  loadViewer() {
-    // checks for the optional datasource ID argument and loads the timeseries viewer if found
-    if (this.argument.length > 0) {
-      const viewer = this.$refs[`${this.argument}viewer`];
-      (viewer as TimeseriesViewerDialog).dialog = true;
-    }
+    this.refreshTimeseriesDataSources()
+    this.activeTab = 0;
   }
 
   refreshDataSources() {
@@ -288,7 +281,7 @@ export default class DataSources extends Vue {
         .finally(() => this.dataSourcesLoading = false)
   }
 
-  refreshTimeseriesDataSources(loadViewer = false) {
+  refreshTimeseriesDataSources() {
     this.timeseriesLoading = true
     this.$client.listDataSources(this.containerID, true, true)
         .then(dataSources => {
@@ -297,7 +290,6 @@ export default class DataSources extends Vue {
         .catch(e => this.errorMessage = e)
         .finally(() => {
           this.timeseriesLoading = false
-          if (loadViewer) this.loadViewer()
         })
   }
 

@@ -212,7 +212,6 @@ export class AvevaDataSourceConfig extends BaseDataSourceConfig {
         'INVISIBLE POINT',
         'TANGENT POINT',
         'POLYGON',
-        'VERTEX',
         'AIDARC',
         'AIDCIRCLE',
         'AIDLINE',
@@ -232,7 +231,6 @@ export class AvevaDataSourceConfig extends BaseDataSourceConfig {
         'MLABEL',
         'POGON',
         'POHEDRON',
-        'POINT',
         'POLFACE',
         'POLOOP',
         'POLPTLIST',
@@ -262,7 +260,7 @@ export class AvevaDataSourceConfig extends BaseDataSourceConfig {
     // as it will return the whole project as an ifc file, then separate by zones, sites etc. See Aveva's database documentation
     // for more information - https://help.aveva.com/AVEVA_Everything3D/1.1/NCUG/wwhelp/wwhimpl/js/html/wwhelp.htm#href=NCUG4.5.15.html#1021602
     @IsArray()
-    ifc_element_types: string[] = ['SITE', 'GROUP', 'SITE', 'ZONE', 'DRAWING', 'STRUCTURE'];
+    ifc_element_types: string[] = ['SITE', 'GROUP', 'ZONE', 'DRAWING', 'STRUCTURE'];
 
     @IsObject()
     ifc_settings: {

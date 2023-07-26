@@ -13,8 +13,17 @@
         small
         v-bind="attrs"
         v-on="on"
+        class="mr-2"
+        @click="$emit('openDialog')"
       >{{ iconName }}</v-icon>
-      <v-btn v-if="!icon" color="primary" v-bind="attrs" v-on="on">{{title}}</v-btn>
+      <v-btn
+        v-if="!icon"
+        color="primary"
+        v-bind="attrs"
+        v-on="on"
+        class="mt-2"
+        @click="$emit('openDialog')"
+      >{{title}}</v-btn>
     </template>
     <v-card>
       <!-- Dialog Title -->
@@ -32,8 +41,8 @@
       <!-- Dialog Action Buttons -->
       <v-card-actions>
         <v-spacer></v-spacer>
-        <slot name="actions" />
         <v-btn color="error" text @click="close()">{{$t("general.cancel")}}</v-btn>
+        <slot name="actions" />
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -47,13 +56,14 @@ import {
 } from "vue";
 
 export default defineComponent({
-  name: 'BasicDialog',
+  name: 'DialogBasic',
 
   props: {
     title: String,
     maxWidth: {type: String, required: false, default: '80%'},
-    icon: {required: false, default: true}, // as PropType<boolean>
+    icon: {required: false, default: true},
     iconName: {required: false, default: 'mdi-eye'},
+    value: Boolean,
   },
 
   setup(props: any, context: SetupContext) {
@@ -61,12 +71,13 @@ export default defineComponent({
 
     function close() {
       show.value = !show.value
+      context.emit('closeDialog');
     }
 
     return {
       show,
       close
     };
-  }
+  },
 });
 </script>

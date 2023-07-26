@@ -110,6 +110,7 @@ export default {
             createdAtMapping:
                 'Select a property key to use the corresponding value to set "created at", or leave blank to use the import time as the "created at" value',
             createdAtManual: 'Select "Default" to use the import time as the "created at" value, or set the time manually',
+            removedForSecurity: '(Removed for Security)',
         },
         links: {
             timeseriesQuickStart: 'https://github.com/idaholab/Deep-Lynx/wiki/Timeseries-Quick-Start-Guide',
