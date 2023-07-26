@@ -16,7 +16,8 @@
             >
               <v-file-input
                 @change="addFile"
-                :rules="[v => !!v || $t('validation.selectOne')]">
+                :rules="[selectionRule]"
+              >
                 <template v-slot:label>
                   .owl File
                 </template>
@@ -28,7 +29,8 @@
                 <v-divider></v-divider>
               </v-row>
               <v-text-field v-model="owlFilePath"
-                :rules="[v => !!v || $t('validation.selectOne')]">
+                :rules="[selectionRule]"
+              >
                 <template v-slot:label>
                   URL to .owl File
                 </template>
@@ -53,45 +55,60 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from 'vue-property-decorator'
+  import Vue from 'vue'
 
-@Component
-export default class OntologyUpdate extends Vue {
-  @Prop({required: true})
-  readonly containerID!: string;
-
-  errorMessage = ""
-  successMessage = ""
-  loading = false
-  owlFilePath = ""
-  owlFile: File | null = null
-
-  addFile(file: File) {
-    this.owlFile = file
+  interface OntologyUpdateModel {
+    errorMessage: string,
+    successMessage: string,
+    loading: boolean,
+    owlFilePath: string,
+    owlFile: File | null
   }
 
-  updateContainer() {
-    this.loading = true
+  export default Vue.extend ({
+    name: 'OntologyUpdate',
 
-    if(this.owlFile || this.owlFilePath !== "") {
-      this.$client.updateContainerFromImport(this.containerID, this.owlFile, this.owlFilePath, this.$store.state.activeContainer?.name)
-          .then(() => {
-            this.loading = false
-            this.errorMessage = ""
-            this.$router.go(0)
-          })
-          .catch(e => {
-            this.loading = false
-            this.errorMessage = e
-          })
-    } else {
-      this.errorMessage = (this.$t('errors.owl') as string)
-      this.loading = false
+    props: {
+      containerID: {type: String, required: true}, // as PropType<string>
+    },
+
+    data: (): OntologyUpdateModel => ({
+      errorMessage: "",
+      successMessage: "",
+      loading: false,
+      owlFilePath: "",
+      owlFile: null
+    }),
+
+    methods: {
+      addFile(file: File) {
+        this.owlFile = file
+      },
+      updateContainer() {
+        this.loading = true
+
+        if(this.owlFile || this.owlFilePath !== "") {
+          this.$client.updateContainerFromImport(this.containerID, this.owlFile, this.owlFilePath, this.$store.state.activeContainer?.name)
+              .then(() => {
+                this.loading = false
+                this.errorMessage = ""
+                this.$router.go(0)
+              })
+              .catch(e => {
+                this.loading = false
+                this.errorMessage = e
+              })
+        } else {
+          this.errorMessage = (this.$t('errors.owl') as string)
+          this.loading = false
+        }
+      },
+      importHelpLink() {
+        return this.$t('links.importOntology')
+      },
+      selectionRule(v: string | number | boolean | null | undefined) {
+        return !!v || this.$t('validation.selectOne');
+      },
     }
-  }
-
-  importHelpLink() {
-    return this.$t('links.importOntology')
-  }
-}
+  });
 </script>

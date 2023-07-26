@@ -88,65 +88,70 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from 'vue-property-decorator'
-import CreateFileSetDialog from "@/components/fileManager/createFileSetDialog.vue";
-import DeleteFileSetDialog from "@/components/fileManager/deleteFileSetDialog.vue";
-import {mdiFileDocumentMultiple} from "@mdi/js";
-import ReprocessDataSourceDialog from "@/components/dataImport/reprocessDataSourceDialog.vue";
-import EditFileSetDialog from "@/components/fileManager/editFileSetDialog.vue";
-import EditTagDialog from "@/components/fileManager/editTagDialog.vue";
-import Config from "../config";
+  import Vue from 'vue'
+  import CreateFileSetDialog from "@/components/fileManager/createFileSetDialog.vue";
+  import DeleteFileSetDialog from "@/components/fileManager/deleteFileSetDialog.vue";
+  import {mdiFileDocumentMultiple} from "@mdi/js";
+  import EditFileSetDialog from "@/components/fileManager/editFileSetDialog.vue";
+  import EditTagDialog from "@/components/fileManager/editTagDialog.vue";
+  import Config from "../config";
 
-@Component({components:{
-    CreateFileSetDialog,
-    EditFileSetDialog,
-    DeleteFileSetDialog,
-    ReprocessDataSourceDialog,
-    EditTagDialog
-  }})
-export default class FileManager extends Vue {
-  @Prop({required: true})
-  readonly containerID!: string;
-
-  fileSetsLoading = false
-  fileSets: any[] = []
-  errorMessage = ""
-  copy = mdiFileDocumentMultiple
-
-  headers() {
-    return [
-      { text: '', value: 'copy', groupable: false,},
-      { text: this.$t('general.id'), value: 'file_id', groupable: false,},
-      { text: this.$t('tags.name'), value: 'tag_name'},
-      { text: this.$t('files.file'), value: 'file_name', groupable: false,},
-      { text: this.$t('files.fileSize'), value: 'file_size', groupable: false,},
-      { text: this.$t('general.modifiedAt'), value: 'file_modified_at', groupable: false,},
-      { text: this.$t('general.actions'), value: 'actions', sortable: false, groupable: false,}
-    ]
+  interface FileManagerModel {
+    fileSetsLoading: boolean,
+    errorMessage: string,
+    copy: typeof mdiFileDocumentMultiple,
+    fileSets: any[]
   }
 
-  mounted() {
-    this.refreshFileSets()
-  }
+  export default Vue.extend ({
+    name: 'ViewFileManager',
 
-  refreshFileSets() {
-    this.fileSetsLoading = true
-    this.$client.listWebGLFilesAndTags(this.containerID)
-        .then(fileSets => {
-          this.fileSets = fileSets
-        })
-        .catch(e => this.errorMessage = e)
-        .finally(() => this.fileSetsLoading = false)
-  }
+    components: { CreateFileSetDialog, EditFileSetDialog, DeleteFileSetDialog, EditTagDialog },
 
-  open3DViewer(selectedTag: any) {
-    localStorage.setItem("webgl", JSON.stringify(selectedTag));
-    localStorage.setItem("container", this.containerID);
-    window.open(`${Config.deepLynxApiUri}/viewer`, "_blank");
-  }
+    props: {
+      containerID: {type: String, required: true},
+    },
 
-  copyID(id: string) {
-    navigator.clipboard.writeText(id)
-  }
-}
+    data: (): FileManagerModel => ({
+      fileSetsLoading: false,
+      errorMessage: "",
+      copy: mdiFileDocumentMultiple,
+      fileSets: []
+    }),
+
+    methods: {
+      headers() {
+        return [
+          { text: '', value: 'copy', groupable: false,},
+          { text: this.$t('general.id'), value: 'file_id', groupable: false,},
+          { text: this.$t('tags.name'), value: 'tag_name'},
+          { text: this.$t('files.file'), value: 'file_name', groupable: false,},
+          { text: this.$t('files.fileSize'), value: 'file_size', groupable: false,},
+          { text: this.$t('general.modifiedAt'), value: 'file_modified_at', groupable: false,},
+          { text: this.$t('general.actions'), value: 'actions', sortable: false, groupable: false,}
+        ]
+      },
+      refreshFileSets() {
+        this.fileSetsLoading = true
+        this.$client.listWebGLFilesAndTags(this.containerID)
+            .then(fileSets => {
+              this.fileSets = fileSets
+            })
+            .catch(e => this.errorMessage = e)
+            .finally(() => this.fileSetsLoading = false)
+      },
+      open3DViewer(selectedTag: any) {
+        localStorage.setItem("webgl", JSON.stringify(selectedTag));
+        localStorage.setItem("container", this.containerID);
+        window.open(`${Config.deepLynxApiUri}/viewer`, "_blank");
+      },
+      copyID(id: string) {
+        navigator.clipboard.writeText(id)
+      }
+    },
+
+    mounted() {
+      this.refreshFileSets()
+    }
+  });
 </script>

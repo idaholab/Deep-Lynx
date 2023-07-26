@@ -56,74 +56,82 @@
       </v-data-table>
     </div>
   </template>
-  
-  <script lang="ts">
-  import {Component, Prop, Vue} from 'vue-property-decorator';
+
+<script lang="ts">
+  import Vue from 'vue';
   import CreateEventActionDialog from '@/components/eventSystem/createEventActionDialog.vue';
   import EditEventActionDialog from '@/components/eventSystem/editEventActionDialog.vue';
   import DeleteEventActionDialog from '@/components/eventSystem/deleteEventActionDialog.vue';
   import SendEventActionDialog from '@/components/eventSystem/sendEventActionDialog.vue';
   import EventActionStatusDialog from '@/components/eventSystem/eventActionStatusDialog.vue';
   import { EventActionT } from '../api/types';
-  
-  @Component({components:{
-    CreateEventActionDialog,
-    EditEventActionDialog,
-    DeleteEventActionDialog,
-    SendEventActionDialog,
-    EventActionStatusDialog
-  }})
-  export default class EventSystem extends Vue {
-    @Prop({required: true})
-    readonly containerID!: string;
 
-    key = 0
-    dialog = false
-    eventsLoading = false
-    eventActions: EventActionT[] = []
-    errorMessage = ""
-    activeTab = 'eventactions'
-  
-    headers() {
-      return [
-        { text: this.$t('general.id'), value: 'id'},
-        { text: this.$t('events.eventType'), value: 'event_type'},
-        { text: this.$t('events.actionType'), value: 'action_type'},
-        { text: this.$t('edges.destination'), value: 'destination'},
-        { text: this.$t('general.active'), value: 'active'},
-        { text: this.$t('general.actions'), value: 'actions', sortable: false }
-      ]
-    }
-  
+  interface EventSystemModel {
+    key: number,
+    dialog: boolean,
+    eventsLoading: boolean,
+    errorMessage: string,
+    activeTab: string,
+    eventActions: EventActionT[]
+  }
+
+  export default Vue.extend ({
+    name: 'ViewEventSystem',
+
+    components: { CreateEventActionDialog, EditEventActionDialog, DeleteEventActionDialog, SendEventActionDialog, EventActionStatusDialog },
+
+    props: {
+      containerID: {type: String, required: true},
+    },
+
+    data: (): EventSystemModel => ({
+      key: 0,
+      dialog: false,
+      eventsLoading: false,
+      errorMessage: "",
+      activeTab: 'eventactions',
+      eventActions: []
+    }),
+
+    methods: {
+      headers() {
+        return [
+          { text: this.$t('general.id'), value: 'id'},
+          { text: this.$t('events.eventType'), value: 'event_type'},
+          { text: this.$t('events.actionType'), value: 'action_type'},
+          { text: this.$t('edges.destination'), value: 'destination'},
+          { text: this.$t('general.active'), value: 'active'},
+          { text: this.$t('general.actions'), value: 'actions', sortable: false }
+        ]
+      },
+      refreshEventActions() {
+        this.eventsLoading = true
+        this.$client.listEventActions(true, this.containerID)
+            .then(eventActions => {
+              this.eventActions = eventActions
+            })
+            .catch(e => this.errorMessage = e)
+            .finally(() => this.eventsLoading = false)
+      },
+      toggleEventActive(eventAction: EventActionT) {
+        if(eventAction.active) {
+          this.$client.activateEventAction(eventAction.id!)
+              .then(()=> {
+                this.refreshEventActions()
+              })
+              .catch(e => this.errorMessage = e)
+        } else {
+          this.$client.deactivateEventAction(eventAction.id!)
+              .then(()=> {
+                this.refreshEventActions()
+              })
+              .catch((e: any) => this.errorMessage = e)
+        }
+      }
+    },
+
     mounted() {
       this.refreshEventActions()
     }
-
-    refreshEventActions() {
-      this.eventsLoading = true
-      this.$client.listEventActions(true, this.containerID)
-          .then(eventActions => {
-            this.eventActions = eventActions
-          })
-          .catch(e => this.errorMessage = e)
-          .finally(() => this.eventsLoading = false)
-    }
-
-    toggleEventActive(eventAction: EventActionT) {
-      if(eventAction.active) {
-        this.$client.activateEventAction(eventAction.id!)
-            .then(()=> {
-              this.refreshEventActions()
-            })
-            .catch(e => this.errorMessage = e)
-      } else {
-        this.$client.deactivateEventAction(eventAction.id!)
-            .then(()=> {
-              this.refreshEventActions()
-            })
-            .catch((e: any) => this.errorMessage = e)
-      }
-    }
-  }
-  </script>
-  
+  });
+</script>

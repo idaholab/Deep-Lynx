@@ -40,7 +40,7 @@
             link
             v-if="$auth.Auth('data', 'write', containerID)"
             @click="setActiveComponent('data-query')"
-            :input-value="currentMainComponent === 'DataQuery'"
+            :input-value="currentMainComponent === 'ViewDataQuery'"
             :ripple="{class:'list-ripple'}"
         >
           <v-list-item-content>
@@ -57,7 +57,7 @@
             link
             v-if="$auth.Auth('ontology', 'read', containerID)"
             @click="setActiveComponent('metatypes')"
-            :input-value="currentMainComponent === 'Metatypes'"
+            :input-value="currentMainComponent === 'ViewMetatypes'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -71,7 +71,7 @@
             link
             v-if="$auth.Auth('ontology', 'read', containerID)"
             @click="setActiveComponent('metatype-relationships')"
-            :input-value="currentMainComponent === 'MetatypeRelationships'"
+            :input-value="currentMainComponent === 'ViewMetatypeRelationships'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -85,7 +85,7 @@
             link
             v-if="$auth.Auth('ontology', 'read', containerID)"
             @click="setActiveComponent('metatype-relationship-pairs')"
-            :input-value="currentMainComponent === 'MetatypeRelationshipPairs'"
+            :input-value="currentMainComponent === 'ViewMetatypeRelationshipPairs'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -99,7 +99,7 @@
             link
             v-if="$auth.Auth('ontology', 'read', containerID) && $store.getters.ontologyVersioningEnabled"
             @click="setActiveComponent('ontology-versioning')"
-            :input-value="currentMainComponent === 'OntologyVersioning'"
+            :input-value="currentMainComponent === 'ViewOntologyVersioning'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -113,7 +113,7 @@
             link
             v-if="$auth.Auth('ontology', 'read', containerID)"
             @click="setActiveComponent('ontology-update')"
-            :input-value="currentMainComponent === 'OntologyUpdate'"
+            :input-value="currentMainComponent === 'ViewOntologyUpdate'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -188,7 +188,7 @@
             link
             v-if="$auth.Auth('data', 'write', containerID)"
             @click="setActiveComponent('event-actions')"
-            :input-value="currentMainComponent === 'EventSystem'"
+            :input-value="currentMainComponent === 'ViewEventSystem'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -201,7 +201,7 @@
               link
               v-if="$auth.Auth('data', 'write', containerID)"
               @click="setActiveComponent('file-manager')"
-              :input-value="currentMainComponent === 'FileManager'"
+              :input-value="currentMainComponent === 'ViewFileManager'"
               :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -267,7 +267,7 @@
             link
             v-if="$auth.Auth('users', 'write', containerID)"
             @click="setActiveComponent('settings')"
-            :input-value="currentMainComponent === 'Settings'"
+            :input-value="currentMainComponent === 'ViewSettings'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -303,7 +303,7 @@
             two-line
             link
             @click="setActiveComponent('users')"
-            :input-value="currentMainComponent === 'Users'"
+            :input-value="currentMainComponent === 'ViewUsers'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -338,7 +338,7 @@
               two-line
               link
               @click="setActiveComponent('service-users')"
-              :input-value="currentMainComponent === 'ServiceUsers'"
+              :input-value="currentMainComponent === 'ViewServiceUsers'"
               :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -406,8 +406,8 @@
             :container="container"
             :argument="argument"
             :class="{
-              'main-content-component-constrained':(currentMainComponent !== 'DataQuery'),
-              'main-content-component-unconstrained':(currentMainComponent === 'DataQuery')
+              'main-content-component-constrained':(currentMainComponent !== 'ViewDataQuery'),
+              'main-content-component-unconstrained':(currentMainComponent === 'ViewDataQuery')
             }"
           />
         </transition>
@@ -593,18 +593,17 @@
 
 <script lang="ts">
   import Vue from 'vue'
-  import Metatypes from "@/views/Metatypes.vue"
-  import MetatypeRelationships from "@/views/MetatypeRelationships.vue"
-  import MetatypeRelationshipPairs from "@/views/MetatypeRelationshipPairs.vue"
-  import OntologyUpdate from "@/views/OntologyUpdate.vue"
+  import ViewMetatypes from "@/views/ViewMetatypes.vue"
+  import ViewMetatypeRelationships from "@/views/ViewMetatypeRelationships.vue"
+  import ViewMetatypeRelationshipPairs from "@/views/ViewMetatypeRelationshipPairs.vue"
   import ViewDataExport from "@/views/ViewDataExport.vue"
   import ViewDataImports from "@/views/ViewDataImports.vue"
-  import DataQuery from "@/views/DataQuery.vue"
+  import ViewDataQuery from "@/views/ViewDataQuery.vue"
   import DataSources from "@/views/DataSources.vue"
   import ViewDataMapping from "@/views/ViewDataMapping.vue"
-  import EventSystem from "@/views/EventSystem.vue"
-  import Settings from "@/views/Settings.vue"
-  import Users from "@/views/Users.vue"
+  import ViewEventSystem from "@/views/ViewEventSystem.vue"
+  import ViewSettings from "@/views/ViewSettings.vue"
+  import ViewUsers from "@/views/ViewUsers.vue"
   import ViewContainerUsers from "@/views/ViewContainerUsers.vue"
   import ViewContainers from "@/views/ViewContainers.vue"
   import ViewApiKeys from "@/views/ViewApiKeys.vue";
@@ -614,12 +613,13 @@
   import {UserT} from "@/auth/types";
   import {ContainerT, DataSourceT, FullStatistics} from "@/api/types";
   import Config from "@/config";
-  import OntologyVersioning from "@/views/OntologyVersioning.vue";
+  import ViewOntologyUpdate from '@/views/ViewOntologyUpdate.vue'
+  import ViewOntologyVersioning from "@/views/ViewOntologyVersioning.vue";
   import ContainerAlertBanner from "@/components/ontology/containers/containerAlertBanner.vue";
-  import ServiceUsers from "@/views/ServiceUsers.vue";
+  import ViewServiceUsers from "@/views/ViewServiceUsers.vue";
   import ViewContainerExport from "@/views/ViewContainerExport.vue";
   import ViewContainerImport from "@/views/ViewContainerImport.vue";
-  import FileManager from "@/views/FileManager.vue";
+  import ViewFileManager from "@/views/ViewFileManager.vue";
   import ViewOverviewGraph from "@/views/ViewOverviewGraph.vue";
 
   interface HomeModel {
@@ -640,7 +640,32 @@
   export default Vue.extend ({
     name: 'PageHome',
 
-    components: { ContainerSelect, ViewApiKeys, LanguageSelect, ViewDataImports, Metatypes, MetatypeRelationships, MetatypeRelationshipPairs, OntologyUpdate, ViewDataExport, DataQuery, DataSources, ViewDataMapping, EventSystem, Settings, ViewContainerUsers, Users, ViewContainers, OntologyVersioning, ContainerAlertBanner, ServiceUsers, ViewContainerExport, ViewContainerImport, FileManager, ViewOverviewGraph },
+    components: {
+      ContainerSelect,
+      ViewApiKeys,
+      LanguageSelect,
+      ViewDataImports,
+      ViewMetatypes,
+      ViewMetatypeRelationships,
+      ViewMetatypeRelationshipPairs,
+      ViewOntologyUpdate,
+      ViewDataExport,
+      ViewDataQuery,
+      DataSources,
+      ViewDataMapping,
+      ViewEventSystem,
+      ViewSettings,
+      ViewContainerUsers,
+      ViewUsers,
+      ViewContainers,
+      ViewOntologyVersioning,
+      ContainerAlertBanner,
+      ViewServiceUsers,
+      ViewContainerExport,
+      ViewContainerImport,
+      ViewFileManager,
+      ViewOverviewGraph
+    },
 
     props: {
       containerID: {
@@ -707,35 +732,28 @@
           }
 
           case "metatypes": {
-            this.currentMainComponent = "Metatypes";
+            this.currentMainComponent = "ViewMetatypes";
             this.componentName = this.$t('classes.classes')
             this.$router.replace(`/containers/${this.containerID}/metatypes`)
             break;
           }
 
           case "metatype-relationships": {
-            this.currentMainComponent = "MetatypeRelationships";
+            this.currentMainComponent = "ViewMetatypeRelationships";
             this.componentName = this.$t('relationshipTypes.relTypes')
             this.$router.replace(`/containers/${this.containerID}/metatype-relationships`)
             break;
           }
 
           case "metatype-relationship-pairs": {
-            this.currentMainComponent = "MetatypeRelationshipPairs";
+            this.currentMainComponent = "ViewMetatypeRelationshipPairs";
             this.componentName = this.$t('relationships.relationships')
             this.$router.replace(`/containers/${this.containerID}/metatype-relationship-pairs`)
             break;
           }
 
-          case "ontology-update": {
-            this.currentMainComponent = "OntologyUpdate";
-            this.componentName = this.$t('ontology.updateTitle')
-            this.$router.replace(`/containers/${this.containerID}/ontology-update`)
-            break;
-          }
-
           case "data-query": {
-            this.currentMainComponent = "DataQuery";
+            this.currentMainComponent = "ViewDataQuery";
             this.componentName = this.$t('query.viewer')
             this.$router.replace(`/containers/${this.containerID}/data-query`)
             break;
@@ -756,7 +774,7 @@
           }
 
           case "file-manager": {
-            this.currentMainComponent = "FileManager";
+            this.currentMainComponent = "ViewFileManager";
             this.componentName = this.$t('modelExplorer.title')
             this.$router.replace(`/containers/${this.containerID}/file-manager`)
             break;
@@ -777,14 +795,14 @@
           }
 
           case "settings": {
-            this.currentMainComponent = "Settings";
+            this.currentMainComponent = "ViewSettings";
             this.componentName = this.$t('general.settings')
             this.$router.replace(`/containers/${this.containerID}/settings`)
             break;
           }
 
           case "users": {
-            this.currentMainComponent = "Users";
+            this.currentMainComponent = "ViewUsers";
             this.componentName = this.$t('users.users')
             this.$router.replace(`/containers/${this.containerID}/users`)
             break;
@@ -811,15 +829,22 @@
             break;
           }
 
+          case "ontology-update": {
+            this.currentMainComponent = "ViewOntologyUpdate";
+            this.componentName = this.$t('ontology.updateTitle');
+            this.$router.replace(`/containers/${this.containerID}/ontology-update`);
+            break;
+          }
+
           case "ontology-versioning": {
-            this.currentMainComponent = "OntologyVersioning"
+            this.currentMainComponent = "ViewOntologyVersioning"
             this.componentName = this.$t('ontology.versioningTitle')
             this.$router.replace(`/containers/${this.containerID}/ontology-versioning`)
             break;
           }
 
           case "service-users": {
-            this.currentMainComponent = "ServiceUsers"
+            this.currentMainComponent = "ViewServiceUsers"
             this.componentName = this.$t('serviceUsers.title')
             this.$router.replace(`/containers/${this.containerID}/service-users`)
             break;
@@ -840,7 +865,7 @@
           }
 
           case "event-actions": {
-            this.currentMainComponent = "EventSystem";
+            this.currentMainComponent = "ViewEventSystem";
             this.componentName = this.$t('events.title')
             this.$router.replace(`/containers/${this.containerID}/event-actions`)
             break;
@@ -937,7 +962,7 @@
               this.setActiveComponent(this.view)
             }
           })
-          .catch(() =>this.$router.push({name: "ContainerSelect"})
+          .catch(() =>this.$router.push({name: "PageContainerSelect"})
     )
 
       this.$client.listMetatypes(this.containerID as string, {

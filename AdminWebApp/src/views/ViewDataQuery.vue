@@ -164,108 +164,126 @@
 </template>
 
 <script lang="ts">
-import QueryBuilder from "../components/queryBuilder/queryBuilder.vue"
-import NodeFilesDialog from "@/components/data/nodeFilesDialog.vue";
-import NodeTimeseriesDataTable from "@/components/data/nodeTimeseriesDataTable.vue";
-import GraphViewer from "@/components/visualization/graphViewer.vue"
-import {Component, Prop, Vue} from "vue-property-decorator";
+  import Vue from 'vue'
+  import QueryBuilder from "../components/queryBuilder/queryBuilder.vue"
+  import NodeFilesDialog from "@/components/data/nodeFilesDialog.vue";
+  import GraphViewer from "@/components/visualization/graphViewer.vue"
 
-import {ResultSet} from "@/components/queryBuilder/queryBuilder.vue";
-import {mdiFileDocumentMultiple} from "@mdi/js";
-import { NodeT } from "../api/types";
+  import {ResultSet} from "@/components/queryBuilder/queryBuilder.vue";
+  import {mdiFileDocumentMultiple} from "@mdi/js";
+  import { NodeT } from "../api/types";
 
-@Component({components: {QueryBuilder, NodeFilesDialog, NodeTimeseriesDataTable, GraphViewer}})
-export default class DataQuery extends Vue {
-  @Prop()
-  readonly containerID!: string
-
-  $refs!: {
-    graph: GraphViewer
+  interface DataQueryModel {
+    tab: any | null,
+    results: ResultSet | null,
+    nodes: NodeT[] | null,
+    selectedProperties: any | null,
+    openPanels: number[],
+    dialog: boolean,
+    showGraph: boolean,
+    expanded: [],
+    copy: typeof mdiFileDocumentMultiple,
+    activeTabName: 'graph',
   }
 
-  dialog = false
-  tab: any | null = null
-  showGraph = false
-  results: ResultSet | null = null
-  nodes: NodeT[] | null = null
-  selectedProperties: any| null = null
-  expanded = []
-  openPanels: number[] = [0]
-
-  copy = mdiFileDocumentMultiple
-  activeTabName = 'graph'
-
-  tabs() {
-    return  [
-      { id: 0, name: 'graph', display: this.$t('graph.graph')},
-      { id: 1, name: 'list', display: this.$t('general.list') },
-      { id: 2, name: 'json', display: this.$t('general.json')},
-    ]
+  interface GraphRefs {
+    graph: {
+      disableGraphEdit: () => void;
+    };
   }
 
-  headers() {
-    return [
-      {text: this.$t('general.id'), value: 'id', sortable: false},
-      {text: this.$t('classes.class'), value: 'metatype_name'},
-      {text: this.$t('general.dateCreated'), value: 'created_at'},
-      {value: 'data-table-expand'}
-    ]
-  }
+  export default Vue.extend ({
+    name: 'DataQuery',
 
-  edgeHeaders() {
-    return [
-      {text: this.$t('general.id'), value: 'id'},
-      {text: this.$t('edges.originClass'), value: 'origin'},
-      {text: this.$t('relationships.relationship'), value: 'rel'},
-      {text: this.$t('edges.destinationClass'), value: 'destination'},
-      {text: this.$t('general.type'), value: 'type'},
-      {value: 'data-table-expand'}
-    ]
-  }
+    components: { QueryBuilder, NodeFilesDialog, GraphViewer },
 
-  getEdgeType(edge: any, nodeID: string) {
-    const type = edge.source.id === nodeID ? this.$t('edges.outgoing') : this.$t('edges.incoming')
-    return type
-  }
+    props: {
+      containerID: {type: String, required: true},
+    },
 
-  async loadResults(queryResult: any) {
-    // if queryResult === null, do not show graph
-    if (queryResult === null) {
-      this.showGraph = false
-      return
+    data: (): DataQueryModel => ({
+      tab: null,
+      results: null,
+      nodes: null,
+      selectedProperties: null,
+      openPanels: [0],
+      dialog: false,
+      showGraph: false,
+      expanded: [],
+      copy: mdiFileDocumentMultiple,
+      activeTabName: 'graph'
+    }),
+
+    methods: {
+      tabs() {
+        return  [
+          { id: 0, name: 'graph', display: this.$t('graph.graph')},
+          { id: 1, name: 'list', display: this.$t('general.list') },
+          { id: 2, name: 'json', display: this.$t('general.json')},
+        ]
+      },
+      headers() {
+        return [
+          {text: this.$t('general.id'), value: 'id', sortable: false},
+          {text: this.$t('classes.class'), value: 'metatype_name'},
+          {text: this.$t('general.dateCreated'), value: 'created_at'},
+          {value: 'data-table-expand'}
+        ]
+      },
+      edgeHeaders() {
+        return [
+          {text: this.$t('general.id'), value: 'id'},
+          {text: this.$t('edges.originClass'), value: 'origin'},
+          {text: this.$t('relationships.relationship'), value: 'rel'},
+          {text: this.$t('edges.destinationClass'), value: 'destination'},
+          {text: this.$t('general.type'), value: 'type'},
+          {value: 'data-table-expand'}
+        ]
+      },
+      getEdgeType(edge: any, nodeID: string) {
+        const type = edge.source.id === nodeID ? this.$t('edges.outgoing') : this.$t('edges.incoming')
+        return type
+      },
+      async loadResults(queryResult: any) {
+        // if queryResult === null, do not show graph
+        if (queryResult === null) {
+          this.showGraph = false
+          return
+        }
+
+        this.showGraph = true
+        this.activeTabName = 'graph'
+        this.tab = this.tabs()[0]
+        this.results = queryResult
+        this.nodes = queryResult.nodes
+      },
+      disableGraphEdit() {
+        const refs = (this as unknown as { $refs: GraphRefs }).$refs;
+        // Ensure graph editing is disabled on tab change
+        if (refs.graph) {
+          refs.graph.disableGraphEdit();
+        }
+      },
+      setActiveTabName(name: any) {
+        this.activeTabName = name;
+        const refs = (this as unknown as { $refs: GraphRefs }).$refs;
+        // Ensure graph editing is disabled on tab change
+        if (refs.graph) {
+          refs.graph.disableGraphEdit();
+        }
+      },
+      copyID(id: string) {
+        navigator.clipboard.writeText(id)
+      },
+      viewProperties(properties: any) {
+        this.selectedProperties = JSON.parse(properties)
+        this.dialog = true
+      },
+      prettyPrintDate(date: string) {
+        return new Date(Date.parse(date)).toISOString().split("T").join(' ').slice(0, 16) + ' UTC'
+      }
     }
-
-    this.showGraph = true
-    this.activeTabName = 'graph'
-    this.tab = this.tabs()[0]
-    this.results = queryResult
-    this.nodes = queryResult.nodes
-  }
-
-  disableGraphEdit() {
-    // ensure graph editing is disabled on tab change
-    this.$refs.graph!.disableGraphEdit();
-  }
-
-  setActiveTabName(name: any) {
-    this.activeTabName = name;
-    this.$refs.graph!.disableGraphEdit();
-  }
-
-  copyID(id: string) {
-    navigator.clipboard.writeText(id)
-  }
-
-  viewProperties(properties: any) {
-    this.selectedProperties = JSON.parse(properties)
-    this.dialog = true
-  }
-
-  prettyPrintDate(date: string) {
-    return new Date(Date.parse(date)).toISOString().split("T").join(' ').slice(0, 16) + ' UTC'
-  }
-
-}
+  });
 </script>
 
 <style lang="scss" scoped>
