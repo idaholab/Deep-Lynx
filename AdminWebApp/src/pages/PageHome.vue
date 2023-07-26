@@ -857,7 +857,7 @@
         window.location.href = `${Config.deepLynxApiUri}/logout?redirect_uri=${Config.appUrl}`
       },
       containerSelect() {
-        this.$router.push({name: "PageContainerSelect"})
+        this.$router.push({name: "ContainerSelect"})
       },
       helpLink() {
         // Use the $t function to get the translated value
