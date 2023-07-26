@@ -28,6 +28,7 @@ bytes = "1.4.0"
 csv = "1.2.1"
 tracing = "0.1"
 tracing-subscriber = "0.3"
+proc-macro2 = "1.0.60"
 
 [build-dependencies]
 napi-build = "2.0.1"
