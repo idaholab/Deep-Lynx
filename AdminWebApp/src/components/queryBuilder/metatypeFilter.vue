@@ -11,12 +11,13 @@
         ></operators-select>
       </v-col>
       <v-col :cols="6">
-        <search-metatypes
+        <SearchMetatypes
             :disabled="disabled"
             :containerID="containerID"
             :metatypeID="metatype"
             :multiple="operator === 'in'"
-            @selected="setMetatype"></search-metatypes>
+            @selected="setMetatype">
+          </SearchMetatypes>
         <v-checkbox 
           v-model="limitOntologyVersion" 
           :label="$t('query.limitOntology')"
@@ -54,7 +55,7 @@
 
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from "vue-property-decorator";
-import SearchMetatypes from "@/components/ontology/metatypes/searchMetatypes.vue";
+import SearchMetatypes from "@/components/ontology/metatypes/SearchMetatypes.vue";
 import OperatorsSelect from "@/components/queryBuilder/operatorsSelect.vue";
 import {MetatypeKeyT, MetatypeT} from "@/api/types";
 import PropertyFilter from "@/components/queryBuilder/PropertyFilter.vue";

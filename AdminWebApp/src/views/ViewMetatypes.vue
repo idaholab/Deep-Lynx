@@ -27,17 +27,17 @@
         <v-alert type="success" v-if="createdMetatype">
           {{$t('classes.createdSuccessfully')}} -
           <span>
-            <edit-metatype-dialog :metatype="createdMetatype"></edit-metatype-dialog>
+            <EditMetatypeDialog :metatype="createdMetatype"></EditMetatypeDialog>
           </span>
         </v-alert>
         <v-toolbar flat color="white">
           <v-toolbar-title>{{$t("classes.description")}}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <create-metatype-dialog
+          <CreateMetatypeDialog
               v-if="($store.getters.isEditMode && $store.getters.ontologyVersioningEnabled && $store.state.selectedChangelist) || !$store.getters.ontologyVersioningEnabled"
               :containerID="containerID"
               @metatypeCreated="recentlyCreatedMetatype">
-          </create-metatype-dialog>
+          </CreateMetatypeDialog>
         </v-toolbar>
         <v-row>
           <v-col :cols="6">
@@ -68,20 +68,20 @@
       </template>
 
       <template v-slot:[`item.actions`]="{ item }">
-        <view-metatype-dialog
+        <ViewMetatypeDialog
             v-if="!$store.getters.isEditMode && $store.getters.ontologyVersioningEnabled"
             :metatype="item"
             :icon="true">
-        </view-metatype-dialog>
+        </ViewMetatypeDialog>
 
-           <edit-metatype-dialog
+           <EditMetatypeDialog
                v-if="($store.getters.isEditMode && $store.getters.ontologyVersioningEnabled && !item.deleted_at) || !$store.getters.ontologyVersioningEnabled"
                :metatype="item"
                :comparisonMetatype="comparisonMetatypes.find(m => m.name === item.name)"
                :icon="true"
                @metatypeEdited="loadMetatypes()"
            >
-           </edit-metatype-dialog>
+           </EditMetatypeDialog>
 
         <v-tooltip bottom>
           <template v-slot:activator="{on, attrs}">
@@ -120,11 +120,11 @@
 <script lang="ts">
   import Vue from 'vue'
   import {MetatypeT} from '@/api/types';
-  import EditMetatypeDialog from "@/components/ontology/metatypes/editMetatypeDialog.vue";
-  import CreateMetatypeDialog from "@/components/ontology/metatypes/createMetatypeDialog.vue";
+  import EditMetatypeDialog from "@/components/ontology/metatypes/EditMetatypeDialog.vue";
+  import CreateMetatypeDialog from "@/components/ontology/metatypes/CreateMetatypeDialog.vue";
   import {mdiFileDocumentMultiple} from "@mdi/js";
   import OntologyVersionToolbar from "@/components/ontology/versioning/ontologyVersionToolbar.vue";
-  import ViewMetatypeDialog from "@/components/ontology/metatypes/viewMetatypeDialog.vue";
+  import ViewMetatypeDialog from "@/components/ontology/metatypes/ViewMetatypeDialog.vue";
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const diff = require('deep-diff').diff;
 

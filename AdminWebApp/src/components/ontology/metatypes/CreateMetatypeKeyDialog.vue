@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" @click:outside="dialog = false" width="50%">
+  <v-dialog v-model="dialog" @click:outside="dialog = false">
     <template v-slot:activator="{ on }">
       <v-icon
           v-if="icon"
@@ -25,14 +25,14 @@
             >
               <v-text-field
                   v-model="metatypeKey.name"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validationRule]"
               >
                 <template v-slot:label>{{$t('general.name')}} <small style="color:red" >*</small></template>
               </v-text-field>
 
               <v-text-field
                   v-model="metatypeKey.property_name"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validationRule]"
                   required
               >
                 <template v-slot:label>{{$t('properties.name')}} <small style="color:red" >*</small></template>
@@ -42,7 +42,7 @@
                   v-model="metatypeKey.data_type"
                   :items="dataTypes"
                   @change="metatypeKey.default_value = undefined"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validationRule]"
                   required
               >
                 <template v-slot:label>{{$t('general.dataType')}} <small style="color:red" >*</small></template>
@@ -55,29 +55,29 @@
               <v-textarea
                   v-model="metatypeKey.description"
                   :rows="2"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validationRule]"
               >
                 <template v-slot:label>{{$t('general.description')}} <small style="color:#ff0000" >*</small></template>
               </v-textarea>
 
               <h3>{{$t('validation.validation')}}</h3>
               <v-text-field
-                  v-model="metatypeKey.validation.regex"
+                  v-model="validationRegex"
                   :label="$t('validation.regex')"
               >
                 <template slot="append-outer"> <info-tooltip :message="$t('help.regex')"></info-tooltip></template>
               </v-text-field>
               <v-text-field
-                  v-model.number="metatypeKey.validation.max"
-                  :disabled="metatypeKey.validation.regex === ''"
+                  v-model.number="validationMax"
+                  :disabled="validationRegex === ''"
                   type="number"
                   :label="$t('validation.max')"
               >
                 <template slot="append-outer"> <info-tooltip :message="$t('help.max')"></info-tooltip></template>
               </v-text-field>
               <v-text-field
-                  v-model.number="metatypeKey.validation.min"
-                  :disabled="metatypeKey.validation.regex === ''"
+                  v-model.number="validationMin"
+                  :disabled="validationRegex === ''"
                   type="number"
                   :label="$t('validation.min')"
               >
@@ -149,46 +149,112 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
-import {MetatypeKeyT, MetatypeT} from "../../../api/types";
+  import Vue, { PropType } from 'vue'
+  import {MetatypeKeyT, MetatypeT} from "../../../api/types";
 
-@Component
-export default class CreateMetatypeKeyDialog extends Vue {
-  @Prop({required: true})
-  metatype!: MetatypeT;
-
-  @Prop({required: false})
-  readonly icon!: boolean
-
-  errorMessage = ""
-  dialog = false
-  formValid = false
-  metatypeKey: MetatypeKeyT = {validation: {regex: "", min: 0, max: 0}, required: false} as MetatypeKeyT
-  dataTypes = ["number", "number64", "float", "float64", "date", "string", "boolean", "enumeration", "file"]
-  booleanOptions =  [true, false]
-
-  @Watch('dialog', {immediate: true})
-  onDialogChange() {
-    if(this.dialog) this.metatypeKey = {validation: {regex: "", min: 0, max: 0}, required: false} as MetatypeKeyT
+  interface CreateMetatypeKeyDialogModel {
+    errorMessage: string
+    dialog: boolean
+    formValid: boolean
+    metatypeKey: MetatypeKeyT
+    dataTypes: string[]
+    booleanOptions: boolean[]
   }
 
-  createMetatypeKey() {
-    if(this.metatypeKey) {
-      this.metatypeKey.container_id = this.metatype.container_id
-      this.$client.createMetatypeKey(this.metatype.container_id, this.metatype.id!, this.metatypeKey)
+  export default Vue.extend ({
+    name: 'CreateMetatypeKeyDialog',
+
+    props: {
+      metatype: {
+        type: Object as PropType<MetatypeT>,
+        required: true,
+      },
+      icon: {
+        type: Boolean,
+        required: false
+      },
+    },
+    
+    data: (): CreateMetatypeKeyDialogModel => ({
+      errorMessage: "",
+      dialog: false,
+      formValid: false,
+      metatypeKey: {validation: {regex: "", min: 0, max: 0}, required: false} as MetatypeKeyT,
+      dataTypes: ["number", "number64", "float", "float64", "date", "string", "boolean", "enumeration", "file"],
+      booleanOptions: [true, false]
+    }),
+
+    watch: {
+      dialog: {
+        immediate: true,
+        handler(newDialog) {
+         // @ts-ignore
+          if(newDialog) this.metatypeKey = {validation: {regex: "", min: 0, max: 0}, required: false} as MetatypeKeyT
+        }
+      }
+    },
+
+    methods: {
+      createMetatypeKey() {
+        if(this.metatypeKey) {
+          this.metatypeKey.container_id = this.metatype.container_id
+          this.$client.createMetatypeKey(this.metatype.container_id, this.metatype.id!, this.metatypeKey)
           .then(result => {
             if(!result) {
               this.errorMessage = this.$t('errors.errorCommunicating') as string
             } else {
               this.dialog = false
-              this.$emit('metatypeKeyCreated', result[0])
+                this.$emit('metatypeKeyCreated', result[0])
             }
           })
           .catch(e => {
             this.errorMessage = this.$t('errors.errorCommunicating') as string + e
           })
-    }
-  }
+        }
+      },
+      validationRule(v: any) {
+        return !!v || this.$t('validation.required')
+      }
+    },
 
-}
+    computed: {
+      validationRegex: {
+        get(): string {
+          return this.metatypeKey.validation?.regex || '';
+        },
+        set(value: string): void {
+          if (this.metatypeKey.validation) {
+            this.metatypeKey.validation.regex = value;
+          }
+        }
+      },
+      validationMax: {
+        get(): number {
+          return this.metatypeKey.validation?.max || 0;
+        },
+        set(value: number): void {
+          if (this.metatypeKey.validation) {
+            this.metatypeKey.validation.max = value;
+          }
+        }
+      },
+      validationMin: {
+        get(): number {
+          return this.metatypeKey.validation?.min || 0;
+        },
+        set(value: number): void {
+          if (this.metatypeKey.validation) {
+            this.metatypeKey.validation.min = value;
+          }
+        }
+      },
+    }
+  });
 </script>
+
+
+<style lang="scss" scoped>
+  .v-dialog {
+    width: 60%;
+  }
+</style>

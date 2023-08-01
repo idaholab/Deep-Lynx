@@ -21,17 +21,17 @@
                 ref="form"
             >
               <v-text-field
-                  v-model="comparisonMetatype.name"
+                  :value="comparisonMetatype.name"
                   required
-                  :disabled="true"
+                  disabled
                   class="disabled"
               >
                 <template v-slot:label>{{$t('general.name')}} <small style="color:red" >*</small></template>
               </v-text-field>
               <v-textarea
-                  v-model="comparisonMetatype.description"
+                  :value="comparisonMetatype.description"
                   required
-                  :disabled="true"
+                  disabled
                   class="disabled"
               >
                 <template v-slot:label>{{$t('general.description')}} <small style="color:red" >*</small></template>
@@ -63,21 +63,20 @@
                 </v-toolbar>
               </template>
               <template v-slot:[`item.actions`]="{ item }">
-                <view-metatype-key-dialog :metatypeKey="item" :metatype="metatype" :icon="true" @metatypeKeyEdited="loadKeys()"></view-metatype-key-dialog>
+                <ViewMetatypeKeyDialog :metatypeKey="item" :metatype="metatype" :icon="true" @metatypeKeyEdited="loadKeys()"></ViewMetatypeKeyDialog>
               </template>
             </v-data-table>
           </v-col>
 
 
           <v-col :cols="(comparisonMetatype) ? 6 : 12">
-
-            <v-form
+            <v-form 
                 ref="form"
                 v-model="valid"
             >
               <v-text-field
                   v-model="selectedMetatype.name"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validationRule]"
                   required
                   :class="(comparisonMetatype && selectedMetatype.name !== comparisonMetatype.name) ? 'edited-field' : ''"
               >
@@ -85,7 +84,7 @@
               </v-text-field>
               <v-textarea
                   v-model="selectedMetatype.description"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validationRule]"
                   required
                   :class="(comparisonMetatype && selectedMetatype.description !== comparisonMetatype.description) ? 'edited-field' : ''"
               >
@@ -116,17 +115,17 @@
                       vertical
                   ></v-divider>
                   <v-spacer></v-spacer>
-                  <create-metatype-key-dialog :metatype="metatype" @metatypeKeyCreated="loadKeys()"></create-metatype-key-dialog>
+                  <CreateMetatypeKeyDialog :metatype="metatype" @metatypeKeyCreated="loadKeys()"></CreateMetatypeKeyDialog>
                 </v-toolbar>
               </template>
               <template v-slot:[`item.actions`]="{ item }">
                 <div v-if="($store.getters.isEditMode && !item.deleted_at) || !$store.getters.ontologyVersioningEnabled">
-                  <edit-metatype-key-dialog
+                  <EditMetatypeKeyDialog
                       :metatypeKey="item"
                       :metatype="metatype"
                       :icon="true"
                       :comparison-metatype-key="(comparisonMetatype) ? comparisonMetatype.keys.find(k => k.name === item.name) : undefined"
-                      @metatypeKeyEdited="loadKeys()"></edit-metatype-key-dialog>
+                      @metatypeKeyEdited="loadKeys()"></EditMetatypeKeyDialog>
                   <v-icon
                       small
                       @click="deleteKey(item)"
@@ -163,157 +162,186 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
-import {MetatypeKeyT, MetatypeT} from "../../../api/types";
-import EditMetatypeKeyDialog from "@/components/ontology/metatypes/editMetatypeKeyDialog.vue";
-import CreateMetatypeKeyDialog from "@/components/ontology/metatypes/createMetatypeKeyDialog.vue";
-import ViewMetatypeKeyDialog from "@/components/ontology/metatypes/viewMetatypeKeyDialog.vue";
-const diff = require('deep-diff').diff;
+  import Vue, { PropType } from 'vue'
 
-@Component({components: {
-    EditMetatypeKeyDialog,
-    CreateMetatypeKeyDialog,
-    ViewMetatypeKeyDialog
-  }})
-export default class EditMetatypeDialog extends Vue {
-  @Prop({required: true})
-  metatype!: MetatypeT;
+  import {MetatypeKeyT, MetatypeT} from "../../../api/types";
+  import EditMetatypeKeyDialog from "@/components/ontology/metatypes/EditMetatypeKeyDialog.vue";
+  import CreateMetatypeKeyDialog from "@/components/ontology/metatypes/CreateMetatypeKeyDialog.vue"
+  import ViewMetatypeKeyDialog from "@/components/ontology/metatypes/ViewMetatypeKeyDialog.vue";
+  const diff = require('deep-diff').diff;
 
-  @Prop({required: false})
-  readonly icon!: boolean
-
-  // comparison metatype should always be coming in with its keys, so no need to fetch them
-  @Prop({required: false, default: undefined})
-  comparisonMetatype: MetatypeT | undefined
-
-  errorMessage = ""
-  keysLoading = false
-  dialog = false
-  selectedMetatype: MetatypeT | null  = null
-  valid = false
-
-  // this way we only load the keys when the edit dialog is open, so we don't
-  // overload someone using this in a list
-  @Watch('dialog', {immediate: true})
-  isDialogOpen() {
-    if(this.dialog) {
-      this.loadKeys()
-    }
+  interface EditMetatypeDialogModel {
+    errorMessage: string
+    keysLoading: boolean
+    dialog: boolean
+    selectedMetatype: MetatypeT | null
+    valid: boolean
   }
 
-  headers() {
-    return  [
-      { text: this.$t('general.name'), value: 'name' },
-      { text: this.$t('general.description'), value: 'description'},
-      { text: this.$t('general.dataType'), value: 'data_type'},
-      { text: this.$t('general.actions'), value: 'actions', sortable: false }
-    ]
-  }
+  export default Vue.extend ({
+    name: 'EditMetatypeDialog',
 
-  mounted() {
-    // have to do this to avoid mutating properties
-    this.selectedMetatype = JSON.parse(JSON.stringify(this.metatype))
-  }
+    components: { EditMetatypeKeyDialog, CreateMetatypeKeyDialog, ViewMetatypeKeyDialog },
 
-  editMetatype() {
-    this.$client.updateMetatype(this.selectedMetatype?.container_id!, this.selectedMetatype?.id!,
-        {"name": this.selectedMetatype?.name, "description": this.selectedMetatype?.description})
-        .then(result => {
-          if(!result) {
-            this.errorMessage = this.$t('errors.errorCommunicating') as string
-          } else {
-            this.dialog = false
-            this.$emit('metatypeEdited')
+    props: {
+      metatype: {
+        type: Object as PropType<MetatypeT>,
+        required: true
+      },
+      icon: {
+        type: Boolean,
+        required: false
+      },
+      comparisonMetatype: {
+        type: Object as PropType<MetatypeT | undefined>,
+        required: false, 
+        default: undefined
+      },
+    },
+
+    data: (): EditMetatypeDialogModel => ({
+      errorMessage: "",
+      keysLoading: false,
+      dialog: false,
+      selectedMetatype: null,
+      valid: false
+    }),
+
+    watch: {
+      metatype: {
+        immediate: true,
+        handler(newVal: MetatypeT | null) {
+          if (newVal !== null) {
+            // Clone the new value to selectedMetatype whenever metatype changes
+            this.selectedMetatype = Object.assign({}, newVal);
           }
-        })
-        .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
-  }
+        },
+      },
+      dialog: {
+        immediate: true,
+        handler(newDialog) {
+          if(newDialog) {
+            this.$nextTick(() => {
+              this.loadKeys();
+            });
+          }
+        }
+      },
+    },
 
-  loadKeys() {
-    if(this.selectedMetatype) {
-      this.keysLoading = true
-      this.$client.listMetatypeKeys(this.selectedMetatype.container_id, this.selectedMetatype.id!, this.$store.getters.isEditMode)
-          .then(keys => {
-            this.keysLoading = false
+    methods: {
+      headers(): { text: string; value: string }[] {
+        return  [
+          { text: this.$t('general.name'), value: 'name' },
+          { text: this.$t('general.description'), value: 'description'},
+          { text: this.$t('general.dataType'), value: 'data_type'},
+          { text: this.$t('general.actions'), value: 'actions' }
+        ]
+      },
 
-            if(this.selectedMetatype) {
-              this.selectedMetatype.keys = keys
-              this.$forceUpdate()
-            }
-          })
-          .catch(e => {
-            this.errorMessage = e
-            this.keysLoading = false
-          })
-    }
-  }
+      editMetatype() {
+        this.$client.updateMetatype(this.selectedMetatype?.container_id!, this.selectedMetatype?.id!,
+            {"name": this.selectedMetatype?.name, "description": this.selectedMetatype?.description})
+            .then(result => {
+              if(!result) {
+                this.errorMessage = this.$t('errors.errorCommunicating') as string
+              } else {
+                this.dialog = false
+                this.$emit('metatypeEdited')
+              }
+            })
+            .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
+      },
 
-  deleteKey(key: MetatypeKeyT) {
-    this.$client.deleteMetatypeKey(this.selectedMetatype?.container_id!, this.selectedMetatype?.id!, key.id!, {permanent: !this.$store.getters.isEditMode})
-    .then(result => {
-      if(!result) this.errorMessage = this.$t('errors.errorCommunicating') as string
+      loadKeys() {
+        if(this.selectedMetatype) {
+          this.keysLoading = true
+          this.$client.listMetatypeKeys(this.selectedMetatype.container_id, this.selectedMetatype.id!, this.$store.getters.isEditMode)
+              .then(keys => {
+                this.keysLoading = false
 
-      this.loadKeys()
-    })
-    .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
-  }
+                if(this.selectedMetatype) {
+                  this.selectedMetatype.keys = keys
+                  this.$forceUpdate()
+                }
+              })
+              .catch(e => {
+                this.errorMessage = e
+                this.keysLoading = false
+              })
+        }
+      },
 
-  undeleteKey(key: MetatypeKeyT) {
-    this.$client.deleteMetatypeKey(this.selectedMetatype?.container_id!, this.selectedMetatype?.id!, key.id!, {reverse: true})
+      deleteKey(key: MetatypeKeyT) {
+        this.$client.deleteMetatypeKey(this.selectedMetatype?.container_id!, this.selectedMetatype?.id!, key.id!, {permanent: !this.$store.getters.isEditMode})
         .then(result => {
           if(!result) this.errorMessage = this.$t('errors.errorCommunicating') as string
 
           this.loadKeys()
         })
         .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
-  }
+      },
 
-  keyItemRowBackground(item: any) {
-    if(this.$store.getters.isEditMode) {
-      const matchedKey =  this.comparisonMetatype?.keys.find(k => k.name === item.name)!
+      undeleteKey(key: MetatypeKeyT) {
+        this.$client.deleteMetatypeKey(this.selectedMetatype?.container_id!, this.selectedMetatype?.id!, key.id!, {reverse: true})
+            .then(result => {
+              if(!result) this.errorMessage = this.$t('errors.errorCommunicating') as string
 
-      if(item.deleted_at) {
-        return 'deleted-item'
+              this.loadKeys()
+            })
+            .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
+      },
+
+      keyItemRowBackground(item: any) {
+        if(this.$store.getters.isEditMode) {
+          const matchedKey =  this.comparisonMetatype?.keys.find(k => k.name === item.name)!
+
+          if(item.deleted_at) {
+            return 'deleted-item'
+          }
+
+          if(!matchedKey) {
+            return 'created-item'
+          }
+
+          if(this.compareKeys(matchedKey, item)) {
+            return 'edited-item'
+          }
+        }
+        return ''
+      },
+
+      // this function will indicate whether two keys are different
+      compareKeys(original: MetatypeKeyT, target: MetatypeKeyT): boolean {
+        if(typeof this.comparisonMetatype === 'undefined' || typeof this.selectedMetatype === 'undefined') return false
+
+        const o: {[key: string]: any} = {}
+        const t: {[key: string]: any} = {}
+        Object.assign(o, original)
+        Object.assign(t, target)
+
+        // remove the keys we don't want to use to compare
+        function cleanKey(p: MetatypeKeyT) {
+          if(p.created_at) delete p.created_at
+          if(p.created_by) delete p.created_by
+          if(p.modified_at) delete p.modified_at
+          if(p.modified_by) delete p.modified_by
+          if(p.id) delete p.id
+          if(p.metatype_id) delete p.metatype_id
+          if(p.ontology_version) delete  p.ontology_version
+        }
+
+        cleanKey(o as MetatypeKeyT)
+        cleanKey(t as MetatypeKeyT)
+
+        return diff(o, t)
+      },
+
+      validationRule(v: any) {
+        return !!v || this.$t('validation.required')
       }
-
-      if(!matchedKey) {
-        return 'created-item'
-      }
-
-      if(this.compareKeys(matchedKey, item)) {
-        return 'edited-item'
-      }
-    }
-    return ''
-  }
-
-  // this function will indicate whether two keys are different
-  compareKeys(original: MetatypeKeyT, target: MetatypeKeyT): boolean {
-    if(typeof this.comparisonMetatype === 'undefined' || typeof this.selectedMetatype === 'undefined') return false
-
-    const o: {[key: string]: any} = {}
-    const t: {[key: string]: any} = {}
-    Object.assign(o, original)
-    Object.assign(t, target)
-
-    // remove the keys we don't want to use to compare
-    function cleanKey(p: MetatypeKeyT) {
-      if(p.created_at) delete p.created_at
-      if(p.created_by) delete p.created_by
-      if(p.modified_at) delete p.modified_at
-      if(p.modified_by) delete p.modified_by
-      if(p.id) delete p.id
-      if(p.metatype_id) delete p.metatype_id
-      if(p.ontology_version) delete  p.ontology_version
-    }
-
-    cleanKey(o as MetatypeKeyT)
-    cleanKey(t as MetatypeKeyT)
-
-    return diff(o, t)
-  }
-}
-
+    },
+  })
 </script>
 
 <style lang="scss">

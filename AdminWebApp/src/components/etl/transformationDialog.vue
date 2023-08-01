@@ -271,12 +271,12 @@
                               </v-col>
 
                               <v-col cols="12" md="6" lg="4">
-                                <search-metatypes
+                                <SearchMetatypes
                                     @selected="setParentMetatype"
                                     :tooltipHelp="$t('help.classEdgeParam')"
                                     :metatypeID="originMetatypeID"
                                     :containerID="containerID">
-                                </search-metatypes>
+                                </SearchMetatypes>
                               </v-col>
                             </v-row>
 
@@ -313,13 +313,13 @@
                                   </v-col>
 
                                   <v-col cols="12" md="6" lg="4">
-                                    <search-metatypes
+                                    <SearchMetatypes
                                         :tooltip="true"
                                         @selected="setChildMetatype"
                                         :tooltipHelp="$t('help.classEdgeParam')"
                                         :metatypeID="destinationMetatypeID"
                                         :containerID="containerID">
-                                    </search-metatypes>
+                                    </SearchMetatypes>
                                   </v-col>
                                 </v-row>
                               </v-col>
@@ -365,14 +365,14 @@
                                         :rules="[v => !!v || $t('validation.required')]"
                                     />
                                     <template v-if="item.type === 'property'">
-                                      <metatype-keys-select
+                                      <MetatypeKeysSelect
                                           :containerID="containerID"
                                           :metatypeID="selectedRelationshipPair.origin_metatype_id"
                                           :multiple="false"
                                           :propertyName="item.property"
                                           @selected="setFilterPropertyKey(item, ...arguments)"
                                       >
-                                      </metatype-keys-select>
+                                      </MetatypeKeysSelect>
                                     </template>
                                   </template>
 
@@ -389,7 +389,7 @@
                                   <template v-slot:[`item.value`]="{ item }">
                                     <v-row>
                                       <v-col :cols="12" v-if="item.type === 'metatype_id'">
-                                        <search-metatypes
+                                        <SearchMetatypes
                                             :label="$t('transformations.typeSelectKey')"
                                             @selected="setFilterMetatypeID(item, ...arguments)"
                                             :metatypeID="item.value"
@@ -397,7 +397,7 @@
                                             :containerID="containerID"
                                             v-model="item.value"
                                         >
-                                        </search-metatypes>
+                                        </SearchMetatypes>
                                       </v-col>
                                       <v-col :cols="12" v-else-if="item.type === 'data_source'">
                                         <select-data-source
@@ -489,14 +489,14 @@
                                         :rules="[v => !!v || $t('validation.required')]"
                                     />
                                     <template v-if="item.type === 'property'">
-                                      <metatype-keys-select
+                                      <MetatypeKeysSelect
                                           :containerID="containerID"
                                           :metatypeID="selectedRelationshipPair.destination_metatype_id"
                                           :multiple="false"
                                           :propertyName="item.property"
                                           @selected="setFilterPropertyKey(item, ...arguments)"
                                       >
-                                      </metatype-keys-select>
+                                      </MetatypeKeysSelect>
                                     </template>
                                   </template>
 
@@ -513,7 +513,7 @@
                                   <template v-slot:[`item.value`]="{ item }">
                                     <v-row>
                                       <v-col :cols="12" v-if="item.type === 'metatype_id'">
-                                        <search-metatypes
+                                        <SearchMetatypes
                                             :label="$t('transformations.typeSelectKey')"
                                             @selected="setFilterMetatypeID(item, ...arguments)"
                                             :metatypeID="item.value"
@@ -521,7 +521,7 @@
                                             :containerID="containerID"
                                             v-model="item.value"
                                         >
-                                        </search-metatypes>
+                                        </SearchMetatypes>
                                       </v-col>
                                       <v-col :cols="12" v-else-if="item.type === 'data_source'">
                                         <select-data-source
@@ -1122,9 +1122,9 @@ import {
   TypeMappingTransformationT
 } from "@/api/types";
 import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
-import SearchMetatypes from "@/components/ontology/metatypes/searchMetatypes.vue";
+import SearchMetatypes from "@/components/ontology/metatypes/SearchMetatypes.vue";
 import {v4 as uuidv4} from 'uuid';
-import MetatypeKeysSelect from "@/components/ontology/metatypes/metatypeKeysSelect.vue";
+import MetatypeKeysSelect from "@/components/ontology/metatypes/MetatypeKeysSelect.vue";
 
 @Component({
   components: {SelectDataSource, SearchMetatypes, MetatypeKeysSelect},

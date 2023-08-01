@@ -50,7 +50,7 @@
           </div>
 
           <div v-else-if="item.type && item.type === 'metatype_name'">
-            <search-metatypes
+            <SearchMetatypes
                 :disabled="!item.type"
                 :containerID="containerID"
                 :multiple="item.operator === 'in'"
@@ -106,7 +106,7 @@
 import {Component, Prop, Vue} from "vue-property-decorator"
 import {DataSourceT, MetatypeT, TimeseriesDataSourceConfig} from "@/api/types";
 import SelectDataSource from './selectDataSource.vue';
-import SearchMetatypes from '../ontology/metatypes/searchMetatypes.vue';
+import SearchMetatypes from '../ontology/metatypes/SearchMetatypes.vue'
 
 @Component({components: {SelectDataSource, SearchMetatypes}})
 export default class NodeAttachmentParameterDialog extends Vue {

@@ -50,12 +50,19 @@
             >
               <template v-slot:label>{{$t('validation.required')}}</template>
             </v-checkbox>
-
+            <v-textarea
+                v-model="selectedMetatypeKey.description"
+                :rows="2"
+                :disabled="true"
+                class="disabled"
+            >
+              <template v-slot:label>{{$t('general.description')}} </template>
+            </v-textarea>
 
 
               <h3>{{$t('validation.validation')}}</h3>
               <v-text-field
-                  v-model="selectedMetatypeKey.validation.regex"
+                  v-model="validationRegex"
                   :disabled="true"
                   :label="$t('validation.regex')"
                   class="disabled"
@@ -63,7 +70,7 @@
                 <template slot="append-outer"> <info-tooltip :message="$t('help.regex')"></info-tooltip></template>
               </v-text-field>
               <v-text-field
-                  v-model.number="selectedMetatypeKey.validation.max"
+                  v-model.number="validationMax"
                   :disabled="true"
                   type="number"
                   :label="$t('validation.max')"
@@ -72,7 +79,7 @@
                 <template slot="append-outer"> <info-tooltip :message="$t('help.max')"></info-tooltip></template>
               </v-text-field>
               <v-text-field
-                  v-model.number="selectedMetatypeKey.validation.min"
+                  v-model.number="validationMin"
                   :disabled="true"
                   type="number"
                   :label="$t('validation.min')"
@@ -124,41 +131,95 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
-import {MetatypeKeyT, MetatypeT} from "../../../api/types";
+  import Vue, { PropType } from 'vue'
+  import {MetatypeKeyT, MetatypeT} from "../../../api/types";
 
-@Component
-export default class ViewMetatypeKeyDialog extends Vue {
-  @Prop({required: true})
-  metatype!: MetatypeT;
-
-  @Prop({required: true})
-  metatypeKey!: MetatypeKeyT;
-
-  errorMessage = ""
-  dialog = false
-  formValid = false
-  selectedMetatypeKey: MetatypeKeyT | null  = null
-  dataTypes = ["number", "number64", "float", "float64", "date", "string", "boolean", "enumeration", "file", "list"]
-
-  @Watch('dialog', {immediate: true})
-  onDialogChange() {
-    if(this.dialog) this.selectedMetatypeKey = JSON.parse(JSON.stringify(this.metatypeKey))
-
-    if(this.selectedMetatypeKey && !this.selectedMetatypeKey.validation) {
-      this.selectedMetatypeKey.validation = {regex: "", min: 0, max: 0}
-    }
+  interface ViewMetatypeKeyDialogModel {
+    errorMessage: string
+    dialog: boolean
+    formValid: boolean
+    selectedMetatypeKey: MetatypeKeyT | null
+    dataTypes: string[]
   }
 
-  mounted() {
-    // have to do this to avoid mutating properties
-    this.selectedMetatypeKey = JSON.parse(JSON.stringify(this.metatypeKey))
+  export default Vue.extend ({
+    name: 'ViewMetatypeKeyDialog',
 
-    if(this.selectedMetatypeKey && !this.selectedMetatypeKey.validation) {
-      this.selectedMetatypeKey.validation = {regex: "", min: 0, max: 0}
+    props: {
+      metatype: {
+        type: Object as PropType<MetatypeT>,
+        required: true
+      },
+      metatypeKey: {
+        type: Object as PropType<MetatypeKeyT>,
+        required: true
+      },
+    },
+
+    data: (): ViewMetatypeKeyDialogModel => ({
+      errorMessage: "",
+      dialog: false,
+      formValid: false,
+      selectedMetatypeKey: null,
+      dataTypes: ["number", "number64", "float", "float64", "date", "string", "boolean", "enumeration", "file", "list"]
+    }),
+
+    watch: {
+      dialog: {
+        immediate: true,
+        handler(newDialog) {
+          if(newDialog) this.selectedMetatypeKey = Object.assign({}, this.metatypeKey)
+          if(this.selectedMetatypeKey && !this.selectedMetatypeKey.validation) {
+            this.selectedMetatypeKey.validation = {regex: "", min: 0, max: 0}
+          }
+        }
+      }
+    },
+
+    computed: {
+      validationRegex: {
+        get(): string {
+          // Add a null check here
+          if (this.selectedMetatypeKey && this.selectedMetatypeKey.validation) {
+            return this.selectedMetatypeKey.validation.regex || '';
+          }
+          return '';
+        },
+        set(value: string): void {
+          if (this.selectedMetatypeKey && this.selectedMetatypeKey.validation) {
+            this.selectedMetatypeKey.validation.regex = value;
+          }
+        }
+      },
+      validationMax: {
+        get(): number {
+          if (this.selectedMetatypeKey && this.selectedMetatypeKey.validation) {
+            return this.selectedMetatypeKey.validation?.max || 0;
+          }
+          return 0;
+        },
+        set(value: number): void {
+          if (this.selectedMetatypeKey && this.selectedMetatypeKey.validation) {
+            this.selectedMetatypeKey.validation.max = value;
+          }
+        }
+      },
+      validationMin: {
+        get(): number {
+          if (this.selectedMetatypeKey && this.selectedMetatypeKey.validation) {
+            return this.selectedMetatypeKey.validation?.min || 0;
+          }
+          return 0;
+        },
+        set(value: number): void {
+          if (this.selectedMetatypeKey && this.selectedMetatypeKey.validation) {
+            this.selectedMetatypeKey.validation.min = value;
+          }
+        }
+      },
     }
-  }
-}
+
+  });
 </script>
 
 <style lang="scss">

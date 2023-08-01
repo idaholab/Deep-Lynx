@@ -73,7 +73,7 @@
         </template>
         <template v-slot:selection="{item}">
           {{item.name}}
-          <div v-show="item.id === versions[0].id">-{{$t('ongology.current')}}</div>
+          <div v-show="item.id === versions[0].id">-{{$t('general.current')}}</div>
         </template>
       </v-select>
 

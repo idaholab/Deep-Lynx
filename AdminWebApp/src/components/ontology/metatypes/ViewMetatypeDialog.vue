@@ -24,7 +24,7 @@
             >
               <v-text-field
                   v-model="selectedMetatype.name"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validationRule]"
                   required
                   :disabled="true"
                   class="disabled"
@@ -33,7 +33,7 @@
               </v-text-field>
               <v-textarea
                   v-model="selectedMetatype.description"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validationRule]"
                   required
                   :disabled="true"
                   class="disabled"
@@ -70,7 +70,7 @@
                 </v-toolbar>
               </template>
               <template v-slot:[`item.actions`]="{ item }">
-                <view-metatype-key-dialog :metatypeKey="item" :metatype="metatype" :icon="true"></view-metatype-key-dialog>
+                <ViewMetatypeKeyDialog :metatypeKey="item" :metatype="metatype" :icon="true"></ViewMetatypeKeyDialog>
               </template>
             </v-data-table>
           </v-col>
@@ -86,68 +86,98 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
-import {MetatypeT} from "../../../api/types";
-import ViewMetatypeKeyDialog from "@/components/ontology/metatypes/viewMetatypeKeyDialog.vue";
+  import Vue, { PropType } from 'vue'
+  import {MetatypeT} from "../../../api/types";
+  import ViewMetatypeKeyDialog from "@/components/ontology/metatypes/ViewMetatypeKeyDialog.vue";
 
-@Component({components: {
-    ViewMetatypeKeyDialog
-  }})
-export default class ViewMetatypeDialog extends Vue {
-  @Prop({required: true})
-  metatype!: MetatypeT;
+  interface ViewMetatypeDialogModel {
+    errorMessage: string
+    keysLoading: boolean
+    dialog: boolean
+    selectedMetatype: MetatypeT | null
+    valid: boolean
+  }
 
-  @Prop({required: false})
-  readonly icon!: boolean
+  export default Vue.extend ({
+    name: 'ViewMetatypeDialog',
 
-  errorMessage = ""
-  keysLoading = false
-  dialog = false
-  selectedMetatype: MetatypeT | null  = null
-  valid = false
+    components: { ViewMetatypeKeyDialog },
 
-  // this way we only load the keys when the edit dialog is open, so we don't
-  // overload someone using this in a list
-  @Watch('dialog', {immediate: true})
-  isDialogOpen() {
-    if(this.dialog) {
-      this.loadKeys()
+    props: {
+      metatype: {
+        type: Object as PropType<MetatypeT>,
+        required: true
+      },
+      icon: {
+        type: Boolean,
+        required: false
+      },
+    },
+
+    data: (): ViewMetatypeDialogModel => ({
+      errorMessage: "",
+      keysLoading: false,
+      dialog: false,
+      selectedMetatype: null,
+      valid: false
+    }),
+    
+    // this way we only load the keys when the edit dialog is open, so we don't
+    // overload someone using this in a list
+    watch: {
+      metatype: {
+        immediate: true,
+        handler(newVal: MetatypeT | null) {
+          if (newVal !== null) {
+            // Clone the new value to selectedMetatype whenever metatype changes
+            this.selectedMetatype = Object.assign({}, newVal);
+          }
+        },
+      },
+      dialog: {
+        immediate: true,
+        handler(newDialog) {
+          if(newDialog) {
+            this.loadKeys()
+          }
+        }
+      }
+    },
+    
+    methods: {
+      headers(): { text: string; value: string; sortable: boolean }[] {
+        return  [
+          { text: this.$t('general.name'), value: 'name', sortable: false },
+          { text: this.$t('general.description'), value: 'description', sortable: false},
+          { text: this.$t('general.dataType'), value: 'data_type', sortable: false},
+          { text: this.$t('general.actions'), value: 'actions', sortable: false }
+        ]
+      },
+
+      loadKeys() {
+        if(this.selectedMetatype) {
+          this.keysLoading = true
+          this.$client.listMetatypeKeys(this.selectedMetatype.container_id, this.selectedMetatype.id!)
+              .then(keys => {
+                if(this.selectedMetatype) {
+                  this.selectedMetatype.keys = keys
+                  this.keysLoading = false
+                  this.$forceUpdate()
+                }
+              })
+              .catch(e => {
+                this.errorMessage = e
+                this.keysLoading = false
+              })
+        }
+      },
+
+      validationRule(v: any): boolean | string {
+        return !!v || this.$t('validation.required');
+      }
     }
-  }
 
-  headers() {
-    return  [
-      { text: this.$t('general.name'), value: 'name', sortable: false },
-      { text: this.$t('general.description'), value: 'description', sortable: false},
-      { text: this.$t('general.dataType'), value: 'data_type', sortable: false},
-      { text: this.$t('general.actions'), value: 'actions', sortable: false }
-    ]
-  }
-
-  mounted() {
-    // have to do this to avoid mutating properties
-    this.selectedMetatype = JSON.parse(JSON.stringify(this.metatype))
-  }
-
-  loadKeys() {
-    if(this.selectedMetatype) {
-      this.keysLoading = true
-      this.$client.listMetatypeKeys(this.selectedMetatype.container_id, this.selectedMetatype.id!)
-          .then(keys => {
-            if(this.selectedMetatype) {
-              this.selectedMetatype.keys = keys
-              this.keysLoading = false
-              this.$forceUpdate()
-            }
-          })
-          .catch(e => {
-            this.errorMessage = e
-            this.keysLoading = false
-          })
-    }
-  }
-}
-
+  });
 </script>
 
 <style lang="scss">
