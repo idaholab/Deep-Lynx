@@ -475,6 +475,11 @@ paths:
           in: query
           name: dataSourceID
           description: Return only nodes for the selected datasource
+        - schema:
+            type: boolean
+          in: query
+          name: history
+          description: Return historical data for all selected nodes
       responses:
         '200':
           description: ''
@@ -530,6 +535,10 @@ paths:
           required: true
           schema:
             type: string
+        - name: history
+          in: query
+          schema:
+            type: boolean
       responses:
         '200':
           description: ''
@@ -1168,6 +1177,10 @@ paths:
             type: string
           in: query
           name: relationshipPairName
+        - schema:
+            type: boolean
+          in: query
+          name: history
       responses:
         '200':
           description: ''
@@ -1219,6 +1232,10 @@ paths:
           required: true
           schema:
             type: string
+        - name: history
+          in: query
+          schema:
+            type: boolean
       responses:
         '200':
           description: ''
