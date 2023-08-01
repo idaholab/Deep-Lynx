@@ -65,7 +65,7 @@ const DrawerContentsUserInfo: React.FC<Props> = ({}) => {
         </Stack>
       </Box>
       <Box sx={{ padding: '16px', display: 'flex', flex: '1 1 100%', flexDirection: 'column'}}>
-        <NodeInfoMainTabs data={selectedAssetObject} />
+        <NodeInfoMainTabs selectedAssetObject={selectedAssetObject} />
       </Box>
     </>
   );
