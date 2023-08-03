@@ -133,7 +133,7 @@ export default class DataSourceMapper extends Mapper {
         if (Number(count) === 0 && Config.timescaledb_enabled) {
             // perform a second count not using timescale, since the timescale count
             // may return 0 if statistics have not been generated for the hypertable
-            return super.retrieve<any>(this.getHypertableRowCount(tableName));
+            return await super.retrieve<any>(this.getHypertableRowCount(tableName));
         }
         return countVal;
     }
@@ -376,12 +376,12 @@ export default class DataSourceMapper extends Mapper {
         if (Config.timescaledb_enabled) {
             return format(`SELECT * FROM approximate_row_count('%s') AS count`, tableName);
         } else {
-            return format(`SELECT COUNT(*) FROM %I)`, tableName);
+            return format(`SELECT COUNT(*) FROM %I`, tableName);
         }
     }
 
     private getHypertableRowCount(tableName: string): QueryConfig {
-        return format(`SELECT COUNT(*) FROM %I)`, tableName);
+        return format(`SELECT COUNT(*) FROM %I`, tableName);
     }
 
     private getHypertableFirst(primaryTimestamp: string, tableName: string): QueryConfig {
