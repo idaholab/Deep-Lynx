@@ -127,14 +127,15 @@ export default class DataSourceMapper extends Mapper {
     }
 
     public async retrieveTimeseriesRowCount(tableName: string): Promise<Result<number>> {
-        const count = await super.retrieve<number>(this.getHypertableRowCountTimescale(tableName));
+        const countVal = await super.retrieve<any>(this.getHypertableRowCountTimescale(tableName));
+        const count = countVal.value['count']
 
-        if (count.value === 0 && Config.timescaledb_enabled) {
+        if (Number(count) === 0 && Config.timescaledb_enabled) {
             // perform a second count not using timescale, since the timescale count
             // may return 0 if statistics have not been generated for the hypertable
-            return super.retrieve<number>(this.getHypertableRowCount(tableName));
+            return super.retrieve<any>(this.getHypertableRowCount(tableName));
         }
-        return count;
+        return countVal;
     }
 
     public async retrieveTimeseriesRange(primaryTimestamp: string, tableName: string): Promise<Result<TimeseriesRange>> {
