@@ -63,15 +63,15 @@
         default: ''
       },
       metatypeID: {
-        type: Object as PropType<string | string[]>,
+        type: [String, Array],
         required: false
       },
       metatypeUUID: {
-        type: Object as PropType<string | string[]>,
+        type: [String, Array],
         required: false
       },
       metatypeName: {
-        type: Object as PropType<string | string[]>,
+        type: [String, Array],
         required: false,
       },
       rules: {
@@ -101,63 +101,62 @@
       }
     },
 
-    methods: {
-      beforeMount(){
-        if(this.metatypeID) {
-          if(Array.isArray(this.metatypeID)) {
-            this.selectedMetatype = []
+    beforeMount(){
+      if(this.metatypeID) {
+        if(Array.isArray(this.metatypeID)) {
+          this.selectedMetatype = []
 
-            this.metatypeID.forEach(id => {
-              this.$client.retrieveMetatype(this.containerID, id as string)
-                  .then((result: MetatypeT) => (this.selectedMetatype as MetatypeT[]).push(result))
-                  .finally(() => this.loading = false)
-            })
-          }
-
-          this.$client.retrieveMetatype(this.containerID, this.metatypeID as string)
-              .then((result: MetatypeT) => {
-                this.selectedMetatype = result
-                this.emitSelected(this.selectedMetatype)
-              })
+          this.metatypeID.forEach(id => {
+            this.$client.retrieveMetatype(this.containerID, id as string)
+              .then((result: MetatypeT) => (this.selectedMetatype as MetatypeT[]).push(result))
               .finally(() => this.loading = false)
-        } else if (this.metatypeUUID) {
-          if(Array.isArray(this.metatypeUUID)) {
-            this.selectedMetatype = []
-
-            this.metatypeUUID.forEach(id => {
-              this.$client.retrieveMetatypeByUUID(this.containerID, id as string)
-                  .then((result: MetatypeT) => (this.selectedMetatype as MetatypeT[]).push(result))
-                  .finally(() => this.loading = false)
-            })
-          }
-
-          this.$client.retrieveMetatypeByUUID(this.containerID, this.metatypeUUID as string)
-              .then((result: MetatypeT) => {
-                this.selectedMetatype = result
-                this.emitSelected(this.selectedMetatype)
-              })
-              .finally(() => this.loading = false)
-        } else if (this.metatypeName) {
-          const metatypeNames = Array.isArray(this.metatypeName) ? (this.metatypeName as string[]).join(',') : this.metatypeName;
-          this.$client.listMetatypes(this.containerID, {nameIn: metatypeNames, loadKeys: false, ontologyVersion: this.$store.getters.currentOntologyVersionID})
-            .then((metatypes) => {
-              if ((metatypes as MetatypeT[]).length > 1) {
-                this.selectedMetatype = metatypes as MetatypeT[]
-              } else {
-                this.selectedMetatype = (metatypes as MetatypeT[])[0]
-              }
-            })
-            .catch((e: any) => this.errorMessage = e)
-            .finally(() => this.loading = false)
-        } else {
-          this.loading = false
+          })
         }
-      },
 
+        this.$client.retrieveMetatype(this.containerID, this.metatypeID as string)
+          .then((result: MetatypeT) => {
+            this.selectedMetatype = result
+            this.emitSelected(this.selectedMetatype)
+          })
+          .finally(() => this.loading = false)
+      } else if (this.metatypeUUID) {
+        if(Array.isArray(this.metatypeUUID)) {
+          this.selectedMetatype = []
+
+          this.metatypeUUID.forEach(id => {
+            this.$client.retrieveMetatypeByUUID(this.containerID, id as string)
+              .then((result: MetatypeT) => (this.selectedMetatype as MetatypeT[]).push(result))
+              .finally(() => this.loading = false)
+          })
+        }
+
+        this.$client.retrieveMetatypeByUUID(this.containerID, this.metatypeUUID as string)
+          .then((result: MetatypeT) => {
+            this.selectedMetatype = result
+            this.emitSelected(this.selectedMetatype)
+          })
+          .finally(() => this.loading = false)
+      } else if (this.metatypeName) {
+        const metatypeNames = Array.isArray(this.metatypeName) ? (this.metatypeName as string[]).join(',') : this.metatypeName;
+        this.$client.listMetatypes(this.containerID, {nameIn: metatypeNames, loadKeys: false, ontologyVersion: this.$store.getters.currentOntologyVersionID})
+          .then((metatypes) => {
+            if ((metatypes as MetatypeT[]).length > 1) {
+              this.selectedMetatype = metatypes as MetatypeT[]
+            } else {
+              this.selectedMetatype = (metatypes as MetatypeT[])[0]
+            }
+          })
+          .catch((e: any) => this.errorMessage = e)
+          .finally(() => this.loading = false)
+      } else {
+        this.loading = false
+      }
+    },
+
+    methods: {
       emitSelected(metatypes: any) {
         this.$emit('selected', metatypes)
       }
     }
-
   })
 </script>

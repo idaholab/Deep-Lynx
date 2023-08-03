@@ -82,26 +82,25 @@
       selectedMetatypeKeys: null,
       metatypeKeys: []
     }),
+
+    beforeMount() {
+      this.$client.listMetatypeKeys(this.containerID, this.metatypeID)
+        .then((keys) => {
+          this.metatypeKeys = keys
+
+          if(this.propertyName && this.metatypeKeys.length > 0) {
+            const found = this.metatypeKeys.find(k => k.property_name === this.propertyName)
+            if(found) this.selectedMetatypeKeys = found
+          }
+        })
+        .catch((e) => this.errorMessage = e)
+        .finally(() => this.loading = false);
+    },
     
     methods: {
-      beforeMount() {
-        this.$client.listMetatypeKeys(this.containerID, this.metatypeID)
-          .then((keys) => {
-              this.metatypeKeys = keys
-
-              if(this.propertyName && this.metatypeKeys.length > 0) {
-                const found = this.metatypeKeys.find(k => k.property_name === this.propertyName)
-                if(found) this.selectedMetatypeKeys = found
-              }
-          })
-          .catch((e) => this.errorMessage = e)
-          .finally(() => this.loading = false);
-      },
-
       emitSelected(keys: any) {
         this.$emit('selected', keys)
       },
-
       validationRule(v: any) {
         return !!v || this.$t('validation.required')
       }

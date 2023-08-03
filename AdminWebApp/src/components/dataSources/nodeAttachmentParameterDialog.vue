@@ -24,7 +24,7 @@
             :rules="[v => !!v || $t('validation.required')]"
         />
         <div v-if="index > 0">
-          <span style="position: absolute; margin-top: -70px; margin-left: -40px;">{{$t('general.and')}}</span>
+          <span style="position: absolute; margin-top: -90px; margin-left: -20px;">{{$t('general.and')}}</span>
         </div>
       </template>
 
