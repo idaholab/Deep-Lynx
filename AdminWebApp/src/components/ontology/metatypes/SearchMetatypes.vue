@@ -63,15 +63,15 @@
         default: ''
       },
       metatypeID: {
-        type: [String, Array],
+        type: [String, Array] as PropType<string | string[]>,
         required: false
       },
       metatypeUUID: {
-        type: [String, Array],
+        type: [String, Array] as PropType<string | string[]>,
         required: false
       },
       metatypeName: {
-        type: [String, Array],
+        type: [String, Array] as PropType<string | string[]>,
         required: false,
       },
       rules: {

@@ -26,24 +26,34 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from 'vue-property-decorator';
+  import Vue from 'vue';
 
-@Component
-export default class DeleteConfiguredSourceDialog extends Vue {
-  @Prop({required: true})
-  configID!: string;
-
-  errorMessage = ""
-  dialog = false
-
-  deleteConfig() {
-    this.$emit('delete', this.configID)
-    this.reset()
+  interface DeleteConfiguredSourceDialogModel {
+    errorMessage: string
+    dialog: boolean
   }
 
-  reset() {
-    this.dialog = false
-    this.errorMessage = ""
-  }
-}
+  export default Vue.extend ({
+    name: 'DeleteConfiguredSourceDialog',
+
+    props: {
+      configID: {type: String, required: true},
+    },
+
+    data: (): DeleteConfiguredSourceDialogModel => ({
+      errorMessage: "",
+      dialog: false
+    }),
+
+    methods: {
+      deleteConfig() {
+        this.$emit('delete', this.configID)
+        this.reset()
+      },
+      reset() {
+        this.dialog = false
+        this.errorMessage = ""
+      }
+    }
+  });
 </script>

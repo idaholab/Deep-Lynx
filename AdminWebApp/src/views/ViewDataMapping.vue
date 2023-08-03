@@ -12,12 +12,12 @@
       </v-toolbar>
 
       <div class="mx-2">
-        <select-data-source
+        <SelectDataSource
           :containerID="containerID"
           :show-archived="true"
           :dataSourceID="argument"
           @selected="setDataSource">
-        </select-data-source>
+        </SelectDataSource>
       </div>
 
       <v-divider v-if="selectedDataSource !== null"></v-divider>
@@ -407,7 +407,7 @@
   import DataTypeMapping from "@/components/etl/dataTypeMapping.vue"
   import ExportMappingsDialog from "@/components/etl/exportMappingsDialog.vue";
   import ImportMappingsDialog from "@/components/etl/importMappingsDialog.vue";
-  import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
+  import SelectDataSource from "@/components/dataSources/SelectDataSource.vue";
   import DeleteTypeMappingDialog from "@/components/etl/deleteTypeMappingDialog.vue";
 
   interface Options {
@@ -453,7 +453,7 @@
 
     props: {
       containerID: {type: String, required: true},
-      argument: {type: String, required: false, default: ""}, // as PropType<string>
+      argument: {type: String, required: false, default: ""},
     },
 
     data(): DataMappingModel {

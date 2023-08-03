@@ -178,20 +178,21 @@
         />
       </template>
       <template v-slot:[`item.actions`]="{ item }">
-        <timeseries-viewer-dialog v-if="activeTab === 1"
+        <TimeseriesViewerDialog v-if="activeTab === 1"
           :containerID="containerID"
           :dataSourceID="item.id"
           :icon="true"
           :key="timeseriesKey"
           @timeseriesDialogClose="incrementKey"
           :ref="`${item.id}viewer`"
-        ></timeseries-viewer-dialog>
+        ></TimeseriesViewerDialog>
         <DataSourceActions
           mode="edit"
           :icon="true"
           :containerID="containerID"
           :dataSource="item"
           @dataSourceUpdated="refreshTimeseriesDataSources"
+          :timeseries="true"
         />
         <DataSourceActions
           mode="delete"
@@ -199,6 +200,7 @@
           @dataSourceDeleted="refreshTimeseriesDataSources()"
           :containerID="item.container_id"
           :dataSource="item"
+          :timeseries="true"
         />
         <DataSourceActions
           v-if="!item.archived"
@@ -206,6 +208,7 @@
           @dataSourceArchived="refreshTimeseriesDataSources()"
           :containerID="item.container_id"
           :dataSource="item"
+          :timeseries="true"
         />
       </template>
     </v-data-table>
@@ -213,109 +216,119 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from 'vue-property-decorator'
-import {DataSourceT} from "@/api/types";
-import {mdiFileDocumentMultiple} from "@mdi/js";
-import TimeseriesViewerDialog from '@/components/data/timeseriesViewerDialog.vue';
-import DataSourceActions from '@/components/dataSources/DataSourceActions.vue';
+  import Vue from 'vue'
+  import {DataSourceT} from "@/api/types";
+  import {mdiFileDocumentMultiple} from "@mdi/js";
+  import TimeseriesViewerDialog from '@/components/data/TimeseriesViewerDialog.vue';
+  import DataSourceActions from '@/components/dataSources/DataSourceActions.vue';
 
-@Component({components:{
-    TimeseriesViewerDialog,
-    DataSourceActions
-  }})
-export default class DataSources extends Vue {
-  @Prop({required: true})
-  readonly containerID!: string;
-
-  @Prop({required: false, default: ""})
-  readonly argument!: string;
-
-  activeTab = 0
-  tabs = [
-    { id: 0, name: 'datasources' },
-    { id: 1, name: 'timeseriesDatasources' },
-  ]
-
-  select = ""
-  dataSourcesLoading = false
-  timeseriesLoading = false
-  dataSources: DataSourceT[] = []
-  timeseriesDataSources: DataSourceT[] = []
-  errorMessage = ""
-  copy = mdiFileDocumentMultiple
-  timeseriesKey = 0
-  search = ''
-
-  headers() {
-    const headers = [
-      { text: '', value: 'copy'},
-      { text: this.$t('general.id'), value: 'id'},
-      { text: this.$t('general.name'), value: 'name' },
-      { text: this.$t('dataSources.adapterType'), value: 'adapter_type'},
-      { text: this.$t('general.active'), value: 'active', filterable: false},
-      { text: this.$t('general.actions'), value: 'actions', sortable: false, filterable: false }
-    ]
-
-    if (this.activeTab === 1) {
-      headers.splice(4, 0, {
-        text: this.$t('timeseries.fastloadEnabled'), value: 'fastload', filterable: false
-      })
-    }
-
-    return headers;
+  interface DataSourcesModel {
+    dataSources: DataSourceT[]
+    timeseriesDataSources: DataSourceT[]
+    tabs: {id: number, name: string}[]
+    activeTab: number
+    select: string
+    dataSourcesLoading: boolean
+    timeseriesLoading: boolean
+    errorMessage: string
+    copy: string
+    timeseriesKey: number
+    search: string
   }
 
-  mounted() {
-    this.refreshDataSources()
-    this.refreshTimeseriesDataSources()
-    this.activeTab = 0;
-  }
+  export default Vue.extend ({
+    name: 'ViewDataSources',
 
-  refreshDataSources() {
-    this.dataSourcesLoading = true
-    this.$client.listDataSources(this.containerID, true, false)
-        .then(dataSources => {
-          this.dataSources = dataSources
-        })
-        .catch(e => this.errorMessage = e)
-        .finally(() => this.dataSourcesLoading = false)
-  }
+    components: { TimeseriesViewerDialog, DataSourceActions },
 
-  refreshTimeseriesDataSources() {
-    this.timeseriesLoading = true
-    this.$client.listDataSources(this.containerID, true, true)
-        .then(dataSources => {
-          this.timeseriesDataSources= dataSources
-        })
-        .catch(e => this.errorMessage = e)
-        .finally(() => {
-          this.timeseriesLoading = false
-        })
-  }
+    props: {
+      containerID: {required: true, type: String},
+    },
 
-  toggleDataSourceActive(dataSource: DataSourceT) {
-    if(dataSource.active) {
-      this.$client.activateDataSource(this.containerID, dataSource.id!)
-          .then(()=> {
-            this.refreshDataSources()
+    data: (): DataSourcesModel => ({
+      dataSources: [],
+      timeseriesDataSources: [],
+      tabs: [
+        {id: 0, name: 'datasources'},
+        {id: 1, name: 'timeseriesDatasources'}
+      ],
+      activeTab: 0,
+      select: "",
+      dataSourcesLoading: false,
+      timeseriesLoading: false,
+      errorMessage: "",
+      copy: mdiFileDocumentMultiple,
+      timeseriesKey: 0,
+      search: ""
+    }),
+
+    mounted () {
+      this.refreshDataSources()
+      this.refreshTimeseriesDataSources()
+      this.activeTab = 0;
+    },
+
+    methods: {
+      headers() {
+        const headers = [
+          { text: '', value: 'copy'},
+          { text: this.$t('general.id'), value: 'id'},
+          { text: this.$t('general.name'), value: 'name' },
+          { text: this.$t('dataSources.adapterType'), value: 'adapter_type'},
+          { text: this.$t('general.active'), value: 'active', filterable: false},
+          { text: this.$t('general.actions'), value: 'actions', sortable: false, filterable: false }
+        ]
+
+        if (this.activeTab === 1) {
+          headers.splice(4, 0, {
+            text: this.$t('timeseries.fastloadEnabled'), value: 'fastload', filterable: false
           })
-          .catch(e => this.errorMessage = e)
-    } else {
-      this.$client.deactivateDataSource(this.containerID, dataSource.id!)
-          .then(()=> {
-            this.refreshDataSources()
-          })
-          .catch((e: any) => this.errorMessage = e)
+        }
+
+        return headers;
+      },
+      refreshDataSources() {
+        this.dataSourcesLoading = true
+        this.$client.listDataSources(this.containerID, true, false)
+            .then(dataSources => {
+              this.dataSources = dataSources
+            })
+            .catch(e => this.errorMessage = e)
+            .finally(() => this.dataSourcesLoading = false)
+      },
+      refreshTimeseriesDataSources() {
+        this.timeseriesLoading = true
+        this.$client.listDataSources(this.containerID, true, true)
+            .then(dataSources => {
+              this.timeseriesDataSources= dataSources
+            })
+            .catch(e => this.errorMessage = e)
+            .finally(() => {
+              this.timeseriesLoading = false
+            })
+      },
+      toggleDataSourceActive(dataSource: DataSourceT) {
+        if(dataSource.active) {
+          this.$client.activateDataSource(this.containerID, dataSource.id!)
+              .then(()=> {
+                this.refreshDataSources()
+              })
+              .catch(e => this.errorMessage = e)
+        } else {
+          this.$client.deactivateDataSource(this.containerID, dataSource.id!)
+              .then(()=> {
+                this.refreshDataSources()
+              })
+              .catch((e: any) => this.errorMessage = e)
+        }
+      },
+      incrementKey() {
+        this.timeseriesKey += 1
+        this.$router.replace(`/containers/${this.containerID}/data-sources`)
+      },
+      copyID(id: string) {
+        navigator.clipboard.writeText(id)
+      }
     }
-  }
-
-  incrementKey() {
-    this.timeseriesKey += 1
-    this.$router.replace(`/containers/${this.containerID}/data-sources`)
-  }
-
-  copyID(id: string) {
-    navigator.clipboard.writeText(id)
-  }
-}
+  });
 </script>

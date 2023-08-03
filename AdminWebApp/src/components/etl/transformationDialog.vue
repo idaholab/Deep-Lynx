@@ -262,12 +262,12 @@
                               </v-col>
 
                               <v-col cols="12" md="6" lg="4">
-                                <select-data-source
+                                <SelectDataSource
                                     @selected="setParentDataSource"
                                     :tooltipHelp="$t('help.dataSourceEdgeParam')"
                                     :dataSourceID="originDataSourceID"
                                     :containerID="containerID">
-                                </select-data-source>
+                                </SelectDataSource>
                               </v-col>
 
                               <v-col cols="12" md="6" lg="4">
@@ -303,13 +303,13 @@
                                   </v-col>
 
                                   <v-col cols="12" md="6" lg="4">
-                                    <select-data-source
+                                    <SelectDataSource
                                         :tooltip="true"
                                         @selected="setChildDataSource"
                                         :tooltipHelp="$t('help.dataSourceEdgeParam')"
                                         :dataSourceID="destinationDataSourceID"
                                         :containerID="containerID">
-                                    </select-data-source>
+                                    </SelectDataSource>
                                   </v-col>
 
                                   <v-col cols="12" md="6" lg="4">
@@ -400,12 +400,12 @@
                                         </SearchMetatypes>
                                       </v-col>
                                       <v-col :cols="12" v-else-if="item.type === 'data_source'">
-                                        <select-data-source
+                                        <SelectDataSource
                                             @selected="setFilterMetatypeID(item, ...arguments)"
                                             :dataSourceID="item.value"
                                             :containerID="containerID"
                                         >
-                                        </select-data-source>
+                                        </SelectDataSource>
                                       </v-col>
                                       <template v-else>
                                         <v-col :cols="12" lg="7">
@@ -524,12 +524,12 @@
                                         </SearchMetatypes>
                                       </v-col>
                                       <v-col :cols="12" v-else-if="item.type === 'data_source'">
-                                        <select-data-source
+                                        <SelectDataSource
                                             @selected="setFilterMetatypeID(item, ...arguments)"
                                             :dataSourceID="item.value"
                                             :containerID="containerID"
                                         >
-                                        </select-data-source>
+                                        </SelectDataSource>
                                       </v-col>
                                       <template v-else>
                                         <v-col :cols="12" lg="7">
@@ -1121,7 +1121,7 @@ import {
   TypeMappingTransformationSubexpression,
   TypeMappingTransformationT
 } from "@/api/types";
-import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
+import SelectDataSource from "@/components/dataSources/SelectDataSource.vue";
 import SearchMetatypes from "@/components/ontology/metatypes/SearchMetatypes.vue";
 import {v4 as uuidv4} from 'uuid';
 import MetatypeKeysSelect from "@/components/ontology/metatypes/MetatypeKeysSelect.vue";

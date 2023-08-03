@@ -38,7 +38,7 @@
               >
               </v-select>
 
-              <select-data-source v-if="!(['data_source_created', 'data_source_modified', 'data_exported'].includes(eventAction.event_type))"
+              <SelectDataSource v-if="!(['data_source_created', 'data_source_modified', 'data_exported'].includes(eventAction.event_type))"
                 :containerID="containerID"
                 :show-archived="true"
                 :dataSourceID="eventAction.data_source_id"
@@ -46,7 +46,7 @@
                 :label="dataSourceLabel"
                 @selected="setDataSourceID"
               >
-              </select-data-source>
+              </SelectDataSource>
 
               <template>
                 <v-text-field v-if="eventAction.action_type === 'email_user'"
@@ -89,7 +89,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { EventActionT, DataSourceT } from '@/api/types';
-import SelectDataSource from '../dataSources/selectDataSource.vue';
+import SelectDataSource from '../dataSources/SelectDataSource.vue';
 import axios from 'axios';
 import { AxiosResponse, AxiosRequestConfig } from 'axios';
 

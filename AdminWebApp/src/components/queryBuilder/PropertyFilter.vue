@@ -36,7 +36,7 @@
 
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from "vue-property-decorator";
-import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
+import SelectDataSource from "@/components/dataSources/SelectDataSource.vue";
 import OperatorsSelect from "@/components/queryBuilder/operatorsSelect.vue";
 import {MetatypeKeyT} from "@/api/types";
 

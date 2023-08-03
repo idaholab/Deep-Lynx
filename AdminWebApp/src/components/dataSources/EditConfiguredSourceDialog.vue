@@ -61,47 +61,66 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from 'vue-property-decorator';
-import { ContainerT } from '@/api/types';
+  import Vue from 'vue';
+  import { ContainerT } from '@/api/types';
 
-@Component
-export default class EditConfiguredSourceDialog extends Vue {
-  @Prop({required: true})
-  configID!: string;
-
-  dialog = false
-  errorMessage = ''
-  container: ContainerT | undefined = undefined;
-  config: P6SourceConfig | undefined = undefined;
-  index: number | undefined = undefined;
-
-  beforeMount() {
-    this.container = this.$store.getters.activeContainer;
-    this.index = this.container?.config.configured_data_sources?.findIndex(config => config.id === this.configID);
-    // select first item if no index found
-    if (this.index === -1) {this.index = 0}
-    this.config = this.container!.config.configured_data_sources![this.index!] as P6SourceConfig;
+  interface EditConfiguredSourceDialogModel {
+    container: ContainerT | undefined
+    config: P6SourceConfig
+    index: number | undefined
+    dialog: boolean
+    errorMessage: string
   }
 
-  editConfig() {
-    this.container!.config.configured_data_sources![this.index!] = this.config!
-    this.$emit('edited')
-    this.clearConfig()
-  }
+  export default Vue.extend ({
+    name: 'EditConfiguredSourceDialog',
 
-  clearConfig() {
-    this.dialog = false;
-    this.errorMessage = '';
-  }
-}
+    props: {
+      configID: {type: String, required: true},
+    },
 
-type P6SourceConfig = {
-  id?: string;
-  name?: string;
-  endpoint: string;
-  projectID: string;
-  username?: string;
-  password?: string;
-  type: string;
-}
+    data: (): EditConfiguredSourceDialogModel => ({
+      container: undefined,
+      config: {
+        endpoint: '',
+        projectID: '',
+        type: 'p6'
+      },
+      index: undefined,
+      dialog: false,
+      errorMessage: ''
+    }),
+
+    beforeMount() {
+      this.container = this.$store.getters.activeContainer;
+      this.index = this.container?.config.configured_data_sources?.findIndex(
+        config => config.id === this.configID
+      );
+      // select first item if no index found
+      if (this.index === -1) {this.index = 0}
+      this.config = this.container!.config.configured_data_sources![this.index!] as P6SourceConfig;
+    },
+
+    methods: {
+      editConfig() {
+        this.container!.config.configured_data_sources![this.index!] = this.config!
+        this.$emit('edited')
+        this.clearConfig()
+      },
+      clearConfig() {
+        this.dialog = false;
+        this.errorMessage = '';
+      }
+    }
+  });
+
+  type P6SourceConfig = {
+    id?: string;
+    name?: string;
+    endpoint: string;
+    projectID: string;
+    username?: string;
+    password?: string;
+    type: string;
+  }
 </script>

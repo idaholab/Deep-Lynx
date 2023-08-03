@@ -259,7 +259,7 @@
                       <div><span class="text-overline">{{$t('timeseries.data')}}:</span></div>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
-                      <node-timeseries-data-table :nodeID="currentNodeInfo.id" :containerID="containerID"></node-timeseries-data-table>
+                      <NodeTimeseriesData-table :nodeID="currentNodeInfo.id" :containerID="containerID"></NodeTimeseriesData-table>
                     </v-expansion-panel-content>
                   </v-expansion-panel>
                   <!-- Metadata Properties -->
@@ -787,11 +787,11 @@
         width="50%"
     >
       <v-card class="pt-1 pb-3 px-2">
-        <select-data-source
+        <SelectDataSource
             :containerID="containerID"
             :dataSourceID="selectedDataSource"
             @selected="setDataSource">
-        </select-data-source>
+        </SelectDataSource>
         <div v-if="(selectedDataSource !== null)">
           <v-divider></v-divider>
           <create-node-card
@@ -940,11 +940,11 @@
                     </v-col>
                 </div>
 
-                <select-data-source
+                <SelectDataSource
                     @selected="setDataSource"
                     :dataSourceID="interimLink.source.data_source_id"
                     :containerID="containerID">
-                </select-data-source>
+                </SelectDataSource>
 
               </div>
 
@@ -964,8 +964,8 @@
 
 <script lang="ts">
 import NodeFilesDialog from "@/components/data/nodeFilesDialog.vue";
-import NodeTimeseriesDataTable from "@/components/data/nodeTimeseriesDataTable.vue";
-import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
+import NodeTimeseriesDataTable from "@/components/data/NodeTimeseriesDataTable.vue";
+import SelectDataSource from "@/components/dataSources/SelectDataSource.vue";
 import CreateNodeCard from "@/components/data/createNodeCard.vue";
 import EditNodeDialog from "@/components/data/editNodeDialog.vue";
 import NodeTagsDialog from "@/components/data/nodeTagsDialog.vue";

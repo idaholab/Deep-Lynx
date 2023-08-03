@@ -59,7 +59,7 @@
                 <template v-slot:prepend><info-tooltip :message="$t('help.ontologyVersioning')"></info-tooltip> </template>
               </v-checkbox>
 
-              <select-data-source-types @selected="setDataSources"></select-data-source-types>
+              <SelectDataSourceTypes @selected="setDataSources"></SelectDataSourceTypes>
 
               <br>
             </v-form>
@@ -80,7 +80,7 @@
 
 <script lang="ts">
 import {Component, Vue} from 'vue-property-decorator'
-import SelectDataSourceTypes from "@/components/dataSources/selectDataSourceTypes.vue";
+import SelectDataSourceTypes from "@/components/dataSources/SelectDataSourceTypes.vue";
 
 @Component({components: {SelectDataSourceTypes}})
 export default class CreateContainerDialog extends Vue {

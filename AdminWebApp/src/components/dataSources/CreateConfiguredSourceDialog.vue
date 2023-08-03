@@ -33,7 +33,7 @@
                 <v-text-field
                   :label="$t('dataSources.alias')"
                   v-model="config.name"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validateRequired]"
                 />
               </v-col>
             </v-row>
@@ -42,7 +42,7 @@
                 <v-text-field
                   :label="$t('general.endpoint')"
                   v-model="config.endpoint"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validateRequired]"
                 />
               </v-col>
               <v-col :cols="6">
@@ -71,61 +71,75 @@
 </template>
 
 <script lang="ts">
-import {Component, Vue} from 'vue-property-decorator';
-import {v4 as uuidv4} from 'uuid';
+  import Vue from 'vue';
+  import {v4 as uuidv4} from 'uuid';
 
-@Component
-export default class CreateConfiguredSourceDialog extends Vue {
-  dialog = false
-  errorMessage = ''
-  hidePass = true
-  type = ''
-  valid = false
-  config: P6SourceConfig = {
-    id: uuidv4(),
-    name: '',
-    endpoint: '',
-    projectID: '',
-    type: ''
+  interface CreateConfiguredSourceDialogModel {
+    config: P6SourceConfig
+    dialog: boolean
+    errorMessage: string
+    hidePass: boolean
+    type: string
+    valid: boolean
   }
 
-  adapterTypes() {
-    const types = [
-      {text: this.$t('dataSources.p6Name'), value: 'p6', description: this.$t('dataSources.p6description')}
-    ]
+  export default Vue.extend ({
+    name: 'CreateConfiguredSourceDialog',
 
-    return types
-  }
+    data: (): CreateConfiguredSourceDialogModel => ({
+      config: {
+        id: uuidv4(),
+        name: '',
+        endpoint: '',
+        projectID: '',
+        type: ''
+      },
+      dialog: false,
+      errorMessage: '',
+      hidePass: true,
+      type: '',
+      valid: false
+    }),
 
-  selectAdapter(adapter: string){
-    this.config.type = adapter
-  }
+    methods: {
+      validateRequired(value: any): string | boolean {
+        return !!value || this.$t('validation.required');
+      },
+      adapterTypes() {
+        const types = [
+          {text: this.$t('dataSources.p6Name'), value: 'p6', description: this.$t('dataSources.p6description')}
+        ]
 
-  reset() {
-    this.dialog = false
-    this.type = ''
-    this.config = {
-      id: uuidv4(),
-      name: '',
-      endpoint: '',
-      projectID: '',
-      type: ''
+        return types
+      },
+      selectAdapter(adapter: string){
+        this.config.type = adapter
+      },
+      reset() {
+        this.dialog = false
+        this.type = ''
+        this.config = {
+          id: uuidv4(),
+          name: '',
+          endpoint: '',
+          projectID: '',
+          type: ''
+        }
+      },
+      createConfig() {
+        this.$emit('created', this.config)
+        this.reset()
+      }
     }
-  }
+  });
 
-  createConfig() {
-    this.$emit('created', this.config)
-    this.reset()
+  type P6SourceConfig = {
+    id?: string;
+    name?: string;
+    endpoint: string;
+    projectID: string;
+    username?: string;
+    password?: string;
+    type: string;
   }
-}
-
-type P6SourceConfig = {
-  id?: string;
-  name?: string;
-  endpoint: string;
-  projectID: string;
-  username?: string;
-  password?: string;
-  type: string;
-}
 </script>

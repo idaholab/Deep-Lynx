@@ -43,7 +43,7 @@
         <v-row>
           <v-col :cols="12">
             <template v-if="container">
-              <select-data-source-types
+              <SelectDataSourceTypes
                 :values="container.config.enabled_data_sources"
                 @selected="setDataSources"
               />
@@ -62,7 +62,7 @@
                 <span>{{$t('dataSources.p6.configDescription')}}</span>
               </v-col>
               <v-col :cols="4">
-                <create-configured-source-dialog @created="addConfig($event)"/>
+                <CreateConfiguredSourceDialog @created="addConfig($event)"/>
               </v-col>
             </v-toolbar>
           </template>
@@ -73,8 +73,8 @@
             <span>{{ item.type }}</span>
           </template>
           <template v-slot:[`item.actions`]="{ item }">
-            <edit-configured-source-dialog :configID="item.id" @edited="updateContainer()"/>
-            <delete-configured-source-dialog :configID="item.id" @delete="deleteConfig($event)"/>
+            <EditConfiguredSourceDialog :configID="item.id" @edited="updateContainer()"/>
+            <DeleteConfiguredSourceDialog :configID="item.id" @delete="deleteConfig($event)"/>
           </template>
         </v-data-table>
       </v-card-text>
@@ -96,10 +96,10 @@
   import Vue from 'vue'
   import {ContainerT} from "@/api/types";
   import DeleteContainerDialog from "@/components/ontology/containers/deleteContainerDialog.vue";
-  import SelectDataSourceTypes from "@/components/dataSources/selectDataSourceTypes.vue";
-  import CreateConfiguredSourceDialog from '@/components/dataSources/createConfiguredSourceDialog.vue';
-  import DeleteConfiguredSourceDialog from '@/components/dataSources/deleteConfiguredSourceDialog.vue';
-  import EditConfiguredSourceDialog from '@/components/dataSources/editConfiguredSourceDialog.vue';
+  import SelectDataSourceTypes from "@/components/dataSources/SelectDataSourceTypes.vue";
+  import CreateConfiguredSourceDialog from '@/components/dataSources/CreateConfiguredSourceDialog.vue';
+  import DeleteConfiguredSourceDialog from '@/components/dataSources/DeleteConfiguredSourceDialog.vue';
+  import EditConfiguredSourceDialog from '@/components/dataSources/EditConfiguredSourceDialog.vue';
 
   interface SettingsModel {
     errorMessage: string,

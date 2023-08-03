@@ -439,7 +439,7 @@
               </v-col>
             </v-row>
 
-            <node-attachment-parameter-dialog
+            <NodeAttachmentParameterDialog
               :containerID="containerID"
               :timeseriesConfig="timeseriesConfig"
               @removeParameter="removeParameter"
@@ -634,7 +634,7 @@
 <script lang="ts">
   import Vue, { PropType } from 'vue';
   import DialogBasic from '../dialogs/DialogBasic.vue';
-  import NodeAttachmentParameterDialog from './nodeAttachmentParameterDialog.vue';
+  import NodeAttachmentParameterDialog from './NodeAttachmentParameterDialog.vue';
   import { 
     AvevaDataSourceConfig, 
     ContainerT, 
@@ -845,7 +845,7 @@
           }
         }
       },
-      validateRequired(value: string) {
+      validateRequired(value: any) {
         return !!value || this.$t('validation.required');
       },
       getSourceTypes(timeseries: boolean): {text: string, value: string, description: string}[] {

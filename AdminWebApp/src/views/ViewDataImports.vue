@@ -14,7 +14,7 @@
       <v-toolbar flat color="white">
         <v-toolbar-title>{{$t('imports.description')}}</v-toolbar-title>
       </v-toolbar>
-      <select-data-source
+      <SelectDataSource
         :containerID="containerID"
         :showArchived="true"
         :dataSourceID="argument"
@@ -27,7 +27,7 @@
       <v-toolbar flat color="white">
         <v-toolbar-title>{{$t('imports.timeseriesDescription')}}</v-toolbar-title>
       </v-toolbar>
-      <select-data-source
+      <SelectDataSource
         :containerID="containerID"
         :showArchived="true"
         :timeseries="true"
@@ -77,7 +77,7 @@
           <v-icon small class="mr-2" @click="viewItem(item)" v-if="activeTab === 'datasources'">
             mdi-eye
           </v-icon>
-          <timeseries-viewer-dialog v-if="activeTab === 'timeseries'"
+          <TimeseriesViewerDialog v-if="activeTab === 'timeseries'"
             :containerID="containerID"
             :dataSourceID="selectedDataSource.id"
             :icon="true"
@@ -199,11 +199,11 @@
   import {DataSourceT , ImportDataT, ImportT} from "@/api/types";
   import ImportDataDialog from "@/components/dataImport/importDataDialog.vue";
   import DataTypeMapping from "@/components/etl/dataTypeMapping.vue"
-  import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
+  import SelectDataSource from "@/components/dataSources/SelectDataSource.vue";
   import DeleteDataImportDialog from "@/components/dataImport/deleteDataImportDialog.vue";
   import ReprocessDataImportDialog from "@/components/dataImport/reprocessDataImportDialog.vue";
   import {mdiFileDocumentMultiple} from "@mdi/js";
-  import TimeseriesViewerDialog from '@/components/data/timeseriesViewerDialog.vue';
+  import TimeseriesViewerDialog from '@/components/data/TimeseriesViewerDialog.vue';
 
   interface TimeseriesDataSourceConfig {
     fast_load_enabled: boolean;

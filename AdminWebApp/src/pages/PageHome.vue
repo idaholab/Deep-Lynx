@@ -137,7 +137,7 @@
             link
             v-if="$auth.Auth('data', 'write', containerID)"
             @click="setActiveComponent('data-sources')"
-            :input-value="currentMainComponent === 'DataSources'"
+            :input-value="currentMainComponent === 'ViewDataSources'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
@@ -550,7 +550,7 @@
                 </v-carousel>
               </v-card-text>
               <v-card-actions class="d-flex flex-grow-1 pa-4 justify-center align-end">
-                <v-btn color="primary" @click="currentMainComponent='DataSources'">
+                <v-btn color="primary" @click="currentMainComponent='ViewDataSources'">
                   {{$t('dataSources.description')}}
                 </v-btn>
               </v-card-actions>
@@ -599,7 +599,7 @@
   import ViewDataExport from "@/views/ViewDataExport.vue"
   import ViewDataImports from "@/views/ViewDataImports.vue"
   import ViewDataQuery from "@/views/ViewDataQuery.vue"
-  import DataSources from "@/views/DataSources.vue"
+  import ViewDataSources from "@/views/ViewDataSources.vue"
   import ViewDataMapping from "@/views/ViewDataMapping.vue"
   import ViewEventSystem from "@/views/ViewEventSystem.vue"
   import ViewSettings from "@/views/ViewSettings.vue"
@@ -651,7 +651,7 @@
       ViewOntologyUpdate,
       ViewDataExport,
       ViewDataQuery,
-      DataSources,
+      ViewDataSources,
       ViewDataMapping,
       ViewEventSystem,
       ViewSettings,
@@ -760,7 +760,7 @@
           }
 
           case "data-sources": {
-            this.currentMainComponent = "DataSources";
+            this.currentMainComponent = "ViewDataSources";
             this.componentName = this.$t('dataSources.dataSources')
             this.$router.replace(`/containers/${this.containerID}/data-sources/${this.arguments}`)
             break;
