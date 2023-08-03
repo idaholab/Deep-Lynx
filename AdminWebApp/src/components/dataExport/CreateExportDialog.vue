@@ -120,100 +120,112 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Watch, Vue} from "vue-property-decorator"
-import {ExportT, GremlinExportConfigT} from "@/api/types";
+  import Vue from 'vue'
+  import {ExportT, GremlinExportConfigT} from "@/api/types";
 
-type destination = {
-  name: string;
-  adapters: string[];
-}
-
-@Component
-export default class CreateExportDialog extends Vue {
-  @Prop({required: true})
-  readonly containerID!: string;
-
-  @Prop({required: false})
-  readonly icon!: boolean
-
-  @Watch("dialog" ,{immediate: true})
-  onDialogChange() {
-    if(!this.dialog) {
-      this.reset()
-    }
+  type destination = {
+    name: string;
+    adapters: string[];
   }
 
-
-  errorMessage = ""
-  dialog= false
-  valid = true
-  select = ""
-  select_auth = ""
-  destinationTypes: destination[] = [
-    {name: this.$t('exports.neptune') as string, adapters: ["gremlin"]},
-    {name: this.$t('exports.neo4j') as string, adapters: ["gremlin"]},
-    {name: this.$t('exports.cosmo') as string, adapters: ["gremlin"]},
-    {name: this.$t('exports.janus') as string, adapters: ["gremlin"]},
-    {name: this.$t('exports.tinkerPop') as string, adapters: ["gremlin"]}
-  ]
-  // this will be dynamically filled in based on the destination_type selection
-  adapters: string[] = []
-
-  destination_type = ""
-  adapter = ""
-  gremlinConfig: GremlinExportConfigT = {
-    kind: "gremlin",
-    traversal_source: "",
-    user: "",
-    key: "",
-    endpoint: "",
-    port: "", // port is a string due to the type expected by DL also being a string
-    path: "",
-    writes_per_second: 100, // sane default
+  interface CreateExportDialogModel {
+    errorMessage: string,
+    dialog: boolean,
+    valid: boolean,
+    select: string,
+    select_auth: string
+    destination_type: string
+    adapters: string[]
+    adapter: string
+    gremlinConfig: GremlinExportConfigT
   }
 
-  selectDestinationType(destinationType: destination) {
-    this.adapters = destinationType.adapters as string[]
-    this.destination_type = destinationType.name
-  }
+  export default Vue.extend ({
+    name: 'CreateExportDialog',
 
-  selectAdapter(adapter: string) {
-    this.adapter = adapter
-  }
+    props: {
+      containerID: {type: String, required: true},
+      icon: {type: Boolean, required: false},
+    },
 
-  reset() {
-    this.destination_type = ""
-    this.adapter = ""
-    this.gremlinConfig = {
-      kind: "gremlin",
-      traversal_source: "",
-      user: "",
-      key: "",
-      endpoint: "",
-      port: "", // port is a string due to the type expected by DL also being a string
-      path: "",
-      writes_per_second: 100, // sane default
-    }
-  }
-
-  createExport() {
-    this.$client.createExport(this.containerID, {
-      destination_type: this.destination_type,
-      adapter: this.adapter,
-      config: this.gremlinConfig
-    } as ExportT)
-    .then(result => {
-      if(!result) {
-        this.errorMessage = this.$t('errors.errorCommunicating') as string
-      } else {
-        this.dialog = false
-
-        this.$emit('exportCreated', result)
-        this.reset()
+    data: (): CreateExportDialogModel => ({
+      errorMessage: "",
+      dialog: false,
+      valid: true,
+      select: "",
+      select_auth: "",
+      destination_type: "",
+      adapters: [],
+      adapter: "",
+      gremlinConfig: {
+        kind: "gremlin",
+        traversal_source: "",
+        user: "",
+        key: "",
+        endpoint: "",
+        port: "", // port is a string due to the type expected by DL also being a string
+        path: "",
+        writes_per_second: 100, // sane default
       }
-    })
-    .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
-  }
+    }),
 
-}
+    computed: {
+      destinationTypes(): {name: string, adapters: string[]}[] {
+        return [
+          {name: this.$t('exports.neptune') as string, adapters: ["gremlin"]},
+          {name: this.$t('exports.neo4j') as string, adapters: ["gremlin"]},
+          {name: this.$t('exports.cosmo') as string, adapters: ["gremlin"]},
+          {name: this.$t('exports.janus') as string, adapters: ["gremlin"]},
+          {name: this.$t('exports.tinkerPop') as string, adapters: ["gremlin"]}
+        ]
+      },
+    },
+
+    methods: {
+      onDialogChange() {
+        if(!this.dialog) {
+          this.reset()
+        }
+      },
+      selectDestinationType(destinationType: destination) {
+        this.adapters = destinationType.adapters as string[]
+        this.destination_type = destinationType.name
+      },
+      selectAdapter(adapter: string) {
+        this.adapter = adapter
+      },
+      reset() {
+        this.destination_type = ""
+        this.adapter = ""
+        this.gremlinConfig = {
+          kind: "gremlin",
+          traversal_source: "",
+          user: "",
+          key: "",
+          endpoint: "",
+          port: "", // port is a string due to the type expected by DL also being a string
+          path: "",
+          writes_per_second: 100, // sane default
+        }
+      },
+      createExport() {
+        this.$client.createExport(this.containerID, {
+          destination_type: this.destination_type,
+          adapter: this.adapter,
+          config: this.gremlinConfig
+        } as ExportT)
+        .then(result => {
+          if(!result) {
+            this.errorMessage = this.$t('errors.errorCommunicating') as string
+          } else {
+            this.dialog = false
+
+            this.$emit('exportCreated', result)
+            this.reset()
+          }
+        })
+        .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
+      }
+    }
+  });
 </script>

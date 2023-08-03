@@ -161,7 +161,7 @@
 <script lang="ts">
   import Vue from 'vue'
   import {ExportT} from "@/api/types";
-  import CreateExportDialog from "@/components/dataExport/createExportDialog.vue";
+  import CreateExportDialog from "@/components/dataExport/CreateExportDialog.vue";
 
   interface Options {
     sortDesc: boolean[];
