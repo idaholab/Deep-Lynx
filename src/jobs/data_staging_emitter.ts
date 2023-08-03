@@ -72,6 +72,16 @@ void postgresAdapter
                                                         // if the import isn't the cache, we can go ahead and queue the staging data
                                                         this.putPromises.push(queue.Put(Config.process_queue, staging));
                                                     }
+
+                                                    //Only update the cache ttl if it wasn't found. 
+                                                    if (!set)
+                                                    {
+                                                        Cache.set(`imports:${staging.import_id}`, {}, Config.initial_import_cache_ttl).catch((e) => {
+                                                            Logger.error(
+                                                                `unexpected error in data staging emitter when attempting to put import on cache ${e}`,
+                                                            );
+                                                        });
+                                                    }
                                                 })
                                                 // if we error out we need to go ahead and queue this message anyway, just so we're not dropping
                                                 // data
@@ -81,13 +91,7 @@ void postgresAdapter
                                                 })
                                                 .finally(() => {
                                                     if (staging.import_id) {
-                                                        // we set the cache value and push the imports into seen imports
-                                                        Cache.set(`imports:${staging.import_id}`, {}, Config.initial_import_cache_ttl).catch((e) => {
-                                                            Logger.error(
-                                                                `unexpected error in data staging emitter when attempting to put import on cache ${e}`,
-                                                            );
-                                                        });
-
+                                                        //push the imports into seen imports
                                                         seenImports.set(staging.import_id, undefined);
                                                     }
 
