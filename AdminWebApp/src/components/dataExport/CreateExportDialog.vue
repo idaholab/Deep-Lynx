@@ -181,6 +181,13 @@
       },
     },
 
+    watch: {
+      dialog: {
+        handler: 'onDialogChange',
+        immediate: true
+      }
+    },
+
     methods: {
       onDialogChange() {
         if(!this.dialog) {
