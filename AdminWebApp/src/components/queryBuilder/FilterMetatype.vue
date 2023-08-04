@@ -26,7 +26,7 @@
       </v-col>
     </v-row>
     <v-row v-if="metatype !== ''">
-      <v-col align="left"><p>{{$t('query.PropertyFilter')}}</p></v-col>
+      <v-col align="left"><p>{{$t('query.FilterProperty')}}</p></v-col>
       <v-col v-if="loading" :cols="12" align="center"><v-progress-circular indeterminate></v-progress-circular></v-col>
       <v-col v-if="!loading" :cols="12" align="center">
         <div v-for="part in keyQueryParts" :key="part.id" style="margin-top: 10px">
@@ -58,7 +58,7 @@
   import SearchMetatypes from "@/components/ontology/metatypes/SearchMetatypes.vue";
   import OperatorsSelect from "@/components/queryBuilder/operatorsSelect.vue";
   import {MetatypeKeyT, MetatypeT} from "@/api/types";
-  import PropertyFilter from "@/components/queryBuilder/PropertyFilter.vue";
+  import FilterProperty from "@/components/queryBuilder/FilterProperty.vue";
   import {v4 as uuidv4} from "uuid";
 
   interface FilterMetatypeModel {
@@ -74,7 +74,7 @@
   export default Vue.extend ({
     name: 'FilterMetatype',
 
-    components: { SearchMetatypes, OperatorsSelect, PropertyFilter },
+    components: { SearchMetatypes, OperatorsSelect, FilterProperty },
 
     props: {
       containerID: {type: String, required: true},
@@ -172,7 +172,7 @@
       addQueryPart() {
         this.keyQueryParts.push({
           id: uuidv4(),
-          componentName: 'PropertyFilter',
+          componentName: 'FilterProperty',
           operator: '',
           value: ''
         })
@@ -188,7 +188,7 @@
 
   type QueryPart = {
     id?: string;
-    componentName: 'FilterMetatype' | 'PropertyFilter';
+    componentName: 'FilterMetatype' | 'FilterProperty';
     property?: string;
     operator: string;
     value: any;
