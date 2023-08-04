@@ -95,8 +95,7 @@
 
     watch: {
       part: {
-        handler: 'onQueryPartChange',
-        immediate: true
+        handler: 'onQueryPartChange'
       }
     }
   });

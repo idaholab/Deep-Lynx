@@ -809,7 +809,7 @@ export default {
             FilterMetadata: 'Filter by Supplementary Data',
             FilterMetatype: 'Filter by Class',
             FilterProperty: 'Filter by Class Property',
-            OriginalIDFilter: 'Filter by Original Data ID(s)',
+            FilterOriginalID: 'Filter by Original Data ID(s)',
             FilterRawData: 'Filter by Unprocessed Data Record',
         },
         tags: {

@@ -191,7 +191,7 @@
   import AddDialog from "@/components/queryBuilder/addDialog.vue";
   import FilterDataSource from "@/components/queryBuilder/FilterDataSource.vue";
   import FilterMetatype from "@/components/queryBuilder/FilterMetatype.vue";
-  import OriginalIDFilter from "@/components/queryBuilder/OriginalIDFilter.vue";
+  import FilterOriginalID from "@/components/queryBuilder/FilterOriginalID.vue";
   import FilterID from "@/components/queryBuilder/FilterID.vue";
   import {v4 as uuidv4} from 'uuid';
   import {NodeT} from "@/api/types";
@@ -242,7 +242,7 @@
       AddDialog,
       FilterDataSource,
       FilterMetatype,
-      OriginalIDFilter,
+      FilterOriginalID,
       FilterID,
       FilterRawData,
       FilterMetadata
@@ -521,7 +521,7 @@
               break;
             }
 
-            case('OriginalIDFilter'): {
+            case('FilterOriginalID'): {
               if(part.operator === 'in') {
                 args.push(`original_id:{operator: "${part.operator}", value: "${part.value.join(",")}"} `)
               } else {

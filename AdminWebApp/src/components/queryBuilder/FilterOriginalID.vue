@@ -1,32 +1,25 @@
 <template>
   <v-container>
     <v-row>
-      <v-col :cols="4">
-        <v-text-field
-          :label="$t('query.metadataProperty')"
-          clearable
-          v-model="key"
-          :disabled="disabled"
-        />
-      </v-col>
+      <v-col :cols="3" style="padding-top:30px" class="text-right">{{$t('general.originalID')}}</v-col>
       <v-col :cols="3">
-        <operators-select :disabled="disabled" @selected="setOperator" :operator="operator"></operators-select>
+        <operators-select @selected="setOperator" :operator="operator" :disabled="disabled"></operators-select>
       </v-col>
-      <v-col :cols="4">
-        <v-combobox v-if="operator === 'in'"
+      <v-col :cols="6">
+        <v-text-field v-if="operator !== 'in'"
+          :placeholder="$t('general.typeToAdd')"
+          @change="setValue"
           :disabled="disabled"
+          v-model="value"
+        ></v-text-field>
+        <v-combobox v-if="operator === 'in'"
           multiple
           clearable
           :placeholder="$t('general.typeToAdd')"
           @change="setValue"
-          v-model="value"
-        />
-        <v-text-field v-else
-          :placeholder="$t('general.typeToAdd')"
-          clearable
-          v-model="value"
           :disabled="disabled"
-        />
+          v-model="value"
+        ></v-combobox>
       </v-col>
     </v-row>
   </v-container>
@@ -34,46 +27,33 @@
 
 <script lang="ts">
   import Vue, { PropType } from 'vue';
+  import SelectDataSource from "@/components/dataSources/SelectDataSource.vue";
   import OperatorsSelect from "@/components/queryBuilder/operatorsSelect.vue";
 
-  interface FilterMetadataModel {
-    key: string
+  interface FilterOriginalIDModel {
     operator: string
     value: string
   }
 
   export default Vue.extend ({
-    name: 'FilterMetadata',
+    name: 'FilterOriginalID',
 
-    components: { OperatorsSelect },
+    components: { SelectDataSource, OperatorsSelect },
 
     props: {
       queryPart: {type: Object as PropType<QueryPart>, required: false},
       disabled: {type: Boolean, required: false, default: false},
     },
 
-    data: (): FilterMetadataModel => ({
-      key: "",
+    data: (): FilterOriginalIDModel => ({
       operator: "",
       value: ""
     }),
 
     beforeMount() {
       if (this.queryPart) {
-        this.key = this.queryPart.key
         this.operator = this.queryPart.operator
         this.value = this.queryPart.value
-      }
-    },
-
-    computed: {
-      part(): QueryPart {
-        return {
-          componentName: 'FilterMetadata',
-          key: this.key,
-          operator: this.operator,
-          value: this.value
-        }
       }
     },
 
@@ -81,12 +61,22 @@
       setOperator(operator: string) {
         this.operator = operator
       },
-      setValue(value: string) {
+      setValue(value: any) {
         this.value = value
       },
       onQueryPartChange() {
         if(!this.disabled) {
           this.$emit('update', this.part)
+        }
+      }
+    },
+
+    computed: {
+      part(): QueryPart {
+        return {
+          componentName: 'FilterOriginalID',
+          operator: this.operator,
+          value: this.value
         }
       }
     },
@@ -98,14 +88,12 @@
     }
   });
 
-  // QueryPart matches the type expected by the query builder- this allows us to use Object.assign and copy
+  // QueryPart matches the type expected by the query builder - this allows us to use Object.assign and copy over on
   // changes
   type QueryPart = {
-    componentName: 'FilterMetadata',
-    key: string,
-    operator: string,
+    componentName: 'FilterOriginalID';
+    operator: string;
     value: any;
     nested?: QueryPart[];
-    options?: {[key: string]: any}
   }
 </script>
