@@ -1,30 +1,23 @@
 <template>
   <v-container>
     <v-row>
-      <v-col :cols="3" style="padding-top:30px" class="text-right">{{$t('general.deepLynxID')}}</v-col>
+      <v-col :cols="3" style="padding-top:30px" class="text-right">{{$t('dataSources.dataSource')}}</v-col>
       <v-col :cols="3">
-        <operators-select 
-          @selected="setOperator" 
-          :operator="operator" 
-          :disabled="disabled"
-          :custom_operators="operators"
-        />
+        <operators-select
+            :disabled="disabled"
+            @selected="setOperator"
+            :operator="operator"
+            :custom_operators="operators"
+        ></operators-select>
       </v-col>
       <v-col :cols="6">
-        <v-text-field v-if="operator !== 'in'"
-          :placeholder="$t('general.typeToAdd')"
-          @change="setValue"
+        <SelectDataSource
+          :containerID="containerID"
+          :multiple="operator === 'in'"
           :disabled="disabled"
-          v-model="value"
-        ></v-text-field>
-        <v-combobox v-if="operator === 'in'"
-          multiple
-          clearable
-          :placeholder="$t('general.typeToAdd')"
-          @change="setValue"
-          :disabled="disabled"
-          v-model="value"
-        ></v-combobox>
+          :dataSourceID="dataSource"
+          @selected="setDataSource"
+        />
       </v-col>
     </v-row>
   </v-container>
@@ -32,27 +25,25 @@
 
 <script lang="ts">
   import Vue, { PropType } from 'vue';
+  import SelectDataSource from "@/components/dataSources/SelectDataSource.vue";
   import OperatorsSelect from "@/components/queryBuilder/operatorsSelect.vue";
+  import {DataSourceT} from "@/api/types";
 
-  interface FilterIDModel {
+  interface FilterDataSourceModel {
     operator: string
-    value: string
+    dataSource: string | string[]
   }
 
   export default Vue.extend ({
-    name: 'FilterID',
+    name: 'FilterDataSource',
 
-    components: { OperatorsSelect },
+    components: { SelectDataSource, OperatorsSelect },
 
     props: {
+      containerID: {type: String, required: true},
       queryPart: {type: Object as PropType<QueryPart>, required: false},
       disabled: {type: Boolean, required: false, default: false},
     },
-
-    data: (): FilterIDModel => ({
-      operator: "",
-      value: ""
-    }),
 
     computed: {
       operators(): {text: string, value: string}[] {
@@ -60,23 +51,26 @@
           {text: this.$t('operators.equals'), value: 'eq'},
           {text: this.$t('operators.notEquals'), value: 'neq'},
           {text: this.$t('operators.in'), value: 'in'},
-          {text: this.$t('operators.lessThan'), value: '<'},
-          {text: this.$t('operators.greaterThan'), value: '>'},
-        ]
+        ];
       },
       part(): QueryPart {
         return {
-          componentName: 'FilterID',
+          componentName: 'FilterDataSource',
           operator: this.operator,
-          value: this.value
+          value: this.dataSource
         }
       }
     },
 
+    data: (): FilterDataSourceModel => ({
+      operator: "",
+      dataSource: ""
+    }),
+
     beforeMount() {
       if (this.queryPart) {
         this.operator = this.queryPart.operator
-        this.value = this.queryPart.value
+        this.dataSource = this.queryPart.value
       }
     },
 
@@ -84,13 +78,18 @@
       setOperator(operator: string) {
         this.operator = operator
       },
-      setValue(value: any) {
-        this.value = value
+      setDataSource(dataSources: DataSourceT | DataSourceT[]) {
+        if(Array.isArray(dataSources)) {
+          const ids: string[] = []
+          dataSources.forEach(source => ids.push(source.id!))
+
+          this.dataSource = ids
+        } else {
+          this.dataSource = dataSources.id!
+        }
       },
       onQueryPartChange() {
-        if(!this.disabled) {
-          this.$emit('update', this.part)
-        }
+        this.$emit('update', this.part)
       }
     },
 
@@ -105,7 +104,7 @@
   // QueryPart matches the type expected by the query builder - this allows us to use Object.assign and copy over on
   // changes
   type QueryPart = {
-    componentName: 'FilterID';
+    componentName: 'FilterDataSource';
     operator: string;
     value: any;
     nested?: QueryPart[];

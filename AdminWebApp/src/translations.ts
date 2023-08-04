@@ -804,7 +804,7 @@ export default {
             viewerDescription: 'Query and Edit Data',
             // the following are component names and are dynamically translated,
             // which is why they are capitalized
-            DataSourceFilter: 'Filter by Data Source',
+            FilterDataSource: 'Filter by Data Source',
             FilterID: 'Filter by DeepLynx ID(s)',
             MetadataFilter: 'Filter by Supplementary Data',
             FilterMetatype: 'Filter by Class',

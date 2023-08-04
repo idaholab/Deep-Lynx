@@ -189,10 +189,10 @@
   import Vue from 'vue';
 
   import AddDialog from "@/components/queryBuilder/addDialog.vue";
-  import DataSourceFilter from "@/components/queryBuilder/dataSourceFilter.vue";
+  import FilterDataSource from "@/components/queryBuilder/FilterDataSource.vue";
   import FilterMetatype from "@/components/queryBuilder/FilterMetatype.vue";
   import OriginalIDFilter from "@/components/queryBuilder/OriginalIDFilter.vue";
-  import IDFilter from "@/components/queryBuilder/IDFilter.vue";
+  import FilterID from "@/components/queryBuilder/FilterID.vue";
   import {v4 as uuidv4} from 'uuid';
   import {NodeT} from "@/api/types";
   import { GraphQLSchema, buildSchema } from 'graphql';
@@ -240,10 +240,10 @@
 
     components: {
       AddDialog,
-      DataSourceFilter,
+      FilterDataSource,
       FilterMetatype,
       OriginalIDFilter,
-      IDFilter,
+      FilterID,
       FilterRawData,
       MetadataFilter
     },
@@ -503,7 +503,7 @@
               break;
             }
 
-            case('DataSourceFilter'): {
+            case('FilterDataSource'): {
               if(part.operator === 'in') {
                 args.push(`data_source_id:{operator: "${part.operator}", value: [${part.value}]} `)
               } else {
@@ -512,7 +512,7 @@
               break;
             }
 
-            case('IDFilter'): {
+            case('FilterID'): {
               if(part.operator === 'in') {
                 args.push(`id:{operator: "${part.operator}", value: [${part.value}]} `)
               } else {
