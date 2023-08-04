@@ -63,7 +63,7 @@
                   </v-card>
                   <v-card v-if="!results" style="margin-top: 10px" class="pa-4">
                     <p class="mb-2">{{$t('query.clickToAdd')}}</p>
-                    <add-dialog @selected="addQueryPart"></add-dialog>
+                    <AddFilter @selected="addQueryPart"></AddFilter>
                   </v-card>
                 </v-col>
               </v-row>
@@ -188,7 +188,7 @@
 <script lang="ts">
   import Vue from 'vue';
 
-  import AddDialog from "@/components/queryBuilder/addDialog.vue";
+  import AddFilter from "@/components/queryBuilder/AddFilter.vue";
   import FilterDataSource from "@/components/queryBuilder/FilterDataSource.vue";
   import FilterMetatype from "@/components/queryBuilder/FilterMetatype.vue";
   import FilterOriginalID from "@/components/queryBuilder/FilterOriginalID.vue";
@@ -239,7 +239,7 @@
     name: 'QueryBuilder',
 
     components: {
-      AddDialog,
+      AddFilter,
       FilterDataSource,
       FilterMetatype,
       FilterOriginalID,

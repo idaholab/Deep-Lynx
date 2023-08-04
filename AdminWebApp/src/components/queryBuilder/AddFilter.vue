@@ -37,7 +37,7 @@
 import {Component, Vue} from "vue-property-decorator";
 
 @Component
-export default class AddDialog extends Vue {
+export default class AddFilter extends Vue {
   dialog = false
   model = 0
 
