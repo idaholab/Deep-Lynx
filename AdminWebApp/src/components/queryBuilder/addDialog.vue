@@ -43,7 +43,7 @@ export default class AddDialog extends Vue {
 
   options() {
     const options = [
-      {text: this.$t('query.MetatypeFilter'), value: 'MetatypeFilter'},
+      {text: this.$t('query.FilterMetatype'), value: 'FilterMetatype'},
       {text: this.$t('query.DataSourceFilter'), value: 'DataSourceFilter'},
       {text: this.$t('query.IDFilter'), value: 'IDFilter'},
       {text: this.$t('query.OriginalIDFilter'), value: 'OriginalIDFilter'},

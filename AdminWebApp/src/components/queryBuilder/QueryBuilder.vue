@@ -190,10 +190,10 @@
 
   import AddDialog from "@/components/queryBuilder/addDialog.vue";
   import DataSourceFilter from "@/components/queryBuilder/dataSourceFilter.vue";
-  import MetatypeFilter from "@/components/queryBuilder/metatypeFilter.vue";
+  import FilterMetatype from "@/components/queryBuilder/FilterMetatype.vue";
   import OriginalIDFilter from "@/components/queryBuilder/OriginalIDFilter.vue";
   import IDFilter from "@/components/queryBuilder/IDFilter.vue";
-  import {v4 as uuidv4} from 'uuid'
+  import {v4 as uuidv4} from 'uuid';
   import {NodeT} from "@/api/types";
   import { GraphQLSchema, buildSchema } from 'graphql';
   import {mdiInformation} from "@mdi/js";
@@ -238,7 +238,15 @@
   export default Vue.extend ({
     name: 'QueryBuilder',
 
-    components: { AddDialog, DataSourceFilter, MetatypeFilter, OriginalIDFilter, IDFilter, RawDataFilter, MetadataFilter },
+    components: {
+      AddDialog,
+      DataSourceFilter,
+      FilterMetatype,
+      OriginalIDFilter,
+      IDFilter,
+      RawDataFilter,
+      MetadataFilter
+    },
 
     props: {
       containerID: {type: String, required: true},
@@ -464,7 +472,7 @@
 
         this.queryParts.forEach(part => {
           switch(part.componentName) {
-            case('MetatypeFilter'): {
+            case('FilterMetatype'): {
               if(part.operator === 'in') {
                 if(part.options!.limitOntology){
                   args.push(`metatype_id:{operator: "${part.operator}", value: [${part.value}]} `)

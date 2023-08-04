@@ -807,7 +807,7 @@ export default {
             DataSourceFilter: 'Filter by Data Source',
             IDFilter: 'Filter by DeepLynx ID(s)',
             MetadataFilter: 'Filter by Supplementary Data',
-            MetatypeFilter: 'Filter by Class',
+            FilterMetatype: 'Filter by Class',
             PropertyFilter: 'Filter by Class Property',
             OriginalIDFilter: 'Filter by Original Data ID(s)',
             RawDataFilter: 'Filter by Unprocessed Data Record',
