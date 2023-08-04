@@ -27,7 +27,6 @@
 
 <script lang="ts">
   import Vue, { PropType } from 'vue';
-  import SelectDataSource from "@/components/dataSources/SelectDataSource.vue";
   import SelectOperators from "@/components/queryBuilder/SelectOperators.vue";
 
   interface FilterOriginalIDModel {
@@ -38,7 +37,7 @@
   export default Vue.extend ({
     name: 'FilterOriginalID',
 
-    components: { SelectDataSource, SelectOperators },
+    components: { SelectOperators },
 
     props: {
       queryPart: {type: Object as PropType<QueryPart>, required: false},

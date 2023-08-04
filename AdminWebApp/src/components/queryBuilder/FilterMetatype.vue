@@ -25,7 +25,7 @@
         />
       </v-col>
     </v-row>
-    <v-row v-if="metatype !== ''">
+    <v-row v-if="(metatype !== '' && !disabled) || disabled && keyQueryParts.length >= 1">
       <v-col align="left"><p>{{$t('query.FilterProperty')}}</p></v-col>
       <v-col v-if="loading" :cols="12" align="center"><v-progress-circular indeterminate></v-progress-circular></v-col>
       <v-col v-if="!loading" :cols="12" align="center">
@@ -41,11 +41,11 @@
           />
         </div>
       </v-col>
-      <v-col v-if="!loading" :cols="12" align="center">{{$t('query.clickToAddProperty')}}</v-col>
-      <v-col v-if="!loading" :cols="12" align="center">
+      <v-col v-if="!loading && !disabled" :cols="12" align="center">{{$t('query.clickToAddProperty')}}</v-col>
+      <v-col v-if="!loading && !disabled" :cols="12" align="center">
         <v-icon
-            large
-            @click="addQueryPart"
+          large
+          @click="addQueryPart"
         >
           mdi-plus-circle
         </v-icon>
