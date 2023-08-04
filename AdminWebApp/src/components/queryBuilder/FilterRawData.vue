@@ -10,7 +10,7 @@
         ></v-text-field>
       </v-col>
       <v-col :cols="3">
-        <operators-select :disabled="disabled" @selected="setOperator" :operator="operator"></operators-select>
+        <SelectOperators :disabled="disabled" @selected="setOperator" :operator="operator"></SelectOperators>
       </v-col>
       <v-col :cols="5">
         <v-combobox v-if="operator === 'in'"
@@ -39,7 +39,7 @@
 
 <script lang="ts">
   import Vue, { PropType } from 'vue';
-  import OperatorsSelect from "@/components/queryBuilder/operatorsSelect.vue";
+  import SelectOperators from "@/components/queryBuilder/SelectOperators.vue";
 
   interface FilterRawDataModel {
     key: string,
@@ -51,7 +51,7 @@
   export default Vue.extend ({
     name: 'FilterRawData',
 
-    components: {OperatorsSelect},
+    components: {SelectOperators},
 
     props: {
       queryPart: {type: Object as PropType<QueryPart>, required: false},

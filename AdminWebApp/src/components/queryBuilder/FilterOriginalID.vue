@@ -3,7 +3,7 @@
     <v-row>
       <v-col :cols="3" style="padding-top:30px" class="text-right">{{$t('general.originalID')}}</v-col>
       <v-col :cols="3">
-        <operators-select @selected="setOperator" :operator="operator" :disabled="disabled"></operators-select>
+        <SelectOperators @selected="setOperator" :operator="operator" :disabled="disabled"></SelectOperators>
       </v-col>
       <v-col :cols="6">
         <v-text-field v-if="operator !== 'in'"
@@ -28,7 +28,7 @@
 <script lang="ts">
   import Vue, { PropType } from 'vue';
   import SelectDataSource from "@/components/dataSources/SelectDataSource.vue";
-  import OperatorsSelect from "@/components/queryBuilder/operatorsSelect.vue";
+  import SelectOperators from "@/components/queryBuilder/SelectOperators.vue";
 
   interface FilterOriginalIDModel {
     operator: string
@@ -38,7 +38,7 @@
   export default Vue.extend ({
     name: 'FilterOriginalID',
 
-    components: { SelectDataSource, OperatorsSelect },
+    components: { SelectDataSource, SelectOperators },
 
     props: {
       queryPart: {type: Object as PropType<QueryPart>, required: false},

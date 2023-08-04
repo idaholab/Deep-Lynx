@@ -3,12 +3,12 @@
     <v-row>
       <v-col :cols="3" style="padding-top:30px" class="text-right">{{$t('classes.class')}}</v-col>
       <v-col :cols="3">
-        <operators-select
+        <SelectOperators
           :disabled="disabled"
           @selected="setOperator"
           :operator="operator"
           :custom_operators="operators"
-        ></operators-select>
+        ></SelectOperators>
       </v-col>
       <v-col :cols="6">
         <SearchMetatypes
@@ -57,7 +57,7 @@
 <script lang="ts">
   import Vue, { PropType } from 'vue';
   import SearchMetatypes from "@/components/ontology/metatypes/SearchMetatypes.vue";
-  import OperatorsSelect from "@/components/queryBuilder/operatorsSelect.vue";
+  import SelectOperators from "@/components/queryBuilder/SelectOperators.vue";
   import {MetatypeKeyT, MetatypeT} from "@/api/types";
   import FilterProperty from "@/components/queryBuilder/FilterProperty.vue";
   import {v4 as uuidv4} from "uuid";
@@ -75,7 +75,7 @@
   export default Vue.extend ({
     name: 'FilterMetatype',
 
-    components: { SearchMetatypes, OperatorsSelect, FilterProperty },
+    components: { SearchMetatypes, SelectOperators, FilterProperty },
 
     props: {
       containerID: {type: String, required: true},

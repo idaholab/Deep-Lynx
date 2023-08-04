@@ -3,7 +3,7 @@
     <v-row>
       <v-col :cols="3" style="padding-top:30px" class="text-right">{{$t('general.deepLynxID')}}</v-col>
       <v-col :cols="3">
-        <operators-select 
+        <SelectOperators 
           @selected="setOperator" 
           :operator="operator" 
           :disabled="disabled"
@@ -32,7 +32,7 @@
 
 <script lang="ts">
   import Vue, { PropType } from 'vue';
-  import OperatorsSelect from "@/components/queryBuilder/operatorsSelect.vue";
+  import SelectOperators from "@/components/queryBuilder/SelectOperators.vue";
 
   interface FilterIDModel {
     operator: string
@@ -42,7 +42,7 @@
   export default Vue.extend ({
     name: 'FilterID',
 
-    components: { OperatorsSelect },
+    components: { SelectOperators },
 
     props: {
       queryPart: {type: Object as PropType<QueryPart>, required: false},

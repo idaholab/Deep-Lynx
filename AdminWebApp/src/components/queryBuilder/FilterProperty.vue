@@ -12,7 +12,7 @@
         ></v-combobox>
       </v-col>
       <v-col :cols="3">
-        <operators-select :disabled="disabled" @selected="setOperator" :operator="operator"></operators-select>
+        <SelectOperators :disabled="disabled" @selected="setOperator" :operator="operator"></SelectOperators>
       </v-col>
       <v-col :cols="6">
         <v-text-field v-if="operator !== 'in'"
@@ -36,7 +36,7 @@
 
 <script lang="ts">
   import Vue, {PropType} from 'vue';
-  import OperatorsSelect from "@/components/queryBuilder/operatorsSelect.vue";
+  import SelectOperators from "@/components/queryBuilder/SelectOperators.vue";
   import {MetatypeKeyT} from "@/api/types";
 
   interface FilterPropertyModel {
@@ -48,7 +48,7 @@
   export default Vue.extend ({
     name: 'FilterProperty',
 
-    components: { OperatorsSelect },
+    components: { SelectOperators },
 
     props: {
       keys: {

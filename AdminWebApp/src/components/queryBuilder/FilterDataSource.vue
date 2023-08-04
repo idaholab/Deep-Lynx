@@ -3,12 +3,12 @@
     <v-row>
       <v-col :cols="3" style="padding-top:30px" class="text-right">{{$t('dataSources.dataSource')}}</v-col>
       <v-col :cols="3">
-        <operators-select
+        <SelectOperators
             :disabled="disabled"
             @selected="setOperator"
             :operator="operator"
             :custom_operators="operators"
-        ></operators-select>
+        ></SelectOperators>
       </v-col>
       <v-col :cols="6">
         <SelectDataSource
@@ -26,7 +26,7 @@
 <script lang="ts">
   import Vue, { PropType } from 'vue';
   import SelectDataSource from "@/components/dataSources/SelectDataSource.vue";
-  import OperatorsSelect from "@/components/queryBuilder/operatorsSelect.vue";
+  import SelectOperators from "@/components/queryBuilder/SelectOperators.vue";
   import {DataSourceT} from "@/api/types";
 
   interface FilterDataSourceModel {
@@ -37,7 +37,7 @@
   export default Vue.extend ({
     name: 'FilterDataSource',
 
-    components: { SelectDataSource, OperatorsSelect },
+    components: { SelectDataSource, SelectOperators },
 
     props: {
       containerID: {type: String, required: true},
