@@ -197,7 +197,7 @@
   import {NodeT} from "@/api/types";
   import { GraphQLSchema, buildSchema } from 'graphql';
   import {mdiInformation} from "@mdi/js";
-  import RawDataFilter from "./rawDataFilter.vue";
+  import FilterRawData from "./FilterRawData.vue";
   import MetadataFilter from "./metadataFilter.vue";
   // importing sample queries for code clarity
   import { 
@@ -244,7 +244,7 @@
       FilterMetatype,
       OriginalIDFilter,
       IDFilter,
-      RawDataFilter,
+      FilterRawData,
       MetadataFilter
     },
 
@@ -530,7 +530,7 @@
               break;
             }
 
-            case('RawDataFilter'): {
+            case('FilterRawData'): {
               if(part.operator === 'in') {
                 rawDataProps.push(`{key: "${part.key}", operator: "${part.operator}", value: "${part.value.join(",")}", historical: ${part.options!.historical}}`)
               } else {

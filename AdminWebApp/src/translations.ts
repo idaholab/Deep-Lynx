@@ -810,7 +810,7 @@ export default {
             FilterMetatype: 'Filter by Class',
             PropertyFilter: 'Filter by Class Property',
             OriginalIDFilter: 'Filter by Original Data ID(s)',
-            RawDataFilter: 'Filter by Unprocessed Data Record',
+            FilterRawData: 'Filter by Unprocessed Data Record',
         },
         tags: {
             name: 'Tag Name',
