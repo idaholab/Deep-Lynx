@@ -198,7 +198,7 @@
   import { GraphQLSchema, buildSchema } from 'graphql';
   import {mdiInformation} from "@mdi/js";
   import FilterRawData from "./FilterRawData.vue";
-  import MetadataFilter from "./metadataFilter.vue";
+  import FilterMetadata from "./FilterMetadata.vue";
   // importing sample queries for code clarity
   import { 
     graphSampleQuery, 
@@ -245,7 +245,7 @@
       OriginalIDFilter,
       FilterID,
       FilterRawData,
-      MetadataFilter
+      FilterMetadata
     },
 
     props: {
@@ -539,7 +539,7 @@
               break;
             }
 
-            case('MetadataFilter'): {
+            case('FilterMetadata'): {
               if(part.operator === 'in') {
                 metadataProps.push(`{key: "${part.key}", operator: "${part.operator}", value: "${part.value.join(",")}", historical: ${part.options!.historical}}`)
               } else {

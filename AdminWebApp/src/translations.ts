@@ -806,7 +806,7 @@ export default {
             // which is why they are capitalized
             FilterDataSource: 'Filter by Data Source',
             FilterID: 'Filter by DeepLynx ID(s)',
-            MetadataFilter: 'Filter by Supplementary Data',
+            FilterMetadata: 'Filter by Supplementary Data',
             FilterMetatype: 'Filter by Class',
             FilterProperty: 'Filter by Class Property',
             OriginalIDFilter: 'Filter by Original Data ID(s)',
