@@ -4,11 +4,12 @@
       <v-toolbar flat color="white">
         <v-toolbar-title>{{$t('query.viewerDescription')}}</v-toolbar-title>
       </v-toolbar>
-      <query-builder
-          :initialQuery="true"
-          :containerID="containerID"
-          @results="loadResults"
-          @disableGraphEdit="disableGraphEdit"></query-builder>
+      <QueryBuilder
+        :initialQuery="true"
+        :containerID="containerID"
+        @results="loadResults"
+        @disableGraphEdit="disableGraphEdit"
+      />
 
       <v-row>
         <v-col

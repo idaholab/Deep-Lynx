@@ -3,12 +3,12 @@
     <v-row>
       <v-col :cols="3" >
         <v-combobox
-            :items="keys"
-            item-text="name"
-            item-value="property_name"
-            :disabled="disabled"
-            v-model="property"
-            :label="$t('properties.name')"
+          :items="keys"
+          item-text="name"
+          item-value="property_name"
+          :disabled="disabled"
+          v-model="property"
+          :label="$t('properties.name')"
         ></v-combobox>
       </v-col>
       <v-col :cols="3">
@@ -36,7 +36,6 @@
 
 <script lang="ts">
   import Vue, {PropType} from 'vue';
-  import SelectDataSource from "@/components/dataSources/SelectDataSource.vue";
   import OperatorsSelect from "@/components/queryBuilder/operatorsSelect.vue";
   import {MetatypeKeyT} from "@/api/types";
 
@@ -49,13 +48,13 @@
   export default Vue.extend ({
     name: 'FilterProperty',
 
-    components: { SelectDataSource, OperatorsSelect },
+    components: { OperatorsSelect },
 
     props: {
       keys: {
         type: Array as PropType<MetatypeKeyT[]>,
         required: true,
-        default: []
+        default: () => []
       },
       queryPart: {type: Object as PropType<QueryPart>, required: false},
       disabled: {type: Boolean, required: false, default: false},

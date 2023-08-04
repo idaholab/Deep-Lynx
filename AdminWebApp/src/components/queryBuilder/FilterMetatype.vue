@@ -4,20 +4,20 @@
       <v-col :cols="3" style="padding-top:30px" class="text-right">{{$t('classes.class')}}</v-col>
       <v-col :cols="3">
         <operators-select
-            :disabled="disabled"
-            @selected="setOperator"
-            :operator="operator"
-            :custom_operators="operators"
+          :disabled="disabled"
+          @selected="setOperator"
+          :operator="operator"
+          :custom_operators="operators"
         ></operators-select>
       </v-col>
       <v-col :cols="6">
         <SearchMetatypes
-            :disabled="disabled"
-            :containerID="containerID"
-            :metatypeID="metatype"
-            :multiple="operator === 'in'"
-            @selected="setMetatype">
-          </SearchMetatypes>
+          :disabled="disabled"
+          :containerID="containerID"
+          :metatypeID="metatype"
+          :multiple="operator === 'in'"
+          @selected="setMetatype">
+        </SearchMetatypes>
         <v-checkbox 
           v-model="limitOntologyVersion" 
           :label="$t('query.limitOntology')"
@@ -33,11 +33,12 @@
           <v-flex class="text-right">
             <v-icon class="justify-right" @click="removeQueryPart(part)">mdi-window-close</v-icon>
           </v-flex>
-          <property-filter
-              :keys="metatypeKeys"
-              :queryPart="part"
-              :disabled="disabled"
-              @update="updateQueryPart(part, $event)"></property-filter>
+          <FilterProperty
+            :keys="metatypeKeys"
+            :queryPart="part"
+            :disabled="disabled"
+            @update="updateQueryPart(part, $event)"
+          />
         </div>
       </v-col>
       <v-col v-if="!loading" :cols="12" align="center">{{$t('query.clickToAddProperty')}}</v-col>
