@@ -165,11 +165,10 @@
 
 <script lang="ts">
   import Vue from 'vue'
-  import QueryBuilder from "../components/queryBuilder/queryBuilder.vue"
+  import QueryBuilder, {ResultSet} from "../components/queryBuilder/QueryBuilder.vue"
   import NodeFilesDialog from "@/components/data/nodeFilesDialog.vue";
   import GraphViewer from "@/components/visualization/graphViewer.vue"
 
-  import {ResultSet} from "@/components/queryBuilder/queryBuilder.vue";
   import {mdiFileDocumentMultiple} from "@mdi/js";
   import { NodeT } from "../api/types";
 
