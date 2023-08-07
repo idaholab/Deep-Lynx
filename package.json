@@ -81,7 +81,7 @@
         "monocle-ts": "^2.3.11",
         "newtype-ts": "^0.3.4",
         "node-rsa": "^1.1.1",
-        "nodemon": "^2.0.7",
+        "nodemon": "^2.0.22",
         "nyc": "^15.1.0",
         "prettier": "2.3.1",
         "run-script-os": "^1.1.5",
