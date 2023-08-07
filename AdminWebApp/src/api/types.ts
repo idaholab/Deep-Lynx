@@ -491,6 +491,8 @@ export type TypeMappingTransformationT = {
     archived: boolean;
     origin_parameters?: EdgeConfigKeyT[];
     destination_parameters?: EdgeConfigKeyT[];
+    created_at_key?: string;
+    created_at_format_string?: string;
 };
 
 export type TypeMappingTransformationPayloadT = {
@@ -507,6 +509,8 @@ export type TypeMappingTransformationPayloadT = {
     on_conflict?: 'create' | 'update' | 'ignore';
     keys: TypeMappingTransformationKeyMapping[];
     type_mapping_id: string;
+    created_at_key?: string;
+    created_at_format_string?: string;
 };
 
 export type TypeMappingUpgradePayloadT = {
@@ -680,7 +684,6 @@ export function DefaultAvevaDataSourceConfig(): AvevaDataSourceConfig {
             'INVISIBLE POINT',
             'TANGENT POINT',
             'POLYGON',
-            'VERTEX',
             'AIDARC',
             'AIDCIRCLE',
             'AIDLINE',
@@ -700,7 +703,6 @@ export function DefaultAvevaDataSourceConfig(): AvevaDataSourceConfig {
             'MLABEL',
             'POGON',
             'POHEDRON',
-            'POINT',
             'POLFACE',
             'POLOOP',
             'POLPTLIST',
@@ -725,7 +727,7 @@ export function DefaultAvevaDataSourceConfig(): AvevaDataSourceConfig {
             'NSNOUT',
             'NXRUSION',
         ],
-        ifc_element_types: ['WORLD', 'SITE', 'AREA WORLD', 'GROUP WORLD', 'GROUP', 'AREA SET', 'AREA DEFINITION', 'SITE', 'ZONE', 'DRAWING', 'STRUCTURE'],
+        ifc_element_types: ['WORLD', 'SITE', 'AREA WORLD', 'GROUP WORLD', 'GROUP', 'AREA SET', 'AREA DEFINITION', 'ZONE', 'DRAWING', 'STRUCTURE'],
         ifc_settings: {
             format: 'IFC2x3',
             data_level: 'GA',

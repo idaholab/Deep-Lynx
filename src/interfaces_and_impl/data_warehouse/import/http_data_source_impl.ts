@@ -14,6 +14,7 @@ import {plainToClass} from 'class-transformer';
 import {toStream} from '../../../services/utilities';
 import {DataSource} from './data_source';
 const buildUrl = require('build-url');
+const https = require('https');
 
 /*
  HttpImpl is a data source which polls and HTTP source for data every x seconds
@@ -167,6 +168,11 @@ export default class HttpDataSourceImpl extends StandardDataSourceImpl implement
             }
         }
 
+        const agent = new https.Agent({
+            rejectUnauthorized: false,
+        });
+        httpConfig.httpsAgent = agent;
+
         try {
             resp = await axios.get(endpoint, httpConfig);
             if (resp.status > 299 || resp.status < 200 || !resp.data) {
@@ -175,11 +181,9 @@ export default class HttpDataSourceImpl extends StandardDataSourceImpl implement
                 let reference = '';
                 if ('Reference' in resp.headers) reference = resp.headers.Reference;
 
+                // convert data to an array of objects so DeepLynx can understand it
                 if (!Array.isArray(resp.data)) {
-                    Logger.error(`response from http importer must be an array of JSON objects`);
-                    await ImportMapper.Instance.completeTransaction(pollTransaction.value);
-
-                    return Promise.resolve();
+                    resp.data = [resp.data]
                 }
 
                 // set to super user if we don't know who's running the source

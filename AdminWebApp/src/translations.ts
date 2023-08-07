@@ -21,6 +21,7 @@ export default {
             dataRetention:
                 'This controls how many days DeepLynx will retain the raw data you import. A value of 0 will retain no raw data after processing and a value of -1 will retain raw data indefinitely.',
             dateFormatString: 'Formatting your date/time - if you do not include a timezone, we will assume UTC time.',
+            dateFormatStringSmall: 'Format Help - assumes UTC time if no timezone given.',
             dataSourceCard:
                 'Data Sources allow DeepLynx to retrieve or be sent data from outside sources. Managing Data Sources is essential to successful usage of DeepLynx. Manage your Data Sources by clicking below.',
             dataSourceEdgeParam: 'Choose the Data Source the parent or child record belongs to.',
@@ -106,6 +107,10 @@ export default {
                 "Property Value vs. Type tells DeepLynx that a JSON property, CSV column, or XML type should have it's value examined as well as examining its type. This allows you to send in identical payload structures but create a different type mapping depending on the value of a property. ",
             welcomeCard:
                 'DeepLynx is a unique data warehouse designed to provide easy collaboration on large projects. DeepLynx allows users to define an ontology and then store data under it. Find more information on our wiki below.',
+            createdAtMapping:
+                'Select a property key to use the corresponding value to set "created at", or leave blank to use the import time as the "created at" value',
+            createdAtManual: 'Select "Default" to use the import time as the "created at" value, or set the time manually',
+            removedForSecurity: '(Removed for Security)',
         },
         links: {
             timeseriesQuickStart: 'https://github.com/idaholab/Deep-Lynx/wiki/Timeseries-Quick-Start-Guide',
@@ -227,7 +232,7 @@ export default {
             success: 'Request was successful!',
             statusMessage: 'Status Message',
             status: 'Status',
-            createdAt: 'Date Created',
+            dateCreated: 'Date Created',
             enable: 'Enable',
             description: 'Description',
             beta: 'BETA',
@@ -252,6 +257,8 @@ export default {
             typeToAdd: 'Type and hit Enter to add',
             deepLynxID: 'DeepLynx ID',
             originalID: 'Original Data ID',
+            createdAt: 'Created At',
+            createdAtFormatString: 'Created At Format String (blank for ISO)',
             createdBy: 'Created By',
             typeToSearch: 'Type and hit Enter to Search',
             deepLynx: 'DeepLynx',
@@ -262,6 +269,7 @@ export default {
             upload: 'Upload',
             create: 'Create',
             showOptional: 'Show Optional Fields',
+            alterCreatedAt: 'Alter Created At',
             comingSoon: 'Coming Soon',
             ok: 'OK',
             username: 'Username',

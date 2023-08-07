@@ -357,7 +357,9 @@ export default class TypeMappingMapper extends Mapper {
                                                             archived,
                                                             config,
                                                             type,
-                                                            name)
+                                                            name,
+                                                            created_at_key,
+                                                            created_at_format_string)
                    SELECT $3,
                           t.metatype_id,
                           t.metatype_relationship_pair_id,
@@ -376,7 +378,9 @@ export default class TypeMappingMapper extends Mapper {
                           t.archived,
                           t.config,
                           t.type,
-                          t.name
+                          t.name,
+                          t.created_at_key,
+                          t.created_at_format_string
                    FROM type_mapping_transformations t
                    WHERE type_mapping_id = $2
             `,

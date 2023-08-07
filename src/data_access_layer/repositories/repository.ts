@@ -812,6 +812,10 @@ export class Repository {
             this._selectRoot = 'SELECT DISTINCT';
         }
 
+        if (queryOptions && queryOptions.includeHistory === true) {
+            this._selectRoot = 'SELECT';
+        }
+
         return this;
     }
 
@@ -1064,6 +1068,7 @@ export type QueryOptions = {
     tableName?: string | null | undefined;
     // load from a materialized view if one is present
     loadFromView?: boolean;
+    includeHistory?: boolean;
 };
 
 export type JoinOptions = {

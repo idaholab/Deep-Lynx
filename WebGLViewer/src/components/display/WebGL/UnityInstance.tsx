@@ -17,6 +17,7 @@ import {
   Button,
 } from "@mui/material";
 import { appStateActions } from "../../../../app/store";
+import { ReactUnityEventParameter } from "react-unity-webgl/distribution/types/react-unity-event-parameters";
 
 type Props = {
   handleLoadedState: (isLoaded: boolean) => void;
@@ -71,21 +72,29 @@ const UnityInstance: React.FC<Props> = ({
     setHeight(window.innerHeight);
   };
 
-  const handleDataPanel = useCallback((target: string) => {
-      // TimeSeries
-    },
-    []
-  );
+  // Update the type of the handleDataPanel function
+  const handleDataPanel: (...parameters: ReactUnityEventParameter[]) => ReactUnityEventParameter = useCallback((...parameters) => {
+    // Return a ReactUnityEventParameter as required by EventListeners
+    return undefined as ReactUnityEventParameter;
+  }, []);
 
-  const handleNodes = useCallback((response: string) => {
-    let nodes = response.split(",");
+  const handleNodes: (...parameters: ReactUnityEventParameter[]) => ReactUnityEventParameter = useCallback((...parameters) => {
+    // similar to response = parameters[0]
+    let [response] = parameters;
+    let nodes = (response as string).split(",");
     dispatch(appStateActions.setUnityNodes(nodes));
+    // Return a ReactUnityEventParameter as required by EventListeners
+    return undefined as ReactUnityEventParameter;
   }, [selectedScene]);
 
-  const handleScenes = useCallback((response: string) => {
-    let scenes = response.split(",");
+  const handleScenes: (...parameters: ReactUnityEventParameter[]) => ReactUnityEventParameter = useCallback((...parameters) => {
+    // similar to response = parameters[0]
+    let [response] = parameters;
+    let scenes = (response as string).split(",");
     dispatch(appStateActions.setSceneList(scenes));
-  }, []);
+    // Return a ReactUnityEventParameter as required by EventListeners
+    return undefined as ReactUnityEventParameter;
+  }, [selectedScene]);
 
   function handleSceneSelection(scene: string) {
     console.log("Selecting: " + scene);

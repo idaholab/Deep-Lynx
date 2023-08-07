@@ -8,6 +8,7 @@ import {
 } from '@mui/material';
 
 // MUI Icons
+import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
@@ -48,9 +49,10 @@ const ButtonIconText: React.FC<Props> = ({
         }}
         onClick={handleClick}
       >
+        {type === 'add' && <AddIcon sx={{ fontSize: '20px', paddingTop: '2px'}} />}
         {type === 'close' && <CloseIcon sx={{ fontSize: '20px', paddingTop: '2px'}} />}
         {type === 'attach' && <AttachFileIcon sx={{ fontSize: '20px', paddingTop: '2px'}} />}
-        {type === 'add' && <FormatListBulletedIcon sx={{ fontSize: '20px', paddingTop: '2px'}} />}
+        {/* {type === 'add' && <FormatListBulletedIcon sx={{ fontSize: '20px', paddingTop: '2px'}} />} */}
         {type === 'hub' && <HubIcon sx={{ fontSize: '20px', paddingTop: '2px'}} />}
         {type === 'select' && <RadioButtonCheckedIcon sx={{ fontSize: '20px', paddingTop: '2px'}} />}
         {type === 'highlight' && <HighlightIcon sx={{ fontSize: '20px', paddingTop: '2px'}} />}

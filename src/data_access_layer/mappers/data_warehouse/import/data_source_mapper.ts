@@ -126,8 +126,16 @@ export default class DataSourceMapper extends Mapper {
         return super.runAsTransaction(...this.createHypertableStatement(source));
     }
 
-    public retrieveTimeseriesRowCount(tableName: string): Promise<Result<number>> {
-        return super.retrieve<number>(this.getHypertableRowCount(tableName));
+    public async retrieveTimeseriesRowCount(tableName: string): Promise<Result<number>> {
+        const countVal = await super.retrieve<any>(this.getHypertableRowCountTimescale(tableName));
+        const count = countVal.value['count']
+
+        if (Number(count) === 0 && Config.timescaledb_enabled) {
+            // perform a second count not using timescale, since the timescale count
+            // may return 0 if statistics have not been generated for the hypertable
+            return await super.retrieve<any>(this.getHypertableRowCount(tableName));
+        }
+        return countVal;
     }
 
     public async retrieveTimeseriesRange(primaryTimestamp: string, tableName: string): Promise<Result<TimeseriesRange>> {
@@ -364,12 +372,16 @@ export default class DataSourceMapper extends Mapper {
         return format(`SELECT data_staging.* FROM data_staging WHERE data_source_id = %L`, dataSourceID);
     }
 
-    private getHypertableRowCount(tableName: string): QueryConfig {
+    private getHypertableRowCountTimescale(tableName: string): QueryConfig {
         if (Config.timescaledb_enabled) {
             return format(`SELECT * FROM approximate_row_count('%s') AS count`, tableName);
         } else {
-            return format(`SELECT COUNT(*) FROM %I)`, tableName);
+            return format(`SELECT COUNT(*) FROM %I`, tableName);
         }
+    }
+
+    private getHypertableRowCount(tableName: string): QueryConfig {
+        return format(`SELECT COUNT(*) FROM %I`, tableName);
     }
 
     private getHypertableFirst(primaryTimestamp: string, tableName: string): QueryConfig {

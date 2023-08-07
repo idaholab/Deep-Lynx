@@ -12,6 +12,7 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "baseUrl": ".",
+    "forceConsistentCasingInFileNames": true,
     "types": [
       "webpack-env",
       "vuetify"

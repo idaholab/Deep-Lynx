@@ -11,12 +11,12 @@
         ></operators-select>
       </v-col>
       <v-col :cols="6">
-        <select-data-source
+        <SelectDataSource
             :containerID="containerID"
             :multiple="operator === 'in'"
             :disabled="disabled"
             :dataSourceID="dataSource"
-            @selected="setDataSource"></select-data-source>
+            @selected="setDataSource"></SelectDataSource>
       </v-col>
     </v-row>
   </v-container>
@@ -24,7 +24,7 @@
 
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from "vue-property-decorator";
-import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
+import SelectDataSource from "@/components/dataSources/SelectDataSource.vue";
 import OperatorsSelect from "@/components/queryBuilder/operatorsSelect.vue";
 import {DataSourceT} from "@/api/types";
 

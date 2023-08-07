@@ -192,9 +192,9 @@
               <v-col>
                 <div><span class="text-overline">{{$t('general.id')}}:</span> {{currentNodeInfo.id}}</div>
                 <div><span class="text-overline">{{$t('classes.class')}}:</span> {{currentNodeInfo.metatype.name}}</div>
-                <div><span class="text-overline">{{$t('dataSources.dataSource')}}:</span> {{datasources[currentNodeInfo.data_source_id]?.name}} ({{currentNodeInfo.data_source_id}})</div>
-                <div><span class="text-overline">{{$t('general.createdAt')}}:</span> {{currentNodeInfo.created_at}}</div>
-                <div><span class="text-overline">{{$t('general.modifiedAt')}}:</span> {{currentNodeInfo.modified_at}}</div>
+                <div><span class="text-overline">{{$t('dataSources.dataSource')}}:</span> {{datasources.get(currentNodeInfo.data_source_id)?.name}} ({{currentNodeInfo.data_source_id}})</div>
+                <div><span class="text-overline">{{$t('general.dateCreated')}}:</span> {{currentNodeInfo.created_at}}</div>
+                <div v-show="currentNodeInfo.modified_at"><span class="text-overline">{{$t('general.modifiedAt')}}:</span> {{currentNodeInfo.modified_at}}</div>
                 <v-expansion-panels multiple v-model="openPanels">
                   <!-- Properties -->
                   <v-expansion-panel>
@@ -259,7 +259,7 @@
                       <div><span class="text-overline">{{$t('timeseries.data')}}:</span></div>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
-                      <node-timeseries-data-table :nodeID="currentNodeInfo.id" :containerID="containerID"></node-timeseries-data-table>
+                      <NodeTimeseriesData-table :nodeID="currentNodeInfo.id" :containerID="containerID"></NodeTimeseriesData-table>
                     </v-expansion-panel-content>
                   </v-expansion-panel>
                   <!-- Metadata Properties -->
@@ -336,9 +336,9 @@
               <v-col>
                 <div><span class="text-overline">{{$t('general.id')}}:</span> {{currentEdgeInfo.id}}</div>
                 <div><span class="text-overline">{{$t('relationshipTypes.relType')}}:</span> {{currentEdgeInfo.metatype_relationship.name}}</div>
-                <div><span class="text-overline">{{$t('dataSources.dataSource')}}:</span> {{datasources[currentEdgeInfo.data_source_id]?.name}} ({{currentEdgeInfo.data_source_id}})</div>
-                <div><span class="text-overline">{{$t('general.createdAt')}}:</span> {{currentEdgeInfo.created_at}}</div>
-                <div><span class="text-overline">{{$t('general.modifiedAt')}}:</span> {{currentEdgeInfo.modified_at}}</div>
+                <div><span class="text-overline">{{$t('dataSources.dataSource')}}:</span> {{datasources.get(currentEdgeInfo.data_source_id)?.name}} ({{currentEdgeInfo.data_source_id}})</div>
+                <div><span class="text-overline">{{$t('general.dateCreated')}}:</span> {{currentEdgeInfo.created_at}}</div>
+                <div v-show="currentEdgeInfo.modified_at"><span class="text-overline">{{$t('general.modifiedAt')}}:</span> {{currentEdgeInfo.modified_at}}</div>
                 <v-expansion-panels
                   multiple v-model="openPanels"
                   v-if="currentEdgeInfo.properties !== null"
@@ -787,11 +787,11 @@
         width="50%"
     >
       <v-card class="pt-1 pb-3 px-2">
-        <select-data-source
+        <SelectDataSource
             :containerID="containerID"
             :dataSourceID="selectedDataSource"
             @selected="setDataSource">
-        </select-data-source>
+        </SelectDataSource>
         <div v-if="(selectedDataSource !== null)">
           <v-divider></v-divider>
           <create-node-card
@@ -940,11 +940,11 @@
                     </v-col>
                 </div>
 
-                <select-data-source
+                <SelectDataSource
                     @selected="setDataSource"
                     :dataSourceID="interimLink.source.data_source_id"
                     :containerID="containerID">
-                </select-data-source>
+                </SelectDataSource>
 
               </div>
 
@@ -964,8 +964,8 @@
 
 <script lang="ts">
 import NodeFilesDialog from "@/components/data/nodeFilesDialog.vue";
-import NodeTimeseriesDataTable from "@/components/data/nodeTimeseriesDataTable.vue";
-import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
+import NodeTimeseriesDataTable from "@/components/data/NodeTimeseriesDataTable.vue";
+import SelectDataSource from "@/components/dataSources/SelectDataSource.vue";
 import CreateNodeCard from "@/components/data/createNodeCard.vue";
 import EditNodeDialog from "@/components/data/editNodeDialog.vue";
 import NodeTagsDialog from "@/components/data/nodeTagsDialog.vue";
@@ -2286,6 +2286,8 @@ export default class GraphViewer extends Vue {
 
     // select new version of node
     this.selectedNodeHistory = history[history.length-1].created_at
+    // ensure the selected node reflects the one most recent in created_at
+    void this.getInfo(history[history.length-1], false, history.length)
   }
 
   findNode(label: string) {
@@ -2384,7 +2386,7 @@ export default class GraphViewer extends Vue {
     const sources = await this.$client.listDataSources(this.containerID)
 
     for (const datasource of sources) {
-      if (datasource.id != undefined) {
+      if (datasource.id !== undefined) {
         this.datasources.set(datasource.id, datasource);
       }
     }

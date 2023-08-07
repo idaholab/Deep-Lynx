@@ -46,6 +46,8 @@ const DrawerContentsNodeInfo: React.FC<Props> = ({}) => {
     console.log('Action to \"Show On Graph\" clicked!')
   }
 
+  console.log(selectedAssetObject)
+
   return (
     <>
       <Box sx={{ display: 'flex', padding: '0 16px' }}>

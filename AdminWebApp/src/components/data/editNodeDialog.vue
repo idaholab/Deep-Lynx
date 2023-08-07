@@ -9,11 +9,11 @@
         >mdi-pencil</v-icon>
         <v-btn v-if="!icon" style="max-width: fit-content" color="primary" dark class="mt-2" v-on="on">{{$t("nodes.edit")}}</v-btn>
       </template>
-  
+
       <v-card class="pt-1 pb-3 px-2" v-if="selectedNode">
         <v-card-title>
           <span class="headline text-h3">{{$t('general.edit')}} {{nodeName}} ({{selectedNode.metatype.name}})</span>
-        </v-card-title>   
+        </v-card-title>
         <v-card-text>
           <error-banner :message="errorMessage"></error-banner>
           <v-row>
@@ -34,7 +34,7 @@
                         vertical
                     ></v-divider>
                     <v-spacer></v-spacer>
-  
+
                     <!-- Add Property Dialog -->
                     <v-dialog
                       v-model="addPropertyDialog"
@@ -56,7 +56,7 @@
                       <v-card-title>
                         <span class="text-h5">{{$t("properties.add")}}</span>
                       </v-card-title>
-          
+
                       <v-card-text>
                         <v-container>
                           <v-row>
@@ -92,7 +92,7 @@
                           </v-row>
                         </v-container>
                       </v-card-text>
-          
+
                       <v-card-actions>
                         <v-spacer></v-spacer>
                         <v-btn
@@ -112,7 +112,7 @@
                       </v-card-actions>
                     </v-card>
                   </v-dialog>
-  
+
                   </v-toolbar>
                 </template>
                 <template v-slot:[`item.value`]="value">
@@ -128,7 +128,7 @@
                     </template>
                   </v-edit-dialog>
                 </template>
-  
+
                 <template v-slot:[`item.actions`]="{ item }">
                   <v-icon
                       small
@@ -138,6 +138,19 @@
                   </v-icon>
                 </template>
               </v-data-table>
+            </v-col>
+            <v-col :cols="12">
+              <v-checkbox
+                  v-model="alterCreatedAt"
+                  :label="$t('general.alterCreatedAt')"
+                  v-observe-visibility="loadDatePickr"
+              ></v-checkbox>
+              <div  v-show="alterCreatedAt">
+                <div class="d-block">
+                  <label for="createdAtDate" style="padding-right: 4px">{{$t('general.createdAt')}}: </label>
+                  <input type="text" :placeholder="$t('timeseries.selectDate')" id="createdAtDate" />
+                </div>
+              </div>
             </v-col>
           </v-row>
         </v-card-text>
@@ -149,25 +162,26 @@
       </v-card>
     </v-dialog>
   </template>
-  
+
   <script lang="ts">
   import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
   import {MetatypeKeyT, NodeT, PropertyT} from "../../api/types";
-  
+  import flatpickr from "flatpickr";
+
   @Component({components: {}})
   export default class EditNodeDialog extends Vue {
     @Prop({required: true})
     node!: any;
-  
+
     @Prop({required: true})
     containerID!: string;
-  
+
     @Prop({required: true})
     dataSourceID!: string;
-  
+
     @Prop({required: false})
     readonly icon!: boolean
-  
+
     errorMessage = ""
     dialog = false
     selectedNode: NodeT | null  = null
@@ -175,23 +189,26 @@
     property = {}
     nodeName = ""
     addPropertyDialog = false
-    
+
     newProperty: PropertyT = {
       key: '',
       value: '',
       type: ''
     }
-  
+
     metatypeKeys: MetatypeKeyT[] = []
-  
+
+    alterCreatedAt = false
+    createdAtDate = new Date().toISOString()
+
     // load properties to array when the node is selected so that we can edit fields.
     @Watch('dialog', {immediate: true})
     isDialogOpen() {
       if(this.dialog) {
         this.propertiesToArray()
-      } 
+      }
     }
-  
+
     headers() {
       return  [
         { text: this.$t('general.name'), value: 'key'},
@@ -199,29 +216,45 @@
         { text: this.$t('general.actions'), value: 'actions', sortable: false }
       ]
     }
-  
+
+    loadDatePickr() {
+      const createdAtPickr = flatpickr('#createdAtDate', {
+        altInput: true,
+        altFormat: 'F j, y h:i:S K',
+        dateFormat: 'Z',
+        enableTime: true,
+        enableSeconds: true,
+        allowInput: true,
+      }) as flatpickr.Instance;
+
+      (createdAtPickr as flatpickr.Instance).config.onChange.push((selectedDates, dateStr) => {
+        this.createdAtDate = dateStr;
+      });
+      (createdAtPickr as flatpickr.Instance).setDate(this.createdAtDate);
+    }
+
     async propertiesToArray() {
       // have to do this to avoid mutating properties
       this.selectedNode = JSON.parse(JSON.stringify(this.node))
       this.nodeName = (this.selectedNode!.properties as any).name ? (this.selectedNode!.properties as any).name : this.selectedNode!.id
-  
+
       // grab all metatype keys
       this.metatypeKeys = await this.$client.listMetatypeKeys(this.containerID, this.selectedNode!.metatype!.id!)
-  
+
       if (this.selectedNode) {
         this.nodeProperties = []
         Object.entries(this.selectedNode.properties).forEach(([key, text]) => {
           const object = {key: key, value: String(text)} as PropertyT
-          this.nodeProperties.push(object)  
+          this.nodeProperties.push(object)
         })
       }
-     
+
     }
-  
+
     setProperties() {
       this.property = {}
       const entries: { [key: string]: any } = {}
-  
+
       this.nodeProperties.forEach( (property: any) => {
         // look at supplied data type to determine property value changes
         // types: ['number', 'number64', 'float', 'float64', 'date', 'string', 'boolean', 'enumeration', 'file', 'list', 'unknown']
@@ -229,7 +262,7 @@
           return key.property_name === property.key
         })
         if (key.length > 0) property.type = key[0].data_type
-        
+
         if (property.type === 'boolean') {
           if (String(property.value).toLowerCase() === "true") {
             property.value = true
@@ -247,56 +280,56 @@
         } else if (property.type === 'list') {
           property.value = property.value.split(',')
         }
-  
+
         // default to string behavior
         entries[property.key] = property.value
       })
-  
+
       this.property = entries
     }
-  
+
     updateNode() {
       this.setProperties()
-  
-      this.$client.createOrUpdateNode(this.containerID,
-        {
-          "container_id": this.containerID,
-          "data_source_id": this.dataSourceID,
-          "metatype_id": this.selectedNode!.metatype!.id,
-          "properties": this.property,
-          "id": this.selectedNode!.id
-        }
-      )
+      const node: any = {
+        "container_id": this.containerID,
+        "data_source_id": this.dataSourceID,
+        "metatype_id": this.selectedNode!.metatype!.id,
+        "properties": this.property,
+        "id": this.selectedNode!.id
+      }
+      if (this.alterCreatedAt) node.created_at = this.createdAtDate
+
+      this.$client.createOrUpdateNode(this.containerID, node)
         .then((results: NodeT[]) => {
           this.close()
           const emitNode = results[0]
-  
+
           emitNode.metatype_id = this.node.metatype.id!
           emitNode.metatype_name = this.node.metatype.name
           this.$emit('nodeUpdated', emitNode)
         })
         .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
     }
-  
+
     addProperty() {
       this.nodeProperties.push(this.newProperty)
       this.closeAddPropertyDialog()
     }
-  
+
     deleteProperty(item: PropertyT) {
       this.nodeProperties = this.nodeProperties.filter(( property: PropertyT ) => {
         return property.key !== item.key && property.value !== item.value;
       })
     }
-  
+
     getKey() {
       const key = this.metatypeKeys.filter((key: MetatypeKeyT) => {
         return key.property_name === this.newProperty.key
       })
       if (key.length > 0) this.newProperty.type = key[0].data_type
-      
+
     }
-  
+
     close() {
       // reset node and properties
       this.selectedNode = null
@@ -304,7 +337,7 @@
       this.errorMessage = ""
       this.dialog = false
     }
-  
+
     closeAddPropertyDialog() {
       // reset property
       this.newProperty = {
@@ -315,6 +348,5 @@
       this.addPropertyDialog = false
     }
   }
-  
+
   </script>
-  
