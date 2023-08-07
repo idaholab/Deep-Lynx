@@ -616,7 +616,8 @@ impl Edge {
       }
     };
 
-    let property_len: u32 = properties.len() as u32 + 8;
+    //let property_len: u32 = properties.len() as u32 + 8;
+    let property_len: u32 = 8;
     let mut property_names: Vec<u8> = vec![];
     let mut property_names_raw: Vec<String> = vec![];
 
@@ -629,12 +630,14 @@ impl Edge {
     property_names.extend("_modified_at\0".as_bytes());
     property_names.extend("_modified_by\0".as_bytes());
 
+    /*
     for (key, _) in properties.iter() {
       let name = key.as_bytes();
       property_names_raw.push(key.clone());
       property_names.extend(name);
       property_names.extend("\0".as_bytes());
     }
+     */
 
     let mut parsed: Vec<u8> = vec![];
     parsed.extend(self.metatype_relationship_name.as_bytes());
@@ -684,6 +687,7 @@ impl Edge {
     property_final.extend(self.modified_by.as_bytes());
     property_final.extend("\0".as_bytes());
 
+    /*
     for property_name in index_names {
       match properties.get(property_name.as_str()) {
         None => {}
@@ -731,7 +735,7 @@ impl Edge {
         }
       }
     }
-
+     */
     property_final
   }
 }
