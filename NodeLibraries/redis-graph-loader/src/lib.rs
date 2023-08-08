@@ -616,8 +616,7 @@ impl Edge {
       }
     };
 
-    //let property_len: u32 = properties.len() as u32 + 8;
-    let property_len: u32 = 8;
+    let property_len: u32 = properties.len() as u32 + 8;
     let mut property_names: Vec<u8> = vec![];
     let mut property_names_raw: Vec<String> = vec![];
 
