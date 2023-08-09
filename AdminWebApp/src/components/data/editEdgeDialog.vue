@@ -12,7 +12,7 @@
 
       <v-card class="pt-1 pb-3 px-2" v-if="selectedEdge">
         <v-card-title>
-          <span class="headline text-h3">{{$t('general.edit')}} ({{selectedEdge.relationship.name}})</span>
+          <span class="headline text-h3">{{$t('general.edit')}} ({{selectedEdge.metatype_relationship.name}})</span>
         </v-card-title>
         <v-card-text>
           <error-banner :message="errorMessage"></error-banner>
@@ -237,9 +237,9 @@
       // have to do this to avoid mutating properties
       this.selectedEdge = JSON.parse(JSON.stringify(this.edge))
       this.edgeName = (this.selectedEdge!.properties as any).name ? (this.selectedEdge!.properties as any).name : this.selectedEdge!.id
-
+      console.log(this.selectedEdge);
       // grab all metatype keys
-      this.relationshipKeys = await this.$client.listMetatypeRelationshipKeys(this.containerID, this.selectedEdge!.relationship!.id!)
+      this.relationshipKeys = await this.$client.listMetatypeRelationshipKeys(this.containerID, this.selectedEdge!.metatype_relationship!.id!)
 
       if (this.selectedEdge) {
         this.edgeProperties = []
@@ -293,7 +293,7 @@
       const edge: any = {
         "container_id": this.containerID,
         "data_source_id": this.dataSourceID,
-        "relationship_id": this.selectedEdge!.relationship!.id,
+        "relationship_id": this.selectedEdge!.metatype_relationship!.id,
         "properties": this.property,
         "id": this.selectedEdge!.id
       }
@@ -304,8 +304,8 @@
           this.close()
           const emitEdge = results[0]
 
-          emitEdge.relationship_id = this.edge.relationship.id!
-          emitEdge.metatype_relationship_name = this.edge.relationship.name
+          emitEdge.relationship_id = this.edge.metatype_relationship.id!
+          emitEdge.metatype_relationship_name = this.edge.metatype_relationship.name
           this.$emit('edgeUpdated', emitEdge)
         })
         .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)

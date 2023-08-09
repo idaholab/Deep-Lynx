@@ -182,7 +182,7 @@ export type EdgeT = {
     id: string;
     container_id: string;
     data_source_id: string;
-    relationship: MetatypeRelationshipT;
+    metatype_relationship: MetatypeRelationshipT;
     destination_node?: NodeT;
     origin_node?: NodeT;
     origin_id?: string;
