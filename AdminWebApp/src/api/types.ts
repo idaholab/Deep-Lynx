@@ -178,6 +178,7 @@ export type NodeT = {
 };
 
 export type EdgeT = {
+    selected_edge?: boolean;
     id: string;
     container_id: string;
     data_source_id: string;
