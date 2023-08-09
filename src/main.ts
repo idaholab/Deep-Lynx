@@ -11,6 +11,7 @@ import UserRepository from './data_access_layer/repositories/access_management/u
 import PostgresAdapter from './data_access_layer/mappers/db_adapters/postgres/postgres';
 import OAuthRepository from './data_access_layer/repositories/access_management/oauth_repository';
 import {Migrator} from './data_access_layer/migrate';
+import {ReturnSuperUser} from './domain_objects/access_management/user';
 
 process.on('unhandledRejection', (reason, promise) => {
     BackedLogger.error(`Unhandled rejection at ${promise} reason: ${reason}`);
@@ -121,6 +122,9 @@ async function Start(): Promise<any> {
         const userRepo = new UserRepository();
         void userRepo.createDefaultSuperUser();
     }
+
+    // configure the default superuser
+    void ReturnSuperUser();
 
     if (Config.vue_app_id !== '') {
         const oauthRepo = new OAuthRepository();

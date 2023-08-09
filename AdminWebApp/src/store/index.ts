@@ -125,7 +125,7 @@ export default new Vuex.Store<State>({
             const oldSelectedChangelistID = state.selectedChangelist?.id;
             commit('setOwnedCurrentChangelists', []);
 
-            const config: {[key: string]: any} = {createdBy: currentUserID};
+            const config: {status?: string | string[]; createdBy?: string} = {createdBy: currentUserID};
             return new Promise((resolve, reject) => {
                 client
                     .listOntologyVersions(getters.activeContainerID, config)
