@@ -37,18 +37,18 @@
 import {Component, Vue} from "vue-property-decorator";
 
 @Component
-export default class AddDialog extends Vue {
+export default class AddFilter extends Vue {
   dialog = false
   model = 0
 
   options() {
     const options = [
-      {text: this.$t('query.MetatypeFilter'), value: 'MetatypeFilter'},
-      {text: this.$t('query.DataSourceFilter'), value: 'DataSourceFilter'},
-      {text: this.$t('query.IDFilter'), value: 'IDFilter'},
-      {text: this.$t('query.OriginalIDFilter'), value: 'OriginalIDFilter'},
-      {text: this.$t('query.MetadataFilter'), value: "MetadataFilter"},
-      {text: this.$t('query.RawDataFilter'), value: 'RawDataFilter'}
+      {text: this.$t('query.FilterMetatype'), value: 'FilterMetatype'},
+      {text: this.$t('query.FilterDataSource'), value: 'FilterDataSource'},
+      {text: this.$t('query.FilterID'), value: 'FilterID'},
+      {text: this.$t('query.FilterOriginalID'), value: 'FilterOriginalID'},
+      {text: this.$t('query.FilterMetadata'), value: "FilterMetadata"},
+      {text: this.$t('query.FilterRawData'), value: 'FilterRawData'}
     ]
 
     return options

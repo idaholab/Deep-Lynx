@@ -19,7 +19,7 @@
         <v-toolbar flat color="white">
           <v-toolbar-title>{{$t("exports.graph")}}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <create-export-dialog :containerID="containerID" @exportCreated="loadExports()"></create-export-dialog>
+          <CreateExportDialog :containerID="containerID" @exportCreated="loadExports()"></CreateExportDialog>
         </v-toolbar>
       </template>
       <template v-slot:[`item.actions`]="{ item }">
@@ -161,7 +161,7 @@
 <script lang="ts">
   import Vue from 'vue'
   import {ExportT} from "@/api/types";
-  import CreateExportDialog from "@/components/dataExport/createExportDialog.vue";
+  import CreateExportDialog from "@/components/dataExport/CreateExportDialog.vue";
 
   interface Options {
     sortDesc: boolean[];
