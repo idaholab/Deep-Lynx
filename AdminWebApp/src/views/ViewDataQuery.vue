@@ -4,11 +4,12 @@
       <v-toolbar flat color="white">
         <v-toolbar-title>{{$t('query.viewerDescription')}}</v-toolbar-title>
       </v-toolbar>
-      <query-builder
-          :initialQuery="true"
-          :containerID="containerID"
-          @results="loadResults"
-          @disableGraphEdit="disableGraphEdit"></query-builder>
+      <QueryBuilder
+        :initialQuery="true"
+        :containerID="containerID"
+        @results="loadResults"
+        @disableGraphEdit="disableGraphEdit"
+      />
 
       <v-row>
         <v-col
@@ -165,11 +166,10 @@
 
 <script lang="ts">
   import Vue from 'vue'
-  import QueryBuilder from "../components/queryBuilder/queryBuilder.vue"
+  import QueryBuilder, {ResultSet} from "../components/queryBuilder/QueryBuilder.vue"
   import NodeFilesDialog from "@/components/data/nodeFilesDialog.vue";
   import GraphViewer from "@/components/visualization/graphViewer.vue"
 
-  import {ResultSet} from "@/components/queryBuilder/queryBuilder.vue";
   import {mdiFileDocumentMultiple} from "@mdi/js";
   import { NodeT } from "../api/types";
 
