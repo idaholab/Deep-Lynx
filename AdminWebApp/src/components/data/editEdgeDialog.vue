@@ -234,10 +234,9 @@
     }
 
     async propertiesToArray() {
-      // have to do this to avoid mutating properties
+      // have to do this to avoid mutating properties 
       this.selectedEdge = JSON.parse(JSON.stringify(this.edge))
       this.edgeName = (this.selectedEdge!.properties as any).name ? (this.selectedEdge!.properties as any).name : this.selectedEdge!.id
-      console.log(this.selectedEdge);
       // grab all metatype keys
       this.relationshipKeys = await this.$client.listMetatypeRelationshipKeys(this.containerID, this.selectedEdge!.metatype_relationship!.id!)
 
@@ -293,7 +292,14 @@
       const edge: any = {
         "container_id": this.containerID,
         "data_source_id": this.dataSourceID,
-        "relationship_id": this.selectedEdge!.metatype_relationship!.id,
+        "metatype_relationship": this.selectedEdge!.metatype_relationship,
+        "relationship_pair_id": this.selectedEdge!.relationship_pair_id,
+        "origin_id": this.selectedEdge!.origin_id,
+        "destination_id": this.selectedEdge!.destination_id,
+        "import_data_id": this.selectedEdge!.import_data_id,
+        "type_mapping_transformation_id": this.selectedEdge!.type_mapping_transformation_id,
+        "data_staging_id": this.selectedEdge!.data_staging_id,
+        "metadata": this.selectedEdge!.metadata,
         "properties": this.property,
         "id": this.selectedEdge!.id
       }

@@ -293,6 +293,11 @@
       const node: any = {
         "container_id": this.containerID,
         "data_source_id": this.dataSourceID,
+        "import_data_id": this.selectedNode!.import_data_id,
+        "type_mapping_transformation_id": this.selectedNode!.type_mapping_transformation_id,
+        "data_staging_id": this.selectedNode!.data_staging_id,
+        "original_data_id": this.selectedNode!.original_data_id,
+        "metadata": this.selectedNode!.metadata,
         "metatype_id": this.selectedNode!.metatype!.id,
         "properties": this.property,
         "id": this.selectedNode!.id
