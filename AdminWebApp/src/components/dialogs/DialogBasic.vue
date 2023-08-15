@@ -60,9 +60,9 @@ export default defineComponent({
 
   props: {
     title: String,
-    maxWidth: {type: String, required: false, default: '80%'},
-    icon: {required: false, default: true},
-    iconName: {required: false, default: 'mdi-eye'},
+    maxWidth: { type: String, required: false, default: '80%' },
+    icon: { required: false, default: true },
+    iconName: { required: false, default: 'mdi-eye' },
     value: Boolean,
   },
 
@@ -70,7 +70,7 @@ export default defineComponent({
     const show = ref(props.value);
 
     function close() {
-      show.value = !show.value
+      show.value = !show.value;
       context.emit('closeDialog');
     }
 

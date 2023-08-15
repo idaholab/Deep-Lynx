@@ -980,7 +980,7 @@ import EditNodeDialog from "@/components/data/editNodeDialog.vue";
 import EditEdgeDialog from "@/components/data/editEdgeDialog.vue";
 import NodeTagsDialog from "@/components/data/nodeTagsDialog.vue";
 import EdgeTagsDialog from "@/components/data/edgeTagsDialog.vue";
-import {ResultSet} from "@/components/queryBuilder/queryBuilder.vue";
+import {ResultSet} from "@/components/queryBuilder/QueryBuilder.vue";
 import {Component, Prop, Watch, Vue} from "vue-property-decorator";
 import {NodeT, DataSourceT, MetatypeRelationshipPairT, MetatypeRelationshipKeyT, UserT, EdgeT, OntologyVersionT} from "@/api/types";
 import ForceGraph, {ForceGraphInstance} from 'force-graph';

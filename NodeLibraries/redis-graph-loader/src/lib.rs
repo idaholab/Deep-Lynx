@@ -186,7 +186,7 @@ TO STDOUT WITH (FORMAT csv, HEADER true) ;
 
       // prior to doing anything we need to check the buffer size and send off to Redis if we're over
       // 512mb. Technically we could go to a total of 1gb, but the nodes for a single label can't go
-      // over 512mb as it's a single binary string. Much easier to just send every 512 then attempt
+      // over 512mb as it's a single binary string. Much easier to just send every 512 than attempt
       // to manage the buffer size of each individual label.
       if (current_size + properties.as_slice().len()) > 496 * 1_000_000 {
         self
@@ -230,8 +230,6 @@ TO STDOUT WITH (FORMAT csv, HEADER true) ;
       )
       .await?;
     has_txed = true;
-
-    return Ok(());
 
     // now let's handle the edges TODO: move this into its own functions
     let stream = self
@@ -286,14 +284,13 @@ TO STDOUT WITH (FORMAT csv, HEADER true);"#
       .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
       .into_async_read();
 
-    // convert into the CSV deserialize reader so that we can simply cast to Node without having to
+    // convert into the CSV deserialize reader so that we can simply cast to Edge without having to
     // handle things ourselves
     let mut async_reader = csv_async::AsyncDeserializer::from_reader(async_reader.compat());
     let mut records = async_reader.deserialize::<Edge>();
 
-    // map is the metatype name and index of properties so order is preserved
+    // map is the metatype relationship name and index of properties so order is preserved
     let mut relationship_name_header: IndexMap<String, Vec<String>> = IndexMap::default();
-    // map for the new redis id to the deeplynx id so that we can map the edges correctly
     // buffer for sending to redis
     let mut current_buffer: Vec<Vec<u8>> = vec![];
     let mut edge_count = 0;
@@ -308,7 +305,7 @@ TO STDOUT WITH (FORMAT csv, HEADER true);"#
         // TODO: handle cases in which we have the same metatype name but a different set of properties
         relationship_name_header.insert(edge.metatype_relationship_name.clone(), index);
 
-        current_size += header.as_slice().len();
+        current_size += header.len();
         current_buffer.push(header);
         relationship_index += 1;
       }
@@ -326,7 +323,7 @@ TO STDOUT WITH (FORMAT csv, HEADER true);"#
       // 512mb. Technically we could go to a total of 1gb, but the nodes for a single label can't go
       // over 512mb as it's a single binary string. Much easier to just send every 512 then attempt
       // to manage the buffer size of each individual label.
-      if (current_size + properties.as_slice().len() + 16) > 496 * 1_00_000 {
+      if (current_size + properties.as_slice().len() + 16) > 496 * 1_000_000 {
         self
           .transmit_to_redis(
             &current_buffer,
@@ -536,7 +533,7 @@ impl Node {
 
     for property_name in index_names {
       match properties.get(property_name.as_str()) {
-        None => {}
+        None => property_final.extend(0_i8.to_ne_bytes()),
         Some(value) => {
           match value {
             Value::Null => property_final.extend(0_i8.to_ne_bytes()),
@@ -689,7 +686,7 @@ impl Edge {
 
     for property_name in index_names {
       match properties.get(property_name.as_str()) {
-        None => {}
+        None => property_final.extend(0_i8.to_ne_bytes()),
         Some(value) => {
           match value {
             Value::Null => property_final.extend(0_i8.to_ne_bytes()),
