@@ -29,3 +29,14 @@ profile-logs
 /AdminWebApp/src/**/*.js
 /AdminWebApp/src/**/*.js.map
 /NodeLibraries/dl-fast-load/build-output.txt
+
+# Devenv
+.devenv*
+devenv.local.nix
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml
+
