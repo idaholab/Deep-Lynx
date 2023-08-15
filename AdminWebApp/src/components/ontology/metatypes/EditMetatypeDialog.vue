@@ -146,7 +146,7 @@
                 </div>
                 <!-- otherwise show link to parent -->
                 <div v-else>
-                  Inherited property from {{item.metatype_id}}
+                  {{$t('classes.inheritedProperty')}} {{item.metatype_id}}
                 </div>
               </template>
             </v-data-table>

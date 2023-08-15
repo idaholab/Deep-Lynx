@@ -451,6 +451,7 @@ export default {
             selectProperty: 'Select Class Property',
             selectParentHelp: 'Select a class to be the parent or leave blank for a root class',
             createChild: 'Create Child Class',
+            inheritedProperty: 'Inherited property from',
             editProperty: 'Edit Class Property',
             newProperty: 'New Class Property',
             searchProperty: 'Type to search available Class Properties',
