@@ -242,6 +242,10 @@
               this.successMessage = (this.$t('changelists.applied') as string)
               this.$store.dispatch('refreshOwnedCurrentChangelists')
               this.$store.dispatch('refreshCurrentOntologyVersions')
+              // ensure edit mode and selected change list are set so that users
+              // cannot edit the ontology without a changelist selected
+              this.$store.commit('setEditMode', false)
+              this.$store.commit('selectChangelist', undefined)
               this.listChangelists()
               this.listOntologyVersions()
             })

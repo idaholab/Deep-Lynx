@@ -197,6 +197,7 @@ export default {
             importContainer:
                 'Note that importing type mappings requires also importing data sources, and type mappings may require certain ontology elements in order to transfer completely.',
             inactiveMappings: 'Please note that any data sources or type mappings imported are set as inactive.',
+            rootClass: 'Please note that this will create a root class with no parent class.',
         },
         general: {
             default: 'Default',
@@ -315,6 +316,7 @@ export default {
             welcome: 'Welcome to DeepLynx!',
             database: 'Database',
             archive: 'Archive',
+            parent: 'Parent',
         },
         validation: {
             validEmail: 'Email must be valid',
@@ -447,6 +449,8 @@ export default {
             id: 'Class ID',
             name: 'Class Name',
             selectProperty: 'Select Class Property',
+            selectParentHelp: 'Select a class to be the parent or leave blank for a root class',
+            createChild: 'Create Child Class',
             editProperty: 'Edit Class Property',
             newProperty: 'New Class Property',
             searchProperty: 'Type to search available Class Properties',

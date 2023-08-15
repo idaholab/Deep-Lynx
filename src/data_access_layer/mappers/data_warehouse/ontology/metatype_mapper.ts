@@ -101,7 +101,17 @@ export default class MetatypeMapper extends Mapper {
     }
 
     public async JSONCreate(metatypes: Metatype[]): Promise<Result<boolean>> {
-        return super.runStatement(this.insertFromJSONStatement(metatypes))
+        return super.runStatement(this.insertFromJSONStatement(metatypes));
+    }
+
+    public async UpdateInheritance(m: Metatype[], transaction?: PoolClient): Promise<Result<boolean>> {
+        return super.runStatement(this.upsertMetatypesInheritance(m), {
+            transaction,
+        });
+    }
+
+    public async DeleteInheritance(id: string): Promise<Result<boolean>> {
+        return super.runStatement(this.deleteMetatypesInheritance(id));
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -218,7 +228,7 @@ export default class MetatypeMapper extends Mapper {
         }
     }
 
-    // usees json_to_recordset to directly insert metatypes from json
+    // uses json_to_recordset to directly insert metatypes from json
     private insertFromJSONStatement(metatypes: Metatype[]) {
         const text = `INSERT INTO metatypes(
                     container_id,
@@ -245,5 +255,23 @@ export default class MetatypeMapper extends Mapper {
         const values = JSON.stringify(metatypes);
 
         return format(text, values);
+    }
+
+    // accommodates both new inheritance inserts and parent_id updates
+    private upsertMetatypesInheritance(metatypes: Metatype[]) {
+        const text = `INSERT INTO metatypes_inheritance (parent_id, child_id) 
+                    VALUES %L
+                    ON CONFLICT (child_id) DO UPDATE
+                    SET parent_id = excluded.parent_id`;
+        const values = metatypes.map((metatype) => [metatype.parent_id, metatype.id]);
+
+        return format(text, values);
+    }
+
+    private deleteMetatypesInheritance(metatypeID: string) {
+        return {
+            text: `DELETE FROM metatypes_inheritance WHERE child_id = $1`,
+            values: [metatypeID],
+        };
     }
 }
