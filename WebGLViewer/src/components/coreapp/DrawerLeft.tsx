@@ -54,15 +54,16 @@ const queryFilterData = (query: any, data: any) => {
   if (!query) {
     return data;
   } else {
-    return data.filter((d: any) => d.title.toString().toLowerCase().includes(query.toString().toLowerCase()));
+    return data.filter((d: any) => d.properties?.name.toString().toLowerCase().includes(query.toString().toLowerCase()));
   }
 };
 
-const SearchBar = ({setSearchQuery}: any) => (
+const SearchBar = ({ searchQuery, setSearchQuery, nodesData }: any) => (
   <FormControl fullWidth variant="outlined" size="small">
     <OutlinedInput
       id="search-bar"
       className="text"
+      value={searchQuery}
       onInput={(event: React.ChangeEvent<HTMLInputElement>) => {
         const target = event.target as HTMLInputElement;
         if (target) setSearchQuery(target.value);
@@ -72,7 +73,7 @@ const SearchBar = ({setSearchQuery}: any) => (
         'aria-label': 'search assets',
       }}
       placeholder="Search..."
-      
+      disabled={nodesData && nodesData.length > 0 ? false : true}
     />
   </FormControl>
 );
@@ -102,8 +103,6 @@ const DrawerLeft: React.FC<Props> = ({}) => {
 
   const [selected, setSelected] = useState('nodeList');
   const [searchQuery, setSearchQuery] = useState('');
-
-  const [filteredData, setFilteredData] = useState(); 
 
   const handleToggleOpenDrawerLeft = () => {
     dispatch(appStateActions.toggleDrawerLeft());
@@ -175,6 +174,7 @@ const DrawerLeft: React.FC<Props> = ({}) => {
   );
 
   const nodesData = nodesDataResponse?.value || [];
+  const filteredNodesData = queryFilterData(searchQuery, nodesData);
 
   const { data: sessionsDataResponse, isLoading: isLoadingSessionsData } = useGetAllSessionsQuery(
     {
@@ -184,7 +184,7 @@ const DrawerLeft: React.FC<Props> = ({}) => {
     },
   );
 
-  let sessionsData;
+  let sessionsData: any;
 
   if (sessionsDataResponse?.value) {
     try {
@@ -194,9 +194,8 @@ const DrawerLeft: React.FC<Props> = ({}) => {
     }
   }
 
-
   return (
-  <>
+    <>
       <Drawer variant="permanent" open={openDrawerLeftState}
         sx={{
           '& > .MuiDrawer-paper': {
@@ -337,7 +336,11 @@ const DrawerLeft: React.FC<Props> = ({}) => {
                 />
               </Tooltip>
               {(selected === 'nodeList' && (Object.keys(selectedAssetObject).length === 0)) &&
-                <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+                <SearchBar
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  nodesData={nodesData}
+                />
               }
               {(selected === 'nodeList' && (Object.keys(selectedAssetObject).length !== 0)) &&
                 <Box sx={{ position: 'absolute', right: '0px', paddingRight: '16px' }}>
@@ -352,7 +355,13 @@ const DrawerLeft: React.FC<Props> = ({}) => {
             </Box>
             {selected === 'nodeList' && 
               <>
-                {(Object.keys(selectedAssetObject).length === 0) && <DrawerContentsNodeList data={nodesData} />}
+                {(Object.keys(selectedAssetObject).length === 0) && 
+                  <DrawerContentsNodeList
+                    filteredData={filteredNodesData}
+                    initialData={nodesData}
+                    isLoading={isLoadingNodesData}
+                  />
+                }
                 {(Object.keys(selectedAssetObject).length !== 0) && <DrawerContentsNodeInfo />}
               </>
             }
@@ -364,7 +373,12 @@ const DrawerLeft: React.FC<Props> = ({}) => {
             }
             {selected === 'sessionList' && 
               <>
-                {(Object.keys(selectedSessionObject).length === 0) && <DrawerContentsSessionList data={sessionsData} /> }
+                {(Object.keys(selectedSessionObject).length === 0) &&
+                  <DrawerContentsSessionList
+                    data={sessionsData}
+                    isLoading={isLoadingSessionsData}
+                  />
+                }
                 {(Object.keys(selectedSessionObject).length !== 0) && <DrawerContentsSessionInfo />}
               </>
             }
