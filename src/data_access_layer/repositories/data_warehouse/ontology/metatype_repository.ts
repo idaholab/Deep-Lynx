@@ -73,14 +73,12 @@ export default class MetatypeRepository extends Repository implements Repository
             if (m.parent_id) {
                 const inheritanceResult = await this.#mapper.UpdateInheritance([m], transaction.value);
                 if (inheritanceResult.isError || !inheritanceResult.value) {
-                    await this.#mapper.rollbackTransaction(transaction.value);
-                    return Promise.resolve(Result.Pass(inheritanceResult));
+                    return Promise.resolve(Result.Failure(inheritanceResult.error.error.message));
                 }
             } else {
                 const inheritanceResult = await this.#mapper.DeleteInheritance(m.id);
                 if (inheritanceResult.isError || !inheritanceResult.value) {
-                    await this.#mapper.rollbackTransaction(transaction.value);
-                    return Promise.resolve(Result.Pass(inheritanceResult));
+                    return Promise.resolve(Result.Failure(inheritanceResult.error.error.message));
                 }
             }
 
@@ -115,8 +113,7 @@ export default class MetatypeRepository extends Repository implements Repository
         if (m.parent_id) {
             const inheritanceResult = await this.#mapper.UpdateInheritance([m], transaction.value);
             if (inheritanceResult.isError || !inheritanceResult.value) {
-                await this.#mapper.rollbackTransaction(transaction.value);
-                return Promise.resolve(Result.Pass(inheritanceResult));
+                return Promise.resolve(Result.Failure(inheritanceResult.error.error.message));
             }
         }
 
@@ -184,8 +181,7 @@ export default class MetatypeRepository extends Repository implements Repository
         if (toInheritance.length > 0) {
             const results = await this.#mapper.UpdateInheritance(toInheritance, transaction.value);
             if (results.isError || !results.value) {
-                await this.#mapper.rollbackTransaction(transaction.value);
-                return Promise.resolve(Result.Pass(results));
+                return Promise.resolve(Result.Failure(results.error.error.message));
             }
         }
 
