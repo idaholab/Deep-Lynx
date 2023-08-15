@@ -185,18 +185,6 @@ export default class HttpDataTargetImpl implements DataTarget {
             resp = await axios.post(endpoint, data, httpConfig);
             if (resp.status > 299 || resp.status < 200) {
                 Logger.debug(`data target ${this.DataTargetRecord.id} post failed`);
-            } else {
-                let reference = '';
-                if ('Reference' in resp.headers) {
-                    reference = resp.headers.Reference;
-                }
-
-                // set to super user if we don't know who's running the target
-                let user = SuperUser;
-                const retrievedUser = await this.#userRepo.findByID(this.DataTargetRecord.created_by!);
-                if (!retrievedUser.isError) {
-                    user = retrievedUser.value;
-                }
             }
         } catch (err) {
             Logger.error(`data target ${this.DataTargetRecord.id} post failed ${err}`);
