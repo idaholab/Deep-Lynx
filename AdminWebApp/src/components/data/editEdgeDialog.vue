@@ -7,12 +7,12 @@
             class="mr-2"
             v-on="on"
         >mdi-pencil</v-icon>
-        <v-btn v-if="!icon" style="max-width: fit-content" color="primary" dark class="mt-2" v-on="on">{{$t("nodes.edit")}}</v-btn>
+        <v-btn style="max-width: fit-content" color="primary" dark class="mt-2" v-on="on">{{$t("edges.edit")}}</v-btn>
       </template>
 
-      <v-card class="pt-1 pb-3 px-2" v-if="selectedNode">
+      <v-card class="pt-1 pb-3 px-2" v-if="selectedEdge">
         <v-card-title>
-          <span class="headline text-h3">{{$t('general.edit')}} {{nodeName}} ({{selectedNode.metatype.name}})</span>
+          <span class="headline text-h3">{{$t('general.edit')}} ({{selectedEdge.metatype_relationship.name}})</span>
         </v-card-title>
         <v-card-text>
           <error-banner :message="errorMessage"></error-banner>
@@ -20,7 +20,7 @@
             <v-col :cols="12">
               <v-data-table
                   :headers="headers()"
-                  :items="nodeProperties"
+                  :items="edgeProperties"
                   :disable-pagination="true"
                   :hide-default-footer="true"
                   class="elevation-1"
@@ -65,7 +65,7 @@
                             >
                               <v-autocomplete
                                 v-model="newProperty.key"
-                                :items = "metatypeKeys"
+                                :items = "relationshipKeys"
                                 item-text = "name"
                                 item-value = "property_name"
                                 :label="$t('general.key')"
@@ -157,7 +157,7 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="primary" text @click="close" >{{$t("general.cancel")}}</v-btn>
-          <v-btn color="primary" text @click="updateNode">{{$t("general.save")}}</v-btn>
+          <v-btn color="primary" text @click="updateEdge">{{$t("general.save")}}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -165,13 +165,13 @@
 
   <script lang="ts">
   import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
-  import {MetatypeKeyT, NodeT, PropertyT} from "../../api/types";
+  import {EdgeT, MetatypeKeyT, MetatypeRelationshipKeyT, PropertyT} from "../../api/types";
   import flatpickr from "flatpickr";
 
   @Component({components: {}})
-  export default class EditNodeDialog extends Vue {
+  export default class EditEdgeDialog extends Vue {
     @Prop({required: true})
-    node!: any;
+    edge!: any;
 
     @Prop({required: true})
     containerID!: string;
@@ -184,10 +184,10 @@
 
     errorMessage = ""
     dialog = false
-    selectedNode: NodeT | null  = null
-    nodeProperties: PropertyT[] = []
+    selectedEdge: EdgeT | null  = null
+    edgeProperties: PropertyT[] = []
     property = {}
-    nodeName = ""
+    edgeName = ""
     addPropertyDialog = false
 
     newProperty: PropertyT = {
@@ -196,12 +196,12 @@
       type: ''
     }
 
-    metatypeKeys: MetatypeKeyT[] = []
+    relationshipKeys: MetatypeRelationshipKeyT[] = []
 
     alterCreatedAt = false
     createdAtDate = new Date().toISOString()
 
-    // load properties to array when the node is selected so that we can edit fields.
+    // load properties to array when the edge is selected so that we can edit fields.
     @Watch('dialog', {immediate: true})
     isDialogOpen() {
       if(this.dialog) {
@@ -234,18 +234,17 @@
     }
 
     async propertiesToArray() {
-      // have to do this to avoid mutating properties
-      this.selectedNode = JSON.parse(JSON.stringify(this.node))
-      this.nodeName = (this.selectedNode!.properties as any).name ? (this.selectedNode!.properties as any).name : this.selectedNode!.id
-
+      // have to do this to avoid mutating properties 
+      this.selectedEdge = JSON.parse(JSON.stringify(this.edge))
+      this.edgeName = (this.selectedEdge!.properties as any).name ? (this.selectedEdge!.properties as any).name : this.selectedEdge!.id
       // grab all metatype keys
-      this.metatypeKeys = await this.$client.listMetatypeKeys(this.containerID, this.selectedNode!.metatype!.id!)
+      this.relationshipKeys = await this.$client.listMetatypeRelationshipKeys(this.containerID, this.selectedEdge!.metatype_relationship!.id!)
 
-      if (this.selectedNode) {
-        this.nodeProperties = []
-        Object.entries(this.selectedNode.properties).forEach(([key, text]) => {
+      if (this.selectedEdge) {
+        this.edgeProperties = []
+        Object.entries(this.selectedEdge.properties).forEach(([key, text]) => {
           const object = {key: key, value: String(text)} as PropertyT
-          this.nodeProperties.push(object)
+          this.edgeProperties.push(object)
         })
       }
 
@@ -255,10 +254,10 @@
       this.property = {}
       const entries: { [key: string]: any } = {}
 
-      this.nodeProperties.forEach( (property: any) => {
+      this.edgeProperties.forEach( (property: any) => {
         // look at supplied data type to determine property value changes
         // types: ['number', 'number64', 'float', 'float64', 'date', 'string', 'boolean', 'enumeration', 'file', 'list', 'unknown']
-        const key = this.metatypeKeys.filter((key: MetatypeKeyT) => {
+        const key = this.relationshipKeys.filter((key: MetatypeKeyT) => {
           return key.property_name === property.key
         })
         if (key.length > 0) property.type = key[0].data_type
@@ -288,47 +287,49 @@
       this.property = entries
     }
 
-    updateNode() {
+    updateEdge() {
       this.setProperties()
-      const node: any = {
+      const edge: any = {
         "container_id": this.containerID,
         "data_source_id": this.dataSourceID,
-        "import_data_id": this.selectedNode!.import_data_id,
-        "type_mapping_transformation_id": this.selectedNode!.type_mapping_transformation_id,
-        "data_staging_id": this.selectedNode!.data_staging_id,
-        "original_data_id": this.selectedNode!.original_data_id,
-        "metadata": this.selectedNode!.metadata,
-        "metatype_id": this.selectedNode!.metatype!.id,
+        "metatype_relationship": this.selectedEdge!.metatype_relationship,
+        "relationship_pair_id": this.selectedEdge!.relationship_pair_id,
+        "origin_id": this.selectedEdge!.origin_id,
+        "destination_id": this.selectedEdge!.destination_id,
+        "import_data_id": this.selectedEdge!.import_data_id,
+        "type_mapping_transformation_id": this.selectedEdge!.type_mapping_transformation_id,
+        "data_staging_id": this.selectedEdge!.data_staging_id,
+        "metadata": this.selectedEdge!.metadata,
         "properties": this.property,
-        "id": this.selectedNode!.id
+        "id": this.selectedEdge!.id
       }
-      if (this.alterCreatedAt) node.created_at = this.createdAtDate
+      if (this.alterCreatedAt) edge.created_at = this.createdAtDate
 
-      this.$client.createOrUpdateNode(this.containerID, node)
-        .then((results: NodeT[]) => {
+      this.$client.createEdge(this.containerID, edge)
+        .then((results: EdgeT[]) => {
           this.close()
-          const emitNode = results[0]
+          const emitEdge = results[0]
 
-          emitNode.metatype_id = this.node.metatype.id!
-          emitNode.metatype_name = this.node.metatype.name
-          this.$emit('nodeUpdated', emitNode)
+          emitEdge.relationship_id = this.edge.metatype_relationship.id!
+          emitEdge.metatype_relationship_name = this.edge.metatype_relationship.name
+          this.$emit('edgeUpdated', emitEdge)
         })
         .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
     }
 
     addProperty() {
-      this.nodeProperties.push(this.newProperty)
+      this.edgeProperties.push(this.newProperty)
       this.closeAddPropertyDialog()
     }
 
     deleteProperty(item: PropertyT) {
-      this.nodeProperties = this.nodeProperties.filter(( property: PropertyT ) => {
+      this.edgeProperties = this.edgeProperties.filter(( property: PropertyT ) => {
         return property.key !== item.key && property.value !== item.value;
       })
     }
 
     getKey() {
-      const key = this.metatypeKeys.filter((key: MetatypeKeyT) => {
+      const key = this.relationshipKeys.filter((key: MetatypeRelationshipKeyT) => {
         return key.property_name === this.newProperty.key
       })
       if (key.length > 0) this.newProperty.type = key[0].data_type
@@ -336,9 +337,9 @@
     }
 
     close() {
-      // reset node and properties
-      this.selectedNode = null
-      this.nodeProperties = []
+      // reset edge and properties
+      this.selectedEdge = null
+      this.edgeProperties = []
       this.errorMessage = ""
       this.dialog = false
     }

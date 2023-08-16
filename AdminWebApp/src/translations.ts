@@ -502,6 +502,7 @@ export default {
             history: 'Node History',
         },
         edges: {
+            edit: 'Edit Edge',
             create: 'Create Edge',
             edge: 'Edge',
             history: 'Edge History',
