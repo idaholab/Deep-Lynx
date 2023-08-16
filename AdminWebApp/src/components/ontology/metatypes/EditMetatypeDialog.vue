@@ -11,11 +11,11 @@
     </template>
 
     <v-card class="pt-1 pb-3 px-2" v-if="selectedMetatype">
-      <error-banner :message="errorMessage"></error-banner>
       <v-card-title>
         <span class="headline text-h3">{{$t('general.edit')}} {{selectedMetatype.name}}</span>
       </v-card-title>
       <v-card-text>
+        <error-banner :message="errorMessage"></error-banner>
         <v-row>
           <v-col :cols="6" v-if="comparisonMetatype">
             <v-form
