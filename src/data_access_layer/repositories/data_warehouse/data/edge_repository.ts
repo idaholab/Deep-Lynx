@@ -263,7 +263,44 @@ export default class EdgeRepository extends Repository implements RepositoryInte
      */
     private async validateRelationship(e: Edge, transaction?: PoolClient): Promise<Result<boolean>> {
         // TODO: figure out a way to validate relationships that doesn't include hammering the database
+        // validateCreatedAtDate() shouldn't be used until we resolve the comments above - transaction 
+        // handling will need to be added for created date as well
+        //this.validateCreatedAtDate(e, transaction);
         return Promise.resolve(Result.Success(true));
+    }
+
+    /*
+        Eventually we'll want to be validating the created at date by ensuring that the new created_at date is
+        newer than both the origin and destination node. However, due to performance issues we aren't doing any 
+        edge validation on the relationships. So putting this function in as a 'description of what needs to happen,
+        but until we refactor or find a way to not need to hit the db multiple times per edge for node-lookups this
+        should remain un-called. 
+    */
+    private async validateCreatedAtDate(e: Edge, transaction?: PoolClient): Promise<Result<boolean>> {
+        this.#nodeRepo
+        .findByID(e.origin_id!)
+        .then((nodeResult) =>{
+            var origin_created_at = nodeResult.value.created_at!;
+
+            this.#nodeRepo
+            .findByID(e.destination_id!)
+            .then((nodeResult) =>{
+                var destination_created_at = nodeResult.value.created_at!;
+                var useDestination = origin_created_at! > destination_created_at!;
+                var isValid = false;
+                console.log(origin_created_at);
+                console.log(destination_created_at);
+                if(useDestination)
+                    isValid = e.created_at! > destination_created_at!;
+                else
+                    isValid = e.created_at! > origin_created_at!;
+
+                if(isValid)
+                    return Promise.resolve(Result.Success(true));
+            });
+        });
+
+        return Promise.resolve(Result.Failure(': the edge created date must be after the created date of both connected nodes.'));
     }
 
     // populateFromParameters takes an edge record contains parameters and generates edges to be inserted based on those

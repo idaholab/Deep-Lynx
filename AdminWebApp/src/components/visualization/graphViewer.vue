@@ -347,7 +347,16 @@
                   <v-expansion-panel>
                     <v-expansion-panel-header>
                       <div><span class="text-overline">{{$t('properties.properties')}}:</span></div>
+
+                      <edit-edge-dialog
+                        :edge="currentEdgeInfo"
+                        :dataSourceID="currentEdgeInfo.data_source_id"
+                        :containerID="containerID"
+                        @edgeUpdated="edgeUpdated"
+                        >
+                      </edit-edge-dialog>
                     </v-expansion-panel-header>
+                    
                     <v-expansion-panel-content>
                       <v-data-table
                         :items="Object.keys(currentEdgeInfo.properties).map(k => {
@@ -372,7 +381,7 @@
                             two-line
                             v-for="(item, i) in currentEdgeInfo.history"
                             :key="i"
-                            @click="getEdgeInfo(item, i)"
+                            @click="getEdgeInfo(item, false, i)"
                           >
                             <v-list-item-icon style="margin-right: 12px">
                               <v-icon color="#b2df8a">mdi-edit</v-icon>
@@ -968,6 +977,7 @@ import NodeTimeseriesDataTable from "@/components/data/NodeTimeseriesDataTable.v
 import SelectDataSource from "@/components/dataSources/SelectDataSource.vue";
 import CreateNodeCard from "@/components/data/createNodeCard.vue";
 import EditNodeDialog from "@/components/data/editNodeDialog.vue";
+import EditEdgeDialog from "@/components/data/editEdgeDialog.vue";
 import NodeTagsDialog from "@/components/data/nodeTagsDialog.vue";
 import EdgeTagsDialog from "@/components/data/edgeTagsDialog.vue";
 import {ResultSet} from "@/components/queryBuilder/QueryBuilder.vue";
@@ -984,6 +994,7 @@ import {mdiInformation} from "@mdi/js";
     CreateNodeCard,
     SelectDataSource,
     EditNodeDialog,
+    EditEdgeDialog,
     NodeTagsDialog,
     EdgeTagsDialog
   }})
@@ -1113,6 +1124,7 @@ export default class GraphViewer extends Vue {
   pointInTimeString = (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().substring(0, 10)
 
   previousNodeSelect: any = null
+  previousEdgeSelect: any = null
   selectedLink: any = null
 
   fileKey = 0
@@ -1826,7 +1838,11 @@ export default class GraphViewer extends Vue {
             created_at: historicalNode.created_at,
             modified_at: historicalNode.modified_at,
             history: history,
-            metadata_properties: historicalNode ? historicalNode.metadataProperties : node.metadata_properties
+            metadata_properties: historicalNode ? historicalNode.metadataProperties : node.metadata_properties,
+            import_data_id: historicalNode.import_data_id,
+            type_mapping_transformation_id: historicalNode.type_mapping_transformation_id,
+            data_staging_id: historicalNode.data_staging_id,
+            metadata: historicalNode.metadata
           }
 
           if (this.results.rawMetadataEnabled) {
@@ -1835,7 +1851,13 @@ export default class GraphViewer extends Vue {
 
         } else {
           this.selectedNodeHistory = history[0].created_at
-          this.currentNodeInfo.metadata_properties = node.metadata_properties
+          //Set the additional fields that do not come in from the GraphQL query
+          this.currentNodeInfo.data_staging_id = history[0].data_staging_id;
+          this.currentNodeInfo.import_data_id = history[0].import_data_id;
+          this.currentNodeInfo.original_data_id = history[0].original_data_id;
+          this.currentNodeInfo.type_mapping_transformation_id = history[0].type_mapping_transformation_id;
+          this.currentNodeInfo.metadata = history[0].metadata;
+          this.currentNodeInfo.metadata_properties = node.metadata_properties;
         }
 
         // minimize the legend
@@ -2045,6 +2067,9 @@ export default class GraphViewer extends Vue {
       id: data.id,
       container_id: data.container_id,
       data_source_id: data.data_source_id,
+      import_data_id: data.import_data_id,
+      type_mapping_transformation_id: data.type_mapping_transformation_id,
+      data_staging_id: data.data_staging_id,
       metatype: {
         id: data.metatype_id || data.metatype?.id,
         name: data.metatype_name
@@ -2077,19 +2102,23 @@ export default class GraphViewer extends Vue {
     return nodeHistory
   }
 
-  async getEdgeInfo(data: EdgeT, index?: number) {
+  async getEdgeInfo(data: EdgeT, update?: boolean, index?: number) {
     const edgeHistory = await this.$client.retrieveEdgeHistory(this.containerID, data.id);
 
     this.currentEdgeInfo = {
       id: data.id,
       container_id: this.containerID,
       data_source_id: data.data_source_id,
-      origin_id: data.origin_id,
-      destination_id: data.destination_id,
       metatype_relationship: {
         name: data.metatype_relationship_name,
         id: data.relationship_id
       },
+      origin_id: data.origin_id,
+      destination_id: data.destination_id,
+      relationship_pair_id: data.relationship_pair_id,
+      data_staging_id: data.data_staging_id,
+      import_data_id: data.import_data_id,
+      type_mapping_transformation_id: data.type_mapping_transformation_id,
       properties: data.properties,
       created_at: this.$utils.formatISODate(data.created_at),
       modified_at: this.$utils.formatISODate(data.modified_at),
@@ -2106,6 +2135,18 @@ export default class GraphViewer extends Vue {
         this.currentEdgeInfo.raw_data = edgeHistory[edgeHistory.length - 1]['raw_data_properties' as keyof object]
       }
     }
+
+    if (!update) {
+      // remove the highlight from any previously selected node
+      this.resetEdgeSelectForID(data.id)
+
+      // highlight the newly selected node
+      data.selected_edge = true
+
+      this.previousNodeSelect = data
+    }
+
+    return edgeHistory
   }
 
   nodeDistance(node1: NodeT, node2: NodeT) {
@@ -2138,6 +2179,14 @@ export default class GraphViewer extends Vue {
     if (this.previousNodeSelect && this.previousNodeSelect.id !== id) {
       this.previousNodeSelect.selected_node = false
       this.previousNodeSelect = null
+    }
+  }
+
+  resetEdgeSelectForID(id?: string) {
+    // remove selection from previous node if selection exists
+    if (this.previousEdgeSelect && this.previousEdgeSelect.id !== id) {
+      this.previousEdgeSelect.selected_node = false
+      this.previousEdgeSelect = null
     }
   }
 
@@ -2288,6 +2337,15 @@ export default class GraphViewer extends Vue {
     this.selectedNodeHistory = history[history.length-1].created_at
     // ensure the selected node reflects the one most recent in created_at
     void this.getInfo(history[history.length-1], false, history.length)
+  }
+
+  async edgeUpdated(edge: any) {
+    const history = await this.getEdgeInfo(edge, true)
+
+    // select new version of edge
+    this.selectedEdgeHistory = history[history.length-1].created_at
+    // ensure the selected edge reflects the one most recent in created_at
+    void this.getEdgeInfo(history[history.length-1], false, history.length)
   }
 
   findNode(label: string) {

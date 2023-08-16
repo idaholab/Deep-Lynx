@@ -167,6 +167,7 @@ export type NodeT = {
     metatype?: MetatypeT;
     properties: PropertyT[] | object;
     metadata_properties?: object;
+    metadata?: MetadataT[];
     raw_properties?: string; // JSON string with the raw properties
     container_id: string;
     original_data_id?: string;
@@ -175,13 +176,29 @@ export type NodeT = {
     modified_at: string;
     incoming_edges?: EdgeT[];
     outgoing_edges?: EdgeT[];
+    import_data_id?: string;
+    type_mapping_transformation_id?: string;
+    data_staging_id?: string;
+};
+
+export type MetadataT = {
+    conversions?: ConversionT[];
+    failed_conversions?: ConversionT[];
+};
+
+export type ConversionT = {
+    original_value: any;
+    converted_value?: any;
+    errors?: string;
 };
 
 export type EdgeT = {
+    selected_edge?: boolean;
     id: string;
     container_id: string;
+    relationship_pair_id?: string;
     data_source_id: string;
-    relationship: MetatypeRelationshipT;
+    metatype_relationship: MetatypeRelationshipT;
     destination_node?: NodeT;
     origin_node?: NodeT;
     origin_id?: string;
@@ -190,8 +207,12 @@ export type EdgeT = {
     relationship_id?: string;
     properties: PropertyT[] | object;
     metadata_properties?: object;
+    metadata?: MetadataT[];
     created_at: string;
     modified_at: string;
+    data_staging_id: string;
+    import_data_id: string;
+    type_mapping_transformation_id: string;
 };
 
 export type PropertyT = {
