@@ -56,7 +56,19 @@ export default class Metatype extends BaseDomainClass {
     // for tracking removed keys for update
     #removedKeys: MetatypeKey[] | undefined;
 
-    constructor(input: {id?: string; container_id?: string; name?: string; description?: string; keys?: MetatypeKey[]; ontology_version?: string}) {
+    @IsOptional()
+    @IsString()
+    parent_id?: string;
+
+    constructor(input: {
+        id?: string;
+        container_id?: string;
+        name?: string;
+        description?: string;
+        keys?: MetatypeKey[];
+        ontology_version?: string;
+        parent_id?: string;
+    }) {
         super();
 
         // we have to do this because class-transformer doesn't know to create
@@ -68,6 +80,7 @@ export default class Metatype extends BaseDomainClass {
             if (input.ontology_version) this.ontology_version = input.ontology_version;
             if (input.name) this.name = input.name;
             if (input.description) this.description = input.description;
+            if (input.parent_id) this.parent_id = input.parent_id;
         }
     }
 

@@ -359,8 +359,8 @@ export class Client {
         return this.get<MetatypeRelationshipPairT[] | number>(`/containers/${containerID}/metatype_relationship_pairs`, query);
     }
 
-    createMetatype(containerID: string, name: string, description: string, ontologyVersion?: string): Promise<MetatypeT[]> {
-        return this.post<MetatypeT[]>(`/containers/${containerID}/metatypes`, {name, description, ontology_version: ontologyVersion});
+    createMetatype(containerID: string, name: string, description: string, ontologyVersion?: string, parentID?: string): Promise<MetatypeT[]> {
+        return this.post<MetatypeT[]>(`/containers/${containerID}/metatypes`, {name, description, ontology_version: ontologyVersion, parent_id: parentID});
     }
 
     retrieveMetatype(containerID: string, metatypeID: string): Promise<MetatypeT> {
@@ -1620,7 +1620,7 @@ export class Client {
         if (queryParams) {
             url = buildURL(this.config?.rootURL!, {path: uri, queryParams: queryParams!});
         } else {
-            url = buildURL(this.config?.rootURL!, {path: uri})
+            url = buildURL(this.config?.rootURL!, {path: uri});
         }
 
         const formData = new FormData();

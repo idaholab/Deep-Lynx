@@ -69,6 +69,19 @@ export default class MetatypeRepository extends Repository implements Repository
                 return Promise.resolve(Result.Failure(`unable to commit changes to database ${committed.error}`));
             }
 
+            // handle possible inheritance update or delete
+            if (m.parent_id) {
+                const inheritanceResult = await this.#mapper.UpdateInheritance([m], transaction.value);
+                if (inheritanceResult.isError || !inheritanceResult.value) {
+                    return Promise.resolve(Result.Failure(inheritanceResult.error.error.message));
+                }
+            } else {
+                const inheritanceResult = await this.#mapper.DeleteInheritance(m.id);
+                if (inheritanceResult.isError || !inheritanceResult.value) {
+                    return Promise.resolve(Result.Failure(inheritanceResult.error.error.message));
+                }
+            }
+
             return Promise.resolve(Result.Success(true));
         }
 
@@ -96,6 +109,14 @@ export default class MetatypeRepository extends Repository implements Repository
             return Promise.resolve(Result.Failure(`unable to commit changes to database ${committed.error}`));
         }
 
+        // update the inheritance lookup table if applicable
+        if (m.parent_id) {
+            const inheritanceResult = await this.#mapper.UpdateInheritance([m], transaction.value);
+            if (inheritanceResult.isError || !inheritanceResult.value) {
+                return Promise.resolve(Result.Failure(inheritanceResult.error.error.message));
+            }
+        }
+
         return Promise.resolve(Result.Success(true));
     }
 
@@ -104,6 +125,7 @@ export default class MetatypeRepository extends Repository implements Repository
         const toCreate: Metatype[] = [];
         const toUpdate: Metatype[] = [];
         const toReturn: Metatype[] = [];
+        const toInheritance: Metatype[] = [];
 
         // run validation, separate, and clear cache for each metatype
         for (const metatype of m) {
@@ -117,6 +139,10 @@ export default class MetatypeRepository extends Repository implements Repository
                 void this.deleteCached(metatype.id);
             } else {
                 toCreate.push(metatype);
+            }
+
+            if (metatype.parent_id) {
+                toInheritance.push(metatype);
             }
         }
 
@@ -143,6 +169,20 @@ export default class MetatypeRepository extends Repository implements Repository
             }
 
             toReturn.push(...results.value);
+
+            // need newly created ID for inheritance
+            toInheritance.forEach((metatype: Metatype) => {
+                // metatype name uniqueness enforced for a given container and ontology version
+                const index = results.value.findIndex((m) => m.name === metatype.name);
+                if (index !== -1) metatype.id = results.value[index].id;
+            });
+        }
+
+        if (toInheritance.length > 0) {
+            const results = await this.#mapper.UpdateInheritance(toInheritance, transaction.value);
+            if (results.isError || !results.value) {
+                return Promise.resolve(Result.Failure(results.error.error.message));
+            }
         }
 
         toReturn.forEach((result, i) => {
@@ -415,9 +455,8 @@ export default class MetatypeRepository extends Repository implements Repository
         });
         if (results.isError) return Promise.resolve(Result.Pass(results));
 
-        const keyRepo = new MetatypeKeyRepository();
-
         if (loadKeys) {
+            const keyRepo = new MetatypeKeyRepository();
             const metatype_ids: string[] = [];
             results.value.forEach((metatype) => {
                 metatype_ids.push(metatype.id!);
