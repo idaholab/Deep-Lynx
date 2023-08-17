@@ -34,6 +34,7 @@ const nodeRepo = new NodeRepository();
 const edgeRepo = new EdgeRepository();
 import {Worker} from "worker_threads";
 import {plainToInstance} from "class-transformer";
+import MetatypeMapper from "./metatype_mapper";
 
 // vestigial type for ease of use
 export type ContainerImportT = {
@@ -758,12 +759,6 @@ export default class ContainerImport {
                 }
             }
 
-            // Add inherits relationship to relationship map
-            relationshipMap.set('inherits', {
-                name: 'inherits',
-                description: 'Identifies the parent of the entity.',
-            });
-
             // Datatype Properties
             for (const dataProperty of datatypeProperties) {
                 // skip empty objects (no rdf:about property)
@@ -865,29 +860,7 @@ export default class ContainerImport {
             } else {
                 const allRelationshipPairNames: string[] = [];
 
-                // prepare inherits relationship pairs
                 classListMap.forEach((thisClass: MetatypeExtendT) => {
-                    // don't add parent relationship for root entity
-                    if (thisClass.parent_id && !/owl#Thing/.exec(thisClass.parent_id)) {
-                        allRelationshipPairNames.push(thisClass.name + ' : child of : ' + classIDMap.get(thisClass.parent_id).name);
-
-                        // add inherited properties and relationships (flatten ontology)
-                        let parent = classIDMap.get(thisClass.parent_id);
-                        // loop until root class (below owl#Thing) is reached
-                        while (typeof parent.parent_id !== 'undefined' && !parent.parent_id.match(/owl#Thing/)) {
-                            thisClass.properties = {
-                                ...thisClass.properties,
-                                ...parent.properties,
-                            };
-                            parent = classIDMap.get(parent.parent_id);
-                        }
-                        // add root class properties
-                        thisClass.properties = {
-                            ...thisClass.properties,
-                            ...parent.properties,
-                        };
-                    }
-
                     // prepare properties/keys and remaining relationship pairs
                     // for now we just need the names for matching later
                     for (const propertyName in thisClass.properties) {
@@ -896,7 +869,7 @@ export default class ContainerImport {
                         if (property.property_type === 'primitive') {
                             const dataProp = dataPropertyMap.get(property.value);
                             if (dataProp) {
-                            thisClass.keys.push(dataProp.name);
+                                thisClass.keys.push(dataProp.name);
                             }
                         } else if (property.property_type === 'relationship') {
                             // use relationshipIDMap for accessing relationships by ID
@@ -920,9 +893,6 @@ export default class ContainerImport {
                     // retrieve existing container, relationships, metatypes, and relationship pairs
                     oldMetatypeRelationships = (await metatypeRelationshipRepo.where().containerID('eq', input.container.id!).list(false)).value;
 
-                    // we load from the materialized view here because of the possible large amount of keys - however we need to refresh the view
-                    // so we don't have stale data
-                    await MetatypeKeyMapper.Instance.RefreshView();
                     oldMetatypes = (await metatypeRepo.where().containerID('eq', input.container.id!).list(false)).value;
 
                     oldMetatypeRelationshipPairs = (await metatypeRelationshipPairRepo.where().containerID('eq', input.container.id!).list()).value;
@@ -960,7 +930,9 @@ export default class ContainerImport {
 
                             // check metatypeKeys for metatypes to be updated
                             const newMetatypeKeys = classListMap.get(metatype.name).keys;
-                            const oldMetatypeKeys = (await MetatypeKeyMapper.Instance.ListFromViewForMetatype(metatype.id!)).value;
+
+                            // compare against only keys owned by this metatype
+                            const oldMetatypeKeys = (await MetatypeKeyMapper.Instance.ListSelfKeysForMetatype(metatype.id!)).value;
 
                             for (const key of oldMetatypeKeys) {
                                 if (!newMetatypeKeys.includes(key.name)) {
@@ -995,7 +967,6 @@ export default class ContainerImport {
                                     }
                                 } else {
                                     // update key
-                                    const thisMetatype = classListMap.get(metatype.name);
                                     thisMetatype.updateKeys.set(key.name, key);
                                     thisMetatype.updateKeyNames.push(key.name);
                                 }
@@ -1003,7 +974,6 @@ export default class ContainerImport {
                         }
                     }
 
-                    // Ontology must first be flattened
                     for (const relationshipPair of oldMetatypeRelationshipPairs) {
                         if (!allRelationshipPairNames.includes(relationshipPair.name)) {
                             const edges = (await edgeRepo.where().relationshipPairID('eq', relationshipPair.id!).list(true, {limit: 10})).value;
@@ -1125,36 +1095,11 @@ export default class ContainerImport {
                 const metatypeKeys: MetatypeKey[] = []
                 const relationshipPairs: MetatypeRelationshipPair[] = []
 
+                const metatypesInheritancePairs: [string, string][] = [];
+
                 // Add metatype keys (properties) and relationship pairs
                 classListMap.forEach((thisClass: MetatypeExtendT) => {
                     const updateRelationships: MetatypeRelationshipPair[] = [];
-
-                    // Add relationship to parent class
-                    const relationship = relationshipMap.get('inherits');
-                    // Don't add parent relationship for root entity
-                    if (thisClass.parent_id && !/owl#Thing/.exec(thisClass.parent_id)) {
-                        const relationshipName = thisClass.name + ' : child of : ' + classIDMap.get(thisClass.parent_id).name;
-
-                        const data = new MetatypeRelationshipPair({
-                            name: relationshipName,
-                            description: relationship.description,
-                            origin_metatype: thisClass.db_id!,
-                            destination_metatype: classIDMap.get(thisClass.parent_id).db_id,
-                            relationship: relationship.db_id,
-                            relationship_type: 'many:one',
-                            container_id: input.container.id!,
-                            ontology_version: (input.ontologyVersionID) ? input.ontologyVersionID : thisClass.ontology_version
-                        });
-
-                        if (thisClass.updateKeyNames.includes(relationshipName)) {
-                            const originalKeyData = thisClass.updateKeys.get(relationshipName);
-                            data.id = originalKeyData.id;
-                            updateRelationships.push(data);
-                        } else {
-                            propertyPromises.push(() => metatypeRelationshipPairRepo.bulkSave(input.user, [data], false));
-                            relationshipPairs.push(data);
-                        }
-                    }
 
                     // Add primitive properties and other relationships
                     // placeholder for keys that will be sent to BatchUpdate()
@@ -1285,7 +1230,28 @@ export default class ContainerImport {
                         propertyPromises.push(() => metatypeRelationshipPairRepo.bulkSave(input.user, updateRelationships, false));
                         relationshipPairs.concat(updateRelationships);
                     }
+
+                    // add inheritance
+                    if (thisClass.parent_id && !/owl#Thing/.exec(thisClass.parent_id)) {
+                        const parent = classIDMap.get(thisClass.parent_id);
+
+                        // add parent and child IDs
+                        metatypesInheritancePairs.push([parent.db_id, thisClass.db_id!]);
+                    }
+
                 });
+                // disable inheritance trigger before bulk insert
+                void MetatypeMapper.Instance.DisableInheritanceTrigger();
+                const inheritanceResult = await MetatypeMapper.Instance.InheritanceBulkInsert(metatypesInheritancePairs);
+                // ensure trigger is re-enabled after insert
+                void MetatypeMapper.Instance.EnableInheritanceTrigger();
+
+                if (inheritanceResult.isError || !inheritanceResult.value) {
+                    // TODO: Should this call rollback?
+                    resolve(Result.Failure('unable to set inheritance for classes'));
+                    return;
+                }
+
                 const propertyResults: Result<boolean>[] = await pAll(propertyPromises, {concurrency: 2});
 
                 // refresh metatype keys view just once now that all keys have been saved

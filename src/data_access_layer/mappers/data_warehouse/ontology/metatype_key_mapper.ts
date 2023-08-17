@@ -78,6 +78,10 @@ export default class MetatypeKeyMapper extends Mapper {
         return super.rows(this.listFromIDsStatement(ids), {resultClass: this.resultClass});
     }
 
+    public async ListSelfKeysForMetatype(metatypeID: string): Promise<Result<MetatypeKey[]>> {
+        return super.rows(this.listSelfKeysStatement(metatypeID), {resultClass: this.resultClass});
+    }
+
     public async Update(userID: string, key: MetatypeKey, transaction?: PoolClient): Promise<Result<MetatypeKey>> {
         const r = await super.run(this.fullUpdateStatement(userID, key), {
             transaction,
@@ -151,7 +155,7 @@ export default class MetatypeKeyMapper extends Mapper {
     }
 
     public async JSONCreate(metatypeKeys: MetatypeKey[]): Promise<Result<boolean>> {
-        return super.runStatement(this.insertFromJSONStatement(metatypeKeys))
+        return super.runStatement(this.insertFromJSONStatement(metatypeKeys));
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -302,6 +306,13 @@ export default class MetatypeKeyMapper extends Mapper {
                       ORDER BY metatype_id, mk.name`;
         const values = metatype_ids;
         return format(text, values);
+    }
+
+    private listSelfKeysStatement(metatypeID: string): QueryConfig {
+        return {
+            text: `SELECT * FROM metatype_keys WHERE metatype_id = $1`,
+            values: [metatypeID],
+        };
     }
 
     private fullUpdateStatement(userID: string, ...keys: MetatypeKey[]): string {
