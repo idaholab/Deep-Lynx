@@ -5,6 +5,7 @@
     "main": "./dist/main.js",
     "author": "John Darrington and Christopher Ritter",
     "license": "MIT",
+    "private": true,
     "workspaces": [
         "./NodeLibraries/deeplynx"
     ],
