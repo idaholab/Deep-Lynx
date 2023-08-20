@@ -1,0 +1,3 @@
+string,timestamp,int,bigint,float,float64,json,boolean,booleanCase
+,1999-10-10:10:10,1,"9,223,372,036,854,775,500",1.01,1.00000000000001,{“test”:”test”},TRUE,false
+test,1999-10-10:10:10,1,"9,223,372,036,854,775,500",1.01,1.00000000000001,{“test”:”test”},TRUE,false

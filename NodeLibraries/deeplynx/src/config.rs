@@ -8,6 +8,7 @@ use std::fs::File;
 pub struct Configuration {
     pub db_connection_string: String,
     pub redis_connection_string: String,
+    pub max_columns: Option<u32>,
 }
 
 impl Configuration {
