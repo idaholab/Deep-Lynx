@@ -727,7 +727,4 @@ export default class OAuthRoutes {
             .catch((err) => res.redirect(buildUrl('/oauth', {queryParams: {error: err}})));
     }
 }
-function queryParamSanitize(req: Request<import("express-serve-static-core").ParamsDictionary, any, any, import("qs").ParsedQs, Record<string, any>>) {
-    throw new Error('Function not implemented.');
-}
 
