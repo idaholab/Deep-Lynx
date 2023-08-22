@@ -26,8 +26,6 @@ const oauthRepo = new OAuthRepository();
 import DOMPurify from 'isomorphic-dompurify';
 import Result from '../../../common_classes/result';
 import Logger from '../../../services/logger';
-import { forEach } from 'core-js/core/array';
-import { Dictionary } from 'io-ts';
 
 /*
     OAuthRoutes contain all routes pertaining to oauth application management and
