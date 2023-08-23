@@ -98,64 +98,6 @@
         <v-divider v-if="selectedDataSource !== null"></v-divider>
 
         <v-data-table
-            v-if="selectedMetatype || selectedRelationshipPair && !reviewMappings"
-            v-model="selectedMappings"
-            show-select
-            :headers="headers()"
-            :items="typeMappings"
-            :items-per-page="25"
-            :footer-props="{
-                'items-per-page-options': [25,50,100]
-            }"
-        >
-
-          <template v-slot:[`item.active`]="{ item }">
-            <v-checkbox v-model="item.active" :disabled="true"></v-checkbox>
-          </template>
-
-          <template v-slot:[`item.created_at`]="{ item }">
-            {{new Date(parseInt(item.created_at, 10)).toUTCString()}}
-          </template>
-
-          <template v-slot:[`item.resulting_types`]="{ item }">
-            <div v-for="transformation in item.transformations" :key="transformation.id">
-              {{transformation.metatype_name}}
-              {{transformation.metatype_relationship_pair_name}}
-            </div>
-          </template>
-
-          <template v-slot:[`item.sample_payload`]="{ item }">
-            <v-icon
-                small
-                class="mr-2"
-                @click="viewSamplePayload(item)"
-            >
-              mdi-eye
-            </v-icon>
-          </template>
-
-          <template v-slot:[`item.actions`]="{ item }">
-            <v-icon
-                small
-                class="mr-2"
-                @click="editMapping(item)"
-            >
-              mdi-pencil
-            </v-icon>
-
-            <delete-type-mapping-dialog
-                :containerID="containerID"
-                :dataSourceID="selectedDataSource.id"
-                :mappingID="item.value.id"
-                :icon="true"
-                @typeMappingDeleted="mappingDeleted()"
-            ></delete-type-mapping-dialog>
-          </template>
-        </v-data-table>
-
-
-
-        <v-data-table
             v-if="reviewMappings"
             :headers="reviewHeaders()"
             :items="importedMappingResults"
@@ -165,9 +107,6 @@
                 'items-per-page-options': [25,50,100]
             }"
         >
-
-
-
           <template v-slot:[`item.isError`]="{ item }">
             <p v-if="!item.isError">{{$t('general.successful')}}</p>
             <p v-else class="warning--text">{{$t('errors.error')}}: {{item.error}}</p>
@@ -207,7 +146,7 @@
 
         <v-col :cols="4" class="mt-2 mb-n3"><div class="box edited mr-2"></div><p>{{$t('transformations.deprecated')}} <info-tooltip :message="$t('help.deprecatedParams')"></info-tooltip></p></v-col>
         <v-data-table
-            v-if="!selectedMetatype && !selectedRelationshipPair && !reviewMappings"
+            v-if="!reviewMappings"
             :headers="headers()"
             :items="typeMappings"
             v-model="selectedMappings"
@@ -277,7 +216,6 @@
                 'items-per-page-options': [25,50,100]
             }"
         >
-
           <template v-slot:[`item.active`]="{ item }">
             <v-checkbox v-model="item.active" :disabled="true"></v-checkbox>
 

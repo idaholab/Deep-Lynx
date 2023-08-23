@@ -351,7 +351,7 @@ export default class TypeMappingRoutes {
             // new filter so as not to pollute the existing one
             let filter = new TypeMappingRepository();
 
-            filter = filter.where().containerID('eq', req.params.id).and().dataSourceID('eq', req.params.sourceID);
+            filter = filter.where().containerID('eq', req.params.containerID).and().dataSourceID('eq', req.params.sourceID);
 
             if (req.query.resultingMetatypeName) {
                 filter = filter.and().resultingMetatypeName('like', req.query.resultingMetatypeName);
@@ -398,18 +398,15 @@ export default class TypeMappingRoutes {
                 .catch((err) => Result.Failure(err, 404).asResponse(res))
                 .finally(() => next());
         } else {
-            // @ts-ignore
-            TypeMappingMapper.Instance.List(
-                req.params.containerID,
-                req.params.sourceID,
-                // @ts-ignore
-                +req.query.offset,
-                // @ts-ignore
-                +req.query.limit,
-                // @ts-ignore
-                req.query.sortBy,
-                String(req.query.sortDesc).toLowerCase() === 'true',
-            )
+            new TypeMappingRepository()
+                .where().containerID('eq', req.params.containerID)
+                .and().dataSourceID('eq', req.params.sourceID)
+                .findAll({
+                    offset: +req.query.offset!,
+                    limit: +req.query.limit!,
+                    sortBy: req.query.sortBy as string | undefined,
+                    sortDesc: String(req.query.sortDesc).toLowerCase() === 'true'
+                })
                 .then((result) => {
                     if (result.isError && result.error) {
                         result.asResponse(res);
