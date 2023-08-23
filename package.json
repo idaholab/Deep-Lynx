@@ -95,6 +95,7 @@
     "dependencies": {
         "@azure/service-bus": "^7.4.0",
         "@ladjs/graceful": "^1.0.5",
+        "@node-saml/passport-saml": "^4.0.4",
         "@types/amqplib": "^0.8.2",
         "@types/busboy": "^1.5.0",
         "@types/dompurify": "^2.3.1",
@@ -159,7 +160,6 @@
         "passport-http": "^0.3.0",
         "passport-jwt": "^4.0.0",
         "passport-local": "^1.0.0",
-        "passport-saml": "^3.1.2",
         "pg": "^8.8.0",
         "pg-connection-string": "^2.5.0",
         "pg-copy-streams": "^6.0.4",
