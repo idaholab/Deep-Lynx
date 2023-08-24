@@ -325,8 +325,8 @@ export default class OAuthRoutes {
     private static loginPage(req: Request, res: Response, next: NextFunction) {
         const oauthRequest = oauthRepo.authorizationFromRequest(req);
 
-        //Sanitize the query params since they are being passed through
-        for (const param in req.query) {    
+        // Sanitize the query params since they are being passed through
+        for (const param in req.query) {
             req.query[param] = DOMPurify.sanitize(req.query[param] as string);
         }
 
@@ -345,7 +345,7 @@ export default class OAuthRoutes {
             saml_enabled: Config.saml_enabled,
         });
     }
-    
+
     private static loginSaml(req: Request, res: Response) {
         const oauthRequest = oauthRepo.authorizationFromRequest(req);
 
@@ -635,7 +635,11 @@ export default class OAuthRoutes {
                     }
 
                     try {
-                        const token = jwt.sign(classToPlain(user.value), Config.encryption_key_secret, {expiresIn: expiry, algorithm: 'RS256', allowInsecureKeySizes: true});
+                        const token = jwt.sign(classToPlain(user.value), Config.encryption_key_secret, {
+                            expiresIn: expiry,
+                            algorithm: 'RS256',
+                            allowInsecureKeySizes: true,
+                        });
                         res.status(200).json(token);
                         return;
                     } catch (e: any) {
@@ -727,4 +731,3 @@ export default class OAuthRoutes {
             .catch((err) => res.redirect(buildUrl('/oauth', {queryParams: {error: err}})));
     }
 }
-
