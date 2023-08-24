@@ -13,7 +13,7 @@
     <v-card class="pt-1 pb-3 px-2" v-if="selectedMetatypeKey">
       <v-card-title>
         <span class="headline text-h3">{{$t('general.edit')}} {{selectedMetatypeKey.name}}</span>
-      </v-card-title>   
+      </v-card-title>
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
         <v-row>
@@ -296,8 +296,8 @@
         required: true
       },
       comparisonMetatypeKey: {
-        type: Object as PropType<MetatypeKeyT | undefined>,
-        required: true, 
+        type: [Object, undefined] as PropType<MetatypeKeyT | undefined>,
+        required: false,
         default: undefined
       },
       icon: {
@@ -314,7 +314,7 @@
       dataTypes: ["number", "number64", "float", "float64", "date", "string", "boolean", "enumeration", "file"],
       booleanOptions: [true, false],
     }),
-    
+
     watch: {
       dialog: {
         immediate: true,
@@ -326,7 +326,7 @@
         }
       }
     },
-    
+
     methods: {
       editMetatypeKey() {
         if(this.selectedMetatypeKey) {

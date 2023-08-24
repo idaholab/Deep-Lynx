@@ -7,22 +7,28 @@
           class="mr-2"
           v-on="on"
       >mdi-card-plus</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("classes.createNew")}}</v-btn>
+      <v-btn v-if="!icon && !parentID" color="primary" dark class="mt-2" v-on="on">{{$t("classes.createNew")}}</v-btn>
+      <v-btn v-if="!icon && parentID" color="primary" dark class="mt-2" v-on="on">{{$t("classes.createChild")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
         <span class="headline text-h3">{{$t('classes.new')}}</span>
-      </v-card-title>   
+      </v-card-title>
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
         <v-row>
           <v-col :cols="12">
 
+            <v-alert type="warning" v-if="rootClass">
+              {{$t('warnings.rootClass')}}
+            </v-alert>
+
             <v-form
                 ref="form"
                 v-model="valid"
             >
+              <MetatypeParentSelect :containerID="containerID" :parentID="parentID" :disableSelect="true" @parentUpdate="parentUpdate"></MetatypeParentSelect>
               <v-text-field
                   v-model="name"
                   :rules="[validationRule]"
@@ -54,17 +60,22 @@
 
 <script lang="ts">
   import Vue from 'vue'
+  import {MetatypeT} from "@/api/types";
+  import MetatypeParentSelect from "@/components/ontology/metatypes/MetatypeParentSelect.vue";
 
   interface CreateMetatypeDialogModel {
     errorMessage: string
     dialog: boolean
     name: string
     description: string
+    parentMetatype: MetatypeT | null
     valid: boolean
+    rootClass: boolean
   }
 
   export default Vue.extend({
     name: 'CreateMetatypeDialog',
+    components: {MetatypeParentSelect},
 
     props: {
       containerID: {
@@ -75,6 +86,10 @@
         type: Boolean,
         required: false,
       },
+      parentID: {
+        type: String,
+        required: false,
+      }
     },
 
     data: (): CreateMetatypeDialogModel => ({
@@ -82,12 +97,29 @@
       dialog: false,
       name: "",
       description: "",
-      valid: false
+      parentMetatype: null,
+      valid: false,
+      rootClass: true,
     }),
 
+    watch: {
+      parentMetatype: 'onParentMetatypeChange'
+    },
+
     methods: {
+      onParentMetatypeChange() {
+        this.rootClass = !this.parentMetatype;
+      },
+      parentUpdate(newParent: MetatypeT) {
+        this.parentMetatype = newParent
+      },
       createMetatype() {
-        this.$client.createMetatype(this.containerID, this.name, this.description, this.$store.getters.activeOntologyVersionID)
+        let parentID = this.parentID
+        // set the parent if supplied or overwritten
+        if (this.parentMetatype) {
+          parentID = this.parentMetatype.id!
+        }
+        this.$client.createMetatype(this.containerID, this.name, this.description, this.$store.getters.activeOntologyVersionID, parentID)
           .then(result => {
             if(!result) {
               this.errorMessage = this.$t('errors.errorCommunicating') as string
@@ -108,7 +140,18 @@
       validationRule(v: any) {
         return !!v || this.$t('validation.required')
       }
-    }
+    },
+
+    created() {
+      if (this.parentID) {
+        this.$client.retrieveMetatype(this.containerID, this.parentID)
+            .then((metatype) => {
+              this.parentMetatype = metatype
+            })
+            .catch((e: any) => this.errorMessage = e)
+
+      }
+    },
   });
 </script>
 

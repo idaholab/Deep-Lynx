@@ -12,7 +12,12 @@
           <v-toolbar flat color="white">
             <v-toolbar-title>{{$t('events.actionDescription')}}</v-toolbar-title>
             <v-spacer></v-spacer>
-            <create-event-action-dialog :containerID="containerID" @eventCreated="refreshEventActions()" :key="key" @dialogClose="key += 1"></create-event-action-dialog>
+            <EventSystemActions
+              :icon="false"
+              mode="create"
+              :containerID="containerID"
+              @eventCreated="refreshEventActions()"
+            />
           </v-toolbar>
         </template>
         <template v-slot:[`item.active`]="{ item }">
@@ -32,26 +37,34 @@
           />
         </template>
         <template v-slot:[`item.actions`]="{ item }">
-          <edit-event-action-dialog
+          <EventSystemActions
+            mode="edit"
+            :icon="true"
             :containerID="containerID"
             :eventAction="item"
             @eventUpdated="refreshEventActions()"
-          ></edit-event-action-dialog>
-          <delete-event-action-dialog
+          />
+          <EventSystemActions
+            mode="delete"
+            :icon="true"
             :containerID="containerID"
             :eventAction="item"
             @eventDeleted="refreshEventActions()"
-          ></delete-event-action-dialog>
-          <send-event-action-dialog
+          />
+          <!-- <EventSystemActions
+            mode="send"
+            :icon="true"
             :containerID="containerID"
             :eventAction="item"
             :actionID="item.id"
-          ></send-event-action-dialog>
-          <event-action-status-dialog
+          /> -->
+          <EventSystemActions
+            mode="status"
+            :icon="true"
             :containerID="containerID"
             :eventAction="item"
             :actionID="item.id"
-          ></event-action-status-dialog>
+          />
         </template>
       </v-data-table>
     </div>
@@ -59,12 +72,8 @@
 
 <script lang="ts">
   import Vue from 'vue';
-  import CreateEventActionDialog from '@/components/eventSystem/createEventActionDialog.vue';
-  import EditEventActionDialog from '@/components/eventSystem/editEventActionDialog.vue';
-  import DeleteEventActionDialog from '@/components/eventSystem/deleteEventActionDialog.vue';
-  import SendEventActionDialog from '@/components/eventSystem/sendEventActionDialog.vue';
-  import EventActionStatusDialog from '@/components/eventSystem/eventActionStatusDialog.vue';
-  import { EventActionT } from '../api/types';
+  import { EventActionT } from '@/api/types';
+  import EventSystemActions from '@/components/eventSystem/EventSystemActions.vue';
 
   interface EventSystemModel {
     key: number,
@@ -78,7 +87,9 @@
   export default Vue.extend ({
     name: 'ViewEventSystem',
 
-    components: { CreateEventActionDialog, EditEventActionDialog, DeleteEventActionDialog, SendEventActionDialog, EventActionStatusDialog },
+    components: {
+      EventSystemActions
+    },
 
     props: {
       containerID: {type: String, required: true},

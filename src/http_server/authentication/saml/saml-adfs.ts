@@ -7,7 +7,7 @@ import Result from '../../../common_classes/result';
 import {User} from '../../../domain_objects/access_management/user';
 import {serialize} from 'class-transformer';
 
-const SamlStrategy = require('passport-saml').Strategy;
+const SamlStrategy = require("@node-saml/passport-saml").Strategy;
 
 export function SetSamlAdfs(app: express.Application) {
     // do not set the auth strategy if we don't have a public/private key pair.
@@ -39,10 +39,10 @@ export function SetSamlAdfs(app: express.Application) {
                 entryPoint: Config.saml_adfs_entry_point,
                 issuer: Config.saml_adfs_issuer,
                 callbackUrl: Config.saml_adfs_callback,
-                privateCert: fs.readFileSync(Config.saml_adfs_private_cert_path, 'utf-8'),
+                privateKey: fs.readFileSync(Config.saml_adfs_private_cert_path, 'utf-8'),
                 cert: fs.readFileSync(Config.saml_adfs_public_cert_path, 'utf-8'),
                 signatureAlgorithm: 'sha256',
-                RACComparison: 'exact',
+                racComparison: 'exact',
                 disableRequestedAuthnContext: true,
                 identifierFormat: null,
             },
