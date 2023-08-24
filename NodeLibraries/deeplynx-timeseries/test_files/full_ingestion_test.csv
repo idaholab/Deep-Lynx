@@ -1,3 +1,0 @@
-bool,char,smallint,int,bigint,real,double,numeric,numeric2,varchar,varchar2,text,bytea,timestamptz,timestamp,date,time,uuid,jsonb
-true,a,1,2,3,1.0,2.0,3.0,4.0,a,a,testing one two three,'\000',2004-10-19 10:23:54+02,2004-10-19 10:23:54,2004-10-19,10:23:54,6216dc17-d580-4708-9231-4666e2d91255,{"""test""": """test"""}
-true,a,,2,3,1.0,2.0,3.0,4.0,a,a,testing one two three,'\000',2004-10-19 10:23:54+02,2004-10-19 10:23:54,2004-10-19,10:23:54,6216dc17-d580-4708-9231-4666e2d91255,{"""test""": """test"""}
