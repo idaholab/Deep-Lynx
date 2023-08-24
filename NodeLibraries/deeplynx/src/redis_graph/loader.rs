@@ -557,7 +557,7 @@ impl Edge {
       Value::Object(o) => o,
       _ => {
         // TODO: Handle non-object properties if ever needed
-        panic!("properties of node not an object")
+        panic!("properties of edge not an object")
       }
     };
 
@@ -595,7 +595,7 @@ impl Edge {
 
     let properties = match properties {
       Value::Object(o) => o,
-      _ => panic!("properties of node not an object"),
+      _ => panic!("properties of edge not an object"),
     };
 
     let mut property_final: Vec<u8> = vec![];
