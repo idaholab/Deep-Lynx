@@ -12,7 +12,7 @@ use tokio_util::compat::FuturesAsyncReadCompatExt;
 #[derive(Clone)]
 pub struct RedisGraphLoader {
   db: PgPool,
-  config: Configuration,
+  _config: Configuration,
   redis_client: Client,
 }
 
@@ -33,7 +33,7 @@ impl RedisGraphLoader {
 
     Ok(RedisGraphLoader {
       db,
-      config,
+      _config: config,
       redis_client,
     })
   }
@@ -324,7 +324,6 @@ TO STDOUT WITH (FORMAT csv, HEADER true);"#
         has_txed,
       )
       .await?;
-    has_txed = true;
 
     Ok(())
   }
