@@ -10,7 +10,7 @@ const devnull = require('dev-null');
 
 import pLimit from 'p-limit';
 import TimeseriesService from '../../../services/timeseries/timeseries';
-import {LegacyTimeseriesColumn} from 'deeplynx-timeseries';
+import {LegacyTimeseriesColumn} from 'deeplynx';
 
 const limit = pLimit(50);
 

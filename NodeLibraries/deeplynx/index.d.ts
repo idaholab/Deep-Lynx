@@ -39,8 +39,8 @@ export interface ChangeBucketPayload {
 export function inferLegacySchema(csv: Buffer): Array<LegacyTimeseriesColumn>
 export function inferBucketSchema(csv: Buffer): Array<BucketColumn>
 export interface Configuration {
-  dbConnectionString: string
-  redisConnectionString: string
+  dbConnectionString?: string
+  redisConnectionString?: string
   maxColumns?: number
 }
 export type JsBucketRepository = BucketRepository
