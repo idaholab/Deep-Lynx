@@ -41,6 +41,7 @@ export function SetSamlAdfs(app: express.Application) {
                 callbackUrl: Config.saml_adfs_callback,
                 privateKey: fs.readFileSync(Config.saml_adfs_private_cert_path, 'utf-8'),
                 cert: fs.readFileSync(Config.saml_adfs_public_cert_path, 'utf-8'),
+                signatureAlgorithm: 'sha256',
                 racComparison: 'exact',
                 disableRequestedAuthnContext: true,
                 identifierFormat: null,
