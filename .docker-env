@@ -66,6 +66,8 @@ SAML_ADFS_CALLBACK=
 SAML_ADFS_PRIVATE_CERT_PATH=
 # x509 certificate extracted from ADFS metadata file
 SAML_ADFS_PUBLIC_CERT_PATH=
+# Algorithm used for signing requests (default is sha256)
+SAML_ADFS_SIGNATURE_ALGORITHM=
 
 # SAML audience to validate with IDP (defaults to false, no validation)
 SAML_ADFS_AUDIENCE=
