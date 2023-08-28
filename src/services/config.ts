@@ -68,6 +68,11 @@ export class Config {
     private readonly _saml_adfs_claims_email: string;
     private readonly _saml_adfs_private_cert_path: string | undefined;
     private readonly _saml_adfs_public_cert_path: string | undefined;
+    private readonly _saml_adfs_signature_algorithm: string;
+    private readonly _saml_adfs_audience: string | boolean;
+    private readonly _saml_adfs_disable_requested_authn_context: boolean;
+    private readonly _saml_adfs_want_authn_response_signed: boolean;
+    private readonly _saml_adfs_want_assertions_signed: boolean;
 
     private readonly _auth_config_file: string;
     private readonly _auth_token_expiry: string;
@@ -193,6 +198,11 @@ export class Config {
         this._saml_adfs_callback = process.env.SAML_ADFS_CALLBACK || 'http://localhost:8090/oauth/saml';
         this._saml_adfs_private_cert_path = process.env.SAML_ADFS_PRIVATE_CERT_PATH;
         this._saml_adfs_public_cert_path = process.env.SAML_ADFS_PUBLIC_CERT_PATH;
+        this._saml_adfs_signature_algorithm = process.env.SAML_ADFS_SIGNATURE_ALGORITHM || 'sha236';
+        this._saml_adfs_audience = this.ConvertAudience(process.env.SAML_ADFS_AUDIENCE || false);
+        this._saml_adfs_disable_requested_authn_context = process.env.SAML_ADFS_DISABLE_REQUESTED_AUTHN_CONTEXT === 'true';
+        this._saml_adfs_want_authn_response_signed = process.env.SAML_ADFS_WANT_AUTHN_RESPONSE_SIGNED === 'true';
+        this._saml_adfs_want_assertions_signed = process.env.SAML_ADFS_WANT_ASSERTIONS_SIGNED === 'true';
         this._saml_enabled = process.env.SAML_ENABLED === 'true';
         this._auth_config_file =
             process.env.AUTH_CONFIG_FILE_PATH || path.resolve(__dirname, '../../src/domain_objects/access_management/authorization/auth_model.conf');
@@ -482,6 +492,27 @@ export class Config {
         return this._saml_adfs_public_cert_path;
     }
 
+    get saml_adfs_signature_algorithm(): string {
+        return this._saml_adfs_signature_algorithm;
+    }
+    
+
+    get saml_adfs_audience(): string | boolean {
+        return this._saml_adfs_audience;
+    }
+
+    get saml_adfs_want_authn_response_signed(): boolean {
+        return this._saml_adfs_want_authn_response_signed;
+    }
+
+    get saml_adfs_want_assertions_signed(): boolean {
+        return this._saml_adfs_want_assertions_signed;
+    }
+
+    get saml_adfs_disable_requested_authn_context(): boolean {
+        return this._saml_adfs_disable_requested_authn_context;
+    }
+
     get smtp_username(): string {
         return this._smtp_username;
     }
@@ -640,6 +671,17 @@ export class Config {
 
     get minio_bucket_name(): string {
         return this._minio_bucket_name;
+    }
+
+    // Audience may be set to 'false' to ensure no audience validation happens,
+    // or may be any string to validate as audience with IDP
+    private ConvertAudience(audience: string|boolean): string|boolean {
+        if (typeof audience === "string") {
+            if (audience.toLowerCase() === "false"){
+                return false;
+            }
+        }
+        return audience;
     }
 
     public static Instance(): Config {
