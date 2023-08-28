@@ -46,6 +46,7 @@ export function SetSamlAdfs(app: express.Application) {
                 disableRequestedAuthnContext: true,
                 identifierFormat: null,
                 wantAuthnResponseSigned: false,
+                wantAssertionsSigned: false,
             },
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
             (profile: any, done: any) => {
