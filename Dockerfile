@@ -44,7 +44,6 @@ RUN npm install npm@latest --location=global
 RUN npm update --location=global
 RUN npm install pm2 --location=global
 RUN npm install cargo-cp-artifact --location=global
-RUN npm install yarn --location=global
 
 # Bundle app source
 COPY . .
