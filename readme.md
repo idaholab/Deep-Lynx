@@ -96,7 +96,7 @@ check-revoke = false
 
 ![image](uploads/72791227158a46ba389346566f745ccb/image.png)
 
-8. Run `yarn run watch` or `yarn run start` to start the application. See the `readme` for additional details and available commands. **This command starts a process that only ends when a user terminates with Cntrl+C or Cntrl+D - you will see a constant feed of logs from this terminal once you have started DeepLynx. This is normal.** Changes to the source code of DeepLynx will be captured if you run the application with the `npm run watch` command.
+8. Run `yarn run watch` or `yarn run start` to start the application. See the `readme` for additional details and available commands. **This command starts a process that only ends when a user terminates with Cntrl+C or Cntrl+D - you will see a constant feed of logs from this terminal once you have started DeepLynx. This is normal.** Changes to the source code of DeepLynx will be captured if you run the application with the `yarn run watch` command.
 ![image](uploads/c04ddc5cfea2b77ffe47287d8c213700/image.png)
 
 **Note:** DeepLynx ships with a Vue single page application which serves as the primary UI for the DeepLynx system. You can run this [separately](Administration-Web-App-Installation) (and it's recommended to do so if you're developing it).
