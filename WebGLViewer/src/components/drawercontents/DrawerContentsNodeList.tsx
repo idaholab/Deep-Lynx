@@ -79,13 +79,18 @@ const StyledMenu = styled((props: MenuProps) => (
 }));
 
 type Props = {
-  data: Array<any>,
+  filteredData: Array<any>,
+  initialData: Array<any>,
+  isLoading: Boolean
 };
 
 const DrawerContentsNodeList: React.FC<Props> = ({
-  data,
+  filteredData,
+  initialData,
+  isLoading
 }) => {
-  const nodeList = data;
+  const nodeList = filteredData;
+  const nodeListInitial = initialData;
 
   const dispatch = useAppDispatch();
 
@@ -137,10 +142,19 @@ const DrawerContentsNodeList: React.FC<Props> = ({
           Name
         </Box>
       </Box>
-      {!nodeList || nodeList.length === 0 ? (
-        <LoadingProgress text={'Loading Game Objects'}/>
-      ) :(
-        <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0', borderTop: `1px solid ${COLORS.colorDarkgray}` }}>
+      <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0', borderTop: `1px solid ${COLORS.colorDarkgray}` }}>
+        {isLoading ? (
+          <LoadingProgress text={'Loading Game Objects'}/>
+        ) : (!nodeList || nodeList.length === 0) ? (
+          <Typography align="center" sx={{ margin: '8px 0', fontSize: '14px' }}>
+            {nodeListInitial.length === 0 &&
+              'No Game Objects to display'
+            }
+            {nodeListInitial.length !== 0 &&
+              'No matching Game Objects'
+            }            
+          </Typography>
+        ) :(
           <List dense sx={{ paddingTop: '0' }}>
             {nodeList.map((object: any, index: number) => (
               <ListItem
@@ -235,8 +249,8 @@ const DrawerContentsNodeList: React.FC<Props> = ({
               </ListItem>
             ))}
           </List>
-        </Box>
-      )}
+        )}
+      </Box>
     </>
   );
 }
