@@ -200,7 +200,7 @@ export class Config {
         this._saml_adfs_public_cert_path = process.env.SAML_ADFS_PUBLIC_CERT_PATH;
         this._saml_adfs_signature_algorithm = process.env.SAML_ADFS_SIGNATURE_ALGORITHM || 'sha256';
         this._saml_adfs_audience = this.ConvertAudience(process.env.SAML_ADFS_AUDIENCE || false);
-        this._saml_adfs_disable_requested_authn_context = process.env.SAML_ADFS_DISABLE_REQUESTED_AUTHN_CONTEXT === 'true';
+        this._saml_adfs_disable_requested_authn_context = process.env.SAML_ADFS_DISABLE_REQUESTED_AUTHN_CONTEXT === 'true' || true;
         this._saml_adfs_want_authn_response_signed = process.env.SAML_ADFS_WANT_AUTHN_RESPONSE_SIGNED === 'true';
         this._saml_adfs_want_assertions_signed = process.env.SAML_ADFS_WANT_ASSERTIONS_SIGNED === 'true';
         this._saml_enabled = process.env.SAML_ENABLED === 'true';
