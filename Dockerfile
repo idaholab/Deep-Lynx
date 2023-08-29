@@ -1,4 +1,4 @@
-FROM rust:alpine3.17 as build-rust
+FROM rust:alpine3.18 as build-rust
 RUN apk add build-base musl-dev openssl-dev
 RUN apk update add --update nodejs=18.16.0-r1
 RUN apk add --update npm
