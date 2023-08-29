@@ -41,13 +41,13 @@ export function SetSamlAdfs(app: express.Application) {
                 callbackUrl: Config.saml_adfs_callback,
                 privateCert: fs.readFileSync(Config.saml_adfs_private_cert_path, 'utf-8'),
                 cert: fs.readFileSync(Config.saml_adfs_public_cert_path, 'utf-8'),
-                signatureAlgorithm: 'sha256',
+                signatureAlgorithm: Config.saml_adfs_signature_algorithm,
                 racComparison: 'exact',
-                disableRequestedAuthnContext: true,
+                disableRequestedAuthnContext: Config.saml_adfs_disable_requested_authn_context,
                 identifierFormat: null,
-                wantAuthnResponseSigned: false,
-                wantAssertionsSigned: false,
-                audience: false,
+                wantAuthnResponseSigned: Config.saml_adfs_want_authn_response_signed,
+                wantAssertionsSigned: Config.saml_adfs_want_assertions_signed,
+                audience: Config.saml_adfs_audience,
             },
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
             (profile: any, done: any) => {
