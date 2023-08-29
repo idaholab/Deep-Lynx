@@ -165,8 +165,6 @@ jobs:
           CI_COMMIT_SHA: $GITHUB_SHA
           NODE_EXTRA_CA_CERTS: ${{ secrets.NODE_EXTRA_CA_CERTS }}
           RUN_JOBS: ${{ secrets.RUN_JOBS }}
-          JAZZ_HOST: ${{ secrets.JAZZ_HOST }}
-          JAZZ_IP: ${{ secrets.JAZZ_IP }}
           ELM_HOST: ${{ secrets.ELM_HOST }}
           ELM_IP: ${{ secrets.ELM_IP }}
           NETWORKING_HOST: ${{ secrets.NETWORKING_HOST }}

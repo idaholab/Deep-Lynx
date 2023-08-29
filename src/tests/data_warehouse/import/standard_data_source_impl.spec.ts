@@ -13,7 +13,6 @@ import DataSourceRepository, {DataSourceFactory} from '../../../data_access_laye
 import StandardDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/standard_data_source_impl';
 import HttpDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/http_data_source_impl';
 import AvevaDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/aveva_data_source';
-import JazzDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/jazz_data_source_impl';
 import fs from 'fs';
 import DataStagingRepository from '../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import {toStream} from '../../../services/utilities';
@@ -32,7 +31,6 @@ describe('A Standard DataSource Implementation can', async () => {
         StandardDataSourceImpl
         | HttpDataSourceImpl
         | AvevaDataSourceImpl
-        | JazzDataSourceImpl
         | TimeseriesDataSourceImpl
         | TimeseriesBucketDataSourceImpl
         | undefined;
