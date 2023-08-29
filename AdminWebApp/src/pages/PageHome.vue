@@ -9,7 +9,7 @@
       dark
     >
       <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
-      <v-toolbar-title class="pl-0">{{componentName}}</v-toolbar-title>
+      <v-toolbar-title class="pl-0">{{getToolbarName(componentName)}}</v-toolbar-title>
       <v-spacer></v-spacer>
 
       <language-select class="pt-2" style="max-width:125px;"></language-select>
@@ -932,6 +932,12 @@
         // Return a default value or handle the error as per requirements
         return '';
       },
+      getToolbarName(componentName: any) {
+        if (componentName === 'PageHome') {
+          return this.$t('general.dashboard');
+        }
+        return componentName;
+      }
     },
 
     created() {
