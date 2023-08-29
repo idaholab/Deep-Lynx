@@ -38,6 +38,7 @@ export type MetatypeT = {
     ontology_version?: string;
     old_id?: string;
     uuid?: string;
+    relationships?: MetatypeRelationshipPairT[];
 };
 
 export type MetatypeRelationshipT = {
@@ -76,6 +77,7 @@ export type MetatypeRelationshipPairT = {
     origin_metatype?: MetatypeT;
     destination_metatype?: MetatypeT;
     relationship?: MetatypeRelationshipT;
+    metatype_id?: string;
 };
 
 export type MetatypeKeyT = {
@@ -103,6 +105,7 @@ export type MetatypeKeyT = {
     modified_by?: string;
     deleted_at?: string;
     ontology_version?: string;
+    uuid?: string;
 };
 
 export type MetatypeRelationshipKeyT = {
@@ -127,6 +130,7 @@ export type MetatypeRelationshipKeyT = {
     created_by?: string;
     modified_by?: string;
     ontology_version?: string;
+    uuid?: string;
 };
 
 export type KeyPairT = {

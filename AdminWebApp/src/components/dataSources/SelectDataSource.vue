@@ -54,7 +54,7 @@
       multiple: {type: Boolean, required: false, default: false},
       disabled: {type: Boolean, required: false, default: false},
       dataSourceID: {
-        type: Object as PropType<string|string[]>, 
+        type: [String, Array],
         required: false
       },
       rules: {

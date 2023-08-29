@@ -4,6 +4,7 @@ import MetatypeRelationshipPairRepository from '../../../../data_access_layer/re
 import {plainToClass} from 'class-transformer';
 import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
 import Result from '../../../../common_classes/result';
+import MetatypeRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository';
 
 const repo = new MetatypeRelationshipPairRepository();
 
@@ -27,6 +28,12 @@ export default class MetatypeRelationshipPairRoutes {
             ...middleware,
             authInContainer('read', 'ontology'),
             this.listMetatypeRelationshipPairs,
+        );
+        app.get(
+            '/containers/:containerID/metatypes/:metatypeID/metatype_relationship_pairs',
+            ...middleware,
+            authInContainer('read', 'ontology'),
+            this.listMetatypeRelationshipPairsForMetatype,
         );
         app.put(
             '/containers/:containerID/metatype_relationship_pairs/:relationshipPairID',
@@ -118,10 +125,11 @@ export default class MetatypeRelationshipPairRoutes {
         }
 
         if (typeof req.query.metatypeID !== 'undefined' && (req.query.metatypeID as string) !== '') {
-            repository = repository.and((new MetatypeRelationshipPairRepository)
-                .origin_metatype_id('eq', req.query.metatypeID)
-                .or()
-                .destination_metatype_id('eq', req.query.metatypeID)
+            repository = repository.and(
+                new MetatypeRelationshipPairRepository()
+                    .origin_metatype_id('eq', req.query.metatypeID)
+                    .or()
+                    .destination_metatype_id('eq', req.query.metatypeID),
             );
         }
 
@@ -171,6 +179,26 @@ export default class MetatypeRelationshipPairRoutes {
                 })
                 .finally(() => next());
         }
+    }
+
+    private static async listMetatypeRelationshipPairsForMetatype(req: Request, res: Response, next: NextFunction) {
+        if (req.metatype?.id) {
+            const metatypeRepo = new MetatypeRepository();
+            // force a refresh
+            req.metatype = (await metatypeRepo.findByID(req.metatype.id, true)).value;
+            if (typeof req.query.deleted !== 'undefined' && String(req.query.deleted as string).toLowerCase() === 'false') {
+                Result.Success(req.metatype.relationships?.filter((relationship) => !relationship.deleted_at)).asResponse(res);
+                next();
+                return;
+            }
+
+            Result.Success(req.metatype.relationships).asResponse(res);
+            next();
+            return;
+        }
+
+        Result.Failure('metatype not found', 404).asResponse(res);
+        next();
     }
 
     private static updateMetatypeRelationshipPair(req: Request, res: Response, next: NextFunction) {

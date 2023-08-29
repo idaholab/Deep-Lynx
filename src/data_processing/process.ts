@@ -3,7 +3,7 @@ import Result from '../common_classes/result';
 import DataStagingMapper from '../data_access_layer/mappers/data_warehouse/import/data_staging_mapper';
 import TypeMappingRepository from '../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository';
 import TypeMapping from '../domain_objects/data_warehouse/etl/type_mapping';
-import {SuperUser} from '../domain_objects/access_management/user';
+import {ReturnSuperUser} from '../domain_objects/access_management/user';
 import FileMapper from '../data_access_layer/mappers/data_warehouse/data/file_mapper';
 import Logger from '../services/logger';
 import NodeRepository from '../data_access_layer/repositories/data_warehouse/data/node_repository';
@@ -60,7 +60,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
                 sample_payload: staging.data,
                 shape_hash: staging.shape_hash,
             }),
-            SuperUser,
+            await ReturnSuperUser(),
         );
 
         await stagingRepo.setErrors(staging.id!, ['no active transformations for type mapping']);
@@ -140,9 +140,21 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
             // we must find the node ID to attach a file to it,
             // even if a the node entry was dropped due to duplicate data
             const listed = await new NodeRepository()
-                .where().originalDataID('in', nodesToInsert.map(n => n.original_data_id))
-                .and().dataSourceID('in', nodesToInsert.map(n => n.data_source_id))
-                .and().containerID('in', nodesToInsert.map(n => n.container_id))
+                .where()
+                .originalDataID(
+                    'in',
+                    nodesToInsert.map((n) => n.original_data_id),
+                )
+                .and()
+                .dataSourceID(
+                    'in',
+                    nodesToInsert.map((n) => n.data_source_id),
+                )
+                .and()
+                .containerID(
+                    'in',
+                    nodesToInsert.map((n) => n.container_id),
+                )
                 .list();
 
             if (listed.isError) {
@@ -151,13 +163,13 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
                 nodesToInsert.forEach((node) => {
                     let nodeID: string | undefined;
                     if (node.id) {
-                        nodeID = node.id
+                        nodeID = node.id;
                     } else if (listed.value.length > 0) {
-                        const relevantNodes = listed.value.filter(n => {
-                            return n.original_data_id === node.original_data_id
-                                && n.data_source_id === node.data_source_id
-                                && n.container_id === node.container_id
-                        })
+                        const relevantNodes = listed.value.filter((n) => {
+                            return (
+                                n.original_data_id === node.original_data_id && n.data_source_id === node.data_source_id && n.container_id === node.container_id
+                            );
+                        });
                         nodeID = relevantNodes.length > 0 ? relevantNodes[0].id! : undefined;
                     } else {
                         nodeID = undefined;
@@ -174,7 +186,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
                             );
                         });
                     }
-                })
+                });
             }
 
             const attached = await NodeMapper.Instance.BulkAddFile(nodeFiles, transaction.value);

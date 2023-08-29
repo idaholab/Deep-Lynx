@@ -317,6 +317,7 @@ export default {
             database: 'Database',
             archive: 'Archive',
             parent: 'Parent',
+            owner: 'Owner',
         },
         validation: {
             validEmail: 'Email must be valid',
@@ -452,6 +453,7 @@ export default {
             selectParentHelp: 'Select a class to be the parent or leave blank for a root class',
             createChild: 'Create Child Class',
             inheritedProperty: 'Inherited property from',
+            inheritedRelationship: 'Inherited relationship from',
             editProperty: 'Edit Class Property',
             newProperty: 'New Class Property',
             searchProperty: 'Type to search available Class Properties',
@@ -664,6 +666,7 @@ export default {
             enable: 'Enable Type Mapping',
             import: 'Import Type Mappings',
             importFromFile: 'Import Mappings from File',
+            notFound: 'Type Mapping Not Found',
         },
         transformations: {
             transformations: 'Transformations',

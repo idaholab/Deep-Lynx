@@ -58,7 +58,12 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
             return Promise.resolve(Result.Success(cached));
         }
 
-        const retrieved = await this.#mapper.Retrieve(id);
+        let retrieved;
+        if (metatypeID) {
+            retrieved = await this.#mapper.RetrieveFromView(id, metatypeID);
+        } else {
+            retrieved = await this.#mapper.Retrieve(id);
+        }
 
         // don't fail out on cache set failure, it will log and move on
         void this.setCache(retrieved.value);
@@ -151,7 +156,7 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
         return Promise.resolve(Result.Success(true));
     }
 
-    async listForMetatype(metatypeID: string, fromView?: boolean): Promise<Result<MetatypeKey[]>> {
+    async listForMetatype(metatypeID: string, containerID: string, fromView?: boolean): Promise<Result<MetatypeKey[]>> {
         const cached = await this.getCachedForMetatype(metatypeID);
         if (cached) {
             return Promise.resolve(Result.Success(cached));
@@ -160,7 +165,7 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
         // we don't cache from the materialized view
         if (fromView) return this.#mapper.ListFromViewForMetatype(metatypeID);
 
-        const keys = await this.#mapper.ListForMetatype(metatypeID);
+        const keys = await this.#mapper.ListForMetatype(metatypeID, containerID);
         if (keys.isError) return Promise.resolve(Result.Pass(keys));
 
         void (await this.setCachedForMetatype(metatypeID, keys.value));

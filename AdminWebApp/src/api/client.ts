@@ -558,6 +558,10 @@ export class Client {
         return this.get<MetatypeRelationshipPairT>(`/containers/${containerID}/metatype_relationship_pairs/${metatypeRelationshipPairID}`);
     }
 
+    listMetatypeRelationshipPairsForMetatype(containerID: string, metatypeID: string): Promise<MetatypeRelationshipPairT[]> {
+        return this.get<MetatypeRelationshipPairT[]>(`/containers/${containerID}/metatypes/${metatypeID}/metatype_relationship_pairs`);
+    }
+
     updateMetatypeRelationship(containerID: string, metatypeRelationshipID: string, metatypeRelationship: any): Promise<boolean> {
         return this.put<boolean>(`/containers/${containerID}/metatype_relationships/${metatypeRelationshipID}`, metatypeRelationship);
     }

@@ -35,6 +35,10 @@ export default class MetatypeRelationshipPair extends BaseDomainClass {
     @IsOptional()
     old_id?: string;
 
+    @IsOptional()
+    @IsString()
+    metatype_id?: string;
+
     // in order to support the data structure we need additional transformation
     // functions to take the database value and create an empty metatype for it
     // this is done because the record in the database has only the id values, we
@@ -42,7 +46,6 @@ export default class MetatypeRelationshipPair extends BaseDomainClass {
     // we set toClassOnly as true because want the serialized version of this model
     // to contain the classes. We also have getters for the ID  and type
     // in order to maintain backwards compatibility with old API responses
-    @MetatypeID({message: 'Destination Metatype must have valid ID'})
     @Expose({name: 'destination_metatype_id', toClassOnly: true})
     @Transform(
         ({value}) => {
@@ -64,7 +67,6 @@ export default class MetatypeRelationshipPair extends BaseDomainClass {
         return this.destinationMetatype!;
     }
 
-    @MetatypeID({message: 'Origin Metatype must have valid ID'})
     @Expose({name: 'origin_metatype_id', toClassOnly: true})
     @Transform(
         ({value}) => {

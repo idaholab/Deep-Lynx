@@ -526,7 +526,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
 
         const metatypeRepo = new MetatypeRepository();
         const relationshipRepo = new MetatypeRelationshipRepository();
-        const pairRepo = new MetatypeRelationshipPairRepository();
+        const pairRepo = new MetatypeRelationshipPairRepository(false);
         const transformationRepo = new TypeTransformationRepository();
 
         // first fetch all transformations for all mappings - don't loop and contain them on the parent object because

@@ -6,6 +6,7 @@ import Result from '../../../common_classes/result';
 import {pipe} from 'fp-ts/lib/function';
 import {fold} from 'fp-ts/Either';
 import {Type} from 'class-transformer';
+import MetatypeRelationshipPair from './metatype_relationship_pair';
 
 /*
     Metatype represents a metatype record in the DeepLynx database and the various
@@ -56,6 +57,11 @@ export default class Metatype extends BaseDomainClass {
     // for tracking removed keys for update
     #removedKeys: MetatypeKey[] | undefined;
 
+    @Type(() => MetatypeRelationshipPair)
+    relationships: MetatypeRelationshipPair[] | undefined;
+    // for tracking removed pairs for update
+    #removedRelationships: MetatypeRelationshipPair[] | undefined;
+
     @IsOptional()
     @IsString()
     parent_id?: string;
@@ -68,6 +74,7 @@ export default class Metatype extends BaseDomainClass {
         keys?: MetatypeKey[];
         ontology_version?: string;
         parent_id?: string;
+        relationships?: MetatypeRelationshipPair[];
     }) {
         super();
 
@@ -81,7 +88,13 @@ export default class Metatype extends BaseDomainClass {
             if (input.name) this.name = input.name;
             if (input.description) this.description = input.description;
             if (input.parent_id) this.parent_id = input.parent_id;
+            if (input.relationships) this.relationships = input.relationships;
         }
+    }
+
+    addRelationship(...relationships: MetatypeRelationshipPair[]) {
+        if (!this.relationships) this.relationships = [];
+        this.relationships.push(...relationships);
     }
 
     get removedKeys() {
@@ -199,7 +212,7 @@ export default class Metatype extends BaseDomainClass {
     }
 
     // validateAndTransformProperties will compile an io-ts type to run a provided
-    // input against. You use this method to insure that the provided input's structure
+    // input against. You use this method to ensure that the provided input's structure
     // and values match the expected structure and values defined in the ontology
     // as well as run any validations that might be required on a given key
     // this will return a valid payload with default values set if needed
@@ -207,7 +220,7 @@ export default class Metatype extends BaseDomainClass {
         // easiest way to create type for callback func
         const compiledType = this.compileKeys();
 
-        // before we attempt to validate we need to insure that any keys with default values have that applied to the payload
+        // before we attempt to validate we need to ensure that any keys with default values have that applied to the payload
         if (this.keys)
             for (const key of this.keys) {
                 if (key.property_name in input || key.default_value === null) continue;

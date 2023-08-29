@@ -43,7 +43,7 @@
                   :items="originMetatypes"
                   :search-input.sync="originSearch"
                   item-text="name"
-                  item-value="id"
+                  return-object
                   persistent-hint
                   required
                   clearable
@@ -110,6 +110,9 @@ export default class CreateRelationshipPairDialog extends Vue {
   containerID!: string;
 
   @Prop({required: false})
+  metatype?: MetatypeT;
+
+  @Prop({required: false})
   readonly icon!: boolean
 
   errorMessage = ""
@@ -121,13 +124,19 @@ export default class CreateRelationshipPairDialog extends Vue {
   relationshipTypeChoices = ["many:many", "one:one", "one:many", "many:one"]
   name = ""
   description =  ""
-  originSelect = ""
+  originSelect: MetatypeT | undefined = undefined
   destinationSelect = ""
   relationshipSelect = ""
   relationshipType = ""
   originMetatypes: MetatypeT[] = []
   destinationMetatypes: MetatypeT[] = []
   metatypeRelationships: MetatypeRelationshipT[] = []
+
+  created() {
+    if (this.metatype) {
+      this.originSelect = this.metatype
+    }
+  }
 
   @Watch('dialog', {immediate: true})
   onDialogChange() {
@@ -165,7 +174,7 @@ export default class CreateRelationshipPairDialog extends Vue {
     this.$client.createMetatypeRelationshipPair(this.containerID,
         {"name": this.name,
           "description": this.description,
-          "origin_metatype_id": this.originSelect,
+          "origin_metatype_id": this.originSelect!.id,
           "destination_metatype_id": this.destinationSelect,
           "relationship_id": this.relationshipSelect,
           "ontology_version": this.$store.getters.activeOntologyVersionID,
@@ -182,7 +191,7 @@ export default class CreateRelationshipPairDialog extends Vue {
   reset() {
     this.name =  ""
     this.description = ""
-    this.originSelect = ""
+    this.originSelect = undefined
     this.destinationSelect = ""
     this.relationshipSelect = ""
     this.relationshipType = ""

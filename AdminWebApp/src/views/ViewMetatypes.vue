@@ -261,7 +261,7 @@
                 this.$client.listMetatypes(this.containerID, {
                   ontologyVersion: this.$store.getters.currentOntologyVersionID,
                   nameIn,
-                  loadKeys: true
+                  loadKeys: true,
                 })
                 .then((comparison) => {
                   this.metatypesLoading = false
@@ -304,11 +304,8 @@
         if(typeof  original === 'undefined' || typeof target === 'undefined') return true
         // first copy the objects over so that our key deletion does not affect the real object, since we can't compare
         // ids and metadata we need to get rid of those on each object
-        const o = {}
-        const t = {}
-
-        Object.assign(o, original)
-        Object.assign(t, target)
+        const o = structuredClone(original)
+        const t = structuredClone(target)
 
         // remove the keys we don't want to use to compare
         function cleanMetatype(m: MetatypeT) {
@@ -330,6 +327,24 @@
             if(p.id) delete p.id
             if(p.metatype_id) delete p.metatype_id
             if(p.ontology_version) delete  p.ontology_version
+            if(p.uuid) delete p.uuid
+          })
+
+          m.relationships!.map(p => {
+            if(p.created_at) delete p.created_at
+            if(p.created_by) delete p.created_by
+            if(p.modified_at) delete p.modified_at
+            if(p.modified_by) delete p.modified_by
+            if(p.id) delete p.id
+            if(p.origin_metatype_id) delete p.origin_metatype_id
+            if(p.destination_metatype_id) delete p.destination_metatype_id
+            if(p.relationship_id) delete p.relationship_id
+            if(p.old_id) delete p.old_id
+            if(p.metatype_id) delete p.metatype_id
+            if(p.ontology_version) delete  p.ontology_version
+            if(p.origin_metatype) delete  p.origin_metatype
+            if(p.destination_metatype) delete  p.destination_metatype
+            if(p.relationship) delete  p.relationship
           })
 
         }

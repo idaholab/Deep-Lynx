@@ -67,6 +67,33 @@
                 <ViewMetatypeKeyDialog :metatypeKey="item" :metatype="metatype" :icon="true" @metatypeKeyEdited="loadKeys()"></ViewMetatypeKeyDialog>
               </template>
             </v-data-table>
+
+            <v-data-table
+                :headers="relationshipHeaders()"
+                :items="comparisonMetatype.relationships"
+                :items-per-page="100"
+                :footer-props="{
+                    'items-per-page-options': [25, 50, 100]
+                }"
+                class="elevation-1"
+                sort-by="name"
+                style="margin-top: 30px"
+            >
+              <template v-slot:top>
+                <v-toolbar flat color="white">
+                  <v-toolbar-title>{{$t("relationships.relationships")}}</v-toolbar-title>
+                  <v-divider
+                      class="mx-4"
+                      inset
+                      vertical
+                  ></v-divider>
+                  <v-spacer></v-spacer>
+                </v-toolbar>
+              </template>
+              <template v-slot:[`item.actions`]="{ item }">
+                <ViewRelationshipPairDialog :pair="item" :icon="true"></ViewRelationshipPairDialog>
+              </template>
+            </v-data-table>
           </v-col>
 
 
@@ -151,6 +178,63 @@
                 </div>
               </template>
             </v-data-table>
+
+            <v-data-table
+                :headers="relationshipHeaders()"
+                :items="selectedMetatype.relationships"
+                :items-per-page="100"
+                :footer-props="{
+                    'items-per-page-options': [25, 50, 100]
+                }"
+                class="elevation-1"
+                :item-class="pairItemRowBackground"
+                sort-by="name"
+                style="margin-top: 30px"
+            >
+
+              <template v-slot:top>
+                <v-toolbar flat color="white">
+                  <v-toolbar-title>{{$t("relationships.relationships")}}</v-toolbar-title>
+                  <v-divider
+                      class="mx-4"
+                      inset
+                      vertical
+                  ></v-divider>
+                  <v-spacer></v-spacer>
+                  <CreateRelationshipPairDialog :containerID="selectedMetatype.container_id" :metatype="selectedMetatype" @pairCreated="loadRelationships()"></CreateRelationshipPairDialog>
+                </v-toolbar>
+              </template>
+              <template v-slot:[`item.actions`]="{ item }">
+                <!-- only allow edits on owned relationships -->
+                <div v-if="item.origin_metatype_id === selectedMetatype.id || item.destination_metatype_id === selectedMetatype.id">
+                  <div v-if="($store.getters.isEditMode && !item.deleted_at) || !$store.getters.ontologyVersioningEnabled">
+                    <EditRelationshipPairDialog
+                        :pair="item"
+                        :icon="true"
+                        :comparisonPair="(comparisonMetatype) ? comparisonMetatype.relationships.find(k => k.name === item.name) : undefined"
+                        @pairEdited="loadRelationships()"></EditRelationshipPairDialog>
+                    <v-icon
+                        small
+                        @click="deleteRelationship(item)"
+                    >
+                      mdi-delete
+                    </v-icon>
+                  </div>
+
+                  <v-icon
+                      v-if="$store.getters.isEditMode && item.deleted_at"
+                      small
+                      @click="undeleteRelationship(item)"
+                  >
+                    mdi-restore
+                  </v-icon>
+                </div>
+                <!-- otherwise show link to parent -->
+                <div v-else>
+                  {{$t('classes.inheritedRelationship')}} {{selectedMetatype.parent_id}}
+                </div>
+              </template>
+            </v-data-table>
             <v-row v-if="$store.getters.isEditMode" style="margin-top: 15px">
               <v-col :cols="3"><div class="box created mr-2"></div><p>{{$t('general.created')}}</p></v-col>
               <v-col :cols="3"><div class="box edited mr-2"></div><p>{{$t('general.edited')}}</p></v-col>
@@ -182,12 +266,18 @@
 <script lang="ts">
   import Vue, { PropType } from 'vue'
 
-  import {MetatypeKeyT, MetatypeT} from "../../../api/types";
+  import {MetatypeKeyT, MetatypeRelationshipPairT, MetatypeT} from "../../../api/types";
   import EditMetatypeKeyDialog from "@/components/ontology/metatypes/EditMetatypeKeyDialog.vue";
   import CreateMetatypeKeyDialog from "@/components/ontology/metatypes/CreateMetatypeKeyDialog.vue"
   import ViewMetatypeKeyDialog from "@/components/ontology/metatypes/ViewMetatypeKeyDialog.vue";
   import CreateMetatypeDialog from "@/components/ontology/metatypes/CreateMetatypeDialog.vue";
   import MetatypeParentSelect from "@/components/ontology/metatypes/MetatypeParentSelect.vue";
+  import ViewRelationshipPairDialog
+    from "@/components/ontology/metatypeRelationshipPairs/viewRelationshipPairDialog.vue";
+  import CreateRelationshipPairDialog
+    from "@/components/ontology/metatypeRelationshipPairs/createRelationshipPairDialog.vue";
+  import EditRelationshipPairDialog
+    from "@/components/ontology/metatypeRelationshipPairs/editRelationshipPairDialog.vue";
   const diff = require('deep-diff').diff;
 
   interface EditMetatypeDialogModel {
@@ -201,7 +291,10 @@
   export default Vue.extend ({
     name: 'EditMetatypeDialog',
 
-    components: {CreateMetatypeDialog, EditMetatypeKeyDialog, CreateMetatypeKeyDialog, ViewMetatypeKeyDialog, MetatypeParentSelect },
+    components: {
+      EditRelationshipPairDialog,
+      CreateRelationshipPairDialog,
+      CreateMetatypeDialog, EditMetatypeKeyDialog, CreateMetatypeKeyDialog, ViewMetatypeKeyDialog, MetatypeParentSelect, ViewRelationshipPairDialog },
 
     props: {
       metatype: {
@@ -256,6 +349,16 @@
           { text: this.$t('general.description'), value: 'description'},
           { text: this.$t('general.dataType'), value: 'data_type'},
           { text: this.$t('general.actions'), value: 'actions' }
+        ]
+      },
+
+      relationshipHeaders(): { text: string; value: string; sortable: boolean }[] {
+        return  [
+          { text: this.$t('general.name'), value: 'name', sortable: false },
+          { text: this.$t('general.description'), value: 'description', sortable: false},
+          { text: this.$t('edges.origin'), value: 'origin_metatype_name',sortable: true},
+          { text: this.$t('edges.destination'), value: 'destination_metatype_name', sortable: true },
+          { text: this.$t('general.actions'), value: 'actions', sortable: false }
         ]
       },
 
@@ -316,6 +419,45 @@
             .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
       },
 
+      loadRelationships() {
+        if(this.selectedMetatype) {
+          this.keysLoading = true
+          this.$client.listMetatypeRelationshipPairsForMetatype(this.selectedMetatype.container_id, this.selectedMetatype.id!)
+              .then(relationships => {
+                this.keysLoading = false
+
+                if(this.selectedMetatype) {
+                  this.selectedMetatype.relationships = relationships
+                  this.$forceUpdate()
+                }
+              })
+              .catch(e => {
+                this.errorMessage = e
+                this.keysLoading = false
+              })
+        }
+      },
+
+      deleteRelationship(pair: MetatypeRelationshipPairT) {
+        this.$client.deleteMetatypeRelationshipPair(this.selectedMetatype?.container_id!, pair.id!, {permanent: !this.$store.getters.isEditMode})
+            .then(result => {
+              if(!result) this.errorMessage = this.$t('errors.errorCommunicating') as string
+
+              this.loadRelationships()
+            })
+            .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
+      },
+
+      undeleteRelationship(pair: MetatypeRelationshipPairT) {
+        this.$client.deleteMetatypeRelationshipPair(this.selectedMetatype?.container_id!, pair.id!, {reverse: true})
+            .then(result => {
+              if(!result) this.errorMessage = this.$t('errors.errorCommunicating') as string
+
+              this.loadRelationships()
+            })
+            .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
+      },
+
       keyItemRowBackground(item: any) {
         if(this.$store.getters.isEditMode) {
           const matchedKey =  this.comparisonMetatype?.keys.find(k => k.name === item.name)!
@@ -353,10 +495,63 @@
           if(p.id) delete p.id
           if(p.metatype_id) delete p.metatype_id
           if(p.ontology_version) delete  p.ontology_version
+          if(p.uuid) delete p.uuid
         }
 
         cleanKey(o as MetatypeKeyT)
         cleanKey(t as MetatypeKeyT)
+
+        return diff(o, t)
+      },
+
+      pairItemRowBackground(item: any) {
+        if(this.$store.getters.isEditMode) {
+          const matchedPair =  this.comparisonMetatype?.relationships!.find(k => k.name === item.name)!
+
+          if(item.deleted_at) {
+            return 'deleted-item'
+          }
+
+          if(!matchedPair) {
+            return 'created-item'
+          }
+
+          if(this.comparePairs(matchedPair, item)) {
+            return 'edited-item'
+          }
+        }
+        return ''
+      },
+
+      // this function will indicate whether two relationship pairs are different
+      comparePairs(original: MetatypeRelationshipPairT, target: MetatypeRelationshipPairT): boolean {
+        if(typeof this.comparisonMetatype === 'undefined' || typeof this.selectedMetatype === 'undefined') return false
+
+        const o: {[key: string]: any} = {}
+        const t: {[key: string]: any} = {}
+        Object.assign(o, original)
+        Object.assign(t, target)
+
+        // remove the keys we don't want to use to compare
+        function cleanPair(p: MetatypeRelationshipPairT) {
+          if(p.created_at) delete p.created_at
+          if(p.created_by) delete p.created_by
+          if(p.modified_at) delete p.modified_at
+          if(p.modified_by) delete p.modified_by
+          if(p.id) delete p.id
+          if(p.origin_metatype_id) delete p.origin_metatype_id
+          if(p.destination_metatype_id) delete p.destination_metatype_id
+          if(p.relationship_id) delete p.relationship_id
+          if(p.old_id) delete p.old_id
+          if(p.metatype_id) delete p.metatype_id
+          if(p.ontology_version) delete  p.ontology_version
+          if(p.origin_metatype) delete  p.origin_metatype
+          if(p.destination_metatype) delete  p.destination_metatype
+          if(p.relationship) delete  p.relationship
+        }
+
+        cleanPair(o as MetatypeRelationshipPairT)
+        cleanPair(t as MetatypeRelationshipPairT)
 
         return diff(o, t)
       },

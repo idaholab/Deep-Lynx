@@ -58,8 +58,12 @@ export default class MetatypeKeyMapper extends Mapper {
         return super.retrieve(this.retrieveStatement(id), {resultClass: this.resultClass});
     }
 
-    public async ListForMetatype(metatypeID: string): Promise<Result<MetatypeKey[]>> {
-        return super.rows(this.listStatement(metatypeID), {resultClass: this.resultClass});
+    public async RetrieveFromView(id: string, metatypeID: string): Promise<Result<MetatypeKey>> {
+        return super.retrieve(this.retrieveFromViewStatement(id, metatypeID), {resultClass: this.resultClass});
+    }
+
+    public async ListForMetatype(metatypeID: string, containerID: string): Promise<Result<MetatypeKey[]>> {
+        return super.rows(this.listStatement(metatypeID, containerID), {resultClass: this.resultClass});
     }
 
     public async ListForMetatypeIDs(metatype_ids: string[]): Promise<Result<MetatypeKey[]>> {
@@ -151,7 +155,7 @@ export default class MetatypeKeyMapper extends Mapper {
     }
 
     public async JSONCreate(metatypeKeys: MetatypeKey[]): Promise<Result<boolean>> {
-        return super.runStatement(this.insertFromJSONStatement(metatypeKeys))
+        return super.runStatement(this.insertFromJSONStatement(metatypeKeys));
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -218,6 +222,13 @@ export default class MetatypeKeyMapper extends Mapper {
         };
     }
 
+    private retrieveFromViewStatement(metatypeKeyID: string, metatypeID: string): QueryConfig {
+        return {
+            text: `SELECT * FROM metatype_full_keys WHERE id = $1 AND metatype_id = $2`,
+            values: [metatypeKeyID, metatypeID],
+        };
+    }
+
     private listFromIDsStatement(ids: string[]): string {
         const text = `SELECT * FROM metatype_full_keys WHERE id IN (%L)`;
         const values = ids;
@@ -274,10 +285,10 @@ export default class MetatypeKeyMapper extends Mapper {
         return format(text, metatype_ids);
     }
 
-    private listStatement(metatypeID: string): QueryConfig {
+    private listStatement(metatypeID: string, containerID: string): QueryConfig {
         return {
-            text: `SELECT * FROM get_metatype_keys($1::bigint) ORDER BY name`,
-            values: [metatypeID],
+            text: `SELECT * FROM get_metatype_keys($1::bigint, $2::bigint) ORDER BY name`,
+            values: [metatypeID, containerID],
         };
     }
 

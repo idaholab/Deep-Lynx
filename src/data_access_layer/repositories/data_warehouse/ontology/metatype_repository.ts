@@ -12,6 +12,8 @@ import {PoolClient} from 'pg';
 import {User} from '../../../../domain_objects/access_management/user';
 import MetatypeKeyRepository from './metatype_key_repository';
 import GraphQLRunner from '../../../../graphql/schema';
+import MetatypeRelationshipPairMapper from '../../../mappers/data_warehouse/ontology/metatype_relationship_pair_mapper';
+import MetatypeRelationshipPairRepository from './metatype_relationship_pair_repository';
 
 /*
     MetatypeRepository contains methods for persisting and retrieving a metatype
@@ -22,6 +24,7 @@ import GraphQLRunner from '../../../../graphql/schema';
 export default class MetatypeRepository extends Repository implements RepositoryInterface<Metatype> {
     #mapper: MetatypeMapper = MetatypeMapper.Instance;
     #keyMapper: MetatypeKeyMapper = MetatypeKeyMapper.Instance;
+    #pairMapper: MetatypeRelationshipPairMapper = MetatypeRelationshipPairMapper.Instance;
 
     async save(m: Metatype, user: User, saveKeys = true): Promise<Result<boolean>> {
         const errors = await m.validationErrors();
@@ -329,9 +332,15 @@ export default class MetatypeRepository extends Repository implements Repository
                 // do not set the cache from the materialized view as it could be out of date data
                 const keys = await this.#keyMapper.ListFromViewForMetatype(retrieved.value.id!);
                 if (!keys.isError) retrieved.value.addKey(...keys.value);
+
+                const pairs = await this.#pairMapper.ListFromViewForMetatype(retrieved.value.id!);
+                if (!pairs.isError) retrieved.value.addRelationship(...pairs.value);
             } else {
-                const keys = await this.#keyMapper.ListForMetatype(retrieved.value.id!);
+                const keys = await this.#keyMapper.ListForMetatype(retrieved.value.id!, retrieved.value.container_id!);
                 if (!keys.isError) retrieved.value.addKey(...keys.value);
+
+                const pairs = await this.#pairMapper.ListForMetatype(retrieved.value.id!, retrieved.value.container_id!);
+                if (!pairs.isError) retrieved.value.addRelationship(...pairs.value);
 
                 // don't fail out on cache set failure, it will log and move on
                 void this.setCache(retrieved.value);
@@ -349,9 +358,15 @@ export default class MetatypeRepository extends Repository implements Repository
                 // do not set the cache from the materialized view as it could be out of date data
                 const keys = await this.#keyMapper.ListFromViewForMetatype(retrieved.value.id!);
                 if (!keys.isError) retrieved.value.addKey(...keys.value);
+
+                const pairs = await this.#pairMapper.ListFromViewForMetatype(retrieved.value.id!);
+                if (!pairs.isError) retrieved.value.addRelationship(...pairs.value);
             } else {
-                const keys = await this.#keyMapper.ListForMetatype(retrieved.value.id!);
+                const keys = await this.#keyMapper.ListForMetatype(retrieved.value.id!, retrieved.value.container_id!);
                 if (!keys.isError) retrieved.value.addKey(...keys.value);
+
+                const pairs = await this.#pairMapper.ListForMetatype(retrieved.value.id!, retrieved.value.container_id!);
+                if (!pairs.isError) retrieved.value.addRelationship(...pairs.value);
             }
         }
 
@@ -381,6 +396,9 @@ export default class MetatypeRepository extends Repository implements Repository
 
         const keysDeleted = await new MetatypeKeyRepository().deleteCachedForMetatype(id);
         if (!keysDeleted) Logger.error(`unable to remove keys for metatype ${id} from cache`);
+
+        const relationshipsDeleted = await new MetatypeRelationshipPairRepository().deleteCachedForMetatype(id);
+        if (!relationshipsDeleted) Logger.error(`unable to remove relationships for metatype ${id} from cache`);
 
         return Promise.resolve(deleted);
     }
@@ -448,20 +466,22 @@ export default class MetatypeRepository extends Repository implements Repository
         return super.count();
     }
 
-    async list(loadKeys = true, options?: QueryOptions, transaction?: PoolClient): Promise<Result<Metatype[]>> {
+    async list(loadKeys = true, loadRelationships = true, options?: QueryOptions, transaction?: PoolClient): Promise<Result<Metatype[]>> {
         const results = await super.findAll(options, {
             transaction,
             resultClass: Metatype,
         });
         if (results.isError) return Promise.resolve(Result.Pass(results));
 
-        if (loadKeys) {
-            const keyRepo = new MetatypeKeyRepository();
-            const metatype_ids: string[] = [];
+        const metatype_ids: string[] = [];
+        if (loadKeys || loadRelationships) {
             results.value.forEach((metatype) => {
                 metatype_ids.push(metatype.id!);
             });
+        }
 
+        if (loadKeys) {
+            const keyRepo = new MetatypeKeyRepository();
             const keys = (await keyRepo.listForMetatypeIDs(metatype_ids, options?.loadFromView)).value;
 
             await Promise.all(
@@ -472,6 +492,23 @@ export default class MetatypeRepository extends Repository implements Repository
                     });
                     // add keys to metatype
                     return metatype.addKey(...keyList);
+                }),
+            );
+        }
+
+        if (loadRelationships) {
+            let pairRepo = new MetatypeRelationshipPairRepository();
+            pairRepo = pairRepo.where().metatype_id('in', metatype_ids);
+            const pairs = (await pairRepo.list(false, {sortBy: 'name'})).value;
+
+            await Promise.all(
+                results.value.map((metatype) => {
+                    // find relevant relationship pairs
+                    const pairList = pairs.filter((pair) => {
+                        return pair.metatype_id === metatype.id;
+                    });
+                    // add pairs to metatype
+                    return metatype.addRelationship(...pairList);
                 }),
             );
         }

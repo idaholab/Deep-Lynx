@@ -19,7 +19,7 @@ import MetatypeRelationship from '../../../domain_objects/data_warehouse/ontolog
 import MetatypeRelationshipMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper';
 import MetatypeRelationshipPairMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper';
 import MetatypeRelationshipPair from '../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
-import {SuperUser} from '../../../domain_objects/access_management/user';
+import {ReturnSuperUser} from '../../../domain_objects/access_management/user';
 
 describe('A Data Type Mapping Transformation', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -499,8 +499,9 @@ describe('A Data Type Mapping Transformation', async () => {
         let retrieved = await TypeTransformationMapper.Instance.ListForTypeMapping(mapping.value.id!);
         expect(retrieved.isError).false;
         expect(retrieved.value).not.empty;
+        const superUser = await ReturnSuperUser();
 
-        let copied = await TypeMappingMapper.Instance.CopyTransformations(SuperUser.id!, mapping.value.id!, mapping2.value.id!);
+        let copied = await TypeMappingMapper.Instance.CopyTransformations(superUser.id!, mapping.value.id!, mapping2.value.id!);
         expect(copied.isError).false;
 
         let retrieved2 = await TypeTransformationMapper.Instance.ListForTypeMapping(mapping2.value.id!);

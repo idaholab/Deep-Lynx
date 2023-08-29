@@ -13,7 +13,7 @@
         :hint="$t('classes.selectParentHelp')"
         clearable
         @change="updateSelectedMetatype"
-        :disabled="(disableSelect && parentID)"
+        :disabled="(disableSelect && parentID !== undefined)"
     >
       <template v-slot:label>{{$t('general.parent')}}</template>
     </v-autocomplete>

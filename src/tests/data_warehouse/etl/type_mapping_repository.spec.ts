@@ -350,7 +350,7 @@ describe('A Type Mapping Repository', async () => {
         const mKeyRepo = new MetatypeKeyRepository();
         const relRepo = new MetatypeRelationshipRepository();
         const rKeyRepo = new MetatypeRelationshipKeyRepository();
-        const pairRepo = new MetatypeRelationshipPairRepository();
+        const pairRepo = new MetatypeRelationshipPairRepository(false);
         const transformRepo = new TypeTransformationRepository();
 
         // create an ontology version

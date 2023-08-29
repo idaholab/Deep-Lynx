@@ -288,7 +288,7 @@ describe('A Metatype Relationship Repository', async () => {
         expect(saved.isError).false;
 
         // simple list first
-        let results = await repository.list(false, {limit: 1, offset: 0});
+        let results = await repository.list(false, false, {limit: 1, offset: 0});
         expect(results.isError).false;
         expect(results.value).not.empty;
         expect(results.value.length).eq(1);

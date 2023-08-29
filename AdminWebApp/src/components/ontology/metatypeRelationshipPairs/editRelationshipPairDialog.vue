@@ -47,6 +47,7 @@
                   required
                   disabled
                   class="disabled"
+                  v-observe-visibility="loadComparisonPair"
               >
                 <template v-slot:label>{{$t('edges.originClass')}}</template>
               </v-autocomplete>
@@ -250,6 +251,40 @@ export default class EditRelationshipPairDialog extends Vue {
           this.$emit('pairEdited')
         })
         .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
+  }
+
+  loadComparisonPair(isVisible: boolean) {
+    if (isVisible && this.comparisonPair) {
+      if (this.comparisonPair.relationship?.id) {
+        // retrieve comparisonPair relationship
+        this.$client.retrieveMetatypeRelationship(
+            this.comparisonPair.container_id,
+            this.comparisonPair.relationship.id
+        ).then((result) => {
+          this.comparisonPair!.relationship = result
+        }).catch((e: any) => this.errorMessage = e)
+      }
+
+      if (this.comparisonPair.origin_metatype?.id) {
+        // retrieve comparisonPair origin metatype
+        this.$client.retrieveMetatype(
+            this.comparisonPair.container_id,
+            this.comparisonPair.origin_metatype.id
+        ).then((result) => {
+          this.comparisonPair!.origin_metatype = result
+        }).catch((e: any) => this.errorMessage = e)
+      }
+
+      if (this.comparisonPair.destination_metatype?.id) {
+        // retrieve comparisonPair destination metatype
+        this.$client.retrieveMetatype(
+            this.comparisonPair.container_id,
+            this.comparisonPair.destination_metatype.id
+        ).then((result) => {
+          this.comparisonPair!.destination_metatype = result
+        }).catch((e: any) => this.errorMessage = e)
+      }
+    }
   }
 }
 
