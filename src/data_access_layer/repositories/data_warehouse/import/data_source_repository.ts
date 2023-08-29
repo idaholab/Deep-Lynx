@@ -18,11 +18,10 @@ import {DataSource} from '../../../../interfaces_and_impl/data_warehouse/import/
 import ImportRepository from './import_repository';
 import TimeseriesDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/timeseries_data_source';
 import File from '../../../../domain_objects/data_warehouse/data/file';
-import Logger from '../../../../services/logger';
 import {plainToClass} from 'class-transformer';
 import TimeseriesService from '../../../../services/timeseries/timeseries';
 import TimeseriesBucketDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/timeseries_bucket_data_source';
-import {Bucket, ChangeBucketPayload} from 'deeplynx-timeseries';
+import {Bucket, ChangeBucketPayload} from 'deeplynx';
 
 /*
     DataSourceRepository contains methods for persisting and retrieving data sources
@@ -132,8 +131,8 @@ export default class DataSourceRepository extends Repository implements Reposito
 
             const config = toSave.config as TimeseriesBucketDataSourceConfig;
             if (toSave.adapter_type === 'timeseries_bucket') {
-                const changeBucketPayload = config.change_bucket_payload!;
-                const bucket = await (await this.#timeseriesBucket()).createBucket(changeBucketPayload);
+                const changeBucketPayload = config.change_bucket_payload;
+                const bucket = await (await this.#timeseriesBucket()).createBucket(changeBucketPayload!);
                 config.bucket = bucket;
                 // reset changeBucketPayload to undefined in case future updates don't require bucket update
                 config.change_bucket_payload = undefined;

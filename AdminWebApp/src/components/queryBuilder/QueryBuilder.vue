@@ -53,8 +53,8 @@
                         <v-icon v-if="!results" class="justify-right" @click="removeQueryPart(part)">mdi-window-close</v-icon>
                       </v-flex>
                     </v-card-title>
-                    <component
-                      v-bind:is="part.componentName"
+                    <FilterTypes
+                      :mode="part.componentName"
                       :disabled="results !== null"
                       :containerID="containerID"
                       :queryPart="part"
@@ -63,7 +63,7 @@
                   </v-card>
                   <v-card v-if="!results" style="margin-top: 10px" class="pa-4">
                     <p class="mb-2">{{$t('query.clickToAdd')}}</p>
-                    <AddFilter @selected="addQueryPart"></AddFilter>
+                    <AddFilter :rawMetadataEnabled="rawMetadataEnabled" @selected="addQueryPart"></AddFilter>
                   </v-card>
                 </v-col>
               </v-row>
@@ -189,16 +189,11 @@
   import Vue from 'vue';
 
   import AddFilter from "@/components/queryBuilder/AddFilter.vue";
-  import FilterDataSource from "@/components/queryBuilder/FilterDataSource.vue";
-  import FilterMetatype from "@/components/queryBuilder/FilterMetatype.vue";
-  import FilterOriginalID from "@/components/queryBuilder/FilterOriginalID.vue";
-  import FilterID from "@/components/queryBuilder/FilterID.vue";
+  import FilterTypes from "@/components/queryBuilder/FliterTypes.vue"
   import {v4 as uuidv4} from 'uuid';
   import {NodeT} from "@/api/types";
   import { GraphQLSchema, buildSchema } from 'graphql';
   import {mdiInformation} from "@mdi/js";
-  import FilterRawData from "./FilterRawData.vue";
-  import FilterMetadata from "./FilterMetadata.vue";
   // importing sample queries for code clarity
   import { 
     graphSampleQuery, 
@@ -240,12 +235,7 @@
 
     components: {
       AddFilter,
-      FilterDataSource,
-      FilterMetatype,
-      FilterOriginalID,
-      FilterID,
-      FilterRawData,
-      FilterMetadata
+      FilterTypes,
     },
 
     props: {
@@ -303,7 +293,6 @@
         }
       },
       initCodeMirror() {
-
         this.$nextTick(() => {
           if (this.$refs.queryEditor) {
             this.enableQueryEditor()
@@ -577,7 +566,7 @@
             }
           }`
         }
-      }
+      },
     },
 
     mounted() {

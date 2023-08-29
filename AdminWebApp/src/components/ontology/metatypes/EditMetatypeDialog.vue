@@ -306,7 +306,7 @@
         required: false
       },
       comparisonMetatype: {
-        type: Object as PropType<MetatypeT | undefined>,
+        type: [Object, undefined] as PropType<MetatypeT | undefined>,
         required: false,
         default: undefined
       },

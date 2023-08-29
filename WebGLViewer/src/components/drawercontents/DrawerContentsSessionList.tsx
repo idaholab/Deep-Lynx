@@ -83,10 +83,12 @@ const StyledMenu = styled((props: MenuProps) => (
 
 type Props = {
   data: Array<any>,
+  isLoading: Boolean
 };
 
 const DrawerContentsSessionList: React.FC<Props> = ({
   data,
+  isLoading
 }) => {
   const sessionList = data;
 
@@ -183,132 +185,138 @@ const DrawerContentsSessionList: React.FC<Props> = ({
           <ButtonIconText type="add" handleClick={() => handleToggleModal()} text="Add Session" color="primary" />
         </Box>
       </Box>
-      {!sessionList ? (
-        <LoadingProgress text={'Loading Sessions'}/>
-      ) :(
-        <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0', borderTop: `1px solid ${COLORS.colorDarkgray}` }}>
-          <List dense sx={{ paddingTop: '0' }}>
-            {sessionList.map((object: any, index: number) => (
-              <ListItem
-                key={object.id}
-                disablePadding
-                sx={{ borderBottom: `1px solid ${COLORS.colorDarkgray}` }}
-                secondaryAction={
-                  <>
+      <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0', borderTop: `1px solid ${COLORS.colorDarkgray}` }}>
+        {isLoading ? (
+          <LoadingProgress text={'Loading Sessions'}/>
+        ) : (!sessionList || sessionList.length === 0) ? (
+          <Typography align="center" sx={{ margin: '8px 0', fontSize: '14px' }}>
+            No Sessions to display
+          </Typography>
+        ) :(
+          <>
+            <List dense sx={{ paddingTop: '0' }}>
+              {sessionList.map((object: any, index: number) => (
+                <ListItem
+                  key={object.id}
+                  disablePadding
+                  sx={{ borderBottom: `1px solid ${COLORS.colorDarkgray}` }}
+                  secondaryAction={
+                    <>
+                      <Button
+                        id="customized-button"
+                        className={`menu-button-${index}`}
+                        aria-controls={open ? 'customized-menu' : undefined}
+                        aria-haspopup="true"
+                        aria-expanded={open ? 'true' : undefined}
+                        variant="contained"
+                        disableElevation
+                        onClick={(e) => handleMenuClick(index, e)}
+                        endIcon={<KeyboardArrowDownIcon />}
+                        size="small"
+                        sx={{
+                          color: 'white',
+                          padding: '0px 4px 0 8px',
+                          '& span': {
+                            fontSize: '14px',
+                            marginBottom: '1px',
+                            '&:first-of-type': {
+                              marginRight: '-6px'
+                            },
+                          }
+                        }}
+                      >
+                        <span>Actions</span>
+                      </Button>
+                      <StyledMenu
+                        id="customized-menu"
+                        MenuListProps={{
+                          'aria-labelledby': 'customized-button',
+                        }}
+                        anchorEl={
+                          // Check to see if the anchor is set.
+                          anchorEl && anchorEl[index]
+                        }
+                        open={
+                          // Check to see if the anchor is set.
+                          Boolean(anchorEl && anchorEl[index])
+                        }
+                        onClose={handleMenuClose}
+                      >
+                        <MenuItem onClick={() => handleDeleteSession(object.id)} disableRipple>
+                          <DeleteIcon />
+                          Delete Session
+                        </MenuItem>
+                      </StyledMenu>
+                    </>
+                  }
+                >
+                  <ListItemButton
+                    onClick={() => handleSelectSessionObject(object, 800, `listItem${index+1}`)}
+                    selected={selected === `listItem${index+1}`}
+                    sx={{
+                      '&.Mui-selected': {
+                        backgroundColor: `${COLORS.colorListSelectGray} !important`
+                      },
+                      '&.Mui-focusVisible': {
+                        backgroundColor: `${COLORS.colorListSelectGray} !important`
+                      },
+                      '&:hover': {
+                        backgroundColor: `${COLORS.colorListSelectGray} !important`
+                      }
+                    }}
+                  >
+                    <ListItemText>
+                      <Box sx={{ display: 'flex', flexDirection: 'row' }}>
+                        <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          { object.name }
+                        </Box>
+                      </Box>
+                    </ListItemText>
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+            <Modal open={modalOpen} onClose={handleToggleModal} disableEnforceFocus>
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: 400,
+                  backgroundColor: 'white',
+                  border: '2px solid black',
+                  boxShadow: '24px',
+                  padding: '16px',
+                }}
+              >
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <Input
+                      id="session-name"
+                      name="name"
+                      placeholder="Enter session name"
+                      value={newSession.name}
+                      onChange={handleAddSessionInputChange}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
                     <Button
-                      id="customized-button"
-                      className={`menu-button-${index}`}
-                      aria-controls={open ? 'customized-menu' : undefined}
-                      aria-haspopup="true"
-                      aria-expanded={open ? 'true' : undefined}
                       variant="contained"
                       disableElevation
-                      onClick={(e) => handleMenuClick(index, e)}
-                      endIcon={<KeyboardArrowDownIcon />}
+                      onClick={handleAddNewSession}
                       size="small"
-                      sx={{
-                        color: 'white',
-                        padding: '0px 4px 0 8px',
-                        '& span': {
-                          fontSize: '14px',
-                          marginBottom: '1px',
-                          '&:first-of-type': {
-                            marginRight: '-6px'
-                          },
-                        }
-                      }}
+                      sx={{ marginTop: '16px' }}
                     >
-                      <span>Actions</span>
+                      Add Session
                     </Button>
-                    <StyledMenu
-                      id="customized-menu"
-                      MenuListProps={{
-                        'aria-labelledby': 'customized-button',
-                      }}
-                      anchorEl={
-                        // Check to see if the anchor is set.
-                        anchorEl && anchorEl[index]
-                      }
-                      open={
-                        // Check to see if the anchor is set.
-                        Boolean(anchorEl && anchorEl[index])
-                      }
-                      onClose={handleMenuClose}
-                    >
-                      <MenuItem onClick={() => handleDeleteSession(object.id)} disableRipple>
-                        <DeleteIcon />
-                        Delete Session
-                      </MenuItem>
-                    </StyledMenu>
-                  </>
-                }
-              >
-                <ListItemButton
-                  onClick={() => handleSelectSessionObject(object, 800, `listItem${index+1}`)}
-                  selected={selected === `listItem${index+1}`}
-                  sx={{
-                    '&.Mui-selected': {
-                      backgroundColor: `${COLORS.colorListSelectGray} !important`
-                    },
-                    '&.Mui-focusVisible': {
-                      backgroundColor: `${COLORS.colorListSelectGray} !important`
-                    },
-                    '&:hover': {
-                      backgroundColor: `${COLORS.colorListSelectGray} !important`
-                    }
-                  }}
-                >
-                  <ListItemText>
-                    <Box sx={{ display: 'flex', flexDirection: 'row' }}>
-                      <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        { object.name }
-                      </Box>
-                    </Box>
-                  </ListItemText>
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-          <Modal open={modalOpen} onClose={handleToggleModal} disableEnforceFocus>
-            <Box
-              sx={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: 400,
-                backgroundColor: 'white',
-                border: '2px solid black',
-                boxShadow: '24px',
-                padding: '16px',
-              }}
-            >
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <Input
-                    id="session-name"
-                    name="name"
-                    placeholder="Enter session name"
-                    value={newSession.name}
-                    onChange={handleAddSessionInputChange}
-                  />
+                  </Grid>
                 </Grid>
-                <Grid item xs={6}>
-                  <Button
-                    variant="contained"
-                    disableElevation
-                    onClick={handleAddNewSession}
-                    size="small"
-                    sx={{ marginTop: '16px' }}
-                  >
-                    Add Session
-                  </Button>
-                </Grid>
-              </Grid>
-            </Box>
-          </Modal>
-        </Box>
-      )}
+              </Box>
+            </Modal>
+          </>
+        )}
+      </Box>
     </>
   );
 }

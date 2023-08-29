@@ -33,33 +33,52 @@
 </template>
 
 <script lang="ts">
+  import { Vue } from "vue-property-decorator";
 
-import {Component, Vue} from "vue-property-decorator";
-
-@Component
-export default class AddFilter extends Vue {
-  dialog = false
-  model = 0
-
-  options() {
-    const options = [
-      {text: this.$t('query.FilterMetatype'), value: 'FilterMetatype'},
-      {text: this.$t('query.FilterDataSource'), value: 'FilterDataSource'},
-      {text: this.$t('query.FilterID'), value: 'FilterID'},
-      {text: this.$t('query.FilterOriginalID'), value: 'FilterOriginalID'},
-      {text: this.$t('query.FilterMetadata'), value: "FilterMetadata"},
-      {text: this.$t('query.FilterRawData'), value: 'FilterRawData'}
-    ]
-
-    return options
+  interface AddFilterModel {
+    dialog: boolean
+    model: number
   }
 
-  select(filterName: string) {
-    this.$emit('selected', filterName)
-    this.dialog = false
-    this.$nextTick(() => {
-      this.model = 0;
-    });
-  }
-}
+  export default Vue.extend ({
+    name: 'AddFilter',
+
+    props: {
+      rawMetadataEnabled: {type: Boolean, required: false},
+    },
+
+    data: (): AddFilterModel => ({
+      dialog: false,
+      model: 0,
+    }),
+
+    methods: {
+      options() {
+        const commonOptions = [
+          { text: this.$t('query.FilterMetatype'), value: 'FilterMetatype' },
+          { text: this.$t('query.FilterDataSource'), value: 'FilterDataSource' },
+          { text: this.$t('query.FilterID'), value: 'FilterID' },
+          { text: this.$t('query.FilterOriginalID'), value: 'FilterOriginalID' },
+          { text: this.$t('query.FilterMetadata'), value: 'FilterMetadata' },
+        ];
+
+        if (this.rawMetadataEnabled) {
+          return [
+            ...commonOptions,
+            { text: this.$t('query.FilterRawData'), value: 'FilterRawData' },
+          ];
+        } else {
+            return commonOptions;
+        }
+      },
+
+      select(filterName: string) {
+        this.$emit('selected', filterName)
+        this.dialog = false
+        this.$nextTick(() => {
+          this.model = 0;
+        });
+      }
+    },
+  })
 </script>

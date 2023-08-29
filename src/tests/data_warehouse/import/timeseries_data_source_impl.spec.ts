@@ -11,17 +11,13 @@ import DataSourceRecord, {TimeseriesColumn, TimeseriesDataSourceConfig} from '..
 import DataSourceRepository, {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import fs from 'fs';
 import {plainToInstance} from 'class-transformer';
-import Config from '../../../services/config';
 import {PassThrough} from 'stream';
 import {exec} from 'child_process';
 import {promisify} from 'util';
-import ImportRepository from '../../../data_access_layer/repositories/data_warehouse/import/import_repository';
-import Import from '../../../domain_objects/data_warehouse/import/import';
 import {DataSource} from '../../../interfaces_and_impl/data_warehouse/import/data_source';
-import ImportMapper from '../../../data_access_layer/mappers/data_warehouse/import/import_mapper';
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
 import TimeseriesService from '../../../services/timeseries/timeseries';
-import {LegacyTimeseriesColumn} from 'deeplynx-timeseries';
+import {LegacyTimeseriesColumn} from 'deeplynx';
 
 const promiseExec = promisify(exec);
 const csv = require('csvtojson');

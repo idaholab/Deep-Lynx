@@ -325,6 +325,11 @@ export default class OAuthRoutes {
     private static loginPage(req: Request, res: Response, next: NextFunction) {
         const oauthRequest = oauthRepo.authorizationFromRequest(req);
 
+        // Sanitize the query params since they are being passed through
+        for (const param in req.query) {
+            req.query[param] = DOMPurify.sanitize(req.query[param] as string);
+        }
+
         return res.render('login', {
             // @ts-ignore
             _csrfToken: req.csrfToken(),
@@ -486,8 +491,8 @@ export default class OAuthRoutes {
                     application_id: req.query.application_id,
                     application_secret: req.query.application_secret,
                     applications: classToPlain(result.value),
-                    _error: req.query.error,
-                    _success: req.query.success,
+                    _error: req.query.error ? DOMPurify.sanitize(req.query.errory as string) : undefined,
+                    _success: req.query.success ? DOMPurify.sanitize(req.query.success as string) : undefined,
                 });
             })
             .catch((err) => res.render('oauth_applications', {_error: err}));
@@ -630,7 +635,11 @@ export default class OAuthRoutes {
                     }
 
                     try {
-                        const token = jwt.sign(classToPlain(user.value), Config.encryption_key_secret, {expiresIn: expiry, algorithm: 'RS256', allowInsecureKeySizes: true});
+                        const token = jwt.sign(classToPlain(user.value), Config.encryption_key_secret, {
+                            expiresIn: expiry,
+                            algorithm: 'RS256',
+                            allowInsecureKeySizes: true,
+                        });
                         res.status(200).json(token);
                         return;
                     } catch (e: any) {

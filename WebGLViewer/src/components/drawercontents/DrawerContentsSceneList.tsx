@@ -17,12 +17,16 @@ import {
   ListItemText,
   ListItemButton,
   OutlinedInput,
+  Typography
 } from '@mui/material';
 
 // Styles
 import '../../styles/App.scss';
 // @ts-ignore
 import COLORS from '../../styles/variables';
+
+// Custom Components
+import LoadingProgress from '../elements/LoadingProgress';
 
 const filterData = (query: any, data: any) => {
   if (!query) {
@@ -58,21 +62,15 @@ const DrawerContentsSceneList: React.FC<Props> = ({}) => {
 
   const dispatch = useAppDispatch();
 
-  type sceneList = string[];
-  const sceneList : sceneList = useAppSelector((state: any) => state.appState.sceneList);
-
-  type openDrawerLeftState = boolean;
-  const openDrawerLeftState: openDrawerLeftState = useAppSelector((state: any) => state.appState.openDrawerLeft);
-
-  type openDrawerLeftWidth = number;
-  const openDrawerLeftWidth: openDrawerLeftWidth = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);
+  const sceneList : string[] = useAppSelector((state: any) => state.appState.sceneList);
+  const openDrawerLeftState: boolean = useAppSelector((state: any) => state.appState.openDrawerLeft);
+  const openDrawerLeftWidth: number = useAppSelector((state: any) => state.appState.openDrawerLeftWidth);
 
   const [searchQuery, setSearchQuery] = useState("");
 
   const [selected, setSelected] = React.useState<string | false>(false);
 
-  type selectedSceneObject = any;
-  const selectedSceneObject: selectedSceneObject = useAppSelector((state: any) => state.appState.selectedSceneObject);
+  const selectedSceneObject: any = useAppSelector((state: any) => state.appState.selectedSceneObject);
   const handleSelectScene = (scene: string) => {
     dispatch(appStateActions.selectSceneObject(scene));
     setSelected(scene);
@@ -81,43 +79,53 @@ const DrawerContentsSceneList: React.FC<Props> = ({}) => {
   return (
     <>
       <Box sx={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', padding: '0', borderTop: `1px solid ${COLORS.colorDarkgray}` }}>
-        <List dense sx={{ paddingTop: '0' }}>
-          {sceneList.map((scene: string, index: number) => (
-            <ListItem
-              key={index}
-              disablePadding
-              sx={{ borderBottom: `1px solid ${COLORS.colorDarkgray}` }}
-            >
-              <ListItemButton
-                onClick={() => handleSelectScene(scene)}
-                selected={selected === `listItem${index+1}`}
-                sx={{
-                  '&.Mui-selected': {
-                    backgroundColor: `${COLORS.colorListSelectGray} !important`
-                  },
-                  '&.Mui-focusVisible': {
-                    backgroundColor: `${COLORS.colorListSelectGray} !important`
-                  },
-                  '&:hover': {
-                    backgroundColor: `${COLORS.colorListSelectGray} !important`
-                  }
-                }}
-              >
-                <ListItemText>
-                  <Box sx={{ display: 'flex', flexDirection: 'row' }}>
-                    <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      { 
-                        scene ? (
-                          scene.split("/").pop()
-                        ) : null
-                      }
-                    </Box>
-                  </Box>
-                </ListItemText>
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
+        <>
+          {!sceneList || sceneList.length === 0 ? (
+            <Typography align="center" sx={{ margin: '8px 0', fontSize: '14px' }}>
+              No Scenes to display
+            </Typography>
+          ) :(
+            <>
+              <List dense sx={{ paddingTop: '0' }}>
+                {sceneList.map((scene: string, index: number) => (
+                  <ListItem
+                    key={index}
+                    disablePadding
+                    sx={{ borderBottom: `1px solid ${COLORS.colorDarkgray}` }}
+                  >
+                    <ListItemButton
+                      onClick={() => handleSelectScene(scene)}
+                      selected={selected === `listItem${index+1}`}
+                      sx={{
+                        '&.Mui-selected': {
+                          backgroundColor: `${COLORS.colorListSelectGray} !important`
+                        },
+                        '&.Mui-focusVisible': {
+                          backgroundColor: `${COLORS.colorListSelectGray} !important`
+                        },
+                        '&:hover': {
+                          backgroundColor: `${COLORS.colorListSelectGray} !important`
+                        }
+                      }}
+                    >
+                      <ListItemText>
+                        <Box sx={{ display: 'flex', flexDirection: 'row' }}>
+                          <Box sx={{ maxWidth: '165px', overflow: 'hidden', position: 'relative', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            { 
+                              scene ? (
+                                scene.split("/").pop()
+                              ) : null
+                            }
+                          </Box>
+                        </Box>
+                      </ListItemText>
+                    </ListItemButton>
+                  </ListItem>
+                ))}
+              </List>
+            </>
+          )}
+        </>
       </Box>
     </>
   );

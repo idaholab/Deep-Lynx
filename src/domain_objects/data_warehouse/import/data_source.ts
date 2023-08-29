@@ -23,7 +23,7 @@ import {PoolClient} from 'pg';
 import {Transform} from 'stream';
 import {DataRetentionDays} from '../../validators/data_retention_validator';
 import {WebSocket} from 'ws';
-import { Bucket, ChangeBucketPayload } from 'deeplynx-timeseries';
+import {Bucket, ChangeBucketPayload} from 'deeplynx';
 
 // ReceiveDataOptions will allow us to grow the potential options needed by the ReceiveData
 // function of various implementations without having to grow the parameter list
@@ -452,27 +452,27 @@ export default class DataSourceRecord extends BaseDomainClass {
     @Type(() => BaseDataSourceConfig, {
         keepDiscriminatorProperty: true,
         discriminator: {
-        property: 'kind',
-        subTypes: [
-        {value: StandardDataSourceConfig, name: 'standard'},
-        {value: StandardDataSourceConfig, name: 'manual'},
-        {value: JazzDataSourceConfig, name: 'jazz'},
-        {value: HttpDataSourceConfig, name: 'http'},
-        {value: AvevaDataSourceConfig, name: 'aveva'},
-        {value: TimeseriesDataSourceConfig, name: 'timeseries'},
-        {value: P6DataSourceConfig, name: 'p6'},
-        {value: TimeseriesBucketDataSourceConfig, name: 'timeseries_bucket'}
-        ],
+            property: 'kind',
+            subTypes: [
+                {value: StandardDataSourceConfig, name: 'standard'},
+                {value: StandardDataSourceConfig, name: 'manual'},
+                {value: JazzDataSourceConfig, name: 'jazz'},
+                {value: HttpDataSourceConfig, name: 'http'},
+                {value: AvevaDataSourceConfig, name: 'aveva'},
+                {value: TimeseriesDataSourceConfig, name: 'timeseries'},
+                {value: P6DataSourceConfig, name: 'p6'},
+                {value: TimeseriesBucketDataSourceConfig, name: 'timeseries_bucket'},
+            ],
         },
-        })
-    config?: StandardDataSourceConfig
-    | HttpDataSourceConfig
-    | JazzDataSourceConfig
-    | AvevaDataSourceConfig
-    | TimeseriesDataSourceConfig
-    | P6DataSourceConfig
-    | TimeseriesBucketDataSourceConfig =
-    new StandardDataSourceConfig();
+    })
+    config?:
+        | StandardDataSourceConfig
+        | HttpDataSourceConfig
+        | JazzDataSourceConfig
+        | AvevaDataSourceConfig
+        | TimeseriesDataSourceConfig
+        | P6DataSourceConfig
+        | TimeseriesBucketDataSourceConfig = new StandardDataSourceConfig();
 
     constructor(input: {
         container_id: string;
@@ -480,13 +480,13 @@ export default class DataSourceRecord extends BaseDomainClass {
         adapter_type: string;
         active?: boolean;
         config?:
-        | StandardDataSourceConfig
-        | HttpDataSourceConfig
-        | JazzDataSourceConfig
-        | AvevaDataSourceConfig
-        | TimeseriesDataSourceConfig
-        | P6DataSourceConfig
-        | TimeseriesBucketDataSourceConfig;
+            | StandardDataSourceConfig
+            | HttpDataSourceConfig
+            | JazzDataSourceConfig
+            | AvevaDataSourceConfig
+            | TimeseriesDataSourceConfig
+            | P6DataSourceConfig
+            | TimeseriesBucketDataSourceConfig;
         data_format?: string;
         status?: 'ready' | 'polling' | 'error';
         status_message?: string;
