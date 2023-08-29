@@ -29,6 +29,8 @@ profile-logs
 /AdminWebApp/src/**/*.js
 /AdminWebApp/src/**/*.js.map
 /NodeLibraries/dl-fast-load/build-output.txt
+/NodeLibraries/deeplynx-timeseries/
+/NodeLibraries/redis-graph-loader/
 
 # Devenv
 .devenv*

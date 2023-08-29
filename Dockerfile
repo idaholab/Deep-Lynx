@@ -47,11 +47,10 @@ RUN npm install cargo-cp-artifact --location=global
 
 # Bundle app source
 COPY . .
-RUN rm -rf /srv/core_api/NodeLibraries/deeplynx-timeseries
-RUN rm -rf /srv/core_api/NodeLibraries/redis-graph-loader
+RUN rm -rf /srv/core_api/NodeLibraries/deeplynx
 COPY --from=build-rust /srv/core_api/NodeLibraries/deeplynx /srv/core_api/NodeLibraries/deeplynx
 
-RUN yarn install --frozen-lockfile --include=dev
+RUN yarn install --frozen-lockfile
 RUN yarn run build:docker
 # Build the Viewer and Webapp
 RUN yarn run build:web
