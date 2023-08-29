@@ -1,4 +1,4 @@
-import {BucketRepository, ChangeBucketPayload, Bucket, LegacyTimeseriesColumn} from 'deeplynx-timeseries';
+import {BucketRepository, ChangeBucketPayload, Bucket, LegacyTimeseriesColumn} from 'deeplynx';
 import Config from '../config';
 
 export default class TimeseriesService {
