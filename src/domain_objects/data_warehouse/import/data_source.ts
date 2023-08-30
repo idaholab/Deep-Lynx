@@ -47,7 +47,7 @@ export class ReceiveDataOptions {
  validate against
 */
 export class BaseDataSourceConfig extends NakedDomainClass {
-    kind: 'http' | 'standard' | 'manual' | 'jazz' | 'aveva' | 'timeseries' | 'p6' | 'timeseries_bucket' = 'standard';
+    kind: 'http' | 'standard' | 'manual' | 'aveva' | 'timeseries' | 'p6' | 'timeseries_bucket' = 'standard';
 
     // advanced configuration, while we allow the user to set these it's generally
     // assumed that only those with technical knowledge or experience would be modifying
@@ -134,63 +134,6 @@ export class HttpDataSourceConfig extends BaseDataSourceConfig {
             this.password = input.password;
             if (input.secure) this.secure = input.secure;
             if (input.timeout) this.timeout = input.timeout;
-        }
-    }
-}
-
-export class JazzDataSourceConfig extends BaseDataSourceConfig {
-    kind: 'jazz' = 'jazz';
-
-    @IsUrl()
-    endpoint?: string;
-
-    @IsBoolean()
-    secure = false;
-
-    @IsString()
-    project_name?: string;
-
-    // poll interval in minutes
-    poll_interval = 10;
-
-    // timout of http request in milliseconds
-    timeout = 30000;
-
-    // limit records returned, can be useful for large projects
-    limit?: number;
-
-    // artifact types dictate to Jazz how to limit the return to user defined or general artifact types - we cannot set
-    // sane defaults for this as the artifact type names vary widely between projects - enforce that we have at least one
-    // item in the array however
-    @IsArray()
-    @ArrayMinSize(1)
-    artifact_types: string[] = [];
-
-    @IsString()
-    @Exclude({toPlainOnly: true})
-    token?: string;
-
-    constructor(input: {
-        endpoint: string;
-        token: string;
-        project_name: string;
-        poll_interval?: number;
-        timeout?: number;
-        secure?: boolean;
-        limit?: number;
-        artifact_types?: string[];
-    }) {
-        super();
-
-        if (input) {
-            this.endpoint = input.endpoint;
-            this.project_name = input.project_name;
-            this.token = input.token;
-            if (input.poll_interval) this.poll_interval = input.poll_interval;
-            if (input.secure) this.secure = input.secure;
-            if (input.limit) this.limit = input.limit;
-            if (input.artifact_types) this.artifact_types = input.artifact_types;
-            if (input.timeout) this.timeout = 30000;
         }
     }
 }
@@ -427,7 +370,7 @@ export default class DataSourceRecord extends BaseDomainClass {
     name?: string;
 
     @IsString()
-    @IsIn(['http', 'standard', 'manual', 'jazz', 'aveva', 'timeseries', 'p6', 'timeseries_bucket'])
+    @IsIn(['http', 'standard', 'manual', 'aveva', 'timeseries', 'p6', 'timeseries_bucket'])
     adapter_type = 'standard';
 
     @IsString()
@@ -456,7 +399,6 @@ export default class DataSourceRecord extends BaseDomainClass {
             subTypes: [
                 {value: StandardDataSourceConfig, name: 'standard'},
                 {value: StandardDataSourceConfig, name: 'manual'},
-                {value: JazzDataSourceConfig, name: 'jazz'},
                 {value: HttpDataSourceConfig, name: 'http'},
                 {value: AvevaDataSourceConfig, name: 'aveva'},
                 {value: TimeseriesDataSourceConfig, name: 'timeseries'},
@@ -468,7 +410,6 @@ export default class DataSourceRecord extends BaseDomainClass {
     config?:
         | StandardDataSourceConfig
         | HttpDataSourceConfig
-        | JazzDataSourceConfig
         | AvevaDataSourceConfig
         | TimeseriesDataSourceConfig
         | P6DataSourceConfig
@@ -482,7 +423,6 @@ export default class DataSourceRecord extends BaseDomainClass {
         config?:
             | StandardDataSourceConfig
             | HttpDataSourceConfig
-            | JazzDataSourceConfig
             | AvevaDataSourceConfig
             | TimeseriesDataSourceConfig
             | P6DataSourceConfig
