@@ -3,7 +3,7 @@ import Result from '../common_classes/result';
 import DataStagingMapper from '../data_access_layer/mappers/data_warehouse/import/data_staging_mapper';
 import TypeMappingRepository from '../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository';
 import TypeMapping from '../domain_objects/data_warehouse/etl/type_mapping';
-import {SuperUser} from '../domain_objects/access_management/user';
+import {ReturnSuperUser} from '../domain_objects/access_management/user';
 import FileMapper from '../data_access_layer/mappers/data_warehouse/data/file_mapper';
 import Logger from '../services/logger';
 import NodeRepository from '../data_access_layer/repositories/data_warehouse/data/node_repository';
@@ -60,7 +60,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
                 sample_payload: staging.data,
                 shape_hash: staging.shape_hash,
             }),
-            SuperUser,
+            await ReturnSuperUser(),
         );
 
         await stagingRepo.setErrors(staging.id!, ['no active transformations for type mapping']);
