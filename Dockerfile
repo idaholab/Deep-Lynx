@@ -39,6 +39,7 @@ RUN mkdir /srv/core_api
 
 WORKDIR /srv/core_api
 COPY package*.json ./
+COPY yarn.lock ./
 
 RUN npm install npm@latest --location=global
 RUN npm update --location=global
@@ -50,7 +51,7 @@ COPY . .
 RUN rm -rf /srv/core_api/NodeLibraries/deeplynx
 COPY --from=build-rust /srv/core_api/NodeLibraries/deeplynx /srv/core_api/NodeLibraries/deeplynx
 
-RUN yarn install --frozen-lockfile
+RUN yarn install
 RUN yarn run build:docker
 # Build the Viewer and Webapp
 RUN yarn run build:web

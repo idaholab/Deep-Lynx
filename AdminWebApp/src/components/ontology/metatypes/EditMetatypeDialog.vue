@@ -12,7 +12,7 @@
 
     <v-card class="pt-1 pb-3 px-2" v-if="selectedMetatype">
       <v-card-title>
-        <span class="headline text-h3">{{$t('general.edit')}} {{selectedMetatype.name}}</span>
+        <span class="headline text-h3">{{$t('general.edit')}} {{selectedMetatype.name}} ({{selectedMetatype.id}})</span>
       </v-card-title>
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
@@ -206,7 +206,7 @@
               </template>
               <template v-slot:[`item.actions`]="{ item }">
                 <!-- only allow edits on owned relationships -->
-                <div v-if="item.origin_metatype_id === selectedMetatype.id || item.destination_metatype_id === selectedMetatype.id">
+                <div v-if="item.metatype_id === selectedMetatype.id">
                   <div v-if="($store.getters.isEditMode && !item.deleted_at) || !$store.getters.ontologyVersioningEnabled">
                     <EditRelationshipPairDialog
                         :pair="item"
@@ -231,7 +231,7 @@
                 </div>
                 <!-- otherwise show link to parent -->
                 <div v-else>
-                  {{$t('classes.inheritedRelationship')}} {{selectedMetatype.parent_id}}
+                  {{$t('classes.inheritedRelationship')}} {{item.metatype_id}}
                 </div>
               </template>
             </v-data-table>
@@ -355,8 +355,8 @@
       relationshipHeaders(): { text: string; value: string; sortable: boolean }[] {
         return  [
           { text: this.$t('general.name'), value: 'name', sortable: false },
-          { text: this.$t('general.description'), value: 'description', sortable: false},
-          { text: this.$t('edges.origin'), value: 'origin_metatype_name',sortable: true},
+          { text: this.$t('edges.origin'), value: 'origin_metatype_name', sortable: true},
+          { text: this.$t('general.type'), value: 'relationship_name', sortable: true},
           { text: this.$t('edges.destination'), value: 'destination_metatype_name', sortable: true },
           { text: this.$t('general.actions'), value: 'actions', sortable: false }
         ]

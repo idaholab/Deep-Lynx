@@ -314,7 +314,7 @@ export class GremlinImpl implements Exporter {
                     continue;
                 }
 
-                const gremlinEdge = await this.client.edges.add(origin.value.gremlin_node_id!, destination.value.gremlin_node_id!, pair.value.name, edge);
+                const gremlinEdge = await this.client.edges.add(origin.value.gremlin_node_id!, destination.value.gremlin_node_id!, pair.value.name!, edge);
                 if (gremlinEdge.isError) {
                     Logger.error(`gremlin export failing to add edge ${gremlinEdge.error?.error}`);
                     continue;

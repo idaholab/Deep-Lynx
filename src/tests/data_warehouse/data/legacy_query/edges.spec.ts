@@ -113,7 +113,6 @@ describe('Using a legacy GraphQL Query for a nodes edges', async () => {
             'test suite',
             new MetatypeRelationshipPair({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatype.id!,
                 destination_metatype: metatype.id!,
                 relationship: relationship.value.id!,

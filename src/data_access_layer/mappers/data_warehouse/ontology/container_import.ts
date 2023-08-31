@@ -896,7 +896,7 @@ export default class ContainerImport {
                         if (property.property_type === 'primitive') {
                             const dataProp = dataPropertyMap.get(property.value);
                             if (dataProp) {
-                            thisClass.keys.push(dataProp.name);
+                                thisClass.keys.push(dataProp.name);
                             }
                         } else if (property.property_type === 'relationship') {
                             // use relationshipIDMap for accessing relationships by ID
@@ -1005,7 +1005,7 @@ export default class ContainerImport {
 
                     // Ontology must first be flattened
                     for (const relationshipPair of oldMetatypeRelationshipPairs) {
-                        if (!allRelationshipPairNames.includes(relationshipPair.name)) {
+                        if (!allRelationshipPairNames.includes(relationshipPair.name!)) {
                             const edges = (await edgeRepo.where().relationshipPairID('eq', relationshipPair.id!).list(true, {limit: 10})).value;
                             if (edges.length > 0) {
                                 resolve(
@@ -1024,7 +1024,7 @@ export default class ContainerImport {
                             // update key
                             // use regex to parse out metatype name
                             const regex = /\S*/;
-                            const metatypeName = regex.exec(relationshipPair.name)![0];
+                            const metatypeName = regex.exec(relationshipPair.name!)![0];
 
                             const thisMetatype = classListMap.get(metatypeName);
                             thisMetatype.updateKeys.set(relationshipPair.name, relationshipPair);
@@ -1137,7 +1137,6 @@ export default class ContainerImport {
 
                         const data = new MetatypeRelationshipPair({
                             name: relationshipName,
-                            description: relationship.description,
                             origin_metatype: thisClass.db_id!,
                             destination_metatype: classIDMap.get(thisClass.parent_id).db_id,
                             relationship: relationship.db_id,
@@ -1236,7 +1235,6 @@ export default class ContainerImport {
 
                             const data = new MetatypeRelationshipPair({
                                 name: relationshipName,
-                                description: relationship.description,
                                 origin_metatype: thisClass.db_id!,
                                 destination_metatype: classIDMap.get(property.target).db_id,
                                 relationship: relationshipID,
@@ -1295,7 +1293,7 @@ export default class ContainerImport {
 
                 // Invalidate cache for this container as a final step
                 for (const metatype of metatypes) {
-                    // this will also invalidate cached keys for these metatypes
+                    // this will also invalidate cached keys and pairs for these metatypes
                     if (metatype.id) void metatypeRepo.deleteCached(metatype.id);
                 }
                 for (const metatypeRelationship of metatypeRelationships) {

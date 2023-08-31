@@ -498,14 +498,14 @@ export default class MetatypeRepository extends Repository implements Repository
 
         if (loadRelationships) {
             let pairRepo = new MetatypeRelationshipPairRepository();
-            pairRepo = pairRepo.where().metatype_id('in', metatype_ids);
+            pairRepo = pairRepo.where().origin_metatype_id('in', metatype_ids);
             const pairs = (await pairRepo.list(false, {sortBy: 'name'})).value;
 
             await Promise.all(
                 results.value.map((metatype) => {
                     // find relevant relationship pairs
                     const pairList = pairs.filter((pair) => {
-                        return pair.metatype_id === metatype.id;
+                        return pair.originMetatype?.id === metatype.id;
                     });
                     // add pairs to metatype
                     return metatype.addRelationship(...pairList);

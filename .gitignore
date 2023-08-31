@@ -49,3 +49,4 @@ devenv.local.nix
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+/yarn-error.log

@@ -429,7 +429,6 @@ describe('A Type Mapping Repository', async () => {
         const pairV1 = new MetatypeRelationshipPair({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric(),
             ontology_version: ontologyV1.id,
             origin_metatype: metatypeV1,
             destination_metatype: dest_type,

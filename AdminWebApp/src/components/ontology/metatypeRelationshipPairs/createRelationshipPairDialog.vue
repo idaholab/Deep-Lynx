@@ -23,19 +23,6 @@
                 ref="form"
                 v-model="valid"
             >
-              <v-text-field
-                  v-model="name"
-                  :rules="[v => !!v || $t('validation.required')]"
-                  required
-              >
-                <template v-slot:label>{{$t('general.name')}} <small style="color:red" >*</small></template>
-              </v-text-field>
-              <v-textarea
-                  v-model="description"
-                  :rules="[v => !!v || $t('validation.required')]"
-              >
-                <template v-slot:label>{{$t('general.description')}} <small style="color:red" >*</small></template>
-              </v-textarea>
               <v-autocomplete
                   v-model="originSelect"
                   :rules="[v => !!v || $t('validation.required')]"
@@ -46,7 +33,7 @@
                   return-object
                   persistent-hint
                   required
-                  clearable
+                  disabled
               >
                 <template v-slot:label>{{$t('edges.originClass')}} <small style="color:red" >*</small></template>
               </v-autocomplete>
@@ -60,7 +47,6 @@
                   item-value="id"
                   persistent-hint
                   required
-                  clearable
               >
                 <template v-slot:label>{{$t('relationshipTypes.relType')}} <small style="color:red" >*</small></template>
               </v-autocomplete>
@@ -172,9 +158,7 @@ export default class CreateRelationshipPairDialog extends Vue {
 
   newRelationshipPair() {
     this.$client.createMetatypeRelationshipPair(this.containerID,
-        {"name": this.name,
-          "description": this.description,
-          "origin_metatype_id": this.originSelect!.id,
+        {"origin_metatype_id": this.originSelect!.id,
           "destination_metatype_id": this.destinationSelect,
           "relationship_id": this.relationshipSelect,
           "ontology_version": this.$store.getters.activeOntologyVersionID,

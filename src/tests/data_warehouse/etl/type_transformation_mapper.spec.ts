@@ -311,7 +311,6 @@ describe('A Data Type Mapping Transformation', async () => {
             new MetatypeRelationshipPair({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatype.value.id!,
                 destination_metatype: metatype.value.id!,
                 relationship: relationship.value.id!,

@@ -379,7 +379,6 @@ describe('The updated repository layer', async () => {
         const relPairList = [
             new MetatypeRelationshipPair({
                 name: 'album includes song',
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes[3].id!,
                 destination_metatype: metatypes[2].id!,
                 relationship: relationships[0].id!,
@@ -388,7 +387,6 @@ describe('The updated repository layer', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: 'musician member of band',
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes[0].id!,
                 destination_metatype: metatypes[1].id!,
                 relationship: relationships[1].id!,
@@ -397,7 +395,6 @@ describe('The updated repository layer', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: 'musician writes song',
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes[0].id!,
                 destination_metatype: metatypes[2].id!,
                 relationship: relationships[2].id!,
@@ -406,7 +403,6 @@ describe('The updated repository layer', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: 'musician writes album',
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes[0].id!,
                 destination_metatype: metatypes[3].id!,
                 relationship: relationships[2].id!,
@@ -415,7 +411,6 @@ describe('The updated repository layer', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: 'band performs song',
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes[1].id!,
                 destination_metatype: metatypes[2].id!,
                 relationship: relationships[2].id!,
@@ -424,7 +419,6 @@ describe('The updated repository layer', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: 'band performs album',
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes[1].id!,
                 destination_metatype: metatypes[3].id!,
                 relationship: relationships[2].id!,
@@ -433,7 +427,6 @@ describe('The updated repository layer', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: 'song features musician',
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes[2].id!,
                 destination_metatype: metatypes[0].id!,
                 relationship: relationships[3].id!,

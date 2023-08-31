@@ -1,7 +1,7 @@
 import {BaseDomainClass} from '../../../common_classes/base_domain_class';
-import {IsBoolean, IsDate, IsIn, IsNotEmpty, IsOptional, IsString, MinLength, registerDecorator, ValidationArguments, ValidationOptions} from 'class-validator';
+import {IsBoolean, IsDate, IsIn, IsNotEmpty, IsOptional, IsString, registerDecorator, ValidationArguments, ValidationOptions} from 'class-validator';
 import {Expose, plainToClass, Transform, Type} from 'class-transformer';
-import Metatype, {MetatypeID} from './metatype';
+import Metatype from './metatype';
 import MetatypeRelationship, {MetatypeRelationshipID} from './metatype_relationship';
 
 /*
@@ -22,14 +22,9 @@ export default class MetatypeRelationshipPair extends BaseDomainClass {
     @IsBoolean()
     archived?: boolean;
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
-    @MinLength(1)
-    name = '';
-
-    @IsNotEmpty()
-    @IsString()
-    description = '';
+    name?: string;
 
     // used for migration from one ontology version to another, or as part of the ontology export/import feature
     @IsOptional()
@@ -143,8 +138,7 @@ export default class MetatypeRelationshipPair extends BaseDomainClass {
     uuid?: string;
 
     constructor(input: {
-        name: string;
-        description: string;
+        name?: string;
         relationship_type: string;
         origin_metatype: Metatype | string; // we will also accept ids in place of classes
         destination_metatype: Metatype | string;
@@ -155,8 +149,7 @@ export default class MetatypeRelationshipPair extends BaseDomainClass {
         super();
 
         if (input) {
-            this.name = input.name;
-            this.description = input.description;
+            if (input.name) this.name = input.name;
             this.relationship_type = input.relationship_type;
             // we also accept string id's in place of full classes as a backwards
             // compatibility issue

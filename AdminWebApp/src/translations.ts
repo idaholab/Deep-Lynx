@@ -547,8 +547,6 @@ export default {
             standardName: 'Standard',
             standardDescription:
                 'This is the standard, passive data source for DeepLynx. Data is uploaded to this data source either manually or from external programs.',
-            jazzName: 'Jazz',
-            jazzDescription: 'This is the Jazz/Doors Next Generation data source. This allows you to pull in artifacts automatically from the Jazz/DNG server.',
             p6Name: 'P6',
             p6Description: 'This is a wrapper over the standard data source, but contains Oracle Primavera P6 specific configuration values.',
             httpName: 'HTTP Poller',
@@ -559,7 +557,6 @@ export default {
             authMethod: 'Authentication Method',
             useHttps: 'Use HTTPS',
             pollInterval: 'Poll Interval (in minutes)',
-            jazzArtifacts: 'Artifact Types for Retrieval',
             recordsPerCall: 'Records Per Call Limit',
             ignoredDBtypes: 'Ignored Database Types',
             ignoredElements: 'Ignored Element Types',

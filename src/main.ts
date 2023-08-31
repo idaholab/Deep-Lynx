@@ -27,9 +27,9 @@ async function Start(): Promise<any> {
 
     void Cache.Instance.cache.flush();
 
-    // if enabled, create an initial SuperUser for easier system management
+    // if enabled, create an inital SuperUser for easier system management
     // if SAML is configured, the initial SAML user will be assigned admin status
-    // if this superuser hasn't been created
+    // if the superuser hasn't been created
     if (Config.initial_super_user) {
         const userRepo = new UserRepository();
         void userRepo.createDefaultSuperUser();

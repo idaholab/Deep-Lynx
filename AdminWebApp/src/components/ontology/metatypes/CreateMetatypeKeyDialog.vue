@@ -13,7 +13,7 @@
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
         <span class="headline text-h3">{{$t('classes.newProperty')}}</span>
-      </v-card-title>   
+      </v-card-title>
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
         <v-row>
@@ -32,7 +32,7 @@
 
               <v-text-field
                   v-model="metatypeKey.property_name"
-                  :rules="[validationRule]"
+                  :rules="[validationRule, validatePropertyName]"
                   required
               >
                 <template v-slot:label>{{$t('properties.name')}} <small style="color:red" >*</small></template>
@@ -174,7 +174,7 @@
         required: false
       },
     },
-    
+
     data: (): CreateMetatypeKeyDialogModel => ({
       errorMessage: "",
       dialog: false,
@@ -214,7 +214,16 @@
       },
       validationRule(v: any) {
         return !!v || this.$t('validation.required')
-      }
+      },
+      validatePropertyName(name: string) {
+        // this regex should disallow spaces
+        const matches = /^[^ ]+$/.exec(name)
+        if(!matches || matches.length === 0) {
+          return this.$t('help.propertyNameRegex');
+        }
+
+        return true;
+      },
     },
 
     computed: {

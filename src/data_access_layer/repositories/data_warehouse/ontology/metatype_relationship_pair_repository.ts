@@ -27,7 +27,6 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
     async delete(p: MetatypeRelationshipPair): Promise<Result<boolean>> {
         if (p.id) {
             void this.deleteCached(p.id, p.container_id);
-
             void this.#metatypeRepo.deleteCached(p.metatype_id!);
             return this.#mapper.Delete(p.id);
         }
@@ -38,7 +37,6 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
     archive(user: User, p: MetatypeRelationshipPair): Promise<Result<boolean>> {
         if (p.id) {
             void this.deleteCached(p.id, p.container_id);
-
             void this.#metatypeRepo.deleteCached(p.metatype_id!);
             return this.#mapper.Archive(p.id, user.id!);
         }
@@ -49,7 +47,6 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
     unarchive(user: User, p: MetatypeRelationshipPair): Promise<Result<boolean>> {
         if (p.id) {
             void this.deleteCached(p.id, p.container_id);
-
             void this.#metatypeRepo.deleteCached(p.metatype_id!);
             return this.#mapper.Unarchive(p.id, user.id!);
         }
@@ -122,6 +119,12 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
             return Promise.resolve(Result.Failure(`metatype relationship pair does not pass validation ${errors.join}`));
         }
 
+        // delete metatype cache
+        if (p.originMetatype?.id) {
+            void this.#metatypeRepo.deleteCached(p.originMetatype.id);
+            void this.deleteCachedForMetatype(p.originMetatype.id);
+        }
+
         // update if ID has already been set
         if (p.id) {
             // to allow partial updates we must first fetch the original object
@@ -145,12 +148,6 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         // we want to ensure we always have the latest relationship values
         const loaded = await this.loadRelationships(p);
         if (loaded.isError) Logger.error(loaded.error?.error!);
-
-        // delete metatype cache
-        if (p.originMetatype?.id) {
-            void this.#metatypeRepo.deleteCached(p.originMetatype.id);
-            void this.deleteCachedForMetatype(p.originMetatype.id);
-        }
 
         return Promise.resolve(Result.Success(true));
     }
@@ -194,6 +191,12 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
                 return Promise.resolve(Result.Failure(`one or more metatype relationship pairs do not pass validation ${errors.join(',')}`));
             }
 
+            // delete metatype cache
+            if (pair.originMetatype?.id) {
+                void this.#metatypeRepo.deleteCached(pair.originMetatype.id);
+                void this.deleteCachedForMetatype(pair.originMetatype.id);
+            }
+
             if (pair.id) {
                 toUpdate.push(pair);
                 void this.deleteCached(pair.id, pair.container_id);
@@ -222,7 +225,7 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
             const results = await this.#mapper.BulkCreate(user.id!, toCreate, transaction.value);
             if (results.isError) {
                 await this.#mapper.rollbackTransaction(transaction.value);
-                return Promise.resolve(Result.Pass(results));
+                return Promise.resolve(Result.Failure(results.error.error.message));
             }
 
             toReturn.push(...results.value);
@@ -244,14 +247,6 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
                     return this.loadRelationships(pair);
                 }),
             );
-
-        // delete metatype cache
-        p.forEach((pair) => {
-            if (pair.originMetatype?.id) {
-                void this.#metatypeRepo.deleteCached(pair.originMetatype.id);
-                void this.deleteCachedForMetatype(pair.originMetatype.id);
-            }
-        });
 
         return Promise.resolve(Result.Success(true));
     }
@@ -341,6 +336,10 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         return Promise.resolve(undefined);
     }
 
+    RefreshView(): Promise<Result<boolean>> {
+        return this.#mapper.RefreshView();
+    }
+
     async saveFromJSON(relationshipPairs: MetatypeRelationshipPair[]): Promise<Result<boolean>> {
         const saved = await this.#mapper.JSONCreate(relationshipPairs);
         return saved;
@@ -379,11 +378,6 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
 
     name(operator: string, value: any) {
         super.query('name', operator, value);
-        return this;
-    }
-
-    description(operator: string, value: any) {
-        super.query('description', operator, value);
         return this;
     }
 

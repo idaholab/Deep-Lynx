@@ -11,7 +11,6 @@ import Result from '../../../../common_classes/result';
 import {User} from '../../../../domain_objects/access_management/user';
 import {PoolClient} from 'pg';
 import ImportMapper from '../../../mappers/data_warehouse/import/import_mapper';
-import JazzDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/jazz_data_source_impl';
 import AvevaDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/aveva_data_source';
 import P6DataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/p6_data_source';
 import {DataSource} from '../../../../interfaces_and_impl/data_warehouse/import/data_source';
@@ -441,7 +440,6 @@ export class DataSourceFactory {
     ): Promise<
         | StandardDataSourceImpl
         | HttpDataSourceImpl
-        | JazzDataSourceImpl
         | AvevaDataSourceImpl
         | TimeseriesDataSourceImpl
         | P6DataSourceImpl
@@ -460,10 +458,6 @@ export class DataSourceFactory {
             case 'manual': {
                 // this is to handle backwards compatibility with already existing records
                 return Promise.resolve(new StandardDataSourceImpl(sourceRecord));
-            }
-
-            case 'jazz': {
-                return Promise.resolve(new JazzDataSourceImpl(sourceRecord));
             }
 
             case 'aveva': {

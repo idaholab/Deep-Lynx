@@ -236,7 +236,6 @@ export type DataSourceT = {
         | StandardDataSourceConfig
         | HttpDataSourceConfig
         | AvevaDataSourceConfig
-        | JazzDataSourceConfig
         | TimeseriesDataSourceConfig
         | P6DataSourceConfig
         | undefined;
@@ -298,22 +297,6 @@ export type HttpDataSourceConfig = {
     token?: string; // security token, set if auth method is token
     username?: string; // auth method basic
     password?: string; // auth method basic
-    stop_nodes?: string[];
-    value_nodes?: string[];
-    data_retention_days?: number;
-    raw_retention_enabled?: boolean;
-};
-
-export type JazzDataSourceConfig = {
-    kind: 'jazz';
-    endpoint: string;
-    secure: boolean;
-    project_name: string;
-    artifact_types: string[]; // artifact types to retrieve, everything else is ignored
-    limit: number;
-    poll_interval: number; // in minutes
-    timeout: number; // milliseconds
-    token: string; // security token for http authentication
     stop_nodes?: string[];
     value_nodes?: string[];
     data_retention_days?: number;
@@ -769,24 +752,6 @@ export function DefaultAvevaDataSourceConfig(): AvevaDataSourceConfig {
             structure: 6,
             cable: 6,
         },
-    };
-}
-
-// Like the AvevaDefaultConfig we're including functions for all default configs for data source types, easier to
-// change when they're in one place.
-export function DefaultJazzDataSourceConfig(): JazzDataSourceConfig {
-    return {
-        kind: 'jazz',
-        endpoint: '',
-        secure: true,
-        project_name: '',
-        artifact_types: [],
-        poll_interval: 10,
-        token: '',
-        timeout: 30000,
-        limit: 10,
-        data_retention_days: 30,
-        raw_retention_enabled: false,
     };
 }
 

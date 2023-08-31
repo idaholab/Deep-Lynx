@@ -196,8 +196,8 @@ export default class TimeseriesDataSourceImpl implements DataSource {
 
     /*
         Run allows data sources to set up a continual process that will be called
-        in intervals, so far only the http poller and jazz data sources use this
-        function.
+        in intervals, so far only the http poller data source uses this function,
+        jazz did but has been deprecated.
      */
     Run(): Promise<void> {
         return Promise.resolve();

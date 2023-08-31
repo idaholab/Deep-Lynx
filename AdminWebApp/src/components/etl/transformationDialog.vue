@@ -234,11 +234,6 @@
                             <info-tooltip :message="$t('help.relationshipSearch')"></info-tooltip>
                           </template>
 
-                          <template slot="item" slot-scope="data">
-                            {{ data.item.origin_metatype_name }} - {{ data.item.relationship_name }} -
-                            {{ data.item.destination_metatype_name }}
-                          </template>
-
                         </v-autocomplete>
                       </v-col>
 

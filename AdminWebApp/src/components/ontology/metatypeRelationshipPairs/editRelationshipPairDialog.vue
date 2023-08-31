@@ -94,21 +94,6 @@
                 ref="form"
                 v-model="valid"
             >
-              <v-text-field
-                  v-model="selectedPair.name"
-                  :rules="[v => !!v || $t('validation.required')]"
-                  required
-                  :class="(comparisonPair && selectedPair.name !== comparisonPair.name) ? 'edited-field' : ''"
-              >
-                <template v-slot:label>{{$t('general.name')}} <small style="color:red" >*</small></template>
-              </v-text-field>
-              <v-textarea
-                  v-model="selectedPair.description"
-                  :rules="[v => !!v || $t('validation.required')]"
-                  :class="(comparisonPair && selectedPair.description !== comparisonPair.description) ? 'edited-field' : ''"
-              >
-                <template v-slot:label>{{$t('general.description')}} <small style="color:red" >*</small></template>
-              </v-textarea>
               <v-autocomplete
                   v-model="selectedPair.origin_metatype_id"
                   :class="(comparisonPair && selectedPair.origin_metatype_id !== comparisonPair.origin_metatype_id) ? 'edited-field' : ''"
@@ -120,7 +105,7 @@
                   item-value="id"
                   persistent-hint
                   required
-                  clearable
+                  disabled
               >
                 <template v-slot:label>{{$t('edges.originClass')}} <small style="color:red" >*</small></template>
               </v-autocomplete>
@@ -239,9 +224,7 @@ export default class EditRelationshipPairDialog extends Vue {
   editRelationshipPair() {
     this.$client.updateMetatypeRelationshipPair(this.pair.container_id,
         this.pair.id!,
-        {"name": this.selectedPair!.name,
-          "description": this.selectedPair!.description,
-          "origin_metatype_id": this.selectedPair!.origin_metatype_id,
+        {"origin_metatype_id": this.selectedPair!.origin_metatype_id,
           "destination_metatype_id": this.selectedPair!.destination_metatype_id,
           "relationship_id": this.selectedPair!.relationship_id,
           "relationship_type": this.selectedPair!.relationship_type}

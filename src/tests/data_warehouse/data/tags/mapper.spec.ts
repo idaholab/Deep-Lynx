@@ -128,7 +128,6 @@ describe('TagMapper', async () => {
             'test suite',
             new MetatypeRelationshipPair({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatype.value.id!,
                 destination_metatype: metatype.value.id!,
                 relationship: relationship.value.id!,
@@ -145,17 +144,17 @@ describe('TagMapper', async () => {
             new Node({
                 container_id: containerID,
                 metatype: metatype.value,
-                properties: {name: "nodeA"},
+                properties: {name: 'nodeA'},
             }),
             new Node({
                 container_id: containerID,
                 metatype: metatype.value,
-                properties: {name: "nodeB"},
+                properties: {name: 'nodeB'},
             }),
             new Node({
                 container_id: containerID,
                 metatype: metatype.value,
-                properties: {name: "nodeC"},
+                properties: {name: 'nodeC'},
             }),
         ];
 
@@ -168,21 +167,21 @@ describe('TagMapper', async () => {
             new Edge({
                 container_id: containerID,
                 metatype_relationship_pair: pair.value.id!,
-                properties: {name: "edgeA"},
+                properties: {name: 'edgeA'},
                 origin_id: nodes[0].id,
                 destination_id: nodes[1].id,
             }),
             new Edge({
                 container_id: containerID,
                 metatype_relationship_pair: pair.value.id!,
-                properties: {name: "edgeB"},
+                properties: {name: 'edgeB'},
                 origin_id: nodes[1].id,
                 destination_id: nodes[2].id,
             }),
             new Edge({
                 container_id: containerID,
                 metatype_relationship_pair: pair.value.id!,
-                properties: {name: "edgeC"},
+                properties: {name: 'edgeC'},
                 origin_id: nodes[2].id,
                 destination_id: nodes[0].id,
             }),
@@ -239,7 +238,7 @@ describe('TagMapper', async () => {
 
         const tagged = await tMapper.NodesWithTag(tagID);
         expect(tagged.isError, tagged.error?.error).false;
-        const taggedNodeIDs = tagged.value.map(n => n.id!);
+        const taggedNodeIDs = tagged.value.map((n) => n.id!);
         expect(taggedNodeIDs.includes(nodes[0].id!));
 
         return Promise.resolve();
@@ -278,7 +277,7 @@ describe('TagMapper', async () => {
 
         const tagged = await tMapper.EdgesWithTag(tagID);
         expect(tagged.isError, tagged.error?.error).false;
-        const taggedEdgeIDs = tagged.value.map(e => e.id!);
+        const taggedEdgeIDs = tagged.value.map((e) => e.id!);
         expect(taggedEdgeIDs.includes(edges[0].id!));
 
         return Promise.resolve();
@@ -292,8 +291,8 @@ describe('TagMapper', async () => {
 
         const tagged = await tMapper.NodesWithTag(tagID);
         expect(tagged.isError, tagged.error?.error).false;
-        const taggedNodeIDs = tagged.value.map(n => n.id!);
-        nodeIDs.forEach(id => {
+        const taggedNodeIDs = tagged.value.map((n) => n.id!);
+        nodeIDs.forEach((id) => {
             expect(taggedNodeIDs.includes(id));
         });
 
@@ -308,8 +307,8 @@ describe('TagMapper', async () => {
 
         const tagged = await tMapper.NodesWithTag(tagID);
         expect(tagged.isError, tagged.error?.error).false;
-        const taggedNodeIDs = tagged.value.map(n => n.id!);
-        nodeIDs.forEach(id => {
+        const taggedNodeIDs = tagged.value.map((n) => n.id!);
+        nodeIDs.forEach((id) => {
             expect(taggedNodeIDs.includes(id)).false;
         });
 
@@ -324,8 +323,8 @@ describe('TagMapper', async () => {
 
         const tagged = await tMapper.EdgesWithTag(tagID);
         expect(tagged.isError, tagged.error?.error).false;
-        const taggedEdgeIDs = tagged.value.map(e => e.id!);
-        edgeIDs.forEach(id => {
+        const taggedEdgeIDs = tagged.value.map((e) => e.id!);
+        edgeIDs.forEach((id) => {
             expect(taggedEdgeIDs.includes(id));
         });
 
@@ -340,8 +339,8 @@ describe('TagMapper', async () => {
 
         const tagged = await tMapper.EdgesWithTag(tagID);
         expect(tagged.isError, tagged.error?.error).false;
-        const taggedEdgeIDs = tagged.value.map(e => e.id!);
-        edgeIDs.forEach(id => {
+        const taggedEdgeIDs = tagged.value.map((e) => e.id!);
+        edgeIDs.forEach((id) => {
             expect(taggedEdgeIDs.includes(id)).false;
         });
 

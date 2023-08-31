@@ -120,10 +120,6 @@ export default class MetatypeRelationshipPairRoutes {
             repository = repository.and().name('like', `%${req.query.name}%`);
         }
 
-        if (typeof req.query.description !== 'undefined' && (req.query.description as string) !== '') {
-            repository = repository.and().description('like', `%${req.query.description}%`);
-        }
-
         if (typeof req.query.metatypeID !== 'undefined' && (req.query.metatypeID as string) !== '') {
             repository = repository.and(
                 new MetatypeRelationshipPairRepository()

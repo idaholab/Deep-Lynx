@@ -302,7 +302,6 @@ export class Client {
         containerID: string,
         {
             name,
-            description,
             ontologyVersion,
             metatypeID,
             originID,
@@ -319,7 +318,6 @@ export class Client {
             destinationName,
         }: {
             name?: string;
-            description?: string;
             ontologyVersion?: string;
             metatypeID?: string;
             originID?: string;
@@ -339,7 +337,6 @@ export class Client {
         const query: {[key: string]: any} = {};
 
         if (name) query.name = name;
-        if (description) query.description = description;
         if (ontologyVersion) query.ontologyVersion = ontologyVersion;
         query.ontologyVersion = ontologyVersion;
         if (originID) query.originID = originID;

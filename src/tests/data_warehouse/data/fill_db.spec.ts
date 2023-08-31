@@ -337,7 +337,6 @@ describe('We can generate test data', async () => {
             'test suite',
             new MetatypeRelationshipPair({
                 name: 'owns',
-                description: 'owns another entity',
                 origin_metatype: test_metatypes.find((m) => m.name === 'Maintenance')!.id!,
                 destination_metatype: test_metatypes.find((m) => m.name === 'Maintenance Entry')!.id!,
                 relationship: resultMetatypeRelationships.find((m) => m.name === 'parent')!.id!,
