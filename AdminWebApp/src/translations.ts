@@ -79,6 +79,7 @@ export default {
             postgresDate: 'Date String should be in postgres datetime format',
             propertyMapping: 'Select the payload keys which correspond with the resulting class or relationship properties',
             propertyName: 'This is the JSON compliant property name your data will be stored under inside the database schema.',
+            propertyNameRegex: 'Spaces are not allowed in property names',
             queryAlt: 'In the results window you can hold down the "Alt" key and click on the arrow for an object or array to fully expand the contents.',
             queryAutocomplete:
                 'While writing your query, hit "Ctrl-Space" to bring up the autocompletion menu. \nThis menu provides some of the available schema from which to query.',

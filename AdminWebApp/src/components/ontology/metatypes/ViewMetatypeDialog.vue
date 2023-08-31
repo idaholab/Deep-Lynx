@@ -186,8 +186,8 @@
       relationshipHeaders(): { text: string; value: string; sortable: boolean }[] {
         return  [
           { text: this.$t('general.name'), value: 'name', sortable: false },
-          { text: this.$t('general.description'), value: 'description', sortable: false},
-          { text: this.$t('edges.origin'), value: 'origin_metatype_name',sortable: true},
+          { text: this.$t('edges.origin'), value: 'origin_metatype_name', sortable: true},
+          { text: this.$t('general.type'), value: 'relationship_name', sortable: true},
           { text: this.$t('edges.destination'), value: 'destination_metatype_name', sortable: true },
           { text: this.$t('general.actions'), value: 'actions', sortable: false }
         ]
