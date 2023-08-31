@@ -39,6 +39,7 @@ RUN mkdir /srv/core_api
 
 WORKDIR /srv/core_api
 COPY package*.json ./
+COPY yarn.lock ./
 
 RUN npm install npm@latest --location=global
 RUN npm update --location=global

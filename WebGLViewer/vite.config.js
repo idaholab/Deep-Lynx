@@ -10,11 +10,11 @@ export default defineConfig({
         outDir: '../dist/http_server/web_gl',
         assetsDir: 'viewer',
         rollupOptions: {
-            onwarn(warning, warn) {
+            onwarn: function (warning, warn) {
                 if (warning.code === 'MODULE_LEVEL_DIRECTIVE') {
-                return
+                    return;
                 }
-                warn(warning)
+                warn(warning);
             }
         }
     }
