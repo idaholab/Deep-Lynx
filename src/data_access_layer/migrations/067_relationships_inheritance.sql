@@ -132,7 +132,7 @@ BEGIN
                         WHERE origin_metatype_id = parent_metatype.id
                           AND destination_metatype_id = NEW.destination_metatype_id
                           AND relationship_id = NEW.relationship_id) > 0 THEN
-                        RAISE EXCEPTION 'proposed relationship pair is in metatypes parents inheritance chain';
+                        RAISE EXCEPTION 'proposed relationship pair (%) is in metatypes parents inheritance chain', NEW.name;
                     END IF;
 
                 END LOOP;

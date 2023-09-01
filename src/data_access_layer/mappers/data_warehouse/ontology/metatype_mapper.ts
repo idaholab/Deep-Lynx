@@ -114,6 +114,18 @@ export default class MetatypeMapper extends Mapper {
         return super.runStatement(this.deleteMetatypesInheritance(id));
     }
 
+    public async InheritanceBulkInsert(pairs: [string, string][]): Promise<Result<boolean>> {
+        return super.runStatement(this.metatypesInheritanceBulkInsert(pairs));
+    }
+
+    public async DisableInheritanceTrigger(): Promise<Result<boolean>> {
+        return super.runStatement(this.disableInheritanceTrigger());
+    }
+
+    public async EnableInheritanceTrigger(): Promise<Result<boolean>> {
+        return super.runStatement(this.enableInheritanceTrigger());
+    }
+
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
@@ -272,6 +284,30 @@ export default class MetatypeMapper extends Mapper {
         return {
             text: `DELETE FROM metatypes_inheritance WHERE child_id = $1`,
             values: [metatypeID],
+        };
+    }
+
+    private metatypesInheritanceBulkInsert(pairs: [string, string][]) {
+        const text = `INSERT INTO metatypes_inheritance (parent_id, child_id)
+                    VALUES %L
+                    ON CONFLICT (child_id) DO UPDATE
+                    SET parent_id = excluded.parent_id`;
+        const values = pairs;
+
+        return format(text, values);
+    }
+
+    private disableInheritanceTrigger(): QueryConfig {
+        return {
+            text: `ALTER TABLE metatypes_inheritance DISABLE TRIGGER check_metatype_inheritance;`,
+            values: [],
+        };
+    }
+
+    private enableInheritanceTrigger(): QueryConfig {
+        return {
+            text: `ALTER TABLE metatypes_inheritance ENABLE TRIGGER check_metatype_inheritance;`,
+            values: [],
         };
     }
 }

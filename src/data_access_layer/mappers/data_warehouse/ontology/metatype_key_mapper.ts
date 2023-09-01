@@ -82,6 +82,10 @@ export default class MetatypeKeyMapper extends Mapper {
         return super.rows(this.listFromIDsStatement(ids), {resultClass: this.resultClass});
     }
 
+    public async ListSelfKeysForMetatype(metatypeID: string, containerID: string): Promise<Result<MetatypeKey[]>> {
+        return super.rows(this.listSelfKeysStatement(metatypeID, containerID), {resultClass: this.resultClass});
+    }
+
     public async Update(userID: string, key: MetatypeKey, transaction?: PoolClient): Promise<Result<MetatypeKey>> {
         const r = await super.run(this.fullUpdateStatement(userID, key), {
             transaction,
@@ -313,6 +317,13 @@ export default class MetatypeKeyMapper extends Mapper {
                       ORDER BY metatype_id, mk.name`;
         const values = metatype_ids;
         return format(text, values);
+    }
+
+    private listSelfKeysStatement(metatypeID: string, containerID: string): QueryConfig {
+        return {
+            text: `SELECT * FROM metatype_keys WHERE metatype_id = $1 AND container_id = $2`,
+            values: [metatypeID, containerID],
+        };
     }
 
     private fullUpdateStatement(userID: string, ...keys: MetatypeKey[]): string {

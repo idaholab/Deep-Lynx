@@ -130,6 +130,7 @@ export default {
             statusCode: 'Request unsuccessful. Status Code ',
             error: 'Error',
             containerCreation: 'Container creation unsuccessful.',
+            containerName: 'Container name already exists.',
             nameError: 'A container with this name has already been created by the current user.',
             checkLogs: 'Please see the logs for additional detail.',
             owlError: 'Please select either an ontology file or valid URL to an ontology (.owl) file',
