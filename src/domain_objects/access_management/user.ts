@@ -350,8 +350,9 @@ export async function ReturnSuperUser() {
     const user = await UserMapper.Instance.RetrieveByEmail(Config.superuser_email);
     if (!user.isError || user.value) {
         SuperUser = user.value;
+        return user.value;
     } else {
-        SuperUser = new User({
+        const user = new User({
             id: '0',
             identity_provider: 'username_password',
             display_name: 'Super User',
@@ -360,6 +361,8 @@ export async function ReturnSuperUser() {
             active: true,
             admin: true,
         });
+        SuperUser = user;
+        return user;
     }
 }
 

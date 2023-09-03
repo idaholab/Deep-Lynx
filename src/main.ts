@@ -27,6 +27,17 @@ async function Start(): Promise<any> {
 
     void Cache.Instance.cache.flush();
 
+    // if enabled, create an inital SuperUser for easier system management
+    // if SAML is configured, the initial SAML user will be assigned admin status
+    // if the superuser hasn't been created
+    if (Config.initial_super_user) {
+        const userRepo = new UserRepository();
+        void userRepo.createDefaultSuperUser();
+    }
+
+    // configure the default superuser
+    void (await ReturnSuperUser());
+
     if (Config.run_jobs) {
         // Bree is a job runner that allows us to start and schedule independent processes across threads
         // We use it primarily for data processing and mapping, as those cpu heavy tasks tend to block the
@@ -114,17 +125,6 @@ async function Start(): Promise<any> {
             });
         });
     }
-
-    // if enabled, create an initial SuperUser for easier system management
-    // if SAML is configured, the initial SAML user will be assigned admin status
-    // if this superuser hasn't been created
-    if (Config.initial_super_user) {
-        const userRepo = new UserRepository();
-        void userRepo.createDefaultSuperUser();
-    }
-
-    // configure the default superuser
-    void ReturnSuperUser();
 
     if (Config.vue_app_id !== '') {
         const oauthRepo = new OAuthRepository();
