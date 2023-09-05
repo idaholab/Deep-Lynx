@@ -198,8 +198,8 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
             ${pair.destinationMetatype!.id},
             '${pair.relationship_type}',
             ${pair.container_id},
-            ${userID},
-            ${userID}`,
+            '${userID}',
+            '${userID}'`,
         ]);
 
         return format(text, values);
@@ -241,8 +241,8 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
             ${pair.container_id},
             ${ontologyVersionID},
             ${pair.old_id},
-            ${userID},
-            ${userID}`,
+            '${userID}',
+            '${userID}'`,
         ]);
 
         return format(text, values);
@@ -275,7 +275,7 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
             ${p.originMetatype!.id},
             ${p.destinationMetatype!.id},
             ${p.container_id},
-            ${userID}`,
+            '${userID}'`,
         ]);
 
         return format(text, values);

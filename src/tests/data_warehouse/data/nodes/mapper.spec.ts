@@ -134,6 +134,9 @@ describe('A Node Mapper', async () => {
         expect(node.isError, metatype.error?.error).false;
 
         // Run the update test
+        let updateDate = new Date();
+        updateDate.setHours(updateDate.getHours() + 1);
+        node.value.created_at = updateDate;
         node.value.properties = updatedPayload;
 
         const updatedNode = await storage.Update('test suite', node.value);

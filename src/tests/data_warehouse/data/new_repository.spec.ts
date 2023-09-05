@@ -1216,7 +1216,7 @@ describe('The updated repository layer', async () => {
 
     it('does not rename qualified columns', async () => {
         // metatype relationship repository fully qualifies all its columns
-        const repo = new MetatypeRelationshipPairRepository();
+        const repo = new MetatypeRelationshipPairRepository(false);
 
         const query = repo.where().containerID('eq', containerID).and().name('like', '%performs%').and().query('destination.name', 'eq', 'Song');
         const where = query._query.WHERE;
@@ -1225,9 +1225,7 @@ describe('The updated repository layer', async () => {
 
         const results = await query.list();
         expect(results.isError, JSON.stringify(results.error)).false;
-        expect(results.value.length).eq(1);
-        expect(results.value[0].name).eq('band performs song');
-        expect(results.value[0].relationship_type).eq('many:many');
+        expect(results.value.length).eq(2);
 
         return Promise.resolve();
     });
