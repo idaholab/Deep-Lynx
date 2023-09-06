@@ -167,6 +167,7 @@ export type NodeT = {
     metatype?: MetatypeT;
     properties: PropertyT[] | object;
     metadata_properties?: object;
+    metadata?: MetadataT[];
     raw_properties?: string; // JSON string with the raw properties
     container_id: string;
     original_data_id?: string;
@@ -175,13 +176,29 @@ export type NodeT = {
     modified_at: string;
     incoming_edges?: EdgeT[];
     outgoing_edges?: EdgeT[];
+    import_data_id?: string;
+    type_mapping_transformation_id?: string;
+    data_staging_id?: string;
+};
+
+export type MetadataT = {
+    conversions?: ConversionT[];
+    failed_conversions?: ConversionT[];
+};
+
+export type ConversionT = {
+    original_value: any;
+    converted_value?: any;
+    errors?: string;
 };
 
 export type EdgeT = {
+    selected_edge?: boolean;
     id: string;
     container_id: string;
+    relationship_pair_id?: string;
     data_source_id: string;
-    relationship: MetatypeRelationshipT;
+    metatype_relationship: MetatypeRelationshipT;
     destination_node?: NodeT;
     origin_node?: NodeT;
     origin_id?: string;
@@ -190,8 +207,12 @@ export type EdgeT = {
     relationship_id?: string;
     properties: PropertyT[] | object;
     metadata_properties?: object;
+    metadata?: MetadataT[];
     created_at: string;
     modified_at: string;
+    data_staging_id: string;
+    import_data_id: string;
+    type_mapping_transformation_id: string;
 };
 
 export type PropertyT = {
@@ -211,7 +232,6 @@ export type DataSourceT = {
         | StandardDataSourceConfig
         | HttpDataSourceConfig
         | AvevaDataSourceConfig
-        | JazzDataSourceConfig
         | TimeseriesDataSourceConfig
         | P6DataSourceConfig
         | undefined;
@@ -273,22 +293,6 @@ export type HttpDataSourceConfig = {
     token?: string; // security token, set if auth method is token
     username?: string; // auth method basic
     password?: string; // auth method basic
-    stop_nodes?: string[];
-    value_nodes?: string[];
-    data_retention_days?: number;
-    raw_retention_enabled?: boolean;
-};
-
-export type JazzDataSourceConfig = {
-    kind: 'jazz';
-    endpoint: string;
-    secure: boolean;
-    project_name: string;
-    artifact_types: string[]; // artifact types to retrieve, everything else is ignored
-    limit: number;
-    poll_interval: number; // in minutes
-    timeout: number; // milliseconds
-    token: string; // security token for http authentication
     stop_nodes?: string[];
     value_nodes?: string[];
     data_retention_days?: number;
@@ -744,24 +748,6 @@ export function DefaultAvevaDataSourceConfig(): AvevaDataSourceConfig {
             structure: 6,
             cable: 6,
         },
-    };
-}
-
-// Like the AvevaDefaultConfig we're including functions for all default configs for data source types, easier to
-// change when they're in one place.
-export function DefaultJazzDataSourceConfig(): JazzDataSourceConfig {
-    return {
-        kind: 'jazz',
-        endpoint: '',
-        secure: true,
-        project_name: '',
-        artifact_types: [],
-        poll_interval: 10,
-        token: '',
-        timeout: 30000,
-        limit: 10,
-        data_retention_days: 30,
-        raw_retention_enabled: false,
     };
 }
 

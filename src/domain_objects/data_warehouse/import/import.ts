@@ -5,7 +5,6 @@ import {
     AvevaDataSourceConfig,
     BaseDataSourceConfig,
     HttpDataSourceConfig,
-    JazzDataSourceConfig,
     StandardDataSourceConfig,
     P6DataSourceConfig,
     TimeseriesBucketDataSourceConfig
@@ -107,7 +106,6 @@ export class DataStaging extends NakedDomainClass {
         subTypes: [
         {value: StandardDataSourceConfig, name: 'standard'},
         {value: StandardDataSourceConfig, name: 'manual'},
-        {value: JazzDataSourceConfig, name: 'jazz'},
         {value: HttpDataSourceConfig, name: 'http'},
         {value: AvevaDataSourceConfig, name: 'aveva'},
         {value: P6DataSourceConfig, name: 'p6'},
@@ -118,7 +116,6 @@ export class DataStaging extends NakedDomainClass {
     data_source_config?:
     StandardDataSourceConfig
     | HttpDataSourceConfig
-    | JazzDataSourceConfig
     | AvevaDataSourceConfig
     | P6DataSourceConfig
     | TimeseriesBucketDataSourceConfig =

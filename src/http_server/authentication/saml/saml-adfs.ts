@@ -7,7 +7,7 @@ import Result from '../../../common_classes/result';
 import {User} from '../../../domain_objects/access_management/user';
 import {serialize} from 'class-transformer';
 
-const SamlStrategy = require('passport-saml').Strategy;
+const SamlStrategy = require('@node-saml/passport-saml').Strategy;
 
 export function SetSamlAdfs(app: express.Application) {
     // do not set the auth strategy if we don't have a public/private key pair.
@@ -41,10 +41,13 @@ export function SetSamlAdfs(app: express.Application) {
                 callbackUrl: Config.saml_adfs_callback,
                 privateCert: fs.readFileSync(Config.saml_adfs_private_cert_path, 'utf-8'),
                 cert: fs.readFileSync(Config.saml_adfs_public_cert_path, 'utf-8'),
-                signatureAlgorithm: 'sha256',
-                RACComparison: 'exact',
-                disableRequestedAuthnContext: true,
+                signatureAlgorithm: Config.saml_adfs_signature_algorithm,
+                racComparison: 'exact',
+                disableRequestedAuthnContext: Config.saml_adfs_disable_requested_authn_context,
                 identifierFormat: null,
+                wantAuthnResponseSigned: Config.saml_adfs_want_authn_response_signed,
+                wantAssertionsSigned: Config.saml_adfs_want_assertions_signed,
+                audience: Config.saml_adfs_audience,
             },
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
             (profile: any, done: any) => {

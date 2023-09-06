@@ -13,8 +13,9 @@
     <v-card class="pt-1 pb-3 px-2" v-if="selectedMetatype">
       <v-card-title>
         <span class="headline text-h3">{{$t('general.edit')}} {{selectedMetatype.name}}</span>
-      </v-card-title>   
+      </v-card-title>
       <v-card-text>
+        <error-banner :message="errorMessage"></error-banner>
         <v-row>
           <v-col :cols="6" v-if="comparisonMetatype">
             <v-form
@@ -70,7 +71,7 @@
 
 
           <v-col :cols="(comparisonMetatype) ? 6 : 12">
-            <v-form 
+            <v-form
                 ref="form"
                 v-model="valid"
             >
@@ -119,34 +120,51 @@
                 </v-toolbar>
               </template>
               <template v-slot:[`item.actions`]="{ item }">
-                <div v-if="($store.getters.isEditMode && !item.deleted_at) || !$store.getters.ontologyVersioningEnabled">
-                  <EditMetatypeKeyDialog
-                      :metatypeKey="item"
-                      :metatype="metatype"
-                      :icon="true"
-                      :comparison-metatype-key="(comparisonMetatype) ? comparisonMetatype.keys.find(k => k.name === item.name) : undefined"
-                      @metatypeKeyEdited="loadKeys()"></EditMetatypeKeyDialog>
+                <!-- only allow edits on owned keys -->
+                <div v-if="item.metatype_id === selectedMetatype.id">
+                  <div v-if="($store.getters.isEditMode && !item.deleted_at) || !$store.getters.ontologyVersioningEnabled">
+                    <EditMetatypeKeyDialog
+                        :metatypeKey="item"
+                        :metatype="metatype"
+                        :icon="true"
+                        :comparison-metatype-key="(comparisonMetatype) ? comparisonMetatype.keys.find(k => k.name === item.name) : undefined"
+                        @metatypeKeyEdited="loadKeys()"></EditMetatypeKeyDialog>
+                    <v-icon
+                        small
+                        @click="deleteKey(item)"
+                    >
+                      mdi-delete
+                    </v-icon>
+                  </div>
+
                   <v-icon
+                      v-if="$store.getters.isEditMode && item.deleted_at"
                       small
-                      @click="deleteKey(item)"
+                      @click="undeleteKey(item)"
                   >
-                    mdi-delete
+                    mdi-restore
                   </v-icon>
                 </div>
-
-                <v-icon
-                    v-if="$store.getters.isEditMode && item.deleted_at"
-                    small
-                    @click="undeleteKey(item)"
-                >
-                  mdi-restore
-                </v-icon>
+                <!-- otherwise show link to parent -->
+                <div v-else>
+                  {{$t('classes.inheritedProperty')}} {{item.metatype_id}}
+                </div>
               </template>
             </v-data-table>
             <v-row v-if="$store.getters.isEditMode" style="margin-top: 15px">
               <v-col :cols="3"><div class="box created mr-2"></div><p>{{$t('general.created')}}</p></v-col>
               <v-col :cols="3"><div class="box edited mr-2"></div><p>{{$t('general.edited')}}</p></v-col>
               <v-col :cols="3"><div class="box removed mr-2"></div><p>{{$t('general.removed')}}</p></v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <CreateMetatypeDialog :containerID="selectedMetatype.container_id" :parentID="selectedMetatype.id"></CreateMetatypeDialog>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <MetatypeParentSelect :containerID="selectedMetatype.container_id" :parentID="selectedMetatype.parent_id" @parentUpdate="parentUpdate"></MetatypeParentSelect>
+              </v-col>
             </v-row>
           </v-col>
         </v-row>
@@ -168,6 +186,8 @@
   import EditMetatypeKeyDialog from "@/components/ontology/metatypes/EditMetatypeKeyDialog.vue";
   import CreateMetatypeKeyDialog from "@/components/ontology/metatypes/CreateMetatypeKeyDialog.vue"
   import ViewMetatypeKeyDialog from "@/components/ontology/metatypes/ViewMetatypeKeyDialog.vue";
+  import CreateMetatypeDialog from "@/components/ontology/metatypes/CreateMetatypeDialog.vue";
+  import MetatypeParentSelect from "@/components/ontology/metatypes/MetatypeParentSelect.vue";
   const diff = require('deep-diff').diff;
 
   interface EditMetatypeDialogModel {
@@ -181,7 +201,7 @@
   export default Vue.extend ({
     name: 'EditMetatypeDialog',
 
-    components: { EditMetatypeKeyDialog, CreateMetatypeKeyDialog, ViewMetatypeKeyDialog },
+    components: {CreateMetatypeDialog, EditMetatypeKeyDialog, CreateMetatypeKeyDialog, ViewMetatypeKeyDialog, MetatypeParentSelect },
 
     props: {
       metatype: {
@@ -193,8 +213,8 @@
         required: false
       },
       comparisonMetatype: {
-        type: Object as PropType<MetatypeT | undefined>,
-        required: false, 
+        type: [Object, undefined] as PropType<MetatypeT | undefined>,
+        required: false,
         default: undefined
       },
     },
@@ -241,7 +261,11 @@
 
       editMetatype() {
         this.$client.updateMetatype(this.selectedMetatype?.container_id!, this.selectedMetatype?.id!,
-            {"name": this.selectedMetatype?.name, "description": this.selectedMetatype?.description})
+            {
+              "name": this.selectedMetatype?.name,
+              "description": this.selectedMetatype?.description,
+              "parent_id": this.selectedMetatype?.parent_id,
+            })
             .then(result => {
               if(!result) {
                 this.errorMessage = this.$t('errors.errorCommunicating') as string
@@ -339,7 +363,15 @@
 
       validationRule(v: any) {
         return !!v || this.$t('validation.required')
-      }
+      },
+
+      parentUpdate(newParent: MetatypeT) {
+        if (this.selectedMetatype && newParent) {
+          this.selectedMetatype.parent_id = newParent.id
+        } else if (this.selectedMetatype && !newParent) {
+          this.selectedMetatype.parent_id = undefined
+        }
+      },
     },
   })
 </script>

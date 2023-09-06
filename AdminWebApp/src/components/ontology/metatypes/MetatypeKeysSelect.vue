@@ -13,7 +13,6 @@
         :multiple="multiple"
         :clearable="multiple"
         :disabled="disabled"
-        :rules="rules"
         :loading="loading"
     >
       <template v-if="tooltip" slot="append-outer"><info-tooltip :message="tooltipHelp"></info-tooltip> </template>
@@ -64,10 +63,6 @@
       metatypeID: {
         type: String,
         required: true
-      },
-      rules: {
-        type: Object as PropType<any>,
-        required: false
       },
       propertyName: {
         type: String,

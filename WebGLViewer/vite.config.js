@@ -8,6 +8,14 @@ export default defineConfig({
     build: {
         emptyOutDir: true,
         outDir: '../dist/http_server/web_gl',
-        assetsDir: 'viewer'
+        assetsDir: 'viewer',
+        rollupOptions: {
+            onwarn: function (warning, warn) {
+                if (warning.code === 'MODULE_LEVEL_DIRECTIVE') {
+                    return;
+                }
+                warn(warning);
+            }
+        }
     }
 });

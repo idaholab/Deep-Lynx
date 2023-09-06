@@ -10,7 +10,7 @@ import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/o
 import Container from '../../../domain_objects/data_warehouse/ontology/container';
 import faker from 'faker';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
-import {Bucket} from 'deeplynx-timeseries';
+import {Bucket} from 'deeplynx';
 
 describe('A Timeseries Bucket Data Source', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';

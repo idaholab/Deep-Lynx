@@ -127,8 +127,6 @@
             />
           </template>
 
-          <!-- Removed Jazz since it is deprecated -->
-
           <!-- Aveva -->
           <template v-if="newDataSource.adapter_type === 'aveva'">
             <v-combobox

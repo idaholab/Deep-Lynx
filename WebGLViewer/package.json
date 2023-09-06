@@ -56,5 +56,6 @@
     "eslint-plugin-react": "^7.31.11",
     "typescript": "^4.6.4",
     "vite": "^3.2.5"
-  }
+  },
+  "packageManager": "^npm@9.6.6"
 }

@@ -29,3 +29,23 @@ profile-logs
 /AdminWebApp/src/**/*.js
 /AdminWebApp/src/**/*.js.map
 /NodeLibraries/dl-fast-load/build-output.txt
+/NodeLibraries/deeplynx-timeseries/
+/NodeLibraries/redis-graph-loader/
+
+# Devenv
+.devenv*
+devenv.local.nix
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml
+
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions

@@ -11,7 +11,6 @@
       :clearable="multiple"
       :disabled="disabled"
       v-model="selected"
-      :rules="rules"
       :loading="loading"
       :key="key"
     >
@@ -54,11 +53,7 @@
       multiple: {type: Boolean, required: false, default: false},
       disabled: {type: Boolean, required: false, default: false},
       dataSourceID: {
-        type: Object as PropType<string|string[]>, 
-        required: false
-      },
-      rules: {
-        type: Object as PropType<any>,
+        type: [String, Array] as PropType<string|string[]>, 
         required: false
       },
       noIndent: {type: Boolean, required: false, default: false},

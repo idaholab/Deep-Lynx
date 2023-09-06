@@ -11,18 +11,16 @@ import Result from '../../../../common_classes/result';
 import {User} from '../../../../domain_objects/access_management/user';
 import {PoolClient} from 'pg';
 import ImportMapper from '../../../mappers/data_warehouse/import/import_mapper';
-import JazzDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/jazz_data_source_impl';
 import AvevaDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/aveva_data_source';
 import P6DataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/p6_data_source';
 import {DataSource} from '../../../../interfaces_and_impl/data_warehouse/import/data_source';
 import ImportRepository from './import_repository';
 import TimeseriesDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/timeseries_data_source';
 import File from '../../../../domain_objects/data_warehouse/data/file';
-import Logger from '../../../../services/logger';
 import {plainToClass} from 'class-transformer';
 import TimeseriesService from '../../../../services/timeseries/timeseries';
 import TimeseriesBucketDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/timeseries_bucket_data_source';
-import {Bucket, ChangeBucketPayload} from 'deeplynx-timeseries';
+import {Bucket, ChangeBucketPayload} from 'deeplynx';
 
 /*
     DataSourceRepository contains methods for persisting and retrieving data sources
@@ -132,8 +130,8 @@ export default class DataSourceRepository extends Repository implements Reposito
 
             const config = toSave.config as TimeseriesBucketDataSourceConfig;
             if (toSave.adapter_type === 'timeseries_bucket') {
-                const changeBucketPayload = config.change_bucket_payload!;
-                const bucket = await (await this.#timeseriesBucket()).createBucket(changeBucketPayload);
+                const changeBucketPayload = config.change_bucket_payload;
+                const bucket = await (await this.#timeseriesBucket()).createBucket(changeBucketPayload!);
                 config.bucket = bucket;
                 // reset changeBucketPayload to undefined in case future updates don't require bucket update
                 config.change_bucket_payload = undefined;
@@ -442,7 +440,6 @@ export class DataSourceFactory {
     ): Promise<
         | StandardDataSourceImpl
         | HttpDataSourceImpl
-        | JazzDataSourceImpl
         | AvevaDataSourceImpl
         | TimeseriesDataSourceImpl
         | P6DataSourceImpl
@@ -461,10 +458,6 @@ export class DataSourceFactory {
             case 'manual': {
                 // this is to handle backwards compatibility with already existing records
                 return Promise.resolve(new StandardDataSourceImpl(sourceRecord));
-            }
-
-            case 'jazz': {
-                return Promise.resolve(new JazzDataSourceImpl(sourceRecord));
             }
 
             case 'aveva': {

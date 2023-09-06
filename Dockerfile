@@ -1,8 +1,9 @@
-FROM rust:alpine3.17 as build-rust
+FROM rust:alpine3.18 as build-rust
 RUN apk add build-base musl-dev openssl-dev
 RUN apk update add --update nodejs=18.16.0-r1
 RUN apk add --update npm
 RUN npm install -g @napi-rs/cli
+RUN npm install -g yarn
 
 RUN mkdir /srv/core_api
 WORKDIR /srv/core_api
@@ -10,11 +11,9 @@ WORKDIR /srv/core_api
 COPY . .
 ENV RUSTFLAGS="-C target-feature=-crt-static"
 
-WORKDIR /srv/core_api/NodeLibraries/deeplynx-timeseries
-RUN npm run build
-
-WORKDIR /srv/core_api/NodeLibraries/redis-graph-loader
-RUN npm run build
+WORKDIR /srv/core_api/NodeLibraries/deeplynx
+RUN yarn install
+RUN yarn run build
 
 
 FROM node:lts-alpine3.18 as production
@@ -40,6 +39,7 @@ RUN mkdir /srv/core_api
 
 WORKDIR /srv/core_api
 COPY package*.json ./
+COPY yarn.lock ./
 
 RUN npm install npm@latest --location=global
 RUN npm update --location=global
@@ -48,17 +48,14 @@ RUN npm install cargo-cp-artifact --location=global
 
 # Bundle app source
 COPY . .
-RUN rm -rf /srv/core_api/NodeLibraries/deeplynx-timeseries
-RUN rm -rf /srv/core_api/NodeLibraries/redis-graph-loader
-COPY --from=build-rust /srv/core_api/NodeLibraries/deeplynx-timeseries /srv/core_api/NodeLibraries/deeplynx-timeseries
-COPY --from=build-rust /srv/core_api/NodeLibraries/redis-graph-loader /srv/core_api/NodeLibraries/redis-graph-loader
+RUN rm -rf /srv/core_api/NodeLibraries/deeplynx
+COPY --from=build-rust /srv/core_api/NodeLibraries/deeplynx /srv/core_api/NodeLibraries/deeplynx
 
-RUN npm ci --include=dev
-RUN npm run build:docker
-RUN cd /srv/core_api/AdminWebApp && npm ci --include=dev && npm run build -- --dest /srv/core_api/dist/http_server/web_gui
-RUN rm -rf /srv/core_api/AdminWebApp/node_modules
-# Build the Viewer
-RUN npm run build:webgl
+RUN yarn install
+RUN yarn run build:docker
+# Build the Viewer and Webapp
+RUN yarn run build:web
+RUN yarn run build:webgl
 # catch any env file a user might have accidentally built into the container
 RUN rm -rf .env
 

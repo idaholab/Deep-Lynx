@@ -2361,7 +2361,7 @@ paths:
       tags:
         - Data Sources
       summary: Create Data Source
-      description: 'Create new datasource. Supported data source types are `http`, `standard` (or `manual`), `jazz`, `p6`, `aveva`, and `timeseries`.'
+      description: 'Create new datasource. Supported data source types are `http`, `standard` (or `manual`), `p6`, `aveva`, and `timeseries`.'
       operationId: CreateDataSource
       parameters:
         - name: container_id

@@ -75,7 +75,7 @@
         </ViewMetatypeDialog>
 
            <EditMetatypeDialog
-               v-if="($store.getters.isEditMode && $store.getters.ontologyVersioningEnabled && !item.deleted_at) || !$store.getters.ontologyVersioningEnabled"
+               v-if="($store.getters.isEditMode && $store.getters.ontologyVersioningEnabled && !item.deleted_at && $store.state.selectedChangelist) || !$store.getters.ontologyVersioningEnabled"
                :metatype="item"
                :comparisonMetatype="comparisonMetatypes.find(m => m.name === item.name)"
                :icon="true"
@@ -207,6 +207,7 @@
           { text: this.$t('general.id'), value: 'id' },
           { text: this.$t('general.name'), value: 'name' },
           { text: this.$t('general.description'), value: 'description'},
+          { text: this.$t('general.parent'), value: 'parent_id'},
           { text: this.$t('general.actions'), value: 'actions', sortable: false }
         ]
       },
@@ -357,7 +358,7 @@
         return ''
       }
     },
-    
+
     created() {
       this.$store
         .dispatch('refreshCurrentOntologyVersions')

@@ -1,5 +1,5 @@
 import Config from '../config';
-import {RedisGraphLoader} from 'redis_graph_loader';
+import {RedisGraphLoader} from 'deeplynx';
 
 export default class RedisGraphLoaderService {
     private loader: RedisGraphLoader;

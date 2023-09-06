@@ -19,6 +19,7 @@ import {Exclude, Expose, plainToClass, Transform, Type} from 'class-transformer'
 import Container from '../data_warehouse/ontology/container';
 import bcrypt from 'bcryptjs';
 import Result from '../../common_classes/result';
+import UserMapper from '../../data_access_layer/mappers/access_management/user_mapper';
 const validator = require('validator');
 
 /*
@@ -340,16 +341,30 @@ export class ContainerUserInvite extends BaseDomainClass {
 
 // use wisely as the ID is generated each time it's called - this is mainly used
 // in testing and if, for whatever reason, you're running DeepLynx with only
-// basic authentication or no authentication on the http_server
-export const SuperUser = new User({
-    id: '0',
-    identity_provider: 'username_password',
-    display_name: 'Super User',
-    email: Config.superuser_email,
-    password: Config.superuser_password,
-    active: true,
-    admin: true,
-});
+// basic authentication or no authentication on the http_server.
+// if a superuser has been created by DeepLynx, return that user.
+// otherwise, return a default superuser
+export let SuperUser: User;
+
+export async function ReturnSuperUser() {
+    const user = await UserMapper.Instance.RetrieveByEmail(Config.superuser_email);
+    if (!user.isError || user.value) {
+        SuperUser = user.value;
+        return user.value;
+    } else {
+        const user = new User({
+            id: '0',
+            identity_provider: 'username_password',
+            display_name: 'Super User',
+            email: Config.superuser_email,
+            password: Config.superuser_password,
+            active: true,
+            admin: true,
+        });
+        SuperUser = user;
+        return user;
+    }
+}
 
 /*
  These final operations are class-validator specific property validations

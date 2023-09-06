@@ -197,6 +197,7 @@ export default {
             importContainer:
                 'Note that importing type mappings requires also importing data sources, and type mappings may require certain ontology elements in order to transfer completely.',
             inactiveMappings: 'Please note that any data sources or type mappings imported are set as inactive.',
+            rootClass: 'Please note that this will create a root class with no parent class.',
         },
         general: {
             default: 'Default',
@@ -315,6 +316,7 @@ export default {
             welcome: 'Welcome to DeepLynx!',
             database: 'Database',
             archive: 'Archive',
+            parent: 'Parent',
         },
         validation: {
             validEmail: 'Email must be valid',
@@ -447,6 +449,9 @@ export default {
             id: 'Class ID',
             name: 'Class Name',
             selectProperty: 'Select Class Property',
+            selectParentHelp: 'Select a class to be the parent or leave blank for a root class',
+            createChild: 'Create Child Class',
+            inheritedProperty: 'Inherited property from',
             editProperty: 'Edit Class Property',
             newProperty: 'New Class Property',
             searchProperty: 'Type to search available Class Properties',
@@ -497,6 +502,7 @@ export default {
             history: 'Node History',
         },
         edges: {
+            edit: 'Edit Edge',
             create: 'Create Edge',
             edge: 'Edge',
             history: 'Edge History',
@@ -539,8 +545,6 @@ export default {
             standardName: 'Standard',
             standardDescription:
                 'This is the standard, passive data source for DeepLynx. Data is uploaded to this data source either manually or from external programs.',
-            jazzName: 'Jazz',
-            jazzDescription: 'This is the Jazz/Doors Next Generation data source. This allows you to pull in artifacts automatically from the Jazz/DNG server.',
             p6Name: 'P6',
             p6Description: 'This is a wrapper over the standard data source, but contains Oracle Primavera P6 specific configuration values.',
             httpName: 'HTTP Poller',
@@ -551,7 +555,6 @@ export default {
             authMethod: 'Authentication Method',
             useHttps: 'Use HTTPS',
             pollInterval: 'Poll Interval (in minutes)',
-            jazzArtifacts: 'Artifact Types for Retrieval',
             recordsPerCall: 'Records Per Call Limit',
             ignoredDBtypes: 'Ignored Database Types',
             ignoredElements: 'Ignored Element Types',
@@ -804,13 +807,13 @@ export default {
             viewerDescription: 'Query and Edit Data',
             // the following are component names and are dynamically translated,
             // which is why they are capitalized
-            DataSourceFilter: 'Filter by Data Source',
-            IDFilter: 'Filter by DeepLynx ID(s)',
-            MetadataFilter: 'Filter by Supplementary Data',
-            MetatypeFilter: 'Filter by Class',
-            PropertyFilter: 'Filter by Class Property',
-            OriginalIDFilter: 'Filter by Original Data ID(s)',
-            RawDataFilter: 'Filter by Unprocessed Data Record',
+            FilterDataSource: 'Filter by Data Source',
+            FilterID: 'Filter by DeepLynx ID(s)',
+            FilterMetadata: 'Filter by Supplementary Data',
+            FilterMetatype: 'Filter by Class',
+            FilterProperty: 'Filter by Class Property',
+            FilterOriginalID: 'Filter by Original Data ID(s)',
+            FilterRawData: 'Filter by Unprocessed Data Record',
         },
         tags: {
             name: 'Tag Name',
