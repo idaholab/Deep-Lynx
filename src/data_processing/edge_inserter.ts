@@ -1,4 +1,4 @@
-import Edge, {EdgeQueueItem} from '../domain_objects/data_warehouse/data/edge';
+import Edge, {EdgeQueueItem, IsEdges} from '../domain_objects/data_warehouse/data/edge';
 import Result from '../common_classes/result';
 import EdgeRepository from '../data_access_layer/repositories/data_warehouse/data/edge_repository';
 import EdgeMapper from '../data_access_layer/mappers/data_warehouse/data/edge_mapper';
@@ -8,6 +8,7 @@ import EdgeQueueItemMapper from '../data_access_layer/mappers/data_warehouse/dat
 import FileMapper from '../data_access_layer/mappers/data_warehouse/data/file_mapper';
 import {DataStagingFile, EdgeFile} from '../domain_objects/data_warehouse/data/file';
 import {plainToClass} from 'class-transformer';
+import TagMapper from '../data_access_layer/mappers/data_warehouse/data/tag_mapper';
 
 // InsertEdge takes a single EdgeQueueItem and attempts to insert it into the database without making any changes
 export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<boolean>> {
@@ -40,7 +41,7 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
     Logger.debug(`created ${edges.value.length} from edge parameters`);
     // we need to do batch insert here
     let recordBuffer: Edge[] = [];
-    const saveOperations: Promise<Result<boolean>>[] = [];
+    const saveOperations: Promise<Result<boolean | Edge[]>>[] = [];
 
     edges.value.forEach((e) => {
         recordBuffer.push(e);
@@ -49,11 +50,11 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
             const toSave = [...recordBuffer];
             recordBuffer = [];
 
-            saveOperations.push(repo.bulkSave(edge.created_by!, toSave));
+            saveOperations.push(repo.bulkSave(edge.created_by!, toSave, true));
         }
     });
 
-    saveOperations.push(repo.bulkSave(edge.created_by!, recordBuffer));
+    saveOperations.push(repo.bulkSave(edge.created_by!, recordBuffer, true));
 
     Logger.debug(`saving ${saveOperations.length} edges`);
     const saveResults = await Promise.all(saveOperations);
@@ -109,8 +110,29 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
         }
     }
 
+    // attach any supplied tags, ensuring it is supplied as an array
+    // TODO: edges are created but no tags on edgequeueitem
+    if (edgeQueueItem.tags) {
+        edgeQueueItem.tags = [edgeQueueItem.tags].flat();
+        for (const tag of edgeQueueItem.tags) {
+            for (const result of saveResults.values()) {
+                if (typeof result.value !== 'boolean') {
+                    for (const edge of result.value) {
+                        const tagResult = await TagMapper.Instance.TagEdge(tag.id!, edge.id!);
+
+                        if (tagResult.isError) {
+                            Logger.error(`unable to attach tag ${tag.id} to edge ${edge.id} ${tagResult.error?.error}`);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // if the original edge item is one with filters, we continually put it back on the queue until it either hits the limit
     // or the backoff time in order to capture all potential nodes that match this filter from earlier or later imports
+    // TODO: is this implying that the creation of edges with filters may take a very long time or not happen at all
+    // TODO: for future imports due to the use of attempts/backoff?
     if ((edge.origin_parameters && edge.origin_parameters.length > 0) || (edge.destination_parameters && edge.destination_parameters.length > 0)) {
         const currentTime = new Date().getTime();
         const check = currentTime + Math.pow(Config.edge_insertion_backoff_multiplier, edgeQueueItem.attempts++) * 1000;

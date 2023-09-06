@@ -16,6 +16,13 @@ import Cache from '../services/cache/cache';
 import Config from '../services/config';
 import EdgeQueueItemMapper from '../data_access_layer/mappers/data_warehouse/data/edge_queue_item_mapper';
 import {classToPlain} from 'class-transformer';
+import {MappingTag} from '../domain_objects/data_warehouse/etl/type_transformation';
+import TagMapper from '../data_access_layer/mappers/data_warehouse/data/tag_mapper';
+
+export type NodeTagAttachment = {
+    tags: MappingTag[];
+    originalDataIDs: string[];
+};
 
 // ProcessData accepts a data staging record and inserts nodes and edges based
 // on matching transformation records - this acts on a single record
@@ -90,7 +97,8 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
     }
 
     let nodesToInsert: Node[] = [];
-    const edgesToInsert: Edge[] = [];
+    const tagsToAttachNodes: NodeTagAttachment[] = [];
+    let edgesToQueue: EdgeQueueItem[] = [];
 
     // for each transformation run the transformation process. Results will either be an array of nodes or an array of edges
     // if we run into errors, add the error to the data staging row, and immediately return. Do not attempt to
@@ -113,8 +121,33 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
             }
 
             // check to see result type, force into corresponding container
-            if (IsNodes(results.value)) nodesToInsert.push(...results.value);
-            if (IsEdges(results.value)) edgesToInsert.push(...results.value);
+            if (IsNodes(results.value)) {
+                nodesToInsert.push(...results.value);
+                if (transformation.tags)
+                    tagsToAttachNodes.push({
+                        tags: [transformation.tags].flat(),
+                        originalDataIDs: results.value.map((result) => {
+                            return result.original_data_id!;
+                        }),
+                    });
+            }
+
+            if (IsEdges(results.value)) {
+                edgesToQueue = edgesToQueue.concat(
+                    results.value.map((e) => {
+                        if (transformation.tags) {
+                            return new EdgeQueueItem({
+                                edge: classToPlain(e),
+                                import_id: staging.import_id!,
+                                file_attached: staging.file_attached,
+                                tags: [transformation.tags].flat(),
+                            });
+                        } else {
+                            return new EdgeQueueItem({edge: classToPlain(e), import_id: staging.import_id!, file_attached: staging.file_attached});
+                        }
+                    }),
+                );
+            }
         }
 
     // we must deduplicate nodes based on original ID in order to avoid a database transaction error. We toss out the
@@ -125,6 +158,11 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
     // insert all nodes and files
     if (nodesToInsert.length > 0) {
         const inserted = await nodeRepository.bulkSave(staging.data_source_id!, nodesToInsert, transaction.value);
+        // TODO: nodes haven't been inserted because the insert statement is there "idle in transaction"
+        // TODO: transaction not committed
+        // TODO: node_tags table doesn't have foreign key on node_id to nodes table, so could return nodes and insert attachment
+        // eventually the tags do show up, not sure exactly how. In my sample data, the tags that should be separated by transformation
+        // are being applied to both sets of transformations for nodes
         if (inserted.isError) {
             await stagingMapper.rollbackTransaction(transaction.value);
 
@@ -138,7 +176,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
             const nodeFiles: NodeFile[] = [];
 
             // we must find the node ID to attach a file to it,
-            // even if a the node entry was dropped due to duplicate data
+            // even if the node entry was dropped due to duplicate data
             const listed = await new NodeRepository()
                 .where()
                 .originalDataID(
@@ -194,12 +232,64 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
                 await stagingRepo.addError(staging.id!, `unable to attach files to nodes during data staging process ${attached.error?.error}`);
             }
         }
-    }
 
-    // we send the edges to the edge queue item table so that they can be processed separately
-    const edgesToQueue: EdgeQueueItem[] = edgesToInsert.map((e) => {
-        return new EdgeQueueItem({edge: classToPlain(e), import_id: staging.import_id!, file_attached: staging.file_attached});
-    });
+        // attach the nodes to any tags specified in the transformation
+        if (tagsToAttachNodes.length > 0) {
+            for (const attachmentTag of tagsToAttachNodes) {
+                // we must find the node ID to attach a file to it,
+                // even if the node entry was dropped due to duplicate data
+                const listed = await new NodeRepository()
+                    .where()
+                    .originalDataID('in', attachmentTag.originalDataIDs)
+                    .and()
+                    .dataSourceID(
+                        'in',
+                        nodesToInsert.map((n) => n.data_source_id),
+                    )
+                    .and()
+                    .containerID(
+                        'in',
+                        nodesToInsert.map((n) => n.container_id),
+                    )
+                    .list();
+                // TODO: nodes not being returned. Not seeing them in the databse during debug either.
+
+                if (listed.isError) {
+                    await stagingRepo.addError(staging.id!, `unable to find node IDs for tag attachment ${listed.error?.error}`);
+                } else {
+                    for (const node of nodesToInsert) {
+                        let nodeID: string | undefined;
+                        if (node.id) {
+                            nodeID = node.id;
+                        } else if (listed.value.length > 0) {
+                            const relevantNodes = listed.value.filter((n) => {
+                                return (
+                                    n.original_data_id === node.original_data_id &&
+                                    n.data_source_id === node.data_source_id &&
+                                    n.container_id === node.container_id
+                                );
+                            });
+                            nodeID = relevantNodes.length > 0 ? relevantNodes[0].id! : undefined;
+                        } else {
+                            nodeID = undefined;
+                        }
+                        if (!nodeID) continue;
+
+                        // attach each supplied tag to the matching nodes, ensuring we have an array
+                        for (const tag of [attachmentTag.tags].flat()) {
+                            const tagResult = await TagMapper.Instance.TagNode(tag.id!, nodeID);
+                            if (tagResult.isError) {
+                                await stagingRepo.addError(
+                                    staging.id!,
+                                    `unable to attach tag ${tag.id} to node ${nodeID} during ` + `data staging process ${tagResult.error?.error}`,
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     // send queue edges to queue
     if (edgesToQueue.length > 0) {

@@ -4,7 +4,7 @@ import {Expose, plainToClass, Transform, Type} from 'class-transformer';
 import Container from '../ontology/container';
 import MetatypeRelationshipPair, {MetatypeRelationshipPairID} from '../ontology/metatype_relationship_pair';
 import Node from './node';
-import {Conversion, EdgeConnectionParameter} from '../etl/type_transformation';
+import {Conversion, EdgeConnectionParameter, MappingTag} from '../etl/type_transformation';
 
 export class EdgeMetadata {
     @IsOptional()
@@ -229,7 +229,19 @@ export class EdgeQueueItem extends NakedDomainClass {
     @IsOptional()
     file_attached?: boolean = false;
 
-    constructor(input: {edge: object; import_id: string; attempts?: number; next_attempt_at?: Date; error?: string; file_attached?: boolean}) {
+    @ValidateNested()
+    @Type(() => MappingTag)
+    tags: MappingTag[] = [];
+
+    constructor(input: {
+        edge: object;
+        import_id: string;
+        attempts?: number;
+        next_attempt_at?: Date;
+        error?: string;
+        file_attached?: boolean;
+        tags?: MappingTag[];
+    }) {
         super();
 
         if (input) {
@@ -239,6 +251,7 @@ export class EdgeQueueItem extends NakedDomainClass {
             if (input.next_attempt_at) this.next_attempt_at = input.next_attempt_at;
             if (input.error) this.error = input.error;
             if (input.file_attached) this.file_attached = input.file_attached;
+            if (input.tags) this.tags = input.tags;
         }
     }
 }

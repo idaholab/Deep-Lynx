@@ -170,6 +170,23 @@ export class KeyMapping extends NakedDomainClass {
     }
 }
 
+export class MappingTag extends NakedDomainClass {
+    @IsString()
+    id?: string;
+
+    @IsString()
+    tag_name?: string;
+
+    constructor(input: {id: string; tag_name: string}) {
+        super();
+
+        if (input) {
+            this.id = input.id;
+            this.tag_name = input.tag_name;
+        }
+    }
+}
+
 // Actions that can be performed when a transformation encounters an error
 export type TransformationErrorAction = 'ignore' | 'fail on required' | 'fail';
 export const TransformationErrorActions: TransformationErrorAction[] = ['ignore', 'fail on required', 'fail'];
@@ -306,6 +323,10 @@ export default class TypeTransformation extends BaseDomainClass {
     @IsString()
     created_at_format_string?: string;
 
+    @ValidateNested()
+    @Type(() => MappingTag)
+    tags: MappingTag[] = [];
+
     @IsOptional()
     transaction?: PoolClient;
 
@@ -330,6 +351,7 @@ export default class TypeTransformation extends BaseDomainClass {
         name?: string;
         created_at_key?: string;
         created_at_format_string?: string;
+        tags?: MappingTag[];
         origin_parameters?: EdgeConnectionParameter[];
         destination_parameters?: EdgeConnectionParameter[];
     }) {
@@ -356,6 +378,7 @@ export default class TypeTransformation extends BaseDomainClass {
             if (input.config) this.config = input.config;
             if (input.created_at_key) this.created_at_key = input.created_at_key;
             if (input.created_at_format_string) this.created_at_format_string = input.created_at_format_string;
+            if (input.tags) this.tags = input.tags;
             if (input.destination_parameters) this.destination_parameters = input.destination_parameters;
             if (input.origin_parameters) this.origin_parameters = input.origin_parameters;
         }
@@ -673,6 +696,7 @@ export default class TypeTransformation extends BaseDomainClass {
                 node.original_data_id = `${TypeTransformation.getNestedValue(this.unique_identifier_key, data.data, index)}`;
             }
 
+            // TODO: is created at being set for edges as well?? doesn't look like it.
             if (this.created_at_key) {
                 const createdAtValue = `${TypeTransformation.getNestedValue(this.created_at_key, data.data, index)}`;
                 const convertedDate = this.created_at_format_string
