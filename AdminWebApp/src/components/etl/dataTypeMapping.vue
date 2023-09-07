@@ -1,6 +1,6 @@
 <template>
   <div>
-    <error-banner :message="errorMessage"></error-banner>
+    <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
     <div class="pa-6 pb-0">
       <p>{{$t('help.typeMapping')}}</p>
       <v-checkbox

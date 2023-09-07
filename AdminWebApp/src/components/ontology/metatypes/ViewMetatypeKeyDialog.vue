@@ -11,10 +11,10 @@
     <v-card class="pt-1 pb-3 px-2" v-if="selectedMetatypeKey">
       <v-card-title>
         <span class="headline text-h3">{{selectedMetatypeKey.name}}</span>
-      </v-card-title>   
+      </v-card-title>
       <v-card-text>
-        <error-banner :message="errorMessage"></error-banner>
-        <v-row>    
+        <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
+        <v-row>
           <v-col :cols="12">
             <v-text-field
                 v-model="selectedMetatypeKey.name"

@@ -13,7 +13,7 @@
       class="elevation-1"
     >
       <template v-slot:top>
-        <error-banner :message="errorMessage"></error-banner>
+        <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
         <success-banner :message="successMessage"></success-banner>
 
         <v-toolbar flat color="white">
@@ -200,7 +200,7 @@
         page: 1,
         itemsPerPage: 100,
       }
-      
+
       return {
         successMessage: "",
         errorMessage: "",

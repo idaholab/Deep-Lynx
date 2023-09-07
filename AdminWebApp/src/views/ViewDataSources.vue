@@ -9,7 +9,7 @@
       </v-tab>
     </v-tabs>
 
-    <error-banner :message="errorMessage"></error-banner>
+    <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
 
     <v-data-table
         v-if="activeTab === 0"

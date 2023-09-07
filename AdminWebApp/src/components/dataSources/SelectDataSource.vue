@@ -1,6 +1,6 @@
 <template>
   <div>
-    <error-banner :message="errorMessage"></error-banner>
+    <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
     <v-combobox
       :style="[noIndent ? '' : {'margin-left': '10px', 'margin-right': '10px'}]"
       :items="dataSources"

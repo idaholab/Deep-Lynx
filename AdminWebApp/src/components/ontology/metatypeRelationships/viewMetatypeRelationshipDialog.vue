@@ -13,7 +13,7 @@
     <v-card v-if="selectedMetatypeRelationship">
       <v-card-text>
         <v-container>
-          <error-banner :message="errorMessage"></error-banner>
+          <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
           <span class="headline">{{ $t('general.view') }} {{ selectedMetatypeRelationship.name }}</span>
           <v-row>
             <v-col :cols="12">

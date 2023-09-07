@@ -1,6 +1,6 @@
 <template>
   <div>
-    <error-banner :message="errorMessage"></error-banner>
+    <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
     <v-combobox
         :items="metatypes"
         v-model="selectedMetatype"
@@ -43,22 +43,22 @@
       },
       multiple: {
         type: Boolean,
-        required: false, 
+        required: false,
         default: false
       },
       disabled: {
         type: Boolean,
-        required: false, 
+        required: false,
         default: false
       },
       tooltip: {
         type: Boolean,
-        required: false, 
+        required: false,
         default: false
       },
       tooltipHelp: {
         type: String,
-        required: false, 
+        required: false,
         default: ''
       },
       metatypeID: {

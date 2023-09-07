@@ -34,6 +34,10 @@ export default class MetatypeRelationshipPair extends BaseDomainClass {
     @IsString()
     metatype_id?: string;
 
+    @IsOptional()
+    @IsString()
+    metatype_name?: string;
+
     // in order to support the data structure we need additional transformation
     // functions to take the database value and create an empty metatype for it
     // this is done because the record in the database has only the id values, we

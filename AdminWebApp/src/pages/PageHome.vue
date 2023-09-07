@@ -1,7 +1,7 @@
 <template>
   <div>
   <div v-if="container">
-    <error-banner :message="errorMessage"></error-banner>
+    <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
     <v-app-bar
       app
       color="secondary"

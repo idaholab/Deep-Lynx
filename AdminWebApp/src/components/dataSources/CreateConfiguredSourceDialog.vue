@@ -10,7 +10,7 @@
       </v-card-title>
 
       <v-card-text>
-        <error-banner :message="errorMessage"></error-banner>
+        <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
         <v-row>
           <v-col :cols="12">
             <v-select
@@ -55,7 +55,7 @@
           </v-form>
         </div>
       </v-card-text>
-            
+
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="primary" text @click="reset()">{{$t('general.cancel')}}</v-btn>

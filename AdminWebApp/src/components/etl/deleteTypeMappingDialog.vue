@@ -16,7 +16,7 @@
         <span class="headline text-h3">{{$t('typeMappings.delete')}}</span>
       </v-card-title>
       <v-card-text>
-        <error-banner :message="errorMessage"></error-banner>
+        <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
         <v-row>
           <v-col :cols="12">
             <v-progress-linear v-if="transformationsLoading" indeterminate></v-progress-linear>

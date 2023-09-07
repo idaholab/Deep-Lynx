@@ -307,7 +307,7 @@ export default class MetatypeKeyMapper extends Mapper {
                    v.modified_at, v.created_by, v.modified_by, v.ontology_version,
                    v.old_id, v.deleted_at, p.key_parent, p.lvl + 1
             FROM parents p JOIN metatypes_view v ON p.id = v.parent_id
-        ) SELECT mk.id, p.id AS metatype_id, mk.name, mk.description,
+        ) SELECT mk.id, p.id AS metatype_id, p.name AS metatype_name, mk.name, mk.description,
                  mk.required, mk.property_name, mk.data_type, mk.options,
                  mk.default_value, mk.validation, mk.created_at, mk.modified_at,
                  mk.created_by, mk.modified_by, mk.ontology_version,

@@ -15,7 +15,7 @@
         <span class="headline text-h3">{{$t('general.edit')}} {{selectedMetatype.name}} ({{selectedMetatype.id}})</span>
       </v-card-title>
       <v-card-text>
-        <error-banner :message="errorMessage"></error-banner>
+        <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
         <v-row>
           <v-col :cols="6" v-if="comparisonMetatype">
             <v-form
@@ -174,7 +174,13 @@
                 </div>
                 <!-- otherwise show link to parent -->
                 <div v-else>
-                  {{$t('classes.inheritedProperty')}} {{item.metatype_id}}
+                  {{$t('classes.inheritedProperty')}}
+                  <v-tooltip top>
+                    <template v-slot:activator="{ on, attrs }">
+                      <span v-bind="attrs" v-on="on">{{item.metatype_name}}</span>
+                    </template>
+                    <span>{{item.metatype_id}}</span>
+                  </v-tooltip>
                 </div>
               </template>
             </v-data-table>
@@ -231,7 +237,13 @@
                 </div>
                 <!-- otherwise show link to parent -->
                 <div v-else>
-                  {{$t('classes.inheritedRelationship')}} {{item.metatype_id}}
+                  {{$t('classes.inheritedRelationship')}}
+                  <v-tooltip top>
+                    <template v-slot:activator="{ on, attrs }">
+                      <span v-bind="attrs" v-on="on">{{item.metatype_name}}</span>
+                    </template>
+                    <span>{{item.metatype_id}}</span>
+                  </v-tooltip>
                 </div>
               </template>
             </v-data-table>
@@ -281,7 +293,7 @@
   const diff = require('deep-diff').diff;
 
   interface EditMetatypeDialogModel {
-    errorMessage: string
+    errorMessage: string | {message: string, format: string}[]
     keysLoading: boolean
     dialog: boolean
     selectedMetatype: MetatypeT | null
@@ -377,7 +389,15 @@
                 this.$emit('metatypeEdited')
               }
             })
-            .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
+            .catch(e => {
+              this.errorMessage = [{
+                message: this.$t('errors.errorCommunicating') as string,
+                format: 'font-weight: bold;'
+              }, {
+                message: JSON.parse(e).error,
+                format: ''
+              }]
+            })
       },
 
       loadKeys() {

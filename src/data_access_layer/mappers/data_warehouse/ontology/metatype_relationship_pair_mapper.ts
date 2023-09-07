@@ -357,20 +357,21 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
                    v.modified_at, v.created_by, v.modified_by, v.ontology_version,
                    v.old_id, v.deleted_at, p.pair_parent, p.lvl + 1
             FROM parents p JOIN metatypes_view v ON p.id = v.parent_id WHERE v.container_id = $2
-        ) SELECT mk.id, mk.relationship_id, mk.origin_metatype_id AS metatype_id, p.id AS origin_metatype_id,
-                 mk.destination_metatype_id, mk.container_id,
+        ) SELECT mk.id, mk.relationship_id, mk.origin_metatype_id AS metatype_id, owner.name AS metatype_name,
+                 p.id AS origin_metatype_id, mk.destination_metatype_id, mk.container_id,
                  mk.relationship_type, mk.created_at, mk.modified_at,
                  mk.created_by, mk.modified_by, mk.ontology_version, mk.deleted_at,
                  p.lvl, origin.name        AS origin_metatype_name,
                  destination.name   AS destination_metatype_name,
                  relationships.name AS relationship_name,
                  origin.name || ' - ' || relationships.name || ' - ' || destination.name AS name
-                      FROM parents p JOIN metatype_relationship_pairs mk ON p.pair_parent = mk.origin_metatype_id
+                FROM parents p JOIN metatype_relationship_pairs mk ON p.pair_parent = mk.origin_metatype_id
+                     LEFT JOIN metatypes owner ON mk.origin_metatype_id = owner.id
                      LEFT JOIN metatypes origin ON p.id = origin.id
                      LEFT JOIN metatypes destination ON mk.destination_metatype_id = destination.id
                      LEFT JOIN metatype_relationships relationships ON mk.relationship_id = relationships.id
-                      WHERE p.id IN ($1) AND mk.container_id = $2
-                      ORDER BY origin_metatype_id, mk.name`;
+                WHERE p.id IN ($1) AND mk.container_id = $2
+                ORDER BY origin_metatype_id, mk.name`;
         const values = [metatype_ids, containerID];
         return format(text, values);
     }

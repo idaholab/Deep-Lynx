@@ -5,7 +5,7 @@
         <v-toolbar-title>{{$t('ontology.versioningSubtitle')}}<br><span class="text-caption">{{$t('ontology.versioningDescription')}}</span></v-toolbar-title>
       </v-toolbar>
 
-      <error-banner :message="errorMessage"></error-banner>
+      <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
       <success-banner :message="successMessage"></success-banner>
       <v-tabs grow>
         <v-tab @click="activeTab = 'ontologyVersions'; listOntologyVersions()">

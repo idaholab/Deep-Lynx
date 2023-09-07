@@ -66,6 +66,10 @@ export default class Metatype extends BaseDomainClass {
     @IsString()
     parent_id?: string;
 
+    @IsOptional()
+    @IsString()
+    parent_name?: string;
+
     constructor(input: {
         id?: string;
         container_id?: string;

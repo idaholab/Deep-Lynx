@@ -15,7 +15,7 @@
               <v-container class="py-9 pl-6 pr-9" v-if="$auth.IsLoggedIn() && !inviteSuccessful">
                 <h2 class="text-h2 text-center">{{$t('containers.acceptInviteLong')}} {{$route.query.containerName}}</h2>
                 <p>{{$t("containers.acceptDescription")}} {{$route.query.containerName}}</p>
-                <error-banner :message="errorMessage"></error-banner>
+                <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
                 <success-banner :message="successMessage"></success-banner>
                 <div v-if="successful">
                   <p>{{$t('containers.acceptSuccess')}}</p>
@@ -28,7 +28,7 @@
               <v-container class="py-9 pl-6 pr-9" v-if="inviteSuccessful">
                 <h2 class="text-h2 text-center">{{$t('containers.acceptSuccess')}}</h2>
                 <p>{{$t("containers.chooseNow")}}</p>
-                <error-banner :message="errorMessage"></error-banner>
+                <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
                 <success-banner :message="successMessage"></success-banner>
                 <v-btn large block @click="containerSelect" style="margin-top: 25px" >{{$t('containers.selection')}}</v-btn>
 

@@ -1,7 +1,7 @@
 <template>
   <v-container fluid>
     <v-col :cols="12">
-      <error-banner :message="errorMessage"></error-banner>
+      <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
       <v-data-table
           :items="timeseriesTables"
           :headers="headers()"

@@ -126,7 +126,7 @@ export default {
             email: 'mailto:GRP-deeplynx-team@inl.gov',
         },
         errors: {
-            errorCommunicating: 'Error communicating with DeepLynx: ',
+            errorCommunicating: 'Error returned from DeepLynx: ',
             statusCode: 'Request unsuccessful. Status Code ',
             error: 'Error',
             containerCreation: 'Container creation unsuccessful.',

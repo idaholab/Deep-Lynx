@@ -35,6 +35,7 @@ export type MetatypeT = {
     modified_by?: string;
     deleted_at?: string;
     parent_id?: string;
+    parent_name?: string;
     ontology_version?: string;
     old_id?: string;
     uuid?: string;
@@ -78,11 +79,13 @@ export type MetatypeRelationshipPairT = {
     destination_metatype?: MetatypeT;
     relationship?: MetatypeRelationshipT;
     metatype_id?: string;
+    metatype_name?: string;
 };
 
 export type MetatypeKeyT = {
     id?: string;
     metatype_id?: string;
+    metatype_name?: string;
     container_id: string;
     name: string;
     property_name: string;
@@ -232,13 +235,7 @@ export type DataSourceT = {
     adapter_type: string | undefined;
     active: boolean;
     archived?: boolean;
-    config:
-        | StandardDataSourceConfig
-        | HttpDataSourceConfig
-        | AvevaDataSourceConfig
-        | TimeseriesDataSourceConfig
-        | P6DataSourceConfig
-        | undefined;
+    config: StandardDataSourceConfig | HttpDataSourceConfig | AvevaDataSourceConfig | TimeseriesDataSourceConfig | P6DataSourceConfig | undefined;
     created_at?: string;
     modified_at?: string;
     created_by?: string;

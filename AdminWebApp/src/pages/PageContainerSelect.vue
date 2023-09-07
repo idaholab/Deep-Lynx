@@ -15,7 +15,7 @@
               <v-container class="py-9 pl-6 pr-9 d-flex">
                 <div class="align-self-center ma-auto">
                   <h2 class="text-h2 text-center mb-4">{{$t('general.welcome')}}</h2>
-                  <error-banner :message="errorMessage"></error-banner>
+                  <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
                   <p>{{$t('help.chooseContainer')}}</p>
                   <v-form>
                     <container-select @containerSelected="containerSelected"></container-select>
@@ -146,24 +146,24 @@
       helpLink() {
         // Use the $t function to get the translated value
         const translatedLink = this.$t('links.wiki');
-        
+
         // Ensure it's a string before returning
         if (typeof translatedLink === 'string') {
           return translatedLink;
         }
-        
+
         // Return a default value or handle the error as per requirements
         return '';
       },
       email() {
         // Use the $t function to get the translated value
         const translatedLink = this.$t('links.email');
-        
+
         // Ensure it's a string before returning
         if (typeof translatedLink === 'string') {
           return translatedLink;
         }
-        
+
         // Return a default value or handle the error as per requirements
         return '';
       }

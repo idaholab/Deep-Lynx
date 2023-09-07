@@ -7,14 +7,14 @@
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
         <span class="headline text-h3">{{$t('imports.dataDescription')}}</span>
-      </v-card-title>   
+      </v-card-title>
       <v-card-text>
-        <error-banner :message="errorMessage"></error-banner>
+        <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
         <v-row>
           <v-col :cols="12">
             <v-form ref="form" lazy-validation>
-              <v-file-input 
-                :label="$t('imports.fileTypes')" 
+              <v-file-input
+                :label="$t('imports.fileTypes')"
                 @change="addFiles"
               />
             </v-form>
