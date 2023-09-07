@@ -15,7 +15,7 @@
         <span class="headline text-h3">{{$t("relationships.edit")}}</span>
       </v-card-title>
       <v-card-text v-if="selectedPair">
-        <error-banner :message="errorMessage"></error-banner>
+        <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
         <v-row>
           <v-col v-if="comparisonPair" :cols="6">
 

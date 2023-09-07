@@ -42,7 +42,7 @@
         </h3>
       </v-card-title>
       <v-card-text class="d-flex flex-column pb-0" style="overflow-y: hidden;">
-        <error-banner :message="errorMessage"></error-banner>
+        <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
         <v-row class="d-flex flex-grow-0">
           <v-col :cols="12" style="position: sticky; top: 0px; z-index: 99; background: white">
             <div>
@@ -686,7 +686,7 @@
                 </template>
               </v-expansion-panel-header>
               <v-expansion-panel-content>
-                <error-banner :message="validationErrorMessage"></error-banner>
+                <error-banner :message="validationErrorMessage" @closeAlert="validationErrorMessage = ''"></error-banner>
 
                 <!-- node -->
                 <template v-if="payloadType === 'node'">

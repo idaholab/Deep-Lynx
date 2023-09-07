@@ -23,7 +23,7 @@
         <span class="headline text-h3">{{$t('transformations.deletePermanently')}}</span>
       </v-card-title>
       <v-card-text>
-        <error-banner :message="errorMessage"></error-banner>
+        <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
         <v-row>
           <v-col :cols="12">
             <v-progress-linear v-if="inUseLoading" indeterminate></v-progress-linear>
@@ -69,7 +69,7 @@
         <span class="headline text-h3">{{$t('transformations.archive')}}</span>
       </v-card-title>
       <v-card-text>
-        <error-banner :message="errorMessage"></error-banner>
+        <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
         <v-row>
           <v-col :cols="12">
             <v-alert type="warning">

@@ -15,7 +15,7 @@
         <span class="headline text-h3">{{$t("relationships.new")}}</span>
       </v-card-title>
       <v-card-text>
-        <error-banner :message="errorMessage"></error-banner>
+        <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
         <v-row>
           <v-col :cols="12">
 
@@ -80,7 +80,7 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="primary" text @click="dialog = false" >{{$t("general.cancel")}}</v-btn>
-        <v-btn color="primary" text :disabled="!valid" @click="newRelationshipPair()">{{$t("general.save")}}</v-btn>
+        <v-btn color="primary" text :disabled="!valid" @click="newRelationshipPair()" :loading="pairLoading">{{$t("general.save")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -101,7 +101,7 @@ export default class CreateRelationshipPairDialog extends Vue {
   @Prop({required: false})
   readonly icon!: boolean
 
-  errorMessage = ""
+  errorMessage: string | {message: string, format: string}[] = ""
   dialog = false
   valid = false
   destinationSearch = ""
@@ -117,6 +117,7 @@ export default class CreateRelationshipPairDialog extends Vue {
   originMetatypes: MetatypeT[] = []
   destinationMetatypes: MetatypeT[] = []
   metatypeRelationships: MetatypeRelationshipT[] = []
+  pairLoading = false
 
   created() {
     if (this.metatype) {
@@ -157,6 +158,7 @@ export default class CreateRelationshipPairDialog extends Vue {
   }
 
   newRelationshipPair() {
+    this.pairLoading = true
     this.$client.createMetatypeRelationshipPair(this.containerID,
         {"origin_metatype_id": this.originSelect!.id,
           "destination_metatype_id": this.destinationSelect,
@@ -169,7 +171,16 @@ export default class CreateRelationshipPairDialog extends Vue {
           this.reset()
           this.$emit('pairCreated', results[0])
         })
-        .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
+        .catch(e => {
+          this.errorMessage = [{
+            message: this.$t('errors.errorCommunicating') as string,
+            format: 'font-weight: bold;'
+          }, {
+            message: JSON.parse(e).error,
+            format: ''
+          }]
+        })
+        .finally(() => this.pairLoading = false)
   }
 
   reset() {

@@ -138,7 +138,7 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
             const results = await this.#mapper.BulkCreate(user.id!, toCreate, transaction.value);
             if (results.isError) {
                 await this.#mapper.rollbackTransaction(transaction.value);
-                return Promise.resolve(Result.Pass(results));
+                return Promise.resolve(Result.Failure(results.error.error.message));
             }
             toReturn.push(...results.value);
         }

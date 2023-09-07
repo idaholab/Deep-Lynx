@@ -1,6 +1,6 @@
 <template>
   <div>
-    <error-banner :message="errorMessage"></error-banner>
+    <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
     <v-data-table
       :headers="headers"
       :items="containers"
@@ -31,12 +31,12 @@
         </v-icon>
       </template>
     </v-data-table>
-    
+
     <v-dialog v-model="editDialog" max-width="900px">
       <v-card class="pt-1 pb-3 px-2">
         <v-card-title>
           <span class="headline text-h3">{{$t("containers.edit")}}</span>
-        </v-card-title>   
+        </v-card-title>
         <v-card-text>
           <v-row>
             <v-col v-if="toEdit !== null" :cols="12">

@@ -22,7 +22,7 @@
     >
 
       <template v-slot:top>
-        <error-banner :message="errorMessage"></error-banner>
+        <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
         <success-banner :message="successMessage"></success-banner>
         <v-alert type="success" v-if="createdMetatype">
           {{$t('classes.createdSuccessfully')}} -
@@ -55,6 +55,15 @@
         <v-row>
           <v-col v-if="$store.getters.isEditMode" :cols="12"><p style="margin-left: 15px"><strong>{{$t('general.note')}}: </strong> {{$t('warnings.className')}}</p></v-col>
         </v-row>
+      </template>
+
+      <template v-slot:[`item.parent_name`]="{ item }">
+        <v-tooltip top>
+          <template v-slot:activator="{ on, attrs }">
+            <span v-bind="attrs" v-on="on">{{item.parent_name}}</span>
+          </template>
+          <span>{{item.parent_id}}</span>
+        </v-tooltip>
       </template>
 
       <template v-slot:[`item.copy`]="{ item }">
@@ -207,7 +216,7 @@
           { text: this.$t('general.id'), value: 'id' },
           { text: this.$t('general.name'), value: 'name' },
           { text: this.$t('general.description'), value: 'description'},
-          { text: this.$t('general.parent'), value: 'parent_id'},
+          { text: this.$t('general.parent'), value: 'parent_name'},
           { text: this.$t('general.actions'), value: 'actions', sortable: false }
         ]
       },

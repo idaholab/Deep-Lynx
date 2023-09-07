@@ -1,6 +1,6 @@
 <template>
   <div>
-    <error-banner :message="errorMessage"></error-banner>
+    <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
     <success-banner :message="inviteSuccess"></success-banner>
     <v-data-table
       :headers="headers"
@@ -57,7 +57,7 @@
 
       </template>
     </v-data-table>
-    
+
     <v-dialog v-model="editDialog" max-width="900px" @click:outside="clear()">
       <v-card class="pt-1 pb-3 px-2">
         <v-card-title>

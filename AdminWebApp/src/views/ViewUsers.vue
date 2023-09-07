@@ -1,6 +1,6 @@
 <template>
   <div>
-    <error-banner :message="errorMessage"></error-banner>
+    <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
     <v-data-table
       :headers="headers"
       :items="users"
@@ -34,7 +34,7 @@
       <v-card class="pt-1 pb-3 px-2">
         <v-card-title>
           <span class="headline text-h3">{{$t("users.edit")}}</span>
-        </v-card-title>   
+        </v-card-title>
         <v-card-text>
           <v-row>
             <v-col v-if="toEdit !== null" :cols="12">

@@ -5,7 +5,7 @@
     </v-toolbar>
 
     <v-card-text>
-      <error-banner :message="errorMessage"></error-banner>
+      <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
       <success-banner :message="successMessage"></success-banner>
       <div>
         <v-row>

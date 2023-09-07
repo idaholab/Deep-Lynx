@@ -7,9 +7,9 @@
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
         <span class="headline text-h3">{{$t("apiKeys.create")}}</span>
-      </v-card-title>   
+      </v-card-title>
       <v-card-text>
-        <error-banner :message="errorMessage"></error-banner>
+        <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
         <v-alert type="success" v-if="returnedKey" class="multi-line">
           <p>{{$t('apiKeys.success')}}</p>
           <p><strong>{{$t('general.key')}}</strong></p>

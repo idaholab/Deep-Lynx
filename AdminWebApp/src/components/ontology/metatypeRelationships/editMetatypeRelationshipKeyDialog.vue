@@ -13,7 +13,7 @@
     <v-card v-if="selectedMetatypeRelationshipKey">
       <v-card-text>
         <v-container>
-          <error-banner :message="errorMessage"></error-banner>
+          <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
           <span class="headline">{{ $t('general.edit') }} {{ selectedMetatypeRelationshipKey.name }}</span>
           <v-row>
             <v-col v-if="comparisonRelationshipKey" :cols="6">

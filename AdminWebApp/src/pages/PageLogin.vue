@@ -13,7 +13,7 @@
             </v-col>
             <v-col cols="7">
               <v-container class="py-9 pl-6 pr-9">
-                <error-banner :message="errorMessage"></error-banner>
+                <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
                 <v-container fill-height fluid>
                   <v-row align="center" justify="center">
                     <div class="px-11">
