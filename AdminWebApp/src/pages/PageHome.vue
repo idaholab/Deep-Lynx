@@ -1,7 +1,7 @@
 <template>
   <div>
   <div v-if="container">
-    <error-banner :message="errorMessage"></error-banner>
+    <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
     <v-app-bar
       app
       color="secondary"
@@ -77,20 +77,6 @@
             <v-list-item-content>
               <v-list-item-title>{{$t("relationshipTypes.relTypes")}}</v-list-item-title>
               <v-list-item-subtitle>{{$t("relationshipTypes.description")}}</v-list-item-subtitle>
-            </v-list-item-content>
-          </v-list-item>
-
-          <v-list-item
-            two-line
-            link
-            v-if="$auth.Auth('ontology', 'read', containerID)"
-            @click="setActiveComponent('metatype-relationship-pairs')"
-            :input-value="currentMainComponent === 'ViewMetatypeRelationshipPairs'"
-            :ripple="{class:'list-ripple'}"
-          >
-            <v-list-item-content>
-              <v-list-item-title>{{$t("relationships.relationships")}}</v-list-item-title>
-              <v-list-item-subtitle>{{$t("relationships.description")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
 
@@ -595,7 +581,6 @@
   import Vue from 'vue'
   import ViewMetatypes from "@/views/ViewMetatypes.vue"
   import ViewMetatypeRelationships from "@/views/ViewMetatypeRelationships.vue"
-  import ViewMetatypeRelationshipPairs from "@/views/ViewMetatypeRelationshipPairs.vue"
   import ViewDataExport from "@/views/ViewDataExport.vue"
   import ViewDataImports from "@/views/ViewDataImports.vue"
   import ViewDataQuery from "@/views/ViewDataQuery.vue"
@@ -647,7 +632,6 @@
       ViewDataImports,
       ViewMetatypes,
       ViewMetatypeRelationships,
-      ViewMetatypeRelationshipPairs,
       ViewOntologyUpdate,
       ViewDataExport,
       ViewDataQuery,
@@ -742,13 +726,6 @@
             this.currentMainComponent = "ViewMetatypeRelationships";
             this.componentName = this.$t('relationshipTypes.relTypes')
             this.$router.replace(`/containers/${this.containerID}/metatype-relationships`)
-            break;
-          }
-
-          case "metatype-relationship-pairs": {
-            this.currentMainComponent = "ViewMetatypeRelationshipPairs";
-            this.componentName = this.$t('relationships.relationships')
-            this.$router.replace(`/containers/${this.containerID}/metatype-relationship-pairs`)
             break;
           }
 
@@ -887,48 +864,48 @@
       helpLink() {
         // Use the $t function to get the translated value
         const translatedLink = this.$t('links.wiki');
-        
+
         // Ensure it's a string before returning
         if (typeof translatedLink === 'string') {
           return translatedLink;
         }
-        
+
         // Return a default value or handle the error as per requirements
         return '';
       },
       emailLink() {
         // Use the $t function to get the translated value
         const translatedLink = this.$t('links.email');
-        
+
         // Ensure it's a string before returning
         if (typeof translatedLink === 'string') {
           return translatedLink;
         }
-        
+
         // Return a default value or handle the error as per requirements
         return '';
       },
       welcomeLink() {
         // Use the $t function to get the translated value
         const translatedLink = this.$t('links.wiki');
-        
+
         // Ensure it's a string before returning
         if (typeof translatedLink === 'string') {
           return translatedLink;
         }
-        
+
         // Return a default value or handle the error as per requirements
         return '';
       },
       ontologyLink() {
         // Use the $t function to get the translated value
         const translatedLink = this.$t('links.createOntology');
-        
+
         // Ensure it's a string before returning
         if (typeof translatedLink === 'string') {
           return translatedLink;
         }
-        
+
         // Return a default value or handle the error as per requirements
         return '';
       },

@@ -14,9 +14,9 @@
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
         <span class="headline text-h3">{{$t('serviceUsers.managePermissions')}}</span>
-      </v-card-title>   
+      </v-card-title>
       <v-card-text>
-        <error-banner :message="errorMessage"></error-banner>
+        <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
         <v-row>
           <v-col :cols="12">
 

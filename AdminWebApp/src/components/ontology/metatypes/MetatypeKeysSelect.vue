@@ -1,6 +1,6 @@
 <template>
   <div>
-    <error-banner :message="errorMessage"></error-banner>
+    <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
     <v-combobox
         :items="metatypeKeys"
         v-model="selectedMetatypeKeys"
@@ -21,7 +21,7 @@
 </template>
 
 <script lang="ts">
-  import Vue, { PropType } from 'vue'
+  import Vue from 'vue'
   import {MetatypeKeyT} from "@/api/types";
 
   interface MetatypeKeySelectModel {
@@ -42,22 +42,22 @@
       },
       multiple: {
         type: Boolean,
-        required: false, 
+        required: false,
         default: false
       },
       disabled: {
         type: Boolean,
-        required: false, 
+        required: false,
         default: false
       },
       tooltip: {
         type: Boolean,
-        required: false, 
+        required: false,
         default: false
       },
       tooltipHelp: {
         type: String,
-        required: false, 
+        required: false,
         default: ''
       },
       metatypeID: {
@@ -91,7 +91,7 @@
         .catch((e) => this.errorMessage = e)
         .finally(() => this.loading = false);
     },
-    
+
     methods: {
       emitSelected(keys: any) {
         this.$emit('selected', keys)
@@ -100,6 +100,6 @@
         return !!v || this.$t('validation.required')
       }
     }
-    
+
   });
 </script>

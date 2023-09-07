@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-card class="d-flex flex-column height-full mb-6">
-      <error-banner :message="errorMessage"></error-banner>
+      <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
       <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('containers.overviewGraph')}}</v-card-title>
       <v-progress-circular indeterminate v-if="loading" style="width: auto;"></v-progress-circular>
       <div ref="forcegraph" ></div>

@@ -356,7 +356,7 @@
                         >
                       </edit-edge-dialog>
                     </v-expansion-panel-header>
-                    
+
                     <v-expansion-panel-content>
                       <v-data-table
                         :items="Object.keys(currentEdgeInfo.properties).map(k => {
@@ -798,7 +798,6 @@
       <v-card class="pt-1 pb-3 px-2">
         <SelectDataSource
             :containerID="containerID"
-            :dataSourceID="selectedDataSource"
             @selected="setDataSource">
         </SelectDataSource>
         <div v-if="(selectedDataSource !== null)">

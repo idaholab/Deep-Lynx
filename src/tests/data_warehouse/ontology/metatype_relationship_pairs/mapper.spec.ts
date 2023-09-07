@@ -81,7 +81,6 @@ describe('A Metatype Relationship Pair Mapper can', async () => {
             'test suite',
             new MetatypeRelationshipPair({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
                 relationship_type: 'one:one',
                 origin_metatype: metatype.value[0],
                 destination_metatype: metatype.value[1],
@@ -131,7 +130,6 @@ describe('A Metatype Relationship Pair Mapper can', async () => {
             'test suite',
             new MetatypeRelationshipPair({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
                 relationship_type: 'one:one',
                 origin_metatype: metatype.value[0],
                 destination_metatype: metatype.value[1],

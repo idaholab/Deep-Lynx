@@ -101,6 +101,11 @@ async function Start(): Promise<any> {
                     timeout: 0,
                 },
                 {
+                    name: 'metatype_pairs_refresh', // will run metatype_pairs_refresh.js
+                    interval: '1m',
+                    timeout: 0,
+                },
+                {
                     name: 'staging_clean', // will run staging_clean.ts
                     interval: '1 day',
                     timeout: 0,

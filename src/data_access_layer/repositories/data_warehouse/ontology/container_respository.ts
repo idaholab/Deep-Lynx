@@ -466,6 +466,9 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         const relationshipPairRepo = new MetatypeRelationshipPairRepository();
         void (await relationshipPairRepo.saveFromJSON(relationshipPairs));
 
+        // refresh relationship pair view
+        void relationshipPairRepo.RefreshView();
+
         // after successful ontology imports (or after error), update ontology version statuses
         void ontologyVersionRepo.setStatus(oldOntologyVersionID!, 'deprecated', 'Replaced by imported ontology from container file');
 

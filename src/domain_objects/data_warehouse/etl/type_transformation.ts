@@ -500,8 +500,10 @@ export default class TypeTransformation extends BaseDomainClass {
                     }
 
                     newPayload[fetched.value.property_name] = k.value;
+                    let value = k.value;
+
                     if (k.key) {
-                        const value = TypeTransformation.getNestedValue(k.key, data.data, index);
+                        value = TypeTransformation.getNestedValue(k.key, data.data, index);
 
                         if (typeof value === 'undefined') {
                             switch (this.config.on_key_extraction_error) {
@@ -522,35 +524,35 @@ export default class TypeTransformation extends BaseDomainClass {
                                 }
                             }
                         }
+                    }
 
-                        const conversion = TypeTransformation.convertValue(fetched.value.data_type, value);
-                        if (conversion === null) {
-                            newPayload[fetched.value.property_name] = value;
-                        } else {
-                            if (conversion.errors) {
-                                failedConversions.push(conversion);
+                    const conversion = TypeTransformation.convertValue(fetched.value.data_type, value);
+                    if (conversion === null) {
+                        newPayload[fetched.value.property_name] = value;
+                    } else {
+                        if (conversion.errors) {
+                            failedConversions.push(conversion);
 
-                                switch (this.config.on_conversion_error) {
-                                    case 'fail': {
-                                        break;
-                                    }
-
-                                    // continue only if the key is not required
-                                    case 'fail on required': {
-                                        if (fetched.value.required) {
-                                            return Promise.resolve(Result.Failure('unable to fetch data from payload for a required key'));
-                                        } else continue;
-                                    }
-
-                                    // ignore means we can skip this key
-                                    case 'ignore': {
-                                        continue;
-                                    }
+                            switch (this.config.on_conversion_error) {
+                                case 'fail': {
+                                    break;
                                 }
-                            } else {
-                                newPayload[fetched.value.property_name] = conversion.converted_value;
-                                conversions.push(conversion);
+
+                                // continue only if the key is not required
+                                case 'fail on required': {
+                                    if (fetched.value.required) {
+                                        return Promise.resolve(Result.Failure('unable to fetch data from payload for a required key'));
+                                    } else continue;
+                                }
+
+                                // ignore means we can skip this key
+                                case 'ignore': {
+                                    continue;
+                                }
                             }
+                        } else {
+                            newPayload[fetched.value.property_name] = conversion.converted_value;
+                            conversions.push(conversion);
                         }
                     }
                 }

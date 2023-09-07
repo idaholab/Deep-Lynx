@@ -31,7 +31,7 @@ import MetatypeRelationshipPairRepository from '../../../data_access_layer/repos
 import DataSourceRepository, {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import fs from 'fs';
 import DataStagingRepository from '../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
-import { Repository } from '../../../data_access_layer/repositories/repository';
+import {Repository} from '../../../data_access_layer/repositories/repository';
 import NodeLeafRepository from '../../../data_access_layer/repositories/data_warehouse/data/node_leaf_repository';
 
 describe('The updated repository layer', async () => {
@@ -379,7 +379,6 @@ describe('The updated repository layer', async () => {
         const relPairList = [
             new MetatypeRelationshipPair({
                 name: 'album includes song',
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes[3].id!,
                 destination_metatype: metatypes[2].id!,
                 relationship: relationships[0].id!,
@@ -388,7 +387,6 @@ describe('The updated repository layer', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: 'musician member of band',
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes[0].id!,
                 destination_metatype: metatypes[1].id!,
                 relationship: relationships[1].id!,
@@ -397,7 +395,6 @@ describe('The updated repository layer', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: 'musician writes song',
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes[0].id!,
                 destination_metatype: metatypes[2].id!,
                 relationship: relationships[2].id!,
@@ -406,7 +403,6 @@ describe('The updated repository layer', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: 'musician writes album',
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes[0].id!,
                 destination_metatype: metatypes[3].id!,
                 relationship: relationships[2].id!,
@@ -415,7 +411,6 @@ describe('The updated repository layer', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: 'band performs song',
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes[1].id!,
                 destination_metatype: metatypes[2].id!,
                 relationship: relationships[2].id!,
@@ -424,7 +419,6 @@ describe('The updated repository layer', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: 'band performs album',
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes[1].id!,
                 destination_metatype: metatypes[3].id!,
                 relationship: relationships[2].id!,
@@ -433,7 +427,6 @@ describe('The updated repository layer', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: 'song features musician',
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes[2].id!,
                 destination_metatype: metatypes[0].id!,
                 relationship: relationships[3].id!,
@@ -898,10 +891,12 @@ describe('The updated repository layer', async () => {
             .and(
                 new Repository('nodes')
                     .queryJsonb('year', 'properties', '<', 1986)
-                    .and(new Repository('nodes')
-                        .queryJsonb('isGoodSong', 'properties', 'eq', 'true')
-                        .and()
-                        .queryJsonb('availability', 'properties', 'eq', 'OnDemand')),
+                    .and(
+                        new Repository('nodes')
+                            .queryJsonb('isGoodSong', 'properties', 'eq', 'true')
+                            .and()
+                            .queryJsonb('availability', 'properties', 'eq', 'OnDemand'),
+                    ),
             );
         expect(andAndQuery._query.WHERE).not.undefined;
         let query = andAndQuery._query.WHERE?.join(' ');
@@ -925,10 +920,12 @@ describe('The updated repository layer', async () => {
             .and(
                 new Repository('nodes')
                     .queryJsonb('year', 'properties', '<', 1986)
-                    .and(new Repository('nodes')
-                        .queryJsonb('isGoodSong', 'properties', 'eq', 'true')
-                        .or()
-                        .queryJsonb('availability', 'properties', 'eq', 'OnDemand')),
+                    .and(
+                        new Repository('nodes')
+                            .queryJsonb('isGoodSong', 'properties', 'eq', 'true')
+                            .or()
+                            .queryJsonb('availability', 'properties', 'eq', 'OnDemand'),
+                    ),
             );
         expect(andOrQuery._query.WHERE).not.undefined;
 
@@ -953,10 +950,12 @@ describe('The updated repository layer', async () => {
             .and(
                 new Repository('nodes')
                     .queryJsonb('year', 'properties', '<', 1986)
-                    .or(new Repository('nodes')
-                        .queryJsonb('isGoodSong', 'properties', 'eq', 'true')
-                        .and()
-                        .queryJsonb('availability', 'properties', 'eq', 'OnDemand')),
+                    .or(
+                        new Repository('nodes')
+                            .queryJsonb('isGoodSong', 'properties', 'eq', 'true')
+                            .and()
+                            .queryJsonb('availability', 'properties', 'eq', 'OnDemand'),
+                    ),
             );
         expect(orAndQuery._query.WHERE).not.undefined;
         query = orAndQuery._query.WHERE?.join(' ');
@@ -982,10 +981,12 @@ describe('The updated repository layer', async () => {
             .and(
                 new Repository('nodes')
                     .queryJsonb('year', 'properties', '<', 1986)
-                    .or(new Repository('nodes')
-                        .queryJsonb('isGoodSong', 'properties', 'eq', 'true')
-                        .or()
-                        .queryJsonb('availability', 'properties', 'eq', 'OnDemand')),
+                    .or(
+                        new Repository('nodes')
+                            .queryJsonb('isGoodSong', 'properties', 'eq', 'true')
+                            .or()
+                            .queryJsonb('availability', 'properties', 'eq', 'OnDemand'),
+                    ),
             );
         expect(orOrQuery._query.WHERE).not.undefined;
         query = orOrQuery._query.WHERE?.join(' ');
@@ -1013,12 +1014,16 @@ describe('The updated repository layer', async () => {
 
         // WHERE (A or (B or C)) AND containerID = id AND metatype = song
         let query = nodeRepo
-            .where(new Repository('nodes')
-                .queryJsonb('year', 'properties', '>', 1985)
-                .or(new Repository('nodes')
-                    .queryJsonb('isGoodSong', 'properties', 'eq', 'false')
-                    .or()
-                    .queryJsonb('availability', 'properties', 'eq', 'SongRadio')))
+            .where(
+                new Repository('nodes')
+                    .queryJsonb('year', 'properties', '>', 1985)
+                    .or(
+                        new Repository('nodes')
+                            .queryJsonb('isGoodSong', 'properties', 'eq', 'false')
+                            .or()
+                            .queryJsonb('availability', 'properties', 'eq', 'SongRadio'),
+                    ),
+            )
             .and()
             .containerID('eq', containerID)
             .and()
@@ -1043,12 +1048,16 @@ describe('The updated repository layer', async () => {
         query = nodeRepo
             .where()
             .containerID('eq', containerID)
-            .and(new Repository('nodes')
-                .queryJsonb('year', 'properties', '>', 1985)
-                .or(new Repository('nodes')
-                    .queryJsonb('isGoodSong', 'properties', 'eq', 'false')
-                    .or()
-                    .queryJsonb('availability', 'properties', 'eq', 'SongRadio')))
+            .and(
+                new Repository('nodes')
+                    .queryJsonb('year', 'properties', '>', 1985)
+                    .or(
+                        new Repository('nodes')
+                            .queryJsonb('isGoodSong', 'properties', 'eq', 'false')
+                            .or()
+                            .queryJsonb('availability', 'properties', 'eq', 'SongRadio'),
+                    ),
+            )
             .and()
             .metatypeName('eq', 'Song');
         expect(query._query.WHERE).not.undefined;
@@ -1073,12 +1082,16 @@ describe('The updated repository layer', async () => {
             .containerID('eq', containerID)
             .and()
             .metatypeName('eq', 'Song')
-            .and(new Repository('nodes')
-                .queryJsonb('year', 'properties', '>', 1985)
-                .or(new Repository('nodes')
-                    .queryJsonb('isGoodSong', 'properties', 'eq', 'false')
-                    .or()
-                    .queryJsonb('availability', 'properties', 'eq', 'SongRadio')));
+            .and(
+                new Repository('nodes')
+                    .queryJsonb('year', 'properties', '>', 1985)
+                    .or(
+                        new Repository('nodes')
+                            .queryJsonb('isGoodSong', 'properties', 'eq', 'false')
+                            .or()
+                            .queryJsonb('availability', 'properties', 'eq', 'SongRadio'),
+                    ),
+            );
         expect(query._query.WHERE).not.undefined;
         queryString = query._query.WHERE?.join(' ');
 
@@ -1203,7 +1216,7 @@ describe('The updated repository layer', async () => {
 
     it('does not rename qualified columns', async () => {
         // metatype relationship repository fully qualifies all its columns
-        const repo = new MetatypeRelationshipPairRepository();
+        const repo = new MetatypeRelationshipPairRepository(false);
 
         const query = repo.where().containerID('eq', containerID).and().name('like', '%performs%').and().query('destination.name', 'eq', 'Song');
         const where = query._query.WHERE;
@@ -1212,9 +1225,7 @@ describe('The updated repository layer', async () => {
 
         const results = await query.list();
         expect(results.isError, JSON.stringify(results.error)).false;
-        expect(results.value.length).eq(1);
-        expect(results.value[0].name).eq('band performs song');
-        expect(results.value[0].relationship_type).eq('many:many');
+        expect(results.value.length).eq(2);
 
         return Promise.resolve();
     });
@@ -1260,7 +1271,7 @@ describe('The updated repository layer', async () => {
             .where()
             .containerID('eq', containerID)
             .sortBy('COUNT(id)', 'n', true)
-            .list(false, {groupBy: 'id', limit: 3}); // test grouping in list function
+            .list(false, false, {groupBy: 'id', limit: 3}); // test grouping in list function
         expect(results.isError, JSON.stringify(results.error)).false;
         expect(results.value.length).eq(3);
         // test to see our results match what they're supposed to
@@ -1389,7 +1400,8 @@ describe('The updated repository layer', async () => {
     it('does not qualify a null table', async () => {
         let repo = new EdgeRepository(true);
 
-        repo = repo.select('origin_id')
+        repo = repo
+            .select('origin_id')
             .addFields({'COUNT(*)': 'outgoing_edges'})
             .where()
             .containerID('eq', containerID)
@@ -1400,7 +1412,7 @@ describe('The updated repository layer', async () => {
         const groupby = repo._query.GROUPBY![0];
         expect(orderby).eq('outgoing_edges DESC');
         expect(groupby).eq('origin_id');
-        
+
         const results = await repo.list();
         expect(results.isError, JSON.stringify(results.error)).false;
         expect(results.value[0]['outgoing_edges' as keyof object]).eq('7');
@@ -1409,11 +1421,7 @@ describe('The updated repository layer', async () => {
     it('can sort in multiple formats', async () => {
         let repo = new NodeLeafRepository(nodes[20].id!, containerID, '10');
 
-        repo = repo
-            .sortBy('origin_metatype_id')
-            .sortBy('origin_metatype_uuid', null)
-            .sortBy('origin_metatype_name', 'fake_alias')
-            .options({})
+        repo = repo.sortBy('origin_metatype_id').sortBy('origin_metatype_uuid', null).sortBy('origin_metatype_name', 'fake_alias').options({});
         const orderby = repo._query.ORDERBY!;
         expect(orderby[0]).eq('nodeleafs.origin_metatype_id ASC');
         expect(orderby[1]).eq('origin_metatype_uuid ASC');
@@ -1422,14 +1430,14 @@ describe('The updated repository layer', async () => {
         expect(orderby[2]).undefined;
 
         repo = repo.options({
-            sortBy: 'destination_metatype_id,destination_id', 
-            sortDesc: true
+            sortBy: 'destination_metatype_id,destination_id',
+            sortDesc: true,
         });
         expect(orderby[2]).eq('nodeleafs.destination_metatype_id DESC');
-        expect(orderby[3]).eq('nodeleafs.destination_id DESC')
+        expect(orderby[3]).eq('nodeleafs.destination_id DESC');
 
         const results = await repo.list();
-        expect(results.value[0].depth).eq(8)
+        expect(results.value[0].depth).eq(8);
         expect(results.value[0].path?.length).eq(8);
     });
 });

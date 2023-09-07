@@ -13,7 +13,7 @@
         />
 
         <v-card id="dialog">
-            <error-banner :message="errorMessage"></error-banner>
+            <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
             <success-banner :message="successMessage"></success-banner>
             <v-toolbar dark color="secondary" flat tile v-observe-visibility="setDatePickers">
                 <v-btn icon dark @click="closeDialog">

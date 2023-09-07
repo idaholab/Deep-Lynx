@@ -8,7 +8,7 @@
         {{ $t('dataSources.timeseries') }}
       </v-tab>
     </v-tabs>
-    <error-banner :message="errorMessage"></error-banner>
+    <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
     <success-banner :message="successMessage"></success-banner>
     <div class="mx-2" v-if="activeTab === 'datasources'">
       <v-toolbar flat color="white">

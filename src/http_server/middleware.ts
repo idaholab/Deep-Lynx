@@ -211,7 +211,7 @@ export function metatypeContext(): any {
         const repo = new MetatypeRepository();
 
         if (req.query && req.query.uuid === 'true') {
-            repo.findByUUID(req.params.metatypeID)
+            repo.findByUUID(req.params.metatypeID, true)
                 .then((result) => {
                     if (result.isError) {
                         resp.status(result.error?.errorCode!).json(result);
@@ -226,7 +226,7 @@ export function metatypeContext(): any {
                     return;
                 });
         } else {
-            repo.findByID(req.params.metatypeID)
+            repo.findByID(req.params.metatypeID, true)
                 .then((result) => {
                     if (result.isError) {
                         resp.status(result.error?.errorCode!).json(result);

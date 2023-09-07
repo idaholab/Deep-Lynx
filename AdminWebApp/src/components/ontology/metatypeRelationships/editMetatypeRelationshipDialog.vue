@@ -13,9 +13,9 @@
     <v-card class="pt-1 pb-3 px-2" v-if="selectedMetatypeRelationship">
       <v-card-title>
         <span class="headline text-h3">{{ $t('general.edit') }} {{ selectedMetatypeRelationship.name }}</span>
-      </v-card-title>   
+      </v-card-title>
       <v-card-text>
-        <error-banner :message="errorMessage"></error-banner>
+        <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
         <v-row>
           <v-col v-if="comparisonMetatypeRelationship" :cols="6">
             <v-form

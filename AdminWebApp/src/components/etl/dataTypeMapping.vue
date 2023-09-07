@@ -1,6 +1,6 @@
 <template>
   <div>
-    <error-banner :message="errorMessage"></error-banner>
+    <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
     <div class="pa-6 pb-0">
       <p>{{$t('help.typeMapping')}}</p>
       <v-checkbox
@@ -20,6 +20,7 @@
           <v-spacer></v-spacer>
           <div class="mr-3">
             <transformation-dialog
+              v-if="typeMappingID || typeMapping"
               :payload="unmappedData"
               :typeMappingID="(typeMappingID) ? typeMappingID: typeMapping.id"
               :containerID="containerID"
@@ -137,11 +138,15 @@ export default class DataTypeMapping extends Vue {
   transformations: TypeMappingTransformationT[] = []
 
   updateTypeMapping() {
-    this.$client.updateTypeMapping(this.containerID, this.dataSourceID, this.typeMapping?.id!, this.typeMapping!)
-        .then(() => {
-          this.$emit("updated")
-        })
-        .catch((e: any) => this.errorMessage = e)
+    if (this.typeMapping) {
+      this.$client.updateTypeMapping(this.containerID, this.dataSourceID, this.typeMapping.id, this.typeMapping)
+          .then(() => {
+            this.$emit("updated")
+          })
+          .catch((e: any) => this.errorMessage = e)
+    } else {
+      this.errorMessage = this.$t("typeMappings.notFound")
+    }
   }
 
   headers() {
@@ -197,12 +202,16 @@ export default class DataTypeMapping extends Vue {
   }
 
   refreshTransformations(){
-    this.$client.retrieveTransformations(this.containerID, this.dataSourceID, this.typeMapping?.id!)
-        .then((transformations) => {
-          this.transformations = transformations
-          this.$emit("updated")
-        })
-        .catch(e => this.errorMessage = e)
+    if (this.typeMapping) {
+      this.$client.retrieveTransformations(this.containerID, this.dataSourceID, this.typeMapping.id)
+          .then((transformations) => {
+            this.transformations = transformations
+            this.$emit("updated")
+          })
+          .catch(e => this.errorMessage = e)
+    } else {
+      this.errorMessage = this.$t("typeMappings.notFound")
+    }
   }
 
   deleteTransformation(transformation: TypeMappingTransformationT) {

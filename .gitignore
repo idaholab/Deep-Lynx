@@ -22,6 +22,8 @@ profile-logs
 /src/tests/test-data.json
 /src/tests/test-data.csv
 /src/tests/private-key.pem
+/src/tests/*_export.json
+/**/test-timeseries-datasource-graphql.json
 /NodeLibraries/dl-fast-load/target/
 /NodeLibraries/dl-fast-load/index.node
 /RedisLoader/target/
@@ -49,3 +51,4 @@ devenv.local.nix
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+/yarn-error.log

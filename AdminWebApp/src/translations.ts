@@ -79,6 +79,7 @@ export default {
             postgresDate: 'Date String should be in postgres datetime format',
             propertyMapping: 'Select the payload keys which correspond with the resulting class or relationship properties',
             propertyName: 'This is the JSON compliant property name your data will be stored under inside the database schema.',
+            propertyNameRegex: 'Spaces are not allowed in property names',
             queryAlt: 'In the results window you can hold down the "Alt" key and click on the arrow for an object or array to fully expand the contents.',
             queryAutocomplete:
                 'While writing your query, hit "Ctrl-Space" to bring up the autocompletion menu. \nThis menu provides some of the available schema from which to query.',
@@ -125,10 +126,11 @@ export default {
             email: 'mailto:GRP-deeplynx-team@inl.gov',
         },
         errors: {
-            errorCommunicating: 'Error communicating with DeepLynx: ',
+            errorCommunicating: 'Error returned from DeepLynx: ',
             statusCode: 'Request unsuccessful. Status Code ',
             error: 'Error',
             containerCreation: 'Container creation unsuccessful.',
+            containerName: 'Container name already exists.',
             nameError: 'A container with this name has already been created by the current user.',
             checkLogs: 'Please see the logs for additional detail.',
             owlError: 'Please select either an ontology file or valid URL to an ontology (.owl) file',
@@ -317,6 +319,7 @@ export default {
             database: 'Database',
             archive: 'Archive',
             parent: 'Parent',
+            owner: 'Owner',
         },
         validation: {
             validEmail: 'Email must be valid',
@@ -452,6 +455,7 @@ export default {
             selectParentHelp: 'Select a class to be the parent or leave blank for a root class',
             createChild: 'Create Child Class',
             inheritedProperty: 'Inherited property from',
+            inheritedRelationship: 'Inherited relationship from',
             editProperty: 'Edit Class Property',
             newProperty: 'New Class Property',
             searchProperty: 'Type to search available Class Properties',
@@ -661,6 +665,7 @@ export default {
             enable: 'Enable Type Mapping',
             import: 'Import Type Mappings',
             importFromFile: 'Import Mappings from File',
+            notFound: 'Type Mapping Not Found',
         },
         transformations: {
             transformations: 'Transformations',

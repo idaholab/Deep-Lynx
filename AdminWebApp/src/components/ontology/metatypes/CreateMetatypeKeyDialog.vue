@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" @click:outside="dialog = false">
+  <v-dialog v-model="dialog" max-width="60%" @click:outside="dialog = false">
     <template v-slot:activator="{ on }">
       <v-icon
           v-if="icon"
@@ -13,9 +13,9 @@
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
         <span class="headline text-h3">{{$t('classes.newProperty')}}</span>
-      </v-card-title>   
+      </v-card-title>
       <v-card-text>
-        <error-banner :message="errorMessage"></error-banner>
+        <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
         <v-row>
           <v-col :cols="12">
 
@@ -32,7 +32,7 @@
 
               <v-text-field
                   v-model="metatypeKey.property_name"
-                  :rules="[validationRule]"
+                  :rules="[validationRule, validatePropertyName]"
                   required
               >
                 <template v-slot:label>{{$t('properties.name')}} <small style="color:red" >*</small></template>
@@ -142,7 +142,7 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="primary" text @click="dialog = false" >{{$t("general.cancel")}}</v-btn>
-        <v-btn color="primary" :disabled="!formValid" text @click="createMetatypeKey()">{{$t("general.create")}}</v-btn>
+        <v-btn color="primary" :disabled="!formValid" text @click="createMetatypeKey()" :loading="keyLoading">{{$t("general.create")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -153,12 +153,13 @@
   import {MetatypeKeyT, MetatypeT} from "../../../api/types";
 
   interface CreateMetatypeKeyDialogModel {
-    errorMessage: string
+    errorMessage: {message: string, format: string}[]
     dialog: boolean
     formValid: boolean
     metatypeKey: MetatypeKeyT
     dataTypes: string[]
     booleanOptions: boolean[]
+    keyLoading: boolean
   }
 
   export default Vue.extend ({
@@ -174,14 +175,15 @@
         required: false
       },
     },
-    
+
     data: (): CreateMetatypeKeyDialogModel => ({
-      errorMessage: "",
+      errorMessage: [],
       dialog: false,
       formValid: false,
       metatypeKey: {validation: {regex: "", min: 0, max: 0}, required: false} as MetatypeKeyT,
       dataTypes: ["number", "number64", "float", "float64", "date", "string", "boolean", "enumeration", "file"],
-      booleanOptions: [true, false]
+      booleanOptions: [true, false],
+      keyLoading: false,
     }),
 
     watch: {
@@ -197,24 +199,44 @@
     methods: {
       createMetatypeKey() {
         if(this.metatypeKey) {
+          this.keyLoading = true
           this.metatypeKey.container_id = this.metatype.container_id
           this.$client.createMetatypeKey(this.metatype.container_id, this.metatype.id!, this.metatypeKey)
           .then(result => {
             if(!result) {
-              this.errorMessage = this.$t('errors.errorCommunicating') as string
+              this.errorMessage = [{
+                message: this.$t('errors.errorCommunicating') as string,
+                format: ''
+              }]
             } else {
               this.dialog = false
                 this.$emit('metatypeKeyCreated', result[0])
             }
           })
           .catch(e => {
-            this.errorMessage = this.$t('errors.errorCommunicating') as string + e
+            this.errorMessage = [{
+              message: this.$t('errors.errorCommunicating') as string,
+              format: 'font-weight: bold;'
+            }, {
+              message: JSON.parse(e).error,
+              format: ''
+            }]
           })
+          .finally(() => this.keyLoading = false)
         }
       },
       validationRule(v: any) {
         return !!v || this.$t('validation.required')
-      }
+      },
+      validatePropertyName(name: string) {
+        // this regex should disallow spaces
+        const matches = /^[^ ]+$/.exec(name)
+        if(!matches || matches.length === 0) {
+          return this.$t('help.propertyNameRegex');
+        }
+
+        return true;
+      },
     },
 
     computed: {

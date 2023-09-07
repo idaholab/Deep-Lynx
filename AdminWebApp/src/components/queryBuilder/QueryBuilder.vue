@@ -26,7 +26,7 @@
         </v-card>
       </v-col>
       <v-col :cols="9">
-        <error-banner :message="errorMessage"></error-banner>
+        <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
         <v-card>
           <v-tabs v-model="activeTab" background-color="lightgray" class="data-query-tabs">
             <v-tab @click="activeTab = 'queryBuilder'">{{$t('query.builder')}}</v-tab>
@@ -155,7 +155,7 @@
               <v-row style="margin-bottom:15px">
                 <v-col :cols="6">
                   <v-card style="height: 100%">
-                    <textarea 
+                    <textarea
                       v-observe-visibility="initCodeMirror"
                       v-model="selectedSampleQuery.value"
                       ref="queryEditor"
@@ -195,11 +195,11 @@
   import { GraphQLSchema, buildSchema } from 'graphql';
   import {mdiInformation} from "@mdi/js";
   // importing sample queries for code clarity
-  import { 
-    graphSampleQuery, 
-    introspectiveQuery, 
-    metatypeSampleQuery, 
-    relationshipSampleQuery, 
+  import {
+    graphSampleQuery,
+    introspectiveQuery,
+    metatypeSampleQuery,
+    relationshipSampleQuery,
     simpleGraphQuery,
     hintSchema
   } from './sampleQueries';
@@ -275,7 +275,7 @@
       selectedSampleQuery(): {text: string, value: string} {
         return this.sampleQueries[0];
       },
-      
+
     },
 
     methods: {

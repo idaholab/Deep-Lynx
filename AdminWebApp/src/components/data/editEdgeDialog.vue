@@ -15,7 +15,7 @@
           <span class="headline text-h3">{{$t('general.edit')}} ({{selectedEdge.metatype_relationship.name}})</span>
         </v-card-title>
         <v-card-text>
-          <error-banner :message="errorMessage"></error-banner>
+          <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
           <v-row>
             <v-col :cols="12">
               <v-data-table
@@ -234,7 +234,7 @@
     }
 
     async propertiesToArray() {
-      // have to do this to avoid mutating properties 
+      // have to do this to avoid mutating properties
       this.selectedEdge = JSON.parse(JSON.stringify(this.edge))
       this.edgeName = (this.selectedEdge!.properties as any).name ? (this.selectedEdge!.properties as any).name : this.selectedEdge!.id
       // grab all metatype keys

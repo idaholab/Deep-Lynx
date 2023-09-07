@@ -151,7 +151,7 @@ describe('A Metatype Key', async () => {
 
         await storage.RefreshView();
 
-        const retrieved = await storage.ListForMetatype(metatype.value.id!);
+        const retrieved = await storage.ListForMetatype(metatype.value.id!, metatype.value.container_id!);
         expect(retrieved.isError).false;
         expect(retrieved.value).not.empty;
         expect(retrieved.value).length(keys.value.length);

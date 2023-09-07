@@ -1,6 +1,6 @@
 <template>
   <div>
-    <error-banner :message="errorMessage"></error-banner>
+    <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
     <error-banner v-if="!$store.getters.selectedChangelistID && $store.state.inEditMode" :message="$t('help.selectChangelist')"></error-banner>
     <v-toolbar
       :color="backgroundColor"

@@ -207,7 +207,7 @@ export default class GraphQLRunner {
             }
 
             // load metatypes with the keys loaded from the materialized view for speed's sake
-            const metatypeResults = await metatypeRepo.list(true, {sortBy: 'id', loadFromView: true});
+            const metatypeResults = await metatypeRepo.list(true, true, {sortBy: 'id', loadFromView: true});
             if (metatypeResults.isError) {
                 return Promise.resolve(Result.Pass(metatypeResults));
             }
@@ -1099,8 +1099,8 @@ export default class GraphQLRunner {
                     .sortBy('created_at', undefined, true);
 
                 repo = new NodeRepository(true)
-                .from(new NodeRepository().subquery(pointInTime), 'sub')
-                .select('*', 'sub');
+                    .from(new NodeRepository().subquery(pointInTime), 'sub')
+                    .select('*', 'sub');
             }
 
             // you might notice that metatype_id and metatype_name are missing as filters - these are not
@@ -1490,8 +1490,8 @@ export default class GraphQLRunner {
                     .sortBy('created_at', undefined, true);
 
                 repo = new NodeRepository(true)
-                .from(new NodeRepository().subquery(pointInTime), 'sub')
-                .select('*', 'sub');
+                    .from(new NodeRepository().subquery(pointInTime), 'sub')
+                    .select('*', 'sub');
             }
 
             if (input.id) {

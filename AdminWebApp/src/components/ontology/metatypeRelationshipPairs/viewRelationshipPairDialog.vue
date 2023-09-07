@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" max-width="60%">
+  <v-dialog v-model="dialog" @click:outside="dialog = false" width="50%">
     <template v-slot:activator="{ on }">
       <v-icon
           v-if="icon"
@@ -15,7 +15,7 @@
         <span class="headline text-h3">{{ $t('general.view') }} {{ selectedPair.name }}</span>
       </v-card-title>
       <v-card-text v-if="selectedPair">
-        <error-banner :message="errorMessage"></error-banner>
+        <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
         <v-row>
           <v-col :cols="12">
             <v-form

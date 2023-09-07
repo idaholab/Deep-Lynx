@@ -2,6 +2,7 @@ import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
 import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
+import Logger from '../../../../services/logger';
 
 const format = require('pg-format');
 
@@ -17,6 +18,7 @@ const format = require('pg-format');
 export default class MetatypeRelationshipPairMapper extends Mapper {
     public resultClass = MetatypeRelationshipPair;
     public static tableName = 'metatype_relationship_pairs';
+    public static viewName = 'metatype_full_relationship_pairs';
 
     private static instance: MetatypeRelationshipPairMapper;
 
@@ -35,14 +37,25 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
+        this.RefreshView().catch((e) => {
+            Logger.error(`error refreshing relationship pairs view ${e}`);
+        });
+
         return Promise.resolve(Result.Success(r.value[0]));
     }
 
     public async BulkCreate(userID: string, input: MetatypeRelationshipPair[], transaction?: PoolClient): Promise<Result<MetatypeRelationshipPair[]>> {
-        return super.run(this.createStatement(userID, ...input), {
+        const r = await super.run(this.createStatement(userID, ...input), {
             transaction,
             resultClass: this.resultClass,
         });
+        if (r.isError) return Promise.resolve(Result.Pass(r));
+
+        this.RefreshView().catch((e) => {
+            Logger.error(`error refreshing relationship pairs view ${e}`);
+        });
+
+        return Promise.resolve(r);
     }
 
     public async BulkCreateFromExport(
@@ -61,6 +74,26 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
         return super.retrieve(this.retrieveStatement(id), {resultClass: this.resultClass});
     }
 
+    public async ListForMetatype(metatypeID: string, containerID: string): Promise<Result<MetatypeRelationshipPair[]>> {
+        return super.rows(this.listStatement(metatypeID, containerID), {resultClass: this.resultClass});
+    }
+
+    public async ListFromTableForMetatype(metatypeID: string, containerID: string): Promise<Result<MetatypeRelationshipPair[]>> {
+        return super.rows(this.listFromTableStatement(metatypeID, containerID), {resultClass: this.resultClass});
+    }
+
+    public async ListForMetatypeIDs(metatype_ids: string[], containerID: string): Promise<Result<MetatypeRelationshipPair[]>> {
+        return super.rows(this.listPairsStatement(metatype_ids, containerID));
+    }
+
+    public async ListFromViewForMetatype(metatypeID: string): Promise<Result<MetatypeRelationshipPair[]>> {
+        return super.rows(this.listViewStatement(metatypeID), {resultClass: this.resultClass});
+    }
+
+    public async ListFromViewForMetatypeIDs(metatype_ids: string[]): Promise<Result<MetatypeRelationshipPair[]>> {
+        return super.rows(this.listViewPairsStatement(metatype_ids));
+    }
+
     public async Update(userID: string, p: MetatypeRelationshipPair, transaction?: PoolClient): Promise<Result<MetatypeRelationshipPair>> {
         const r = await super.run(this.fullUpdateStatement(userID, p), {
             transaction,
@@ -68,10 +101,18 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
+        this.RefreshView().catch((e) => {
+            Logger.error(`error refreshing relationship pairs view ${e}`);
+        });
+
         return Promise.resolve(Result.Success(r.value[0]));
     }
 
     public async BulkUpdate(userID: string, p: MetatypeRelationshipPair[], transaction?: PoolClient): Promise<Result<MetatypeRelationshipPair[]>> {
+        this.RefreshView().catch((e) => {
+            Logger.error(`error refreshing relationship pairs view ${e}`);
+        });
+
         return super.run(this.fullUpdateStatement(userID, ...p), {
             transaction,
             resultClass: this.resultClass,
@@ -101,7 +142,26 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
     }
 
     public async JSONCreate(relationshipPairs: MetatypeRelationshipPair[]): Promise<Result<boolean>> {
-        return super.runStatement(this.insertFromJSONStatement(relationshipPairs))
+        return super.runStatement(this.insertFromJSONStatement(relationshipPairs));
+    }
+
+    public RefreshView(): Promise<Result<boolean>> {
+        return super.runStatement(this.refreshViewStatement());
+    }
+
+    // these functions are copies only to be used on container import. they do not refresh the keys view.
+    public async ImportBulkCreate(userID: string, pairs: MetatypeRelationshipPair[], transaction?: PoolClient): Promise<Result<MetatypeRelationshipPair[]>> {
+        return super.run(this.importCreateStatement(userID, ...pairs), {
+            transaction,
+            resultClass: this.resultClass,
+        });
+    }
+
+    public async ImportBulkUpdate(userID: string, pairs: MetatypeRelationshipPair[], transaction?: PoolClient): Promise<Result<MetatypeRelationshipPair[]>> {
+        return super.run(this.importUpdateStatement(userID, ...pairs), {
+            transaction,
+            resultClass: this.resultClass,
+        });
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -112,37 +172,34 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
         const text = `INSERT INTO
                             metatype_relationship_pairs(
                                                         name,
-                                                        description,
                                                         relationship_id,
                                                         origin_metatype_id,
                                                         destination_metatype_id,
                                                         relationship_type,
                                                         container_id,
                                                         created_by, modified_by)
-                        VALUES %L 
+                        VALUES %s 
                     ON CONFLICT(relationship_id,origin_metatype_id,destination_metatype_id) DO UPDATE SET
                         created_by = EXCLUDED.created_by,
                         modified_by = EXCLUDED.created_by,
                         created_at = NOW(),
                         modified_at = NOW(),
                         deleted_at = NULL,
-                        name = EXCLUDED.name,
-                        description = EXCLUDED.description
+                        name = EXCLUDED.name
                     WHERE EXCLUDED.relationship_id = metatype_relationship_pairs.relationship_id
                     AND EXCLUDED.origin_metatype_id = metatype_relationship_pairs.origin_metatype_id
                     AND EXCLUDED.destination_metatype_id = metatype_relationship_pairs.destination_metatype_id
                         RETURNING *`;
 
         const values = pairs.map((pair) => [
-            pair.name,
-            pair.description,
-            pair.relationship!.id,
-            pair.originMetatype!.id,
-            pair.destinationMetatype!.id,
-            pair.relationship_type,
-            pair.container_id,
-            userID,
-            userID,
+            `generate_pair_name(${pair.relationship!.id!}, ${pair.originMetatype!.id!}, ${pair.destinationMetatype!.id!}),
+            ${pair.relationship!.id},
+            ${pair.originMetatype!.id},
+            ${pair.destinationMetatype!.id},
+            '${pair.relationship_type}',
+            ${pair.container_id},
+            '${userID}',
+            '${userID}'`,
         ]);
 
         return format(text, values);
@@ -152,7 +209,6 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
         const text = `INSERT INTO
                             metatype_relationship_pairs(
                                                         name,
-                                                        description,
                                                         relationship_id,
                                                         origin_metatype_id,
                                                         destination_metatype_id,
@@ -161,7 +217,7 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
                                                         ontology_version,
                                                         old_id,
                                                         created_by, modified_by)
-                        VALUES %L 
+                        VALUES %s 
                     ON CONFLICT(relationship_id,origin_metatype_id,destination_metatype_id) DO UPDATE SET
                         old_id = EXCLUDED.old_id,
                         created_by = EXCLUDED.created_by,
@@ -170,7 +226,6 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
                         modified_at = NOW(),
                         deleted_at = NULL,
                         name = EXCLUDED.name,
-                        description = EXCLUDED.description,
                         relationship_type = EXCLUDED.relationship_type
                     WHERE EXCLUDED.relationship_id = metatype_relationship_pairs.relationship_id
                     AND EXCLUDED.origin_metatype_id = metatype_relationship_pairs.origin_metatype_id
@@ -178,17 +233,16 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
                         RETURNING *`;
 
         const values = pairs.map((pair) => [
-            pair.name,
-            pair.description,
-            pair.relationship!.id,
-            pair.originMetatype!.id,
-            pair.destinationMetatype!.id,
-            pair.relationship_type,
-            pair.container_id,
-            ontologyVersionID,
-            pair.old_id,
-            userID,
-            userID,
+            `generate_pair_name(${pair.relationship!.id!}, ${pair.originMetatype!.id!}, ${pair.destinationMetatype!.id!}),
+            ${pair.relationship!.id},
+            ${pair.originMetatype!.id},
+            ${pair.destinationMetatype!.id},
+            '${pair.relationship_type}',
+            ${pair.container_id},
+            ${ontologyVersionID},
+            ${pair.old_id},
+            '${userID}',
+            '${userID}'`,
         ]);
 
         return format(text, values);
@@ -197,7 +251,6 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
     private fullUpdateStatement(userID: string, ...pairs: MetatypeRelationshipPair[]): string {
         const text = `UPDATE metatype_relationship_pairs AS p SET
                             name = u.name,
-                            description = u.description,
                             relationship_type = u.relationship_type,
                             relationship_id = u.relationship_id::bigint,
                             origin_metatype_id = u.origin_metatype_id::bigint,
@@ -205,9 +258,8 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
                             container_id = u.container_id::bigint,
                             modified_by = u.modified_by,
                             modified_at = NOW()
-                        FROM(VALUES %L) as u(id,
+                        FROM(VALUES %s) as u(id,
                                             name,
-                                            description,
                                             relationship_type,
                                             relationship_id,
                                             origin_metatype_id,
@@ -216,15 +268,14 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
                                             modified_by)
                         WHERE u.id::bigint= p.id RETURNING p.*`;
         const values = pairs.map((p) => [
-            p.id,
-            p.name,
-            p.description,
-            p.relationship_type,
-            p.relationship!.id,
-            p.originMetatype!.id,
-            p.destinationMetatype!.id,
-            p.container_id,
-            userID,
+            `${p.id},
+            generate_pair_name(${p.relationship!.id!}, ${p.originMetatype!.id!}, ${p.destinationMetatype!.id!}),
+            '${p.relationship_type}',
+            ${p.relationship!.id},
+            ${p.originMetatype!.id},
+            ${p.destinationMetatype!.id},
+            ${p.container_id},
+            '${userID}'`,
         ]);
 
         return format(text, values);
@@ -265,12 +316,71 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
         };
     }
 
+    // list statement must reference the get_metatype_relationship_pairs function or view
+    // so that we are getting all relationships back, both the metatype's own and the inherited pairs
+    private listViewStatement(metatypeID: string): QueryConfig {
+        return {
+            text: `SELECT * FROM metatype_full_relationship_pairs WHERE origin_metatype_id = $1`,
+            values: [metatypeID],
+        };
+    }
+
+    private listViewPairsStatement(metatype_ids: string[]): QueryConfig {
+        const text = `SELECT * FROM metatype_full_relationship_pairs WHERE origin_metatype_id IN (%L)`;
+        return format(text, metatype_ids);
+    }
+
+    private listStatement(metatypeID: string, containerID: string): QueryConfig {
+        return {
+            text: `SELECT * FROM get_metatype_relationship_pairs($1::bigint, $2::bigint) ORDER BY name`,
+            values: [metatypeID, containerID],
+        };
+    }
+
+    // list statement for relationship pairs owned by a metatype
+    private listFromTableStatement(metatypeID: string, containerID: string): QueryConfig {
+        return {
+            text: `SELECT * FROM metatype_relationship_pairs WHERE origin_metatype_id = $1 AND container_id = $2 ORDER BY name`,
+            values: [metatypeID, containerID],
+        };
+    }
+
+    private listPairsStatement(metatype_ids: string[], containerID: string): QueryConfig {
+        const text = `WITH RECURSIVE parents AS (
+            SELECT id, container_id, name, description, created_at,
+                   modified_at, created_by, modified_by, ontology_version,
+                   old_id, deleted_at, id AS pair_parent, 1 AS lvl
+            FROM metatypes_view
+            WHERE container_id = $2
+            UNION
+            SELECT v.id, v.container_id, v.name, v.description, v.created_at,
+                   v.modified_at, v.created_by, v.modified_by, v.ontology_version,
+                   v.old_id, v.deleted_at, p.pair_parent, p.lvl + 1
+            FROM parents p JOIN metatypes_view v ON p.id = v.parent_id WHERE v.container_id = $2
+        ) SELECT mk.id, mk.relationship_id, mk.origin_metatype_id AS metatype_id, owner.name AS metatype_name,
+                 p.id AS origin_metatype_id, mk.destination_metatype_id, mk.container_id,
+                 mk.relationship_type, mk.created_at, mk.modified_at,
+                 mk.created_by, mk.modified_by, mk.ontology_version, mk.deleted_at,
+                 p.lvl, origin.name        AS origin_metatype_name,
+                 destination.name   AS destination_metatype_name,
+                 relationships.name AS relationship_name,
+                 origin.name || ' - ' || relationships.name || ' - ' || destination.name AS name
+                FROM parents p JOIN metatype_relationship_pairs mk ON p.pair_parent = mk.origin_metatype_id
+                     LEFT JOIN metatypes owner ON mk.origin_metatype_id = owner.id
+                     LEFT JOIN metatypes origin ON p.id = origin.id
+                     LEFT JOIN metatypes destination ON mk.destination_metatype_id = destination.id
+                     LEFT JOIN metatype_relationships relationships ON mk.relationship_id = relationships.id
+                WHERE p.id IN ($1) AND mk.container_id = $2
+                ORDER BY origin_metatype_id, mk.name`;
+        const values = [metatype_ids, containerID];
+        return format(text, values);
+    }
+
     private forExportStatement(containerID: string, ontologyVersionID?: string): QueryConfig {
         if (ontologyVersionID) {
             return {
                 text: `SELECT m.container_id, 
                           m.name, 
-                          m.description, 
                           m.id as old_id, 
                           m.destination_metatype_id, 
                           m.origin_metatype_id, 
@@ -284,7 +394,6 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
             return {
                 text: `SELECT m.container_id, 
                           m.name, 
-                          m.description, 
                           m.id as old_id, 
                           m.destination_metatype_id, 
                           m.origin_metatype_id, 
@@ -297,7 +406,87 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
         }
     }
 
-    // usees json_to_recordset to directly insert metatype relationship pairs from json
+    private refreshViewStatement(): QueryConfig {
+        return {
+            text: `REFRESH MATERIALIZED VIEW metatype_full_relationship_pairs;`,
+            values: [],
+        };
+    }
+
+    // these create and update statements are used only by the container import
+    // and do not use the generate_pair_name function, as the value is already known
+    // in the container import
+    private importCreateStatement(userID: string, ...pairs: MetatypeRelationshipPair[]): string {
+        const text = `INSERT INTO
+                            metatype_relationship_pairs(
+                                                        name,
+                                                        relationship_id,
+                                                        origin_metatype_id,
+                                                        destination_metatype_id,
+                                                        relationship_type,
+                                                        container_id,
+                                                        created_by, modified_by)
+                        VALUES %L
+                    ON CONFLICT(relationship_id,origin_metatype_id,destination_metatype_id) DO UPDATE SET
+                        created_by = EXCLUDED.created_by,
+                        modified_by = EXCLUDED.created_by,
+                        created_at = NOW(),
+                        modified_at = NOW(),
+                        deleted_at = NULL,
+                        name = EXCLUDED.name
+                    WHERE EXCLUDED.relationship_id = metatype_relationship_pairs.relationship_id
+                    AND EXCLUDED.origin_metatype_id = metatype_relationship_pairs.origin_metatype_id
+                    AND EXCLUDED.destination_metatype_id = metatype_relationship_pairs.destination_metatype_id
+                        RETURNING *`;
+
+        const values = pairs.map((pair) => [
+            pair.name!,
+            pair.relationship!.id,
+            pair.originMetatype!.id,
+            pair.destinationMetatype!.id,
+            pair.relationship_type,
+            pair.container_id,
+            userID,
+            userID,
+        ]);
+
+        return format(text, values);
+    }
+
+    private importUpdateStatement(userID: string, ...pairs: MetatypeRelationshipPair[]): string {
+        const text = `UPDATE metatype_relationship_pairs AS p SET
+                            name = u.name,
+                            relationship_type = u.relationship_type,
+                            relationship_id = u.relationship_id::bigint,
+                            origin_metatype_id = u.origin_metatype_id::bigint,
+                            destination_metatype_id = u.destination_metatype_id::bigint,
+                            container_id = u.container_id::bigint,
+                            modified_by = u.modified_by,
+                            modified_at = NOW()
+                        FROM(VALUES %L) as u(id,
+                                            name,
+                                            relationship_type,
+                                            relationship_id,
+                                            origin_metatype_id,
+                                            destination_metatype_id,
+                                            container_id,
+                                            modified_by)
+                        WHERE u.id::bigint= p.id RETURNING p.*`;
+        const values = pairs.map((p) => [
+            p.id,
+            p.name!,
+            p.relationship_type,
+            p.relationship!.id,
+            p.originMetatype!.id,
+            p.destinationMetatype!.id,
+            p.container_id,
+            userID,
+        ]);
+
+        return format(text, values);
+    }
+
+    // uses json_to_recordset to directly insert metatype relationship pairs from json
     private insertFromJSONStatement(relationshipPairs: MetatypeRelationshipPair[]) {
         const text = `INSERT INTO metatype_relationship_pairs 
                 (relationship_id,
@@ -305,7 +494,6 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
                 destination_metatype_id,
                 container_id,
                 name,
-                description,
                 relationship_type,
                 created_by,
                 modified_by,
@@ -316,7 +504,6 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
                 destination.id,
                 ont_import.container_id,
                 ont_import.name,
-                ont_import.description,
                 ont_import.relationship_type,
                 ont_import.created_by,
                 ont_import.modified_by,
@@ -325,7 +512,6 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
                 json_to_recordset(%L) AS ont_import 
                 (container_id int8,
                 name text,
-                description text,
                 relationship_type text,
                 old_id int8,
                 created_by text,
@@ -353,7 +539,6 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
                     modified_at = NOW(),
                     deleted_at = NULL,
                     name = EXCLUDED.name,
-                    description = EXCLUDED.description,
                     relationship_type = EXCLUDED.relationship_type,
                     ontology_version = EXCLUDED.ontology_version
                 WHERE EXCLUDED.relationship_id = metatype_relationship_pairs.relationship_id

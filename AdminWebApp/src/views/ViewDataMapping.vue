@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-card>
-      <error-banner :message="errorMessage"></error-banner>
+      <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
       <success-banner :message="successMessage"></success-banner>
       <v-alert type="success" v-if="importedMappingResults.length > 0">
         {{$t('typeMappings.successfullyImported')}} -

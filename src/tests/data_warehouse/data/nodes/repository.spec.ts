@@ -156,6 +156,9 @@ describe('A Node Repository', async () => {
         expect(mixed.properties).to.have.deep.property('flower_name', 'Daisy');
 
         // update the node's payload
+        let updateDate = new Date();
+        updateDate.setHours(updateDate.getHours() + 1);
+        mixed.created_at = updateDate;
         mixed.properties = updatedPayload;
 
         saved = await nodeRepo.save(mixed, user);
@@ -370,7 +373,6 @@ describe('A Node Repository', async () => {
         // TODO: implement this test
         return Promise.resolve();
     });
-
 });
 
 const payload: {[key: string]: any} = {

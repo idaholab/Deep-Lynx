@@ -15,7 +15,7 @@
         <span class="headline text-h3">{{$t("relationships.new")}}</span>
       </v-card-title>
       <v-card-text>
-        <error-banner :message="errorMessage"></error-banner>
+        <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
         <v-row>
           <v-col :cols="12">
 
@@ -23,19 +23,6 @@
                 ref="form"
                 v-model="valid"
             >
-              <v-text-field
-                  v-model="name"
-                  :rules="[v => !!v || $t('validation.required')]"
-                  required
-              >
-                <template v-slot:label>{{$t('general.name')}} <small style="color:red" >*</small></template>
-              </v-text-field>
-              <v-textarea
-                  v-model="description"
-                  :rules="[v => !!v || $t('validation.required')]"
-              >
-                <template v-slot:label>{{$t('general.description')}} <small style="color:red" >*</small></template>
-              </v-textarea>
               <v-autocomplete
                   v-model="originSelect"
                   :rules="[v => !!v || $t('validation.required')]"
@@ -43,10 +30,10 @@
                   :items="originMetatypes"
                   :search-input.sync="originSearch"
                   item-text="name"
-                  item-value="id"
+                  return-object
                   persistent-hint
                   required
-                  clearable
+                  disabled
               >
                 <template v-slot:label>{{$t('edges.originClass')}} <small style="color:red" >*</small></template>
               </v-autocomplete>
@@ -60,7 +47,6 @@
                   item-value="id"
                   persistent-hint
                   required
-                  clearable
               >
                 <template v-slot:label>{{$t('relationshipTypes.relType')}} <small style="color:red" >*</small></template>
               </v-autocomplete>
@@ -94,7 +80,7 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="primary" text @click="dialog = false" >{{$t("general.cancel")}}</v-btn>
-        <v-btn color="primary" text :disabled="!valid" @click="newRelationshipPair()">{{$t("general.save")}}</v-btn>
+        <v-btn color="primary" text :disabled="!valid" @click="newRelationshipPair()" :loading="pairLoading">{{$t("general.save")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -110,9 +96,12 @@ export default class CreateRelationshipPairDialog extends Vue {
   containerID!: string;
 
   @Prop({required: false})
+  metatype?: MetatypeT;
+
+  @Prop({required: false})
   readonly icon!: boolean
 
-  errorMessage = ""
+  errorMessage: string | {message: string, format: string}[] = ""
   dialog = false
   valid = false
   destinationSearch = ""
@@ -121,13 +110,20 @@ export default class CreateRelationshipPairDialog extends Vue {
   relationshipTypeChoices = ["many:many", "one:one", "one:many", "many:one"]
   name = ""
   description =  ""
-  originSelect = ""
+  originSelect: MetatypeT | undefined = undefined
   destinationSelect = ""
   relationshipSelect = ""
   relationshipType = ""
   originMetatypes: MetatypeT[] = []
   destinationMetatypes: MetatypeT[] = []
   metatypeRelationships: MetatypeRelationshipT[] = []
+  pairLoading = false
+
+  created() {
+    if (this.metatype) {
+      this.originSelect = this.metatype
+    }
+  }
 
   @Watch('dialog', {immediate: true})
   onDialogChange() {
@@ -162,10 +158,9 @@ export default class CreateRelationshipPairDialog extends Vue {
   }
 
   newRelationshipPair() {
+    this.pairLoading = true
     this.$client.createMetatypeRelationshipPair(this.containerID,
-        {"name": this.name,
-          "description": this.description,
-          "origin_metatype_id": this.originSelect,
+        {"origin_metatype_id": this.originSelect!.id,
           "destination_metatype_id": this.destinationSelect,
           "relationship_id": this.relationshipSelect,
           "ontology_version": this.$store.getters.activeOntologyVersionID,
@@ -176,13 +171,22 @@ export default class CreateRelationshipPairDialog extends Vue {
           this.reset()
           this.$emit('pairCreated', results[0])
         })
-        .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
+        .catch(e => {
+          this.errorMessage = [{
+            message: this.$t('errors.errorCommunicating') as string,
+            format: 'font-weight: bold;'
+          }, {
+            message: JSON.parse(e).error,
+            format: ''
+          }]
+        })
+        .finally(() => this.pairLoading = false)
   }
 
   reset() {
     this.name =  ""
     this.description = ""
-    this.originSelect = ""
+    this.originSelect = undefined
     this.destinationSelect = ""
     this.relationshipSelect = ""
     this.relationshipType = ""

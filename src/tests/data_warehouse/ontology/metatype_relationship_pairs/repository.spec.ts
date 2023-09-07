@@ -93,7 +93,6 @@ describe('A Metatype Relationship Pair Repository', async () => {
 
         const pair = new MetatypeRelationshipPair({
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric(),
             relationship_type: 'one:one',
             origin_metatype: metatype1,
             destination_metatype: metatype2,
@@ -133,7 +132,6 @@ describe('A Metatype Relationship Pair Repository', async () => {
 
         const pair = new MetatypeRelationshipPair({
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric(),
             relationship_type: 'one:one',
             origin_metatype: metatype1,
             destination_metatype: metatype2,
@@ -173,7 +171,6 @@ describe('A Metatype Relationship Pair Repository', async () => {
 
         const pair = new MetatypeRelationshipPair({
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric(),
             relationship_type: 'one:one',
             origin_metatype: metatype1,
             destination_metatype: metatype2,
@@ -199,7 +196,6 @@ describe('A Metatype Relationship Pair Repository', async () => {
 
         const pair2 = new MetatypeRelationshipPair({
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric(),
             relationship_type: 'many:many',
             origin_metatype: metatype3,
             destination_metatype: metatype4,
@@ -244,7 +240,6 @@ describe('A Metatype Relationship Pair Repository', async () => {
 
         const pair = new MetatypeRelationshipPair({
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric(),
             relationship_type: 'one:one',
             origin_metatype: metatype1,
             destination_metatype: metatype2,
@@ -277,7 +272,6 @@ describe('A Metatype Relationship Pair Repository', async () => {
 
         const pair2 = new MetatypeRelationshipPair({
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric(),
             relationship_type: 'many:many',
             origin_metatype: metatype3,
             destination_metatype: metatype4,

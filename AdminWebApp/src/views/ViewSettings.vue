@@ -6,7 +6,7 @@
       </v-toolbar>
 
       <v-card-text>
-        <error-banner :message="errorMessage"></error-banner>
+        <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
         <success-banner :message="successMessage"></success-banner>
         <v-row>
           <v-col :cols="12">
@@ -108,7 +108,7 @@
     valid: boolean,
     container?: ContainerT
   }
-  
+
   type P6SourceConfig = {
     id?: string
     name?: string;

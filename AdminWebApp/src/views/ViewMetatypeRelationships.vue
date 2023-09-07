@@ -21,7 +21,7 @@
         :item-class="itemRowBackground"
     >
       <template v-slot:top>
-        <error-banner :message="errorMessage"></error-banner>
+        <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
         <success-banner :message="successMessage"></success-banner>
         <v-alert type="success" v-if="createdRelationship">
           {{$t('relationshipTypes.createdSuccessfully')}} -
@@ -168,7 +168,7 @@
         itemsPerPage: 100,
       }
 
-      return {  
+      return {
         copy: mdiFileDocumentMultiple,
         errorMessage: "",
         successMessage: "",

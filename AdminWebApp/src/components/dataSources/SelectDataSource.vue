@@ -1,6 +1,6 @@
 <template>
   <div>
-    <error-banner :message="errorMessage"></error-banner>
+    <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
     <v-combobox
       :style="[noIndent ? '' : {'margin-left': '10px', 'margin-right': '10px'}]"
       :items="dataSources"
@@ -53,7 +53,7 @@
       multiple: {type: Boolean, required: false, default: false},
       disabled: {type: Boolean, required: false, default: false},
       dataSourceID: {
-        type: [String, Array] as PropType<string|string[]>, 
+        type: [String, Array] as PropType<string|string[]>,
         required: false
       },
       noIndent: {type: Boolean, required: false, default: false},

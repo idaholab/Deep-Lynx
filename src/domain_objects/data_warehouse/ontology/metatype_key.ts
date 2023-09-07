@@ -14,6 +14,10 @@ export default class MetatypeKey extends BaseDomainClass {
     @IsString()
     metatype_id?: string;
 
+    @IsOptional()
+    @IsString()
+    metatype_name?: string;
+
     @IsString()
     @IsOptional()
     container_id?: string;

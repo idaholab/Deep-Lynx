@@ -15,7 +15,7 @@
         <span class="headline text-h3">{{$t("relationships.edit")}}</span>
       </v-card-title>
       <v-card-text v-if="selectedPair">
-        <error-banner :message="errorMessage"></error-banner>
+        <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
         <v-row>
           <v-col v-if="comparisonPair" :cols="6">
 
@@ -47,6 +47,7 @@
                   required
                   disabled
                   class="disabled"
+                  v-observe-visibility="loadComparisonPair"
               >
                 <template v-slot:label>{{$t('edges.originClass')}}</template>
               </v-autocomplete>
@@ -93,21 +94,6 @@
                 ref="form"
                 v-model="valid"
             >
-              <v-text-field
-                  v-model="selectedPair.name"
-                  :rules="[v => !!v || $t('validation.required')]"
-                  required
-                  :class="(comparisonPair && selectedPair.name !== comparisonPair.name) ? 'edited-field' : ''"
-              >
-                <template v-slot:label>{{$t('general.name')}} <small style="color:red" >*</small></template>
-              </v-text-field>
-              <v-textarea
-                  v-model="selectedPair.description"
-                  :rules="[v => !!v || $t('validation.required')]"
-                  :class="(comparisonPair && selectedPair.description !== comparisonPair.description) ? 'edited-field' : ''"
-              >
-                <template v-slot:label>{{$t('general.description')}} <small style="color:red" >*</small></template>
-              </v-textarea>
               <v-autocomplete
                   v-model="selectedPair.origin_metatype_id"
                   :class="(comparisonPair && selectedPair.origin_metatype_id !== comparisonPair.origin_metatype_id) ? 'edited-field' : ''"
@@ -119,7 +105,7 @@
                   item-value="id"
                   persistent-hint
                   required
-                  clearable
+                  disabled
               >
                 <template v-slot:label>{{$t('edges.originClass')}} <small style="color:red" >*</small></template>
               </v-autocomplete>
@@ -238,9 +224,7 @@ export default class EditRelationshipPairDialog extends Vue {
   editRelationshipPair() {
     this.$client.updateMetatypeRelationshipPair(this.pair.container_id,
         this.pair.id!,
-        {"name": this.selectedPair!.name,
-          "description": this.selectedPair!.description,
-          "origin_metatype_id": this.selectedPair!.origin_metatype_id,
+        {"origin_metatype_id": this.selectedPair!.origin_metatype_id,
           "destination_metatype_id": this.selectedPair!.destination_metatype_id,
           "relationship_id": this.selectedPair!.relationship_id,
           "relationship_type": this.selectedPair!.relationship_type}
@@ -250,6 +234,40 @@ export default class EditRelationshipPairDialog extends Vue {
           this.$emit('pairEdited')
         })
         .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
+  }
+
+  loadComparisonPair(isVisible: boolean) {
+    if (isVisible && this.comparisonPair) {
+      if (this.comparisonPair.relationship?.id) {
+        // retrieve comparisonPair relationship
+        this.$client.retrieveMetatypeRelationship(
+            this.comparisonPair.container_id,
+            this.comparisonPair.relationship.id
+        ).then((result) => {
+          this.comparisonPair!.relationship = result
+        }).catch((e: any) => this.errorMessage = e)
+      }
+
+      if (this.comparisonPair.origin_metatype?.id) {
+        // retrieve comparisonPair origin metatype
+        this.$client.retrieveMetatype(
+            this.comparisonPair.container_id,
+            this.comparisonPair.origin_metatype.id
+        ).then((result) => {
+          this.comparisonPair!.origin_metatype = result
+        }).catch((e: any) => this.errorMessage = e)
+      }
+
+      if (this.comparisonPair.destination_metatype?.id) {
+        // retrieve comparisonPair destination metatype
+        this.$client.retrieveMetatype(
+            this.comparisonPair.container_id,
+            this.comparisonPair.destination_metatype.id
+        ).then((result) => {
+          this.comparisonPair!.destination_metatype = result
+        }).catch((e: any) => this.errorMessage = e)
+      }
+    }
   }
 }
 
