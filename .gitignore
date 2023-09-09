@@ -51,4 +51,5 @@ devenv.local.nix
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+/public-key.pem
 /yarn-error.log

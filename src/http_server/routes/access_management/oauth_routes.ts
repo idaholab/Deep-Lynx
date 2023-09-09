@@ -19,6 +19,7 @@ import {OAuthApplication, OAuthTokenExchangeRequest} from '../../../domain_objec
 
 const csurf = require('csurf');
 const buildUrl = require('build-url');
+const pem2jwk = require('pem-jwk').pem2jwk;
 
 const userRepo = new UserRepository();
 const keyRepo = new KeyPairRepository();
@@ -46,6 +47,7 @@ export default class OAuthRoutes {
         app.get('/oauth', csurf(), this.loginPage);
         app.get('/logout', this.logout);
         app.post('/oauth', csurf(), LocalAuthMiddleware, this.login);
+        app.get('/oauth/jwks.json', this.jwks);
 
         // saml specific
         app.get('/login-saml', this.loginSaml);
@@ -106,6 +108,10 @@ export default class OAuthRoutes {
             _csrfToken: req.csrfToken(),
         });
         return;
+    }
+
+    private static jwks(req: Request, res: Response) {
+        res.json(pem2jwk(Config.encryption_key_public));
     }
 
     private static oauthApplicationPage(req: Request, res: Response) {
