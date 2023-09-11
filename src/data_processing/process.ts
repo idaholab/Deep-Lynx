@@ -158,8 +158,6 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
     // insert all nodes and files
     if (nodesToInsert.length > 0) {
         const inserted = await nodeRepository.bulkSave(staging.data_source_id!, nodesToInsert, transaction.value);
-        // eventually the tags do show up, not sure exactly how. In my sample data, the tags that should be separated by transformation
-        // are being applied to both sets of transformations for nodes
         if (inserted.isError) {
             await stagingMapper.rollbackTransaction(transaction.value);
 

@@ -1336,7 +1336,6 @@ export default class TransformationDialog extends Vue {
     this.$client.listTagsForContainer(this.containerID)
         .then((tags) => {
           this.tags = tags.map((tag: TagT) => { return {id: tag.id, tag_name: tag.tag_name} });
-          console.log(this.tags)
         })
         .catch(e => this.errorMessage = e)
   }
@@ -1796,8 +1795,6 @@ export default class TransformationDialog extends Vue {
     if (this.createdAt) payload.created_at_key = this.createdAt
     if (this.createdAtFormatString) payload.created_at_format_string = this.createdAtFormatString
 
-    console.log(this.selectedTags)
-
     if (this.selectedTags.length > 0) payload.tags = this.selectedTags
 
     payload.config.on_conversion_error = this.onConversionError
@@ -1806,7 +1803,6 @@ export default class TransformationDialog extends Vue {
     payload.keys = this.propertyMapping
     if (this.uniqueIdentifierKey) payload.unique_identifier_key = this.uniqueIdentifierKey
     if (this.rootArray) payload.root_array = this.rootArray
-    console.log(payload)
 
     this.$client.createTypeMappingTransformation(this.containerID, this.dataSourceID, this.typeMappingID, payload as TypeMappingTransformationPayloadT)
         .then((transformation) => {

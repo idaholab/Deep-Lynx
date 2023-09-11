@@ -696,7 +696,6 @@ export default class TypeTransformation extends BaseDomainClass {
                 node.original_data_id = `${TypeTransformation.getNestedValue(this.unique_identifier_key, data.data, index)}`;
             }
 
-            // TODO: is created at being set for edges as well?? doesn't look like it.
             if (this.created_at_key) {
                 const createdAtValue = `${TypeTransformation.getNestedValue(this.created_at_key, data.data, index)}`;
                 const convertedDate = this.created_at_format_string

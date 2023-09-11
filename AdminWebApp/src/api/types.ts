@@ -498,7 +498,6 @@ export type TypeMappingTransformationT = {
     destination_parameters?: EdgeConfigKeyT[];
     created_at_key?: string;
     created_at_format_string?: string;
-
     tags?: TypeMappingTransformationTagT[];
 };
 
