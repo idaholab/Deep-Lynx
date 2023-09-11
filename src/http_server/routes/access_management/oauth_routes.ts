@@ -602,15 +602,29 @@ export default class OAuthRoutes {
     }
 
     private static tokenExchange(req: Request, res: Response, next: NextFunction) {
+        let clientID: string | undefined;
+        let clientSecret: string | undefined;
+        // current RFCs dictate that if a client secret comes in, it will come in as Basic Auth
+        const authHeader = req.header('Authorization');
+
+        if (authHeader) {
+            const broken = authHeader.split(' ');
+            if (broken.length === 2) {
+                const parsed = Buffer.from(broken[1], 'base64').toString('ascii').split(':');
+                clientID = parsed[0];
+                clientSecret = parsed[1];
+            }
+        }
+
         oauthRepo
-            .authorizationCodeExchange(plainToClass(OAuthTokenExchangeRequest, req.body as object))
+            .authorizationCodeExchange(plainToClass(OAuthTokenExchangeRequest, req.body as object), clientID, clientSecret)
             .then((result) => {
                 if (result.isError) {
                     res.status(result.error?.errorCode!).json(result.error);
                     return;
                 }
 
-                return res.status(200).json(result);
+                return res.status(200).json({access_token: result.value});
             })
             .catch((e) => res.status(500).json(e))
             .finally(() => next());
