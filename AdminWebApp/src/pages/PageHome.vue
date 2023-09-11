@@ -373,7 +373,7 @@
           <span class="d-block text-h6" style="margin-bottom: 10px">{{$t('help.foundBugs')}} <a :href="emailLink()">{{$t('help.tellUs')}}</a> </span>
           <span class="d-block text-h6" style="margin-bottom: 10px">{{$t('help.needHelp')}} <a :href="helpLink()">{{$t('general.wiki')}}</a> </span>
           <span class="d-block text-h6" style="margin-bottom: 10px">&copy; {{ new Date().getFullYear() }} {{$t('general.inl')}}</span>
-          <span class="d-block text-h6" v-if="$auth.IsAdmin() && stats ">{{ stats.version }}</span>
+          <span class="d-block text-h6" v-if="stats">{{ stats.version }}</span>
         </v-container>
       </template>
     </v-navigation-drawer>
