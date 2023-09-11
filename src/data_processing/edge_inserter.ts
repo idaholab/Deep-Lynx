@@ -111,11 +111,10 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
     }
 
     // attach any supplied tags, ensuring it is supplied as an array
-    // TODO: edges are created but no tags on edgequeueitem
     if (edgeQueueItem.tags) {
         edgeQueueItem.tags = [edgeQueueItem.tags].flat();
         for (const tag of edgeQueueItem.tags) {
-            for (const result of saveResults.values()) {
+            for (const result of saveResults) {
                 if (typeof result.value !== 'boolean') {
                     for (const edge of result.value) {
                         const tagResult = await TagMapper.Instance.TagEdge(tag.id!, edge.id!);
@@ -131,8 +130,6 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
 
     // if the original edge item is one with filters, we continually put it back on the queue until it either hits the limit
     // or the backoff time in order to capture all potential nodes that match this filter from earlier or later imports
-    // TODO: is this implying that the creation of edges with filters may take a very long time or not happen at all
-    // TODO: for future imports due to the use of attempts/backoff?
     if ((edge.origin_parameters && edge.origin_parameters.length > 0) || (edge.destination_parameters && edge.destination_parameters.length > 0)) {
         const currentTime = new Date().getTime();
         const check = currentTime + Math.pow(Config.edge_insertion_backoff_multiplier, edgeQueueItem.attempts++) * 1000;

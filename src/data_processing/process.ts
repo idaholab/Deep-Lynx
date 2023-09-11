@@ -8,7 +8,7 @@ import FileMapper from '../data_access_layer/mappers/data_warehouse/data/file_ma
 import Logger from '../services/logger';
 import NodeRepository from '../data_access_layer/repositories/data_warehouse/data/node_repository';
 import Node, {IsNodes} from '../domain_objects/data_warehouse/data/node';
-import Edge, {EdgeQueueItem, IsEdges} from '../domain_objects/data_warehouse/data/edge';
+import {EdgeQueueItem, IsEdges} from '../domain_objects/data_warehouse/data/edge';
 import DataStagingRepository from '../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import {DataStagingFile, NodeFile} from '../domain_objects/data_warehouse/data/file';
 import NodeMapper from '../data_access_layer/mappers/data_warehouse/data/node_mapper';
@@ -158,9 +158,6 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
     // insert all nodes and files
     if (nodesToInsert.length > 0) {
         const inserted = await nodeRepository.bulkSave(staging.data_source_id!, nodesToInsert, transaction.value);
-        // TODO: nodes haven't been inserted because the insert statement is there "idle in transaction"
-        // TODO: transaction not committed
-        // TODO: node_tags table doesn't have foreign key on node_id to nodes table, so could return nodes and insert attachment
         // eventually the tags do show up, not sure exactly how. In my sample data, the tags that should be separated by transformation
         // are being applied to both sets of transformations for nodes
         if (inserted.isError) {
@@ -236,8 +233,8 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
         // attach the nodes to any tags specified in the transformation
         if (tagsToAttachNodes.length > 0) {
             for (const attachmentTag of tagsToAttachNodes) {
-                // we must find the node ID to attach a file to it,
-                // even if the node entry was dropped due to duplicate data
+                // create a list of relevant Node IDs for this set of tags and original data IDs
+                const nodeIDs = [];
                 const listed = await new NodeRepository()
                     .where()
                     .originalDataID('in', attachmentTag.originalDataIDs)
@@ -252,14 +249,13 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
                         nodesToInsert.map((n) => n.container_id),
                     )
                     .list();
-                // TODO: nodes not being returned. Not seeing them in the databse during debug either.
 
                 if (listed.isError) {
                     await stagingRepo.addError(staging.id!, `unable to find node IDs for tag attachment ${listed.error?.error}`);
                 } else {
                     for (const node of nodesToInsert) {
                         let nodeID: string | undefined;
-                        if (node.id) {
+                        if (node.id && attachmentTag.originalDataIDs.includes(node.original_data_id!)) {
                             nodeID = node.id;
                         } else if (listed.value.length > 0) {
                             const relevantNodes = listed.value.filter((n) => {
@@ -273,18 +269,18 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
                         } else {
                             nodeID = undefined;
                         }
-                        if (!nodeID) continue;
+                        if (nodeID) nodeIDs.push(nodeID);
+                    }
+                }
 
-                        // attach each supplied tag to the matching nodes, ensuring we have an array
-                        for (const tag of [attachmentTag.tags].flat()) {
-                            const tagResult = await TagMapper.Instance.TagNode(tag.id!, nodeID);
-                            if (tagResult.isError) {
-                                await stagingRepo.addError(
-                                    staging.id!,
-                                    `unable to attach tag ${tag.id} to node ${nodeID} during ` + `data staging process ${tagResult.error?.error}`,
-                                );
-                            }
-                        }
+                // attach each supplied tag to the matching nodes, ensuring we have an array
+                for (const tag of [attachmentTag.tags].flat()) {
+                    const tagResult = await TagMapper.Instance.BulkTagNode(tag.id!, nodeIDs, transaction.value);
+                    if (tagResult.isError) {
+                        await stagingRepo.addError(
+                            staging.id!,
+                            `unable to attach tag ${tag.id} to nodes ${nodeIDs} during ` + `data staging process ${tagResult.error?.error}`,
+                        );
                     }
                 }
             }
