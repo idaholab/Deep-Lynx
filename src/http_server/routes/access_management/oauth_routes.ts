@@ -19,6 +19,7 @@ import {OAuthApplication, OAuthTokenExchangeRequest} from '../../../domain_objec
 
 const csurf = require('csurf');
 const buildUrl = require('build-url');
+const pem2jwk = require('pem-jwk').pem2jwk;
 
 const userRepo = new UserRepository();
 const keyRepo = new KeyPairRepository();
@@ -46,6 +47,7 @@ export default class OAuthRoutes {
         app.get('/oauth', csurf(), this.loginPage);
         app.get('/logout', this.logout);
         app.post('/oauth', csurf(), LocalAuthMiddleware, this.login);
+        app.get('/oauth/jwks.json', this.jwks);
 
         // saml specific
         app.get('/login-saml', this.loginSaml);
@@ -106,6 +108,10 @@ export default class OAuthRoutes {
             _csrfToken: req.csrfToken(),
         });
         return;
+    }
+
+    private static jwks(req: Request, res: Response) {
+        res.json(pem2jwk(Config.encryption_key_public));
     }
 
     private static oauthApplicationPage(req: Request, res: Response) {
@@ -596,15 +602,29 @@ export default class OAuthRoutes {
     }
 
     private static tokenExchange(req: Request, res: Response, next: NextFunction) {
+        let clientID: string | undefined;
+        let clientSecret: string | undefined;
+        // current RFCs dictate that if a client secret comes in, it will come in as Basic Auth
+        const authHeader = req.header('Authorization');
+
+        if (authHeader) {
+            const broken = authHeader.split(' ');
+            if (broken.length === 2) {
+                const parsed = Buffer.from(broken[1], 'base64').toString('ascii').split(':');
+                clientID = parsed[0];
+                clientSecret = parsed[1];
+            }
+        }
+
         oauthRepo
-            .authorizationCodeExchange(plainToClass(OAuthTokenExchangeRequest, req.body as object))
+            .authorizationCodeExchange(plainToClass(OAuthTokenExchangeRequest, req.body as object), clientID, clientSecret)
             .then((result) => {
                 if (result.isError) {
                     res.status(result.error?.errorCode!).json(result.error);
                     return;
                 }
 
-                return res.status(200).json(result);
+                return res.status(200).json({access_token: result.value, token_type: 'bearer'});
             })
             .catch((e) => res.status(500).json(e))
             .finally(() => next());
