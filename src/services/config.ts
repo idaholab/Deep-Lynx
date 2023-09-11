@@ -40,6 +40,7 @@ export class Config {
     private readonly _timescaledb_enabled: boolean = false;
     private readonly _session_secret: string;
     private readonly _encryption_key_path: string | undefined;
+    private readonly _encryption_public_key_path: string | undefined;
 
     private readonly _file_storage_method: string;
     private readonly _filesystem_storage_directory: string;
@@ -171,6 +172,7 @@ export class Config {
         this._vue_app_id = process.env.VUE_APP_DEEP_LYNX_APP_ID || '';
 
         this._encryption_key_path = process.env.ENCRYPTION_KEY_PATH;
+        this._encryption_public_key_path = process.env.ENCRYPTION_PUBLIC_KEY_PATH;
 
         this._file_storage_method = process.env.FILE_STORAGE_METHOD || 'largeobject';
         this._filesystem_storage_directory = process.env.FILESYSTEM_STORAGE_DIRECTORY || '';
@@ -289,6 +291,7 @@ export class Config {
                 fs.writeFileSync('./public-key.pem', publicKey);
             }
             this._encryption_key_path = './private-key.pem';
+            this._encryption_public_key_path = './public-key.pem';
         }
     }
 
@@ -440,6 +443,12 @@ export class Config {
         return Buffer.from('', 'utf8');
     }
 
+    get encryption_key_public(): Buffer {
+        if (this._encryption_public_key_path && this._encryption_public_key_path !== '') return fs.readFileSync(this._encryption_public_key_path);
+
+        return Buffer.from('', 'utf8');
+    }
+
     get log_level(): string {
         return this._log_level;
     }
@@ -495,7 +504,6 @@ export class Config {
     get saml_adfs_signature_algorithm(): string {
         return this._saml_adfs_signature_algorithm;
     }
-    
 
     get saml_adfs_audience(): string | boolean {
         return this._saml_adfs_audience;
@@ -675,9 +683,9 @@ export class Config {
 
     // Audience may be set to 'false' to ensure no audience validation happens,
     // or may be any string to validate as audience with IDP
-    private ConvertAudience(audience: string|boolean): string|boolean {
-        if (typeof audience === "string") {
-            if (audience.toLowerCase() === "false"){
+    private ConvertAudience(audience: string | boolean): string | boolean {
+        if (typeof audience === 'string') {
+            if (audience.toLowerCase() === 'false') {
                 return false;
             }
         }
