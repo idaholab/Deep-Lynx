@@ -112,6 +112,7 @@ export default {
                 'Select a property key to use the corresponding value to set "created at", or leave blank to use the import time as the "created at" value',
             createdAtManual: 'Select "Default" to use the import time as the "created at" value, or set the time manually',
             removedForSecurity: '(Removed for Security)',
+            tagMapping: 'Nodes or edges may be associated with tags. Tags connect graph data with 2D/3D models.',
         },
         links: {
             timeseriesQuickStart: 'https://github.com/idaholab/Deep-Lynx/wiki/Timeseries-Quick-Start-Guide',
@@ -298,6 +299,7 @@ export default {
             addColumn: 'Add Column',
             keys: 'Keys',
             date: 'Date',
+            dateFormat: 'Date Format',
             dateFormatString: 'Date Format String (blank for ISO)',
             add: 'Add',
             config: 'Configuration',

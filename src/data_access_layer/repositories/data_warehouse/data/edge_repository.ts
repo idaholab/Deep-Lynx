@@ -139,7 +139,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         return Promise.resolve(Result.Success(true));
     }
 
-    async bulkSave(user: User | string, edges: Edge[], transaction?: PoolClient): Promise<Result<boolean>> {
+    async bulkSave(user: User | string, edges: Edge[], returnEdges = false, transaction?: PoolClient): Promise<Result<boolean | Edge[]>> {
         let internalTransaction = false;
         if (!transaction) {
             const newTransaction = await this.#mapper.startTransaction();
@@ -250,53 +250,46 @@ export default class EdgeRepository extends Repository implements RepositoryInte
             if (commit.isError) return Promise.resolve(Result.Pass(commit));
         }
 
-        return Promise.resolve(Result.Success(true));
+        return returnEdges ? Promise.resolve(Result.Success(toReturn)) : Promise.resolve(Result.Success(true));
     }
 
     /*
-     validateRelationship validates whether the edge can be created between two nodes - this checks
-     nodes' metatypes against the proposed relationship type and if existing relationships
-     would violate a one:many or one:one clause - because this is validation only, we don't
-     attempt to roll back a transaction if it exists - but we do have to use it
-     as the nodes we're validating against might have been inserted earlier as part
-     of the transaction
-     */
+         validateRelationship validates whether the edge can be created between two nodes - this checks
+         nodes' metatypes against the proposed relationship type and if existing relationships
+         would violate a one:many or one:one clause - because this is validation only, we don't
+         attempt to roll back a transaction if it exists - but we do have to use it
+         as the nodes we're validating against might have been inserted earlier as part
+         of the transaction
+         */
     private async validateRelationship(e: Edge, transaction?: PoolClient): Promise<Result<boolean>> {
         // TODO: figure out a way to validate relationships that doesn't include hammering the database
-        // validateCreatedAtDate() shouldn't be used until we resolve the comments above - transaction 
+        // validateCreatedAtDate() shouldn't be used until we resolve the comments above - transaction
         // handling will need to be added for created date as well
-        //this.validateCreatedAtDate(e, transaction);
+        // this.validateCreatedAtDate(e, transaction);
         return Promise.resolve(Result.Success(true));
     }
 
     /*
         Eventually we'll want to be validating the created at date by ensuring that the new created_at date is
-        newer than both the origin and destination node. However, due to performance issues we aren't doing any 
+        newer than both the origin and destination node. However, due to performance issues we aren't doing any
         edge validation on the relationships. So putting this function in as a 'description of what needs to happen,
         but until we refactor or find a way to not need to hit the db multiple times per edge for node-lookups this
-        should remain un-called. 
+        should remain un-called.
     */
     private async validateCreatedAtDate(e: Edge, transaction?: PoolClient): Promise<Result<boolean>> {
-        this.#nodeRepo
-        .findByID(e.origin_id!)
-        .then((nodeResult) =>{
-            var origin_created_at = nodeResult.value.created_at!;
+        this.#nodeRepo.findByID(e.origin_id!).then((nodeResult) => {
+            const origin_created_at = nodeResult.value.created_at!;
 
-            this.#nodeRepo
-            .findByID(e.destination_id!)
-            .then((nodeResult) =>{
-                var destination_created_at = nodeResult.value.created_at!;
-                var useDestination = origin_created_at! > destination_created_at!;
-                var isValid = false;
+            this.#nodeRepo.findByID(e.destination_id!).then((nodeResult) => {
+                const destination_created_at = nodeResult.value.created_at!;
+                const useDestination = origin_created_at > destination_created_at;
+                let isValid = false;
                 console.log(origin_created_at);
                 console.log(destination_created_at);
-                if(useDestination)
-                    isValid = e.created_at! > destination_created_at!;
-                else
-                    isValid = e.created_at! > origin_created_at!;
+                if (useDestination) isValid = e.created_at! > destination_created_at;
+                else isValid = e.created_at! > origin_created_at;
 
-                if(isValid)
-                    return Promise.resolve(Result.Success(true));
+                if (isValid) return Promise.resolve(Result.Success(true));
             });
         });
 

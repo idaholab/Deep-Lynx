@@ -184,9 +184,10 @@
                               :items="payloadKeys"
                               v-model="createdAt"
                               item-text="name"
-                              :label="$t('general.createdAt')"
                               clearable
                           >
+                            <template v-slot:label>{{ $t('general.createdAt') }}
+                              <small>{{ $t('general.optional') }}</small></template>
                             <template slot="append-outer">
                               <info-tooltip :message="$t('help.createdAtMapping')"></info-tooltip>
                             </template>
@@ -205,6 +206,24 @@
                               </a>
                             </template>
                           </v-text-field>
+                        </v-col>
+
+                        <!-- tags -->
+                        <v-col cols="12" md="6" lg="4">
+                          <v-autocomplete
+                              :items="tags"
+                              v-model="selectedTags"
+                              item-text="tag_name"
+                              clearable
+                              return-object
+                              multiple
+                          >
+                            <template v-slot:label>{{ $t('tags.tags') }}
+                              <small>{{ $t('general.optional') }}</small></template>
+                            <template slot="append-outer">
+                              <info-tooltip :message="$t('help.tagMapping')"></info-tooltip>
+                            </template>
+                          </v-autocomplete>
                         </v-col>
 
                         <v-col cols="12" md="6" lg="4" v-if="keysLoading">
@@ -238,36 +257,52 @@
                       </v-col>
 
                       <template v-if="this.selectedRelationshipPair">
-                        <v-row>
-                          <!-- created at -->
-                          <v-col cols="12" md="6" lg="4">
-                            <v-autocomplete
-                              :items="payloadKeys"
-                              v-model="createdAt"
-                              item-text="name"
-                              :label="$t('general.createdAt')"
-                              clearable
-                            >
-                              <template slot="append-outer">
-                                <info-tooltip :message="$t('help.createdAtMapping')"></info-tooltip>
-                              </template>
-                            </v-autocomplete>
-                          </v-col>
+                        <!-- created at -->
+                        <v-col cols="12" md="6" lg="4">
+                          <v-autocomplete
+                            :items="payloadKeys"
+                            v-model="createdAt"
+                            item-text="name"
+                            :label="$t('general.createdAt')"
+                            clearable
+                          >
+                            <template slot="append-outer">
+                              <info-tooltip :message="$t('help.createdAtMapping')"></info-tooltip>
+                            </template>
+                          </v-autocomplete>
+                        </v-col>
 
-                          <v-col cols="12" md="6" lg="4" v-if="createdAt">
-                            <v-text-field
-                              :label="$t('general.createdAtFormatString')"
-                              v-model="createdAtFormatString"
-                              :rules="[v => !v.includes('%') || $t('help.postgresDate')]"
-                            >
-                              <template slot="append-outer">
-                                <a :href=dateString() target="_blank">
-                                  {{$t('help.dateFormatStringSmall')}}
-                                </a>
-                              </template>
-                            </v-text-field>
-                          </v-col>
-                        </v-row>
+                        <v-col cols="12" md="6" lg="4" v-if="createdAt">
+                          <v-text-field
+                            :label="$t('general.createdAtFormatString')"
+                            v-model="createdAtFormatString"
+                            :rules="[v => !v.includes('%') || $t('help.postgresDate')]"
+                          >
+                            <template slot="append-outer">
+                              <a :href=dateString() target="_blank">
+                                {{$t('help.dateFormatStringSmall')}}
+                              </a>
+                            </template>
+                          </v-text-field>
+                        </v-col>
+
+                        <!-- tags -->
+                        <v-col cols="12" md="6" lg="4">
+                          <v-autocomplete
+                              :items="tags"
+                              v-model="selectedTags"
+                              item-text="tag_name"
+                              clearable
+                              return-object
+                              multiple
+                          >
+                            <template v-slot:label>{{ $t('tags.tags') }}
+                              <small>{{ $t('general.optional') }}</small></template>
+                            <template slot="append-outer">
+                              <info-tooltip :message="$t('help.tagMapping')"></info-tooltip>
+                            </template>
+                          </v-autocomplete>
+                        </v-col>
 
                         <template v-if="hasOldEdgeParams">
                           <v-col :cols="12">
@@ -663,13 +698,16 @@
                           {{$t('general.name')}}
                         </th>
                         <th class="text-left">
+                          {{$t('general.type')}}
+                        </th>
+                        <th class="text-left">
                           {{$t('general.keys')}}
                         </th>
                         <th
                             class="text-left"
                             width="30%"
                         >
-                          {{$t('general.date')}}
+                          {{$t('general.dateFormat')}}
                         </th>
                       </tr>
                       </thead>
@@ -680,6 +718,9 @@
                       >
                         <td>
                           {{ key.name }}
+                        </td>
+                        <td>
+                          {{ key.data_type }}
                         </td>
                         <td>
                           <v-row>
@@ -766,13 +807,16 @@
                           {{$t('general.name')}}
                         </th>
                         <th class="text-left">
+                          {{$t('general.type')}}
+                        </th>
+                        <th class="text-left">
                           {{$t('general.keys')}}
                         </th>
                         <th
                             class="text-left"
                             width="30%"
                         >
-                          {{$t('general.date')}}
+                          {{$t('general.dateFormat')}}
                         </th>
                       </tr>
                       </thead>
@@ -783,6 +827,9 @@
                       >
                         <td>
                           {{ key.name }}
+                        </td>
+                        <td>
+                          {{ key.data_type }}
                         </td>
                         <td>
                           <v-row>
@@ -1145,7 +1192,7 @@ import {
   TypeMappingTransformationCondition,
   TypeMappingTransformationPayloadT,
   TypeMappingTransformationSubexpression,
-  TypeMappingTransformationT
+  TypeMappingTransformationT, TagT
 } from "@/api/types";
 import SelectDataSource from "@/components/dataSources/SelectDataSource.vue";
 import SearchMetatypes from "@/components/ontology/metatypes/SearchMetatypes.vue";
@@ -1276,12 +1323,21 @@ export default class TransformationDialog extends Vue {
   uniqueIdentifierKey: any = null
   propertyMapping: { [key: string]: any }[] = []
 
+  tags: TagT[] = []
+  selectedTags: TagT[] = []
+
   mounted() {
     if (this.transformation) {
       if (this.transformation.origin_parameters) this.originConfigKeys = JSON.parse(JSON.stringify(this.transformation.origin_parameters));
       if (this.transformation.destination_parameters) this.destinationConfigKeys = JSON.parse(JSON.stringify(this.transformation.destination_parameters));
       this.$forceUpdate();
     }
+
+    this.$client.listTagsForContainer(this.containerID)
+        .then((tags) => {
+          this.tags = tags.map((tag: TagT) => { return {id: tag.id, tag_name: tag.tag_name} });
+        })
+        .catch(e => this.errorMessage = e)
   }
 
   conditionsHeader() {
@@ -1414,8 +1470,12 @@ export default class TransformationDialog extends Vue {
     }
 
     if (this.transformation?.created_at_key) {
-      this.createdAt = this.transformation.created_at_key
-      this.createdAtFormatString = this.transformation.created_at_format_string || ''
+      this.createdAt = this.transformation.created_at_key;
+      this.createdAtFormatString = this.transformation.created_at_format_string || '';
+    }
+
+    if (this.transformation?.tags) {
+      this.selectedTags = this.transformation.tags;
     }
 
     this.name = this.transformation?.name!
@@ -1735,6 +1795,8 @@ export default class TransformationDialog extends Vue {
     if (this.createdAt) payload.created_at_key = this.createdAt
     if (this.createdAtFormatString) payload.created_at_format_string = this.createdAtFormatString
 
+    if (this.selectedTags.length > 0) payload.tags = this.selectedTags
+
     payload.config.on_conversion_error = this.onConversionError
     payload.config.on_key_extraction_error = this.onKeyExtractionError
     payload.conditions = this.conditions
@@ -1786,6 +1848,8 @@ export default class TransformationDialog extends Vue {
 
     if (this.createdAt) payload.created_at_key = this.createdAt
     if (this.createdAtFormatString) payload.created_at_format_string = this.createdAtFormatString
+
+    if (this.selectedTags.length > 0) payload.tags = this.selectedTags
 
     this.$client.updateTypeMappingTransformation(this.containerID, this.dataSourceID, this.typeMappingID, this.transformation?.id!, payload as TypeMappingTransformationPayloadT)
         .then((transformation) => {
