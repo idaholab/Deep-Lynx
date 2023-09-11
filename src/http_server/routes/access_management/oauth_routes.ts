@@ -624,7 +624,7 @@ export default class OAuthRoutes {
                     return;
                 }
 
-                return res.status(200).json({access_token: result.value});
+                return res.status(200).json({access_token: result.value, token_type: 'bearer'});
             })
             .catch((e) => res.status(500).json(e))
             .finally(() => next());
