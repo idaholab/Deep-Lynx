@@ -84,7 +84,6 @@ DROP FUNCTION IF EXISTS get_metatype_keys;
 
 CREATE OR REPLACE FUNCTION public.get_metatype_keys(arg_metatype_id bigint, arg_container_id bigint)
     RETURNS SETOF metatype_full_keys
-    LANGUAGE sql
 AS $$
 WITH RECURSIVE parents AS (
     SELECT * FROM metatypes_view
