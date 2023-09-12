@@ -127,7 +127,7 @@
                             @change="updatePlot(true)"
                         />
 
-                        <v-select
+                        <v-autocomplete
                             v-model="selectedDataSources"
                             :items="dataSources"
                             item-text="name"
@@ -780,11 +780,11 @@
                           // set timeseriesFlag based upon primary timestamp type
                           column.type !== 'date' ? (this.timeseriesFlag = false) : (this.timeseriesFlag = true);
                       }
-
-                      if (!column.is_primary_timestamp && (column.type?.toLowerCase().includes('float') || column.type?.toLowerCase().includes('number'))) {
-                          columnNameEntry.y = true;
-                      }
                   }
+
+                if (!column.is_primary_timestamp && (column.type?.toLowerCase().includes('float') || column.type?.toLowerCase().includes('number'))) {
+                  columnNameEntry.y = true;
+                }
 
                   const previousColumn = previousColumns.find((c) => c.uniqueName === columnNameEntry.uniqueName);
                   // keep previous columns if found and the column is not now the x column
