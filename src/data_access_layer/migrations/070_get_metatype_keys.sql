@@ -15,4 +15,4 @@ WITH RECURSIVE parents AS (
          mk.modified_at, mk.created_by, mk.modified_by, mk.ontology_version,
          mk.container_id, mk.deleted_at
 FROM parents p INNER JOIN metatype_keys mk ON mk.metatype_id = p.id;
-$$ LANGUAGE sql;
+$$;
