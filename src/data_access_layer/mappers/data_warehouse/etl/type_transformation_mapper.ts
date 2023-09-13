@@ -1,6 +1,6 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
-import {PoolClient, QueryConfig} from 'pg';
+import { PoolClient, QueryConfig } from 'pg';
 import TypeTransformation from '../../../../domain_objects/data_warehouse/etl/type_transformation';
 
 const format = require('pg-format');
@@ -69,7 +69,7 @@ export default class TypeTransformationMapper extends Mapper {
     }
 
     public async ListForTypeMapping(typeMappingID: string): Promise<Result<TypeTransformation[]>> {
-        return super.rows<TypeTransformation>(this.listByMapping(typeMappingID), {resultClass: this.resultClass});
+        return super.rows<TypeTransformation>(this.listByMapping(typeMappingID), { resultClass: this.resultClass });
     }
 
     public async ListFromIDs(ids: string[]): Promise<Result<TypeTransformation[]>> {
@@ -77,7 +77,7 @@ export default class TypeTransformationMapper extends Mapper {
             return Result.Success([]);
         }
 
-        return super.rows(this.listFromIDsStatement(ids), {resultClass: this.resultClass});
+        return super.rows(this.listFromIDsStatement(ids), { resultClass: this.resultClass });
     }
 
     public async BulkDelete(transformations: TypeTransformation[], transaction?: PoolClient): Promise<Result<boolean>> {
@@ -167,7 +167,7 @@ export default class TypeTransformationMapper extends Mapper {
             JSON.stringify(tt.destination_parameters),
             tt.created_at_key,
             tt.created_at_format_string,
-            tt.tags,
+            JSON.stringify(tt.tags),
             userID,
             userID,
         ]);
@@ -258,7 +258,7 @@ export default class TypeTransformationMapper extends Mapper {
             JSON.stringify(tt.destination_parameters),
             tt.created_at_key,
             tt.created_at_format_string,
-            tt.tags,
+            JSON.stringify(tt.tags),
             userID,
             userID,
         ]);
