@@ -253,7 +253,14 @@ TO STDOUT WITH (FORMAT csv, HEADER true);"#
       let edge = record?;
 
       if !relationship_name_header.contains_key(&edge.metatype_relationship_name) {
-        let (header, index) = edge.to_redis_header_bytes();
+        let metatype_relationship_properties = fetch_possible_metatype_relationship_properties(
+          edge.metatype_relationship_name.clone(),
+          edge.container_id,
+          &self.db,
+        )
+        .await?;
+
+        let (header, index) = edge.to_redis_header_bytes(metatype_relationship_properties);
         // save the index so we maintain property order across the import
         // TODO: handle cases in which we have the same metatype name but a different set of properties
         relationship_name_header.insert(edge.metatype_relationship_name.clone(), index);
@@ -693,13 +700,13 @@ pub async fn fetch_possible_metatype_properties(
 }
 
 pub async fn fetch_possible_metatype_relationship_properties(
-  metatype_name: String,
+  metatype_relationship_name: String,
   container_id: u64,
   connection: &Pool<Postgres>,
 ) -> Result<Vec<String>, RedisLoaderError> {
   let mut rows = sqlx::query("SELECT DISTINCT property_name FROM metatype_relationship_keys WHERE container_id = $1 AND metatype_name = $2")
       .bind(container_id as i64)
-      .bind(metatype_name)
+      .bind(metatype_relationship_name)
       .fetch(connection);
 
   let mut results = vec![];
