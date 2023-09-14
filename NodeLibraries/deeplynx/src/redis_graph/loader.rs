@@ -5,7 +5,7 @@ use indexmap::IndexMap;
 use redis::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use sqlx::PgPool;
+use sqlx::{PgPool, Pool, Postgres, Row};
 use std::collections::HashMap;
 use tokio_util::compat::FuturesAsyncReadCompatExt;
 
@@ -108,7 +108,15 @@ TO STDOUT WITH (FORMAT csv, HEADER true) ;
       node_ids.insert(node.id, node.new_id);
 
       if !metatype_name_header.contains_key(&node.metatype_name) {
-        let (header, index) = node.to_redis_header_bytes();
+        // fetch all possible properties so that we can handle older metatypes
+        let metatype_propeties = fetch_possible_metatype_properties(
+          node.metatype_name.clone(),
+          node.container_id,
+          &self.db,
+        )
+        .await?;
+
+        let (header, index) = node.to_redis_header_bytes(metatype_propeties);
         // save the index so we maintain property order across the import
         // TODO: handle cases in which we have the same metatype name but a different set of properties
         metatype_name_header.insert(node.metatype_name.clone(), index);
@@ -391,18 +399,8 @@ struct Node {
 
 impl Node {
   // returns parsed header and an index of property names to make sure order stays the same
-  pub fn to_redis_header_bytes(&self) -> (Vec<u8>, Vec<String>) {
-    let properties: Value = serde_json::from_str(self.properties.as_str()).unwrap();
-
-    let properties = match properties {
-      Value::Object(o) => o,
-      _ => {
-        // TODO: Handle non-object properties if ever needed
-        panic!("properties of node not an object")
-      }
-    };
-
-    let property_len: u32 = properties.len() as u32 + 9;
+  pub fn to_redis_header_bytes(&self, metatype_properties: Vec<String>) -> (Vec<u8>, Vec<String>) {
+    let property_len: u32 = metatype_properties.len() as u32 + 9;
     let mut property_names: Vec<u8> = vec![];
     let mut property_names_raw: Vec<String> = vec![];
 
@@ -416,7 +414,7 @@ impl Node {
     property_names.extend("_modified_at\0".as_bytes());
     property_names.extend("_modified_by\0".as_bytes());
 
-    for (key, _) in properties.iter() {
+    for key in metatype_properties.iter() {
       let name = key.as_bytes();
       property_names_raw.push(key.clone());
       property_names.extend(name);
@@ -549,18 +547,11 @@ struct Edge {
 
 impl Edge {
   // returns parsed header and an index of property names to make sure order stays the same
-  pub fn to_redis_header_bytes(&self) -> (Vec<u8>, Vec<String>) {
-    let properties: Value = serde_json::from_str(self.properties.as_str()).unwrap();
-
-    let properties = match properties {
-      Value::Object(o) => o,
-      _ => {
-        // TODO: Handle non-object properties if ever needed
-        panic!("properties of edge not an object")
-      }
-    };
-
-    let property_len: u32 = properties.len() as u32 + 8;
+  pub fn to_redis_header_bytes(
+    &self,
+    metatype_relationship_properties: Vec<String>,
+  ) -> (Vec<u8>, Vec<String>) {
+    let property_len: u32 = metatype_relationship_properties.len() as u32 + 8;
     let mut property_names: Vec<u8> = vec![];
     let mut property_names_raw: Vec<String> = vec![];
 
@@ -573,7 +564,7 @@ impl Edge {
     property_names.extend("_modified_at\0".as_bytes());
     property_names.extend("_modified_by\0".as_bytes());
 
-    for (key, _) in properties.iter() {
+    for key in metatype_relationship_properties.iter() {
       let name = key.as_bytes();
       property_names_raw.push(key.clone());
       property_names.extend(name);
@@ -678,4 +669,46 @@ impl Edge {
 
     property_final
   }
+}
+
+pub async fn fetch_possible_metatype_properties(
+  metatype_name: String,
+  container_id: u64,
+  connection: &Pool<Postgres>,
+) -> Result<Vec<String>, RedisLoaderError> {
+  let mut rows = sqlx::query("SELECT DISTINCT property_name FROM metatype_full_keys WHERE container_id = $1 AND metatype_name = $2")
+      .bind(container_id as i64)
+      .bind(metatype_name)
+      .fetch(connection);
+
+  let mut results = vec![];
+  while let Some(row) = rows.try_next().await? {
+    // map the row into a user-defined domain type
+    let property_name: &str = row.try_get("property_name")?;
+
+    results.push(property_name.to_string());
+  }
+
+  Ok(results)
+}
+
+pub async fn fetch_possible_metatype_relationship_properties(
+  metatype_name: String,
+  container_id: u64,
+  connection: &Pool<Postgres>,
+) -> Result<Vec<String>, RedisLoaderError> {
+  let mut rows = sqlx::query("SELECT DISTINCT property_name FROM metatype_relationship_keys WHERE container_id = $1 AND metatype_name = $2")
+      .bind(container_id as i64)
+      .bind(metatype_name)
+      .fetch(connection);
+
+  let mut results = vec![];
+  while let Some(row) = rows.try_next().await? {
+    // map the row into a user-defined domain type
+    let property_name: &str = row.try_get("property_name")?;
+
+    results.push(property_name.to_string());
+  }
+
+  Ok(results)
 }
