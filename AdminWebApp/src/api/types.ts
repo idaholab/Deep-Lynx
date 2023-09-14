@@ -6,7 +6,7 @@ export type ContainerT = {
         data_versioning_enabled: boolean;
         ontology_versioning_enabled: boolean;
         enabled_data_sources: string[];
-        configured_data_sources?: {[key: string]: any}[];
+        p6_preset_configs?: P6DataSourceConfig[];
     };
     created_at: string;
     modified_at: string;
@@ -329,10 +329,12 @@ export type AvevaDataSourceConfig = {
 
 export type P6DataSourceConfig = {
     kind: 'p6';
+    id?: string;
+    name?: string;
     endpoint: string;
     projectID: string;
-    username: string;
-    password: string;
+    username?: string;
+    password?: string;
     stop_nodes?: string[];
     value_nodes?: string[];
     data_retention_days?: number;

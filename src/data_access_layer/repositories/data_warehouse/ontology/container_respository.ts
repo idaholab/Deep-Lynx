@@ -277,27 +277,6 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         return this.#alertMapper.ListUnacknowledgedForContainer(containerID);
     }
 
-    async generateAuthAlert(container: Container): Promise<Result<boolean>> {
-        const includesP6 = container.config?.enabled_data_sources?.includes('p6');
-        const auth = await KeyPairMapper.Instance.ServiceKeysForContainer(container.id!, 'p6_adapter_auth');
-        const alerts = (await this.activeAlertsForContainer(container.id!)).value.map((a) => a.message?.includes('P6'));
-
-        // only generate the alert if P6 is enabled, not yet authorized, and there isn't an alert yet
-        if (includesP6 && auth.value.length <= 0 && alerts.length === 0) {
-            void this.createAlert(
-                new ContainerAlert({
-                    containerID: container.id!,
-                    type: 'warning',
-                    message:
-                        // eslint-disable-next-line max-len
-                        'The P6 adapter must be authorized to access this container before P6 data sources can be activated. Click the Authorize button to authorize this container.',
-                }),
-            );
-        }
-
-        return Promise.resolve(Result.Success(true));
-    }
-
     // export ontology returns a File record with the information needed to download a .json file with the container's
     // exported ontology. Eventually we'll convert this into an OWL file, for now, we just do a File.
     async exportOntology(containerID: string, user: User, ontologyVersionID?: string): Promise<Result<ContainerExport>> {

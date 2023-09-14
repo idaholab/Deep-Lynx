@@ -23,7 +23,7 @@
                   :rows="2"
                   v-model="container.description"
                   :label="$t('general.description')"
-                  :rules="[requiredRule]"
+                  :rules="[validateRequired]"
               ></v-textarea>
 
               <v-row>
@@ -52,7 +52,7 @@
         </v-row>
         <v-data-table v-if="container?.config.enabled_data_sources.includes('p6')"
           :headers="configuredSourcesHeaders()"
-          :items="container?.config.configured_data_sources"
+          :items="p6configs"
           class="elevation-1 mt-5"
         >
           <template v-slot:top>
@@ -61,27 +61,52 @@
                 <h3>{{$t('dataSources.p6.defaultConfig')}}</h3>
                 <span>{{$t('dataSources.p6.configDescription')}}</span>
               </v-col>
-              <v-col :cols="4">
-                <CreateConfiguredSourceDialog @created="addConfig($event)"/>
-              </v-col>
+              <v-spacer/>
+              <ConfiguredSourceActions
+                mode="create"
+                :icon="false"
+                @created="addConfig($event)"
+              />
             </v-toolbar>
           </template>
           <template v-slot:[`item.name`]="{ item }">
             <span>{{ item.name }}</span>
           </template>
-          <template v-slot:[`item.type`]="{ item }">
-            <span>{{ item.type }}</span>
+          <template v-slot:[`item.endpoint`]="{ item }">
+            <span>{{ item.endpoint }}</span>
+          </template>
+          <template v-slot:[`item.projectID`]="{ item }">
+            <span>{{ item.projectID }}</span>
           </template>
           <template v-slot:[`item.actions`]="{ item }">
-            <EditConfiguredSourceDialog :configID="item.id" @edited="updateContainer()"/>
-            <DeleteConfiguredSourceDialog :configID="item.id" @delete="deleteConfig($event)"/>
+            <ConfiguredSourceActions
+              :icon="true"
+              mode="edit"
+              :configID="item.id"
+              :configuredSource="item"
+              @edited="editConfig($event)"
+            />
+            <!-- This will be replaced by the custom data source type very soon -->
+            <!-- Commenting it out for the time being but it will be useful when designing the custom ds frontend -->
+            <!-- <ConfiguredSourceActions
+              :icon="true"
+              mode="authorize"
+              :containerID="containerID"
+              :configID="item.id"
+            /> -->
+            <ConfiguredSourceActions
+              :icon="true"
+              mode="delete"
+              :configID="item.id"
+              @delete="deleteConfig($event)"
+            />
           </template>
         </v-data-table>
       </v-card-text>
 
       <v-card-actions>
         <template v-if="container">
-          <delete-container-dialog :containerID="container.id"></delete-container-dialog>
+          <delete-container-dialog :containerID="containerID"></delete-container-dialog>
         </template>
         <v-spacer></v-spacer>
         <v-btn color="primary" text @click="updateContainer" ><span v-if="!loading">{{$t("general.save")}}</span>
@@ -94,12 +119,11 @@
 
 <script lang="ts">
   import Vue from 'vue'
-  import {ContainerT} from "@/api/types";
+  import {ContainerT, P6DataSourceConfig} from "@/api/types";
   import DeleteContainerDialog from "@/components/ontology/containers/deleteContainerDialog.vue";
   import SelectDataSourceTypes from "@/components/dataSources/SelectDataSourceTypes.vue";
-  import CreateConfiguredSourceDialog from '@/components/dataSources/CreateConfiguredSourceDialog.vue';
-  import DeleteConfiguredSourceDialog from '@/components/dataSources/DeleteConfiguredSourceDialog.vue';
-  import EditConfiguredSourceDialog from '@/components/dataSources/EditConfiguredSourceDialog.vue';
+  import ConfiguredSourceActions from '@/components/dataSources/ConfiguredSourceActions.vue';
+  import {v4 as uuidv4} from 'uuid';
 
   interface SettingsModel {
     errorMessage: string,
@@ -107,22 +131,18 @@
     loading: boolean,
     valid: boolean,
     container?: ContainerT
-  }
-
-  type P6SourceConfig = {
-    id?: string
-    name?: string;
-    endpoint: string;
-    projectID: string;
-    username?: string;
-    password?: string;
-    type: string;
+    containerID: string
+    p6configs: P6DataSourceConfig[]
   }
 
   export default Vue.extend ({
     name: 'ViewSettings',
 
-    components: { DeleteContainerDialog, SelectDataSourceTypes, CreateConfiguredSourceDialog, DeleteConfiguredSourceDialog, EditConfiguredSourceDialog },
+    components: { 
+      DeleteContainerDialog, 
+      SelectDataSourceTypes,
+      ConfiguredSourceActions 
+    },
 
     data: (): SettingsModel => ({
       errorMessage: "",
@@ -130,31 +150,42 @@
       loading: false,
       valid: true,
       container: undefined as SettingsModel['container'] | undefined,
+      containerID: '',
+      p6configs: []
     }),
 
     methods: {
       deleteConfig(configID: string) {
-        if (this.container?.config?.configured_data_sources) {
-          this.container.config.configured_data_sources = this.container.config.configured_data_sources.filter(
-            config => config.id !== configID
-          );
-          this.updateContainer();
-        }
+        this.p6configs = this.p6configs.filter(
+          config => config.id !== configID
+        );
+        this.updateContainer();
       },
-      addConfig(config: P6SourceConfig) {
-        if (this.container?.config?.configured_data_sources) {
-          this.container.config.configured_data_sources.push(config);
-          this.updateContainer();
+      addConfig(config: P6DataSourceConfig) {
+        config.id = uuidv4();
+        this.p6configs.push(config);
+        this.updateContainer();
+      },
+      editConfig(config: P6DataSourceConfig) {
+        if (!config.id) {
+          this.errorMessage = `unable to update configuration ${config.name}`
         }
+        // replace the config with the matching id
+        this.p6configs = this.p6configs.map(c => c.id === config.id ? config : c);
+        this.updateContainer();
       },
       updateContainer() {
         // @ts-ignore
         if(!this.$refs.form!.validate()) return;
 
+        this.container!.config.p6_preset_configs = this.p6configs;
+
         this.$client.updateContainer(this.container)
             .then((container) => {
-              this.$store.commit('setEditMode', false)
-              this.$store.commit('setActiveContainer', container)
+              this.$store.commit('setEditMode', false);
+              this.$store.commit('setActiveContainer', container);
+              this.container = container;
+              this.p6configs = container!.config.p6_preset_configs ? container!.config.p6_preset_configs : [];
               this.successMessage = this.$t('containers.settingsSaved') as string
 
               setTimeout(() => this.successMessage = "", 5000)
@@ -170,19 +201,21 @@
       configuredSourcesHeaders() {
         return [
           {text: this.$t('general.name'), value: 'name'},
-          {text: this.$t('dataSources.adapterType'), value: 'type'},
+          {text: this.$t('general.endpoint'), value: 'endpoint'},
+          {text: this.$t('general.projectID'), value: 'projectID'},
           {text: this.$t('general.actions'), value: 'actions', sortable: false}
         ]
       },
-      requiredRule(v: string | number | boolean | null | undefined) {
+      validateRequired(v: any) {
         return !!v || this.$t('validation.required');
       },
     },
 
     beforeMount() {
       // set container and ensure that configured data sources exists
-      this.container = this.$store.getters.activeContainer
-      if (!this.container?.config.configured_data_sources) {this.container!.config.configured_data_sources = []}
-    }
+      this.container = this.$store.getters.activeContainer;
+      this.p6configs = this.container!.config.p6_preset_configs ? this.container!.config.p6_preset_configs : [];
+      this.containerID = this.container!.id;
+    },
   });
 </script>

@@ -603,6 +603,8 @@ export default {
             newConfigured: 'New Configured Source',
             editConfigured: 'Edit Configured Source',
             deleteConfigured: 'Delete Configured Source',
+            authorizeAdapter: 'Authorize Adapter for Container',
+            authContainerP6: 'The P6 adapter must be authorized to access this container before P6 data sources can be activated. Click the Authorize button to authorize this container.',
             deleteConfiguredConfirm: 'Would you like to delete this pre-set Data Source configuration?',
             selectEnabled: 'Select Enabled Data Source Types',
             reprocess: 'Reprocess Data Source',
