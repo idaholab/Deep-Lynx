@@ -50,6 +50,15 @@
             </template>
           </v-col>
         </v-row>
+        <v-row>
+          <v-col v-if="container?.config.enabled_data_sources.includes('p6')">
+            <ConfiguredSourceActions
+              mode="authorize"
+              :icon="false"
+              :containerID="containerID"
+            />
+          </v-col>
+        </v-row>
         <v-data-table v-if="container?.config.enabled_data_sources.includes('p6')"
           :headers="configuredSourcesHeaders()"
           :items="p6configs"
