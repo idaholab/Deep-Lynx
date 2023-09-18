@@ -15,7 +15,7 @@
         <v-card id="dialog">
             <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
             <success-banner :message="successMessage"></success-banner>
-            <v-toolbar dark color="secondary" flat tile v-observe-visibility="setDatePickers">
+            <v-toolbar dark color="secondary" flat tile v-observe-visibility="loadPage">
                 <v-btn icon dark @click="closeDialog">
                     <v-icon>mdi-close</v-icon>
                 </v-btn>
@@ -26,6 +26,7 @@
             <v-row class="mt-2">
                 <v-col :cols="3">
                     <v-card class="pa-4 ml-3" style="height: 100%">
+                        <v-progress-linear v-if="indexesLoading" indeterminate></v-progress-linear>
                         <v-switch
                             hide-details
                             class="d-flex justify-center mt-0 mb-3 pt-0"
@@ -66,7 +67,7 @@
                                 class="pt-5"
                                 v-model.number="defaultPlotLimit"
                                 type="number"
-                                :rules="[validateRequired, validatePositive, validateNumber]"
+                                :rules="[validatePositive, validateNumber]"
                                 :label="$t('general.limit')"
                                 :hint="$t('timeseries.limitHint')"
                             />
@@ -116,6 +117,7 @@
 
                 <v-col :cols="3">
                     <v-card class="pa-4" style="height: 100%">
+                        <v-progress-linear v-if="dataSourceLoading" indeterminate></v-progress-linear>
                         <v-select v-model="chartType" :items="chartTypes" :hint="$t('timeseries.chartType')" persistent-hint @change="updatePlot(true)" />
 
                         <v-select
@@ -151,6 +153,7 @@
 
                 <v-col :cols="6">
                     <v-card class="pa-4 mr-3" style="height: 100%">
+                        <v-progress-linear v-if="columnsLoading" indeterminate></v-progress-linear>
                         <v-data-table
                             v-if="selectedDataSources.length > 0"
                             :headers="columnHeaders"
@@ -193,6 +196,7 @@
             <v-row>
                 <v-col :cols="12">
                     <v-card class="pa-4 mx-3">
+                        <v-progress-linear v-if="chartLoading" indeterminate></v-progress-linear>
                         <div id="timeseriesPlot"></div>
                         <v-btn v-show="Object.keys(results).length > 0" color="primary" dark class="mx-3" @click="showChart = !showChart">
                             <v-icon v-if="showChart">mdi-table</v-icon> <v-icon v-else>mdi-arrow-up-drop-circle</v-icon>
@@ -252,8 +256,6 @@
 
   interface TimeseriesViewerDialogModel {
     dataSource: DataSourceT | null
-    initialStart: Date
-    initialEnd: Date
     results: any
     tableResults: any[]
     selectedDataSources: DataSourceT[]
@@ -294,6 +296,11 @@
     streamSeconds: number
     streamEntireProgress: number
     replayRecordSize: number
+    columnsLoading: boolean
+    dataSourceLoading: boolean
+    indexesLoading: boolean
+    chartLoading: boolean
+    pageLoaded: boolean
   }
 
   export default Vue.extend ({
@@ -309,8 +316,8 @@
 
     data: (): TimeseriesViewerDialogModel => ({
       dataSource: null,
-      initialStart: new Date(Date.now() - 1000 * 60 * 60 * 24),
-      initialEnd: new Date(),
+      startDate: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+      endDate: new Date().toISOString(),
       results: {},
       tableResults: [],
       selectedDataSources: [],
@@ -327,12 +334,10 @@
       dialog: false,
       errorMessage: '',
       successMessage: '',
-      endDate: '',
-      startDate: '',
       timeseriesFlag: true,
       startIndex: 0,
-      endIndex: 1000,
-      defaultPlotLimit: 5000,
+      endIndex: 10000,
+      defaultPlotLimit: 10000,
       tableHeight: 500,
       showChart: true,
       chartType: 'line',
@@ -350,11 +355,15 @@
       streamProgress: 0,
       streamSeconds: 0,
       streamEntireProgress: 0,
-      replayRecordSize: 100
+      replayRecordSize: 100,
+      columnsLoading: false,
+      dataSourceLoading: false,
+      indexesLoading: false,
+      chartLoading: false,
+      pageLoaded: false
     }),
 
     watch: {
-        dataSourceID: {handler: 'dataSourceChange', immediate: true},
         streamActive: {handler: 'streamActiveChange', immediate: true}
     },
 
@@ -417,9 +426,6 @@
     },
 
     methods: {
-      validateRequired(value: any): boolean | string {
-        return !!value || this.$t('validation.required');
-      },
       validatePositive(value: any): boolean | string {
         if (value < 0) return this.$t('validation.positive');
         return true;
@@ -427,9 +433,6 @@
       validateNumber(value: any): boolean | string {
         const pattern = /^[0-9]+$/;
         return pattern.test(value) || this.$t('validation.nan');
-      },
-      dataSourceChange() {
-          this.load();
       },
       streamActiveChange() {
           if (this.streamActive) {
@@ -493,6 +496,7 @@
           }
       },
       load() {
+        this.dataSourceLoading = true;
           this.$client
               .retrieveDataSource(this.containerID, this.dataSourceID!)
               .then((result) => {
@@ -500,15 +504,18 @@
                   this.selectedDataSources = [this.dataSource];
                   this.adjustColumnNames();
               })
-              .catch((e) => (this.errorMessage = e));
+              .catch((e) => (this.errorMessage = e))
+              .finally(() => this.dataSourceLoading = false);
       },
       loadDataSources() {
+          this.dataSourceLoading = true;
           this.$client
               .listDataSources(this.containerID, false, true)
               .then((result) => {
                   this.dataSources = result;
               })
-              .catch((e) => (this.errorMessage = e));
+              .catch((e) => (this.errorMessage = e))
+              .finally(() => this.dataSourceLoading = false);
       },
       addTrace() {
           const length = this.userTraces.length;
@@ -729,6 +736,8 @@
               }
           }
 
+          this.chartLoading = false;
+
           const plot = await Plotly.react(plotlyDiv!, plotData, layout, {responsive: true, editable: true});
 
           // remove any existing listeners to avoid duplicate event listeners
@@ -746,6 +755,7 @@
           plotlyDiv!.lastElementChild!.scrollIntoView({behavior: 'auto'});
       },
       adjustColumnNames() {
+          this.columnsLoading = true;
           // have at minimum the chosen data source selected
           if (this.selectedDataSources.length === 0) this.selectedDataSources.push(this.dataSource!);
 
@@ -795,17 +805,21 @@
                   }
               }
           }
+          this.columnsLoading = false;
       },
-      determineDataSourceShape() {
-          this.selectedDataSources.forEach(async (dataSource: DataSourceT) => {
+      async determineDataSourceShape() {
+          this.indexesLoading = true;
+          for (const dataSource of this.selectedDataSources) {
+              if(this.dataSourceShapes.get(dataSource.id!)) continue;
+
               const count = await this.$client.retrieveTimeseriesRowCount(this.containerID, dataSource.id!);
 
               const range = await this.$client.retrieveTimeseriesRange(this.containerID, dataSource.id!);
 
               this.dataSourceShapes.set(dataSource.id!, {
-                  count: count.count,
-                  start: range.start,
-                  end: range.end,
+                  count: count.count || 0,
+                  start: range.start || this.startDate,
+                  end: range.end || this.endDate,
               });
 
               // set start and end times/index if main data source
@@ -824,11 +838,13 @@
                       this.errorMessage = `${this.$t('dataSources.dataSource')} ${dataSource.name} ${this.$t('general.mayBeEmpty')}`;
                   }
               }
-          });
+          }
+          this.indexesLoading = false;
       },
       async submitSearch() {
           // @ts-ignore
           if (!this.$refs.searchForm!.validate()) return;
+          this.chartLoading = true;
 
           this.errorMessage = '';
 
@@ -853,6 +869,7 @@
                   const intervals = seconds / this.replayStreamInterval;
 
                   const timeseriesData = await this.queryTimeseriesData();
+                  this.chartLoading = false;
 
                   this.timeseriesReplayInterval = setInterval(() => {
                       if (!this.streamActive) clearInterval(this.timeseriesReplayInterval);
@@ -1137,18 +1154,15 @@
           clearInterval(this.timeseriesReplayInterval);
           clearInterval(this.indexReplayInterval);
           clearInterval(this.liveStreamInterval);
-      }
-    },
-
-    mounted() {
-        this.load();
-        this.loadDataSources();
-
-        // provide sane defaults- may be overwritten by datasource information
-        this.startDate = this.initialStart.toISOString();
-        this.endDate = this.initialEnd.toISOString();
-        this.startIndex = 0;
-        this.endIndex = 5000;
+      },
+      loadPage() {
+        if (!this.pageLoaded) {
+          this.load();
+          this.loadDataSources();
+          this.setDatePickers();
+          this.pageLoaded = true;
+        }
+      },
     },
   });
 </script>
@@ -1161,5 +1175,9 @@
     border-color: $primary;
     border-radius: 5px;
     padding: 8px;
+}
+
+.v-progress-linear {
+  margin-bottom: 10px !important;
 }
 </style>

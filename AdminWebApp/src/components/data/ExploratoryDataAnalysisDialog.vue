@@ -54,6 +54,11 @@
         <div id="correlationPlot"></div>
 
         <span v-if="!correlationMatrixFlag">{{$t('errors.matrix')}}</span>
+        <v-switch
+            hide-details
+            v-model="showPrimaryTimestamps"
+            :label="$t('timeseries.showTimestampColumns')"
+        />
       </v-card>
 
       <v-row class="mx-0 mt-4">
@@ -90,7 +95,8 @@
     columnToDataMap: Map<string, column>
     dialog: boolean
     correlationMatrixFlag: boolean
-    colorArray: readonly string[]
+    colorArray: readonly string[],
+    showPrimaryTimestamps: boolean
   }
 
   export default Vue.extend ({
@@ -102,7 +108,7 @@
         required: true
       },
       results: {
-        type: Object as PropType<any>, 
+        type: Object as PropType<any>,
         required: true
       },
       dataSourceShapes: {
@@ -115,10 +121,21 @@
       columnToDataMap: new Map(),
       dialog: false,
       correlationMatrixFlag: true,
-      colorArray: schemeCategory10
+      colorArray: schemeCategory10,
+      showPrimaryTimestamps: true
     }),
 
+    watch: {
+      showPrimaryTimestamps: {handler: 'showPrimaryTimestampsChange', immediate: true}
+    },
+
     methods: {
+      showPrimaryTimestampsChange() {
+        if (document.getElementById('correlationPlot')) {
+          this.columnToDataMap = new Map();
+          this.performAnalysis();
+        }
+      },
       async performAnalysis() {
         const plotlyBox = document.getElementById('boxPlot')
         Plotly.purge(plotlyBox!)
@@ -145,6 +162,7 @@
           if (dataSourceResults.length !== dataSourceResultsLength) this.correlationMatrixFlag = false
 
           for (const column of dataSourceColumns) {
+            if (!this.showPrimaryTimestamps && column.is_primary_timestamp) continue;
             const y = []
 
             for (let i = 0; i < dataSourceResults.length; i++) {
