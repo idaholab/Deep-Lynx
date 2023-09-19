@@ -1,7 +1,7 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
-import {PoolClient, QueryConfig} from 'pg';
-import {EdgeQueueItem} from '../../../../domain_objects/data_warehouse/data/edge';
+import { PoolClient, QueryConfig } from 'pg';
+import { EdgeQueueItem } from '../../../../domain_objects/data_warehouse/data/edge';
 import config from '../../../../services/config';
 
 const format = require('pg-format');
@@ -57,7 +57,7 @@ export default class EdgeQueueItemMapper extends Mapper {
     }
 
     public async Delete(id: string, transaction?: PoolClient): Promise<Result<boolean>> {
-        return super.runStatement(this.deleteStatement(id), {transaction});
+        return super.runStatement(this.deleteStatement(id), { transaction });
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -70,7 +70,7 @@ export default class EdgeQueueItemMapper extends Mapper {
                        import_id,
                        tags
                        ) VALUES %L RETURNING *`;
-        const values = items.map((item) => [item.edge, item.import_id, item.tags]);
+        const values = items.map((item) => [item.edge, item.import_id, JSON.stringify(item.tags)]);
 
         return format(text, values);
     }
