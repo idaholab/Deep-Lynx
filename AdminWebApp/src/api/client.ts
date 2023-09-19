@@ -989,9 +989,10 @@ export class Client {
         return this.delete(`/containers/${containerID}/import/imports/${importID}/data/${dataID}`);
     }
 
-    inviteUserToContainer(containerID: string, email: string): Promise<boolean> {
+    inviteUserToContainer(containerID: string, email: string, role_name: string): Promise<boolean> {
         return this.postNoData(`/containers/${containerID}/users/invite`, {
             email,
+            role_name,
         });
     }
 

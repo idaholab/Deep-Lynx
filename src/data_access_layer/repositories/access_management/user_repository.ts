@@ -398,19 +398,20 @@ export default class UserRepository extends Repository implements RepositoryInte
         const invite = await ContainerUserInviteMapper.Instance.RetrieveByTokenAndEmail(inviteToken, user.email);
 
         if (invite.isError) {
-            Logger.error(`unable to retrieve user container invite ${invite.error}`);
+            Logger.error(`unable to retrieve user container invite ${invite.error.error}`);
             return new Promise((resolve) => resolve(Result.Pass(invite)));
         }
 
-        // we default the user to the lowest role in the container they're accepting an invite to
+        // assign the provided role or default to role "user"
         // we do this to avoid bad actors abusing invites to gain admin access to a container
         // we also enforce the match of email to the original invite so that someone can't
         // hijack another's email invitation
-        const assigned = await Authorization.AssignRole(user.id!, 'user', invite.value.container!.id);
+        const role_name = invite.value.role_name ? invite.value.role_name : 'user';
+        const assigned = await Authorization.AssignRole(user.id!, role_name, invite.value.container!.id);
 
         if (!assigned) {
-            Logger.error(`unable to assign user role`);
-            return new Promise((resolve) => resolve(Result.Failure('unable to assign user role ')));
+            Logger.error(`unable to assign user ${invite.value.origin_user} role ${role_name}`);
+            return new Promise((resolve) => resolve(Result.Failure(`unable to assign user ${invite.value.origin_user} role ${role_name}`)));
         }
 
         return ContainerUserInviteMapper.Instance.MarkAccepted(inviteToken, user.email);

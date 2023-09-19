@@ -24,6 +24,13 @@
                 :rules="emailRules()"
                 required
               ></v-text-field>
+
+              <v-select
+                  v-model="roleName"
+                  :items="roles"
+                  :rules="[validationRule]"
+                  required
+              ></v-select>
             </v-form>
           </v-col>
         </v-row>
@@ -47,6 +54,8 @@
     formValid: boolean
     loading: boolean
     email: string
+    roleName: string
+    roles: string[]
   }
 
   export default Vue.extend ({
@@ -64,17 +73,22 @@
       dialog: false,
       formValid: false,
       loading: false,
-      email: ""
+      email: "",
+      roleName: "user",
+      roles: ["user", "editor", "admin"]
     }),
 
     methods: {
+      validationRule(v: any) {
+        return !!v || this.$t('validation.required')
+      },
       clearNew() {
           this.email = ""
           this.dialog = false
       },
       sendInvite() {
         this.loading = true
-          this.$client.inviteUserToContainer(this.containerID, this.email)
+          this.$client.inviteUserToContainer(this.containerID, this.email, this.roleName)
               .then(() => {
                   this.loading = false
                   this.clearNew()
