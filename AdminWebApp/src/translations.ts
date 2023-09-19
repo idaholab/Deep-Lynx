@@ -628,7 +628,7 @@ export default {
             timestamp: 'Timestamp',
             index: 'Index',
             selectDate: 'Select Date...',
-            limitHint: 'Enter 0 for unlimited results (may impact performance)',
+            limitHint: 'Provide a limit. 0 will return the default of up to 10k records.',
             replayOrStream: 'Replay or Live Stream',
             recordsPer: 'Records per',
             stopStream: 'Stop Stream',
@@ -644,6 +644,7 @@ export default {
             attachmentParams: 'Node Attachment Parameters - optional',
             chunkInterval: 'Chunk Interval',
             indexType: 'Index Type',
+            showTimestampColumns: 'Show Timestamp Columns',
         },
         typeMappings: {
             mappingsMaybePlural: 'Mapping(s)',
