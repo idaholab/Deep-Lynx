@@ -64,8 +64,9 @@ export default class ContainerUserInviteMapper extends Mapper {
     // queries more easily.
     private createStatement(invite: ContainerUserInvite): QueryConfig {
         return {
-            text: `INSERT INTO user_container_invites(origin_user, email, token, container_id, issued) VALUES($1, $2, $3, $4, NOW()) RETURNING *`,
-            values: [invite.origin_user, invite.email, invite.token, invite.container!.id!],
+            text: `INSERT INTO user_container_invites(origin_user, email, token, container_id, issued, role_name) 
+                    VALUES($1, $2, $3, $4, NOW(), $5) RETURNING *`,
+            values: [invite.origin_user, invite.email, invite.token, invite.container!.id!, invite.role_name],
         };
     }
 

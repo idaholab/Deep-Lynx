@@ -321,13 +321,18 @@ export class ContainerUserInvite extends BaseDomainClass {
     @Type(() => Date)
     issued?: Date;
 
-    constructor(input: {email: string; originUser?: User; token?: string; container: string | Container}) {
+    @IsString()
+    @IsIn(['editor', 'user', 'admin'])
+    role_name?: string;
+
+    constructor(input: {email: string; originUser?: User; token?: string; container: string | Container; role_name?: string}) {
         super();
 
         if (input) {
             this.email = input.email;
             if (input.originUser) this.origin_user = input.originUser.id!;
             if (input.token) this.token = input.token;
+            if (input.role_name) this.role_name = input.role_name;
             if (input.container instanceof Container) {
                 this.container = input.container;
             } else {
