@@ -9,7 +9,7 @@
     @openDialog="openDialog"
   >
     <template #content>
-      <error-banner :message="errorMessage"/>
+      <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
       <success-banner :message="successMessage"></success-banner>
       <template v-if="mode === 'create' || mode === 'edit'">
         <v-form

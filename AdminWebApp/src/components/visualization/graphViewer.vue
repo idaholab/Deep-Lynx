@@ -446,7 +446,7 @@
         </div>
       </v-card>
 
-      <error-banner :message="errorMessage" style="z-index: 9; width: fit-content; margin-left: 480px; margin-top: 6px;"></error-banner>
+      <error-banner :message="errorMessage" style="z-index: 9; width: fit-content; margin-left: 480px; margin-top: 6px;" @closeAlert="errorMessage = ''"></error-banner>
       <!-- Graph edit tools -->
       <v-speed-dial
           v-model="editFab"

@@ -112,7 +112,7 @@
           <v-spacer></v-spacer>
         </v-toolbar>
         <v-divider></v-divider>
-        <error-banner :message="dataErrorMessage"></error-banner>
+        <error-banner :message="dataErrorMessage" @closeAlert="dataErrorMessage = ''"></error-banner>
         <success-banner :message="dataSuccessMessage"></success-banner>
         <v-data-table
           :headers="importDataHeaders()"

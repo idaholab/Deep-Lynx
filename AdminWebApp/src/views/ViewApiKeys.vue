@@ -10,12 +10,23 @@
         <v-toolbar flat color="white">
           <v-toolbar-title>{{$t('apiKeys.description')}}</v-toolbar-title>
           <v-spacer></v-spacer>
-        <CreateApiKeyDialog @apiKeyCreated="refreshKeys()"></CreateApiKeyDialog>
+          <ApiKeyActions
+            mode="create"
+            :icon="false"
+            :maxWidth="'700px'"
+            @apiKeyCreated="refreshKeys()"
+          />
         </v-toolbar>
       </template>
 
       <template v-slot:[`item.actions`]="{ item }">
-        <DeleteApiKeyDialog :key-pair="item" :icon="true" @apiKeyDeleted="refreshKeys()"></DeleteApiKeyDialog>
+        <ApiKeyActions
+          mode="delete"
+          :icon="true"
+          :key-pair="item"
+          :maxWidth="'60%'"
+          @apiKeyDeleted="refreshKeys()"
+        />
       </template>
     </v-data-table>
   </div>
@@ -24,8 +35,7 @@
 <script lang="ts">
   import Vue from 'vue'
   import {KeyPairT} from "@/api/types";
-  import CreateApiKeyDialog from "@/components/accessManagement/CreateApiKeyDialog.vue";
-  import DeleteApiKeyDialog from "@/components/accessManagement/DeleteApiKeyDialog.vue";
+  import ApiKeyActions from '@/components/accessManagement/ApiKeyActions.vue';
 
   interface ApiKeysModel {
     dialog: boolean,
@@ -37,7 +47,9 @@
   export default Vue.extend ({
     name: 'ViewApiKeys',
 
-    components: { CreateApiKeyDialog, DeleteApiKeyDialog },
+    components: { 
+      ApiKeyActions 
+    },
 
     data: (): ApiKeysModel => ({
       dialog: false,

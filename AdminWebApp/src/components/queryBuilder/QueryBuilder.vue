@@ -325,6 +325,7 @@
             },
             showHint: true,
             hintOptions: {
+            // @ts-ignore
               schema: this.schema,
             },
           })
