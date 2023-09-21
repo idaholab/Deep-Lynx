@@ -78,6 +78,44 @@ ORDER BY origin_metatype_id, mk.name
 $$ LANGUAGE sql;
 
 /*
+ rework the metatype keys view to include the metatype name
+ the drop will cascade to the get_metatype_keys function
+ */
+DROP MATERIALIZED VIEW IF EXISTS metatype_full_keys CASCADE;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS metatype_full_keys AS
+WITH RECURSIVE parents AS (
+    SELECT id, container_id, name, description, created_at,
+           modified_at, created_by, modified_by, ontology_version,
+           old_id, deleted_at, id AS key_parent, 1 AS lvl
+    FROM metatypes_view
+    UNION
+    SELECT v.id, v.container_id, v.name, v.description, v.created_at,
+           v.modified_at, v.created_by, v.modified_by, v.ontology_version,
+           v.old_id, v.deleted_at, p.key_parent, p.lvl + 1
+    FROM parents p JOIN metatypes_view v ON p.id = v.parent_id
+) SELECT mk.id, p.id AS metatype_id, p.name AS metatype_name, mk.name, mk.description,
+         mk.required, mk.property_name, mk.data_type, mk.options,
+         mk.default_value, mk.validation, mk.created_at, mk.modified_at,
+         mk.created_by, mk.modified_by, mk.ontology_version,
+         mk.container_id, mk.deleted_at
+FROM parents p JOIN metatype_keys mk ON p.key_parent = mk.metatype_id
+ORDER BY metatype_id, mk.name;
+
+CREATE INDEX IF NOT EXISTS full_keys_metatype_id ON metatype_full_keys (metatype_id);
+CREATE INDEX IF NOT EXISTS full_keys_container_id ON metatype_full_keys (container_id);
+
+/*
+ add parent_metatype_name to metatypes_view
+ */
+CREATE OR REPLACE VIEW metatypes_view AS (
+     SELECT DISTINCT metatypes.*, metatypes_inheritance.parent_id AS parent_id, parent.name AS parent_name
+     FROM metatypes_inheritance
+              FULL OUTER JOIN metatypes ON metatypes.id = metatypes_inheritance.child_id
+              LEFT JOIN metatypes parent ON parent.id = metatypes_inheritance.parent_id
+);
+
+/*
  add container_id filter and metatype name
  */
 DROP FUNCTION IF EXISTS get_metatype_keys;
@@ -154,42 +192,6 @@ CREATE TRIGGER check_relationship_pair_inheritance BEFORE INSERT OR UPDATE ON me
     FOR EACH ROW EXECUTE FUNCTION check_relationship_pair_inheritance();
 
 /*
- rework the metatype keys view to include the metatype name
- */
-DROP MATERIALIZED VIEW IF EXISTS metatype_full_keys;
-CREATE MATERIALIZED VIEW IF NOT EXISTS metatype_full_keys AS
-WITH RECURSIVE parents AS (
-    SELECT id, container_id, name, description, created_at,
-           modified_at, created_by, modified_by, ontology_version,
-           old_id, deleted_at, id AS key_parent, 1 AS lvl
-    FROM metatypes_view
-    UNION
-    SELECT v.id, v.container_id, v.name, v.description, v.created_at,
-           v.modified_at, v.created_by, v.modified_by, v.ontology_version,
-           v.old_id, v.deleted_at, p.key_parent, p.lvl + 1
-    FROM parents p JOIN metatypes_view v ON p.id = v.parent_id
-) SELECT mk.id, p.id AS metatype_id, p.name AS metatype_name, mk.name, mk.description,
-         mk.required, mk.property_name, mk.data_type, mk.options,
-         mk.default_value, mk.validation, mk.created_at, mk.modified_at,
-         mk.created_by, mk.modified_by, mk.ontology_version,
-         mk.container_id, mk.deleted_at
-FROM parents p JOIN metatype_keys mk ON p.key_parent = mk.metatype_id
-ORDER BY metatype_id, mk.name;
-
-CREATE INDEX IF NOT EXISTS full_keys_metatype_id ON metatype_full_keys (metatype_id);
-CREATE INDEX IF NOT EXISTS full_keys_container_id ON metatype_full_keys (container_id);
-
-/*
- add parent_metatype_name to metatypes_view
- */
-CREATE OR REPLACE VIEW metatypes_view AS (
-     SELECT DISTINCT metatypes.*, metatypes_inheritance.parent_id AS parent_id, parent.name AS parent_name
-     FROM metatypes_inheritance
-              FULL OUTER JOIN metatypes ON metatypes.id = metatypes_inheritance.child_id
-              LEFT JOIN metatypes parent ON parent.id = metatypes_inheritance.parent_id
-         );
-
-/*
  the check_metatype_key trigger ensures that no record can be created or updated when the property name
  matches that of an inherited key, as property names are unique per metatype.
  update function for get_metatype_keys and add trigger
@@ -213,6 +215,8 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS check_metatype_key on metatype_keys;
 
 CREATE TRIGGER check_metatype_key BEFORE INSERT OR UPDATE ON metatype_keys
     FOR EACH ROW EXECUTE FUNCTION check_metatype_key();
