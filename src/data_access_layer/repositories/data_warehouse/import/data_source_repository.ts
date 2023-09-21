@@ -1,9 +1,5 @@
 import RepositoryInterface, {DeleteOptions, FileOptions, QueryOptions, Repository} from '../../repository';
-import DataSourceRecord, {
-    TimeseriesBucketDataSourceConfig,
-    TimeseriesColumn,
-    TimeseriesDataSourceConfig,
-} from '../../../../domain_objects/data_warehouse/import/data_source';
+import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
 import DataSourceMapper, {TimeseriesRange} from '../../../mappers/data_warehouse/import/data_source_mapper';
 import HttpDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/http_data_source_impl';
 import StandardDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/standard_data_source_impl';
@@ -19,8 +15,6 @@ import TimeseriesDataSourceImpl from '../../../../interfaces_and_impl/data_wareh
 import File from '../../../../domain_objects/data_warehouse/data/file';
 import {plainToClass} from 'class-transformer';
 import TimeseriesService from '../../../../services/timeseries/timeseries';
-import TimeseriesBucketDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/timeseries_bucket_data_source';
-import {Bucket, ChangeBucketPayload} from 'deeplynx';
 
 /*
     DataSourceRepository contains methods for persisting and retrieving data sources
@@ -42,11 +36,6 @@ export default class DataSourceRepository extends Repository implements Reposito
         if (!t.DataSourceRecord || !t.DataSourceRecord.id)
             return Promise.resolve(Result.Failure(`cannot delete data source: no data source record or record lacking id`));
         const hasImports = await ImportMapper.Instance.ExistForDataSource(t.DataSourceRecord.id);
-
-        const config = t.DataSourceRecord.config as TimeseriesBucketDataSourceConfig;
-        if (t.DataSourceRecord.adapter_type === 'timeseries_bucket' && config.bucket!.id) {
-            await (await this.#timeseriesBucket()).deleteBucket(config.bucket!.id);
-        }
 
         if (options) {
             if (hasImports.value || (options.force && options.removeData)) return this.#mapper.DeleteWithData(t.DataSourceRecord.id);
@@ -98,22 +87,6 @@ export default class DataSourceRepository extends Repository implements Reposito
 
             const originalToSave = await original.value.ToSave();
 
-            // only attempt to update bucket if changeBucketPayload is present, else assume there are no changes to the bucket
-            const config = toSave.config as TimeseriesBucketDataSourceConfig;
-            const originalConfig = originalToSave.config as TimeseriesBucketDataSourceConfig;
-            if (toSave.adapter_type === 'timeseries_bucket' && config.change_bucket_payload) {
-                const changeBucketPayload = config.change_bucket_payload;
-                // bucket ID must come from the fetched data source
-                const bucketId = originalConfig.bucket!.id;
-
-                // update bucket according to the payload
-                const bucket = await (await this.#timeseriesBucket()).updateBucket(bucketId, changeBucketPayload);
-                config.bucket = bucket;
-
-                // reset changeBucketPayload to undefined in case future updates don't require bucket update
-                config.change_bucket_payload = undefined;
-            }
-
             Object.assign(originalToSave, toSave);
 
             const updated = await this.#mapper.Update(user.id!, originalToSave);
@@ -127,15 +100,6 @@ export default class DataSourceRepository extends Repository implements Reposito
 
             // we need a transaction so that a hypertable failure can delete data source as well
             const transaction = await this.#mapper.startTransaction();
-
-            const config = toSave.config as TimeseriesBucketDataSourceConfig;
-            if (toSave.adapter_type === 'timeseries_bucket') {
-                const changeBucketPayload = config.change_bucket_payload;
-                const bucket = await (await this.#timeseriesBucket()).createBucket(changeBucketPayload!);
-                config.bucket = bucket;
-                // reset changeBucketPayload to undefined in case future updates don't require bucket update
-                config.change_bucket_payload = undefined;
-            }
 
             const created = await this.#mapper.Create(user.id!, toSave, transaction.value);
             if (created.isError) return Promise.resolve(Result.Pass(created));
@@ -437,15 +401,7 @@ export default class DataSourceRepository extends Repository implements Reposito
 export class DataSourceFactory {
     async fromDataSourceRecord(
         sourceRecord: DataSourceRecord,
-    ): Promise<
-        | StandardDataSourceImpl
-        | HttpDataSourceImpl
-        | AvevaDataSourceImpl
-        | TimeseriesDataSourceImpl
-        | P6DataSourceImpl
-        | TimeseriesBucketDataSourceImpl
-        | undefined
-    > {
+    ): Promise<StandardDataSourceImpl | HttpDataSourceImpl | AvevaDataSourceImpl | TimeseriesDataSourceImpl | P6DataSourceImpl | undefined> {
         switch (sourceRecord.adapter_type) {
             case 'http': {
                 return Promise.resolve(new HttpDataSourceImpl(sourceRecord));
@@ -470,21 +426,6 @@ export class DataSourceFactory {
 
             case 'timeseries': {
                 return Promise.resolve(new TimeseriesDataSourceImpl(sourceRecord));
-            }
-
-            case 'timeseries_bucket': {
-                const config = sourceRecord.config as TimeseriesBucketDataSourceConfig;
-                let bucket: Bucket | undefined;
-                // if there is a bucketId, fetch the bucket
-                if (config.bucket && config.bucket.id) {
-                    bucket = await (await TimeseriesService.GetInstance()).retrieveBucket(config.bucket.id);
-                } else if (config.change_bucket_payload) {
-                    // otherwise, use changeBucketPayload to make a new bucket
-                    bucket = await (await TimeseriesService.GetInstance()).createBucket(config.change_bucket_payload);
-                }
-                config.bucket = bucket;
-                sourceRecord.config = config;
-                return Promise.resolve(new TimeseriesBucketDataSourceImpl(sourceRecord));
             }
 
             default: {
