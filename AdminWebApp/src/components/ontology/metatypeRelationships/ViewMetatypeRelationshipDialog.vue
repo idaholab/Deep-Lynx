@@ -24,7 +24,7 @@
               >
                 <v-text-field
                     v-model="selectedMetatypeRelationship.name"
-                    :rules="[v => !!v || $t('validation.required')]"
+                    :rules="[validationRule]"
                     :disabled="true"
                     required
                     class="disabled"
@@ -33,7 +33,7 @@
                 </v-text-field>
                 <v-textarea
                     v-model="selectedMetatypeRelationship.description"
-                    :rules="[v => !!v || $t('validation.required')]"
+                    :rules="[validationRule]"
                     required
                     :disabled="true"
                     class="disabled"
@@ -70,7 +70,7 @@
                   </v-toolbar>
                 </template>
                 <template v-slot:[`item.actions`]="{ item }">
-                 <view-metatype-relationship-key-dialog :metatypeRelationshipKey="item" :metatypeRelationship="metatypeRelationship" :icon="true" @metatypeKeyEdited="loadKeys()"></view-metatype-relationship-key-dialog>
+                 <ViewMetatypeRelationshipKeyDialog :metatypeRelationshipKey="item" :metatypeRelationship="metatypeRelationship" :icon="true" @metatypeKeyEdited="loadKeys()"></ViewMetatypeRelationshipKeyDialog>
                 </template>
               </v-data-table>
             </v-col>
@@ -87,68 +87,88 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
-import {MetatypeRelationshipT} from "../../../api/types";
-import ViewMetatypeRelationshipKeyDialog
-  from "@/components/ontology/metatypeRelationships/viewMetatypeRelationshipKeyDialog.vue";
+  import Vue, { PropType } from 'vue'
+  import {MetatypeRelationshipT} from "../../../api/types";
+  import ViewMetatypeRelationshipKeyDialog from '@/components/ontology/metatypeRelationships/ViewMetatypeRelationshipKeyDialog.vue';
 
-@Component({components: {
-    ViewMetatypeRelationshipKeyDialog
-  }})
-export default class ViewMetatypeRelationshipDialog extends Vue {
-  @Prop({required: true})
-  metatypeRelationship!: MetatypeRelationshipT;
+  interface ViewMetatypeRelationshipDialogModel {
+    selectedMetatypeRelationship: MetatypeRelationshipT | null
+    errorMessage: string
+    keysLoading: boolean
+    dialog: boolean
+    valid: boolean
+  }
 
-  @Prop({required: false})
-  readonly icon!: boolean
+  export default Vue.extend ({
+    name: 'ViewMetatypeRelationshipDialog',
 
-  errorMessage = ""
-  keysLoading = false
-  dialog = false
-  selectedMetatypeRelationship: MetatypeRelationshipT | null  = null
-  valid = false
+    components: { ViewMetatypeRelationshipKeyDialog },
 
-  // this way we only load the keys when the edit dialog is open, so we don't
-  // overload someone using this in a list
-  @Watch('dialog', {immediate: true})
-  isDialogOpen() {
-    if(this.dialog) {
-      this.loadKeys()
+    props: {
+      metatypeRelationship: {
+        type: Object as PropType<MetatypeRelationshipT>,
+        required: true
+      },
+      icon: {
+        type: Boolean,
+        required: false},
+    },
+
+    data: (): ViewMetatypeRelationshipDialogModel => ({
+      selectedMetatypeRelationship: null,
+      errorMessage: "",
+      keysLoading: false,
+      dialog: false,
+      valid: false
+    }),
+
+    watch: {
+      dialog: {
+        immediate: true,
+        handler(newDialog) {
+          if(newDialog) {
+            this.loadKeys()
+          }
+        }
+      }
+    },
+
+    mounted() {
+      // have to do this to avoid mutating properties
+      this.selectedMetatypeRelationship = JSON.parse(JSON.stringify(this.metatypeRelationship))
+    },
+
+    methods: {
+      headers() {
+        return  [
+          { text: this.$t('general.name'), value: 'name' },
+          { text: this.$t('general.description'), value: 'description'},
+          { text: this.$t('general.dataType'), value: 'data_type'},
+          { text: this.$t('general.actions'), value: 'actions', sortable: false }
+        ]
+      },
+      loadKeys() {
+        if(this.selectedMetatypeRelationship) {
+          this.keysLoading = true
+          this.$client.listMetatypeRelationshipKeys(this.selectedMetatypeRelationship.container_id, this.selectedMetatypeRelationship.id!)
+              .then(keys => {
+                if(this.selectedMetatypeRelationship) {
+                  this.selectedMetatypeRelationship.keys = keys
+                  this.keysLoading = false
+                  this.$forceUpdate()
+                }
+              })
+              .catch(e => {
+                this.errorMessage = e
+                this.keysLoading = false
+              })
+        }
+      },
+      validationRule(v: any): boolean | string {
+        return !!v || this.$t('validation.required');
+      }
     }
-  }
-
-  headers() {
-    return  [
-      { text: this.$t('general.name'), value: 'name' },
-      { text: this.$t('general.description'), value: 'description'},
-      { text: this.$t('general.dataType'), value: 'data_type'},
-      { text: this.$t('general.actions'), value: 'actions', sortable: false }
-    ]
-  }
-
-  mounted() {
-    // have to do this to avoid mutating properties
-    this.selectedMetatypeRelationship = JSON.parse(JSON.stringify(this.metatypeRelationship))
-  }
-
-  loadKeys() {
-    if(this.selectedMetatypeRelationship) {
-      this.keysLoading = true
-      this.$client.listMetatypeRelationshipKeys(this.selectedMetatypeRelationship.container_id, this.selectedMetatypeRelationship.id!)
-          .then(keys => {
-            if(this.selectedMetatypeRelationship) {
-              this.selectedMetatypeRelationship.keys = keys
-              this.keysLoading = false
-              this.$forceUpdate()
-            }
-          })
-          .catch(e => {
-            this.errorMessage = e
-            this.keysLoading = false
-          })
-    }
-  }
-}
+  });
 </script>
 
 <style lang="scss">

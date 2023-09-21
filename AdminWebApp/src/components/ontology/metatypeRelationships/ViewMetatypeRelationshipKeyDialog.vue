@@ -132,47 +132,69 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
-import {MetatypeRelationshipKeyT, MetatypeRelationshipT} from "../../../api/types";
+  import Vue, { PropType } from 'vue'
+  import {MetatypeRelationshipKeyT, MetatypeRelationshipT} from "../../../api/types";
 
-@Component
-export default class ViewMetatypeRelationshipKeyDialog extends Vue {
-  @Prop({required: true})
-  metatypeRelationship!: MetatypeRelationshipT;
+  interface ViewMetatypeRelationshipKeyDialogModel {
+    selectedMetatypeRelationshipKey: MetatypeRelationshipKeyT | null
+    errorMessage: string
+    dialog: boolean
+    formValid: boolean
+    dataTypes: string[]
+    booleanOptions: boolean[]
+  }
 
-  @Prop({required: true})
-  metatypeRelationshipKey!: MetatypeRelationshipKeyT;
+  export default Vue.extend ({
+    name: 'ViewMetatypeRelationshipKeyDialog',
 
-  @Prop({required: false})
-  readonly icon!: boolean
+    props: {
+      metatypeRelationship: {
+        type: Object as PropType<MetatypeRelationshipT>,
+        required: true
+      },
+      metatypeRelationshipKey: {
+        type: Object as PropType<MetatypeRelationshipKeyT>,
+        required: true
+      },
+      icon: {
+        type: Boolean,
+        required: false
+      },
+    },
 
-  errorMessage = ""
-  dialog = false
-  formValid = false
-  selectedMetatypeRelationshipKey: MetatypeRelationshipKeyT | null  = null
-  dataTypes = ["number", "number64", "float", "float64", "date", "string", "boolean", "enumeration", "file"]
-  booleanOptions = [true, false]
+    data: (): ViewMetatypeRelationshipKeyDialogModel => ({
+      selectedMetatypeRelationshipKey: null,
+      errorMessage: "",
+      dialog: false,
+      formValid: false,
+      dataTypes: ["number", "number64", "float", "float64", "date", "string", "boolean", "enumeration", "file"],
+      booleanOptions: [true, false]
+    }),
 
-  @Watch('dialog', {immediate: true})
-  onDialogChange() {
-    if(this.dialog){
+    watch: {
+      dialog: {
+        immediate: true,
+        handler(newDialog) {
+          if(newDialog){
+            this.selectedMetatypeRelationshipKey = JSON.parse(JSON.stringify(this.metatypeRelationshipKey))
+
+            if(this.selectedMetatypeRelationshipKey && !this.selectedMetatypeRelationshipKey.validation) {
+              this.selectedMetatypeRelationshipKey.validation = {regex: "", min: 0, max: 0}
+            }
+          }
+        }
+      },
+    },
+
+    mounted() {
+      // have to do this to avoid mutating properties
       this.selectedMetatypeRelationshipKey = JSON.parse(JSON.stringify(this.metatypeRelationshipKey))
 
       if(this.selectedMetatypeRelationshipKey && !this.selectedMetatypeRelationshipKey.validation) {
         this.selectedMetatypeRelationshipKey.validation = {regex: "", min: 0, max: 0}
       }
     }
-  }
-
-  mounted() {
-    // have to do this to avoid mutating properties
-    this.selectedMetatypeRelationshipKey = JSON.parse(JSON.stringify(this.metatypeRelationshipKey))
-
-    if(this.selectedMetatypeRelationshipKey && !this.selectedMetatypeRelationshipKey.validation) {
-      this.selectedMetatypeRelationshipKey.validation = {regex: "", min: 0, max: 0}
-    }
-  }
-}
+  });
 </script>
 
 <style lang="scss">

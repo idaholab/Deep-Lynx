@@ -20,11 +20,10 @@
           <v-col v-if="comparisonMetatypeRelationship" :cols="6">
             <v-form
                 ref="form"
-                v-model="valid"
             >
               <v-text-field
-                  v-model="comparisonMetatypeRelationship.name"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :value="comparisonMetatypeRelationship.name"
+                  :rules="[validationRule]"
                   required
                   disabled
                   class="disabled"
@@ -32,8 +31,8 @@
                 <template v-slot:label>{{$t('general.name')}}</template>
               </v-text-field>
               <v-textarea
-                  v-model="comparisonMetatypeRelationship.description"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :value="comparisonMetatypeRelationship.description"
+                  :rules="[validationRule]"
                   required
                   disabled
                   class="disabled"
@@ -69,11 +68,11 @@
                 </v-toolbar>
               </template>
               <template v-slot:[`item.actions`]="{ item }">
-                  <view-metatype-relationship-key-dialog
+                  <ViewMetatypeRelationshipKeyDialog
                       :metatypeRelationshipKey="item"
                       :metatypeRelationship="comparisonMetatypeRelationship"
                       :icon="true"
-                      ></view-metatype-relationship-key-dialog>
+                      ></ViewMetatypeRelationshipKeyDialog>
               </template>
             </v-data-table>
           </v-col>
@@ -86,14 +85,14 @@
             >
               <v-text-field
                   v-model="selectedMetatypeRelationship.name"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validationRule]"
                   required
               >
                 <template v-slot:label>{{$t('general.name')}} <small style="color:red" >*</small></template>
               </v-text-field>
               <v-textarea
                   v-model="selectedMetatypeRelationship.description"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validationRule]"
                   required
               >
                 <template v-slot:label>{{$t('general.description')}} <small style="color:red" >*</small></template>
@@ -124,17 +123,17 @@
                       vertical
                   ></v-divider>
                   <v-spacer></v-spacer>
-                  <create-metatype-relationship-key-dialog :metatypeRelationship="metatypeRelationship" @metatypeRelationshipKeyCreated="loadKeys()"></create-metatype-relationship-key-dialog>
+                  <CreateMetatypeRelationshipKeyDialog :metatypeRelationship="metatypeRelationship" @metatypeRelationshipKeyCreated="loadKeys()"></CreateMetatypeRelationshipKeyDialog>
                 </v-toolbar>
               </template>
               <template v-slot:[`item.actions`]="{ item }">
                 <div v-if="($store.getters.isEditMode && !item.deleted_at) || !$store.getters.ontologyVersioningEnabled">
-                  <edit-metatype-relationship-key-dialog
+                  <EditMetatypeRelationshipKeyDialog
                       :metatypeRelationshipKey="item"
                       :metatypeRelationship="metatypeRelationship"
                       :comparison-relationship-key="(comparisonMetatypeRelationship) ? comparisonMetatypeRelationship.keys.find(k => k.name === item.name) : undefined"
                       :icon="true"
-                      @metatypeKeyEdited="loadKeys()"></edit-metatype-relationship-key-dialog>
+                      @metatypeKeyEdited="loadKeys()"></EditMetatypeRelationshipKeyDialog>
                   <v-icon
                       small
                       @click="deleteKey(item)"
@@ -171,156 +170,173 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
-import {MetatypeRelationshipKeyT, MetatypeRelationshipT} from "../../../api/types";
-import EditMetatypeRelationshipKeyDialog from "@/components/ontology/metatypeRelationships/editMetatypeRelationshipKeyDialog.vue";
-import CreateMetatypeRelationshipKeyDialog from "@/components/ontology/metatypeRelationships/createMetatypeRelationshipKeyDialog.vue";
-import ViewMetatypeRelationshipKeyDialog
-  from "@/components/ontology/metatypeRelationships/viewMetatypeRelationshipKeyDialog.vue";
-const diff = require('deep-diff').diff;
+  import Vue, { PropType } from 'vue'
+  import {MetatypeRelationshipKeyT, MetatypeRelationshipT} from "../../../api/types";
+  import EditMetatypeRelationshipKeyDialog from "@/components/ontology/metatypeRelationships/EditMetatypeRelationshipKeyDialog.vue";
+  import CreateMetatypeRelationshipKeyDialog from "@/components/ontology/metatypeRelationships/CreateMetatypeRelationshipKeyDialog.vue";
+  import ViewMetatypeRelationshipKeyDialog from "@/components/ontology/metatypeRelationships/ViewMetatypeRelationshipKeyDialog.vue";
+  const diff = require('deep-diff').diff;
 
-@Component({components: {
-    EditMetatypeRelationshipKeyDialog,
-    CreateMetatypeRelationshipKeyDialog,
-    ViewMetatypeRelationshipKeyDialog
-  }})
-export default class EditMetatypeRelationshipDialog extends Vue {
-  @Prop({required: true})
-  metatypeRelationship!: MetatypeRelationshipT;
-
-  @Prop({required: false, default: undefined})
-  comparisonMetatypeRelationship!: MetatypeRelationshipT | undefined;
-
-  @Prop({required: false})
-  readonly icon!: boolean
-
-  errorMessage = ""
-  keysLoading = false
-  dialog = false
-  selectedMetatypeRelationship: MetatypeRelationshipT | null  = null
-  valid = false
-
-  // this way we only load the keys when the edit dialog is open, so we don't
-  // overload someone using this in a list
-  @Watch('dialog', {immediate: true})
-  isDialogOpen() {
-    if(this.dialog) {
-      this.loadKeys()
-    }
+  interface EditMetatypeRelationshipDialogModel {
+    selectedMetatypeRelationship: MetatypeRelationshipT | null
+    errorMessage: string
+    keysLoading: boolean
+    dialog: boolean
+    valid: boolean
   }
 
-  headers() {
-    return  [
-      { text: this.$t('general.name'), value: 'name' },
-      { text: this.$t('general.description'), value: 'description'},
-      { text: this.$t('general.dataType'), value: 'data_type'},
-      { text: this.$t('general.actions'), value: 'actions', sortable: false }
-    ]
-  }
+  export default Vue.extend ({
+    name: 'EditMetatypeRelationshipDialog',
 
-  mounted() {
-    // have to do this to avoid mutating properties
-    this.selectedMetatypeRelationship = JSON.parse(JSON.stringify(this.metatypeRelationship))
-  }
+    components: { EditMetatypeRelationshipKeyDialog, CreateMetatypeRelationshipKeyDialog, ViewMetatypeRelationshipKeyDialog },
 
-  editMetatypeRelationship() {
-    this.$client.updateMetatypeRelationship(this.selectedMetatypeRelationship?.container_id!, this.selectedMetatypeRelationship?.id!,
-        {"name": this.selectedMetatypeRelationship?.name, "description": this.selectedMetatypeRelationship?.description})
-        .then(result => {
-          if(!result) {
-            this.errorMessage = this.$t('errors.errorCommunicating') as string
-          } else {
-            this.dialog = false
-            this.$emit('metatypeRelationshipEdited')
+    props: {
+      metatypeRelationship: {
+        type: Object as PropType<MetatypeRelationshipT>,
+        required: true
+      },
+      icon: {
+        type: Boolean,
+        required: false
+      },
+      comparisonMetatypeRelationship: {
+        type: [Object, undefined] as PropType<MetatypeRelationshipT | undefined>,
+        required: false, 
+        default: undefined,
+      }
+    },
+
+    data: (): EditMetatypeRelationshipDialogModel => ({
+      selectedMetatypeRelationship: null,
+      errorMessage: "",
+      keysLoading: false,
+      dialog: false,
+      valid: false
+    }),
+
+    watch: {
+      dialog: {
+        immediate: true,
+        handler(newDialog) {
+          if(newDialog) {
+            this.$nextTick(() => {
+              this.loadKeys();
+            });
           }
-        })
-        .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
-  }
+        }
+      },
+    },
 
-  loadKeys() {
-    if(this.selectedMetatypeRelationship) {
-      this.keysLoading = true
-      this.$client.listMetatypeRelationshipKeys(this.selectedMetatypeRelationship.container_id, this.selectedMetatypeRelationship.id!)
-          .then(keys => {
-            if(this.selectedMetatypeRelationship) {
-              this.selectedMetatypeRelationship.keys = keys
-              this.keysLoading = false
-              this.$forceUpdate()
-            }
-          })
-          .catch(e => {
-            this.errorMessage = e
-            this.keysLoading = false
-          })
-    }
-  }
+    mounted() {
+      // have to do this to avoid mutating properties
+      this.selectedMetatypeRelationship = JSON.parse(JSON.stringify(this.metatypeRelationship))
+    },
 
-  deleteKey(key: MetatypeRelationshipKeyT) {
-    this.$client.deleteMetatypeRelationshipKey(this.selectedMetatypeRelationship?.container_id!, this.selectedMetatypeRelationship?.id!, key.id!, {permanent: !this.$store.getters.isEditMode})
-    .then(result => {
-      if(!result) this.errorMessage = this.$t('errors.errorCommunicating') as string
-
-      this.loadKeys()
-    })
-    .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
-  }
-
-  undeleteKey(key: MetatypeRelationshipKeyT) {
-    this.$client.deleteMetatypeRelationshipKey(this.selectedMetatypeRelationship?.container_id!, this.selectedMetatypeRelationship?.id!, key.id!, {reverse: true})
+    methods: {
+      headers() {
+        return  [
+          { text: this.$t('general.name'), value: 'name' },
+          { text: this.$t('general.description'), value: 'description'},
+          { text: this.$t('general.dataType'), value: 'data_type'},
+          { text: this.$t('general.actions'), value: 'actions', sortable: false }
+        ]
+      },
+      editMetatypeRelationship() {
+        this.$client.updateMetatypeRelationship(this.selectedMetatypeRelationship?.container_id!, this.selectedMetatypeRelationship?.id!,
+            {"name": this.selectedMetatypeRelationship?.name, "description": this.selectedMetatypeRelationship?.description})
+            .then(result => {
+              if(!result) {
+                this.errorMessage = this.$t('errors.errorCommunicating') as string
+              } else {
+                this.dialog = false
+                this.$emit('metatypeRelationshipEdited')
+              }
+            })
+            .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
+      },
+      loadKeys() {
+        if(this.selectedMetatypeRelationship) {
+          this.keysLoading = true
+          this.$client.listMetatypeRelationshipKeys(this.selectedMetatypeRelationship.container_id, this.selectedMetatypeRelationship.id!)
+              .then(keys => {
+                if(this.selectedMetatypeRelationship) {
+                  this.selectedMetatypeRelationship.keys = keys
+                  this.keysLoading = false
+                  this.$forceUpdate()
+                }
+              })
+              .catch(e => {
+                this.errorMessage = e
+                this.keysLoading = false
+              })
+        }
+      },
+      deleteKey(key: MetatypeRelationshipKeyT) {
+        this.$client.deleteMetatypeRelationshipKey(this.selectedMetatypeRelationship?.container_id!, this.selectedMetatypeRelationship?.id!, key.id!, {permanent: !this.$store.getters.isEditMode})
         .then(result => {
           if(!result) this.errorMessage = this.$t('errors.errorCommunicating') as string
 
           this.loadKeys()
         })
         .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
-  }
+      },
+      undeleteKey(key: MetatypeRelationshipKeyT) {
+        this.$client.deleteMetatypeRelationshipKey(this.selectedMetatypeRelationship?.container_id!, this.selectedMetatypeRelationship?.id!, key.id!, {reverse: true})
+            .then(result => {
+              if(!result) this.errorMessage = this.$t('errors.errorCommunicating') as string
 
-  keyItemRowBackground(item: any) {
-    if(this.$store.getters.isEditMode) {
-      const matchedKey =  this.comparisonMetatypeRelationship?.keys.find(k => k.name === item.name)!
+              this.loadKeys()
+            })
+            .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
+      },
+      keyItemRowBackground(item: any) {
+        if(this.$store.getters.isEditMode) {
+          const matchedKey =  this.comparisonMetatypeRelationship?.keys.find(k => k.name === item.name)!
 
-      if(item.deleted_at) {
-        return 'deleted-item'
-      }
+          if(item.deleted_at) {
+            return 'deleted-item'
+          }
 
-      if(!matchedKey) {
-        return 'created-item'
-      }
+          if(!matchedKey) {
+            return 'created-item'
+          }
 
-      if(this.compareKeys(matchedKey, item)) {
-        return 'edited-item'
-      }
+          if(this.compareKeys(matchedKey, item)) {
+            return 'edited-item'
+          }
+        }
+        return ''
+      },
+      // this function will indicate whether two keys are different
+      compareKeys(original: MetatypeRelationshipKeyT, target: MetatypeRelationshipKeyT): boolean {
+        if(typeof this.comparisonMetatypeRelationship === 'undefined' || typeof this.selectedMetatypeRelationship === 'undefined') return false
+
+        const o: {[key: string]: any} = {}
+        const t: {[key: string]: any} = {}
+        Object.assign(o, original)
+        Object.assign(t, target)
+
+        // remove the keys we don't want to use to compare
+        function cleanKey(p: MetatypeRelationshipKeyT) {
+          if(p.created_at) delete p.created_at
+          if(p.created_by) delete p.created_by
+          if(p.modified_at) delete p.modified_at
+          if(p.modified_by) delete p.modified_by
+          if(p.id) delete p.id
+          if(p.metatype_relationship_id) delete p.metatype_relationship_id
+          if(p.ontology_version) delete  p.ontology_version
+        }
+
+        cleanKey(o as MetatypeRelationshipKeyT)
+        cleanKey(t as MetatypeRelationshipKeyT)
+
+        return diff(o, t)
+      },
+      validationRule(v: any) {
+        return !!v || this.$t('validation.required')
+      },
     }
-    return ''
-  }
-
-  // this function will indicate whether two keys are different
-  compareKeys(original: MetatypeRelationshipKeyT, target: MetatypeRelationshipKeyT): boolean {
-    if(typeof this.comparisonMetatypeRelationship === 'undefined' || typeof this.selectedMetatypeRelationship === 'undefined') return false
-
-    const o: {[key: string]: any} = {}
-    const t: {[key: string]: any} = {}
-    Object.assign(o, original)
-    Object.assign(t, target)
-
-    // remove the keys we don't want to use to compare
-    function cleanKey(p: MetatypeRelationshipKeyT) {
-      if(p.created_at) delete p.created_at
-      if(p.created_by) delete p.created_by
-      if(p.modified_at) delete p.modified_at
-      if(p.modified_by) delete p.modified_by
-      if(p.id) delete p.id
-      if(p.metatype_relationship_id) delete p.metatype_relationship_id
-      if(p.ontology_version) delete  p.ontology_version
-    }
-
-    cleanKey(o as MetatypeRelationshipKeyT)
-    cleanKey(t as MetatypeRelationshipKeyT)
-
-    return diff(o, t)
-  }
-}
-
+  });
 </script>
 
 <style lang="scss">

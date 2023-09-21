@@ -217,7 +217,7 @@
                     <EditRelationshipPairDialog
                         :pair="item"
                         :icon="true"
-                        :comparisonPair="(comparisonMetatype) ? comparisonMetatype.relationships.find(k => k.name === item.name) : undefined"
+                        :comparisonPair="(comparisonMetatype) ? comparisonMetatype.relationships?.find(k => k.name === item.name) : undefined"
                         @pairEdited="loadRelationships()"></EditRelationshipPairDialog>
                     <v-icon
                         small

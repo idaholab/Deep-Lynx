@@ -20,21 +20,21 @@
 
               <v-form class="disabled">
                 <v-text-field
-                    v-model="comparisonRelationshipKey.name"
+                    :value="comparisonRelationshipKey.name"
                     disabled
                 >
                   <template v-slot:label>{{$t('general.name')}} <small style="color:red" >*</small></template>
                 </v-text-field>
 
                 <v-text-field
-                    v-model="comparisonRelationshipKey.property_name"
+                    :value="comparisonRelationshipKey.property_name"
                     disabled
                 >
                   <template v-slot:label>{{$t('properties.name')}} <small style="color:red" >*</small></template>
                   <template slot="append-outer"><info-tooltip :message="$t('help.propertyName')"></info-tooltip> </template>
                 </v-text-field>
                 <v-select
-                    v-model="comparisonRelationshipKey.data_type"
+                    :value="comparisonRelationshipKey.data_type"
                     :items="dataTypes"
                     disabled
                 >
@@ -42,12 +42,12 @@
                 </v-select>
                 <v-checkbox
                     disabled
-                    v-model="comparisonRelationshipKey.required"
+                    :value="comparisonRelationshipKey.required"
                 >
                   <template v-slot:label>{{$t('validation.required')}} <small style="color:#ff0000" >*</small></template>
                 </v-checkbox>
                 <v-textarea
-                    v-model="comparisonRelationshipKey.description"
+                    :value="comparisonRelationshipKey.description"
                     :rows="2"
                     disabled
                 >
@@ -56,14 +56,14 @@
 
                 <h3>{{$t('validation.validation')}}</h3>
                 <v-text-field
-                    v-model="comparisonRelationshipKey.validation.regex"
+                    :value="comparisonRelationshipKey.validation.regex"
                     disabled
                     :label="$t('validation.regex')"
                 >
                   <template slot="append-outer"> <info-tooltip :message="$t('help.regex')"></info-tooltip></template>
                 </v-text-field>
                 <v-text-field
-                    v-model.number="comparisonRelationshipKey.validation.max"
+                    :value="comparisonRelationshipKey.validation.max"
                     type="number"
                     :label="$t('validation.max')"
                     disabled
@@ -71,7 +71,7 @@
                   <template slot="append-outer"> <info-tooltip :message="$t('help.max')"></info-tooltip></template>
                 </v-text-field>
                 <v-text-field
-                    v-model.number="comparisonRelationshipKey.validation.min"
+                    :value="comparisonRelationshipKey.validation.min"
                     disabled
                     type="number"
                     :label="$t('validation.min')"
@@ -84,7 +84,7 @@
                 <!-- default value and options should be comboboxes when set to enumeration -->
                 <div v-if="comparisonRelationshipKey.data_type === 'enumeration'" >
                   <v-combobox
-                      v-model="comparisonRelationshipKey.default_value"
+                      :value="comparisonRelationshipKey.default_value"
                       multiple
                       chips
                       clearable
@@ -96,14 +96,14 @@
                 <div v-if="comparisonRelationshipKey.data_type !== 'enumeration'" >
                   <v-text-field
                       v-if="comparisonRelationshipKey.data_type === 'number'"
-                      v-model="comparisonRelationshipKey.default_value"
+                      :value="comparisonRelationshipKey.default_value"
                       type="number"
                       disabled
                       :label="$t('general.defaultValue')"
                   ></v-text-field>
                   <v-select
                       v-else-if="comparisonRelationshipKey.data_type === 'boolean'"
-                      v-model="comparisonRelationshipKey.default_value"
+                      :value="comparisonRelationshipKey.default_value"
                       disabled
                       :label="$t('general.defaultValue')"
                       :items="booleanOptions"
@@ -113,13 +113,13 @@
                   <v-text-field
                       v-else
                       disabled
-                      v-model="comparisonRelationshipKey.default_value"
+                      :value="comparisonRelationshipKey.default_value"
                       :label="$t('general.defaultValue')"
                   ></v-text-field>
                 </div>
 
                 <v-combobox
-                    v-model="comparisonRelationshipKey.options"
+                    :value="comparisonRelationshipKey.options"
                     :label="$t('general.options')"
                     multiple
                     clearable
@@ -138,7 +138,7 @@
                 <v-text-field
                     v-model="selectedMetatypeRelationshipKey.name"
                     :class="(comparisonRelationshipKey && selectedMetatypeRelationshipKey.name !== comparisonRelationshipKey.name) ? 'edited-field' : ''"
-                    :rules="[v => !!v || $t('validation.required')]"
+                    :rules="[validationRule]"
                 >
                   <template v-slot:label>{{$t('general.name')}} <small style="color:red" >*</small></template>
                 </v-text-field>
@@ -146,7 +146,7 @@
                 <v-text-field
                     v-model="selectedMetatypeRelationshipKey.property_name"
                     :class="(comparisonRelationshipKey && selectedMetatypeRelationshipKey.property_name !== comparisonRelationshipKey.property_name) ? 'edited-field' : ''"
-                    :rules="[v => !!v || $t('validation.required')]"
+                    :rules="[validationRule]"
                     required
                 >
                   <template v-slot:label>{{$t('properties.name')}} <small style="color:red" >*</small></template>
@@ -155,7 +155,7 @@
                     v-model="selectedMetatypeRelationshipKey.data_type"
                     :items="dataTypes"
                     @change="selectedMetatypeRelationshipKey.default_value = undefined"
-                    :rules="[v => !!v || $t('validation.required')]"
+                    :rules="[validationRule]"
                     :class="(comparisonRelationshipKey && selectedMetatypeRelationshipKey.data_type !== comparisonRelationshipKey.data_type) ? 'edited-field' : ''"
                     required
                 >
@@ -170,7 +170,7 @@
                     v-model="selectedMetatypeRelationshipKey.description"
                     :class="(comparisonRelationshipKey && selectedMetatypeRelationshipKey.description !== comparisonRelationshipKey.description) ? 'edited-field' : ''"
                     :rows="2"
-                    :rules="[v => !!v || $t('validation.required')]"
+                    :rules="[validationRule]"
                 >
                   <template v-slot:label>{{$t('general.description')}} <small style="color:#ff0000" >*</small></template>
                 </v-textarea>
@@ -268,66 +268,95 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
-import {MetatypeRelationshipKeyT, MetatypeRelationshipT} from "../../../api/types";
+  import Vue, { PropType } from 'vue'
+  import {MetatypeRelationshipKeyT, MetatypeRelationshipT} from "../../../api/types";
 
-@Component
-export default class EditMetatypeRelationshipKeyDialog extends Vue {
-  @Prop({required: true})
-  metatypeRelationship!: MetatypeRelationshipT;
+  interface EditMetatypeRelationshipKeyDialogModel {
+    selectedMetatypeRelationshipKey: MetatypeRelationshipKeyT | null
+    errorMessage: string
+    dialog: boolean
+    formValid: boolean
+    dataTypes: string[]
+    booleanOptions: boolean[]
+  }
 
-  @Prop({required: true})
-  metatypeRelationshipKey!: MetatypeRelationshipKeyT;
+  export default Vue.extend ({
+    name: 'EditMetatypeRelationshipKeyDialog',
 
-  @Prop({required: false, default: undefined})
-  comparisonRelationshipKey!: MetatypeRelationshipKeyT | undefined;
+    props: {
+      metatypeRelationship: {
+        type: Object as PropType<MetatypeRelationshipT>,
+        required: true
+      },
+      metatypeRelationshipKey: {
+        type: Object as PropType<MetatypeRelationshipKeyT>,
+        required: true
+      },
+      comparisonRelationshipKey: {
+        type: [Object, undefined] as PropType<MetatypeRelationshipKeyT | undefined>,
+        required: false, 
+        default: undefined
+      },
+      icon: {
+        type: Boolean,
+        required: false
+      },
+    },
 
-  @Prop({required: false})
-  readonly icon!: boolean
+    data: (): EditMetatypeRelationshipKeyDialogModel => ({
+      selectedMetatypeRelationshipKey:  null,
+      errorMessage: "",
+      dialog: false,
+      formValid: false,
+      dataTypes: ["number", "number64", "float", "float64", "date", "string", "boolean", "enumeration", "file"],
+      booleanOptions: [true, false]
+    }),
 
-  errorMessage = ""
-  dialog = false
-  formValid = false
-  selectedMetatypeRelationshipKey: MetatypeRelationshipKeyT | null  = null
-  dataTypes = ["number", "number64", "float", "float64", "date", "string", "boolean", "enumeration", "file"]
-  booleanOptions = [true, false]
+    watch: {
+      dialog: {
+        immediate: true,
+        handler(newDialog) {
+          if(newDialog){
+            this.selectedMetatypeRelationshipKey = JSON.parse(JSON.stringify(this.metatypeRelationshipKey))
 
-  @Watch('dialog', {immediate: true})
-  onDialogChange() {
-    if(this.dialog){
+            if(this.selectedMetatypeRelationshipKey && !this.selectedMetatypeRelationshipKey.validation) {
+              this.selectedMetatypeRelationshipKey.validation = {regex: "", min: 0, max: 0}
+            }
+          }
+        }
+      },
+    },
+
+    mounted() {
+      // have to do this to avoid mutating properties
       this.selectedMetatypeRelationshipKey = JSON.parse(JSON.stringify(this.metatypeRelationshipKey))
 
       if(this.selectedMetatypeRelationshipKey && !this.selectedMetatypeRelationshipKey.validation) {
         this.selectedMetatypeRelationshipKey.validation = {regex: "", min: 0, max: 0}
       }
-    }
-  }
+    },
 
-  mounted() {
-    // have to do this to avoid mutating properties
-    this.selectedMetatypeRelationshipKey = JSON.parse(JSON.stringify(this.metatypeRelationshipKey))
-
-    if(this.selectedMetatypeRelationshipKey && !this.selectedMetatypeRelationshipKey.validation) {
-      this.selectedMetatypeRelationshipKey.validation = {regex: "", min: 0, max: 0}
+    methods: {
+      editMetatypeKey() {
+        if(this.selectedMetatypeRelationshipKey) {
+          this.selectedMetatypeRelationshipKey.container_id = this.metatypeRelationship.container_id;
+          this.$client.updateMetatypeRelationshipKey(this.metatypeRelationship.container_id,this.metatypeRelationship.id!, this.selectedMetatypeRelationshipKey?.id!, this.selectedMetatypeRelationshipKey)
+              .then(result => {
+                if(!result) {
+                  this.errorMessage = this.$t('errors.errorCommunicating') as string
+                } else {
+                  this.dialog = false
+                  this.$emit('metatypeKeyEdited')
+                }
+              })
+              .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
+        }
+      },
+      validationRule(v: any) {
+        return !!v || this.$t('validation.required')
+      }
     }
-  }
-
-  editMetatypeKey() {
-    if(this.selectedMetatypeRelationshipKey) {
-      this.selectedMetatypeRelationshipKey.container_id = this.metatypeRelationship.container_id;
-      this.$client.updateMetatypeRelationshipKey(this.metatypeRelationship.container_id,this.metatypeRelationship.id!, this.selectedMetatypeRelationshipKey?.id!, this.selectedMetatypeRelationshipKey)
-          .then(result => {
-            if(!result) {
-              this.errorMessage = this.$t('errors.errorCommunicating') as string
-            } else {
-              this.dialog = false
-              this.$emit('metatypeKeyEdited')
-            }
-          })
-          .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
-    }
-  }
-}
+  });
 </script>
 
 <style lang="scss">

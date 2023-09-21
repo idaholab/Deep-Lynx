@@ -25,14 +25,14 @@
             >
               <v-text-field
                   v-model="name"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validationRule]"
                   required
               >
                 <template v-slot:label>{{$t('general.name')}} <small style="color:red" >*</small></template>
               </v-text-field>
               <v-textarea
                   v-model="description"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validationRule]"
                   required
               >
                 <template v-slot:label>{{$t('general.description')}} <small style="color:red" >*</small></template>
@@ -53,43 +53,61 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from 'vue-property-decorator'
+  import Vue from 'vue'
 
-@Component
-export default class CreateMetatypeRelationshipDialog extends Vue {
-  @Prop({required: true})
-  containerID!: string;
-
-  @Prop({required: false})
-  readonly icon!: boolean
-
-  errorMessage = ""
-  dialog = false
-  name = ""
-  description = ""
-  valid = false
-
-  createMetatype() {
-    this.$client.createMetatypeRelationship(this.containerID, this.name, this.description, this.$store.getters.activeOntologyVersionID)
-        .then(result => {
-          if(!result) {
-            this.errorMessage = this.$t('errors.errorCommunicating') as string
-          } else {
-            this.dialog = false
-            // emit only the first object in the result array, as we're only creating
-            // a single metatype
-            this.$emit('metatypeRelationshipCreated', result[0])
-            this.reset()
-          }
-        })
-        .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
+  interface CreateMetatypeRelationshipDialogModel {
+    errorMessage: string
+    dialog: false
+    name: string
+    description: string
+    valid: false
   }
 
-  reset() {
-    this.name = ""
-    this.description = ""
-  }
+  export default Vue.extend ({
+    name: 'CreateMetatypeRelationshipDialog',
 
-}
+    props: {
+      containerID: {
+        type: String,
+        required: true,
+      },
+      icon: {
+        type: Boolean,
+        required: false
+      },
+    },
 
+    data: (): CreateMetatypeRelationshipDialogModel => ({
+      errorMessage: "",
+      dialog: false,
+      name: "",
+      description: "",
+      valid: false
+    }),
+
+    methods: {
+      createMetatype() {
+        this.$client.createMetatypeRelationship(this.containerID, this.name, this.description, this.$store.getters.activeOntologyVersionID)
+            .then(result => {
+              if(!result) {
+                this.errorMessage = this.$t('errors.errorCommunicating') as string
+              } else {
+                this.dialog = false
+                // emit only the first object in the result array, as we're only creating
+                // a single metatype
+                this.$emit('metatypeRelationshipCreated', result[0])
+                this.reset()
+              }
+            })
+            .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
+      },
+      reset() {
+        this.name = ""
+        this.description = ""
+      },
+      validationRule(v: any) {
+        return !!v || this.$t('validation.required')
+      }
+    }
+  });
 </script>

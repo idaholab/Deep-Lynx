@@ -25,14 +25,14 @@
             >
               <v-text-field
                   v-model="metatypeRelationshipKey.name"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validationRule]"
               >
                 <template v-slot:label>{{$t('general.name')}} <small style="color:red" >*</small></template>
               </v-text-field>
 
               <v-text-field
                   v-model="metatypeRelationshipKey.property_name"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validationRule]"
                   required
               >
                 <template v-slot:label>{{$t('properties.name')}} <small style="color:red" >*</small></template>
@@ -42,7 +42,7 @@
                   v-model="metatypeRelationshipKey.data_type"
                   :items="dataTypes"
                   @change="metatypeRelationshipKey.default_value = undefined"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validationRule]"
                   required
               >
                 <template v-slot:label>{{$t('general.dataType')}} <small style="color:red" >*</small></template>
@@ -55,7 +55,7 @@
               <v-textarea
                   v-model="metatypeRelationshipKey.description"
                   :rows="2"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validationRule]"
               >
                 <template v-slot:label>{{$t('general.description')}} <small style="color:red" >*</small></template>
               </v-textarea>
@@ -144,44 +144,69 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
-import {MetatypeRelationshipKeyT, MetatypeRelationshipT} from "../../../api/types";
+  import Vue, { PropType } from 'vue'
+  import {MetatypeRelationshipKeyT, MetatypeRelationshipT} from "../../../api/types";
 
-@Component
-export default class CreateMetatypeRelationshipKeyDialog extends Vue {
-  @Prop({required: true})
-  metatypeRelationship!: MetatypeRelationshipT;
-
-  @Prop({required: false})
-  readonly icon!: boolean
-
-  errorMessage = ""
-  dialog = false
-  formValid = false
-  metatypeRelationshipKey: MetatypeRelationshipKeyT = {validation: {regex: "", min: 0, max: 0}, required: false} as MetatypeRelationshipKeyT
-  dataTypes = ["number", "number64", "float", "float64", "date", "string", "boolean", "enumeration", "file"]
-  booleanOptions = [true, false]
-
-  @Watch('dialog', {immediate: true})
-  onDialogChange() {
-    if(this.dialog) this.metatypeRelationshipKey = {validation: {regex: "", min: 0, max: 0}, required: false} as MetatypeRelationshipKeyT
+  interface CreateMetatypeRelationshipKeyDialogModel {
+    metatypeRelationshipKey: MetatypeRelationshipKeyT
+    errorMessage: string
+    dialog: boolean
+    formValid: boolean
+    dataTypes: string[]
+    booleanOptions: boolean[]
   }
 
-  createMetatypeKey() {
-    if(this.metatypeRelationshipKey) {
-      this.metatypeRelationshipKey.container_id = this.metatypeRelationship.container_id;
-      this.$client.createMetatypeRelationshipKey(this.metatypeRelationship.container_id, this.metatypeRelationship.id!, this.metatypeRelationshipKey)
-          .then(result => {
-            if(!result) {
-              this.errorMessage = this.$t('errors.errorCommunicating') as string
-            } else {
-              this.dialog = false
-              this.$emit('metatypeRelationshipKeyCreated', result[0])
-            }
-          })
-          .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
+  export default Vue.extend ({
+    name: 'CreateMetatypeRelationshipKeyDialog',
+
+    props: {
+      metatypeRelationship: {
+        type: Object as PropType<MetatypeRelationshipT>,
+        required: true
+      },
+      icon: {
+        type: Boolean,
+        required: false},
+    },
+
+    data: (): CreateMetatypeRelationshipKeyDialogModel => ({
+      metatypeRelationshipKey: {validation: {regex: "", min: 0, max: 0}, required: false} as MetatypeRelationshipKeyT,
+      errorMessage: "",
+      dialog: false,
+      formValid: false,
+      dataTypes: ["number", "number64", "float", "float64", "date", "string", "boolean", "enumeration", "file"],
+      booleanOptions: [true, false]
+    }),
+
+    watch: {
+      dialog: {
+        immediate: true,
+        handler(newDialog) {
+         // @ts-ignore
+         if(newDialog) this.metatypeRelationshipKey = {validation: {regex: "", min: 0, max: 0}, required: false} as MetatypeRelationshipKeyT
+        }
+      }
+    },
+
+    methods: {
+      createMetatypeKey() {
+        if(this.metatypeRelationshipKey) {
+          this.metatypeRelationshipKey.container_id = this.metatypeRelationship.container_id;
+          this.$client.createMetatypeRelationshipKey(this.metatypeRelationship.container_id, this.metatypeRelationship.id!, this.metatypeRelationshipKey)
+              .then(result => {
+                if(!result) {
+                  this.errorMessage = this.$t('errors.errorCommunicating') as string
+                } else {
+                  this.dialog = false
+                  this.$emit('metatypeRelationshipKeyCreated', result[0])
+                }
+              })
+              .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
+        }
+      },
+      validationRule(v: any) {
+        return !!v || this.$t('validation.required')
+      },
     }
-  }
-
-}
+  });
 </script>
