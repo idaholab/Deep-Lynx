@@ -1,4 +1,4 @@
-import {BucketRepository, ChangeBucketPayload, Bucket, LegacyTimeseriesColumn} from 'deeplynx';
+import {BucketRepository, LegacyTimeseriesColumn} from 'deeplynx';
 import Config from '../config';
 
 export default class TimeseriesService {
@@ -24,26 +24,6 @@ export default class TimeseriesService {
 
     constructor() {
         this.repo = new BucketRepository();
-    }
-
-    createBucket(payload: ChangeBucketPayload): Promise<Bucket> {
-        return this.repo.createBucket(payload);
-    }
-
-    retrieveBucket(bucketId: number): Promise<Bucket> {
-        return this.repo.retrieveBucket(bucketId);
-    }
-
-    updateBucket(bucketId: number, payload: ChangeBucketPayload): Promise<Bucket> {
-        return this.repo.updateBucket(bucketId, payload);
-    }
-
-    deleteBucket(bucketId: number): Promise<void> {
-        return this.repo.deleteBucket(bucketId);
-    }
-
-    beginCsvIngestion(bucketId: number): Promise<void> {
-        return this.repo.beginCsvIngestion(bucketId);
     }
 
     beginLegacyCsvIngestion(dataSourceID: string, columns: LegacyTimeseriesColumn[]): void {
