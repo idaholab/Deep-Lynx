@@ -169,12 +169,13 @@
 
           <template v-slot:[`item.resulting_types`]="{ item }">
             <div v-for="transformation in item.transformations" :key="transformation.id">
-              <span :class="isDeprecated(transformation)">{{transformation.metatype_name}}</span>
-              <span :class="isDeprecated(transformation)">{{transformation.metatype_relationship_pair_name}}</span>
-              <span :class="isDeprecated(transformation)">{{transformation.name}}</span>
+              <span v-if="transformation.selected_relationship_pair_name" :class="isDeprecated(transformation)">
+                {{ transformation.selected_relationship_pair_name }}</span>
+              <span v-else :class="isDeprecated(transformation)">
+                {{ transformation.metatype_relationship_pair_name }}</span>
             </div>
           </template>
-
+          
           <template v-slot:[`item.sample_payload`]="{ item }">
             <v-icon
                 small

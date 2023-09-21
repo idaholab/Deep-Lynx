@@ -1327,6 +1327,21 @@ export default class TransformationDialog extends Vue {
   selectedTags: TagT[] = []
 
   mounted() {
+
+    this.$client.listMetatypeRelationshipPairs(this.containerID, {
+      name: '',
+      limit: 10000,
+      offset: 0,
+      originID: undefined,
+      destinationID: undefined,
+      ontologyVersion: this.$store.getters.currentOntologyVersionID,
+      loadRelationships: false,
+    })
+        .then(pairs => {
+          this.relationshipPairs = pairs as MetatypeRelationshipPairT[]
+        })
+      .catch(e => this.errorMessage = e)
+        
     if (this.transformation) {
       if (this.transformation.origin_parameters) this.originConfigKeys = JSON.parse(JSON.stringify(this.transformation.origin_parameters));
       if (this.transformation.destination_parameters) this.destinationConfigKeys = JSON.parse(JSON.stringify(this.transformation.destination_parameters));
@@ -1418,7 +1433,6 @@ export default class TransformationDialog extends Vue {
 
     this.conditions = []
     this.relationshipPairSearch = ""
-    this.relationshipPairs = []
     this.selectedRelationshipPair = null
     this.selectedMetatypeRelationshipPairKeys = []
     this.selectedMetatype = null
@@ -1446,27 +1460,39 @@ export default class TransformationDialog extends Vue {
     }
 
     if (this.transformation?.type === 'edge') {
-      this.$client.retrieveMetatypeRelationshipPair(this.containerID, this.transformation?.metatype_relationship_pair_id!)
+      
+      if (this.transformation.selected_relationship_pair_name) {
+        this.selectedRelationshipPair = this.relationshipPairs.filter((p: MetatypeRelationshipPairT) => {
+          return p.name === this.transformation?.selected_relationship_pair_name!;
+        })[0];
+      }
+      else { 
+        //Leaving this as a fallback for transformations that may not have gotten a selected_relationship_pair_name set to maintain
+        //identical function for all tranformations no matter when they were created.
+        this.$client.retrieveMetatypeRelationshipPair(this.containerID, this.transformation?.metatype_relationship_pair_id!)
           .then((pair) => {
-            this.rootArray = this.transformation?.root_array
-            if (Array.isArray(this.transformation?.conditions)) this.conditions = this.transformation?.conditions as Array<TypeMappingTransformationCondition>
-            this.payloadType = 'edge'
-            this.selectedRelationshipPair = pair
-
-            this.uniqueIdentifierKey = this.transformation?.unique_identifier_key
-            this.origin_key = this.transformation?.origin_id_key
-            this.destination_key = this.transformation?.destination_id_key
-
-            if (this.transformation?.origin_parameters) this.originConfigKeys = JSON.parse(JSON.stringify(this.transformation.origin_parameters));
-            if (this.transformation?.destination_parameters) this.destinationConfigKeys = JSON.parse(JSON.stringify(this.transformation.destination_parameters));
-
-
-            if (Array.isArray(this.transformation?.keys)) this.propertyMapping = this.transformation?.keys as Array<{ [key: string]: any }>
-            if(this.propertyMapping) {
-              this.metadataKeys = this.propertyMapping.filter(k => k.is_metadata_key === true).map(k => k.key) as Array<string>
-            }
+            this.selectedRelationshipPair = pair    
           })
           .catch(e => this.errorMessage = e)
+      }
+
+      this.rootArray = this.transformation?.root_array
+      if (Array.isArray(this.transformation?.conditions)) this.conditions = this.transformation?.conditions as Array<TypeMappingTransformationCondition>
+      this.payloadType = 'edge'
+
+
+      this.uniqueIdentifierKey = this.transformation?.unique_identifier_key
+      this.origin_key = this.transformation?.origin_id_key
+      this.destination_key = this.transformation?.destination_id_key
+
+      if (this.transformation?.origin_parameters) this.originConfigKeys = JSON.parse(JSON.stringify(this.transformation.origin_parameters));
+      if (this.transformation?.destination_parameters) this.destinationConfigKeys = JSON.parse(JSON.stringify(this.transformation.destination_parameters));
+
+
+      if (Array.isArray(this.transformation?.keys)) this.propertyMapping = this.transformation?.keys as Array<{ [key: string]: any }>
+      if(this.propertyMapping) {
+        this.metadataKeys = this.propertyMapping.filter(k => k.is_metadata_key === true).map(k => k.key) as Array<string>
+      }
     }
 
     if (this.transformation?.created_at_key) {
@@ -1555,24 +1581,6 @@ export default class TransformationDialog extends Vue {
         .catch((e: any) => this.errorMessage = e)
   }
 
-  @Watch('relationshipPairSearch', {immediate: true})
-  onRelationshipSearchChange(newVal: string, limit = 1000, offset = 0) {
-    if (newVal === "") return
-
-    this.$client.listMetatypeRelationshipPairs(this.containerID, {
-      name: newVal,
-      limit,
-      offset,
-      originID: undefined,
-      destinationID: undefined,
-      ontologyVersion: this.$store.getters.currentOntologyVersionID,
-      loadRelationships: false,
-    })
-        .then(pairs => {
-          this.relationshipPairs = pairs as MetatypeRelationshipPairT[]
-        })
-        .catch(e => this.errorMessage = e)
-  }
 
   @Watch('selectedMetatype', {immediate: true})
   onMetatypeChange(newMetatype: MetatypeT) {
@@ -1782,6 +1790,7 @@ export default class TransformationDialog extends Vue {
       payload.metatype_id = this.selectedMetatype.id
     } else if (this.selectedRelationshipPair) {
       payload.metatype_relationship_pair_id = this.selectedRelationshipPair.id
+      payload.selected_relationship_pair_name = this.selectedRelationshipPair.name
       payload.origin_id_key = this.origin_key
       payload.origin_data_source_id = this.origin_data_source_id
       payload.origin_metatype_id = this.origin_metatype_id
@@ -1805,13 +1814,13 @@ export default class TransformationDialog extends Vue {
     if (this.rootArray) payload.root_array = this.rootArray
 
     this.$client.createTypeMappingTransformation(this.containerID, this.dataSourceID, this.typeMappingID, payload as TypeMappingTransformationPayloadT)
-        .then((transformation) => {
-          this.loading = false
-          this.reset()
-          this.dialog = false
-          this.$emit("transformationCreated", transformation)
-        })
-        .catch((e) => this.errorMessage = e)
+      .then((transformation) => {
+        this.loading = false
+        this.reset()
+        this.dialog = false
+        this.$emit("transformationCreated", transformation)
+      })
+      .catch((e) => this.errorMessage = e)
   }
 
   editTransformation() {
@@ -1827,6 +1836,7 @@ export default class TransformationDialog extends Vue {
     // include either the metatype or metatype relationship pair id, not both
     payload.metatype_id = (this.selectedMetatype?.id) ? this.selectedMetatype.id : ""
     payload.metatype_relationship_pair_id = (this.selectedRelationshipPair?.id) ? this.selectedRelationshipPair.id : ""
+    payload.selected_relationship_pair_name = (this.selectedRelationshipPair?.name) ? this.selectedRelationshipPair.name : ""
     payload.type = this.payloadType
     payload.name = this.name
     payload.origin_id_key = this.origin_key
@@ -1852,13 +1862,13 @@ export default class TransformationDialog extends Vue {
     if (this.selectedTags.length > 0) payload.tags = this.selectedTags
 
     this.$client.updateTypeMappingTransformation(this.containerID, this.dataSourceID, this.typeMappingID, this.transformation?.id!, payload as TypeMappingTransformationPayloadT)
-        .then((transformation) => {
-          this.loading = false
-          this.reset()
-          this.dialog = false
-          this.$emit("transformationUpdated", transformation)
-        })
-        .catch((e) => this.errorMessage = e)
+      .then((transformation) => {
+        this.loading = false
+        this.reset()
+        this.dialog = false
+        this.$emit("transformationUpdated", transformation)
+      })
+      .catch((e) => this.errorMessage = e)
   }
 
   payloadTypes() {
@@ -2309,19 +2319,19 @@ export default class TransformationDialog extends Vue {
         operator: "==",
         value: this.transformation.origin_metatype_id // yes it needs to be the uuid, but the search box will auto handle this
       } as EdgeConfigKeyT,
-        {
-          id: uuidv4(),
-          type: 'data_source',
-          operator: "==",
-          value: this.transformation.origin_data_source_id
-        },
-        {
-          id: uuidv4(),
-          type: 'original_id',
-          operator: "==",
-          key: this.transformation.origin_id_key,
-          value: null,
-        }
+      {
+        id: uuidv4(),
+        type: 'data_source',
+        operator: "==",
+        value: this.transformation.origin_data_source_id
+      },
+      {
+        id: uuidv4(),
+        type: 'original_id',
+        operator: "==",
+        key: this.transformation.origin_id_key,
+        value: null,
+      }
       ]
 
       this.destinationConfigKeys = [{
@@ -2330,19 +2340,19 @@ export default class TransformationDialog extends Vue {
         operator: "==",
         value: this.transformation.destination_metatype_id // yes it needs to be the uuid, but the search box will auto handle this
       } as EdgeConfigKeyT,
-        {
-          id: uuidv4(),
-          type: 'data_source',
-          operator: "==",
-          value: this.transformation.destination_data_source_id
-        },
-        {
-          id: uuidv4(),
-          type: 'original_id',
-          operator: "==",
-          key: this.transformation.destination_id_key,
-          value: null
-        }]
+      {
+        id: uuidv4(),
+        type: 'data_source',
+        operator: "==",
+        value: this.transformation.destination_data_source_id
+      },
+      {
+        id: uuidv4(),
+        type: 'original_id',
+        operator: "==",
+        key: this.transformation.destination_id_key,
+        value: null
+      }]
 
       this.origin_key = null
       this.destination_key = null

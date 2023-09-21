@@ -94,12 +94,12 @@ export type MetatypeKeyT = {
     data_type: 'number' | 'number64' | 'float' | 'float64' | 'date' | 'string' | 'boolean' | 'enumeration' | 'file';
     archived: boolean;
     validation:
-        | {
-              regex: string;
-              min: number;
-              max: number;
-          }
-        | undefined;
+    | {
+        regex: string;
+        min: number;
+        max: number;
+    }
+    | undefined;
     options: string[] | undefined;
     default_value: string | boolean | number | any[] | undefined;
     created_at?: string;
@@ -482,6 +482,7 @@ export type TypeMappingTransformationT = {
     };
     metatype_id?: string;
     metatype_relationship_pair_id?: string;
+    selected_relationship_pair_name?: string;
     origin_id_key?: string;
     origin_metatype_id?: string;
     origin_data_source_id?: string;
@@ -507,6 +508,7 @@ export type TypeMappingTransformationPayloadT = {
     conditions?: TypeMappingTransformationCondition[];
     metatype_id?: string;
     metatype_relationship_pair_id?: string;
+    selected_relationship_pair_name?: string;
     origin_id_key?: string;
     origin_metatype_id?: string;
     origin_data_source_id?: string;

@@ -35,14 +35,16 @@
         >
           <template v-slot:item.names="{ item }">
             <span v-if="item.archived" class="text--disabled">
-              {{item.metatype_name}}
-              {{item.metatype_relationship_pair_name}}
-              {{item.name}}
+              <span v-if="item.selected_relationship_pair_name">
+                {{ item.selected_relationship_pair_name }}</span>
+              <span v-else>
+                {{ item.metatype_relationship_pair_name }}</span>
             </span>
             <span v-else>
-              {{item.metatype_name}}
-              {{item.metatype_relationship_pair_name}}
-              {{item.name}}
+              <span v-if="item.selected_relationship_pair_name">
+                {{ item.selected_relationship_pair_name }}</span>
+              <span v-else>
+                {{ item.metatype_relationship_pair_name }}</span>
             </span>
           </template>
           <template v-slot:item.actions="{ item }">
