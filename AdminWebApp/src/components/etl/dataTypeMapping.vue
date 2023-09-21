@@ -35,17 +35,21 @@
         >
           <template v-slot:item.names="{ item }">
             <span v-if="item.archived" class="text--disabled">
+              {{ item.metatype_name }}
               <span v-if="item.selected_relationship_pair_name">
                 {{ item.selected_relationship_pair_name }}</span>
               <span v-else>
                 {{ item.metatype_relationship_pair_name }}</span>
+              {{ item.name }}
             </span>
             <span v-else>
+              {{ item.metatype_name }}
               <span v-if="item.selected_relationship_pair_name">
                 {{ item.selected_relationship_pair_name }}</span>
               <span v-else>
                 {{ item.metatype_relationship_pair_name }}</span>
-            </span>
+              {{ item.name }}
+            </span>            
           </template>
           <template v-slot:item.actions="{ item }">
             <transformation-dialog
