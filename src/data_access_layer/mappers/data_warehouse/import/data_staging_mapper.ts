@@ -2,6 +2,14 @@ import Mapper from '../../mapper';
 import Result from '../../../../common_classes/result';
 import {PoolClient, QueryConfig} from 'pg';
 import {DataStaging} from '../../../../domain_objects/data_warehouse/import/import';
+import {QueueFactory} from '../../../../services/queue/queue';
+import PostgresAdapter from '../../db_adapters/postgres/postgres';
+import QueryStream from 'pg-query-stream';
+import {plainToClass} from 'class-transformer';
+import Config from '../../../../services/config';
+import Logger from '../../../../services/logger';
+import {Transform, TransformCallback} from 'stream';
+const devnull = require('dev-null');
 
 const format = require('pg-format');
 
@@ -138,6 +146,68 @@ export default class DataStagingMapper extends Mapper {
         return super.runAsTransaction(this.deleteDataOlderThanRetention());
     }
 
+    // this sends all data staging records for a given data source and potentially a type mapping shape hashe to the queue to be
+    // processed - this is mainly used in the reactive type mapping process
+    public async SendToQueue(dataSourceID: string, shapehash?: string): Promise<Result<boolean>> {
+        // now we stream process this part because we might have a large number of
+        // records, and we really don't want to read that into memory - we also don't wait
+        // for this to complete as it could take a night and a day
+        const queue = await QueueFactory();
+        void PostgresAdapter.Instance.Pool.connect((err, client, done) => {
+            const stream = client.query(new QueryStream(this.listForQueue(dataSourceID, shapehash)));
+            let putPromises: Promise<boolean>[] = [];
+
+            class transform extends Transform {
+                constructor() {
+                    super({
+                        objectMode: true,
+                        transform(data: any, encoding: BufferEncoding, callback: TransformCallback) {
+                            const staging = plainToClass(DataStaging, data as object);
+
+                            putPromises.push(queue.Put(Config.process_queue, staging));
+
+                            // check the buffer, await if needed
+                            if (putPromises.length > 500) {
+                                const buffer = [...putPromises];
+                                putPromises = [];
+                                void Promise.all(buffer)
+                                    .catch((e) => {
+                                        Logger.error(`error while awaiting put promises ${JSON.stringify(e)}`);
+                                        callback(e, null);
+                                    })
+                                    .finally(() => {
+                                        callback(null, staging);
+                                    });
+                            } else {
+                                callback(null, staging);
+                            }
+                        },
+                    });
+                }
+            }
+
+            const emitterStream = new transform();
+
+            emitterStream.on('end', () => {
+                done();
+            });
+
+            emitterStream.on('error', (e: Error) => {
+                Logger.error(`unexpected error in emitting records to processing thread ${JSON.stringify(e)}`);
+            });
+
+            stream.on('error', (e: Error) => {
+                Logger.error(`unexpected error in emitting records to processing thread ${JSON.stringify(e)}`);
+            });
+
+            // we pipe to devnull because we need to trigger the stream and don't
+            // care where the data ultimately ends up
+            stream.pipe(emitterStream).pipe(devnull({objectMode: true}));
+        });
+
+        return Promise.resolve(Result.Success(true));
+    }
+
     // we must also vacuum as part of the data retention delete, but you can't run vacuum as part of a transaction
     // so we pull it out into its own statement
     public Vacuum(): Promise<Result<boolean>> {
@@ -145,25 +215,31 @@ export default class DataStagingMapper extends Mapper {
     }
 
     private createStatement(...data: DataStaging[]): string {
-        const text = `INSERT INTO data_staging(
+        const text = `WITH results AS (INSERT INTO data_staging(
                          data_source_id,
                          import_id,
                          data,
                          shape_hash,
-                         file_attached) VALUES %L RETURNING *`;
+                         file_attached) VALUES %L RETURNING *) 
+                    SELECT results.*, data_sources.container_id, data_sources.config as data_source_config
+                    FROM results
+                    LEFT JOIN data_sources ON results.data_source_id = data_sources.id`;
         const values = data.map((d) => [d.data_source_id, d.import_id, JSON.stringify(d.data), d.shape_hash, d.file_attached]);
 
         return format(text, values);
     }
 
     private fullUpdateStatement(...data: DataStaging[]): string {
-        const text = `UPDATE data_staging AS s SET
+        const text = `WITH results AS (UPDATE data_staging AS s SET
                          data_source_id = u.data_source_id::bigint,
                          import_id = u.import_id::bigint,
                          data = u.data::jsonb,
                          shape_hash = u.shape_hash::text
                         FROM(VALUES %L) AS u(id,data_source_id, import_id, data, shape_hash)
-                        WHERE u.id::uuid = s.id RETURNING s.*`;
+                        WHERE u.id::uuid = s.id RETURNING s.*)
+                      SELECT results.*, data_sources.container_id, data_sources.config as data_source_config
+                      FROM results
+                               LEFT JOIN data_sources ON results.data_source_id = data_sources.id `;
         const values = data.map((d) => [d.id, d.data_source_id, d.import_id, JSON.stringify(d.data), d.shape_hash]);
 
         return format(text, values);
@@ -195,6 +271,26 @@ export default class DataStagingMapper extends Mapper {
                    OFFSET $2 LIMIT $3`,
             values: [importID, offset, limit],
         };
+    }
+
+    private listForQueue(dataSourceID: string, shapehash?: string): string {
+        if (shapehash) {
+            const text = `SELECT data_staging.*, data_sources.container_id, data_sources.config as data_source_config
+                FROM data_staging
+                    LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id
+                    WHERE data_staging.inserted_at IS NULL AND data_staging.data_source_id = $1 `;
+            const values = [dataSourceID];
+
+            return format(text, values);
+        }
+
+        const text = `SELECT data_staging.*, data_sources.container_id, data_sources.config as data_source_config
+                FROM data_staging
+                    LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id
+                    WHERE data_staging.inserted_at IS NULL AND data_staging.data_source_id = $1 AND data_staging.shape_hash = $2 `;
+        const values = [dataSourceID, shapehash];
+
+        return format(text, values);
     }
 
     private listIDOnly(importID: string): QueryConfig {

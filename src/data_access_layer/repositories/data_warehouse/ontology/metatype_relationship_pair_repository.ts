@@ -145,6 +145,8 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
             Object.assign(p, created.value);
         }
 
+        await this.#mapper.RefreshView();
+
         // we want to ensure we always have the latest relationship values
         const loaded = await this.loadRelationships(p);
         if (loaded.isError) Logger.error(loaded.error?.error!);
@@ -248,6 +250,7 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
                 }),
             );
 
+        await this.#mapper.RefreshView();
         return Promise.resolve(Result.Success(true));
     }
 

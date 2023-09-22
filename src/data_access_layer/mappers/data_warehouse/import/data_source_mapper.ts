@@ -128,7 +128,7 @@ export default class DataSourceMapper extends Mapper {
 
     public async retrieveTimeseriesRowCount(tableName: string): Promise<Result<number>> {
         const countVal = await super.retrieve<any>(this.getHypertableRowCountTimescale(tableName));
-        const count = countVal.value['count']
+        const count = countVal.value.count;
 
         if (Number(count) === 0 && Config.timescaledb_enabled) {
             // perform a second count not using timescale, since the timescale count
@@ -363,7 +363,7 @@ export default class DataSourceMapper extends Mapper {
 
     // should only be used with a streaming query so as not to swamp memory
     public listAllActiveStatement(): string {
-        return `SELECT * FROM data_sources WHERE active IS TRUE`;
+        return `SELECT * FROM data_sources WHERE active IS TRUE AND adapter_type <> 'timeseries'`;
     }
 
     // we're only pulling the ID here because that's all we need for the re-queue process, we
