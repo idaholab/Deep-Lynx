@@ -3,7 +3,7 @@ import {Readable} from 'stream';
 import Config from '../config';
 import AzureBlobImpl from './azure_blob_impl';
 import Filesystem from './filesystem_impl';
-import LargeObject from './pg_large_file_impl';
+import LargeObjectImpl from './pg_large_file_impl';
 import File from '../../domain_objects/data_warehouse/data/file';
 import MinioBlobImpl from './minio_impl';
 
@@ -12,7 +12,15 @@ import MinioBlobImpl from './minio_impl';
     Implementations should be able to handle any file type.
  */
 export interface BlobStorage {
-    uploadPipe(filepath: string, filename: string, stream: Readable | null, contentType?: string, encoding?: string): Promise<Result<BlobUploadResponse>>;
+    uploadPipe(
+        filepath: string,
+        filename: string,
+        stream: Readable | null,
+        contentType?: string,
+        encoding?: string,
+        options?: BlobUploadOptions,
+    ): Promise<Result<BlobUploadResponse>>;
+    appendPipe(file: File, stream: Readable | null): Promise<Result<boolean>>;
     deleteFile(file: File): Promise<Result<boolean>>;
     downloadStream(file: File): Promise<Readable | undefined>;
     name(): string;
@@ -42,7 +50,7 @@ export default function BlobStorageProvider(adapterName?: string): BlobStorage |
         }
 
         case 'largeobject': {
-            return new LargeObject();
+            return new LargeObjectImpl();
         }
 
         case 'minio': {
@@ -58,3 +66,7 @@ export default function BlobStorageProvider(adapterName?: string): BlobStorage |
 
     return null;
 }
+
+export type BlobUploadOptions = {
+    canAppend: boolean;
+};

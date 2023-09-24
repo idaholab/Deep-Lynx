@@ -36,7 +36,7 @@ export default class File extends BaseDomainClass {
 
     @IsObject()
     @IsOptional()
-    metadata: object = {};
+    metadata: {[key: string]: any} = {};
 
     @IsString()
     @IsOptional()
@@ -51,13 +51,13 @@ export default class File extends BaseDomainClass {
         md5hash?: string;
         adapter_file_path: string;
         adapter: string;
-        metadata?: object;
+        metadata?: {[key: string]: any};
         short_uuid?: string;
     }) {
         super();
 
         if (input) {
-            if(input.id) this.id = input.id;
+            if (input.id) this.id = input.id;
             this.container_id = input.container_id;
             if (input.data_source_id) this.data_source_id = input.data_source_id;
             this.file_name = input.file_name;

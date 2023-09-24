@@ -1,4 +1,4 @@
-import { expect } from 'chai';
+import {expect} from 'chai';
 import * as fs from 'fs';
 import Logger from '../../../services/logger';
 import Filesystem from '../../../services/blob_storage/filesystem_impl';
@@ -24,8 +24,8 @@ describe('Filesystem storage can', async () => {
             file_size: 200,
             adapter_file_path: 'test/',
             adapter: '',
-            container_id: ''
-        })
+            container_id: '',
+        });
 
         const result = await provider.uploadPipe(file.adapter_file_path!, file.file_name!, readable, 'text/plain', 'utf8');
         if (result) {
@@ -40,6 +40,46 @@ describe('Filesystem storage can', async () => {
         return provider.deleteFile(file);
     });
 
+    it('can append to a file', async () => {
+        const readable = fs.createReadStream('./.env-sample');
+
+        const file = new File({
+            file_name: '.env-sample',
+            file_size: 200,
+            adapter_file_path: 'test/',
+            adapter: '',
+            container_id: '',
+        });
+
+        const result = await provider.uploadPipe(file.adapter_file_path!, file.file_name!, readable, 'text/plain', 'utf8');
+        if (result) {
+            expect(result.isError).false;
+        } else {
+            expect(false).true;
+        }
+
+        // manually overwriting filepath with directory
+        file.adapter_file_path = result.value.filepath;
+        readable.close();
+
+        const append = fs.createReadStream('./.docker-env');
+        // now append
+        const appendResult = await provider.appendPipe(file, append);
+        expect(appendResult.isError).false;
+
+        const s = fs.createWriteStream('.out-sample');
+
+        // as long as the stream is open and not undefined, we can count this test as successful
+        const stream = await provider.downloadStream(file);
+        expect(stream).not.undefined;
+
+        stream?.pipe(s);
+
+        fs.unlinkSync('.out-sample');
+
+        return provider.deleteFile(file);
+    });
+
     it('can download a file', async () => {
         const readable = fs.createReadStream('./.env-sample');
 
@@ -48,8 +88,8 @@ describe('Filesystem storage can', async () => {
             file_size: 200,
             adapter_file_path: 'test/',
             adapter: '',
-            container_id: ''
-        })
+            container_id: '',
+        });
 
         const result = await provider.uploadPipe(file.adapter_file_path!, file.file_name!, readable, 'text/plain', 'utf8');
         if (result) {

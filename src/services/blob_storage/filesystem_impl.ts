@@ -1,4 +1,4 @@
-import {BlobStorage, BlobUploadResponse} from './blob_storage';
+import {BlobStorage, BlobUploadOptions, BlobUploadResponse} from './blob_storage';
 import Result from '../../common_classes/result';
 import {Readable} from 'stream';
 import * as fs from 'fs';
@@ -44,6 +44,7 @@ export default class Filesystem implements BlobStorage {
         stream: Readable | null,
         contentType?: string,
         encoding?: string,
+        options?: BlobUploadOptions,
     ): Promise<Result<BlobUploadResponse>> {
         if (!this._directory) {
             if (stream) {
@@ -91,6 +92,35 @@ export default class Filesystem implements BlobStorage {
                 short_uuid: shortUUID,
             } as BlobUploadResponse),
         );
+    }
+
+    async appendPipe(file: File, stream: Readable | null): Promise<Result<boolean>> {
+        if (!this._directory) {
+            if (stream) {
+                // unpipe and end the stream so that busboy finish event will be emitted
+                stream.unpipe();
+                stream.emit('end');
+            }
+            return Promise.resolve(Result.Failure('directory does not exist or was unable to be opened'));
+        }
+
+        const shortUUID = short.generate();
+
+        // Windows directories use backslashes instead of forward slashes in unix like systems
+
+        if (!fs.existsSync(file.adapter_file_path!)) {
+            fs.mkdirSync(file.adapter_file_path!, {recursive: true});
+        }
+
+        const writeStream = fs.createWriteStream(`${file.adapter_file_path}${file.file_name}${file.short_uuid}`, {flags: 'a'});
+
+        stream?.on('error', (err: Error) => {
+            Logger.error(`error saving file to filesystem ${err}`);
+        });
+
+        stream?.pipe(writeStream);
+
+        return Promise.resolve(Result.Success(true));
     }
 
     downloadStream(f: File): Promise<Readable | undefined> {
