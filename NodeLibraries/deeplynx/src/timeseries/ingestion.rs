@@ -5,7 +5,6 @@ use chrono::NaiveDateTime;
 use futures::StreamExt;
 use sqlx::{Pool, Postgres};
 use std::io::Read;
-use deltalake::arrow::compute::kernels::length::length;
 
 /// ingest_csv_legacy allows us to use the same paradigm as all other bucket ingestion patterns here
 /// to ingest csv data formatted for the original DeepLynx timeseries integration
