@@ -274,7 +274,7 @@ export default class DataStagingMapper extends Mapper {
     }
 
     private listForQueue(dataSourceID: string, shapehash?: string): string {
-        if (shapehash) {
+        if (!shapehash) {
             const text = `SELECT data_staging.*, data_sources.container_id, data_sources.config as data_source_config
                 FROM data_staging
                     LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id
