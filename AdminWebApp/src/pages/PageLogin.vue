@@ -45,7 +45,7 @@
 <script lang="ts">
   import Vue from 'vue'
   import Config from '@/config'
-  import LanguageSelect from '@/components/general/languageSelect.vue'
+  import LanguageSelect from '@/components/general/LanguageSelect.vue'
   import buildURL from "build-url"
 
   export default Vue.extend ({

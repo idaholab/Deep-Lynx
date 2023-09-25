@@ -102,7 +102,7 @@ import {Component, Prop, Vue, Watch} from "vue-property-decorator";
 import {FileT, NodeT} from "@/api/types";
 import Config from "@/config";
 import {mdiFileDocumentMultiple} from "@mdi/js";
-import IfcViewer from "@/components/general/ifcViewer.vue";
+import IfcViewer from "@/components/general/IfcViewer.vue";
 import 'viewerjs/dist/viewer.css';
 import Viewer from 'viewerjs';
 import {AxiosBasicCredentials, AxiosRequestConfig, AxiosResponse, default as axios} from "axios";

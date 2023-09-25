@@ -592,7 +592,7 @@
   import ViewContainerUsers from "@/views/ViewContainerUsers.vue"
   import ViewContainers from "@/views/ViewContainers.vue"
   import ViewApiKeys from "@/views/ViewApiKeys.vue";
-  import LanguageSelect from "@/components/general/languageSelect.vue";
+  import LanguageSelect from "@/components/general/LanguageSelect.vue";
   import ContainerSelect from "@/components/ontology/containers/containerSelect.vue"
   import {TranslateResult} from "vue-i18n";
   import {UserT} from "@/auth/types";

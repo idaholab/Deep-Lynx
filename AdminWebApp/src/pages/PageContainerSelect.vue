@@ -79,7 +79,7 @@
 
 <script lang="ts">
   import Vue from 'vue'
-  import LanguageSelect from '@/components/general/languageSelect.vue'
+  import LanguageSelect from '@/components/general/LanguageSelect.vue'
   import {ContainerT, UserContainerInviteT} from "@/api/types";
   import ContainerSelect from "@/components/ontology/containers/containerSelect.vue"
   import CreateContainerDialog from "@/components/ontology/containers/createContainerDialog.vue";

@@ -59,7 +59,7 @@
 
 <script lang="ts">
   import Vue from 'vue'
-  import LanguageSelect from '@/components/general/languageSelect.vue'
+  import LanguageSelect from '@/components/general/LanguageSelect.vue'
 
   export default Vue.extend ({
     name: 'PageContainerInvite',
@@ -80,7 +80,7 @@
       }
     },
 
-    components: { LanguageSelect,  },
+    components: { LanguageSelect },
 
     methods: {
       emailRules() {
