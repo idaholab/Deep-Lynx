@@ -197,11 +197,11 @@
   import Vue from 'vue'
   import { VueConstructor } from 'vue';
   import {DataSourceT , ImportDataT, ImportT} from "@/api/types";
-  import ImportDataDialog from "@/components/dataImport/importDataDialog.vue";
+  import ImportDataDialog from "@/components/dataImport/ImportDataDialog.vue";
   import DataTypeMapping from "@/components/etl/dataTypeMapping.vue"
   import SelectDataSource from "@/components/dataSources/SelectDataSource.vue";
-  import DeleteDataImportDialog from "@/components/dataImport/deleteDataImportDialog.vue";
-  import ReprocessDataImportDialog from "@/components/dataImport/reprocessDataImportDialog.vue";
+  import DeleteDataImportDialog from "@/components/dataImport/DeleteDataImportDialog.vue";
+  import ReprocessDataImportDialog from "@/components/dataImport/ReprocessDataImportDialog.vue";
   import {mdiFileDocumentMultiple} from "@mdi/js";
   import TimeseriesViewerDialog from '@/components/data/TimeseriesViewerDialog.vue';
 
