@@ -5,6 +5,7 @@ use chrono::NaiveDateTime;
 use futures::StreamExt;
 use sqlx::{Pool, Postgres};
 use std::io::Read;
+use deltalake::arrow::compute::kernels::length::length;
 
 /// ingest_csv_legacy allows us to use the same paradigm as all other bucket ingestion patterns here
 /// to ingest csv data formatted for the original DeepLynx timeseries integration
@@ -74,9 +75,8 @@ pub async fn ingest_csv_legacy<T: Read>(
   // buffered
   while let Some(record) = csv_reader.records().next() {
     let record = record?;
-    let mut new_record: Vec<String> = vec![];
 
-    for position in &positions {
+    for (i, position) in positions.iter().enumerate() {
       let value = record
         .get(position.index)
         .ok_or(TimeseriesError::Unwrap("csv record field".to_string()))?;
@@ -89,15 +89,17 @@ pub async fn ingest_csv_legacy<T: Read>(
           };
 
           let timestamp = NaiveDateTime::parse_from_str(value, format_string.as_str())?;
-          new_record.push(timestamp.to_string())
+          copier.send(timestamp.to_string().as_bytes()).await?
         }
-        _ => new_record.push(value.to_string()),
+        _ => copier.send(value.to_string().as_bytes()).await?
       };
-    }
 
-    copier
-      .send([new_record.join(",").as_bytes(), "\n".as_bytes()].concat())
-      .await?;
+      if i == &positions.len() - 1  {
+       copier.send("\n".as_bytes()).await?;
+      } else {
+        copier.send(",".as_bytes()).await?;
+      }
+    }
   }
 
   copier.finish().await?;
