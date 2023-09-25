@@ -327,6 +327,7 @@ export default class TypeTransformation extends BaseDomainClass {
     created_at_format_string?: string;
 
     @ValidateNested()
+    @IsOptional()
     @Type(() => MappingTag)
     tags: MappingTag[] = [];
 
