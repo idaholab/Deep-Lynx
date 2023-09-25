@@ -195,11 +195,12 @@ describe('A User Repository', async () => {
         const invite = new ContainerUserInvite({
             email: u.email,
             originUser: user,
+            role_name: 'user',
             container,
         });
 
         results = await repository.inviteUserToContainer(user, invite);
-        expect(results.isError).false;
+        expect(results.isError, `${JSON.stringify(results.error)}`).false;
         expect(invite.token).not.undefined;
 
         // now we accept the invite

@@ -15,6 +15,7 @@ import TimeseriesDataSourceImpl from '../../../../interfaces_and_impl/data_wareh
 import File from '../../../../domain_objects/data_warehouse/data/file';
 import {plainToClass} from 'class-transformer';
 import TimeseriesService from '../../../../services/timeseries/timeseries';
+import DataStagingMapper from '../../../mappers/data_warehouse/import/data_staging_mapper';
 
 /*
     DataSourceRepository contains methods for persisting and retrieving data sources
@@ -238,6 +239,9 @@ export default class DataSourceRepository extends Repository implements Reposito
         if (t.DataSourceRecord && t.DataSourceRecord.id) {
             const set = await this.#mapper.SetActive(t.DataSourceRecord.id, user.id!);
             if (set.isError) return Promise.resolve(Result.Pass(set));
+
+            await DataStagingMapper.Instance.SendToQueue(t.DataSourceRecord.id);
+
             return Promise.resolve(Result.Success(true));
         } else return Promise.resolve(Result.Failure(`data source's record must be instantiated and have an id`));
     }

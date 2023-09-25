@@ -1058,6 +1058,9 @@ describe('Using a new GraphQL Query on graph return we', async () => {
     });
 
     it('can return metatype ids', async () => {
+        await MetatypeRelationshipPairMapper.Instance.RefreshView();
+        await MetatypeKeyMapper.Instance.RefreshView();
+
         const response = await graphql({
             schema,
             source: `{

@@ -12,8 +12,6 @@ import {EdgeQueueItem, IsEdges} from '../domain_objects/data_warehouse/data/edge
 import DataStagingRepository from '../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import {DataStagingFile, NodeFile} from '../domain_objects/data_warehouse/data/file';
 import NodeMapper from '../data_access_layer/mappers/data_warehouse/data/node_mapper';
-import Cache from '../services/cache/cache';
-import Config from '../services/config';
 import EdgeQueueItemMapper from '../data_access_layer/mappers/data_warehouse/data/edge_queue_item_mapper';
 import {classToPlain} from 'class-transformer';
 import {MappingTag} from '../domain_objects/data_warehouse/etl/type_transformation';
@@ -33,9 +31,6 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
     const nodeRepository = new NodeRepository();
 
     const transaction = await stagingMapper.startTransaction();
-
-    // first thing we do is set the cache to a lower ttl for this import, indicating that we are currently processing it
-    await Cache.set(`imports:${staging.import_id}`, {}, Config.import_cache_ttl);
 
     // pull the transformations, abort if none
     if (!staging.shape_hash) {

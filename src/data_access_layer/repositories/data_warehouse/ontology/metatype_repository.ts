@@ -120,6 +120,7 @@ export default class MetatypeRepository extends Repository implements Repository
             }
         }
 
+        await this.#keyMapper.RefreshView(transaction.value);
         return Promise.resolve(Result.Success(true));
     }
 
@@ -209,6 +210,7 @@ export default class MetatypeRepository extends Repository implements Repository
             return Promise.resolve(Result.Failure(`unable to commit changes to database ${committed.error}`));
         }
 
+        await this.#keyMapper.RefreshView(transaction.value);
         return Promise.resolve(Result.Success(true));
     }
 

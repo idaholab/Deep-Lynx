@@ -139,8 +139,8 @@ export default class MetatypeKeyMapper extends Mapper {
         return super.runStatement(this.unarchiveStatement(id, userID));
     }
 
-    public RefreshView(): Promise<Result<boolean>> {
-        return super.runStatement(this.refreshViewStatement());
+    public RefreshView(transaction?: PoolClient): Promise<Result<boolean>> {
+        return super.runStatement(this.refreshViewStatement(), {transaction});
     }
 
     // these functions are copies only to be used on container import. they do not refresh the keys view.
