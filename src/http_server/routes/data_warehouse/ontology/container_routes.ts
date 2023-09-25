@@ -276,6 +276,8 @@ export default class ContainerRoutes {
         });
 
         busboy.on('finish', () => {
+            input.ontology_versioning_enabled = req.container?.config?.data_versioning_enabled;
+
             containerImport
                 .ImportOntology(user, input as ContainerImportT, fileBuffer, req.query.dryrun === 'false', true, req.params.containerID)
                 .then((result) => {
