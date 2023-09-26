@@ -642,15 +642,11 @@ impl Edge {
                 property_final.extend(4_i8.to_ne_bytes());
                 let n: u64 = n.as_u64().unwrap();
                 property_final.extend(n.to_ne_bytes());
-              }
-
-              if n.is_i64() {
+              } else if n.is_i64() {
                 property_final.extend(4_i8.to_ne_bytes());
                 let n: i64 = n.as_i64().unwrap();
                 property_final.extend(n.to_ne_bytes())
-              }
-
-              if n.is_f64() {
+              } else if n.is_f64() {
                 property_final.extend(2_i8.to_ne_bytes());
                 let n: f64 = n.as_f64().unwrap();
                 property_final.extend(n.to_ne_bytes());
