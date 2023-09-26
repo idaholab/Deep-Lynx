@@ -31,7 +31,7 @@
                   :label="$t('files.new')"
                   @change="changeFile"
                   v-model="fileToUpload"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validateFileInput]"
               ></v-file-input>
 
             </v-form>
@@ -54,47 +54,71 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from "vue-property-decorator"
+  import Vue from 'vue'
 
-@Component
-export default class EditFileSetDialog extends Vue {
-  @Prop({required: true})
-  readonly containerID!: string;
-
-  @Prop({required: true})
-  readonly file!: any;
-
-  @Prop({required: false, default: true})
-  readonly icon!: boolean
-
-  errorMessage = ""
-  dialog= false
-  valid = true
-  fileToUpload: File | null = null
-
-  changeFile(file: File) {
-    this.fileToUpload = file;
+  interface EditFileSetDialogModel {
+    fileToUpload: File | null;
+    errorMessage: string;
+    dialog: boolean;
+    valid: boolean;
   }
 
-  updateFile() {
-    // @ts-ignore
-    if(!this.$refs.form!.validate()) return;
-
-    this.$client.updateWebGLFiles(this.containerID, this.file.file_id!, [this.fileToUpload!])
-        .then(() => {
-          this.$emit('fileUpdated');
-          this.clearNewFileSet();
-        })
-        .catch(e => this.errorMessage = e)
-
+  interface VForm extends Vue {
+    validate: () => boolean;
   }
 
-  clearNewFileSet() {
-    this.fileToUpload = null;
-    this.dialog = false;
-  }
+  export default Vue.extend ({
+    name: 'EditFileSetDialog',
 
-}
+    props: {
+      containerID: {
+        required: true,
+        type: String
+      },
+      file: {
+        required: true,
+        type: Object,
+      },
+      icon: {
+        required: false,
+        default: "none",
+        type: String,
+        validator: (value: string) => ["trash", "none"].includes(value)
+      }
+    },
+
+    data: (): EditFileSetDialogModel => ({
+      fileToUpload: null,
+      errorMessage: "",
+      dialog: false,
+      valid: true
+    }),
+
+    methods: {
+      changeFile(file: File) {
+        this.fileToUpload = file;
+      },
+      updateFile() {
+        const form = this.$refs.form as VForm;
+        if(!form.validate()) return;
+
+        this.$client.updateWebGLFiles(this.containerID, this.file.file_id!, [this.fileToUpload!])
+            .then(() => {
+              this.$emit('fileUpdated');
+              this.clearNewFileSet();
+            })
+            .catch(e => this.errorMessage = e)
+
+      },
+      clearNewFileSet() {
+        this.fileToUpload = null;
+        this.dialog = false;
+      },
+      validateFileInput(v: File[] | null): boolean | string {
+        return v ? v.length > 0 || this.$t('validation.required') : '';
+      },
+    }
+  });
 </script>
 
 <style lang="scss">

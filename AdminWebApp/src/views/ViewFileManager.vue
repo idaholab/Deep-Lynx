@@ -92,7 +92,7 @@
   import CreateFileSetDialog from "@/components/fileManager/CreateFileSetDialog.vue";
   import DeleteFileSetDialog from "@/components/fileManager/DeleteFileSetDialog.vue";
   import {mdiFileDocumentMultiple} from "@mdi/js";
-  import EditFileSetDialog from "@/components/fileManager/editFileSetDialog.vue";
+  import EditFileSetDialog from "@/components/fileManager/EditFileSetDialog.vue";
   import EditTagDialog from "@/components/fileManager/editTagDialog.vue";
   import Config from "../config";
 
