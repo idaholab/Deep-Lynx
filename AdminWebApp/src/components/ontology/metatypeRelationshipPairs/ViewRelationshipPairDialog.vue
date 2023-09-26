@@ -37,7 +37,7 @@
               </v-textarea>
               <v-autocomplete
                   v-model="selectedPair.origin_metatype_id"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validationRule]"
                   :single-line="false"
                   :items="originMetatypes"
                   :search-input.sync="originSearch"
@@ -52,7 +52,7 @@
               </v-autocomplete>
               <v-autocomplete
                   v-model="selectedPair.relationship_id"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validationRule]"
                   :single-line="false"
                   :items="metatypeRelationships"
                   :search-input.sync="relationshipSearch"
@@ -67,7 +67,7 @@
               </v-autocomplete>
               <v-autocomplete
                   v-model="selectedPair.destination_metatype_id"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validationRule]"
                   :single-line="false"
                   :items="destinationMetatypes"
                   :search-input.sync="destinationSearch"
@@ -82,7 +82,7 @@
               </v-autocomplete>
               <v-select
                   v-model="selectedPair.relationship_type"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validationRule]"
                   :items="relationshipTypeChoices"
                   required
                   disabled
@@ -103,62 +103,107 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
-import {MetatypeRelationshipPairT, MetatypeRelationshipT, MetatypeT} from "@/api/types";
+  import Vue, { PropType } from 'vue'
+  import {MetatypeRelationshipPairT, MetatypeRelationshipT, MetatypeT} from "@/api/types";
 
-@Component
-export default class ViewRelationshipPairDialog extends Vue {
-  @Prop({required: true})
-  pair!: MetatypeRelationshipPairT;
-
-  @Prop({required: false})
-  readonly icon!: boolean
-
-  errorMessage = ""
-  dialog = false
-  valid = false
-  destinationSearch = ""
-  originSearch = ""
-  relationshipSearch = ""
-  relationshipTypeChoices = ["many:many", "one:one", "one:many", "many:one"]
-  selectedPair: MetatypeRelationshipPairT | null = null
-  originMetatypes: MetatypeT[] = []
-  destinationMetatypes: MetatypeT[] = []
-  metatypeRelationships: MetatypeRelationshipT[] = []
-
-  @Watch('destinationSearch', {immediate: false})
-  onDestinationSearchChange(newVal: string) {
-    this.$client.listMetatypes(this.pair.container_id, {name: newVal, ontologyVersion: this.$store.getters.activeOntologyVersionID})
-        .then((metatypes) => {
-          this.destinationMetatypes = metatypes as MetatypeT[]
-        })
-        .catch((e: any) => this.errorMessage = e)
+  interface ViewRelationshipPairDialogModel {
+    selectedPair: MetatypeRelationshipPairT | null
+    originMetatypes: MetatypeT[]
+    destinationMetatypes: MetatypeT[]
+    metatypeRelationships: MetatypeRelationshipT[]
+    errorMessage: string
+    dialog: boolean
+    valid: boolean
+    destinationSearch: string
+    originSearch: string
+    relationshipSearch: string
+    relationshipTypeChoices: string[]
   }
 
-  @Watch('originSearch', {immediate: false})
-  onOriginSearchChange(newVal: string) {
-    this.$client.listMetatypes(this.pair.container_id, {name: newVal, ontologyVersion: this.$store.getters.activeOntologyVersionID})
-        .then((metatypes) => {
-          this.originMetatypes = metatypes as MetatypeT[]
-        })
-        .catch((e: any) => this.errorMessage = e)
-  }
+  export default Vue.extend ({
+    name: 'ViewRelationshipPairDialog',
 
-  @Watch('relationshipSearch', {immediate: false})
-  relationshipSearchChange(newVal: string) {
-    this.$client.listMetatypeRelationships(this.pair.container_id,  {name: newVal, ontologyVersion: this.$store.getters.activeOntologyVersionID})
-        .then(metatypeRelationships => {
-          this.metatypeRelationships = metatypeRelationships as MetatypeRelationshipT[]
-        })
-        .catch(e => this.errorMessage = e)
-  }
+    props: {
+      pair: {
+        type: Object as PropType<MetatypeRelationshipPairT>,
+        required: true
+      },
+      icon: {
+        type: Boolean,
+        required: false
+      },
+    },
 
-  mounted() {
-    // have to do this to avoid mutating properties
-    this.selectedPair = JSON.parse(JSON.stringify(this.pair))
-  }
-}
+    data: (): ViewRelationshipPairDialogModel => ({
+      selectedPair: null,
+      originMetatypes: [],
+      destinationMetatypes: [],
+      metatypeRelationships: [],
+      errorMessage: "",
+      dialog: false,
+      valid: false,
+      destinationSearch: "",
+      originSearch: "",
+      relationshipSearch: "",
+      relationshipTypeChoices: ["many:many", "one:one", "one:many", "many:one"]
+    }),
 
+    mounted() {
+      // have to do this to avoid mutating properties
+      this.selectedPair = JSON.parse(JSON.stringify(this.pair))
+    },
+
+    watch: {
+      destinationSearch: {
+        immediate: true,
+        handler(newVal) {
+          this.$client
+            .listMetatypes(this.pair.container_id, {
+              name: newVal, 
+              ontologyVersion: this.$store.getters.activeOntologyVersionID
+            })
+            .then((metatypes) => {
+              this.destinationMetatypes = metatypes as MetatypeT[]
+            })
+            .catch((e: any) => this.errorMessage = e)
+        }
+      },
+      originSearch: {
+        immediate: true,
+        handler(newVal) {
+          this.$client
+            .listMetatypes(this.pair.container_id, {
+              name: newVal, 
+              ontologyVersion: this.$store.getters.activeOntologyVersionID
+            })
+            .then((metatypes) => {
+              this.originMetatypes = metatypes as MetatypeT[]
+            })
+            .catch((e: any) => this.errorMessage = e)
+        }
+      },
+      relationshipSearch: {
+        immediate: true,
+        handler(newVal) {
+          this.$client
+            .listMetatypeRelationships(this.pair.container_id,  {
+              name: newVal, 
+              ontologyVersion: this.$store.getters.activeOntologyVersionID
+            })
+            .then(metatypeRelationships => {
+              this.metatypeRelationships = metatypeRelationships as MetatypeRelationshipT[]
+            })
+            .catch(e => this.errorMessage = e)
+        }
+      }
+    },
+
+    methods: {
+      validationRule(v: any) {
+        return !!v || this.$t('validation.required')
+      }
+    }
+  });
 </script>
 
 <style lang="scss">

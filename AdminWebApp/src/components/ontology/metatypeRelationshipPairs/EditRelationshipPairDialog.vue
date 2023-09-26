@@ -23,22 +23,22 @@
                 ref="form"
             >
               <v-text-field
-                  v-model="comparisonPair.name"
+                  :value="comparisonPair.name"
                   disabled
                   class="disabled"
               >
                 <template v-slot:label>{{$t('general.name')}}</template>
               </v-text-field>
               <v-textarea
-                  v-model="comparisonPair.description"
+                  :value="comparisonPair.description"
                   disabled
                   class="disabled"
               >
                 <template v-slot:label>{{$t('general.description')}} </template>
               </v-textarea>
               <v-autocomplete
-                  v-model="comparisonPair.origin_metatype_id"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :value="comparisonPair.origin_metatype_id"
+                  :rules="[validationRule]"
                   :single-line="false"
                   :items="[comparisonPair.origin_metatype]"
                   item-text="name"
@@ -52,8 +52,8 @@
                 <template v-slot:label>{{$t('edges.originClass')}}</template>
               </v-autocomplete>
               <v-autocomplete
-                  v-model="comparisonPair.relationship_id"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :value="comparisonPair.relationship_id"
+                  :rules="[validationRule]"
                   :single-line="false"
                   :items="[comparisonPair.relationship]"
                   item-text="name"
@@ -65,7 +65,7 @@
                 <template v-slot:label>{{$t('relationshipTypes.relType')}}</template>
               </v-autocomplete>
               <v-autocomplete
-                  v-model="comparisonPair.destination_metatype_id"
+                  :value="comparisonPair.destination_metatype_id"
                   :single-line="false"
                   :items="[comparisonPair.destination_metatype]"
                   item-text="name"
@@ -77,7 +77,7 @@
                 <template v-slot:label>{{$t('edges.destinationClass')}}</template>
               </v-autocomplete>
               <v-select
-                  v-model="comparisonPair.relationship_type"
+                  :value="comparisonPair.relationship_type"
                   :items="relationshipTypeChoices"
                   required
                   disabled
@@ -97,7 +97,7 @@
               <v-autocomplete
                   v-model="selectedPair.origin_metatype_id"
                   :class="(comparisonPair && selectedPair.origin_metatype_id !== comparisonPair.origin_metatype_id) ? 'edited-field' : ''"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validationRule]"
                   :single-line="false"
                   :items="originMetatypes"
                   :search-input.sync="originSearch"
@@ -111,7 +111,7 @@
               </v-autocomplete>
               <v-autocomplete
                   v-model="selectedPair.relationship_id"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validationRule]"
                   :class="(comparisonPair && selectedPair.relationship_id !== comparisonPair.relationship_id) ? 'edited-field' : ''"
                   :single-line="false"
                   :items="metatypeRelationships"
@@ -126,7 +126,7 @@
               </v-autocomplete>
               <v-autocomplete
                   v-model="selectedPair.destination_metatype_id"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validationRule]"
                   :class="(comparisonPair && selectedPair.destination_metatype_id !== comparisonPair.destination_metatype_id) ? 'edited-field' : ''"
                   :single-line="false"
                   :items="destinationMetatypes"
@@ -142,7 +142,7 @@
               <v-select
                   v-model="selectedPair.relationship_type"
                   :class="(comparisonPair && selectedPair.relationship_type !== comparisonPair.relationship_type) ? 'edited-field' : ''"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validationRule]"
                   :items="relationshipTypeChoices"
                   required
               >
@@ -163,114 +163,159 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
-import {MetatypeRelationshipPairT, MetatypeRelationshipT, MetatypeT} from "@/api/types";
+  import Vue, { PropType } from 'vue'
+  import {MetatypeRelationshipPairT, MetatypeRelationshipT, MetatypeT} from "@/api/types";
 
-@Component
-export default class EditRelationshipPairDialog extends Vue {
-  @Prop({required: true})
-  pair!: MetatypeRelationshipPairT;
-
-  @Prop({required: false, default: undefined})
-  comparisonPair?: MetatypeRelationshipPairT | undefined
-
-  @Prop({required: false})
-  readonly icon!: boolean
-
-  errorMessage = ""
-  dialog = false
-  valid = false
-  destinationSearch = ""
-  originSearch = ""
-  relationshipSearch = ""
-  relationshipTypeChoices = ["many:many", "one:one", "one:many", "many:one"]
-  selectedPair: MetatypeRelationshipPairT | null = null
-  originMetatypes: MetatypeT[] = []
-  destinationMetatypes: MetatypeT[] = []
-  metatypeRelationships: MetatypeRelationshipT[] = []
-
-  @Watch('destinationSearch', {immediate: false})
-  onDestinationSearchChange(newVal: string) {
-    this.$client.listMetatypes(this.pair.container_id, {name: newVal, ontologyVersion: this.$store.getters.activeOntologyVersionID})
-        .then((metatypes) => {
-          this.destinationMetatypes = metatypes as MetatypeT[]
-        })
-        .catch((e: any) => this.errorMessage = e)
+  interface EditRelationshipPairDialogModel {
+    selectedPair: MetatypeRelationshipPairT | null
+    originMetatypes: MetatypeT[]
+    destinationMetatypes: MetatypeT[]
+    metatypeRelationships: MetatypeRelationshipT[]
+    errorMessage: string
+    dialog: boolean
+    valid: boolean
+    destinationSearch: string
+    originSearch: string
+    relationshipSearch: string
+    relationshipTypeChoices: string[]
   }
 
-  @Watch('originSearch', {immediate: false})
-  onOriginSearchChange(newVal: string) {
-    this.$client.listMetatypes(this.pair.container_id, {name: newVal, ontologyVersion: this.$store.getters.activeOntologyVersionID})
-        .then((metatypes) => {
-          this.originMetatypes = metatypes as MetatypeT[]
-        })
-        .catch((e: any) => this.errorMessage = e)
-  }
+  export default Vue.extend ({
+    name: 'EditRelationshipPairDialog',
 
-  @Watch('relationshipSearch', {immediate: false})
-  relationshipSearchChange(newVal: string) {
-    this.$client.listMetatypeRelationships(this.pair.container_id,  {name: newVal, ontologyVersion: this.$store.getters.activeOntologyVersionID})
-        .then(metatypeRelationships => {
-          this.metatypeRelationships = metatypeRelationships as MetatypeRelationshipT[]
-        })
-        .catch(e => this.errorMessage = e)
-  }
+    props: {
+      pair: {
+        type: Object as PropType<MetatypeRelationshipPairT>,
+        required: true
+      },
+      comparisonPair: {
+        type: Object as PropType<MetatypeRelationshipPairT | undefined>,
+        required: false, 
+        default: undefined
+      },
+      icon: {
+        type: Boolean,
+        required: false
+      },
+    },
 
-  mounted() {
-    // have to do this to avoid mutating properties
-    this.selectedPair = JSON.parse(JSON.stringify(this.pair))
-  }
+    data: (): EditRelationshipPairDialogModel => ({
+      selectedPair: null,
+      originMetatypes: [],
+      destinationMetatypes: [],
+      metatypeRelationships: [],
+      errorMessage: "",
+      dialog: false,
+      valid: false,
+      destinationSearch: "",
+      originSearch: "",
+      relationshipSearch: "",
+      relationshipTypeChoices: ["many:many", "one:one", "one:many", "many:one"]
+    }),
 
-  editRelationshipPair() {
-    this.$client.updateMetatypeRelationshipPair(this.pair.container_id,
-        this.pair.id!,
-        {"origin_metatype_id": this.selectedPair!.origin_metatype_id,
-          "destination_metatype_id": this.selectedPair!.destination_metatype_id,
-          "relationship_id": this.selectedPair!.relationship_id,
-          "relationship_type": this.selectedPair!.relationship_type}
-    )
-        .then(() => {
-          this.dialog = false
-          this.$emit('pairEdited')
-        })
-        .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
-  }
+    mounted() {
+      // have to do this to avoid mutating properties
+      this.selectedPair = JSON.parse(JSON.stringify(this.pair))
+    },
 
-  loadComparisonPair(isVisible: boolean) {
-    if (isVisible && this.comparisonPair) {
-      if (this.comparisonPair.relationship?.id) {
-        // retrieve comparisonPair relationship
-        this.$client.retrieveMetatypeRelationship(
-            this.comparisonPair.container_id,
-            this.comparisonPair.relationship.id
-        ).then((result) => {
-          this.comparisonPair!.relationship = result
-        }).catch((e: any) => this.errorMessage = e)
+    watch: {
+      destinationSearch: {
+        immediate: true,
+        handler(newVal) {
+          this.$client
+            .listMetatypes(this.pair.container_id, {
+              name: newVal, 
+              ontologyVersion: this.$store.getters.activeOntologyVersionID
+            })
+            .then((metatypes) => {
+              this.destinationMetatypes = metatypes as MetatypeT[]
+            })
+            .catch((e: any) => this.errorMessage = e)
+        }
+      },
+      originSearch: {
+        immediate: true,
+        handler(newVal) {
+          this.$client
+            .listMetatypes(this.pair.container_id, {
+              name: newVal, 
+              ontologyVersion: this.$store.getters.activeOntologyVersionID
+            })
+            .then((metatypes) => {
+              this.originMetatypes = metatypes as MetatypeT[]
+            })
+            .catch((e: any) => this.errorMessage = e)
+        }
+      },
+      relationshipSearch: {
+        immediate: true,
+        handler(newVal) {
+          this.$client
+            .listMetatypeRelationships(this.pair.container_id,  {
+              name: newVal, 
+              ontologyVersion: this.$store.getters.activeOntologyVersionID
+            })
+            .then(metatypeRelationships => {
+              this.metatypeRelationships = metatypeRelationships as MetatypeRelationshipT[]
+            })
+            .catch(e => this.errorMessage = e)
+        }
       }
+    },
 
-      if (this.comparisonPair.origin_metatype?.id) {
-        // retrieve comparisonPair origin metatype
-        this.$client.retrieveMetatype(
-            this.comparisonPair.container_id,
-            this.comparisonPair.origin_metatype.id
-        ).then((result) => {
-          this.comparisonPair!.origin_metatype = result
-        }).catch((e: any) => this.errorMessage = e)
-      }
+    methods: {
+      editRelationshipPair() {
+        this.$client.updateMetatypeRelationshipPair(this.pair.container_id,
+            this.pair.id!,
+            {"origin_metatype_id": this.selectedPair!.origin_metatype_id,
+              "destination_metatype_id": this.selectedPair!.destination_metatype_id,
+              "relationship_id": this.selectedPair!.relationship_id,
+              "relationship_type": this.selectedPair!.relationship_type}
+        )
+            .then(() => {
+              this.dialog = false
+              this.$emit('pairEdited')
+            })
+            .catch(e => this.errorMessage = this.$t('errors.errorCommunicating') as string + e)
+      },
+      loadComparisonPair(isVisible: boolean) {
+        if (isVisible && this.comparisonPair) {
+          if (this.comparisonPair.relationship?.id) {
+            // retrieve comparisonPair relationship
+            this.$client.retrieveMetatypeRelationship(
+                this.comparisonPair.container_id,
+                this.comparisonPair.relationship.id
+            ).then((result) => {
+              this.comparisonPair!.relationship = result
+            }).catch((e: any) => this.errorMessage = e)
+          }
 
-      if (this.comparisonPair.destination_metatype?.id) {
-        // retrieve comparisonPair destination metatype
-        this.$client.retrieveMetatype(
-            this.comparisonPair.container_id,
-            this.comparisonPair.destination_metatype.id
-        ).then((result) => {
-          this.comparisonPair!.destination_metatype = result
-        }).catch((e: any) => this.errorMessage = e)
+          if (this.comparisonPair.origin_metatype?.id) {
+            // retrieve comparisonPair origin metatype
+            this.$client.retrieveMetatype(
+                this.comparisonPair.container_id,
+                this.comparisonPair.origin_metatype.id
+            ).then((result) => {
+              this.comparisonPair!.origin_metatype = result
+            }).catch((e: any) => this.errorMessage = e)
+          }
+
+          if (this.comparisonPair.destination_metatype?.id) {
+            // retrieve comparisonPair destination metatype
+            this.$client.retrieveMetatype(
+                this.comparisonPair.container_id,
+                this.comparisonPair.destination_metatype.id
+            ).then((result) => {
+              this.comparisonPair!.destination_metatype = result
+            }).catch((e: any) => this.errorMessage = e)
+          }
+        }
+      },
+      validationRule(v: any) {
+        return !!v || this.$t('validation.required')
       }
     }
-  }
-}
-
+});
 </script>
 
 <style lang="scss">

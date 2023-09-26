@@ -54,48 +54,65 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from 'vue-property-decorator'
+  import Vue from 'vue'
 
-@Component
-export default class CreateOntologyVersionDialog extends Vue {
-  errorMessage = ""
-  loading = false
-  dialog = false
-  name = null
-  description = null
-
-  @Prop({required: true})
-  containerID!: string;
-
-  @Prop({required: false})
-  readonly icon!: boolean
-
-  clearNew() {
-    this.name = null
-    this.description = null
-    this.dialog = false
+  interface CreateOntologyVersionDialogModel {
+    errorMessage: string
+    loading: boolean
+    dialog: boolean
+    name: string | null
+    description: string | null
   }
 
-  createVersion() {
-    this.loading = true
+  export default Vue.extend ({
+    name: 'CreateOntologyVersionDialog',
 
-    this.$client.createOntologyVersion(this.containerID, {
-      name: this.name as any,
-      description: this.description as any,
-      container_id: this.containerID,
-    }, this.$store.getters.currentOntologyVersionID)
-        .then((version) => {
-          this.loading = false
-          this.clearNew()
-          this.$emit("versionCreated", version)
+    props: {
+      containerID: {
+        type: String,
+        required: true
+      },
+      icon: {
+        type: Boolean,
+        required: false
+      },
+    },
 
-          this.dialog = false
-          this.errorMessage = ""
-        })
-        .catch(e => {
-          this.loading = false
-          this.errorMessage = e
-        })
-  }
-}
+    data: (): CreateOntologyVersionDialogModel => ({
+      errorMessage: "",
+      loading: false,
+      dialog: false,
+      name: null,
+      description: null
+    }),
+
+    methods: {
+      clearNew() {
+        this.name = null
+        this.description = null
+        this.dialog = false
+      },
+      createVersion() {
+        this.loading = true
+
+        this.$client.createOntologyVersion(this.containerID, {
+          name: this.name as any,
+          description: this.description as any,
+          container_id: this.containerID,
+        }, this.$store.getters.currentOntologyVersionID)
+            .then((version) => {
+              this.loading = false
+              this.clearNew()
+              this.$emit("versionCreated", version)
+
+              this.dialog = false
+              this.errorMessage = ""
+            })
+            .catch(e => {
+              this.loading = false
+              this.errorMessage = e
+            })
+      }
+    }
+  });
 </script>

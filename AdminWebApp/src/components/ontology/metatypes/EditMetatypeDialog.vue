@@ -284,12 +284,9 @@
   import ViewMetatypeKeyDialog from "@/components/ontology/metatypes/ViewMetatypeKeyDialog.vue";
   import CreateMetatypeDialog from "@/components/ontology/metatypes/CreateMetatypeDialog.vue";
   import MetatypeParentSelect from "@/components/ontology/metatypes/MetatypeParentSelect.vue";
-  import ViewRelationshipPairDialog
-    from "@/components/ontology/metatypeRelationshipPairs/viewRelationshipPairDialog.vue";
-  import CreateRelationshipPairDialog
-    from "@/components/ontology/metatypeRelationshipPairs/createRelationshipPairDialog.vue";
-  import EditRelationshipPairDialog
-    from "@/components/ontology/metatypeRelationshipPairs/editRelationshipPairDialog.vue";
+  import ViewRelationshipPairDialog from "@/components/ontology/metatypeRelationshipPairs/ViewRelationshipPairDialog.vue";
+  import CreateRelationshipPairDialog from "@/components/ontology/metatypeRelationshipPairs/CreateRelationshipPairDialog.vue";
+  import EditRelationshipPairDialog from "@/components/ontology/metatypeRelationshipPairs/EditRelationshipPairDialog.vue";
   const diff = require('deep-diff').diff;
 
   interface EditMetatypeDialogModel {

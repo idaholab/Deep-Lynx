@@ -125,7 +125,7 @@
   import EditMetatypeRelationshipDialog from "@/components/ontology/metatypeRelationships/EditMetatypeRelationshipDialog.vue";
   import CreateMetatypeRelationshipDialog from "@/components/ontology/metatypeRelationships/CreateMetatypeRelationshipDialog.vue";
   import {mdiFileDocumentMultiple} from "@mdi/js";
-  import OntologyVersionToolbar from "@/components/ontology/versioning/ontologyVersionToolbar.vue";
+  import OntologyVersionToolbar from '@/components/ontology/versioning/OntologyVersionToolbar.vue';
   import ViewMetatypeRelationshipDialog from "@/components/ontology/metatypeRelationships/ViewMetatypeRelationshipDialog.vue";
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const diff = require('deep-diff').diff;

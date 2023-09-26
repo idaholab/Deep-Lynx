@@ -116,8 +116,7 @@
   import Vue, { PropType } from 'vue'
   import {MetatypeT} from "../../../api/types";
   import ViewMetatypeKeyDialog from "@/components/ontology/metatypes/ViewMetatypeKeyDialog.vue";
-  import ViewRelationshipPairDialog
-    from "@/components/ontology/metatypeRelationshipPairs/viewRelationshipPairDialog.vue";
+  import ViewRelationshipPairDialog from "@/components/ontology/metatypeRelationshipPairs/ViewRelationshipPairDialog.vue";
 
   interface ViewMetatypeDialogModel {
     errorMessage: string
