@@ -25,9 +25,10 @@
             >
 
               <v-text-field
-                  v-model="tag.tag_name"
+                  v-if="localTag"
+                  v-model="localTag.tag_name"
                   :label="$t('tags.name')"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validateTagName]"
               ></v-text-field>
 
             </v-form>
@@ -50,46 +51,82 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from "vue-property-decorator"
-import {TagT} from "@/api/types";
+  import Vue from 'vue'
+  import {TagT} from "@/api/types";
 
-@Component
-export default class EditTagDialog extends Vue {
-  @Prop({required: true})
-  readonly containerID!: string;
-
-  @Prop({required: true})
-  tag!: TagT
-
-  @Prop({required: false, default: "none"})
-  readonly icon!: "trash" | "none"
-
-  dialog= false
-  valid = true
-  errorMessage = ""
-
-  get displayIcon() {
-    return this.icon
+  interface EditTagDialogModel {
+    errorMessage: string;
+    dialog: boolean;
+    valid: boolean;
+    localTag: TagT | null;
   }
 
-  updateTag() {
-    // @ts-ignore
-    if(!this.$refs.form!.validate()) return;
-
-    this.$client.updateTag(this.containerID, this.tag.id!, this.tag)
-        .then(() => {
-          this.$emit('tagUpdated');
-          this.clearTag();
-        })
-        .catch(e => this.errorMessage = e)
-
+  interface VForm extends Vue {
+    validate: () => boolean;
   }
 
-  clearTag() {
-    this.dialog = false;
-  }
+  export default Vue.extend ({
+    name: 'EditTagDialog',
 
-}
+    props: {
+      containerID: {
+        required: true,
+        type: String
+      },
+      tag: {
+        required: true,
+        type: Object as () => TagT,
+      },
+      icon: {
+        required: false,
+        default: "none",
+        type: String,
+        validator: (value: string) => ["trash", "none"].includes(value)
+      }
+    },
+
+    data: (): EditTagDialogModel & { localTag: TagT | null } => ({
+      errorMessage: "",
+      dialog: false,
+      valid: true,
+      localTag: null
+    }),
+
+    computed: {
+      displayIcon(): string {
+        return this.icon as string;
+      }
+    },
+
+    methods: {
+      updateTag() {
+        if (!this.localTag || !this.localTag.id) {
+          // Handle the scenario when localTag or its id is undefined.
+          return;
+        }
+        
+        const form = this.$refs.form as VForm;
+        if (!form.validate()) return;
+
+        this.$client.updateTag(this.containerID, this.localTag.id, this.localTag)
+            .then(() => {
+                this.$emit('tagUpdated');
+                this.clearTag();
+            })
+            .catch(e => this.errorMessage = e)
+      },
+      clearTag() {
+        this.dialog = false;
+      },
+      validateTagName(v: string): boolean | string {
+        return !!v || this.$t('validation.required');
+      }
+    },
+
+    created() {
+      this.localTag = { ...this.tag };
+    },
+  });
 </script>
 
 <style lang="scss">

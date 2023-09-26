@@ -93,7 +93,7 @@
   import DeleteFileSetDialog from "@/components/fileManager/DeleteFileSetDialog.vue";
   import {mdiFileDocumentMultiple} from "@mdi/js";
   import EditFileSetDialog from "@/components/fileManager/EditFileSetDialog.vue";
-  import EditTagDialog from "@/components/fileManager/editTagDialog.vue";
+  import EditTagDialog from "@/components/fileManager/EditTagDialog.vue";
   import Config from "../config";
 
   interface FileManagerModel {
