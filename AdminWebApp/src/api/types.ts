@@ -186,6 +186,7 @@ export type NodeT = {
     import_data_id?: string;
     type_mapping_transformation_id?: string;
     data_staging_id?: string;
+    created_by?: string;
 };
 
 export type MetadataT = {
@@ -220,6 +221,7 @@ export type EdgeT = {
     data_staging_id: string;
     import_data_id: string;
     type_mapping_transformation_id: string;
+    created_by?: string;
 };
 
 export type PropertyT = {

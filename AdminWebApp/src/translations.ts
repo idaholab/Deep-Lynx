@@ -94,6 +94,7 @@ export default {
             selectChangelist:
                 'Select or create a changelist in order to use edit mode. Note that newly created changelists may take a few minutes to generate fully before they are able to be selected.',
             selectNodeInfo: 'Select Node for more information',
+            selectEdgeInfo: 'Select Edge for more information',
             stopNodes:
                 'Ignored Properties tell DeepLynx what JSON properties, CSV columns, or XML types to ignore when creating the type mapping. For example if you have a two identical payloads, but one has an additional field, you could tell DeepLynx to ignore the additional field and the resulting type mapping would continue to match.',
             strftimeDate: 'Date String should be in strftime datetime format',
@@ -149,6 +150,7 @@ export default {
             onExtraction: 'On Key Extration Errors',
             graphQL: 'There is a problem with the GraphQL query or server error. Please see the result tab.',
             matrix: 'Results Length Varies, Cannot Show Correlation Matrix',
+            noValidRelationships: 'No valid relationships for this metatype pair.',
         },
         warnings: {
             deleteContainer:
@@ -197,6 +199,13 @@ export default {
                 'Deleting this key will cause any integration which uses it to no longer be able to authenticate with DeepLynx. Only delete a key that you know is not in use or has been compromised. Deleting a key/pair cannot be undone.',
             deleteEvent:
                 'Deleting an Event Action means it will be unrecoverable to even administrative users. Only delete Event Actions you know are no longer needed or that were created in error.',
+            deleteProperty: 
+                'Are you sure you want to delete this property? It can be viewed later by clicking through the history seciton.',
+            deleteEdge:
+                'Deleting an edge will remove it from the graph. Are you sure you want to delete this edge?',
+            deleteNode: 
+                'Deleting a node will remove it, as well as any connected edges, from the graph. Are you sure you want to delete this node?',
+            deleteTag: 'Are you sure you want to detach this tag?',
             importContainer:
                 'Note that importing type mappings requires also importing data sources, and type mappings may require certain ontology elements in order to transfer completely.',
             inactiveMappings: 'Please note that any data sources or type mappings imported are set as inactive.',
@@ -534,6 +543,8 @@ export default {
             property: 'Property',
             add: 'Add Property',
             selected: ' Properties Selected',
+            delete: 'Remove Property',
+            edit: 'Edit Property',
         },
         dataSources: {
             dataSource: 'Data Source',
@@ -829,9 +840,13 @@ export default {
             name: 'Tag Name',
             update: 'Update Tag',
             attached: 'Attached Tags',
-            add: 'Add Tag',
+            attach: 'Attach Tag',
             select: 'Select Tag',
             tags: 'Tags',
+            create: 'Create Tag',
+            createAttach: 'Create and Attach New Tag',
+            attachExisting: 'Attach Existing Tag',
+            delete: 'Remove Attached Tag',
         },
         files: {
             update: 'Update File',
