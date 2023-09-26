@@ -30,8 +30,7 @@ import MetatypeRelationshipKeyRepository from './metatype_relationship_key_repos
 import MetatypeRelationshipPairRepository from './metatype_relationship_pair_repository';
 import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
 import TypeMappingRepository from '../etl/type_mapping_repository';
-import KeyPairMapper from '../../../mappers/access_management/keypair_mapper';
-import RedisGraphLoaderService from '../../../../services/cache/redis_graph_loader';
+import RedisGraphService from '../../../../services/cache/redis_graph_loader';
 
 /*
     ContainerRepository contains methods for persisting and retrieving a container
@@ -239,16 +238,15 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         return Promise.resolve(retrieved);
     }
 
-    async loadIntoRedis(id: string): Promise<Result<boolean>> {
-        const loader = await RedisGraphLoaderService.GetInstance();
+    async loadIntoRedis(id: string): Promise<Result<string>> {
+        const loader = await RedisGraphService.GetInstance();
 
         try {
-            await loader.loadGraph(id);
+            const key = await loader.loadGraph(id);
+            return Promise.resolve(Result.Success(key));
         } catch (e: any) {
             return Promise.resolve(Result.Failure(e.toString()));
         }
-
-        return Promise.resolve(Result.Success(true));
     }
 
     async createAlert(alert: ContainerAlert, user?: User): Promise<Result<boolean>> {

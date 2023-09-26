@@ -12,7 +12,7 @@ mod main_tests {
 
         // TODO: make sure you change this for an existing DeepLynx container in the db
         // no way I was going to try and recreate a graph simply for this test
-        redis_loader.generate_redis_graph(45, None).await?;
+        redis_loader.generate_redis_graph(1297, None, None).await?;
 
         Ok(())
     }

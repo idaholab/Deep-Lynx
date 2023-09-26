@@ -32,6 +32,7 @@ export class Config {
     private readonly _cache_provider: string;
     private readonly _cache_default_ttl: number;
     private readonly _cache_redis_connection_string: string;
+    private readonly _redis_graph_ttl: number;
     private readonly _initial_import_cache_ttl: number;
     private readonly _import_cache_ttl: number;
     private readonly _log_db: boolean;
@@ -160,6 +161,7 @@ export class Config {
         // default to 6 hours for the initial import cache, subsequent should be 30 seconds
         this._initial_import_cache_ttl = process.env.INITIAL_IMPORT_CACHE_TTL ? parseInt(process.env.INITIAL_IMPORT_CACHE_TTL!, 10) : 21600;
         this._import_cache_ttl = process.env.IMPORT_CACHE_TTL ? parseInt(process.env.IMPORT_CACHE_TTL!, 10) : 300;
+        this._redis_graph_ttl = process.env.REDIS_GRAPH_TTL ? parseInt(process.env.REDIS_GRAPH_TTL!, 10) : 3600;
 
         this._core_db_connection_string = process.env.CORE_DB_CONNECTION_STRING || '';
         this._timescaledb_enabled = process.env.TIMESCALEDB_ENABLED === 'true';
@@ -357,6 +359,10 @@ export class Config {
 
     get redis_connection_string(): string {
         return this._cache_redis_connection_string;
+    }
+
+    get redis_graph_ttl(): number {
+        return this._redis_graph_ttl;
     }
 
     get server_port(): string {

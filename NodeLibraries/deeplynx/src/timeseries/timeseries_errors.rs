@@ -1,5 +1,4 @@
 use napi::Error;
-use std::io;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -54,4 +53,6 @@ pub enum TestError {
   SqlXMigration(#[from] sqlx::migrate::MigrateError),
   #[error("system IO error: {0}")]
   IO(#[from] std::io::Error),
+  #[error("unwrap error {0}")]
+  Unwrap(String),
 }

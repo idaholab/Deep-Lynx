@@ -48,8 +48,13 @@ impl RedisGraphLoader {
     &self,
     container_id: u64,
     timestamp: Option<String>,
-  ) -> Result<(), RedisLoaderError> {
+    ttl: Option<i64>,
+  ) -> Result<String, RedisLoaderError> {
     let mut connection = self.db.acquire().await?;
+
+    let key: String = format!("{}-{}", container_id, timestamp.clone().unwrap_or("default".to_string()));
+    self.verify_redis_key(key.clone()).await?;
+
     let stream = connection
             .copy_out_raw(
                 format!(
@@ -143,9 +148,8 @@ TO STDOUT WITH (FORMAT csv, HEADER true) ;
       if (current_size + properties.as_slice().len()) > 496 * 1_000_000 {
         self
           .transmit_to_redis(
+            key.clone(),
             &current_buffer,
-            container_id,
-            timestamp.clone().unwrap_or("default".to_string()),
             (node_count, metatype_name_header.len() as u64),
             (0, 0),
             has_txed,
@@ -173,9 +177,8 @@ TO STDOUT WITH (FORMAT csv, HEADER true) ;
     // track of multiple buffers. TODO: benchmark additional requests against potentially just one
     self
       .transmit_to_redis(
+        key.clone(),
         &current_buffer,
-        container_id,
-        timestamp.clone().unwrap_or("default".to_string()),
         (node_count, metatype_name_header.len() as u64),
         (0, 0),
         has_txed,
@@ -286,9 +289,8 @@ TO STDOUT WITH (FORMAT csv, HEADER true);"#
       if (current_size + properties.as_slice().len() + 16) > 496 * 1_000_000 {
         self
           .transmit_to_redis(
+            key.clone(),
             &current_buffer,
-            container_id,
-            timestamp.clone().unwrap_or("default".to_string()),
             (0, 0),
             (edge_count, relationship_name_header.len() as u64),
             has_txed,
@@ -331,23 +333,42 @@ TO STDOUT WITH (FORMAT csv, HEADER true);"#
     // track of multiple buffers. TODO: benchmark additional requests against potentially just one
     self
       .transmit_to_redis(
+        key.clone(),
         &current_buffer,
-        container_id,
-        timestamp.clone().unwrap_or("default".to_string()),
         (0, 0),
         (edge_count, relationship_name_header.len() as u64),
         has_txed,
       )
       .await?;
 
+    self.set_key_expiry(key.clone(),ttl).await?;
+
+    Ok(key.clone())
+  }
+
+  async fn verify_redis_key(&self, key: String) -> Result<(), RedisLoaderError> {
+    // check if the key (graph) already exists, and remove if found
+    let mut async_conn = self.redis_client.get_async_connection().await?;
+
+    let key_exists:i32 = redis::cmd("EXISTS")
+      .arg(key.clone())
+      .query_async(&mut async_conn)
+      .await?;
+
+    if key_exists == 1 {
+      redis::cmd("DEL")
+          .arg(key.clone())
+          .query_async(&mut async_conn)
+          .await?;
+    }
+
     Ok(())
   }
 
   async fn transmit_to_redis(
     &self,
+    key: String,
     payload: &Vec<Vec<u8>>,
-    container_id: u64,
-    timestamp: String,
     // we're doing tuples to stress the relationship between the labels and nodes (it also looks cool)
     nodes_labels: (u64, u64),
     edges_types: (u64, u64),
@@ -358,7 +379,7 @@ TO STDOUT WITH (FORMAT csv, HEADER true);"#
     // BEGIN starts a new graph if the key doesn't exist, if it does - then we ignore this and add
     if !has_txed {
       redis::cmd("GRAPH.BULK")
-        .arg(format!("{}-{}", container_id, timestamp))
+        .arg(key)
         .arg("BEGIN")
         .arg(nodes_labels.0)
         .arg(edges_types.0)
@@ -369,7 +390,7 @@ TO STDOUT WITH (FORMAT csv, HEADER true);"#
         .await?;
     } else {
       redis::cmd("GRAPH.BULK")
-        .arg(format!("{}-{}", container_id, timestamp))
+        .arg(key)
         .arg(nodes_labels.0)
         .arg(edges_types.0)
         .arg(nodes_labels.1)
@@ -378,6 +399,25 @@ TO STDOUT WITH (FORMAT csv, HEADER true);"#
         .query_async(&mut async_conn)
         .await?;
     }
+
+    Ok(())
+  }
+
+  async fn set_key_expiry(
+    &self,
+    key: String,
+    ttl: Option<i64>,
+  ) -> Result<(), RedisLoaderError> {
+    let mut async_conn = self.redis_client.get_async_connection().await?;
+
+    // use provided ttl or else default
+    let graph_ttl = ttl.unwrap_or(3600);
+
+    redis::cmd("EXPIRE")
+        .arg(key)
+        .arg(graph_ttl)
+        .query_async(&mut async_conn)
+        .await?;
 
     Ok(())
   }
@@ -402,12 +442,16 @@ struct Node {
   modified_by: String,
   modified_at: String,
   metatype_name: String,
+  import_data_id: Option<u64>,
+  type_mapping_transformation_id: Option<u64>,
+  data_staging_id: String, // uuid
+  metadata: String
 }
 
 impl Node {
   // returns parsed header and an index of property names to make sure order stays the same
   pub fn to_redis_header_bytes(&self, metatype_properties: Vec<String>) -> (Vec<u8>, Vec<String>) {
-    let property_len: u32 = metatype_properties.len() as u32 + 9;
+    let property_len: u32 = metatype_properties.len() as u32 + 15; // integer should correspond to number of properties added below
     let mut property_names: Vec<u8> = vec![];
     let mut property_names_raw: Vec<String> = vec![];
 
@@ -415,11 +459,17 @@ impl Node {
     property_names.extend("_data_source_id\0".as_bytes());
     property_names.extend("_container_id\0".as_bytes());
     property_names.extend("_original_data_id\0".as_bytes());
+    property_names.extend("_metatype_id\0".as_bytes());
+    property_names.extend("_metatype_name\0".as_bytes());
     property_names.extend("_metadata_properties\0".as_bytes());
     property_names.extend("_created_at\0".as_bytes());
     property_names.extend("_created_by\0".as_bytes());
     property_names.extend("_modified_at\0".as_bytes());
     property_names.extend("_modified_by\0".as_bytes());
+    property_names.extend("_import_data_id\0".as_bytes());
+    property_names.extend("_type_mapping_transformation_id\0".as_bytes());
+    property_names.extend("_data_staging_id\0".as_bytes());
+    property_names.extend("_metadata\0".as_bytes());
 
     for key in metatype_properties.iter() {
       let name = key.as_bytes();
@@ -447,9 +497,13 @@ impl Node {
 
     let mut property_final: Vec<u8> = vec![];
 
+    // order of properties must match header definition in to_redis_header_bytes
+    // strings must be null terminated
+    // numbers that could be null should be checked and 0_i8 pushed if null
     property_final.extend(4_i8.to_ne_bytes());
     property_final.extend(self.id.to_ne_bytes());
 
+    // add null check here
     property_final.extend(4_i8.to_ne_bytes());
     property_final.extend(self.data_source_id.to_ne_bytes());
 
@@ -458,6 +512,13 @@ impl Node {
 
     property_final.extend(3_i8.to_ne_bytes());
     property_final.extend(self.original_data_id.as_bytes());
+    property_final.extend("\0".as_bytes());
+
+    property_final.extend(4_i8.to_ne_bytes());
+    property_final.extend(self.metatype_id.to_ne_bytes());
+
+    property_final.extend(3_i8.to_ne_bytes());
+    property_final.extend(self.metatype_name.as_bytes());
     property_final.extend("\0".as_bytes());
 
     property_final.extend(3_i8.to_ne_bytes());
@@ -478,6 +539,30 @@ impl Node {
 
     property_final.extend(3_i8.to_ne_bytes());
     property_final.extend(self.modified_by.as_bytes());
+    property_final.extend("\0".as_bytes());
+
+    match self.import_data_id.clone() {
+      None => property_final.extend(0_i8.to_ne_bytes()),
+      Some(value) => {
+        property_final.extend(4_i8.to_ne_bytes());
+        property_final.extend(self.import_data_id.unwrap().to_ne_bytes());
+      }
+    }
+
+    match self.type_mapping_transformation_id.clone() {
+      None => property_final.extend(0_i8.to_ne_bytes()),
+      Some(value) => {
+        property_final.extend(4_i8.to_ne_bytes());
+        property_final.extend(self.type_mapping_transformation_id.unwrap().to_ne_bytes());
+      }
+    }
+
+    property_final.extend(3_i8.to_ne_bytes());
+    property_final.extend(self.data_staging_id.as_bytes());
+    property_final.extend("\0".as_bytes());
+
+    property_final.extend(3_i8.to_ne_bytes());
+    property_final.extend(self.metadata.as_bytes());
     property_final.extend("\0".as_bytes());
 
 
@@ -697,9 +782,19 @@ pub async fn fetch_possible_metatype_relationship_properties(
   container_id: u64,
   connection: &Pool<Postgres>,
 ) -> Result<Vec<String>, RedisLoaderError> {
-  let mut rows = sqlx::query("SELECT DISTINCT property_name FROM metatype_relationship_keys WHERE container_id = $1 AND metatype_name = $2")
+  let mut rows = sqlx::query("SELECT DISTINCT relationship_id FROM metatype_full_relationship_pairs WHERE container_id = $1 AND relationship_name = $2")
       .bind(container_id as i64)
       .bind(metatype_relationship_name)
+      .fetch(connection);
+
+  let mut metatype_relationship_id: i64 = 0;
+  while let Some(row) = rows.try_next().await? {
+    metatype_relationship_id = row.try_get("relationship_id")?;
+  }
+
+  let mut rows = sqlx::query("SELECT DISTINCT property_name FROM metatype_relationship_keys WHERE container_id = $1 AND metatype_relationship_id = $2")
+      .bind(container_id.clone() as i64)
+      .bind(metatype_relationship_id)
       .fetch(connection);
 
   let mut results = vec![];
