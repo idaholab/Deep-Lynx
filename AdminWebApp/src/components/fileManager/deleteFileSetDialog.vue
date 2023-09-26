@@ -41,44 +41,63 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from 'vue-property-decorator'
+  import Vue from 'vue'
 
-@Component
-export default class DeleteFileSetDialog extends Vue {
-  @Prop({required: true})
-  containerID!: string
-
-  @Prop({required: true})
-  file!: any
-
-  @Prop({required: false, default: "none"})
-  readonly icon!: "trash" | "none"
-
-  errorMessage = ""
-  dialog = false
-  deleteLoading = false
-
-
-  get displayIcon() {
-    return this.icon
+  interface DeleteFileSetDialogModel {
+    errorMessage: string;
+    dialog: boolean;
+    deleteLoading: boolean;
   }
 
-  deleteFileSet() {
-    this.deleteLoading = true
+  export default Vue.extend ({
+    name: 'DeleteFileSetDialog',
 
-    this.$client.deleteWebGLFile(
-        this.containerID,
-        this.file!.file_id!)
-        .then(() => {
-          this.reset()
-          this.$emit('fileDeleted')
-        })
-        .catch(e => this.errorMessage = e)
-        .finally(() => this.deleteLoading = false)
-  }
+    props: {
+      containerID: {
+        required: true,
+        type: String
+      },
+      file: {
+        required: true,
+        type: Object,
+      },
+      icon: {
+        required: false,
+        default: "none",
+        type: String,
+        validator: (value: string) => ["trash", "none"].includes(value)
+      }
+    },
 
-  reset() {
-    this.dialog = false
-  }
-}
+    data: (): DeleteFileSetDialogModel => ({
+      errorMessage: "",
+      dialog: false,
+      deleteLoading: false
+    }),
+
+    computed: {
+      displayIcon(): string {
+        return this.icon as string;
+      }
+    },
+
+    methods: {
+      deleteFileSet() {
+        this.deleteLoading = true
+
+        this.$client.deleteWebGLFile(
+            this.containerID,
+            this.file!.file_id!)
+            .then(() => {
+              this.reset()
+              this.$emit('fileDeleted')
+            })
+            .catch(e => this.errorMessage = e)
+            .finally(() => this.deleteLoading = false)
+      },
+      reset() {
+        this.dialog = false
+      }
+    }
+  })
 </script>
