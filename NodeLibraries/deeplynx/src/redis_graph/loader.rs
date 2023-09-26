@@ -480,15 +480,16 @@ impl Node {
     property_final.extend(self.modified_by.as_bytes());
     property_final.extend("\0".as_bytes());
 
+
     for property_name in index_names {
       match properties.get(property_name.as_str()) {
         None => property_final.extend(0_i8.to_ne_bytes()),
         Some(value) => {
-          match value {
+          match value.clone() {
             Value::Null => property_final.extend(0_i8.to_ne_bytes()),
             Value::Bool(b) => {
               property_final.extend(1_i8.to_ne_bytes());
-              if *b {
+              if b {
                 property_final.push(0x01);
               } else {
                 property_final.push(0x00);
@@ -499,15 +500,11 @@ impl Node {
                 property_final.extend(4_i8.to_ne_bytes());
                 let n: u64 = n.as_u64().unwrap();
                 property_final.extend(n.to_ne_bytes());
-              }
-
-              if n.is_i64() {
+              } else if n.is_i64() {
                 property_final.extend(4_i8.to_ne_bytes());
                 let n: i64 = n.as_i64().unwrap();
                 property_final.extend(n.to_ne_bytes())
-              }
-
-              if n.is_f64() {
+              } else if n.is_f64() {
                 property_final.extend(2_i8.to_ne_bytes());
                 let n: f64 = n.as_f64().unwrap();
                 property_final.extend(n.to_ne_bytes());
