@@ -89,7 +89,7 @@
 
 <script lang="ts">
   import Vue from 'vue'
-  import CreateFileSetDialog from "@/components/fileManager/createFileSetDialog.vue";
+  import CreateFileSetDialog from "@/components/fileManager/CreateFileSetDialog.vue";
   import DeleteFileSetDialog from "@/components/fileManager/deleteFileSetDialog.vue";
   import {mdiFileDocumentMultiple} from "@mdi/js";
   import EditFileSetDialog from "@/components/fileManager/editFileSetDialog.vue";

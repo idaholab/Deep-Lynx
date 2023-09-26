@@ -28,13 +28,13 @@
                   :label="$t('files.webGL')"
                   @change="addFiles"
                   v-model="filesToUpload"
-                  :rules="[v => v ? v.length > 0 || $t('validation.required') : '']"
+                  :rules="[validateFileInput]"
               ></v-file-input>
 
               <v-text-field
                   v-model="tagName"
                   :label="$t('tags.name')"
-                  :rules="[v => !!v || $t('validation.required')]"
+                  :rules="[validateTextField]"
               ></v-text-field>
 
             </v-form>
@@ -58,49 +58,71 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from "vue-property-decorator"
+  import Vue from 'vue'
 
-@Component
-export default class CreateFileSetDialog extends Vue {
-  @Prop({required: true})
-  readonly containerID!: string;
-
-  errorMessage = ""
-  dialog= false
-  valid = true
-  tagName = ""
-  filesToUpload: File[] | null = null
-  filesLoading = false
-
-  addFiles(files: File[]) {
-    this.filesToUpload = files;
+  interface CreateFileSetDialogModel {
+    filesToUpload: File[] | null;
+    errorMessage: string;
+    dialog: boolean;
+    valid: boolean;
+    tagName: string;
+    filesLoading: boolean;
   }
 
-  createFileSet() {
-    // @ts-ignore
-    if(!this.$refs.form!.validate()) return;
-
-    this.filesLoading = true;
-
-    this.$client.createWebGLTagsAndFiles(this.containerID, this.filesToUpload!, this.tagName)
-        .then(() => {
-          this.$emit('fileSetCreated');
-          this.clearNewFileSet();
-        })
-        .catch(e => this.errorMessage = e)
-        .finally(() => {
-          this.filesLoading = false;
-        })
-
+  interface VForm extends Vue {
+    validate: () => boolean;
   }
 
-  clearNewFileSet() {
-    this.tagName = "";
-    this.addFiles([]);
-    this.dialog = false;
-  }
+  export default Vue.extend ({
+    name: 'CreateFileSetDialog',
 
-}
+    props: {
+      containerID: {required: true, type: String},
+    },
+
+    data: (): CreateFileSetDialogModel => ({
+      filesToUpload: null,
+      errorMessage: "",
+      dialog: false,
+      valid: true,
+      tagName: "",
+      filesLoading: false
+    }),
+
+    methods: {
+      addFiles(files: File[]) {
+        this.filesToUpload = files;
+      },
+      createFileSet() {
+        const form = this.$refs.form as VForm;
+        if(!form.validate()) return;
+
+        this.filesLoading = true;
+
+        this.$client.createWebGLTagsAndFiles(this.containerID, this.filesToUpload!, this.tagName)
+            .then(() => {
+              this.$emit('fileSetCreated');
+              this.clearNewFileSet();
+            })
+            .catch(e => this.errorMessage = e)
+            .finally(() => {
+              this.filesLoading = false;
+            })
+
+      },
+      clearNewFileSet() {
+        this.tagName = "";
+        this.addFiles([]);
+        this.dialog = false;
+      },
+      validateFileInput(v: File[] | null): boolean | string {
+        return v ? v.length > 0 || this.$t('validation.required') : '';
+      },
+      validateTextField(v: string): boolean | string {
+          return !!v || this.$t('validation.required');
+      }
+    }
+  });
 </script>
 
 <style lang="scss">
