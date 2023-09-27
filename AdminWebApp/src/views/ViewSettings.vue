@@ -115,7 +115,7 @@
 
       <v-card-actions>
         <template v-if="container">
-          <delete-container-dialog :containerID="containerID"></delete-container-dialog>
+          <DeleteContainerDialog :containerID="containerID"></DeleteContainerDialog>
         </template>
         <v-spacer></v-spacer>
         <v-btn color="primary" text @click="updateContainer" ><span v-if="!loading">{{$t("general.save")}}</span>
@@ -129,7 +129,7 @@
 <script lang="ts">
   import Vue from 'vue'
   import {ContainerT, P6DataSourceConfig} from "@/api/types";
-  import DeleteContainerDialog from "@/components/ontology/containers/deleteContainerDialog.vue";
+  import DeleteContainerDialog from "@/components/ontology/containers/DeleteContainerDialog.vue";
   import SelectDataSourceTypes from "@/components/dataSources/SelectDataSourceTypes.vue";
   import ConfiguredSourceActions from '@/components/dataSources/ConfiguredSourceActions.vue';
   import {v4 as uuidv4} from 'uuid';

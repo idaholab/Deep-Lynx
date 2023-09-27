@@ -11,7 +11,7 @@
         <v-toolbar flat color="white">
           <v-toolbar-title>{{$t("containers.description")}}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <create-container-dialog @containerCreated="refreshContainers"></create-container-dialog>
+          <CreateContainerDialog @containerCreated="refreshContainers"></CreateContainerDialog>
         </v-toolbar>
 
       </template>
@@ -81,8 +81,8 @@
   import Vue from 'vue'
   import {UserT} from "@/auth/types";
   import {ContainerT} from "@/api/types";
-  import CreateContainerDialog from "@/components/ontology/containers/createContainerDialog.vue"
-
+  import CreateContainerDialog from "@/components/ontology/containers/CreateContainerDialog.vue"
+  
   interface ContainersModel {
     dialog: boolean,
     editDialog: boolean,

@@ -81,8 +81,8 @@
   import Vue from 'vue'
   import LanguageSelect from '@/components/general/LanguageSelect.vue'
   import {ContainerT, UserContainerInviteT} from "@/api/types";
-  import ContainerSelect from "@/components/ontology/containers/containerSelect.vue"
-  import CreateContainerDialog from "@/components/ontology/containers/createContainerDialog.vue";
+  import ContainerSelect from "@/components/ontology/containers/ContainerSelect.vue"
+  import CreateContainerDialog from "@/components/ontology/containers/CreateContainerDialog.vue";
   import LogoutPage from "@/components/accessManagement/LogoutPage.vue";
   import {RefreshPermissions} from "@/auth/authentication_service";
 
