@@ -2,20 +2,20 @@
   <v-dialog v-model="dialog" @click:outside="reset()"  max-width="60%">
     <template v-slot:activator="{ on }">
       <v-icon
-          v-if="displayIcon === 'archive' || displayIcon === 'both' && displayIcon !== 'none'"
-          small
-          class="mr-2"
-          v-on="on"
-          @click="isArchive = true"
+        v-if="icon === 'archive' || icon === 'both'"
+        small
+        class="mr-2"
+        v-on="on"
+        @click="isArchive = true"
       >mdi-archive</v-icon>
       <v-icon
-          v-if="displayIcon === 'trash' || displayIcon === 'both' && displayIcon !== 'none'"
-          small
-          class="mr-2"
-          v-on="on"
-          @click="isDelete = true; initiate()"
+        v-if="icon === 'trash' || icon === 'both'"
+        small
+        class="mr-2"
+        v-on="on"
+        @click="isDelete = true; initiate()"
       >mdi-delete</v-icon>
-      <v-btn v-if="displayIcon ==='none'" color="primary" dark class="mt-2" v-on="on">{{$t("transformations.delete")}}</v-btn>
+      <v-btn v-if="icon ==='none'" color="primary" dark class="mt-2" v-on="on">{{$t("transformations.delete")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2" v-if="isDelete">
@@ -39,8 +39,8 @@
               <v-alert type="error" v-if="inUse">
                 {{$t('warnings.dataDeleteTransformation')}}
                 <v-checkbox
-                    v-model="withData"
-                    :label="$t('transformations.deleteWithData')"
+                  v-model="withData"
+                  :label="$t('transformations.deleteWithData')"
                 ></v-checkbox>
               </v-alert>
             </div>
@@ -89,114 +89,126 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from 'vue-property-decorator'
+import Vue, { PropType } from 'vue';
 import {TypeMappingTransformationT} from "@/api/types";
 
-@Component
-export default class DeleteTypeTransformationDialog extends Vue {
-  @Prop({required: true})
-  containerID!: string
+interface DeleteTypeTransformationDialogModel {
+  errorMessage: string;
+  dialog: boolean;
+  isDelete: boolean;
+  isArchive: boolean;
+  inUseLoading: boolean;
+  inUse: boolean;
+  deleteLoading: boolean;
+  archiveLoading: boolean;
+  timerRunning: boolean;
+  withData: boolean;
+  countDown: number;
+}
 
-  @Prop({required: true})
-  dataSourceID!: string
+export default Vue.extend({
+  name: 'DeleteTypeTransformationDialog',
 
-  @Prop({required: true})
-  transformation!: TypeMappingTransformationT
+  props: {
+    containerID: {type: String, required: true},
+    dataSourceID: {type: String, required: true},
+    transformation: {
+      type: Object as PropType<TypeMappingTransformationT>,
+      required: true
+    },
+    icon: {
+      type: String as PropType<"trash" | "archive" | "both" | "none">,
+      required: false, 
+      default: "none"
+    }
+  },
 
-  @Prop({required: false, default: "none"})
-  readonly icon!: "trash" | "archive" | "both" | "none"
+  data: (): DeleteTypeTransformationDialogModel => ({
+    errorMessage: '',
+    dialog: false,
+    isDelete: false,
+    isArchive: false,
+    inUseLoading: true,
+    inUse: false,
+    deleteLoading: false,
+    archiveLoading: false,
+    timerRunning: false,
+    withData: true,
+    countDown: 1,
+  }),
 
-  errorMessage = ""
-  dialog = false
-  isDelete = false
-  isArchive = false
-  inUseLoading = true
-  inUse = false
-  deleteLoading = false
-  archiveLoading = false
-  timerRunning = false
-  withData = true
-  countDown = 1
-
-  get displayIcon() {
-    return this.icon
-  }
-
-  initiate() {
-    // check to see if it's in-use, should return 'true' if in use
-    this.$client.deleteTransformation(
+  methods: {
+    initiate() {
+      // check to see if it's in-use, should return 'true' if in use
+      this.$client.deleteTransformation(
         this.containerID,
         this.dataSourceID,
         this.transformation.type_mapping_id,
         this.transformation.id,
-        {
-          inUse: true
-        })
+        {inUse: true}
+      )
         .then((result) => {
           this.inUse = result
           this.inUseLoading = false
           this.startCountdown()
         })
         .catch(e => this.errorMessage = e)
-  }
-
-  startCountdown() {
-    this.countDown = 1
-
-    if(!this.timerRunning) this.countdown()
-  }
-
-  countdown() {
-    if(this.countDown > 0) {
-      setTimeout(() => {
-        this.countDown -= 1
-        this.timerRunning = true
-        this.countdown()
-      }, 1000)
-    } else {
-      this.timerRunning = false
-    }
-  }
-
-  deleteSource() {
-    this.deleteLoading = true
-    this.$client.deleteTransformation(
+    },
+    startCountdown() {
+      this.countDown = 1
+      if(!this.timerRunning) this.countdown()
+    },
+    countdown() {
+      if(this.countDown > 0) {
+        setTimeout(() => {
+          this.countDown -= 1
+          this.timerRunning = true
+          this.countdown()
+        }, 1000)
+      } else {
+        this.timerRunning = false
+      }
+    },
+    deleteSource() {
+      this.deleteLoading = true;
+      this.$client.deleteTransformation(
         this.containerID,
         this.dataSourceID,
         this.transformation.type_mapping_id,
         this.transformation.id,
-        {forceDelete: true, withData: this.withData})
+        {forceDelete: true, withData: this.withData}
+      )
         .then(() => {
           this.reset()
           this.$emit('transformationDeleted')
         })
         .catch(e => this.errorMessage = e)
-  }
-
-  archiveSource() {
-    this.archiveLoading = true
-    this.$client.deleteTransformation(
+    },
+    archiveSource() {
+      this.archiveLoading = true
+      this.$client.deleteTransformation(
         this.containerID,
         this.dataSourceID,
         this.transformation.type_mapping_id,
         this.transformation.id,
-        {forceDelete: false, archive: true})
+        {forceDelete: false, archive: true}
+      )
         .then(() => {
           this.reset()
           this.$emit('transformationArchived')
         })
         .catch(e => this.errorMessage = e)
+    },
+    reset() {
+      this.dialog = false
+      this.isDelete = false
+      this.isArchive = false
+      this.deleteLoading = false
+      this.archiveLoading = false
+      this.inUseLoading = true
+      this.timerRunning = false
+      this.withData = true
+    }
   }
-
-  reset() {
-    this.dialog = false
-    this.isDelete = false
-    this.isArchive = false
-    this.deleteLoading = false
-    this.archiveLoading = false
-    this.inUseLoading = true
-    this.timerRunning = false
-    this.withData = true
-  }
-}
+});
 </script>

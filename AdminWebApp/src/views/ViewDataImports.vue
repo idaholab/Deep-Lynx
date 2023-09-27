@@ -198,7 +198,7 @@
   import { VueConstructor } from 'vue';
   import {DataSourceT , ImportDataT, ImportT} from "@/api/types";
   import ImportDataDialog from "@/components/dataImport/ImportDataDialog.vue";
-  import DataTypeMapping from "@/components/etl/dataTypeMapping.vue"
+  import DataTypeMapping from "@/components/etl/DataTypeMapping.vue"
   import SelectDataSource from "@/components/dataSources/SelectDataSource.vue";
   import DeleteDataImportDialog from "@/components/dataImport/DeleteDataImportDialog.vue";
   import ReprocessDataImportDialog from "@/components/dataImport/ReprocessDataImportDialog.vue";
