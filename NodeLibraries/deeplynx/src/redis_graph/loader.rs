@@ -228,10 +228,12 @@ TO STDOUT WITH (FORMAT csv, HEADER true) ;
     let mut connection = self.db.acquire().await?;
 
     // now let's handle the edges TODO: move this into its own functions
-    let stream = connection
-            .copy_out_raw(
-                format!(
-                    r#"
+    let stream;
+    if timestamp_val == "default" {
+      stream = connection
+          .copy_out_raw(
+            format!(
+              r#"
   COPY (SELECT q.* FROM (SELECT DISTINCT ON (edges.origin_id, edges.destination_id, edges.data_source_id, edges.relationship_pair_id) edges.id,
     edges.container_id,
     edges.relationship_pair_id,
@@ -269,12 +271,61 @@ TO STDOUT WITH (FORMAT csv, HEADER true) ;
   WHERE (edges.deleted_at IS NULL) AND (edges.container_id = {container_id}::bigint)
   ORDER BY edges.origin_id, edges.destination_id, edges.data_source_id, edges.relationship_pair_id, edges.id, edges.created_at DESC) as q ORDER BY metatype_relationship_name)
 TO STDOUT WITH (FORMAT csv, HEADER true);"#
-                )
-                    .as_str(),
             )
-            .await?;
+                .as_str(),
+          )
+          .await?;
+    } else {
+      stream = connection
+          .copy_out_raw(
+            format!(
+              r#"
+  COPY (SELECT q.* FROM (SELECT DISTINCT ON (edges.origin_id, edges.destination_id, edges.data_source_id, edges.relationship_pair_id) edges.id,
+    edges.container_id,
+    edges.relationship_pair_id,
+    edges.data_source_id,
+    edges.import_data_id,
+    edges.data_staging_id,
+    edges.type_mapping_transformation_id,
+    edges.origin_id,
+    edges.origin_original_id,
+    edges.origin_data_source_id,
+    edges.origin_metatype_id,
+    origin.uuid AS origin_metatype_uuid,
+    edges.destination_id,
+    edges.destination_original_id,
+    edges.destination_data_source_id,
+    edges.destination_metatype_id,
+    destination.uuid AS destination_metatype_uuid,
+    edges.properties,
+    edges.metadata_properties,
+    edges.metadata,
+    edges.created_at,
+    edges.modified_at,
+    edges.deleted_at,
+    edges.created_by,
+    edges.modified_by,
+    metatype_relationship_pairs.relationship_id,
+    metatype_relationships.name AS metatype_relationship_name,
+    metatype_relationships.uuid AS metatype_relationship_uuid,
+    metatype_relationship_pairs.uuid AS metatype_relationship_pair_uuid
+   FROM ((((edges
+     LEFT JOIN metatype_relationship_pairs ON ((edges.relationship_pair_id = metatype_relationship_pairs.id)))
+     LEFT JOIN metatype_relationships ON ((metatype_relationship_pairs.relationship_id = metatype_relationships.id)))
+     LEFT JOIN metatypes origin ON ((edges.origin_metatype_id = origin.id)))
+     LEFT JOIN metatypes destination ON ((edges.destination_metatype_id = destination.id)))
+  WHERE (edges.deleted_at IS NULL) AND (edges.container_id = {container_id}::bigint)
+  AND (edges.created_at <= '{timestamp_val}')
+  AND (edges.deleted_at > '{timestamp_val}' OR edges.deleted_at IS NULL)
+  ORDER BY edges.origin_id, edges.destination_id, edges.data_source_id, edges.relationship_pair_id, edges.id, edges.created_at DESC) as q ORDER BY metatype_relationship_name)
+TO STDOUT WITH (FORMAT csv, HEADER true);"#
+            )
+                .as_str(),
+          )
+          .await?;
+    }
 
-    let async_reader = stream
+      let async_reader = stream
       // we have to convert the error so that we can turn it into an AsyncReader
       .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
       .into_async_read();
@@ -679,13 +730,16 @@ impl Edge {
     &self,
     metatype_relationship_properties: Vec<String>,
   ) -> (Vec<u8>, Vec<String>) {
-    let property_len: u32 = metatype_relationship_properties.len() as u32 + 8;
+    let property_len: u32 = metatype_relationship_properties.len() as u32 + 11;
     let mut property_names: Vec<u8> = vec![];
     let mut property_names_raw: Vec<String> = vec![];
 
     property_names.extend("_deeplynx_id\0".as_bytes());
     property_names.extend("_data_source_id\0".as_bytes());
     property_names.extend("_container_id\0".as_bytes());
+    property_names.extend("_origin_id\0".as_bytes());
+    property_names.extend("_destination_id\0".as_bytes());
+    property_names.extend("_relationship_pair_id\0".as_bytes());
     property_names.extend("_metadata_properties\0".as_bytes());
     property_names.extend("_created_at\0".as_bytes());
     property_names.extend("_created_by\0".as_bytes());
@@ -726,6 +780,15 @@ impl Edge {
 
     property_final.extend(4_i8.to_ne_bytes());
     property_final.extend(self.container_id.to_ne_bytes());
+
+    property_final.extend(4_i8.to_ne_bytes());
+    property_final.extend(self.origin_id.to_ne_bytes());
+
+    property_final.extend(4_i8.to_ne_bytes());
+    property_final.extend(self.destination_id.to_ne_bytes());
+
+    property_final.extend(4_i8.to_ne_bytes());
+    property_final.extend(self.relationship_pair_id.to_ne_bytes());
 
     property_final.extend(3_i8.to_ne_bytes());
     property_final.extend(self.metadata_properties.as_bytes());
