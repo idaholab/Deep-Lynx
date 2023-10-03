@@ -291,14 +291,14 @@
         </v-card-title>
 
         <div class="flex-grow-1" v-if="selectedDataSource !== null && mappingDialog">
-          <data-type-mapping
+          <DataTypeMapping
             :dataSourceID="selectedDataSource.id"
             :containerID="containerID"
             :typeMappingID="selectedTypeMapping?.id"
             :active="selectedTypeMapping?.active"
             @mappingCreated="mappingDialog = false"
             @updated="loadTypeMappings()"
-          ></data-type-mapping>
+          ></DataTypeMapping>
         </div>
         <v-card-actions class="flex-shrink-1">
           <v-spacer></v-spacer>
@@ -345,11 +345,11 @@
     TypeMappingT,
     TypeMappingTransformationT, TypeMappingUpgradePayloadT
   } from "@/api/types";
-  import DataTypeMapping from "@/components/etl/dataTypeMapping.vue"
-  import ExportMappingsDialog from "@/components/etl/exportMappingsDialog.vue";
-  import ImportMappingsDialog from "@/components/etl/importMappingsDialog.vue";
-  import SelectDataSource from "@/components/dataSources/SelectDataSource.vue";
-  import DeleteTypeMappingDialog from "@/components/etl/deleteTypeMappingDialog.vue";
+  import DataTypeMapping from "../components/etl/DataTypeMapping.vue"
+  import ExportMappingsDialog from "../components/etl/ExportMappingsDialog.vue";
+  import ImportMappingsDialog from "../components/etl/ImportMappingsDialog.vue";
+  import SelectDataSource from "../components/dataSources/SelectDataSource.vue";
+  import DeleteTypeMappingDialog from "../components/etl/DeleteTypeMappingDialog.vue";
 
   interface Options {
     sortDesc: boolean[];

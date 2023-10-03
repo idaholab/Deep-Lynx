@@ -19,10 +19,9 @@
           <h3 class="text-h3 px-6">{{$t('transformations.transformations')}}</h3>
           <v-spacer></v-spacer>
           <div class="mr-3">
-            <transformation-dialog
-              v-if="typeMappingID || typeMapping"
+            <TransformationDialog v-if="typeMappingID || typeMapping"
               :payload="unmappedData"
-              :typeMappingID="(typeMappingID) ? typeMappingID: typeMapping.id"
+              :typeMappingID="mappingID"
               :containerID="containerID"
               :dataSourceID="dataSourceID"
               @transformationCreated="refreshTransformations()"
@@ -30,7 +29,7 @@
           </div>
         </div>
         <v-data-table
-          :headers="headers()"
+          :headers="headers"
           :items="transformations"
         >
           <template v-slot:item.names="{ item }">
@@ -52,7 +51,7 @@
             </span>            
           </template>
           <template v-slot:item.actions="{ item }">
-            <transformation-dialog
+            <TransformationDialog
                 :payload="unmappedData"
                 :typeMappingID="typeMappingID"
                 :containerID="containerID"
@@ -102,70 +101,94 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from 'vue-property-decorator'
+import Vue, { PropType } from 'vue';
 import {
   ImportDataT,
   TypeMappingT, TypeMappingTransformationT
 } from "../../api/types";
-import TransformationDialog from "@/components/etl/transformationDialog.vue";
-import DeleteTypeTransformationDialog from "@/components/etl/deleteTypeTransformationDialog.vue";
+import TransformationDialog from "../etl/TransformationDialog.vue";
+import DeleteTypeTransformationDialog from "../etl/DeleteTypeTransformationDialog.vue";
 
-@Component({
-  filters: {
-    pretty: function(value: any) {
-      return JSON.stringify(value, null, 2)
+interface DataTypeMappingModel {
+  errorMessage: string;
+  typeMapping: TypeMappingT | null;
+  transformations: TypeMappingTransformationT[];
+  unmappedData: {[key: string]: any};
+}
+
+export default Vue.extend({
+  name: 'DataTypeMapping',
+
+  components: { 
+    TransformationDialog, 
+    DeleteTypeTransformationDialog
+  },
+
+  props: {
+    dataSourceID: {type: String, required: true},
+    containerID: {type: String, required: true},
+    typeMappingID: {type: String, required: false},
+    shapeHash: {type: String, required: false},
+    active: {type: Boolean, required: false},
+    import: {
+      type: Object as PropType<ImportDataT | null>,
+      required: false
+    },
+  },
+
+  data: (): DataTypeMappingModel => ({
+    errorMessage: '',
+    typeMapping: null,
+    transformations: [],
+    unmappedData: {},
+  }),
+
+  computed: {
+    headers() {
+      return [
+        {text: this.$t("typeMappings.resultingName"), value: 'names'},
+        {text: this.$t("general.actions"), value: "actions"}
+      ];
+    },
+    mappingID() {
+      if (this.typeMappingID) {
+        return this.typeMappingID;
+      } else {
+        return this.typeMapping!.id!;
+      }
     }
   },
-  components: {TransformationDialog, DeleteTypeTransformationDialog}
-})
-export default class DataTypeMapping extends Vue {
 
-  @Prop({required: true})
-  readonly dataSourceID!: string;
-
-  @Prop({required: true})
-  readonly containerID!: string
-
-  @Prop({required: false})
-  readonly typeMappingID!: string
-
-  @Prop({required: false})
-  readonly shapeHash!: string
-
-  @Prop({required: false})
-  active?: boolean
-
-  @Prop({required: false})
-  readonly import!: ImportDataT | null
-
-  errorMessage = ""
-  typeMapping: TypeMappingT | null = null
-
-  transformations: TypeMappingTransformationT[] = []
-
-  updateTypeMapping() {
-    if (this.typeMapping) {
-      this.$client.updateTypeMapping(this.containerID, this.dataSourceID, this.typeMapping.id, this.typeMapping)
-          .then(() => {
-            this.$emit("updated")
-          })
-          .catch((e: any) => this.errorMessage = e)
-    } else {
-      this.errorMessage = this.$t("typeMappings.notFound")
+  methods: {
+    updateTypeMapping() {
+      if (this.typeMapping) {
+        this.$client.updateTypeMapping(this.containerID, this.dataSourceID, this.typeMapping.id, this.typeMapping)
+            .then(() => {
+              this.$emit("updated")
+            })
+            .catch((e: any) => this.errorMessage = e)
+      } else {
+        this.errorMessage = this.$t("typeMappings.notFound")
+      }
+    },
+    refreshTransformations() {
+      if (this.typeMapping) {
+        this.$client.retrieveTransformations(this.containerID, this.dataSourceID, this.typeMapping.id)
+            .then((transformations) => {
+              this.transformations = transformations
+              this.$emit("updated")
+            })
+            .catch(e => this.errorMessage = e)
+      } else {
+        this.errorMessage = this.$t("typeMappings.notFound")
+      }
+    },
+    deleteTransformation(transformation: TypeMappingTransformationT) {
+      this.$client.deleteTransformation(this.containerID, this.dataSourceID, this.typeMapping?.id!, transformation.id, {})
+        .then(() => this.refreshTransformations())
+        .catch(e => this.errorMessage = e)
     }
-  }
-
-  headers() {
-    return  [{
-      text: this.$t("typeMappings.resultingName"),
-      value: 'names'
-    }, {
-      text: this.$t("general.actions"),
-      value: "actions"
-    }]
-  }
-
-  unmappedData: {[key: string]: any} = {}
+  },
 
   beforeMount() {
     if(this.typeMappingID && this.typeMappingID !== '') {
@@ -206,24 +229,5 @@ export default class DataTypeMapping extends Vue {
           .catch(e => this.errorMessage = e)
     }
   }
-
-  refreshTransformations(){
-    if (this.typeMapping) {
-      this.$client.retrieveTransformations(this.containerID, this.dataSourceID, this.typeMapping.id)
-          .then((transformations) => {
-            this.transformations = transformations
-            this.$emit("updated")
-          })
-          .catch(e => this.errorMessage = e)
-    } else {
-      this.errorMessage = this.$t("typeMappings.notFound")
-    }
-  }
-
-  deleteTransformation(transformation: TypeMappingTransformationT) {
-    this.$client.deleteTransformation(this.containerID, this.dataSourceID, this.typeMapping?.id!, transformation.id, {})
-        .then(() => this.refreshTransformations())
-        .catch(e => this.errorMessage = e)
-  }
-}
+});
 </script>

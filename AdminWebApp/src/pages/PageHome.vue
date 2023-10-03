@@ -593,14 +593,14 @@
   import ViewContainers from "@/views/ViewContainers.vue"
   import ViewApiKeys from "@/views/ViewApiKeys.vue";
   import LanguageSelect from "@/components/general/LanguageSelect.vue";
-  import ContainerSelect from "@/components/ontology/containers/containerSelect.vue"
+  import ContainerSelect from "@/components/ontology/containers/ContainerSelect.vue"
   import {TranslateResult} from "vue-i18n";
   import {UserT} from "@/auth/types";
   import {ContainerT, DataSourceT, FullStatistics} from "@/api/types";
   import Config from "@/config";
   import ViewOntologyUpdate from '@/views/ViewOntologyUpdate.vue'
   import ViewOntologyVersioning from "@/views/ViewOntologyVersioning.vue";
-  import ContainerAlertBanner from "@/components/ontology/containers/containerAlertBanner.vue";
+  import ContainerAlertBanner from "@/components/ontology/containers/ContainerAlertBanner.vue";
   import ViewServiceUsers from "@/views/ViewServiceUsers.vue";
   import ViewContainerExport from "@/views/ViewContainerExport.vue";
   import ViewContainerImport from "@/views/ViewContainerImport.vue";

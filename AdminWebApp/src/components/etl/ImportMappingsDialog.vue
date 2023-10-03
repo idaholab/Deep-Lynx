@@ -32,39 +32,47 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from 'vue-property-decorator'
+  import Vue from 'vue'
 
-@Component
-export default class ImportMappingsDialog extends Vue {
-  @Prop({required: true})
-  containerID!: string;
-
-  @Prop({required: true})
-  dataSourceID!: string;
-
-  errorMessage = ""
-  dialog = false
-  fileToUpload: File | null = null
-
-  addFile(file: File) {
-    this.fileToUpload = file
+  interface ImportMappingsDialogModel {
+    errorMessage: string;
+    dialog: boolean;
+    fileToUpload: File | null;
   }
 
-  reset() {
-    this.fileToUpload = null
-  }
+  export default Vue.extend ({
+    name: 'ImportMappingsDialog',
 
-  uploadMappings() {
-    if(this.fileToUpload) {
-      this.$client.importTypeMappings(this.containerID, this.dataSourceID, this.fileToUpload)
-      .then((results) => {
-        this.dialog = false
-        this.errorMessage = ""
+    props: {
+      containerID: {type: String, required: true},
+      dataSourceID: {type: String, required: true},
+    },
 
-        this.$emit('mappingsImported', results)
-      })
-      .catch((e: any) => this.errorMessage = e)
+    data: (): ImportMappingsDialogModel => ({
+      errorMessage: "",
+      dialog: false,
+      fileToUpload: null,
+    }),
+
+    methods: {
+      addFile(file: File) {
+        this.fileToUpload = file
+      },
+      reset() {
+        this.fileToUpload = null
+      },
+      uploadMappings() {
+        if(this.fileToUpload) {
+          this.$client.importTypeMappings(this.containerID, this.dataSourceID, this.fileToUpload)
+          .then((results) => {
+            this.dialog = false
+            this.errorMessage = ""
+
+            this.$emit('mappingsImported', results)
+          })
+          .catch((e: any) => this.errorMessage = e)
+        }
+      }
     }
-  }
-}
+  });
 </script>
