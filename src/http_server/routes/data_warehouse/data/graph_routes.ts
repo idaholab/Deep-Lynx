@@ -18,6 +18,7 @@ import Config from '../../../../services/config';
 import Result from '../../../../common_classes/result';
 import ContainerRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
 import RedisGraphService from '../../../../services/cache/redis_graph_loader';
+import {parseISO} from 'date-fns';
 
 export default class GraphRoutes {
     public static mount(app: Application, middleware: any[]) {
@@ -193,6 +194,20 @@ function queryRedisGraph(req: Request, res: Response, next: NextFunction) {
     if (req.container) {
         let timestamp;
         if (typeof req.query.timestamp !== 'undefined' && (req.query.timestamp as string) !== '') {
+            const date_conversion_format = 'yyyy-MM-ddTHH:mm:ss.SSSZ';
+            const convertedDate = parseISO(req.query.timestamp.toString());
+
+            // if conversion is unsuccessful, return from the call with an explanation
+            if (isNaN(convertedDate.getTime())) {
+                return res
+                    .status(400)
+                    .json(
+                        'The timestamp query parameter was not provided a valid date input. ' +
+                            'Please provide an input in the format ' +
+                            date_conversion_format,
+                    );
+            }
+
             timestamp = req.query.timestamp.toString();
         }
 

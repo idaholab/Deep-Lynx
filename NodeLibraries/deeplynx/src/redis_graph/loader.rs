@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::{PgPool, Pool, Postgres, Row};
 use std::collections::HashMap;
+use futures_util::stream::BoxStream;
 use tokio_util::compat::FuturesAsyncReadCompatExt;
 
 #[derive(Clone)]
@@ -43,7 +44,6 @@ impl RedisGraphLoader {
   /// to quickly load the data from Postgres into RedisGraph. Due to how we have to format the RedisGraph
   /// bulkloader, we do tend to max out memory with how we read records into it and the fact we have
   /// to keep track of all the new ids for the nodes
-  // TODO: right now generate only does current graph, need to actually make it work with timestamps
   pub async fn generate_redis_graph(
     &self,
     container_id: u64,
@@ -52,13 +52,16 @@ impl RedisGraphLoader {
   ) -> Result<String, RedisLoaderError> {
     let mut connection = self.db.acquire().await?;
 
-    let key: String = format!("{}-{}", container_id, timestamp.clone().unwrap_or("default".to_string()));
+    let timestamp_val = timestamp.clone().unwrap_or("default".to_string());
+    let key: String = format!("{}-{}", container_id, timestamp_val);
     self.verify_redis_key(key.clone()).await?;
 
-    let stream = connection
+    let stream;
+    if timestamp_val == "default" {
+      stream = connection
             .copy_out_raw(
-                format!(
-                    r#"
+              format!(
+                r#"
  COPY (SELECT q.*,  ROW_NUMBER () OVER(ORDER BY metatype_id) as new_id FROM (SELECT DISTINCT ON (nodes.id) nodes.id,
     nodes.container_id,
     nodes.metatype_id,
@@ -83,10 +86,46 @@ impl RedisGraphLoader {
   ORDER BY nodes.id, nodes.created_at) q ORDER BY q.metatype_id)
 TO STDOUT WITH (FORMAT csv, HEADER true) ;
     "#
-                )
-                    .as_str(),
+              )
+                  .as_str(),
             )
             .await?;
+    } else {
+      stream = connection
+          .copy_out_raw(
+            format!(
+              r#"
+ COPY (SELECT q.*,  ROW_NUMBER () OVER(ORDER BY metatype_id) as new_id FROM (SELECT DISTINCT ON (nodes.id) nodes.id,
+    nodes.container_id,
+    nodes.metatype_id,
+    nodes.data_source_id,
+    nodes.import_data_id,
+    nodes.data_staging_id,
+    nodes.type_mapping_transformation_id,
+    nodes.original_data_id,
+    nodes.properties,
+    nodes.metadata_properties,
+    nodes.metadata,
+    nodes.created_at,
+    nodes.modified_at,
+    nodes.deleted_at,
+    nodes.created_by,
+    nodes.modified_by,
+    metatypes.name AS metatype_name,
+    metatypes.uuid AS metatype_uuid
+   FROM (nodes
+     LEFT JOIN metatypes ON ((metatypes.id = nodes.metatype_id)))
+  WHERE (nodes.container_id = {container_id})
+  AND nodes.created_at <= '{timestamp_val}'
+  AND (nodes.deleted_at > '{timestamp_val}' OR nodes.deleted_at IS NULL)
+  ORDER BY nodes.id, nodes.created_at) q ORDER BY q.metatype_id)
+TO STDOUT WITH (FORMAT csv, HEADER true) ;
+    "#
+            )
+                .as_str(),
+          )
+          .await?;
+    }
 
     let async_reader = stream
       // we have to convert the error so that we can turn it into an AsyncReader
