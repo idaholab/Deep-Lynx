@@ -209,6 +209,10 @@ function queryRedisGraph(req: Request, res: Response, next: NextFunction) {
             }
 
             timestamp = req.query.timestamp.toString();
+
+            // dates are rounded to the minute to avoid proliferation of graphs
+            const coef = 1000 * 60;
+            timestamp = new Date(Math.floor(new Date(timestamp).getTime() / coef) * coef).toISOString();
         }
 
         const redisGraph = new RedisGraphService();
