@@ -15,9 +15,7 @@ import NodeRepository from '../../../../../data_access_layer/repositories/data_w
 import NodeLeafRepository from '../../../../../data_access_layer/repositories/data_warehouse/data/node_leaf_repository';
 const nodeRepo = new NodeRepository();
 
-
 export default class NodeFunctions {
-
     public static listNodes(req: Request, res: Response, next: NextFunction) {
         // fresh instance of the repo to avoid filter issues
         if (req.container) {
@@ -38,8 +36,8 @@ export default class NodeFunctions {
 
             if (String(req.query.includeRawData).toLowerCase() === 'true') {
                 repo = repo
-                .join('data_staging', {origin_col:'data_staging_id', destination_col:'id'})
-                .addFields({'data': 'raw_data_properties'}, repo._aliasMap.get('data_staging'))
+                    .join('data_staging', {origin_col: 'data_staging_id', destination_col: 'id'})
+                    .addFields({data: 'raw_data_properties'}, repo._aliasMap.get('data_staging'));
             }
 
             if (req.query.count !== undefined && String(req.query.count).toLowerCase() === 'true') {
@@ -58,7 +56,7 @@ export default class NodeFunctions {
                 repo.list(String(req.query.loadMetatypes).toLowerCase() === 'true', {
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,
-                    includeHistory: String(req.query.history).toLowerCase() === 'true'
+                    includeHistory: String(req.query.history).toLowerCase() === 'true',
                 })
                     .then((result) => {
                         if (result.isError && result.error) {
@@ -79,8 +77,9 @@ export default class NodeFunctions {
     public static retrieveNode(req: Request, res: Response, next: NextFunction) {
         // first check if the node history is desired, otherwise load the single current node
         if (String(req.query.history).toLowerCase() === 'true' && req.container) {
-            const includeRawData = (String(req.query.includeRawData).toLowerCase() === 'true') ? true : false
-            nodeRepo.findNodeHistoryByID(req.params.nodeID, includeRawData)
+            const includeRawData = String(req.query.includeRawData).toLowerCase() === 'true';
+            nodeRepo
+                .findNodeHistoryByID(req.params.nodeID, includeRawData)
                 .then((result) => {
                     if (result.isError && result.error) {
                         result.asResponse(res);
@@ -127,28 +126,25 @@ export default class NodeFunctions {
         // fresh instance of the repo to avoid filter issues
         if (req.container && req.metatype) {
             let repo = new NodeRepository();
-            repo = repo.where()
-                .containerID('eq', req.container.id!)
-                .and()
-                .metatypeID('eq', req.metatype.id);
+            repo = repo.where().containerID('eq', req.container.id!).and().metatypeID('eq', req.metatype.id);
             if (String(req.query.includeRawData).toLowerCase() === 'true') {
                 repo = repo
-                .join('data_staging', {origin_col:'data_staging_id', destination_col:'id'})
-                .addFields({'data': 'raw_data_properties'}, repo._aliasMap.get('data_staging'))
+                    .join('data_staging', {origin_col: 'data_staging_id', destination_col: 'id'})
+                    .addFields({data: 'raw_data_properties'}, repo._aliasMap.get('data_staging'));
             }
             repo.list(String(req.query.loadMetatypes).toLowerCase() === 'true', {
                 limit: req.query.limit ? +req.query.limit : undefined,
                 offset: req.query.offset ? +req.query.offset : undefined,
             })
-            .then((result) => {
-                if (result.isError && result.error) {
-                    result.asResponse(res);
-                    return;
-                }
-                res.status(200).json(result);
-            })
-            .catch((err) => Result.Failure(err, 404).asResponse(res))
-            .finally(() => next());
+                .then((result) => {
+                    if (result.isError && result.error) {
+                        result.asResponse(res);
+                        return;
+                    }
+                    res.status(200).json(result);
+                })
+                .catch((err) => Result.Failure(err, 404).asResponse(res))
+                .finally(() => next());
         } else {
             Result.Failure(`container or metatype not found`, 404).asResponse(res);
             next();
@@ -171,8 +167,10 @@ export default class NodeFunctions {
             });
         }
 
+        const merge = String(req.query.merge).toLowerCase() === 'true';
+
         nodeRepo
-            .bulkSave(req.currentUser!, toSave)
+            .bulkSave(req.currentUser!, toSave, undefined, merge)
             .then((result) => {
                 if (result.isError) {
                     Result.Error(result.error?.error).asResponse(res);
@@ -203,5 +201,4 @@ export default class NodeFunctions {
             next();
         }
     }
-    
 }

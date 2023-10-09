@@ -94,12 +94,12 @@ export type MetatypeKeyT = {
     data_type: 'number' | 'number64' | 'float' | 'float64' | 'date' | 'string' | 'boolean' | 'enumeration' | 'file';
     archived: boolean;
     validation:
-    | {
-        regex: string;
-        min: number;
-        max: number;
-    }
-    | undefined;
+        | {
+              regex: string;
+              min: number;
+              max: number;
+          }
+        | undefined;
     options: string[] | undefined;
     default_value: string | boolean | number | any[] | undefined;
     created_at?: string;
@@ -504,6 +504,7 @@ export type TypeMappingTransformationT = {
     created_at_key?: string;
     created_at_format_string?: string;
     tags?: TypeMappingTransformationTagT[];
+    merge?: boolean;
 };
 
 export type TypeMappingTransformationPayloadT = {

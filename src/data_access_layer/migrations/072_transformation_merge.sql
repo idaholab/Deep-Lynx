@@ -1,0 +1,1 @@
+ALTER TABLE type_mapping_transformations ADD column merge bool;
