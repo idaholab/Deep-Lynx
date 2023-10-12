@@ -152,6 +152,7 @@
                               v-if="rootArray"
                               :items="payloadKeys"
                               v-model="uniqueIdentifierKey"
+                              :rules="[validateIDRequired]"
                               clearable
                           >
                             <template v-slot:label>{{ $t('transformations.uniqueID') }}</template>
@@ -294,17 +295,6 @@
                               <info-tooltip :message="$t('help.tagMapping')"/>
                             </template>
                           </v-autocomplete>
-                        </v-col>
-
-                        <v-col cols="12" md="6" lg="4">
-                          <v-checkbox
-                              v-model="merge"
-                          >
-                            <template v-slot:label>{{$t('transformations.merge')}}</template>
-                            <template slot="prepend">
-                              <info-tooltip :message="$t('help.mergeHelp')"/>
-                            </template>
-                          </v-checkbox>
                         </v-col>
 
                         <template v-if="hasOldEdgeParams">
@@ -1408,6 +1398,11 @@ export default Vue.extend ({
     },
     validatePostgresDate(value: string) {
       return !value.includes('%') || this.$t('help.postgresDate');
+    },
+    validateIDRequired(value: any) {
+      // original data id is required for merging node data from a transformation
+      if (this.merge) return !!value || this.$t('validation.required')
+      return true;
     },
     reset() {
       const mainForm: any = this.$refs.mainForm

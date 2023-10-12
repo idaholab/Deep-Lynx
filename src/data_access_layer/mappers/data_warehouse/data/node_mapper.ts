@@ -148,27 +148,63 @@ export default class NodeMapper extends Mapper {
     // My hope is that this method will allow us to be flexible and create more complicated
     // queries more easily.
     private createOrUpdateStatement(userID: string, merge = false, ...nodes: Node[]): string {
+        // similar to the node_insert_trigger, join to nodes on original_data_id, metatype_id, and data_source_id
+        // in order to perform a merge on a node for which we do not have a DeepLynx ID (data from type mappings)
         const text = merge
             ? `INSERT INTO nodes(
-                  container_id,
-                  metatype_id,
-                  properties,
-                  metadata_properties,
-                  original_data_id,
-                  data_source_id,
-                  type_mapping_transformation_id,
-                  import_data_id,
-                  data_staging_id,
-                  metadata,
-                  created_by,
-                  modified_by,
-                  created_at) VALUES %L
+                    container_id,
+                    metatype_id,
+                    properties,
+                    metadata_properties,
+                    original_data_id,
+                    data_source_id,
+                    type_mapping_transformation_id,
+                    import_data_id,
+                    data_staging_id,
+                    metadata,
+                    created_by,
+                    modified_by,
+                    created_at)
+               SELECT
+                   u.container_id::int8,
+                   u.metatype_id::int8,
+                   n.properties::jsonb || u.properties::jsonb,
+                   n.metadata_properties::jsonb || u.metadata_properties::jsonb,
+                   u.original_data_id::text,
+                   u.data_source_id::int8,
+                   u.type_mapping_transformation_id::int8,
+                   u.import_data_id::int8,
+                   u.data_staging_id::uuid,
+                   u.metadata::jsonb,
+                   u.created_by::text,
+                   u.modified_by::text,
+                   u.created_at::TIMESTAMP
+               FROM (VALUES %L) AS u(
+                     container_id,
+                     metatype_id,
+                     properties,
+                     metadata_properties,
+                     original_data_id,
+                     data_source_id,
+                     type_mapping_transformation_id,
+                     import_data_id,
+                     data_staging_id,
+                     metadata,
+                     created_by,
+                     modified_by,
+                     created_at)
+                LEFT JOIN nodes n ON u.original_data_id = n.original_data_id
+                   AND u.metatype_id::int8 = n.metatype_id
+                   AND u.data_source_id::int8 = n.data_source_id
+                WHERE n.created_at < u.created_at::TIMESTAMP
+                ORDER BY n.created_at DESC LIMIT 1
                   ON CONFLICT(created_at, id) DO UPDATE SET
                       properties = nodes.properties || EXCLUDED.properties,
                       metadata = EXCLUDED.metadata,
                       metadata_properties = nodes.metadata_properties || EXCLUDED.metadata_properties,
                       deleted_at = EXCLUDED.deleted_at
                   WHERE EXCLUDED.id = nodes.id AND EXCLUDED.properties IS DISTINCT FROM nodes.properties
+                        AND EXCLUDED.metadata_properties IS DISTINCT FROM nodes.metadata_properties
                    RETURNING *`
             : `INSERT INTO nodes(
                   container_id,
@@ -189,6 +225,7 @@ export default class NodeMapper extends Mapper {
                       metadata = EXCLUDED.metadata,
                       deleted_at = EXCLUDED.deleted_at
                   WHERE EXCLUDED.id = nodes.id AND EXCLUDED.properties IS DISTINCT FROM nodes.properties
+                        AND EXCLUDED.metadata_properties IS DISTINCT FROM nodes.metadata_properties
                    RETURNING *`;
 
         const values = nodes.map((n) => [
@@ -269,6 +306,7 @@ export default class NodeMapper extends Mapper {
                    metadata_properties = nodes.metadata_properties || EXCLUDED.metadata_properties,
                    deleted_at = EXCLUDED.deleted_at
             WHERE EXCLUDED.id = nodes.id AND EXCLUDED.properties IS DISTINCT FROM nodes.properties
+                AND EXCLUDED.metadata_properties IS DISTINCT FROM nodes.metadata_properties
             RETURNING *`
             : `INSERT INTO nodes(
                   id,
