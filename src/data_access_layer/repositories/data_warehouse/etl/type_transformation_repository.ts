@@ -216,7 +216,7 @@ export default class TypeTransformationRepository extends Repository implements 
         for (const transformation of transformations) {
             if (transformation.metatype_name && !transformation.metatype_id) metatypeNames.push(transformation.metatype_name);
             if (transformation.metatype_relationship_pair_name && !transformation.metatype_relationship_pair_id)
-                relationshipPairNames.push(transformation.metatype_relationship_pair_name);
+                relationshipPairNames.push(transformation.metatype_relationship_pair_name.replace(/:/g, '-'));
         }
 
         // fetch all metatypes and relationship pairs by name specified, this allows us to minimize DB calls, though it
@@ -278,7 +278,7 @@ export default class TypeTransformationRepository extends Repository implements 
 
             // set pair id and any attached relationship keys correctly
             if (!transformations[i].metatype_relationship_pair_id && transformations[i].metatype_relationship_pair_name) {
-                const foundPair = relationshipPairs.find((p) => p.name === transformations[i].metatype_relationship_pair_name);
+                const foundPair = relationshipPairs.find((p) => p.name === transformations[i].metatype_relationship_pair_name?.replace(/:/g, '-'));
 
                 if (foundPair) {
                     transformations[i].metatype_relationship_pair_id = foundPair.id;
