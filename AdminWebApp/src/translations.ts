@@ -330,6 +330,7 @@ export default {
             archive: 'Archive',
             parent: 'Parent',
             owner: 'Owner',
+            merge: 'Merge',
         },
         validation: {
             validEmail: 'Email must be valid',
@@ -716,7 +717,6 @@ export default {
             deletePermanently: 'Delete Transformation Permanently',
             archive: 'Archive Transformation',
             deleteWithData: 'Delete all data associated with Transformation',
-            merge: 'Merge',
         },
         imports: {
             import: 'Import',

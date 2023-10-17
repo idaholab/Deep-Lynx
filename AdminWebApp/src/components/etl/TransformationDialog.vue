@@ -215,7 +215,7 @@
                           <v-checkbox
                               v-model="merge"
                           >
-                            <template v-slot:label>{{$t('transformations.merge')}}</template>
+                            <template v-slot:label>{{$t('general.merge')}}</template>
                             <template slot="prepend">
                               <info-tooltip :message="$t('help.mergeHelp')"/>
                             </template>
