@@ -437,6 +437,7 @@
       },
 
       loadRelationships() {
+        console.log('oh hi mark')
         if(this.selectedMetatype) {
           this.keysLoading = true
           this.$client.listMetatypeRelationshipPairsForMetatype(this.selectedMetatype.container_id, this.selectedMetatype.id!)

@@ -31,6 +31,8 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
             return this.#mapper.Delete(p.id);
         }
 
+        await this.#mapper.RefreshView();
+
         return Promise.resolve(Result.Failure('metatype relationship pair has no id'));
     }
 
