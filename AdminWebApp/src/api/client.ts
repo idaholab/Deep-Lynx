@@ -529,7 +529,7 @@ export class Client {
         const query: {[key: string]: any} = {};
 
         if (name) query.name = name;
-        if (description) query.description = name;
+        if (description) query.description = description;
         if (ontologyVersion) query.ontologyVersion = ontologyVersion;
         if (limit) query.limit = limit;
         if (offset) query.offset = offset;

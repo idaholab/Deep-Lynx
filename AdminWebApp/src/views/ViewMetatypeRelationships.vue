@@ -127,6 +127,7 @@
   import {mdiFileDocumentMultiple} from "@mdi/js";
   import OntologyVersionToolbar from '@/components/ontology/versioning/OntologyVersionToolbar.vue';
   import ViewMetatypeRelationshipDialog from "@/components/ontology/metatypeRelationships/ViewMetatypeRelationshipDialog.vue";
+  import debounce from "lodash.debounce";
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const diff = require('deep-diff').diff;
 
@@ -147,8 +148,9 @@
     name: string,
     description: string,
     metatypeRelationships: MetatypeRelationshipT[],
-    comparisonRelationships: MetatypeRelationshipT[]
-    options: Options
+    comparisonRelationships: MetatypeRelationshipT[],
+    options: Options,
+    debouncedSearchWatch: any
   }
 
   export default Vue.extend ({
@@ -179,7 +181,8 @@
         description: "",
         metatypeRelationships: [],
         comparisonRelationships: [],
-        options
+        options,
+        debouncedSearchWatch: null,
       }
     },
 
@@ -194,12 +197,10 @@
         this.loadMetatypeRelationships()
       },
       onNameChange() {
-        this.countRelationships()
-        this.loadMetatypeRelationships()
+        this.debouncedSearchWatch()
       },
       onDescriptionChange() {
-        this.countRelationships()
-        this.loadMetatypeRelationships()
+        this.debouncedSearchWatch()
       },
       headers() {
         return [
@@ -366,11 +367,16 @@
             .catch((e) => (this.errorMessage = e));
         })
         .catch((e) => (this.errorMessage = e));
+
+      this.debouncedSearchWatch = debounce(() => {
+        this.countRelationships();
+        this.loadMetatypeRelationships();
+      }, 500);
     },
 
-    mounted() {
-      this.countRelationships()
-    }
+    beforeDestroy() {
+      this.debouncedSearchWatch.cancel();
+    },
   });
 </script>
 
