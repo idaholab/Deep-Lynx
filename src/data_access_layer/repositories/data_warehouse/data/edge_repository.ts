@@ -284,8 +284,6 @@ export default class EdgeRepository extends Repository implements RepositoryInte
                 const destination_created_at = nodeResult.value.created_at!;
                 const useDestination = origin_created_at > destination_created_at;
                 let isValid = false;
-                console.log(origin_created_at);
-                console.log(destination_created_at);
                 if (useDestination) isValid = e.created_at! > destination_created_at;
                 else isValid = e.created_at! > origin_created_at;
 
