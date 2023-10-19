@@ -6,7 +6,7 @@ export type ContainerT = {
         data_versioning_enabled: boolean;
         ontology_versioning_enabled: boolean;
         enabled_data_sources: string[];
-        configured_data_sources?: {[key: string]: any}[];
+        p6_preset_configs?: P6DataSourceConfig[];
     };
     created_at: string;
     modified_at: string;
@@ -35,9 +35,11 @@ export type MetatypeT = {
     modified_by?: string;
     deleted_at?: string;
     parent_id?: string;
+    parent_name?: string;
     ontology_version?: string;
     old_id?: string;
     uuid?: string;
+    relationships?: MetatypeRelationshipPairT[];
 };
 
 export type MetatypeRelationshipT = {
@@ -76,11 +78,14 @@ export type MetatypeRelationshipPairT = {
     origin_metatype?: MetatypeT;
     destination_metatype?: MetatypeT;
     relationship?: MetatypeRelationshipT;
+    metatype_id?: string;
+    metatype_name?: string;
 };
 
 export type MetatypeKeyT = {
     id?: string;
     metatype_id?: string;
+    metatype_name?: string;
     container_id: string;
     name: string;
     property_name: string;
@@ -89,12 +94,12 @@ export type MetatypeKeyT = {
     data_type: 'number' | 'number64' | 'float' | 'float64' | 'date' | 'string' | 'boolean' | 'enumeration' | 'file';
     archived: boolean;
     validation:
-        | {
-              regex: string;
-              min: number;
-              max: number;
-          }
-        | undefined;
+    | {
+        regex: string;
+        min: number;
+        max: number;
+    }
+    | undefined;
     options: string[] | undefined;
     default_value: string | boolean | number | any[] | undefined;
     created_at?: string;
@@ -103,6 +108,7 @@ export type MetatypeKeyT = {
     modified_by?: string;
     deleted_at?: string;
     ontology_version?: string;
+    uuid?: string;
 };
 
 export type MetatypeRelationshipKeyT = {
@@ -127,6 +133,7 @@ export type MetatypeRelationshipKeyT = {
     created_by?: string;
     modified_by?: string;
     ontology_version?: string;
+    uuid?: string;
 };
 
 export type KeyPairT = {
@@ -179,6 +186,7 @@ export type NodeT = {
     import_data_id?: string;
     type_mapping_transformation_id?: string;
     data_staging_id?: string;
+    created_by?: string;
 };
 
 export type MetadataT = {
@@ -213,6 +221,7 @@ export type EdgeT = {
     data_staging_id: string;
     import_data_id: string;
     type_mapping_transformation_id: string;
+    created_by?: string;
 };
 
 export type PropertyT = {
@@ -228,13 +237,7 @@ export type DataSourceT = {
     adapter_type: string | undefined;
     active: boolean;
     archived?: boolean;
-    config:
-        | StandardDataSourceConfig
-        | HttpDataSourceConfig
-        | AvevaDataSourceConfig
-        | TimeseriesDataSourceConfig
-        | P6DataSourceConfig
-        | undefined;
+    config: StandardDataSourceConfig | HttpDataSourceConfig | AvevaDataSourceConfig | TimeseriesDataSourceConfig | P6DataSourceConfig | undefined;
     created_at?: string;
     modified_at?: string;
     created_by?: string;
@@ -328,10 +331,12 @@ export type AvevaDataSourceConfig = {
 
 export type P6DataSourceConfig = {
     kind: 'p6';
+    id?: string;
+    name?: string;
     endpoint: string;
     projectID: string;
-    username: string;
-    password: string;
+    username?: string;
+    password?: string;
     stop_nodes?: string[];
     value_nodes?: string[];
     data_retention_days?: number;
@@ -479,6 +484,7 @@ export type TypeMappingTransformationT = {
     };
     metatype_id?: string;
     metatype_relationship_pair_id?: string;
+    selected_relationship_pair_name?: string;
     origin_id_key?: string;
     origin_metatype_id?: string;
     origin_data_source_id?: string;
@@ -497,12 +503,14 @@ export type TypeMappingTransformationT = {
     destination_parameters?: EdgeConfigKeyT[];
     created_at_key?: string;
     created_at_format_string?: string;
+    tags?: TypeMappingTransformationTagT[];
 };
 
 export type TypeMappingTransformationPayloadT = {
     conditions?: TypeMappingTransformationCondition[];
     metatype_id?: string;
     metatype_relationship_pair_id?: string;
+    selected_relationship_pair_name?: string;
     origin_id_key?: string;
     origin_metatype_id?: string;
     origin_data_source_id?: string;
@@ -646,6 +654,11 @@ export type TagT = {
     tag_name?: string;
     container_id?: string;
     metadata?: object;
+};
+
+export type TypeMappingTransformationTagT = {
+    id: string;
+    tag_name: string;
 };
 
 export type TimeseriesRange = {

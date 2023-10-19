@@ -13,7 +13,7 @@
             </v-col>
             <v-col cols="7">
               <v-container class="py-9 pl-6 pr-9">
-                <error-banner :message="errorMessage"></error-banner>
+                <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
                 <v-container fill-height fluid>
                   <v-row align="center" justify="center">
                     <div class="px-11">
@@ -45,7 +45,7 @@
 <script lang="ts">
   import Vue from 'vue'
   import Config from '@/config'
-  import LanguageSelect from '@/components/general/languageSelect.vue'
+  import LanguageSelect from '@/components/general/LanguageSelect.vue'
   import buildURL from "build-url"
 
   export default Vue.extend ({

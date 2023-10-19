@@ -109,8 +109,6 @@ export default class ContainerRoutes {
     private static retrieveContainer(req: Request, res: Response, next: NextFunction) {
         // the middleware will have fetched the container for us, no need to refecth
         if (req.container) {
-            void repository.generateAuthAlert(req.container);
-
             const result = Result.Success(req.container);
             result.asResponse(res);
             next();
@@ -162,9 +160,6 @@ export default class ContainerRoutes {
                     updated.asResponse(res);
                     return;
                 }
-
-                void repository.generateAuthAlert(container);
-
                 Result.Success(container).asResponse(res);
             })
             .catch((err) => Result.Error(err).asResponse(res));
@@ -281,6 +276,8 @@ export default class ContainerRoutes {
         });
 
         busboy.on('finish', () => {
+            input.ontology_versioning_enabled = req.container?.config?.data_versioning_enabled;
+
             containerImport
                 .ImportOntology(user, input as ContainerImportT, fileBuffer, req.query.dryrun === 'false', true, req.params.containerID)
                 .then((result) => {

@@ -116,13 +116,17 @@ export default class MetatypeRoutes {
                 .finally(() => next());
         } else {
             repository
-                .list(req.query.loadKeys === undefined || String(req.query.loadKeys).toLowerCase() === 'true', {
-                    limit: req.query.limit ? +req.query.limit : undefined,
-                    offset: req.query.offset ? +req.query.offset : undefined,
-                    sortBy: req.query.sortBy,
-                    sortDesc: req.query.sortDesc ? String(req.query.sortDesc).toLowerCase() === 'true' : undefined,
-                    loadFromView: req.query.loadFromView ? String(req.query.loadFromView).toLowerCase() === 'true' : undefined,
-                } as QueryOptions)
+                .list(
+                    req.query.loadKeys === undefined || String(req.query.loadKeys).toLowerCase() === 'true',
+                    req.query.loadRelationships === undefined || String(req.query.loadRelationships).toLowerCase() === 'true',
+                    {
+                        limit: req.query.limit ? +req.query.limit : undefined,
+                        offset: req.query.offset ? +req.query.offset : undefined,
+                        sortBy: req.query.sortBy,
+                        sortDesc: req.query.sortDesc ? String(req.query.sortDesc).toLowerCase() === 'true' : undefined,
+                        loadFromView: req.query.loadFromView ? String(req.query.loadFromView).toLowerCase() === 'true' : undefined,
+                    } as QueryOptions,
+                )
                 .then((result) => {
                     result.asResponse(res);
                 })

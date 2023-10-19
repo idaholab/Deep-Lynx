@@ -1,7 +1,7 @@
 <template>
   <div>
   <div v-if="container">
-    <error-banner :message="errorMessage"></error-banner>
+    <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
     <v-app-bar
       app
       color="secondary"
@@ -77,20 +77,6 @@
             <v-list-item-content>
               <v-list-item-title>{{$t("relationshipTypes.relTypes")}}</v-list-item-title>
               <v-list-item-subtitle>{{$t("relationshipTypes.description")}}</v-list-item-subtitle>
-            </v-list-item-content>
-          </v-list-item>
-
-          <v-list-item
-            two-line
-            link
-            v-if="$auth.Auth('ontology', 'read', containerID)"
-            @click="setActiveComponent('metatype-relationship-pairs')"
-            :input-value="currentMainComponent === 'ViewMetatypeRelationshipPairs'"
-            :ripple="{class:'list-ripple'}"
-          >
-            <v-list-item-content>
-              <v-list-item-title>{{$t("relationships.relationships")}}</v-list-item-title>
-              <v-list-item-subtitle>{{$t("relationships.description")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
 
@@ -387,7 +373,7 @@
           <span class="d-block text-h6" style="margin-bottom: 10px">{{$t('help.foundBugs')}} <a :href="emailLink()">{{$t('help.tellUs')}}</a> </span>
           <span class="d-block text-h6" style="margin-bottom: 10px">{{$t('help.needHelp')}} <a :href="helpLink()">{{$t('general.wiki')}}</a> </span>
           <span class="d-block text-h6" style="margin-bottom: 10px">&copy; {{ new Date().getFullYear() }} {{$t('general.inl')}}</span>
-          <span class="d-block text-h6" v-if="$auth.IsAdmin() && stats ">{{ stats.version }}</span>
+          <span class="d-block text-h6">{{ version }}</span>
         </v-container>
       </template>
     </v-navigation-drawer>
@@ -595,7 +581,6 @@
   import Vue from 'vue'
   import ViewMetatypes from "@/views/ViewMetatypes.vue"
   import ViewMetatypeRelationships from "@/views/ViewMetatypeRelationships.vue"
-  import ViewMetatypeRelationshipPairs from "@/views/ViewMetatypeRelationshipPairs.vue"
   import ViewDataExport from "@/views/ViewDataExport.vue"
   import ViewDataImports from "@/views/ViewDataImports.vue"
   import ViewDataQuery from "@/views/ViewDataQuery.vue"
@@ -607,20 +592,21 @@
   import ViewContainerUsers from "@/views/ViewContainerUsers.vue"
   import ViewContainers from "@/views/ViewContainers.vue"
   import ViewApiKeys from "@/views/ViewApiKeys.vue";
-  import LanguageSelect from "@/components/general/languageSelect.vue";
-  import ContainerSelect from "@/components/ontology/containers/containerSelect.vue"
+  import LanguageSelect from "@/components/general/LanguageSelect.vue";
+  import ContainerSelect from "@/components/ontology/containers/ContainerSelect.vue"
   import {TranslateResult} from "vue-i18n";
   import {UserT} from "@/auth/types";
   import {ContainerT, DataSourceT, FullStatistics} from "@/api/types";
   import Config from "@/config";
   import ViewOntologyUpdate from '@/views/ViewOntologyUpdate.vue'
   import ViewOntologyVersioning from "@/views/ViewOntologyVersioning.vue";
-  import ContainerAlertBanner from "@/components/ontology/containers/containerAlertBanner.vue";
+  import ContainerAlertBanner from "@/components/ontology/containers/ContainerAlertBanner.vue";
   import ViewServiceUsers from "@/views/ViewServiceUsers.vue";
   import ViewContainerExport from "@/views/ViewContainerExport.vue";
   import ViewContainerImport from "@/views/ViewContainerImport.vue";
   import ViewFileManager from "@/views/ViewFileManager.vue";
   import ViewOverviewGraph from "@/views/ViewOverviewGraph.vue";
+  const packageJson = require('../../../package.json')
 
   interface HomeModel {
     errorMessage: string
@@ -632,8 +618,9 @@
     argument: string | null
     componentKey: number
     stats: FullStatistics | null
-    metatypesCount: number,
-    relationshipCount: number,
+    version: string
+    metatypesCount: number
+    relationshipCount: number
     dataSources: DataSourceT[]
   }
 
@@ -647,7 +634,6 @@
       ViewDataImports,
       ViewMetatypes,
       ViewMetatypeRelationships,
-      ViewMetatypeRelationshipPairs,
       ViewOntologyUpdate,
       ViewDataExport,
       ViewDataQuery,
@@ -695,7 +681,7 @@
       argument: null,
       componentKey: 0, // this is so we can force a re-render of certain components on component change - assign as key
       stats: null,
-
+      version: '',
       metatypesCount: 0,
       relationshipCount: 0,
       dataSources: [],
@@ -742,13 +728,6 @@
             this.currentMainComponent = "ViewMetatypeRelationships";
             this.componentName = this.$t('relationshipTypes.relTypes')
             this.$router.replace(`/containers/${this.containerID}/metatype-relationships`)
-            break;
-          }
-
-          case "metatype-relationship-pairs": {
-            this.currentMainComponent = "ViewMetatypeRelationshipPairs";
-            this.componentName = this.$t('relationships.relationships')
-            this.$router.replace(`/containers/${this.containerID}/metatype-relationship-pairs`)
             break;
           }
 
@@ -887,48 +866,48 @@
       helpLink() {
         // Use the $t function to get the translated value
         const translatedLink = this.$t('links.wiki');
-        
+
         // Ensure it's a string before returning
         if (typeof translatedLink === 'string') {
           return translatedLink;
         }
-        
+
         // Return a default value or handle the error as per requirements
         return '';
       },
       emailLink() {
         // Use the $t function to get the translated value
         const translatedLink = this.$t('links.email');
-        
+
         // Ensure it's a string before returning
         if (typeof translatedLink === 'string') {
           return translatedLink;
         }
-        
+
         // Return a default value or handle the error as per requirements
         return '';
       },
       welcomeLink() {
         // Use the $t function to get the translated value
         const translatedLink = this.$t('links.wiki');
-        
+
         // Ensure it's a string before returning
         if (typeof translatedLink === 'string') {
           return translatedLink;
         }
-        
+
         // Return a default value or handle the error as per requirements
         return '';
       },
       ontologyLink() {
         // Use the $t function to get the translated value
         const translatedLink = this.$t('links.createOntology');
-        
+
         // Ensure it's a string before returning
         if (typeof translatedLink === 'string') {
           return translatedLink;
         }
-        
+
         // Return a default value or handle the error as per requirements
         return '';
       },
@@ -948,6 +927,8 @@
 
     beforeMount() {
       this.$store.dispatch('refreshCurrentOntologyVersions');
+
+      this.version = packageJson.version;
 
       if(this.$auth.IsAdmin()) {
         this.$client.retrieveStats()

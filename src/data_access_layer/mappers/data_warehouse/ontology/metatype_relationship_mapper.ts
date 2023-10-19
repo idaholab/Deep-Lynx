@@ -17,7 +17,6 @@ const format = require('pg-format');
 export default class MetatypeRelationshipMapper extends Mapper {
     public resultClass = MetatypeRelationship;
     public static tableName = 'metatype_relationships';
-    public static viewName = 'metatype_relationships_view';
 
     private static instance: MetatypeRelationshipMapper;
 
@@ -102,7 +101,7 @@ export default class MetatypeRelationshipMapper extends Mapper {
     }
 
     public async JSONCreate(relationships: MetatypeRelationship[]): Promise<Result<boolean>> {
-        return super.runStatement(this.insertFromJSONStatement(relationships))
+        return super.runStatement(this.insertFromJSONStatement(relationships));
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -158,10 +157,9 @@ export default class MetatypeRelationshipMapper extends Mapper {
         return format(text, values);
     }
 
-    // must run statement against the view so that we get the parent id
     private retrieveStatement(relationshipID: string): QueryConfig {
         return {
-            text: `SELECT * FROM metatype_relationships_view WHERE id = $1`,
+            text: `SELECT * FROM metatype_relationships WHERE id = $1`,
             values: [relationshipID],
         };
     }

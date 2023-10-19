@@ -302,7 +302,6 @@ export class Client {
         containerID: string,
         {
             name,
-            description,
             ontologyVersion,
             metatypeID,
             originID,
@@ -319,7 +318,6 @@ export class Client {
             destinationName,
         }: {
             name?: string;
-            description?: string;
             ontologyVersion?: string;
             metatypeID?: string;
             originID?: string;
@@ -339,7 +337,6 @@ export class Client {
         const query: {[key: string]: any} = {};
 
         if (name) query.name = name;
-        if (description) query.description = description;
         if (ontologyVersion) query.ontologyVersion = ontologyVersion;
         query.ontologyVersion = ontologyVersion;
         if (originID) query.originID = originID;
@@ -532,7 +529,7 @@ export class Client {
         const query: {[key: string]: any} = {};
 
         if (name) query.name = name;
-        if (description) query.description = name;
+        if (description) query.description = description;
         if (ontologyVersion) query.ontologyVersion = ontologyVersion;
         if (limit) query.limit = limit;
         if (offset) query.offset = offset;
@@ -556,6 +553,13 @@ export class Client {
 
     retrieveMetatypeRelationshipPair(containerID: string, metatypeRelationshipPairID: string): Promise<MetatypeRelationshipPairT> {
         return this.get<MetatypeRelationshipPairT>(`/containers/${containerID}/metatype_relationship_pairs/${metatypeRelationshipPairID}`);
+    }
+
+    listMetatypeRelationshipPairsForMetatype(containerID: string, metatypeID: string, deleted = false): Promise<MetatypeRelationshipPairT[]> {
+        const query: {[key: string]: any} = {};
+        query.deleted = deleted;
+
+        return this.get<MetatypeRelationshipPairT[]>(`/containers/${containerID}/metatypes/${metatypeID}/metatype_relationship_pairs`, query);
     }
 
     updateMetatypeRelationship(containerID: string, metatypeRelationshipID: string, metatypeRelationship: any): Promise<boolean> {
@@ -988,9 +992,10 @@ export class Client {
         return this.delete(`/containers/${containerID}/import/imports/${importID}/data/${dataID}`);
     }
 
-    inviteUserToContainer(containerID: string, email: string): Promise<boolean> {
+    inviteUserToContainer(containerID: string, email: string, role_name: string): Promise<boolean> {
         return this.postNoData(`/containers/${containerID}/users/invite`, {
             email,
+            role_name,
         });
     }
 

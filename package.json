@@ -1,6 +1,6 @@
 {
     "name": "deep-lynx",
-    "version": "1.5.0",
+    "version": "1.5.1",
     "description": "DeepLynx allows for an integrated platform during design and operations of mega projects.",
     "main": "./dist/main.js",
     "author": "John Darrington and Christopher Ritter",
@@ -103,6 +103,7 @@
         "@types/dompurify": "^2.3.1",
         "@types/graphql-type-json": "^0.3.2",
         "@types/parquetjs": "^0.10.3",
+        "@types/pg-large-object": "^2.0.5",
         "@vue/cli-service": "~5.0.8",
         "amqplib": "^0.8.0",
         "axios": "^0.21.1",
@@ -161,6 +162,7 @@
         "passport-http": "^0.3.0",
         "passport-jwt": "^4.0.0",
         "passport-local": "^1.0.0",
+        "pem-jwk": "^2.0.0",
         "pg": "^8.8.0",
         "pg-connection-string": "^2.5.0",
         "pg-copy-streams": "^6.0.4",

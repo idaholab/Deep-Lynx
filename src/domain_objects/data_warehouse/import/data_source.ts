@@ -23,7 +23,6 @@ import {PoolClient} from 'pg';
 import {Transform} from 'stream';
 import {DataRetentionDays} from '../../validators/data_retention_validator';
 import {WebSocket} from 'ws';
-import {Bucket, ChangeBucketPayload} from 'deeplynx';
 
 // ReceiveDataOptions will allow us to grow the potential options needed by the ReceiveData
 // function of various implementations without having to grow the parameter list
@@ -342,19 +341,6 @@ export class TimeseriesDataSourceConfig extends BaseDataSourceConfig {
     }
 }
 
-export class TimeseriesBucketDataSourceConfig extends BaseDataSourceConfig {
-    kind: 'timeseries_bucket' = 'timeseries_bucket';
-
-    change_bucket_payload: ChangeBucketPayload | undefined;
-
-    bucket: Bucket | undefined;
-
-    constructor(input?: {change_bucket_payload?: ChangeBucketPayload}) {
-        super();
-        if (input?.change_bucket_payload) this.change_bucket_payload = input.change_bucket_payload;
-    }
-}
-
 /*
     DataSourceRecord represents a data source record in the DeepLynx database and the various
     validations required for said record to be considered valid.
@@ -403,30 +389,18 @@ export default class DataSourceRecord extends BaseDomainClass {
                 {value: AvevaDataSourceConfig, name: 'aveva'},
                 {value: TimeseriesDataSourceConfig, name: 'timeseries'},
                 {value: P6DataSourceConfig, name: 'p6'},
-                {value: TimeseriesBucketDataSourceConfig, name: 'timeseries_bucket'},
             ],
         },
     })
-    config?:
-        | StandardDataSourceConfig
-        | HttpDataSourceConfig
-        | AvevaDataSourceConfig
-        | TimeseriesDataSourceConfig
-        | P6DataSourceConfig
-        | TimeseriesBucketDataSourceConfig = new StandardDataSourceConfig();
+    config?: StandardDataSourceConfig | HttpDataSourceConfig | AvevaDataSourceConfig | TimeseriesDataSourceConfig | P6DataSourceConfig =
+        new StandardDataSourceConfig();
 
     constructor(input: {
         container_id: string;
         name: string;
         adapter_type: string;
         active?: boolean;
-        config?:
-            | StandardDataSourceConfig
-            | HttpDataSourceConfig
-            | AvevaDataSourceConfig
-            | TimeseriesDataSourceConfig
-            | P6DataSourceConfig
-            | TimeseriesBucketDataSourceConfig;
+        config?: StandardDataSourceConfig | HttpDataSourceConfig | AvevaDataSourceConfig | TimeseriesDataSourceConfig | P6DataSourceConfig;
         data_format?: string;
         status?: 'ready' | 'polling' | 'error';
         status_message?: string;

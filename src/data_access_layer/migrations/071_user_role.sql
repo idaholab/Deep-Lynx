@@ -1,0 +1,1 @@
+ALTER TABLE user_container_invites ADD column role_name text DEFAULT NULL;

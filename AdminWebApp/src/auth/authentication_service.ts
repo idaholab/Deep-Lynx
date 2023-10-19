@@ -122,11 +122,11 @@ export async function LoginFromToken(token: string, state: string): Promise<bool
         return new Promise((resolve) => resolve(false));
     }
 
-    const decodedToken = jwt_decode(resp.data.value);
+    const decodedToken = jwt_decode(resp.data.access_token);
 
     // store as `user`
     localStorage.setItem('user', JSON.stringify(decodedToken));
-    localStorage.setItem('user.token', resp.data.value);
+    localStorage.setItem('user.token', resp.data.access_token);
     return new Promise((resolve) => resolve(true));
 }
 

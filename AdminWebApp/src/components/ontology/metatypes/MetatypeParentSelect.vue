@@ -1,6 +1,6 @@
 <template>
   <div>
-    <error-banner :message="errorMessage"></error-banner>
+    <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
     <v-autocomplete
         v-model="parentMetatype"
         :single-line="false"
@@ -13,7 +13,7 @@
         :hint="$t('classes.selectParentHelp')"
         clearable
         @change="updateSelectedMetatype"
-        :disabled="(disableSelect && parentID)"
+        :disabled="(disableSelect && parentID !== undefined)"
     >
       <template v-slot:label>{{$t('general.parent')}}</template>
     </v-autocomplete>

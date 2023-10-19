@@ -7,9 +7,9 @@
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
         <span class="headline text-h3">{{$t("containers.invite")}}</span>
-      </v-card-title>   
+      </v-card-title>
       <v-card-text>
-        <error-banner :message="errorMessage"></error-banner>
+        <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
         <v-row>
           <v-col :cols="12">
 
@@ -24,6 +24,13 @@
                 :rules="emailRules()"
                 required
               ></v-text-field>
+
+              <v-select
+                  v-model="roleName"
+                  :items="roles"
+                  :rules="[validationRule]"
+                  required
+              ></v-select>
             </v-form>
           </v-col>
         </v-row>
@@ -47,6 +54,8 @@
     formValid: boolean
     loading: boolean
     email: string
+    roleName: string
+    roles: string[]
   }
 
   export default Vue.extend ({
@@ -64,17 +73,22 @@
       dialog: false,
       formValid: false,
       loading: false,
-      email: ""
+      email: "",
+      roleName: "user",
+      roles: ["user", "editor", "admin"]
     }),
 
     methods: {
+      validationRule(v: any) {
+        return !!v || this.$t('validation.required')
+      },
       clearNew() {
           this.email = ""
           this.dialog = false
       },
       sendInvite() {
         this.loading = true
-          this.$client.inviteUserToContainer(this.containerID, this.email)
+          this.$client.inviteUserToContainer(this.containerID, this.email, this.roleName)
               .then(() => {
                   this.loading = false
                   this.clearNew()

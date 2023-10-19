@@ -1,6 +1,6 @@
 <template>
   <div>
-    <error-banner :message="errorMessage"></error-banner>
+    <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
     <v-data-table
       :headers="headers"
       :items="containers"
@@ -11,7 +11,7 @@
         <v-toolbar flat color="white">
           <v-toolbar-title>{{$t("containers.description")}}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <create-container-dialog @containerCreated="refreshContainers"></create-container-dialog>
+          <CreateContainerDialog @containerCreated="refreshContainers"></CreateContainerDialog>
         </v-toolbar>
 
       </template>
@@ -31,12 +31,12 @@
         </v-icon>
       </template>
     </v-data-table>
-    
+
     <v-dialog v-model="editDialog" max-width="900px">
       <v-card class="pt-1 pb-3 px-2">
         <v-card-title>
           <span class="headline text-h3">{{$t("containers.edit")}}</span>
-        </v-card-title>   
+        </v-card-title>
         <v-card-text>
           <v-row>
             <v-col v-if="toEdit !== null" :cols="12">
@@ -81,8 +81,8 @@
   import Vue from 'vue'
   import {UserT} from "@/auth/types";
   import {ContainerT} from "@/api/types";
-  import CreateContainerDialog from "@/components/ontology/containers/createContainerDialog.vue"
-
+  import CreateContainerDialog from "@/components/ontology/containers/CreateContainerDialog.vue"
+  
   interface ContainersModel {
     dialog: boolean,
     editDialog: boolean,

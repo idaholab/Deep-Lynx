@@ -170,6 +170,23 @@ export class KeyMapping extends NakedDomainClass {
     }
 }
 
+export class MappingTag extends NakedDomainClass {
+    @IsString()
+    id?: string;
+
+    @IsString()
+    tag_name?: string;
+
+    constructor(input: {id: string; tag_name: string}) {
+        super();
+
+        if (input) {
+            this.id = input.id;
+            this.tag_name = input.tag_name;
+        }
+    }
+}
+
 // Actions that can be performed when a transformation encounters an error
 export type TransformationErrorAction = 'ignore' | 'fail on required' | 'fail';
 export const TransformationErrorActions: TransformationErrorAction[] = ['ignore', 'fail on required', 'fail'];
@@ -286,6 +303,9 @@ export default class TypeTransformation extends BaseDomainClass {
     metatype_relationship_pair_name?: string;
 
     @IsOptional()
+    selected_relationship_pair_name?: string;
+
+    @IsOptional()
     metatype_relationship_pair_ontology_version?: string;
 
     @IsOptional()
@@ -305,6 +325,11 @@ export default class TypeTransformation extends BaseDomainClass {
     @IsOptional()
     @IsString()
     created_at_format_string?: string;
+
+    @ValidateNested()
+    @IsOptional()
+    @Type(() => MappingTag)
+    tags: MappingTag[] = [];
 
     @IsOptional()
     transaction?: PoolClient;
@@ -330,6 +355,7 @@ export default class TypeTransformation extends BaseDomainClass {
         name?: string;
         created_at_key?: string;
         created_at_format_string?: string;
+        tags?: MappingTag[];
         origin_parameters?: EdgeConnectionParameter[];
         destination_parameters?: EdgeConnectionParameter[];
     }) {
@@ -356,6 +382,7 @@ export default class TypeTransformation extends BaseDomainClass {
             if (input.config) this.config = input.config;
             if (input.created_at_key) this.created_at_key = input.created_at_key;
             if (input.created_at_format_string) this.created_at_format_string = input.created_at_format_string;
+            if (input.tags) this.tags = input.tags;
             if (input.destination_parameters) this.destination_parameters = input.destination_parameters;
             if (input.origin_parameters) this.origin_parameters = input.origin_parameters;
         }
@@ -500,8 +527,10 @@ export default class TypeTransformation extends BaseDomainClass {
                     }
 
                     newPayload[fetched.value.property_name] = k.value;
+                    let value = k.value;
+
                     if (k.key) {
-                        const value = TypeTransformation.getNestedValue(k.key, data.data, index);
+                        value = TypeTransformation.getNestedValue(k.key, data.data, index);
 
                         if (typeof value === 'undefined') {
                             switch (this.config.on_key_extraction_error) {
@@ -522,35 +551,35 @@ export default class TypeTransformation extends BaseDomainClass {
                                 }
                             }
                         }
+                    }
 
-                        const conversion = TypeTransformation.convertValue(fetched.value.data_type, value);
-                        if (conversion === null) {
-                            newPayload[fetched.value.property_name] = value;
-                        } else {
-                            if (conversion.errors) {
-                                failedConversions.push(conversion);
+                    const conversion = TypeTransformation.convertValue(fetched.value.data_type, value);
+                    if (conversion === null) {
+                        newPayload[fetched.value.property_name] = value;
+                    } else {
+                        if (conversion.errors) {
+                            failedConversions.push(conversion);
 
-                                switch (this.config.on_conversion_error) {
-                                    case 'fail': {
-                                        break;
-                                    }
-
-                                    // continue only if the key is not required
-                                    case 'fail on required': {
-                                        if (fetched.value.required) {
-                                            return Promise.resolve(Result.Failure('unable to fetch data from payload for a required key'));
-                                        } else continue;
-                                    }
-
-                                    // ignore means we can skip this key
-                                    case 'ignore': {
-                                        continue;
-                                    }
+                            switch (this.config.on_conversion_error) {
+                                case 'fail': {
+                                    break;
                                 }
-                            } else {
-                                newPayload[fetched.value.property_name] = conversion.converted_value;
-                                conversions.push(conversion);
+
+                                // continue only if the key is not required
+                                case 'fail on required': {
+                                    if (fetched.value.required) {
+                                        return Promise.resolve(Result.Failure('unable to fetch data from payload for a required key'));
+                                    } else continue;
+                                }
+
+                                // ignore means we can skip this key
+                                case 'ignore': {
+                                    continue;
+                                }
                             }
+                        } else {
+                            newPayload[fetched.value.property_name] = conversion.converted_value;
+                            conversions.push(conversion);
                         }
                     }
                 }

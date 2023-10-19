@@ -193,7 +193,6 @@ describe('Using a new GraphQL Query on nodes we', async () => {
             'test suite',
             new MetatypeRelationshipPair({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes.value[0].id!,
                 destination_metatype: metatypes.value[1].id!,
                 relationship: relationship.value.id!,
@@ -598,10 +597,16 @@ describe('Using a new GraphQL Query on nodes we', async () => {
 
         data.fields.forEach((field: any) => {
             expect(field.name).not.undefined;
-            if(field.name === '_record'){expect(field.type.name === 'recordInfo')}
-            if(field.name === '_relationship'){expect(field.type.name === 'Multimeta_relationshipInfo')}
-            if(field.name === '_file'){expect(field.type.name === 'fileInfo')}
-        })
+            if (field.name === '_record') {
+                expect(field.type.name === 'recordInfo');
+            }
+            if (field.name === '_relationship') {
+                expect(field.type.name === 'Multimeta_relationshipInfo');
+            }
+            if (field.name === '_file') {
+                expect(field.type.name === 'fileInfo');
+            }
+        });
 
         return Promise.resolve();
     });

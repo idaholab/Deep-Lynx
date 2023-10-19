@@ -9,7 +9,7 @@
     @openDialog="openDialog"
   >
     <template #content>
-      <error-banner :message="errorMessage"/>
+      <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
 
       <template v-if="mode === 'create' || mode === 'edit'">
         <v-form
@@ -656,7 +656,6 @@
       title?: string
     }
     errorMessage: string
-    dialog: boolean
     reprocessLoading: boolean
     archiveLoading: boolean
     deleteLoading: boolean
@@ -690,7 +689,7 @@
     timeseriesErrors: any[]
   }
 
-  export default Vue.extend ({
+  export default Vue.extend({
     name: 'DataSourceActions',
 
     components: { DialogBasic, NodeAttachmentParameterDialog },
@@ -707,7 +706,6 @@
     data: (): DataSourceActionsModel => ({
       config: {},
       errorMessage: "",
-      dialog: false,
       reprocessLoading: false,
       archiveLoading: false,
       deleteLoading: false,
@@ -757,30 +755,27 @@
     beforeMount() {
       switch(this.mode) {
         case 'reprocess': {
-          this.config.title = 'Reprocess Data Source';
+          this.config.title = this.$t('dataSources.reprocess') as string;
           this.config.icon = 'mdi-restore';
           break;
         }
         case 'archive': {
-          this.config.title = 'Archive Data Source';
+          this.config.title = this.$t('dataSources.archive') as string;
           this.config.icon = 'mdi-archive';
           break;
         }
         case 'delete': {
-          this.config.title = 'Delete Data Source';
+          this.config.title = this.$t('dataSources.delete') as string;
           this.config.icon = 'mdi-delete';
           break;
         }
         case 'edit': {
-          this.config.title = 'Edit Data Source';
+          this.config.title = this.$t('dataSources.edit') as string;
           this.config.icon = 'mdi-pencil';
           break;
         }
         case 'create': {
-          this.config.title = 'Create New Data Source';
-          break;
-        }
-        default: {
+          this.config.title = this.$t('dataSources.createNew') as string;
           break;
         }
       }
@@ -838,9 +833,6 @@
           case "p6": {
             return this.$t('dataSources.p6Description');
           }
-          default: {
-            return this.$t('dataSources.standardDescription');
-          }
         }
       },
       validateRequired(value: any) {
@@ -870,26 +862,23 @@
       },
       // p6 functions
       p6configOptions() {
-        const options: string[] = [this.$t('dataSources.p6.defaultAdapter') as string];
-        this.container?.config.configured_data_sources?.forEach((source) => {options.push(source.name)});
-        return options;
+        const configs: {text: string, value: P6DataSourceConfig}[] = [
+          {text: this.$t('dataSources.p6.defaultAdapter'), value: DefaultP6DataSourceConfig()}
+        ];
+        this.container?.config.p6_preset_configs?.forEach((config) => {
+          configs.push({text: config.name!, value: config})
+        });
+        return configs;
       },
       checkConfiguredP6(): boolean {
-        if (this.container!.config.configured_data_sources!.length > 0) {
+        if (this.container!.config.p6_preset_configs!.length > 0) {
           return true;
         } else {
           return false;
         }
       },
-      selectP6config(configName: string) {
-        if (configName !== this.$t('dataSources.p6.defaultAdapter')) {
-          const index = this.container?.config.configured_data_sources?.findIndex(config => config.name = configName);
-          const selectedConfig = this.container!.config.configured_data_sources![index!] as P6DataSourceConfig;
-          // using object assign here otherwise some changes to the source will also be made to the config template
-          Object.assign(this.p6config, selectedConfig);
-        } else {
-          this.p6config = DefaultP6DataSourceConfig()
-        }
+      selectP6config(config: P6DataSourceConfig) {
+        this.p6config = config;
         this.p6preset.endpoint = this.p6config.endpoint ? true : false;
         this.p6preset.projectID = this.p6config.projectID ? true : false;
       },
@@ -982,17 +971,20 @@
         });
       },
       getLink(type: string) {
-        if (type === 'timeseries') {
-          return this.$t('links.timeseriesQuickStart') as string;
-        } else if (type === 'chunk') {
-          return this.$t('links.chunkInterval') as string;
-        } else if (type === 'date') {
-          if (this.fastload === true) {
-            return this.$t('links.rustTime') as string;
+        switch(type) {
+          case 'timeseries': {
+            return this.$t('links.timeseriesQuickStart') as string;
           }
-          return this.$t('links.postgresTime') as string;
+          case 'chunk': {
+            return this.$t('links.chunkInterval') as string;
+          }
+          case 'date': {
+            const formatLink = this.fastload 
+              ? this.$t('links.rustTime') 
+              : this.$t('links.postgresTime')
+            return formatLink;
+          }
         }
-        return '';
       },
       // validation for ts column name and date format string
       validateColumnName(name: string) {
@@ -1184,10 +1176,6 @@
             this.newDataSource.config = this.timeseriesConfig;
             this.newDataSource.active = true;
             break;
-          }
-
-          default: {
-            this.newDataSource.config = this.standardConfig;
           }
         }
 

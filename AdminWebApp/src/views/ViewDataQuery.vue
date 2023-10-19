@@ -18,10 +18,10 @@
         >
           <v-container flat class="pa-0" style="max-width: 100%" v-show="showGraph">
             <v-tabs
-                v-if="results"
-                v-model="tab"
-                background-color="lightgray"
-                slider-color="darkgray"
+              v-if="results"
+              v-model="tab"
+              background-color="lightgray"
+              slider-color="darkgray"
             >
               <v-tab
                   v-for="tab in tabs()"
@@ -39,7 +39,7 @@
                         :cols="12"
                         class="graph"
                     >
-                      <graph-viewer :containerID="containerID" :results="results" ref="graph"></graph-viewer>
+                      <GraphViewer :containerID="containerID" :results="results" ref="graph"></GraphViewer>
                     </v-col>
                   </v-row>
                 </v-card>
@@ -47,15 +47,15 @@
               <v-tab-item>
                 <v-card flat>
                   <v-data-table
-                      :headers="headers()"
-                      :items="nodes"
-                      show-expand
-                      :expanded.sync="expanded"
-                      :items-per-page="100"
-                      item-key="id"
-                      :footer-props="{
-                        'items-per-page-options': [25, 50, 100]
-                        }"
+                    :headers="headers()"
+                    :items="nodes"
+                    show-expand
+                    :expanded.sync="expanded"
+                    :items-per-page="100"
+                    item-key="id"
+                    :footer-props="{
+                      'items-per-page-options': [25, 50, 100]
+                    }"
                   >
                     <template v-slot:[`item.id`]="{ item }">
                       <v-tooltip top>
@@ -88,7 +88,7 @@
                               <div><span class="text-overline">{{$t('files.files')}}:</span></div>
                             </v-expansion-panel-header>
                             <v-expansion-panel-content>
-                              <node-files-dialog :icon="true" :node="item"></node-files-dialog>
+                              <NodeFilesDialog :icon="true" :node="item"></NodeFilesDialog>
                             </v-expansion-panel-content>
                           </v-expansion-panel>
                         <!-- Edges -->
@@ -149,10 +149,10 @@
               <v-tab-item>
                 <v-card flat>
                   <json-viewer
-                      class="json-viewer px-1 py-5 text-wrap"
-                      :value="nodes"
-                      copyable
-                      :maxDepth=1
+                    class="json-viewer px-1 py-5 text-wrap"
+                    :value="nodes"
+                    copyable
+                    :maxDepth=1
                   />
                 </v-card>
               </v-tab-item>
@@ -167,8 +167,8 @@
 <script lang="ts">
   import Vue from 'vue'
   import QueryBuilder, {ResultSet} from "../components/queryBuilder/QueryBuilder.vue"
-  import NodeFilesDialog from "@/components/data/nodeFilesDialog.vue";
-  import GraphViewer from "@/components/visualization/graphViewer.vue"
+  import NodeFilesDialog from "@/components/data/NodeFilesDialog.vue";
+  import GraphViewer from "@/components/visualization/GraphViewer.vue"
 
   import {mdiFileDocumentMultiple} from "@mdi/js";
   import { NodeT } from "../api/types";

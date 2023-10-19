@@ -109,7 +109,7 @@ describe('A NodeLeaf Repository', async () => {
         expect(metatypes.isError).false;
         expect(metatypes.value).not.empty;
 
-        metatypes.value.forEach(async(mt) => {
+        metatypes.value.forEach(async (mt) => {
             const testKeys = [...test_keys];
             testKeys.forEach((key) => (key.metatype_id = mt.id));
             const keys = await mKeyMapper.BulkCreate('test suite', testKeys);
@@ -176,7 +176,6 @@ describe('A NodeLeaf Repository', async () => {
         const relPairs = [
             new MetatypeRelationshipPair({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes.value[0].id!,
                 destination_metatype: metatypes.value[1].id!,
                 relationship: relationships.value[0].id!,
@@ -185,14 +184,13 @@ describe('A NodeLeaf Repository', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes.value[1].id!,
                 destination_metatype: metatypes.value[2].id!,
                 relationship: relationships.value[1].id!,
                 relationship_type: 'many:many',
                 container_id: containerID,
             }),
-        ]
+        ];
 
         const pairResults = await pairMapper.BulkCreate('test suite', relPairs);
 
@@ -214,11 +212,11 @@ describe('A NodeLeaf Repository', async () => {
                 properties: payload,
                 origin_id: nodes[1].id,
                 destination_id: nodes[2].id,
-            })
-        ]
+            }),
+        ];
 
         const edgeResults = await eMapper.BulkCreate('test suite', edgeList);
-        expect (edgeResults.isError).false;
+        expect(edgeResults.isError).false;
 
         return Promise.resolve();
     });
@@ -232,7 +230,7 @@ describe('A NodeLeaf Repository', async () => {
 
     it('can retrieve data', async () => {
         const repo = new NodeLeafRepository(nodes[0].id!, containerID, '2');
-        const results = await repo.list({sortBy: "depth"});
+        const results = await repo.list({sortBy: 'depth'});
         expect(results.isError).false;
         expect(results.value.length).eq(2);
 
@@ -251,7 +249,7 @@ describe('A NodeLeaf Repository', async () => {
 
     it('can retrieve data by original id', async () => {
         const repo = new NodeLeafRepository(nodes[0].original_data_id!, containerID, '2', true);
-        const results = await repo.list({sortBy: "depth"});
+        const results = await repo.list({sortBy: 'depth'});
         expect(results.isError).false;
         expect(results.value.length).eq(2);
 
@@ -274,7 +272,7 @@ const test_keys: MetatypeKey[] = [
         description: 'flower name',
         required: true,
         property_name: 'flower_name',
-        data_type: 'string'
+        data_type: 'string',
     }),
     new MetatypeKey({
         name: 'Test2',
@@ -289,7 +287,7 @@ const test_keys: MetatypeKey[] = [
         description: 'not required',
         required: false,
         property_name: 'notRequired',
-        data_type: 'number'
+        data_type: 'number',
     }),
 ];
 

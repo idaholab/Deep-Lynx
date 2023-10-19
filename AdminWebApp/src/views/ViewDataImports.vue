@@ -8,7 +8,7 @@
         {{ $t('dataSources.timeseries') }}
       </v-tab>
     </v-tabs>
-    <error-banner :message="errorMessage"></error-banner>
+    <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
     <success-banner :message="successMessage"></success-banner>
     <div class="mx-2" v-if="activeTab === 'datasources'">
       <v-toolbar flat color="white">
@@ -112,7 +112,7 @@
           <v-spacer></v-spacer>
         </v-toolbar>
         <v-divider></v-divider>
-        <error-banner :message="dataErrorMessage"></error-banner>
+        <error-banner :message="dataErrorMessage" @closeAlert="dataErrorMessage = ''"></error-banner>
         <success-banner :message="dataSuccessMessage"></success-banner>
         <v-data-table
           :headers="importDataHeaders()"
@@ -197,11 +197,11 @@
   import Vue from 'vue'
   import { VueConstructor } from 'vue';
   import {DataSourceT , ImportDataT, ImportT} from "@/api/types";
-  import ImportDataDialog from "@/components/dataImport/importDataDialog.vue";
-  import DataTypeMapping from "@/components/etl/dataTypeMapping.vue"
+  import ImportDataDialog from "@/components/dataImport/ImportDataDialog.vue";
+  import DataTypeMapping from "@/components/etl/DataTypeMapping.vue"
   import SelectDataSource from "@/components/dataSources/SelectDataSource.vue";
-  import DeleteDataImportDialog from "@/components/dataImport/deleteDataImportDialog.vue";
-  import ReprocessDataImportDialog from "@/components/dataImport/reprocessDataImportDialog.vue";
+  import DeleteDataImportDialog from "@/components/dataImport/DeleteDataImportDialog.vue";
+  import ReprocessDataImportDialog from "@/components/dataImport/ReprocessDataImportDialog.vue";
   import {mdiFileDocumentMultiple} from "@mdi/js";
   import TimeseriesViewerDialog from '@/components/data/TimeseriesViewerDialog.vue';
 

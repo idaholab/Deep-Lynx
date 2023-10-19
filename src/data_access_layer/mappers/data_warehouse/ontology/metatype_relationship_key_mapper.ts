@@ -103,7 +103,7 @@ export default class MetatypeRelationshipKeyMapper extends Mapper {
     }
 
     public async JSONCreate(relationshipKeys: MetatypeRelationshipKey[]): Promise<Result<boolean>> {
-        return super.runStatement(this.insertFromJSONStatement(relationshipKeys))
+        return super.runStatement(this.insertFromJSONStatement(relationshipKeys));
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -267,7 +267,7 @@ export default class MetatypeRelationshipKeyMapper extends Mapper {
 
     private listStatement(relationshipID: string): QueryConfig {
         return {
-            text: `SELECT * FROM get_metatype_relationship_keys($1) ORDER BY name`,
+            text: `SELECT * FROM metatype_relationship_keys WHERE metatype_relationship_id = $1 ORDER BY name`,
             values: [relationshipID],
         };
     }

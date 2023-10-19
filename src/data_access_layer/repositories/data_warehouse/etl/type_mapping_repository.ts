@@ -22,6 +22,7 @@ import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/d
 import MetatypeRelationship from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship';
 import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
 import MetatypeRelationshipKey from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
+import DataStagingMapper from '../../../mappers/data_warehouse/import/data_staging_mapper';
 
 /*
     TypeMappingRepository contains methods for persisting and retrieving nodes
@@ -154,6 +155,10 @@ export default class TypeMappingRepository extends Repository implements Reposit
                 await this.#mapper.rollbackTransaction(transaction);
                 return Promise.resolve(Result.Failure(`unable to commit changes to database ${committed.error}`));
             }
+        }
+
+        if (t.active) {
+            await DataStagingMapper.Instance.SendToQueue(t.data_source_id!, t.shape_hash);
         }
 
         await this.deleteCached(t);
@@ -526,7 +531,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
 
         const metatypeRepo = new MetatypeRepository();
         const relationshipRepo = new MetatypeRelationshipRepository();
-        const pairRepo = new MetatypeRelationshipPairRepository();
+        const pairRepo = new MetatypeRelationshipPairRepository(false);
         const transformationRepo = new TypeTransformationRepository();
 
         // first fetch all transformations for all mappings - don't loop and contain them on the parent object because

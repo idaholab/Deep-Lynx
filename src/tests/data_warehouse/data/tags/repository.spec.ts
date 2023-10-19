@@ -105,7 +105,8 @@ describe('A tag repository can', async () => {
         user = userResult.value;
 
         // Create a metatype
-        const metatype = await mMapper.Create('test suite',
+        const metatype = await mMapper.Create(
+            'test suite',
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
@@ -134,7 +135,6 @@ describe('A tag repository can', async () => {
             'test suite',
             new MetatypeRelationshipPair({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatype.value.id!,
                 destination_metatype: metatype.value.id!,
                 relationship: relationship.value.id!,
@@ -151,17 +151,17 @@ describe('A tag repository can', async () => {
             new Node({
                 container_id: containerID,
                 metatype: metatype.value,
-                properties: {name: "nodeA"},
+                properties: {name: 'nodeA'},
             }),
             new Node({
                 container_id: containerID,
                 metatype: metatype.value,
-                properties: {name: "nodeB"},
+                properties: {name: 'nodeB'},
             }),
             new Node({
                 container_id: containerID,
                 metatype: metatype.value,
-                properties: {name: "nodeC"},
+                properties: {name: 'nodeC'},
             }),
         ];
 
@@ -174,21 +174,21 @@ describe('A tag repository can', async () => {
             new Edge({
                 container_id: containerID,
                 metatype_relationship_pair: pair.value.id!,
-                properties: {name: "edgeA"},
+                properties: {name: 'edgeA'},
                 origin_id: nodes[0].id,
                 destination_id: nodes[1].id,
             }),
             new Edge({
                 container_id: containerID,
                 metatype_relationship_pair: pair.value.id!,
-                properties: {name: "edgeB"},
+                properties: {name: 'edgeB'},
                 origin_id: nodes[1].id,
                 destination_id: nodes[2].id,
             }),
             new Edge({
                 container_id: containerID,
                 metatype_relationship_pair: pair.value.id!,
-                properties: {name: "edgeC"},
+                properties: {name: 'edgeC'},
                 origin_id: nodes[2].id,
                 destination_id: nodes[0].id,
             }),
@@ -336,17 +336,17 @@ describe('A tag repository can', async () => {
 
         expect(savedTag.isError).false;
         expect(savedTag.value).true;
-        
+
         const nodeIDs = nodes.map((n) => n.id!);
-        
+
         const tagNodes = await tagRepo.bulkTagNode(tag, nodeIDs);
         expect(tagNodes.isError, tagNodes.error?.error).false;
         expect(tagNodes.value).true;
 
         let tagged = await tagRepo.listNodesWithTag(tag);
         expect(tagged.isError, tagged.error?.error).false;
-        let taggedNodeIDs = tagged.value.map(n => n.id!);
-        nodeIDs.forEach(id => {
+        let taggedNodeIDs = tagged.value.map((n) => n.id!);
+        nodeIDs.forEach((id) => {
             expect(taggedNodeIDs.includes(id));
         });
 
@@ -356,8 +356,8 @@ describe('A tag repository can', async () => {
 
         tagged = await tagRepo.listNodesWithTag(tag);
         expect(tagged.isError, tagged.error?.error).false;
-        taggedNodeIDs = tagged.value.map(n => n.id!);
-        nodeIDs.forEach(id => {
+        taggedNodeIDs = tagged.value.map((n) => n.id!);
+        nodeIDs.forEach((id) => {
             expect(taggedNodeIDs.includes(id)).false;
         });
     });
@@ -377,17 +377,17 @@ describe('A tag repository can', async () => {
 
         expect(savedTag.isError).false;
         expect(savedTag.value).true;
-        
+
         const edgeIDs = edges.map((e) => e.id!);
-        
+
         const tagEdges = await tagRepo.bulkTagEdge(tag, edgeIDs);
         expect(tagEdges.isError, tagEdges.error?.error).false;
         expect(tagEdges.value).true;
 
         let tagged = await tagRepo.listEdgesWithTag(tag);
         expect(tagged.isError, tagged.error?.error).false;
-        let taggedEdgeIDs = tagged.value.map(e => e.id!);
-        edgeIDs.forEach(id => {
+        let taggedEdgeIDs = tagged.value.map((e) => e.id!);
+        edgeIDs.forEach((id) => {
             expect(taggedEdgeIDs.includes(id));
         });
 
@@ -397,8 +397,8 @@ describe('A tag repository can', async () => {
 
         tagged = await tagRepo.listEdgesWithTag(tag);
         expect(tagged.isError, tagged.error?.error).false;
-        taggedEdgeIDs = tagged.value.map(e => e.id!);
-        edgeIDs.forEach(id => {
+        taggedEdgeIDs = tagged.value.map((e) => e.id!);
+        edgeIDs.forEach((id) => {
             expect(taggedEdgeIDs.includes(id)).false;
         });
     });

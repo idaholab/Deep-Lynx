@@ -1,6 +1,6 @@
 <template>
   <div>
-    <error-banner :message="errorMessage"></error-banner>
+    <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
     <v-data-table
         :headers="headers()"
         :items="fileSets"
@@ -89,11 +89,11 @@
 
 <script lang="ts">
   import Vue from 'vue'
-  import CreateFileSetDialog from "@/components/fileManager/createFileSetDialog.vue";
-  import DeleteFileSetDialog from "@/components/fileManager/deleteFileSetDialog.vue";
+  import CreateFileSetDialog from "@/components/fileManager/CreateFileSetDialog.vue";
+  import DeleteFileSetDialog from "@/components/fileManager/DeleteFileSetDialog.vue";
   import {mdiFileDocumentMultiple} from "@mdi/js";
-  import EditFileSetDialog from "@/components/fileManager/editFileSetDialog.vue";
-  import EditTagDialog from "@/components/fileManager/editTagDialog.vue";
+  import EditFileSetDialog from "@/components/fileManager/EditFileSetDialog.vue";
+  import EditTagDialog from "@/components/fileManager/EditTagDialog.vue";
   import Config from "../config";
 
   interface FileManagerModel {

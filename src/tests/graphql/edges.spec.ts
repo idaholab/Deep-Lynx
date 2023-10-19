@@ -196,7 +196,6 @@ describe('Using a new GraphQL Query on edges we', async () => {
         const relPairList = [
             new MetatypeRelationshipPair({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes.value[0].id!,
                 destination_metatype: metatypes.value[1].id!,
                 relationship: relationships.value[0].id!,
@@ -205,7 +204,6 @@ describe('Using a new GraphQL Query on edges we', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes.value[0].id!,
                 destination_metatype: metatypes.value[2].id!,
                 relationship: relationships.value[0].id!,
@@ -214,7 +212,6 @@ describe('Using a new GraphQL Query on edges we', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes.value[0].id!,
                 destination_metatype: metatypes.value[3].id!,
                 relationship: relationships.value[0].id!,
@@ -223,7 +220,6 @@ describe('Using a new GraphQL Query on edges we', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes.value[1].id!,
                 destination_metatype: metatypes.value[3].id!,
                 relationship: relationships.value[0].id!,
@@ -232,7 +228,6 @@ describe('Using a new GraphQL Query on edges we', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes.value[1].id!,
                 destination_metatype: metatypes.value[0].id!,
                 relationship: relationships.value[1].id!,
@@ -241,7 +236,6 @@ describe('Using a new GraphQL Query on edges we', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes.value[2].id!,
                 destination_metatype: metatypes.value[0].id!,
                 relationship: relationships.value[1].id!,
@@ -250,7 +244,6 @@ describe('Using a new GraphQL Query on edges we', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes.value[1].id!,
                 destination_metatype: metatypes.value[1].id!,
                 relationship: relationships.value[2].id!,

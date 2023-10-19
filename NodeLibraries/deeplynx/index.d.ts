@@ -10,34 +10,7 @@ export interface LegacyTimeseriesColumn {
   type: string
   date_conversion_format_string?: string
 }
-/** Node, we built these translation types for the Node return and parameter types */
-export interface BucketColumn {
-  name: string
-  shortName: string
-  id?: string
-  dataType: string
-  columnAssignment?: string
-  formatString?: string
-  numericPrecision?: number
-  numericScale?: number
-  maxCharacters?: number
-}
-export interface Bucket {
-  id: number
-  name: string
-  dataTableAssignment?: string
-  structure: Array<BucketColumn>
-  createdBy?: string
-  modifiedBy?: string
-  createdAt?: string
-  modifiedAt?: string
-}
-export interface ChangeBucketPayload {
-  name?: string
-  columns: Array<BucketColumn>
-}
 export function inferLegacySchema(csv: Buffer): Array<LegacyTimeseriesColumn>
-export function inferBucketSchema(csv: Buffer): Array<BucketColumn>
 export interface Configuration {
   dbConnectionString?: string
   redisConnectionString?: string
@@ -52,17 +25,6 @@ export class BucketRepository {
    * This function should be called before any work done on the object
    */
   init(config: Configuration): Promise<void>
-  createBucket(payload: ChangeBucketPayload): Promise<Bucket>
-  retrieveBucket(bucketId: number): Promise<Bucket>
-  updateBucket(bucketId: number, payload: ChangeBucketPayload): Promise<Bucket>
-  deleteBucket(bucketId: number): Promise<void>
-  /**
-   * # Safety
-   *
-   * This spawns multithreaded operations so be wary. The beginCsvIngestion function initializes the
-   * repository to receive CSV data from a node.js source
-   */
-  beginCsvIngestion(bucketId: number): Promise<void>
   /**
    * # Safety
    *

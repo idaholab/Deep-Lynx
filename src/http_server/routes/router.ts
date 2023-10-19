@@ -174,6 +174,7 @@ export class Router {
             authenticateRoute(),
             containerContext(),
             activeOntologyVersionContext(),
+            metatypeContext(),
             metatypeRelationshipPairContext(),
             currentUser(),
         ]);
@@ -193,7 +194,7 @@ export class Router {
         EventRoutes.mount(this.app, [authenticateRoute(), containerContext(), eventActionContext(), eventActionStatusContext(), currentUser()]);
         DataQueryRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
         TaskRoutes.mount(this.app, [authenticateRoute(), containerContext(), taskContext(), currentUser()]);
-        ServalRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()])
+        ServalRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
         OntologyVersionRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser(), ontologyVersionContext()]);
 
         // OAuth and Identity Provider routes

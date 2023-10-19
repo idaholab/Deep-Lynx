@@ -58,8 +58,12 @@ export default class MetatypeKeyMapper extends Mapper {
         return super.retrieve(this.retrieveStatement(id), {resultClass: this.resultClass});
     }
 
-    public async ListForMetatype(metatypeID: string): Promise<Result<MetatypeKey[]>> {
-        return super.rows(this.listStatement(metatypeID), {resultClass: this.resultClass});
+    public async RetrieveFromView(id: string, metatypeID: string): Promise<Result<MetatypeKey>> {
+        return super.retrieve(this.retrieveFromViewStatement(id, metatypeID), {resultClass: this.resultClass});
+    }
+
+    public async ListForMetatype(metatypeID: string, containerID: string): Promise<Result<MetatypeKey[]>> {
+        return super.rows(this.listStatement(metatypeID, containerID), {resultClass: this.resultClass});
     }
 
     public async ListForMetatypeIDs(metatype_ids: string[]): Promise<Result<MetatypeKey[]>> {
@@ -76,6 +80,10 @@ export default class MetatypeKeyMapper extends Mapper {
 
     public async ListFromViewIDs(ids: string[]): Promise<Result<MetatypeKey[]>> {
         return super.rows(this.listFromIDsStatement(ids), {resultClass: this.resultClass});
+    }
+
+    public async ListSelfKeysForMetatype(metatypeID: string, containerID: string): Promise<Result<MetatypeKey[]>> {
+        return super.rows(this.listSelfKeysStatement(metatypeID, containerID), {resultClass: this.resultClass});
     }
 
     public async Update(userID: string, key: MetatypeKey, transaction?: PoolClient): Promise<Result<MetatypeKey>> {
@@ -131,8 +139,8 @@ export default class MetatypeKeyMapper extends Mapper {
         return super.runStatement(this.unarchiveStatement(id, userID));
     }
 
-    public RefreshView(): Promise<Result<boolean>> {
-        return super.runStatement(this.refreshViewStatement());
+    public RefreshView(transaction?: PoolClient): Promise<Result<boolean>> {
+        return super.runStatement(this.refreshViewStatement(), {transaction});
     }
 
     // these functions are copies only to be used on container import. they do not refresh the keys view.
@@ -151,7 +159,7 @@ export default class MetatypeKeyMapper extends Mapper {
     }
 
     public async JSONCreate(metatypeKeys: MetatypeKey[]): Promise<Result<boolean>> {
-        return super.runStatement(this.insertFromJSONStatement(metatypeKeys))
+        return super.runStatement(this.insertFromJSONStatement(metatypeKeys));
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -218,6 +226,13 @@ export default class MetatypeKeyMapper extends Mapper {
         };
     }
 
+    private retrieveFromViewStatement(metatypeKeyID: string, metatypeID: string): QueryConfig {
+        return {
+            text: `SELECT * FROM metatype_full_keys WHERE id = $1 AND metatype_id = $2`,
+            values: [metatypeKeyID, metatypeID],
+        };
+    }
+
     private listFromIDsStatement(ids: string[]): string {
         const text = `SELECT * FROM metatype_full_keys WHERE id IN (%L)`;
         const values = ids;
@@ -274,10 +289,10 @@ export default class MetatypeKeyMapper extends Mapper {
         return format(text, metatype_ids);
     }
 
-    private listStatement(metatypeID: string): QueryConfig {
+    private listStatement(metatypeID: string, containerID: string): QueryConfig {
         return {
-            text: `SELECT * FROM get_metatype_keys($1::bigint) ORDER BY name`,
-            values: [metatypeID],
+            text: `SELECT * FROM get_metatype_keys($1::bigint, $2::bigint) ORDER BY name`,
+            values: [metatypeID, containerID],
         };
     }
 
@@ -292,7 +307,7 @@ export default class MetatypeKeyMapper extends Mapper {
                    v.modified_at, v.created_by, v.modified_by, v.ontology_version,
                    v.old_id, v.deleted_at, p.key_parent, p.lvl + 1
             FROM parents p JOIN metatypes_view v ON p.id = v.parent_id
-        ) SELECT mk.id, p.id AS metatype_id, mk.name, mk.description,
+        ) SELECT mk.id, p.id AS metatype_id, p.name AS metatype_name, mk.name, mk.description,
                  mk.required, mk.property_name, mk.data_type, mk.options,
                  mk.default_value, mk.validation, mk.created_at, mk.modified_at,
                  mk.created_by, mk.modified_by, mk.ontology_version,
@@ -302,6 +317,13 @@ export default class MetatypeKeyMapper extends Mapper {
                       ORDER BY metatype_id, mk.name`;
         const values = metatype_ids;
         return format(text, values);
+    }
+
+    private listSelfKeysStatement(metatypeID: string, containerID: string): QueryConfig {
+        return {
+            text: `SELECT * FROM metatype_keys WHERE metatype_id = $1 AND container_id = $2`,
+            values: [metatypeID, containerID],
+        };
     }
 
     private fullUpdateStatement(userID: string, ...keys: MetatypeKey[]): string {

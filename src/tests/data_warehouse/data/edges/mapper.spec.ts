@@ -145,7 +145,6 @@ describe('An Edge Mapper', async () => {
             'test suite',
             new MetatypeRelationshipPair({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes.value[0].id!,
                 destination_metatype: metatypes.value[1].id!,
                 relationship: relationship.value.id!,
@@ -259,7 +258,6 @@ describe('An Edge Mapper', async () => {
             'test suite',
             new MetatypeRelationshipPair({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatype.value[0].id!,
                 destination_metatype: metatype.value[1].id!,
                 relationship: relationship.value.id!,
@@ -357,7 +355,6 @@ describe('An Edge Mapper', async () => {
             'test suite',
             new MetatypeRelationshipPair({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatype.value[0].id!,
                 destination_metatype: metatype.value[1].id!,
                 relationship: relationship.value.id!,
@@ -453,7 +450,6 @@ describe('An Edge Mapper', async () => {
             'test suite',
             new MetatypeRelationshipPair({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatype.value[0].id!,
                 destination_metatype: metatype.value[1].id!,
                 relationship: relationship.value.id!,
@@ -593,7 +589,6 @@ describe('An Edge Mapper', async () => {
             'test suite',
             new MetatypeRelationshipPair({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes.value[0].id!,
                 destination_metatype: metatypes.value[1].id!,
                 relationship: relationship.value.id!,

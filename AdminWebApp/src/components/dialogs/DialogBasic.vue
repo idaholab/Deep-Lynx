@@ -18,12 +18,16 @@
       >{{ iconName }}</v-icon>
       <v-btn
         v-if="!icon"
-        color="primary"
+        style="max-width: fit-content"
+        :color="buttonColor"
         v-bind="attrs"
         v-on="on"
         class="mt-2"
         @click="$emit('openDialog')"
-      >{{title}}</v-btn>
+      >
+        <!-- if there is a separate title for the button, use that -->
+        {{buttonTitle || title}}
+      </v-btn>
     </template>
     <v-card>
       <!-- Dialog Title -->
@@ -60,10 +64,12 @@ export default defineComponent({
 
   props: {
     title: String,
+    buttonTitle: { type: String, required: false },
     maxWidth: { type: String, required: false, default: '80%' },
     icon: { required: false, default: true },
     iconName: { required: false, default: 'mdi-eye' },
     value: Boolean,
+    buttonColor: {type: String, required: false, default: 'primary'},
   },
 
   setup(props: any, context: SetupContext) {

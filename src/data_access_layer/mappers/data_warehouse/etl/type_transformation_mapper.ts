@@ -1,6 +1,6 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
-import {PoolClient, QueryConfig} from 'pg';
+import { PoolClient, QueryConfig } from 'pg';
 import TypeTransformation from '../../../../domain_objects/data_warehouse/etl/type_transformation';
 
 const format = require('pg-format');
@@ -69,7 +69,7 @@ export default class TypeTransformationMapper extends Mapper {
     }
 
     public async ListForTypeMapping(typeMappingID: string): Promise<Result<TypeTransformation[]>> {
-        return super.rows<TypeTransformation>(this.listByMapping(typeMappingID), {resultClass: this.resultClass});
+        return super.rows<TypeTransformation>(this.listByMapping(typeMappingID), { resultClass: this.resultClass });
     }
 
     public async ListFromIDs(ids: string[]): Promise<Result<TypeTransformation[]>> {
@@ -77,7 +77,7 @@ export default class TypeTransformationMapper extends Mapper {
             return Result.Success([]);
         }
 
-        return super.rows(this.listFromIDsStatement(ids), {resultClass: this.resultClass});
+        return super.rows(this.listFromIDsStatement(ids), { resultClass: this.resultClass });
     }
 
     public async BulkDelete(transformations: TypeTransformation[], transaction?: PoolClient): Promise<Result<boolean>> {
@@ -118,6 +118,7 @@ export default class TypeTransformationMapper extends Mapper {
             conditions,
             metatype_id,
             metatype_relationship_pair_id,
+            selected_relationship_pair_name,
             origin_id_key,
             origin_metatype_id,
             origin_data_source_id, 
@@ -131,6 +132,7 @@ export default class TypeTransformationMapper extends Mapper {
             destination_parameters,
             created_at_key,
             created_at_format_string,
+            tags,
             created_by,
             modified_by) VALUES %L RETURNING *)
 
@@ -153,6 +155,7 @@ export default class TypeTransformationMapper extends Mapper {
             JSON.stringify(tt.conditions),
             tt.metatype_id === '' ? undefined : tt.metatype_id,
             tt.metatype_relationship_pair_id === '' ? undefined : tt.metatype_relationship_pair_id,
+            tt.selected_relationship_pair_name === '' ? undefined : tt.selected_relationship_pair_name,
             tt.origin_id_key,
             tt.origin_metatype_id,
             tt.origin_data_source_id,
@@ -166,6 +169,7 @@ export default class TypeTransformationMapper extends Mapper {
             JSON.stringify(tt.destination_parameters),
             tt.created_at_key,
             tt.created_at_format_string,
+            JSON.stringify(tt.tags),
             userID,
             userID,
         ]);
@@ -192,9 +196,11 @@ export default class TypeTransformationMapper extends Mapper {
             root_array = u.root_array,
             config = u.config::jsonb,
             origin_parameters = u.origin_parameters::jsonb,
+            selected_relationship_pair_name = u.relationship_pair_name::text,
             destination_parameters = u.destination_parameters::jsonb,
             created_at_key = u.created_at_key::text,
             created_at_format_string = u.created_at_format_string::text,
+            tags = u.tags::jsonb,
             modified_by = u.modified_by,
             modified_at = NOW()
             FROM (VALUES %L) as u(
@@ -216,9 +222,11 @@ export default class TypeTransformationMapper extends Mapper {
                             root_array,
                             config,
                             origin_parameters,
+                            relationship_pair_name,
                             destination_parameters,
                             created_at_key,
                             created_at_format_string,
+                            tags,
                             modified_by
                           ) WHERE u.id::bigint= t.id RETURNING t.*)
 
@@ -251,9 +259,11 @@ export default class TypeTransformationMapper extends Mapper {
             tt.root_array,
             JSON.stringify(tt.config),
             JSON.stringify(tt.origin_parameters),
+            tt.selected_relationship_pair_name,
             JSON.stringify(tt.destination_parameters),
             tt.created_at_key,
             tt.created_at_format_string,
+            JSON.stringify(tt.tags),
             userID,
             userID,
         ]);

@@ -1,12 +1,12 @@
 <template>
   <div>
-    <ontology-version-toolbar
+    <OntologyVersionToolbar
         v-if="$store.getters.ontologyVersioningEnabled"
         :containerID="containerID"
         @editModeToggle="countRelationships(); loadMetatypeRelationships()"
         @selectedVersion="countRelationships(); loadMetatypeRelationships()"
         @selected="countRelationships(); loadMetatypeRelationships()">
-    </ontology-version-toolbar>
+    </OntologyVersionToolbar>
     <v-data-table
         :headers="headers()"
         :items="metatypeRelationships"
@@ -21,22 +21,22 @@
         :item-class="itemRowBackground"
     >
       <template v-slot:top>
-        <error-banner :message="errorMessage"></error-banner>
+        <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
         <success-banner :message="successMessage"></success-banner>
         <v-alert type="success" v-if="createdRelationship">
           {{$t('relationshipTypes.createdSuccessfully')}} -
           <span>
-            <edit-metatype-relationship-dialog :metatypeRelationship="createdRelationship"></edit-metatype-relationship-dialog>
+            <EditMetatypeRelationshipDialog :metatypeRelationship="createdRelationship"></EditMetatypeRelationshipDialog>
           </span>
         </v-alert>
         <v-toolbar flat color="white">
           <v-toolbar-title>{{$t('relationshipTypes.description')}}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <create-metatype-relationship-dialog
+          <CreateMetatypeRelationshipDialog
               v-if="($store.getters.isEditMode && $store.getters.ontologyVersioningEnabled && $store.state.selectedChangelist) || !$store.getters.ontologyVersioningEnabled"
               :containerID="containerID"
               @metatypeRelationshipCreated="recentlyCreatedRelationship">
-          </create-metatype-relationship-dialog>
+          </CreateMetatypeRelationshipDialog>
         </v-toolbar>
         <v-row>
           <v-col :cols="6">
@@ -70,18 +70,19 @@
 
       </v-tooltip>
       <template v-slot:[`item.actions`]="{ item }">
-        <view-metatype-relationship-dialog
+        <ViewMetatypeRelationshipDialog
             v-if="!$store.getters.isEditMode && $store.getters.ontologyVersioningEnabled"
             :metatypeRelationship="item"
-            :icon="true"></view-metatype-relationship-dialog>
+            :icon="true">
+        </ViewMetatypeRelationshipDialog>
 
-        <edit-metatype-relationship-dialog
+        <EditMetatypeRelationshipDialog
             v-if="($store.getters.isEditMode && $store.getters.ontologyVersioningEnabled && !item.deleted_at) || !$store.getters.ontologyVersioningEnabled"
             :metatypeRelationship="item" :icon="true"
             :comparisonMetatypeRelationship="comparisonRelationships.find(m => m.name === item.name)"
             @metatypeRelationshipEdited="loadMetatypeRelationships"
         >
-        </edit-metatype-relationship-dialog>
+        </EditMetatypeRelationshipDialog>
 
         <v-tooltip bottom>
           <template v-slot:activator="{on, attrs}">
@@ -121,12 +122,12 @@
 <script lang="ts">
   import Vue from 'vue';
   import {MetatypeRelationshipT} from '@/api/types';
-  import EditMetatypeRelationshipDialog from "@/components/ontology/metatypeRelationships/editMetatypeRelationshipDialog.vue";
-  import CreateMetatypeRelationshipDialog from "@/components/ontology/metatypeRelationships/createMetatypeRelationshipDialog.vue";
+  import EditMetatypeRelationshipDialog from "@/components/ontology/metatypeRelationships/EditMetatypeRelationshipDialog.vue";
+  import CreateMetatypeRelationshipDialog from "@/components/ontology/metatypeRelationships/CreateMetatypeRelationshipDialog.vue";
   import {mdiFileDocumentMultiple} from "@mdi/js";
-  import OntologyVersionToolbar from "@/components/ontology/versioning/ontologyVersionToolbar.vue";
-  import ViewMetatypeRelationshipDialog
-  from "@/components/ontology/metatypeRelationships/viewMetatypeRelationshipDialog.vue";
+  import OntologyVersionToolbar from '@/components/ontology/versioning/OntologyVersionToolbar.vue';
+  import ViewMetatypeRelationshipDialog from "@/components/ontology/metatypeRelationships/ViewMetatypeRelationshipDialog.vue";
+  import debounce from "lodash.debounce";
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const diff = require('deep-diff').diff;
 
@@ -147,8 +148,9 @@
     name: string,
     description: string,
     metatypeRelationships: MetatypeRelationshipT[],
-    comparisonRelationships: MetatypeRelationshipT[]
-    options: Options
+    comparisonRelationships: MetatypeRelationshipT[],
+    options: Options,
+    debouncedSearchWatch: any
   }
 
   export default Vue.extend ({
@@ -168,7 +170,7 @@
         itemsPerPage: 100,
       }
 
-      return {  
+      return {
         copy: mdiFileDocumentMultiple,
         errorMessage: "",
         successMessage: "",
@@ -179,7 +181,8 @@
         description: "",
         metatypeRelationships: [],
         comparisonRelationships: [],
-        options
+        options,
+        debouncedSearchWatch: null,
       }
     },
 
@@ -194,12 +197,10 @@
         this.loadMetatypeRelationships()
       },
       onNameChange() {
-        this.countRelationships()
-        this.loadMetatypeRelationships()
+        this.debouncedSearchWatch()
       },
       onDescriptionChange() {
-        this.countRelationships()
-        this.loadMetatypeRelationships()
+        this.debouncedSearchWatch()
       },
       headers() {
         return [
@@ -366,11 +367,16 @@
             .catch((e) => (this.errorMessage = e));
         })
         .catch((e) => (this.errorMessage = e));
+
+      this.debouncedSearchWatch = debounce(() => {
+        this.countRelationships();
+        this.loadMetatypeRelationships();
+      }, 500);
     },
 
-    mounted() {
-      this.countRelationships()
-    }
+    beforeDestroy() {
+      this.debouncedSearchWatch.cancel();
+    },
   });
 </script>
 

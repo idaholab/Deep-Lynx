@@ -42,6 +42,10 @@ export default class MinioBlobImpl implements BlobStorage {
         });
     }
 
+    appendPipe(file: File, stream: Readable | null): Promise<Result<boolean>> {
+        throw new Error('Append not supported on S3 compliant storage providers');
+    }
+
     async deleteFile(f: File): Promise<Result<boolean>> {
         if (f.short_uuid) {
             try {

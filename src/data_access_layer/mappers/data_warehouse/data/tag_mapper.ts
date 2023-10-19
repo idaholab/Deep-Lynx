@@ -89,8 +89,10 @@ export default class TagMapper extends Mapper {
         return super.runStatement(this.tagNodeStatement(tagID, nodeID));
     }
 
-    public async BulkTagNode(tagID: string, nodeIDs: string[]): Promise<Result<boolean>> {
-        return super.runStatement(this.bulkTagNodeStatement(tagID, nodeIDs));
+    public async BulkTagNode(tagID: string, nodeIDs: string[], transaction?: PoolClient): Promise<Result<boolean>> {
+        return super.runStatement(this.bulkTagNodeStatement(tagID, nodeIDs), {
+            transaction,
+        });
     }
 
     public async BulkDetachNodeTag(tagID: string, nodeIDs: string[]): Promise<Result<boolean>> {
@@ -264,37 +266,31 @@ export default class TagMapper extends Mapper {
     private bulkTagNodeStatement(tagID: string, nodeIDs: string[]): QueryConfig {
         const values = nodeIDs.map((nodeID) => [tagID, nodeID]);
         return {
-            text: format(
-                `INSERT INTO node_tags (tag_id, node_id) VALUES %L ON CONFLICT(tag_id, node_id) DO NOTHING`,
-                values
-            ),
-            values: []
-        }
+            text: format(`INSERT INTO node_tags (tag_id, node_id) VALUES %L ON CONFLICT(tag_id, node_id) DO NOTHING`, values),
+            values: [],
+        };
     }
 
     private bulkDetachNodeTagStatement(tagID: string, nodeIDs: string[]): QueryConfig {
         return {
             text: format(`DELETE FROM node_tags WHERE tag_id = %s AND node_id IN (%L)`, tagID, nodeIDs),
-            values: []
-        }
+            values: [],
+        };
     }
 
     private bulkTagEdgeStatement(tagID: string, edgeIDs: string[]): QueryConfig {
         const values = edgeIDs.map((edgeID) => [tagID, edgeID]);
         return {
-            text: format(
-                `INSERT INTO edge_tags (tag_id, edge_id) VALUES %L ON CONFLICT(tag_id, edge_id) DO NOTHING`,
-                values
-            ),
-            values: []
-        }
+            text: format(`INSERT INTO edge_tags (tag_id, edge_id) VALUES %L ON CONFLICT(tag_id, edge_id) DO NOTHING`, values),
+            values: [],
+        };
     }
 
     private bulkDetachEdgeTagStatement(tagID: string, edgeIDs: string[]): QueryConfig {
         return {
             text: format(`DELETE FROM edge_tags WHERE tag_id = %s AND edge_id IN (%L)`, tagID, edgeIDs),
-            values: []
-        }
+            values: [],
+        };
     }
 
     private tagEdgeStatement(tagID: string, edgeID: string): QueryConfig {

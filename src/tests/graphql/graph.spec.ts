@@ -263,7 +263,6 @@ describe('Using a new GraphQL Query on graph return we', async () => {
         const relPairList = [
             new MetatypeRelationshipPair({
                 name: 'album includes song',
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes[3].id!,
                 destination_metatype: metatypes[2].id!,
                 relationship: relationships[0].id!,
@@ -272,7 +271,6 @@ describe('Using a new GraphQL Query on graph return we', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: 'musician member of band',
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes[0].id!,
                 destination_metatype: metatypes[1].id!,
                 relationship: relationships[1].id!,
@@ -281,7 +279,6 @@ describe('Using a new GraphQL Query on graph return we', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: 'musician writes song',
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes[0].id!,
                 destination_metatype: metatypes[2].id!,
                 relationship: relationships[2].id!,
@@ -290,7 +287,6 @@ describe('Using a new GraphQL Query on graph return we', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: 'musician writes album',
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes[0].id!,
                 destination_metatype: metatypes[3].id!,
                 relationship: relationships[2].id!,
@@ -299,7 +295,6 @@ describe('Using a new GraphQL Query on graph return we', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: 'band performs song',
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes[1].id!,
                 destination_metatype: metatypes[2].id!,
                 relationship: relationships[2].id!,
@@ -308,7 +303,6 @@ describe('Using a new GraphQL Query on graph return we', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: 'band performs album',
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes[1].id!,
                 destination_metatype: metatypes[3].id!,
                 relationship: relationships[2].id!,
@@ -317,7 +311,6 @@ describe('Using a new GraphQL Query on graph return we', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: 'song features musician',
-                description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes[2].id!,
                 destination_metatype: metatypes[0].id!,
                 relationship: relationships[3].id!,
@@ -770,7 +763,6 @@ describe('Using a new GraphQL Query on graph return we', async () => {
         const data = response.data!.graph;
         expect(data.length).eq(17);
 
-
         for (const nL of data) {
             expect(nL.depth).not.undefined;
             expect(nL.depth).gt(0);
@@ -807,7 +799,6 @@ describe('Using a new GraphQL Query on graph return we', async () => {
         expect(response.data).not.undefined;
         const data = response.data!.graph;
         expect(data.length).eq(11);
-
 
         for (const nL of data) {
             expect(nL.depth).not.undefined;
@@ -849,7 +840,6 @@ describe('Using a new GraphQL Query on graph return we', async () => {
         expect(response.data).not.undefined;
         const data = response.data!.graph;
         expect(data.length).eq(11);
-
 
         for (const nL of data) {
             expect(nL.depth).not.undefined;
@@ -969,7 +959,6 @@ describe('Using a new GraphQL Query on graph return we', async () => {
         const data = response.data!.graph;
         expect(data.length).eq(11);
 
-
         for (const nL of data) {
             expect(nL.depth).not.undefined;
             expect(nL.depth).gt(0);
@@ -1008,7 +997,6 @@ describe('Using a new GraphQL Query on graph return we', async () => {
         expect(response.data).not.undefined;
         const data = response.data!.graph;
         expect(data.length).eq(8);
-
 
         for (const nL of data) {
             expect(nL.depth).not.undefined;
@@ -1053,7 +1041,6 @@ describe('Using a new GraphQL Query on graph return we', async () => {
         const data = response.data!.graph;
         expect(data.length).eq(8);
 
-
         for (const nL of data) {
             expect(nL.depth).not.undefined;
             expect(nL.depth).gt(0);
@@ -1071,6 +1058,9 @@ describe('Using a new GraphQL Query on graph return we', async () => {
     });
 
     it('can return metatype ids', async () => {
+        await MetatypeRelationshipPairMapper.Instance.RefreshView();
+        await MetatypeKeyMapper.Instance.RefreshView();
+
         const response = await graphql({
             schema,
             source: `{

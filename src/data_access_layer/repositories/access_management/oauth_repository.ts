@@ -141,10 +141,12 @@ export default class OAuthRepository extends Repository implements RepositoryInt
     }
 
     // exchanges a token for a JWT to act on behalf of the user
-    async authorizationCodeExchange(exchangeReq: OAuthTokenExchangeRequest): Promise<Result<string>> {
+    async authorizationCodeExchange(exchangeReq: OAuthTokenExchangeRequest, clientID?: string, clientSecret?: string): Promise<Result<string>> {
         const userRepo = new UserRepository();
         const cached = await Cache.get<object>(exchangeReq.code!);
         if (!cached) return new Promise((resolve) => resolve(Result.Failure('unable to retrieve original request from cache')));
+        if (!clientID) clientID = exchangeReq.client_id;
+        if (!clientSecret) clientSecret = exchangeReq.client_secret;
 
         const originalReq = plainToInstance(OAuthRequest, cached);
 
@@ -153,7 +155,7 @@ export default class OAuthRepository extends Repository implements RepositoryInt
 
         // quick verification between requests
         if (originalReq.redirect_uri !== exchangeReq.redirect_uri) return new Promise((resolve) => resolve(Result.Failure('non-matching redirect uri')));
-        if (originalReq.client_id !== exchangeReq.client_id) return new Promise((resolve) => resolve(Result.Failure('non-matching client ids')));
+        if (originalReq.client_id !== clientID) return new Promise((resolve) => resolve(Result.Failure('non-matching client ids')));
 
         // if PKCE flow, verify the code
         if (exchangeReq.code_verifier) {
@@ -170,15 +172,19 @@ export default class OAuthRepository extends Repository implements RepositoryInt
             }
         } else {
             // if we're not doing PKCE there must be a client secret present
-            const application = await OAuthMapper.Instance.RetrieveByClientID(exchangeReq.client_id!);
+            const application = await OAuthMapper.Instance.RetrieveByClientID(clientID!);
             if (application.isError) return new Promise((resolve) => resolve(Result.Pass(application)));
 
-            const valid = await bcrypt.compare(exchangeReq.client_secret!, application.value.client_secret!);
+            const valid = await bcrypt.compare(clientSecret!, application.value.client_secret!);
 
             if (!valid) return new Promise((resolve) => resolve(Result.Failure('invalid client')));
         }
 
-        const token = jwt.sign(classToPlain(UserToReturnUser(user.value)), Config.encryption_key_secret, {expiresIn: '720m', algorithm: 'RS256', allowInsecureKeySizes: true});
+        const token = jwt.sign(classToPlain(UserToReturnUser(user.value)), Config.encryption_key_secret, {
+            expiresIn: '720m',
+            algorithm: 'RS256',
+            allowInsecureKeySizes: true,
+        });
 
         return new Promise((resolve) => resolve(Result.Success(token)));
     }

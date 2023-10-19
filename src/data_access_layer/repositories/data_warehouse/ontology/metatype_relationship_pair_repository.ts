@@ -12,6 +12,7 @@ import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatyp
 import MetatypeRelationship from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship';
 import {User} from '../../../../domain_objects/access_management/user';
 import {PoolClient} from 'pg';
+import MetatypeMapper from '../../../mappers/data_warehouse/ontology/metatype_mapper';
 
 /*
     MetatypeRelationshipPair contains methods for persisting and retrieving a metatype relationship pair
@@ -21,13 +22,16 @@ import {PoolClient} from 'pg';
  */
 export default class MetatypeRelationshipPairRepository extends Repository implements RepositoryInterface<MetatypeRelationshipPair> {
     #mapper: MetatypeRelationshipPairMapper = MetatypeRelationshipPairMapper.Instance;
+    #metatypeRepo: MetatypeRepository = new MetatypeRepository();
 
     async delete(p: MetatypeRelationshipPair): Promise<Result<boolean>> {
         if (p.id) {
             void this.deleteCached(p.id, p.container_id);
-
+            void this.#metatypeRepo.deleteCached(p.originMetatype!.id!);
             return this.#mapper.Delete(p.id);
         }
+
+        await this.#mapper.RefreshView();
 
         return Promise.resolve(Result.Failure('metatype relationship pair has no id'));
     }
@@ -35,7 +39,7 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
     archive(user: User, p: MetatypeRelationshipPair): Promise<Result<boolean>> {
         if (p.id) {
             void this.deleteCached(p.id, p.container_id);
-
+            void this.#metatypeRepo.deleteCached(p.metatype_id!);
             return this.#mapper.Archive(p.id, user.id!);
         }
 
@@ -45,7 +49,7 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
     unarchive(user: User, p: MetatypeRelationshipPair): Promise<Result<boolean>> {
         if (p.id) {
             void this.deleteCached(p.id, p.container_id);
-
+            void this.#metatypeRepo.deleteCached(p.metatype_id!);
             return this.#mapper.Unarchive(p.id, user.id!);
         }
 
@@ -75,6 +79,11 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         return Promise.resolve(retrieved);
     }
 
+    async listForMetatypeIDs(metatype_ids: string[], containerID: string, fromView?: boolean): Promise<Result<MetatypeRelationshipPair[]>> {
+        if (fromView) return this.#mapper.ListFromViewForMetatypeIDs(metatype_ids);
+        return this.#mapper.ListForMetatypeIDs(metatype_ids, containerID);
+    }
+
     // save will not save the origin/destination metatypes or metatype relationship unless the
     // user specifies. This is because we might be working with this object with a bare
     // minimum of info about those types
@@ -83,13 +92,13 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         // we can't wrap these in transactions so it is possible that you update one
         // but not another of the relationships. This is why the saveRelationships is
         // turned off by default.
+
         if (saveRelationships) {
-            const metatypeRepo = new MetatypeRepository();
             const relationshipRepo = new MetatypeRelationshipRepository();
 
             const results = await Promise.all([
-                metatypeRepo.save(p.originMetatype!, user),
-                metatypeRepo.save(p.destinationMetatype!, user),
+                this.#metatypeRepo.save(p.originMetatype!, user),
+                this.#metatypeRepo.save(p.destinationMetatype!, user),
                 relationshipRepo.save(p.relationship!, user),
             ]);
 
@@ -112,6 +121,12 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
             return Promise.resolve(Result.Failure(`metatype relationship pair does not pass validation ${errors.join}`));
         }
 
+        // delete metatype cache
+        if (p.originMetatype?.id) {
+            void this.#metatypeRepo.deleteCached(p.originMetatype.id);
+            void this.deleteCachedForMetatype(p.originMetatype.id);
+        }
+
         // update if ID has already been set
         if (p.id) {
             // to allow partial updates we must first fetch the original object
@@ -132,7 +147,9 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
             Object.assign(p, created.value);
         }
 
-        // we want to insure we always have the latest relationship values
+        await this.#mapper.RefreshView();
+
+        // we want to ensure we always have the latest relationship values
         const loaded = await this.loadRelationships(p);
         if (loaded.isError) Logger.error(loaded.error?.error!);
 
@@ -149,13 +166,12 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
             const errors: string[] = [];
 
             p.map((pair) => {
-                const metatypeRepo = new MetatypeRepository();
                 const relationshipRepo = new MetatypeRelationshipRepository();
 
                 operations.push(
                     ...[
-                        metatypeRepo.save(pair.originMetatype!, user),
-                        metatypeRepo.save(pair.destinationMetatype!, user),
+                        this.#metatypeRepo.save(pair.originMetatype!, user),
+                        this.#metatypeRepo.save(pair.destinationMetatype!, user),
                         relationshipRepo.save(pair.relationship!, user),
                     ],
                 );
@@ -177,6 +193,12 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
             const errors = await pair.validationErrors();
             if (errors) {
                 return Promise.resolve(Result.Failure(`one or more metatype relationship pairs do not pass validation ${errors.join(',')}`));
+            }
+
+            // delete metatype cache
+            if (pair.originMetatype?.id) {
+                void this.#metatypeRepo.deleteCached(pair.originMetatype.id);
+                void this.deleteCachedForMetatype(pair.originMetatype.id);
             }
 
             if (pair.id) {
@@ -207,7 +229,7 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
             const results = await this.#mapper.BulkCreate(user.id!, toCreate, transaction.value);
             if (results.isError) {
                 await this.#mapper.rollbackTransaction(transaction.value);
-                return Promise.resolve(Result.Pass(results));
+                return Promise.resolve(Result.Failure(results.error.error.message));
             }
 
             toReturn.push(...results.value);
@@ -230,18 +252,18 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
                 }),
             );
 
+        await this.#mapper.RefreshView();
         return Promise.resolve(Result.Success(true));
     }
 
     // attempt to fully load the relationships for the given relationships, we
     // don't trust the cached versions of the relationships as they could have changed
     private async loadRelationships(pair: MetatypeRelationshipPair): Promise<Result<boolean>> {
-        const metatypeRepo = new MetatypeRepository();
         const relationshipRepo = new MetatypeRelationshipRepository();
 
         const results = await Promise.all([
-            metatypeRepo.findByID(pair.originMetatype!.id!),
-            metatypeRepo.findByID(pair.destinationMetatype!.id!),
+            this.#metatypeRepo.findByID(pair.originMetatype!.id!),
+            this.#metatypeRepo.findByID(pair.destinationMetatype!.id!),
             relationshipRepo.findByID(pair.relationship!.id!),
         ]);
 
@@ -292,21 +314,121 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         return Promise.resolve(deleted);
     }
 
+    async deleteCachedForMetatype(metatypeID: string): Promise<boolean> {
+        const deleted = await Cache.del(`${MetatypeMapper.tableName}:${metatypeID}:relationships`);
+        if (!deleted) Logger.error(`unable to remove metatype ${metatypeID}'s relationships from cache`);
+
+        const flushed = await Cache.flushByPattern(`${MetatypeMapper.tableName}:${metatypeID}:relationships:*`);
+        if (!flushed) Logger.error(`unable to remove metatype ${metatypeID}'s relationships by pattern from cache`);
+
+        return Promise.resolve(deleted);
+    }
+
+    async setCachedForMetatype(metatypeID: string, relationships: MetatypeRelationshipPair[]): Promise<boolean> {
+        const set = await Cache.set(`${MetatypeMapper.tableName}:${metatypeID}:relationships`, serialize(relationships), Config.cache_default_ttl);
+        if (!set) Logger.error(`unable to set cache for metatype ${metatypeID}'s relationships`);
+
+        return Promise.resolve(set);
+    }
+
+    async getCachedForMetatype(metatypeID: string): Promise<MetatypeRelationshipPair[] | undefined> {
+        const cached = await Cache.get<object[]>(`${MetatypeMapper.tableName}:${metatypeID}:relationships`);
+        if (cached) {
+            const relationships = plainToClass(MetatypeRelationshipPair, cached);
+            return Promise.resolve(relationships);
+        }
+
+        return Promise.resolve(undefined);
+    }
+
+    RefreshView(): Promise<Result<boolean>> {
+        return this.#mapper.RefreshView();
+    }
+
+    // this function is to be used only on container import. it does not refresh the pairs view.
+    async importBulkSave(user: User, p: MetatypeRelationshipPair[]): Promise<Result<boolean>> {
+        const toCreate: MetatypeRelationshipPair[] = [];
+        const toUpdate: MetatypeRelationshipPair[] = [];
+        const toReturn: MetatypeRelationshipPair[] = [];
+
+        for (const pair of p) {
+            const errors = await pair.validationErrors();
+            if (errors) {
+                return Promise.resolve(Result.Failure(`one or more metatype relationship pairs do not pass validation ${errors.join(',')}`));
+            }
+
+            // delete metatype cache
+            if (pair.originMetatype?.id) {
+                void this.#metatypeRepo.deleteCached(pair.originMetatype.id);
+                void this.deleteCachedForMetatype(pair.originMetatype.id);
+            }
+
+            if (pair.id) {
+                toUpdate.push(pair);
+                void this.deleteCached(pair.id, pair.container_id);
+            } else {
+                toCreate.push(pair);
+            }
+        }
+
+        // we run the bulk save in a transaction so that on failure we don't get
+        // stuck with partially updated items
+        const transaction = await this.#mapper.startTransaction();
+        if (transaction.isError) return Promise.resolve(Result.Failure(`unable to initiate db transaction`));
+
+        if (toUpdate.length > 0) {
+            const results = await this.#mapper.ImportBulkUpdate(user.id!, toUpdate, transaction.value);
+            if (results.isError) {
+                await this.#mapper.rollbackTransaction(transaction.value);
+                return Promise.resolve(Result.Pass(results));
+            }
+
+            toReturn.push(...results.value);
+        }
+
+        if (toCreate.length > 0) {
+            const results = await this.#mapper.ImportBulkCreate(user.id!, toCreate, transaction.value);
+            if (results.isError) {
+                await this.#mapper.rollbackTransaction(transaction.value);
+                return Promise.resolve(Result.Failure(results.error.error.message));
+            }
+
+            toReturn.push(...results.value);
+        }
+
+        toReturn.forEach((result, i) => {
+            Object.assign(p[i], result);
+        });
+
+        const committed = await this.#mapper.completeTransaction(transaction.value);
+        if (committed.isError) {
+            await this.#mapper.rollbackTransaction(transaction.value);
+            return Promise.resolve(Result.Failure(`unable to commit changes to database ${committed.error}`));
+        }
+
+        return Promise.resolve(Result.Success(true));
+    }
+
     async saveFromJSON(relationshipPairs: MetatypeRelationshipPair[]): Promise<Result<boolean>> {
         const saved = await this.#mapper.JSONCreate(relationshipPairs);
         return saved;
     }
 
-    constructor() {
+    constructor(fromView = true) {
         super(MetatypeRelationshipPairMapper.tableName);
         // in order to select the composite fields we must redo the initial query
         // to accept LEFT JOINs
-        this._query.SELECT = [`${this._tableAlias}.*, origin.name as origin_metatype_name`, 
-                    `destination.name AS destination_metatype_name`, 
-                    `relationships.name AS relationship_name`
+
+        let tableName = MetatypeRelationshipPairMapper.viewName;
+        if (!fromView) tableName = MetatypeRelationshipPairMapper.tableName;
+
+        this._query.SELECT = [
+            `${this._tableAlias}.*, origin.name as origin_metatype_name`,
+            `destination.name AS destination_metatype_name`,
+            `relationships.name AS relationship_name`,
         ];
         this._query.FROM = [
-            `FROM ${MetatypeRelationshipPairMapper.tableName} ${this._tableAlias}`,
+            `FROM ${tableName} ${this._tableAlias}`,
             `LEFT JOIN metatypes origin ON ${this._tableAlias}.origin_metatype_id = origin.id`,
             `LEFT JOIN metatypes destination ON ${this._tableAlias}.destination_metatype_id = destination.id`,
             `LEFT JOIN metatype_relationships relationships ON ${this._tableAlias}.relationship_id = relationships.id`,
@@ -314,7 +436,7 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
     }
 
     id(operator: string, value: any) {
-        super.query('metatype_relationship_pairs.id', operator, value);
+        super.query('id', operator, value);
         return this;
     }
 
@@ -325,11 +447,6 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
 
     name(operator: string, value: any) {
         super.query('name', operator, value);
-        return this;
-    }
-
-    description(operator: string, value: any) {
-        super.query('description', operator, value);
         return this;
     }
 
@@ -382,17 +499,23 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         return this;
     }
 
+    metatype_id(operator: string, value: any) {
+        super.query('metatype_id', operator, value);
+        return this;
+    }
+
     async count(): Promise<Result<number>> {
         const results = await super.count();
 
         // reset the query
-        this._query.SELECT = [`${this._tableAlias}.*`, 
-                    `origin.name as origin_metatype_name`, 
-                    `destination.name AS destination_metatype_name`, 
-                    `relationships.name AS relationship_name`,
+        this._query.SELECT = [
+            `${this._tableAlias}.*`,
+            `origin.name as origin_metatype_name`,
+            `destination.name AS destination_metatype_name`,
+            `relationships.name AS relationship_name`,
         ];
         this._query.FROM = [
-            `FROM ${MetatypeRelationshipPairMapper.tableName} ${this._tableAlias}`,
+            `FROM ${MetatypeRelationshipPairMapper.viewName} ${this._tableAlias}`,
             `LEFT JOIN metatypes origin ON ${this._tableAlias}.origin_metatype_id = origin.id`,
             `LEFT JOIN metatypes destination ON ${this._tableAlias}.destination_metatype_id = destination.id`,
             `LEFT JOIN metatype_relationships relationships ON ${this._tableAlias}.relationship_id = relationships.id`,
@@ -408,14 +531,16 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
             transaction,
             resultClass: MetatypeRelationshipPair,
         });
+
         // reset the query
-        this._query.SELECT = [`${this._tableAlias}.*`, 
-                    `origin.name as origin_metatype_name`, 
-                    `destination.name AS destination_metatype_name`, 
-                    `relationships.name AS relationship_name`
+        this._query.SELECT = [
+            `${this._tableAlias}.*`,
+            `origin.name as origin_metatype_name`,
+            `destination.name AS destination_metatype_name`,
+            `relationships.name AS relationship_name`,
         ];
         this._query.FROM = [
-            `FROM ${MetatypeRelationshipPairMapper.tableName} ${this._tableAlias}`,
+            `FROM ${MetatypeRelationshipPairMapper.viewName} ${this._tableAlias}`,
             `LEFT JOIN metatypes origin ON ${this._tableAlias}.origin_metatype_id = origin.id`,
             `LEFT JOIN metatypes destination ON ${this._tableAlias}.destination_metatype_id = destination.id`,
             `LEFT JOIN metatype_relationships relationships ON ${this._tableAlias}.relationship_id = relationships.id`,

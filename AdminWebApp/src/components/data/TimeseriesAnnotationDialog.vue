@@ -87,7 +87,7 @@
 
     data: (): TimeseriesAnnotationDialogModel => ({
       annotation: "",
-      direction: "",
+      direction: "above",
       directions: ["above", "below"],
       valid: false,
       annotateX: undefined,
@@ -95,37 +95,33 @@
       annotateZ: undefined
     }),
 
-    beforeMount () {
-      this.annotateX = this.assignDatumValue(this.x);
-      this.annotateY = this.assignDatumValue(this.y);
-      this.annotateZ = this.assignDatumValue(this.z);
+    watch: {
+      x: {handler: 'xChange', immediate: true}
     },
 
     methods: {
       validateRequired(value: any) {
-        return !!value || this.$t('validation.required');
+        return (value == 0 || !!value) || this.$t('validation.required');
+      },
+      xChange() {
+        this.annotateX = this.x;
+        this.annotateY = this.y;
+        this.annotateZ = this.z;
       },
       createAnnotation() {
         // @ts-ignore
         if (!this.$refs.form!.validate()) return;
 
-        let annotation = {}
-        if (this.annotateZ) {
-          annotation = {
-            x: this.annotateX,
-            y: this.annotateY,
-            z: this.annotateZ,
-            annotation: this.annotation,
-            direction: this.direction
-          }
-        } else {
-          annotation = {
-            x: this.annotateX,
-            y: this.annotateY,
-            annotation: this.annotation,
-            direction: this.direction
-          }
+        let annotation: any = {}
+
+        annotation = {
+          x: this.x,
+          y: this.y,
+          annotation: this.annotation,
+          direction: this.direction
         }
+
+        if (this.z) annotation.z = this.z;
         this.$emit('createAnnotation', annotation)
       },
       assignDatumValue(value: Datum | undefined): Datum | undefined {

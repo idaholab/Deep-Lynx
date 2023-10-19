@@ -387,7 +387,6 @@ describe('The GraphQL Schema Generator', async () => {
         const test_metatype_relationship_pairs: MetatypeRelationshipPair[] = [
             new MetatypeRelationshipPair({
                 name: 'owns',
-                description: 'owns another entity',
                 origin_metatype: test_metatypes.find((m) => m.name === 'Maintenance')!.id!,
                 destination_metatype: test_metatypes.find((m) => m.name === 'Maintenance Entry')!.id!,
                 relationship: resultMetatypeRelationships.find((m) => m.name === 'parent')!.id!,
@@ -396,7 +395,6 @@ describe('The GraphQL Schema Generator', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: 'drives',
-                description: 'actor drives item',
                 origin_metatype: test_metatypes.find((m) => m.name === 'Driver')!.id!,
                 destination_metatype: test_metatypes.find((m) => m.name === 'Car')!.id!,
                 relationship: resultMetatypeRelationships.find((m) => m.name === 'uses')!.id!,
@@ -405,7 +403,6 @@ describe('The GraphQL Schema Generator', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: 'holds',
-                description: 'actor holds item',
                 origin_metatype: test_metatypes.find((m) => m.name === 'Driver')!.id!,
                 destination_metatype: test_metatypes.find((m) => m.name === 'License')!.id!,
                 relationship: resultMetatypeRelationships.find((m) => m.name === 'uses')!.id!,
@@ -414,7 +411,6 @@ describe('The GraphQL Schema Generator', async () => {
             }),
             new MetatypeRelationshipPair({
                 name: 'has',
-                description: 'item has item',
                 origin_metatype: test_metatypes.find((m) => m.name === 'Car')!.id!,
                 destination_metatype: test_metatypes.find((m) => m.name === 'Maintenance')!.id!,
                 relationship: resultMetatypeRelationships.find((m) => m.name === 'has')!.id!,

@@ -13,10 +13,10 @@
     <v-card class="pt-1 pb-3 px-2" v-if="selectedMetatype">
       <v-card-title>
         <span class="headline text-h3">{{$t('general.view')}} {{selectedMetatype.name}}</span>
-      </v-card-title>   
+      </v-card-title>
       <v-card-text>
-        <error-banner :message="errorMessage"></error-banner>
-        <v-row>    
+        <error-banner :message="errorMessage" @closeAlert="errorMessage = ''"></error-banner>
+        <v-row>
           <v-col :cols="12">
             <v-form
                 ref="form"
@@ -73,6 +73,33 @@
                 <ViewMetatypeKeyDialog :metatypeKey="item" :metatype="metatype" :icon="true"></ViewMetatypeKeyDialog>
               </template>
             </v-data-table>
+
+            <v-data-table
+                :headers="relationshipHeaders()"
+                :items="selectedMetatype.relationships"
+                :items-per-page="100"
+                :footer-props="{
+                    'items-per-page-options': [25, 50, 100]
+                }"
+                class="elevation-1"
+                sort-by="name"
+                style="margin-top: 30px"
+            >
+              <template v-slot:top>
+                <v-toolbar flat color="white">
+                  <v-toolbar-title>{{$t("relationships.relationships")}}</v-toolbar-title>
+                  <v-divider
+                      class="mx-4"
+                      inset
+                      vertical
+                  ></v-divider>
+                  <v-spacer></v-spacer>
+                </v-toolbar>
+              </template>
+              <template v-slot:[`item.actions`]="{ item }">
+                <ViewRelationshipPairDialog :pair="item" :icon="true"></ViewRelationshipPairDialog>
+              </template>
+            </v-data-table>
           </v-col>
         </v-row>
       </v-card-text>
@@ -89,6 +116,7 @@
   import Vue, { PropType } from 'vue'
   import {MetatypeT} from "../../../api/types";
   import ViewMetatypeKeyDialog from "@/components/ontology/metatypes/ViewMetatypeKeyDialog.vue";
+  import ViewRelationshipPairDialog from "@/components/ontology/metatypeRelationshipPairs/ViewRelationshipPairDialog.vue";
 
   interface ViewMetatypeDialogModel {
     errorMessage: string
@@ -101,7 +129,7 @@
   export default Vue.extend ({
     name: 'ViewMetatypeDialog',
 
-    components: { ViewMetatypeKeyDialog },
+    components: {ViewRelationshipPairDialog, ViewMetatypeKeyDialog },
 
     props: {
       metatype: {
@@ -121,7 +149,7 @@
       selectedMetatype: null,
       valid: false
     }),
-    
+
     // this way we only load the keys when the edit dialog is open, so we don't
     // overload someone using this in a list
     watch: {
@@ -143,13 +171,23 @@
         }
       }
     },
-    
+
     methods: {
       headers(): { text: string; value: string; sortable: boolean }[] {
         return  [
           { text: this.$t('general.name'), value: 'name', sortable: false },
           { text: this.$t('general.description'), value: 'description', sortable: false},
           { text: this.$t('general.dataType'), value: 'data_type', sortable: false},
+          { text: this.$t('general.actions'), value: 'actions', sortable: false }
+        ]
+      },
+
+      relationshipHeaders(): { text: string; value: string; sortable: boolean }[] {
+        return  [
+          { text: this.$t('general.name'), value: 'name', sortable: false },
+          { text: this.$t('edges.origin'), value: 'origin_metatype_name', sortable: true},
+          { text: this.$t('general.type'), value: 'relationship_name', sortable: true},
+          { text: this.$t('edges.destination'), value: 'destination_metatype_name', sortable: true },
           { text: this.$t('general.actions'), value: 'actions', sortable: false }
         ]
       },
