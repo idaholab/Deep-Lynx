@@ -134,6 +134,7 @@
   import {mdiFileDocumentMultiple} from "@mdi/js";
   import OntologyVersionToolbar from "@/components/ontology/versioning/OntologyVersionToolbar.vue";
   import ViewMetatypeDialog from "@/components/ontology/metatypes/ViewMetatypeDialog.vue";
+  import debounce from "lodash.debounce";
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const diff = require('deep-diff').diff;
 
@@ -157,6 +158,7 @@
     metatypes: MetatypeT[];
     comparisonMetatypes: MetatypeT[];
     options: Options;
+    debouncedSearchWatch: any;
   }
 
   export default Vue.extend ({
@@ -188,7 +190,8 @@
         description: '',
         metatypes: [],
         comparisonMetatypes: [],
-        options
+        options,
+        debouncedSearchWatch: null,
       };
     },
 
@@ -203,12 +206,10 @@
         this.loadMetatypes()
       },
       onNameChange() {
-        this.countMetatypes()
-        this.loadMetatypes()
+        this.debouncedSearchWatch()
       },
       onDescriptionChange() {
-        this.countMetatypes()
-        this.loadMetatypes()
+        this.debouncedSearchWatch()
       },
       headers() {
         return  [
@@ -396,7 +397,17 @@
             .catch((e) => (this.errorMessage = e));
         })
         .catch((e) => (this.errorMessage = e));
+
+      this.debouncedSearchWatch = debounce(() => {
+        this.countMetatypes();
+        this.loadMetatypes();
+      }, 500);
     },
+
+    beforeDestroy() {
+      this.debouncedSearchWatch.cancel();
+    },
+
   });
 </script>
 

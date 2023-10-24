@@ -638,8 +638,14 @@ export default class ContainerImport {
                                 propertyType = 'primitive';
                             }
                         } else {
+                            // the only way to completely ensure we are correctly differentiating between primitive and
+                            // relationship properties would be to compare the onProperty and someValuesFrom against
+                            // full maps/lists of object properties and/or data properties.
+                            // To vastly reduce overhead, enforce that primitive IRIs (full entity ID in XML)
+                            // should reference URLs containing http://www.w3.org
+                            // and that this string must not be used in other IRIs of the ontology
                             target = property['owl:someValuesFrom']['rdf:resource'];
-                            if (/http:\/\/www/.exec(target)) {
+                            if (/http:\/\/www\.w3\.org/.exec(target)) {
                                 propertyType = 'primitive';
                                 target = target.split('#')[1];
                                 target = this.ValidateTarget(target);
@@ -1239,19 +1245,21 @@ export default class ContainerImport {
 
                 });
                 // disable inheritance trigger before bulk insert
-                void MetatypeMapper.Instance.DisableInheritanceTrigger();
-                const inheritanceResult = await MetatypeMapper.Instance.InheritanceBulkInsert(metatypesInheritancePairs);
-                // ensure trigger is re-enabled after insert
-                void MetatypeMapper.Instance.EnableInheritanceTrigger();
+                if (metatypesInheritancePairs.length > 0) {
+                    void MetatypeMapper.Instance.DisableInheritanceTrigger();
+                    const inheritanceResult = await MetatypeMapper.Instance.InheritanceBulkInsert(metatypesInheritancePairs);
+                    // ensure trigger is re-enabled after insert
+                    void MetatypeMapper.Instance.EnableInheritanceTrigger();
 
-                if (inheritanceResult.isError || !inheritanceResult.value) {
-                    await this.rollbackVersion(
-                        input.container.id!,
-                        input.ontologyVersionID!,
-                        input.ontology_versioning_enabled,
-                        input.update,
-                        'unable to set inheritance for classes' )
-                    return resolve(Result.Failure('unable to set inheritance for classes'));
+                    if (inheritanceResult.isError || !inheritanceResult.value) {
+                        await this.rollbackVersion(
+                            input.container.id!,
+                            input.ontologyVersionID!,
+                            input.ontology_versioning_enabled,
+                            input.update,
+                            'unable to set inheritance for classes')
+                        return resolve(Result.Failure('unable to set inheritance for classes'));
+                    }
                 }
 
                 const propertyResults: Result<boolean>[] = await pAll(propertyPromises, {concurrency: 2});

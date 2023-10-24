@@ -27,9 +27,11 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
     async delete(p: MetatypeRelationshipPair): Promise<Result<boolean>> {
         if (p.id) {
             void this.deleteCached(p.id, p.container_id);
-            void this.#metatypeRepo.deleteCached(p.metatype_id!);
+            void this.#metatypeRepo.deleteCached(p.originMetatype!.id!);
             return this.#mapper.Delete(p.id);
         }
+
+        await this.#mapper.RefreshView();
 
         return Promise.resolve(Result.Failure('metatype relationship pair has no id'));
     }

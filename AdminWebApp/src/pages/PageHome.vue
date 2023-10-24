@@ -373,7 +373,7 @@
           <span class="d-block text-h6" style="margin-bottom: 10px">{{$t('help.foundBugs')}} <a :href="emailLink()">{{$t('help.tellUs')}}</a> </span>
           <span class="d-block text-h6" style="margin-bottom: 10px">{{$t('help.needHelp')}} <a :href="helpLink()">{{$t('general.wiki')}}</a> </span>
           <span class="d-block text-h6" style="margin-bottom: 10px">&copy; {{ new Date().getFullYear() }} {{$t('general.inl')}}</span>
-          <span class="d-block text-h6" v-if="stats">{{ stats.version }}</span>
+          <span class="d-block text-h6">{{ version }}</span>
         </v-container>
       </template>
     </v-navigation-drawer>
@@ -606,6 +606,7 @@
   import ViewContainerImport from "@/views/ViewContainerImport.vue";
   import ViewFileManager from "@/views/ViewFileManager.vue";
   import ViewOverviewGraph from "@/views/ViewOverviewGraph.vue";
+  const packageJson = require('../../../package.json')
 
   interface HomeModel {
     errorMessage: string
@@ -617,8 +618,9 @@
     argument: string | null
     componentKey: number
     stats: FullStatistics | null
-    metatypesCount: number,
-    relationshipCount: number,
+    version: string
+    metatypesCount: number
+    relationshipCount: number
     dataSources: DataSourceT[]
   }
 
@@ -679,7 +681,7 @@
       argument: null,
       componentKey: 0, // this is so we can force a re-render of certain components on component change - assign as key
       stats: null,
-
+      version: '',
       metatypesCount: 0,
       relationshipCount: 0,
       dataSources: [],
@@ -925,6 +927,8 @@
 
     beforeMount() {
       this.$store.dispatch('refreshCurrentOntologyVersions');
+
+      this.version = packageJson.version;
 
       if(this.$auth.IsAdmin()) {
         this.$client.retrieveStats()

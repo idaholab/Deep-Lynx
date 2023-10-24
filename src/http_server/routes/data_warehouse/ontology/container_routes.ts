@@ -2,14 +2,18 @@ import {Application, NextFunction, Request, Response} from 'express';
 import {authInContainer, authRequest} from '../../../middleware';
 import ContainerImport, {ContainerImportT} from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_import';
 import ContainerRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
-import {plainToClass} from 'class-transformer';
-import Container, {ContainerExport, ContainerConfig} from '../../../../domain_objects/data_warehouse/ontology/container';
+import {plainToClass, plainToInstance} from 'class-transformer';
+import Container, {
+    ContainerExport,
+    ContainerConfig,
+    DataSourceTemplateIDPayload,
+    DataSourceTemplate
+} from '../../../../domain_objects/data_warehouse/ontology/container';
 import Result from '../../../../common_classes/result';
 import {FileInfo} from 'busboy';
 import FileRepository from '../../../../data_access_layer/repositories/data_warehouse/data/file_repository';
 import DataSourceRepository from '../../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import {DataSource} from '../../../../interfaces_and_impl/data_warehouse/import/data_source';
-import pAll from 'p-all';
 import TypeMappingRepository from '../../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository';
 import TypeMapping from '../../../../domain_objects/data_warehouse/etl/type_mapping';
 
@@ -45,6 +49,10 @@ export default class ContainerRoutes {
 
         app.get('/containers/:containerID/alerts', ...middleware, authInContainer('read', 'ontology'), this.listAlerts);
         app.post('/containers/:containerID/alerts/:alertID', ...middleware, authInContainer('write', 'containers'), this.acknowledgeAlert);
+
+        app.get('/containers/:containerID/data_source_templates', ...middleware, authInContainer('write', 'containers'), this.listDataSourceTemplates);
+        app.post('/containers/:containerID/data_source_templates', ...middleware, authInContainer('write', 'containers'), this.saveDataSourceTemplates);
+        app.delete('/containers/:containerID/data_source_templates', ...middleware, authInContainer('write', 'containers'), this.deleteDataSourceTemplates);
     }
 
     private static createContainer(req: Request, res: Response, next: NextFunction) {
@@ -464,5 +472,66 @@ export default class ContainerRoutes {
         });
 
         return req.pipe(busboy);
+    }
+
+    private static listDataSourceTemplates(req: Request, res: Response, next: NextFunction) {
+        if (req.container && req.container.id) {
+            repository
+                .listDataSourceTemplates(req.container.id)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`unable to find container`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static saveDataSourceTemplates(req: Request, res: Response, next: NextFunction) {
+        if (req.container && req.container.id) {
+            let toSave: DataSourceTemplate[];
+
+            if (Array.isArray(req.body)) {
+                toSave = plainToInstance(DataSourceTemplate, req.body);
+            } else {
+                toSave = [plainToInstance(DataSourceTemplate, req.body as object)];
+            }
+
+            repository
+                .bulkSaveDataSourceTemplates(toSave, req.container.id,)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`unable to find container`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    // if no template_ids are sent in, all data source templates for the container are deleted
+    private static deleteDataSourceTemplates(req: Request, res: Response, next: NextFunction) {
+        if (req.container && req.container.id) {
+            const payload = plainToInstance(DataSourceTemplateIDPayload, req.body as object);
+            repository
+                .bulkDeleteDataSourceTemplates(payload.template_ids!, req.container.id,)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`unable to find container`, 404).asResponse(res);
+            next();
+        }
     }
 }

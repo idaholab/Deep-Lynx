@@ -529,7 +529,7 @@ export class Client {
         const query: {[key: string]: any} = {};
 
         if (name) query.name = name;
-        if (description) query.description = name;
+        if (description) query.description = description;
         if (ontologyVersion) query.ontologyVersion = ontologyVersion;
         if (limit) query.limit = limit;
         if (offset) query.offset = offset;
@@ -555,8 +555,11 @@ export class Client {
         return this.get<MetatypeRelationshipPairT>(`/containers/${containerID}/metatype_relationship_pairs/${metatypeRelationshipPairID}`);
     }
 
-    listMetatypeRelationshipPairsForMetatype(containerID: string, metatypeID: string): Promise<MetatypeRelationshipPairT[]> {
-        return this.get<MetatypeRelationshipPairT[]>(`/containers/${containerID}/metatypes/${metatypeID}/metatype_relationship_pairs`);
+    listMetatypeRelationshipPairsForMetatype(containerID: string, metatypeID: string, deleted = false): Promise<MetatypeRelationshipPairT[]> {
+        const query: {[key: string]: any} = {};
+        query.deleted = deleted;
+
+        return this.get<MetatypeRelationshipPairT[]>(`/containers/${containerID}/metatypes/${metatypeID}/metatype_relationship_pairs`, query);
     }
 
     updateMetatypeRelationship(containerID: string, metatypeRelationshipID: string, metatypeRelationship: any): Promise<boolean> {

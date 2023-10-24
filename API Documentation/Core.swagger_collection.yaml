@@ -220,6 +220,228 @@ paths:
               schema:
                 $ref: '#/components/schemas/Generic200Response'
       deprecated: false
+  '/containers/{container_id}/data_source_templates':
+    get:
+      tags:
+        - Containers
+      summary: List Data Source Templates
+      description: List all Data Source Templates for the container.
+      operationId: RetrieveContainer
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        encrypted:
+                          type: boolean
+                        authorized:
+                          type: boolean
+                        custom_fields:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              encrypt:
+                                type: boolean
+                              required:
+                                type: boolean
+                        redirect_address:
+                          type: string
+                  isError:
+                    type: boolean
+                x-examples:
+                  Example 1:
+                    value:
+                      - id: 98eb71e9-2556-4309-824b-068be12650c9
+                        name: P6
+                        encrypted: true
+                        authorized: false
+                        custom_fields:
+                          - name: encrypted
+                            value: OVTPjwWPZNdAvkkxZseu448ZrrdpjLshMmJZ2BF5HYRobkmb91ZWZimOVwU6VeGT6hc1PABdvMXVHi0nRl7cfw==
+                            encrypt: true
+                            required: true
+                          - name: no value
+                            encrypt: false
+                            required: false
+                          - name: unencrypted
+                            value: unencrypted
+                        redirect_address: 'localhost:8181'
+                      - id: 87da60d8-1445-3298-713a-957ad01549b8
+                        name: Jazz
+                        encrypted: true
+                        authorized: false
+                        redirect_address: 'localhost:8282'
+                    isError: false
+              examples:
+                Example 1:
+                  value:
+                    value:
+                      - id: 98eb71e9-2556-4309-824b-068be12650c9
+                        name: P6
+                        encrypted: true
+                        authorized: false
+                        custom_fields:
+                          - name: encrypted
+                            value: OVTPjwWPZNdAvkkxZseu448ZrrdpjLshMmJZ2BF5HYRobkmb91ZWZimOVwU6VeGT6hc1PABdvMXVHi0nRl7cfw==
+                            encrypt: true
+                            required: true
+                          - name: no value
+                            encrypt: false
+                            required: false
+                          - name: unencrypted
+                            value: unencrypted
+                        redirect_address: 'localhost:8181'
+                      - id: 87da60d8-1445-3298-713a-957ad01549b8
+                        name: Jazz
+                        encrypted: true
+                        authorized: false
+                        redirect_address: 'localhost:8282'
+                    isError: false
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      deprecated: false
+    delete:
+      tags:
+        - Containers
+      summary: Delete Data Source Templates
+      description: 'Deletes an Data Source Template or array of Data Source Templates based on their UUIDs. If no body is specified, all Data Source Templates for the container are deleted.'
+      operationId: ArchiveContainer
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200Response'
+      deprecated: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                template_ids:
+                  type: array
+                  items:
+                    type: string
+              x-examples:
+                Example 1:
+                  template_ids:
+                    - 98eb71e9-2556-4309-824b-068be12650c9
+                    - 87da60d8-1445-3298-713a-957ad01549b8
+            examples:
+              Example 1:
+                value:
+                  template_ids:
+                    - 98eb71e9-2556-4309-824b-068be12650c9
+                    - 87da60d8-1445-3298-713a-957ad01549b8
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+    post:
+      summary: Save Data Source Templates
+      operationId: post-containers-container_id-data_source_templates
+      description: Add a new Data Source Template to the container or create a new Data Source Template.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  redirect_address:
+                    type: string
+                  custom_fields:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        encrypt:
+                          type: boolean
+                        required:
+                          type: boolean
+                        value:
+                          type: string
+              x-examples:
+                Example 1:
+                  - id: 98eb71e9-2556-4309-824b-068be12650c9
+                    name: P6
+                    redirect_address: 'localhost:8181'
+                    custom_fields:
+                      - name: encrypted
+                        encrypt: true
+                        required: true
+                        value: encrypted
+                      - name: no value
+                        required: false
+                        encrypt: false
+                      - name: unencrypted
+                        value: unencrypted
+                  - id: 87da60d8-1445-3298-713a-957ad01549b8
+                    name: Jazz
+                    redirect_address: 'localhost:8282'
+            examples:
+              Example 1:
+                value:
+                  - id: 98eb71e9-2556-4309-824b-068be12650c9
+                    name: P6
+                    redirect_address: 'localhost:8181'
+                    custom_fields:
+                      - name: encrypted
+                        encrypt: true
+                        required: true
+                        value: encrypted
+                      - name: no value
+                        required: false
+                        encrypt: false
+                      - name: unencrypted
+                        value: unencrypted
+                  - id: 87da60d8-1445-3298-713a-957ad01549b8
+                    name: Jazz
+                    redirect_address: 'localhost:8282'
   '/containers/{container_id}/active':
     post:
       tags:

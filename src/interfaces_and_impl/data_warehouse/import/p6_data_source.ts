@@ -5,11 +5,6 @@ import NodeRSA from "node-rsa";
 import Logger from '../../../services/logger';
 import Config from '../../../services/config';
 import { plainToClass } from "class-transformer";
-import { KeyPair, User } from "../../../domain_objects/access_management/user";
-import Result from '../../../common_classes/result';
-import KeyPairMapper from "../../../data_access_layer/mappers/access_management/keypair_mapper";
-import KeyPairRepository from "../../../data_access_layer/repositories/access_management/keypair_repository";
-import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 
 const buildUrl = require('build-url');
 
