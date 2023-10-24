@@ -1,5 +1,9 @@
 import RepositoryInterface from '../../repository';
-import Container, {ContainerAlert, ContainerExport} from '../../../../domain_objects/data_warehouse/ontology/container';
+import Container, {
+    ContainerAlert,
+    ContainerExport,
+    DataSourceTemplate
+} from '../../../../domain_objects/data_warehouse/ontology/container';
 import Result from '../../../../common_classes/result';
 import ContainerMapper from '../../../mappers/data_warehouse/ontology/container_mapper';
 import Authorization from '../../../../domain_objects/access_management/authorization/authorization';
@@ -30,8 +34,9 @@ import MetatypeRelationshipKeyRepository from './metatype_relationship_key_repos
 import MetatypeRelationshipPairRepository from './metatype_relationship_pair_repository';
 import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
 import TypeMappingRepository from '../etl/type_mapping_repository';
-import KeyPairMapper from '../../../mappers/access_management/keypair_mapper';
 import RedisGraphLoaderService from '../../../../services/cache/redis_graph_loader';
+import NodeRSA from 'node-rsa';
+import {v4 as uuidv4} from 'uuid';
 
 /*
     ContainerRepository contains methods for persisting and retrieving a container
@@ -47,6 +52,15 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         const errors = await c.validationErrors();
         if (errors) {
             return Promise.resolve(Result.Failure(`container does not pass validation ${errors.join(',')}`));
+        }
+
+        // iterate through any data source templates and encrypt them
+        if (c.config?.data_source_templates && c.config.data_source_templates?.length > 0) {
+            const templates = c.config.data_source_templates;
+            for (const template of templates) {
+                const index = templates.indexOf(template);
+                templates[index] = await this.encryptTemplate(template);
+            }
         }
 
         // if we have a set ID, attempt to update the Container
@@ -95,6 +109,15 @@ export default class ContainerRepository implements RepositoryInterface<Containe
             const errors = await container.validationErrors();
             if (errors) {
                 return Promise.resolve(Result.Failure(`some containers do not pass validation ${errors.join(',')}`));
+            }
+
+            // iterate through any data source templates and encrypt them
+            if (container.config?.data_source_templates && container.config.data_source_templates?.length > 0) {
+                const templates = container.config.data_source_templates;
+                for (const template of templates) {
+                    const index = templates.indexOf(template);
+                    templates[index] = await this.encryptTemplate(template);
+                }
             }
 
             if (container.id) {
@@ -500,6 +523,192 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         }
     }
 
+    async saveDataSourceTemplate(t: DataSourceTemplate, containerID: string): Promise<Result<boolean>> {
+        const errors = await t.validationErrors();
+        if (errors) {
+            return Promise.resolve(Result.Failure(`data source template does not pass validation ${errors.join(',')}`));
+        }
+
+        // remove cached version of container since we are making a change to it
+        void this.deleteCached(containerID);
+
+        // if there is an existing template that matches ID or name, update
+        const matchedByID = (await this.findDataSourceTemplateByID(t.id!, containerID)).value;
+        const matchedByName = (await this.findDataSourceTemplateByName(t.name!, containerID)).value;
+
+        t = await this.encryptTemplate(t);
+
+        if (matchedByID) {
+            Object.assign(matchedByID, t);
+
+            const updated = await this.#mapper.UpdateDataSourceTemplate(matchedByID, containerID);
+            if (updated.isError) return Promise.resolve(Result.Pass(updated));
+
+            Object.assign(t, updated.value);
+            return Promise.resolve(Result.Success(true));
+        } else if (matchedByName) {
+            // override the "new" ID with the one from the fetched template
+            t.id = matchedByName.id;
+            Object.assign(matchedByName, t);
+
+            const updated = await this.#mapper.UpdateDataSourceTemplate(matchedByName, containerID);
+            if (updated.isError) return Promise.resolve(Result.Pass(updated));
+
+            Object.assign(t, updated.value);
+            return Promise.resolve(Result.Success(true));
+        }
+
+        // if the container has no matching templates, create a new one
+        const created = await this.#mapper.CreateDataSourceTemplate(t, containerID);
+        if (created.isError) return Promise.resolve(Result.Pass(created));
+
+        // set the original object to the returned one
+        Object.assign(t, created.value);
+
+        return Promise.resolve(Result.Success(true));
+    }
+
+    async bulkSaveDataSourceTemplates(t: DataSourceTemplate[], containerID: string): Promise<Result<boolean>> {
+        // separate data source templates by which need to be created vs updated
+        const toCreate: DataSourceTemplate[] = [];
+        const toUpdate: DataSourceTemplate[] = [];
+        const toReturn: DataSourceTemplate[] = [];
+
+        // create storage object for existing template lookup. we can't
+        // simply search on the existence of ID or name since even new
+        // objects will be coming through with both IDs and names.
+        const existingTemplatesByID: {[id: string]: DataSourceTemplate} = {};
+        const existingTemplatesByName: {[name: string]: DataSourceTemplate} = {};
+
+        const existingTemplates = await this.#mapper.ListDataSourceTemplates(containerID);
+        if (existingTemplates.isError) {
+            return Promise.resolve(Result.Failure(`could not list data source templates for container ${containerID}`));
+        }
+
+        existingTemplates.value?.forEach(template => {
+            existingTemplatesByID[template.id!] = template;
+            existingTemplatesByName[template.name!] = template;
+        });
+
+        // run validation and separate
+        for (let template of t) {
+            const errors = await template.validationErrors();
+            if (errors) {
+                return Promise.resolve(Result.Failure(`some data source templates do not pass validation ${errors.join(',')}`));
+            }
+
+            template = await this.encryptTemplate(template);
+
+            if (existingTemplatesByID[template.id!] !== undefined) {
+                toUpdate.push(template);
+            } else if (existingTemplatesByName[template.name!] !== undefined) {
+                // override the "new" ID with the ID of the fetched template
+                template.id = existingTemplatesByName[template.name!].id!
+                toUpdate.push(template);
+            } else {
+                // if no ID is supplied, generate a new one before creation
+                template.id = template.id ? template.id : uuidv4();
+                toCreate.push(template);
+            }
+        }
+
+        // we run bulk save in a transaction so that on failure
+        // we don't get stuck with partially updated items
+        const transaction = await this.#mapper.startTransaction();
+        if (transaction.isError) return Promise.resolve(Result.Failure(`unable to initiate db transaction`));
+
+        // remove cached version of container since we are making a change to it
+        void this.deleteCached(containerID);
+
+        if (toUpdate.length > 0) {
+            // instead of doing a bulk update within a single query, which requires using
+            // a complex CTE, perform a bulk delete of all relevant templates followed by
+            // a bulk insert of the new templates, all within the safety of a transaction.
+            const toDelete = toUpdate.map(t => t.id!);
+            const deleted = await this.#mapper.BulkDeleteDataSourceTemplates(toDelete, containerID, transaction.value);
+            if (deleted.isError) {
+                await this.#mapper.rollbackTransaction(transaction.value);
+                return Promise.resolve(Result.Pass(deleted));
+            }
+
+            const created = await this.#mapper.BulkCreateDataSourceTemplates(toUpdate, containerID, transaction.value);
+            if (created.isError) {
+                await this.#mapper.rollbackTransaction(transaction.value);
+                return Promise.resolve(Result.Pass(created));
+            }
+
+            toReturn.push(...created.value);
+        }
+
+        if (toCreate.length > 0) {
+            const created = await this.#mapper.BulkCreateDataSourceTemplates(toCreate, containerID, transaction.value);
+            if (created.isError) {
+                await this.#mapper.rollbackTransaction(transaction.value);
+                return Promise.resolve(Result.Pass(created));
+            }
+
+            toReturn.push(...created.value);
+        }
+
+        const committed = await this.#mapper.completeTransaction(transaction.value);
+        if (committed.isError) {
+            await this.#mapper.rollbackTransaction(transaction.value);
+            return Promise.resolve(Result.Failure(`unable to commit changes to db ${committed.error}`));
+        }
+
+        toReturn.forEach((result, i) => {
+            Object.assign(t[i], result);
+        });
+
+        return Promise.resolve(Result.Success(true));
+    }
+
+    async listDataSourceTemplates(containerID: string): Promise<Result<DataSourceTemplate[]>> {
+        const templates = await this.#mapper.ListDataSourceTemplates(containerID);
+        if (templates.isError) return Promise.resolve(Result.Pass(templates));
+        // templates.value.forEach(async (t) => {t = await this.sanitizeTemplate(t)});
+        return Promise.resolve(templates);
+    }
+
+    async findDataSourceTemplateByID(templateID: string, containerID: string): Promise<Result<DataSourceTemplate>> {
+        const retrieved = await this.#mapper.RetrieveDataSourceTemplateByID(templateID, containerID);
+        if (retrieved.isError) return Promise.resolve(Result.Pass(retrieved));
+        const toReturn = retrieved.value;
+        // toReturn = await this.sanitizeTemplate(toReturn);
+        return Promise.resolve(Result.Success(toReturn));
+    }
+
+    async findDataSourceTemplateByName(templateName: string, containerID: string): Promise<Result<DataSourceTemplate>> {
+        const retrieved = await this.#mapper.RetrieveDataSourceTemplateByName(templateName, containerID);
+        if (retrieved.isError) return Promise.resolve(Result.Pass(retrieved));
+        const toReturn = retrieved.value;
+        // toReturn = await this.sanitizeTemplate(toReturn);
+        return Promise.resolve(Result.Success(toReturn));
+    }
+
+    async bulkDeleteDataSourceTemplates(templateIDs: string[], containerID: string): Promise<Result<boolean>> {
+        const deleted = await this.#mapper.BulkDeleteDataSourceTemplates(templateIDs, containerID);
+        if (deleted.isError) return Promise.resolve(Result.Pass(deleted));
+        return Promise.resolve(Result.Success(true));
+    }
+
+    // this method accepts an `adapter_auth` note from the KeyPair repository and marks the
+    // adapter with a matching name as authorized. This is to help track whether the adapter
+    // has been authorized to poll the container so the user doesn't have to keep re-authorizing
+    // the adapter for use like they did previously.
+    // TODO: Replace this with data source messaging system eventually
+    async authorizeDataSourceTemplate(adapterName: string, containerID: string): Promise<Result<boolean>> {
+        const templates = await this.listDataSourceTemplates(containerID);
+        for (const template of templates.value) {
+            if (template.name?.toLowerCase() === adapterName) {
+                const authorized = await this.#mapper.AuthorizeDataSourceTemplate(template.name, containerID);
+                if (authorized.isError) return Promise.resolve(Result.Pass(authorized));
+                return Promise.resolve(Result.Success(true));
+            }
+        }
+        return Promise.resolve(Result.Success(false));
+    }
+
     private async getCached(id: string): Promise<Container | undefined> {
         const cached = await Cache.get<object>(`${ContainerMapper.tableName}:${id}`);
         if (cached) {
@@ -522,5 +731,21 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         if (!deleted) Logger.error(`unable to remove container ${id} from cache`);
 
         return Promise.resolve(deleted);
+    }
+
+    private async encryptTemplate(template: DataSourceTemplate): Promise<DataSourceTemplate> {
+        const key = new NodeRSA(Config.encryption_key_secret);
+
+        const output = plainToClass(DataSourceTemplate, {...template});
+
+        if (output.custom_fields) {
+            for (const field of output.custom_fields) {
+                if (field.encrypt === true && field.value !== undefined) {
+                    field.value = key.encryptPrivate(field.value, 'base64');
+                }
+            }
+        }
+
+        return Promise.resolve(output);
     }
 }
