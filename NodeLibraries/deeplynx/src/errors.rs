@@ -1,6 +1,5 @@
 use napi::Error;
 use std::io;
-use std::num::ParseIntError;
 use thiserror::Error;
 use crate::redis_graph::redis_errors::RedisLoaderError;
 

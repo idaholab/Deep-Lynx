@@ -75,7 +75,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
         return Promise.resolve(node);
     }
 
-    async save(n: Node, user: User, transaction?: PoolClient): Promise<Result<boolean>> {
+    async save(n: Node, user: User, transaction?: PoolClient, merge = false): Promise<Result<boolean>> {
         let internalTransaction = false;
         const errors = await n.validationErrors();
         if (errors) return Promise.resolve(Result.Failure(`node does not pass validation ${errors.join(',')}`));
@@ -117,7 +117,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
 
             Object.assign(original.value, n);
 
-            const results = await this.#mapper.Update(user.id!, original.value);
+            const results = await this.#mapper.Update(user.id!, original.value, undefined, merge);
             if (results.isError) {
                 if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
                 return Promise.resolve(Result.Pass(results));
@@ -127,7 +127,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
                 Object.assign(n, results.value);
             }
         } else {
-            const results = await this.#mapper.CreateOrUpdateByCompositeID(user.id!, n);
+            const results = await this.#mapper.CreateOrUpdateByCompositeID(user.id!, n, undefined, merge);
             if (results.isError) {
                 if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
                 return Promise.resolve(Result.Pass(results));
@@ -146,7 +146,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
         return Promise.resolve(Result.Success(true));
     }
 
-    async bulkSave(user: User | string, nodes: Node[], transaction?: PoolClient): Promise<Result<boolean>> {
+    async bulkSave(user: User | string, nodes: Node[], transaction?: PoolClient, merge = false): Promise<Result<boolean>> {
         let internalTransaction = false;
         if (!transaction) {
             const newTransaction = await this.#mapper.startTransaction();
@@ -220,7 +220,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
         }
 
         if (toUpdate.length > 0) {
-            const saved = await this.#mapper.BulkUpdate(user instanceof User ? user.id! : user, toUpdate, transaction);
+            const saved = await this.#mapper.BulkUpdate(user instanceof User ? user.id! : user, toUpdate, merge, transaction);
             if (saved.isError) {
                 if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
                 return Promise.resolve(Result.Pass(saved));
@@ -230,7 +230,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
         }
 
         if (toCreate.length > 0) {
-            const saved = await this.#mapper.BulkCreateOrUpdateByCompositeID(user instanceof User ? user.id! : user, toCreate, transaction);
+            const saved = await this.#mapper.BulkCreateOrUpdateByCompositeID(user instanceof User ? user.id! : user, toCreate, transaction, merge);
             if (saved.isError) {
                 if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
                 return Promise.resolve(Result.Pass(saved));

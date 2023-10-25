@@ -37,7 +37,8 @@ impl JsRedisGraphLoader {
         &self,
         container_id: String,
         timestamp: Option<String>,
-    ) -> Result<(), napi::Error> {
+        ttl: Option<i64>,
+    ) -> Result<String, napi::Error> {
         let inner = self.inner.clone().ok_or(napi::Error::new(
             napi::Status::GenericFailure,
             "must call init before calling functions",
@@ -50,10 +51,11 @@ impl JsRedisGraphLoader {
                     .parse::<u64>()
                     .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?,
                 timestamp,
+                ttl,
             ) // to u64 is a safe cast because container_id isn't negative
             .await
         {
-            Ok(_) => Ok(()),
+            Ok(key) => Ok(key),
             Err(e) => Err(napi::Error::new(
                 napi::Status::GenericFailure,
                 e.to_string(),

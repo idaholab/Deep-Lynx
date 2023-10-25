@@ -17,6 +17,8 @@ import WebGLFunctions from './graph_functions/webgl_functions';
 import Config from '../../../../services/config';
 import Result from '../../../../common_classes/result';
 import ContainerRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
+import RedisGraphService from '../../../../services/cache/redis_graph_loader';
+import {parseISO} from 'date-fns';
 
 export default class GraphRoutes {
     public static mount(app: Application, middleware: any[]) {
@@ -166,6 +168,7 @@ export default class GraphRoutes {
         );
         app.get('/containers/:containerID/graphs/webgl', ...middleware, authInContainer('read', 'data'), WebGLFunctions.listWebglFilesAndTags);
         app.post('/containers/:containerID/graphs/load', ...middleware, authInContainer('read', 'data'), loadRedisGraph);
+        app.post('/containers/:containerID/graphs/query', ...middleware, authInContainer('read', 'data'), queryRedisGraph);
         app.put('/containers/:containerID/graphs/webgl/files/:fileID', ...middleware, authInContainer('write', 'data'), WebGLFunctions.updateWebglFiles);
         app.delete('/containers/:containerID/graphs/webgl/files/:fileID', ...middleware, authInContainer('write', 'data'), FileFunctions.deleteFile);
     }
@@ -176,6 +179,45 @@ function loadRedisGraph(req: Request, res: Response, next: NextFunction) {
         const containerRepo = new ContainerRepository();
         containerRepo
             .loadIntoRedis(req.container.id!)
+            .then((result) => {
+                result.asResponse(res);
+            })
+            .catch((e) => Result.Error(e).asResponse(res))
+            .finally(() => next());
+    } else {
+        Result.Failure('container not found', 404).asResponse(res);
+        next();
+    }
+}
+
+function queryRedisGraph(req: Request, res: Response, next: NextFunction) {
+    if (req.container) {
+        let timestamp;
+        if (typeof req.query.timestamp !== 'undefined' && (req.query.timestamp as string) !== '') {
+            const date_conversion_format = 'yyyy-MM-ddTHH:mm:ss.SSSZ';
+            const convertedDate = parseISO(req.query.timestamp.toString());
+
+            // if conversion is unsuccessful, return from the call with an explanation
+            if (isNaN(convertedDate.getTime())) {
+                return res
+                    .status(400)
+                    .json(
+                        'The timestamp query parameter was not provided a valid date input. ' +
+                            'Please provide an input in the format ' +
+                            date_conversion_format,
+                    );
+            }
+
+            timestamp = req.query.timestamp.toString();
+
+            // dates are rounded to the minute to avoid proliferation of graphs
+            const coef = 1000 * 60;
+            timestamp = new Date(Math.floor(new Date(timestamp).getTime() / coef) * coef).toISOString();
+        }
+
+        const redisGraph = new RedisGraphService();
+        redisGraph
+            .queryGraph(req.container?.id!, {query: req.body.query, variables: req.body.variables}, timestamp)
             .then((result) => {
                 result.asResponse(res);
             })

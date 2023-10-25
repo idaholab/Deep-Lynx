@@ -1,0 +1,3 @@
+db_connection_string: postgresql://postgres:deeplynxcore@localhost/deep_lynx
+redis_connection_string: redis://localhost:6379
+max_columns:

@@ -114,6 +114,8 @@ export default {
             createdAtManual: 'Select "Default" to use the import time as the "created at" value, or set the time manually',
             removedForSecurity: '(Removed for Security)',
             tagMapping: 'Nodes or edges may be associated with tags. Tags connect graph data with 2D/3D models.',
+            mergeHelp:
+                'Select this option to merge incoming properties and supplementary data with existing data on updates, otherwise data will be overwritten',
         },
         links: {
             timeseriesQuickStart: 'https://github.com/idaholab/Deep-Lynx/wiki/Timeseries-Quick-Start-Guide',
@@ -199,12 +201,9 @@ export default {
                 'Deleting this key will cause any integration which uses it to no longer be able to authenticate with DeepLynx. Only delete a key that you know is not in use or has been compromised. Deleting a key/pair cannot be undone.',
             deleteEvent:
                 'Deleting an Event Action means it will be unrecoverable to even administrative users. Only delete Event Actions you know are no longer needed or that were created in error.',
-            deleteProperty: 
-                'Are you sure you want to delete this property? It can be viewed later by clicking through the history seciton.',
-            deleteEdge:
-                'Deleting an edge will remove it from the graph. Are you sure you want to delete this edge?',
-            deleteNode: 
-                'Deleting a node will remove it, as well as any connected edges, from the graph. Are you sure you want to delete this node?',
+            deleteProperty: 'Are you sure you want to delete this property? It can be viewed later by clicking through the history seciton.',
+            deleteEdge: 'Deleting an edge will remove it from the graph. Are you sure you want to delete this edge?',
+            deleteNode: 'Deleting a node will remove it, as well as any connected edges, from the graph. Are you sure you want to delete this node?',
             deleteTag: 'Are you sure you want to detach this tag?',
             importContainer:
                 'Note that importing type mappings requires also importing data sources, and type mappings may require certain ontology elements in order to transfer completely.',
@@ -331,6 +330,7 @@ export default {
             archive: 'Archive',
             parent: 'Parent',
             owner: 'Owner',
+            merge: 'Merge',
         },
         validation: {
             validEmail: 'Email must be valid',
@@ -615,7 +615,8 @@ export default {
             editConfigured: 'Edit Configured Source',
             deleteConfigured: 'Delete Configured Source',
             authorizeAdapter: 'Authorize Adapter for Container',
-            authContainerP6: 'The P6 adapter must be authorized to access this container before P6 data sources can be activated. Click the Authorize button to authorize this container.',
+            authContainerP6:
+                'The P6 adapter must be authorized to access this container before P6 data sources can be activated. Click the Authorize button to authorize this container.',
             deleteConfiguredConfirm: 'Would you like to delete this pre-set Data Source configuration?',
             selectEnabled: 'Select Enabled Data Source Types',
             reprocess: 'Reprocess Data Source',
