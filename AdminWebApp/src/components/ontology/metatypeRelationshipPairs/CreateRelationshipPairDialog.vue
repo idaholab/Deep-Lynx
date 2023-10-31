@@ -23,20 +23,12 @@
                 ref="form"
                 v-model="valid"
             >
-              <v-autocomplete
-                  v-model="originSelect"
-                  :rules="[validationRule]"
-                  :single-line="false"
-                  :items="originMetatypes"
-                  :search-input.sync="originSearch"
-                  item-text="name"
-                  return-object
-                  persistent-hint
+              <v-text-field
+                  :label="$t('edges.originClass')"
+                  :value="metatype.name"
                   required
                   disabled
-              >
-                <template v-slot:label>{{$t('edges.originClass')}} <small style="color:red" >*</small></template>
-              </v-autocomplete>
+              />
               <v-autocomplete
                   v-model="relationshipSelect"
                   :rules="[validationRule]"
@@ -92,7 +84,6 @@
 
   interface CreateRelationshipPairDialogModel {
     errorMessage: string | {message: string, format: string}[]
-    originSelect: MetatypeT | undefined
     originMetatypes: MetatypeT[]
     destinationMetatypes: MetatypeT[]
     metatypeRelationships: MetatypeRelationshipT[]
@@ -130,7 +121,6 @@
 
     data: (): CreateRelationshipPairDialogModel => ({
       errorMessage: "",
-      originSelect: undefined,
       originMetatypes: [],
       destinationMetatypes: [],
       metatypeRelationships: [],
@@ -147,12 +137,6 @@
       relationshipType: "",
       pairLoading: false
     }),
-
-    created() {
-      if (this.metatype) {
-        this.originSelect = this.metatype
-      }
-    },
 
     watch: {
       dialog: {
@@ -212,7 +196,7 @@
       newRelationshipPair() {
         this.pairLoading = true
         this.$client.createMetatypeRelationshipPair(this.containerID,
-            {"origin_metatype_id": this.originSelect!.id,
+            {"origin_metatype_id": this.metatype!.id,
               "destination_metatype_id": this.destinationSelect,
               "relationship_id": this.relationshipSelect,
               "ontology_version": this.$store.getters.activeOntologyVersionID,
@@ -237,7 +221,6 @@
       reset() {
         this.name =  ""
         this.description = ""
-        this.originSelect = undefined
         this.destinationSelect = ""
         this.relationshipSelect = ""
         this.relationshipType = ""
