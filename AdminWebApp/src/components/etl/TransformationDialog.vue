@@ -1220,6 +1220,7 @@ export default Vue.extend ({
         {text: this.$t('operators.lte'), value: "<=", requiresValue: true},
         {text: this.$t('operators.greaterThan'), value: ">", requiresValue: true},
         {text: this.$t('operators.gte'), value: ">=", requiresValue: true},
+        {text: this.$t('operators.in'), value: "in", requiresValue: true},
       ];
     },
     configFilterTypes() {
