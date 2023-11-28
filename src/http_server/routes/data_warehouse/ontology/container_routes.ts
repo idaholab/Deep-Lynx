@@ -6,7 +6,6 @@ import {plainToClass, plainToInstance} from 'class-transformer';
 import Container, {
     ContainerExport,
     ContainerConfig,
-    DataSourceTemplateIDPayload,
     DataSourceTemplate
 } from '../../../../domain_objects/data_warehouse/ontology/container';
 import Result from '../../../../common_classes/result';
@@ -52,7 +51,12 @@ export default class ContainerRoutes {
 
         app.get('/containers/:containerID/data_source_templates', ...middleware, authInContainer('write', 'containers'), this.listDataSourceTemplates);
         app.post('/containers/:containerID/data_source_templates', ...middleware, authInContainer('write', 'containers'), this.saveDataSourceTemplates);
-        app.delete('/containers/:containerID/data_source_templates', ...middleware, authInContainer('write', 'containers'), this.deleteDataSourceTemplates);
+        app.delete(
+            '/containers/:containerID/data_source_templates/:templateID', 
+            ...middleware, 
+            authInContainer('write', 'containers'), 
+            this.deleteDataSourceTemplate
+        );
     }
 
     private static createContainer(req: Request, res: Response, next: NextFunction) {
@@ -516,12 +520,10 @@ export default class ContainerRoutes {
         }
     }
 
-    // if no template_ids are sent in, all data source templates for the container are deleted
-    private static deleteDataSourceTemplates(req: Request, res: Response, next: NextFunction) {
-        if (req.container && req.container.id) {
-            const payload = plainToInstance(DataSourceTemplateIDPayload, req.body as object);
+    private static deleteDataSourceTemplate(req: Request, res: Response, next: NextFunction) {
+        if (req.container && req.container.id && req.params.templateID) {
             repository
-                .bulkDeleteDataSourceTemplates(payload.template_ids!, req.container.id,)
+                .bulkDeleteDataSourceTemplates([req.params.templateID], req.container.id,)
                 .then((result) => {
                     result.asResponse(res);
                 })

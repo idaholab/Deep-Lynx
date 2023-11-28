@@ -665,7 +665,8 @@ export default class ContainerRepository implements RepositoryInterface<Containe
     async listDataSourceTemplates(containerID: string): Promise<Result<DataSourceTemplate[]>> {
         const templates = await this.#mapper.ListDataSourceTemplates(containerID);
         if (templates.isError) return Promise.resolve(Result.Pass(templates));
-        // templates.value.forEach(async (t) => {t = await this.sanitizeTemplate(t)});
+        // in the event that data source templates are null, return an empty array
+        if (templates.value === null) templates.value = [];
         return Promise.resolve(templates);
     }
 
@@ -673,7 +674,6 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         const retrieved = await this.#mapper.RetrieveDataSourceTemplateByID(templateID, containerID);
         if (retrieved.isError) return Promise.resolve(Result.Pass(retrieved));
         const toReturn = retrieved.value;
-        // toReturn = await this.sanitizeTemplate(toReturn);
         return Promise.resolve(Result.Success(toReturn));
     }
 
@@ -681,7 +681,6 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         const retrieved = await this.#mapper.RetrieveDataSourceTemplateByName(templateName, containerID);
         if (retrieved.isError) return Promise.resolve(Result.Pass(retrieved));
         const toReturn = retrieved.value;
-        // toReturn = await this.sanitizeTemplate(toReturn);
         return Promise.resolve(Result.Success(toReturn));
     }
 

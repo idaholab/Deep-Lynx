@@ -465,8 +465,3 @@ export class CustomTemplateField {
         this.required = required;
     }
 }
-
-export class DataSourceTemplateIDPayload extends NakedDomainClass {
-    @IsArray()
-    template_ids?: string[];
-}

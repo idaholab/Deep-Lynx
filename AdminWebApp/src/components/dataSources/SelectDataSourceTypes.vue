@@ -61,6 +61,9 @@
           },{
             text: this.$t('timeseries.timeseries'),
             value: "timeseries"
+          },{
+            text: this.$t('dataSources.customName'),
+            value: "custom"
           }
         ]
       },

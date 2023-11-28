@@ -79,7 +79,7 @@
 </template>
 
 <script lang="ts">
-  import Vue, { PropType } from 'vue'
+  import Vue from 'vue'
   import SelectDataSourceTypes from "@/components/dataSources/SelectDataSourceTypes.vue";
 
   interface CreateContainerDialogModel {

@@ -458,7 +458,7 @@
 
                                       <v-col :cols="12" v-else-if="item.type === 'data_source'">
                                         <SelectDataSource
-                                          @selected="setFilterMetatypeID(item, $event)"
+                                          @selected="setFilterDataSourceID(item, $event)"
                                           :dataSourceID="item.value"
                                           :containerID="containerID"
                                         />
@@ -579,7 +579,7 @@
 
                                       <v-col :cols="12" v-else-if="item.type === 'data_source'">
                                         <SelectDataSource
-                                          @selected="setFilterMetatypeID(item, $event)"
+                                          @selected="setFilterDataSourceID(item, $event)"
                                           :dataSourceID="item.value"
                                           :containerID="containerID"
                                         />
@@ -2133,6 +2133,9 @@ export default Vue.extend ({
     },
     setFilterMetatypeID(item: EdgeConfigKeyT, metatype: MetatypeT): void {
       item.value = metatype.id;
+    },
+    setFilterDataSourceID(item: EdgeConfigKeyT, dataSource: DataSourceT): void {
+      item.value = dataSource.id;
     },
     setFilterPropertyKey(item: EdgeConfigKeyT, key: MetatypeKeyT): void {
       item.property = key.property_name

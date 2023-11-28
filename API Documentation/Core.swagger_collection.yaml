@@ -327,47 +327,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
       deprecated: false
-    delete:
-      tags:
-        - Containers
-      summary: Delete Data Source Templates
-      description: 'Deletes an Data Source Template or array of Data Source Templates based on their UUIDs. If no body is specified, all Data Source Templates for the container are deleted.'
-      operationId: ArchiveContainer
-      parameters:
-        - name: container_id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Generic200Response'
-      deprecated: false
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                template_ids:
-                  type: array
-                  items:
-                    type: string
-              x-examples:
-                Example 1:
-                  template_ids:
-                    - 98eb71e9-2556-4309-824b-068be12650c9
-                    - 87da60d8-1445-3298-713a-957ad01549b8
-            examples:
-              Example 1:
-                value:
-                  template_ids:
-                    - 98eb71e9-2556-4309-824b-068be12650c9
-                    - 87da60d8-1445-3298-713a-957ad01549b8
     parameters:
       - schema:
           type: string
@@ -442,6 +401,38 @@ paths:
                   - id: 87da60d8-1445-3298-713a-957ad01549b8
                     name: Jazz
                     redirect_address: 'localhost:8282'
+  '/containers/{container_id}/data_source_templates/{template_id}':
+    delete:
+      tags:
+        - Containers
+      summary: Delete Data Source Template
+      description: Deletes a Data Source Template based on its UUID as supplied in the route.
+      operationId: ArchiveContainer
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200Response'
+      deprecated: false
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: template_id
+        in: path
+        required: true
   '/containers/{container_id}/active':
     post:
       tags:
