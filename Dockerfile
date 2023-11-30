@@ -41,6 +41,7 @@ WORKDIR /srv/core_api
 COPY package*.json ./
 COPY yarn.lock ./
 
+RUN corepack enable
 RUN npm install npm@latest --location=global
 RUN npm update --location=global
 RUN npm install pm2 --location=global
