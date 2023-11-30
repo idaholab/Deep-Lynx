@@ -38,7 +38,7 @@
             disabled
           />
 
-          <!-- Description Predecessors (P6 and TS only) -->
+          <!-- Description Predecessors (Custom, P6 and TS only) -->
           <template v-if="mode === 'create' 
             && newDataSource.adapter_type === 'p6'
             && checkConfiguredP6()"
@@ -445,6 +445,30 @@
             />
           </template>
 
+          <!-- Custom -->
+          <template v-if="newDataSource.adapter_type === 'custom'">
+            <!-- Allow users to choose an existing template to start from, or create a new one -->
+            <v-row>
+              <v-col>
+                <SelectDataSourceTemplate v-if="mode === 'create'"
+                  :containerID="containerID"
+                  :noIndent="true"
+                  :includeBlank="true"
+                  @selected="setTemplate"
+                />
+              </v-col>
+            </v-row>
+            <!-- We use a component for this since it needs to be used both here and on the container level -->
+            <DataSourceTemplateCard v-if="showTemplateCard"
+              :mode="mode"
+              type="dataSource"
+              :template="newTemplate"
+              :saveOption="saveTemplateOption"
+              :key="newTemplate.name"
+              @validationUpdated="setTemplateValidation"
+            />
+          </template>
+
           <!-- Data Retention and additional settings -->
           <template v-if="newDataSource.adapter_type && newDataSource.adapter_type !== 'timeseries'">
             <!-- Attach Data Staging records -->
@@ -637,6 +661,7 @@
     AvevaDataSourceConfig, 
     ContainerT, 
     DataSourceT, 
+    DataSourceTemplateT, 
     DefaultAvevaDataSourceConfig, 
     DefaultHttpDataSourceConfig,
     DefaultP6DataSourceConfig, 
@@ -647,8 +672,13 @@
     StandardDataSourceConfig, 
     TimeseriesColumn, 
     TimeseriesDataSourceConfig,
+    CustomDataSourceConfig,
+    DefaultCustomDataSourceConfig,
+    DefaultDataSourceTemplate
   } from '@/api/types';
   import {v4 as uuidv4} from 'uuid';
+  import DataSourceTemplateCard from './dataSourceTemplates/DataSourceTemplateCard.vue';
+  import SelectDataSourceTemplate from './dataSourceTemplates/SelectDataSourceTemplate.vue';
 
   interface DataSourceActionsModel {
     config: {
@@ -671,6 +701,7 @@
     avevaConfig: AvevaDataSourceConfig
     p6config: P6DataSourceConfig
     timeseriesConfig: TimeseriesDataSourceConfig
+    customConfig: CustomDataSourceConfig
     select_auth: string
     hidePass: boolean
     expandedTimeSeries: TimeseriesColumn[]
@@ -687,12 +718,16 @@
     auth_methods: {text: string, value: string}[]
     defaultFormatString: string
     timeseriesErrors: any[]
+    newTemplate: DataSourceTemplateT
+    templateSelected: boolean
+    saveTemplateOption: boolean
+    validTemplate: boolean
   }
 
   export default Vue.extend({
     name: 'DataSourceActions',
 
-    components: { DialogBasic, NodeAttachmentParameterDialog },
+    components: { DialogBasic, NodeAttachmentParameterDialog, DataSourceTemplateCard, SelectDataSourceTemplate },
 
     props: {
       mode: {type: String, required: true},
@@ -721,6 +756,7 @@
       avevaConfig: DefaultAvevaDataSourceConfig(),
       p6config: DefaultP6DataSourceConfig(),
       timeseriesConfig: DefaultTimeseriesDataSourceConfig(),
+      customConfig: DefaultCustomDataSourceConfig(),
       select_auth: "",
       hidePass: true,
       expandedTimeSeries: [],
@@ -750,6 +786,10 @@
       auth_methods: [{text: "Basic", value: 'basic'}, {text: "Token", value: 'token'}],
       defaultFormatString: '%Y-%m-%d %H:%M:%S.%f',
       timeseriesErrors: [],
+      newTemplate: DefaultDataSourceTemplate(),
+      templateSelected: false,
+      saveTemplateOption: false,
+      validTemplate: false,
     }),
 
     beforeMount() {
@@ -803,6 +843,9 @@
       },
       fastloadComputed() {
         return this.fastload;
+      },
+      showTemplateCard(): boolean {
+        return (this.mode === 'create' && this.templateSelected) || this.mode === 'edit';
       }
     },
 
@@ -820,20 +863,8 @@
 
     methods: {
       getSourceDescription(sourceType?: string) {
-        switch (sourceType) {
-          case "standard": {
-            return this.$t('dataSources.standardDescription');
-          }
-          case "http": {
-            return this.$t('dataSources.httpDescription');
-          }
-          case "aveva": {
-            return this.$t('dataSources.avevaDescription');
-          }
-          case "p6": {
-            return this.$t('dataSources.p6Description');
-          }
-        }
+        const types = this.getSourceTypes(false);
+        return types.filter(t => t.value === sourceType)[0].description;
       },
       validateRequired(value: any) {
         return !!value || this.$t('validation.required');
@@ -843,7 +874,8 @@
           {text: this.$t('dataSources.standardName'), value: 'standard', description: this.$t('dataSources.standardDescription')},
           {text: this.$t('dataSources.httpName'), value: 'http', description: this.$t('dataSources.httpDescription')},
           {text: this.$t('dataSources.avevaName'), value: 'aveva', description: this.$t('dataSources.avevaDescription')},
-          {text: this.$t('dataSources.p6Name'), value: 'p6', description: this.$t('dataSources.p6description')}
+          {text: this.$t('dataSources.p6Name'), value: 'p6', description: this.$t('dataSources.p6Description')},
+          {text: this.$t('dataSources.customName'), value: 'custom', description: this.$t('dataSources.customDescription')},
         ]
 
         if (timeseries) {
@@ -899,6 +931,15 @@
             this.httpConfig.auth_method = "none";
           }
         }
+      },
+      // custom source functions
+      setTemplate(t: DataSourceTemplateT) {
+        this.newTemplate = t;
+        this.templateSelected = true;
+        this.saveTemplateOption = !!t.saveable;
+      },
+      setTemplateValidation(valid: boolean) {
+        this.validTemplate = valid;
       },
       // returns label that indicates sensitive info is removed if edit mode
       editLabel(label: string): string {
@@ -1107,8 +1148,11 @@
           this.avevaConfig = DefaultAvevaDataSourceConfig();
           this.p6config = DefaultP6DataSourceConfig();
           this.timeseriesConfig = DefaultTimeseriesDataSourceConfig();
+          this.customConfig = DefaultCustomDataSourceConfig();
           this.stopNodes = [];
           this.valueNodes = [];
+          this.templateSelected = false;
+          this.saveTemplateOption = false;
         }
 
         // we need to reset the config for the specific data source type this is if edit mode
@@ -1137,6 +1181,12 @@
 
             case "aveva": {
               this.avevaConfig = Object.assign({}, this.dataSource.config) as AvevaDataSourceConfig;
+              break;
+            }
+
+            case "custom": {
+              this.customConfig = Object.assign({}, this.dataSource.config) as CustomDataSourceConfig;
+              this.newTemplate = this.customConfig.template;
               break;
             }
           }
@@ -1168,6 +1218,12 @@
 
           case "p6": {
             this.newDataSource.config = this.p6config;
+            break;
+          }
+
+          case "custom": {
+            this.customConfig.template = this.newTemplate!;
+            this.newDataSource.config = this.customConfig;
             break;
           }
 

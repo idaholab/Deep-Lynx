@@ -2,7 +2,6 @@ use crate::timeseries::data_types::LegacyDataTypes;
 use crate::timeseries::repository::LegacyTimeseriesColumn;
 use crate::timeseries::timeseries_errors::{TimeseriesError, ValidationError};
 use chrono::NaiveDateTime;
-use futures::StreamExt;
 use sqlx::{Pool, Postgres};
 use std::io::Read;
 

@@ -1,17 +1,32 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_domain_class';
-import {ArrayContains, IsArray, IsBoolean, IsDate, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, MinLength, ValidateNested} from 'class-validator';
+import {
+    IsArray,
+    IsBoolean,
+    IsDate,
+    IsIn,
+    IsNotEmpty,
+    IsNumber,
+    IsOptional,
+    IsString,
+    IsUUID,
+    MinLength,
+    registerDecorator,
+    ValidateNested,
+    ValidationOptions
+} from 'class-validator';
 import Result from '../../../common_classes/result';
 import Authorization from '../../access_management/authorization/authorization';
 import Logger from '../../../services/logger';
-import {Type} from 'class-transformer';
+import {Exclude, Type} from 'class-transformer';
 import Metatype from './metatype';
 import MetatypeRelationship from './metatype_relationship';
 import MetatypeKey from './metatype_key';
 import MetatypeRelationshipKey from './metatype_relationship_key';
 import MetatypeRelationshipPair from './metatype_relationship_pair';
-import {DataSource} from '../../../interfaces_and_impl/data_warehouse/import/data_source';
 import TypeMapping from '../etl/type_mapping';
+import {v4 as uuidv4} from 'uuid';
+import {DataSource} from "../../../interfaces_and_impl/data_warehouse/import/data_source";
 
 /*
     ContainerConfig allows the user and system to toggle features at a container
@@ -29,13 +44,22 @@ export class ContainerConfig extends NakedDomainClass {
     @IsOptional()
     enabled_data_sources?: string[] = [];
 
-    constructor(input?: {data_versioning_enabled: boolean; ontology_versioning_enabled?: boolean; enabled_data_sources?: string[]}) {
+    @IsOptional()
+    data_source_templates?: DataSourceTemplate[] = [];
+
+    constructor(input?: {
+        data_versioning_enabled: boolean;
+        ontology_versioning_enabled?: boolean;
+        enabled_data_sources?: string[];
+        data_source_templates?: DataSourceTemplate[];
+    }) {
         super();
 
         if (input) {
             this.ontology_versioning_enabled = input.ontology_versioning_enabled;
             this.data_versioning_enabled = input.data_versioning_enabled;
             if (input.enabled_data_sources) this.enabled_data_sources = input.enabled_data_sources;
+            if (input.data_source_templates) this.data_source_templates = input.data_source_templates;
         }
     }
 }
@@ -320,5 +344,124 @@ export class ContainerPermissionSet extends NakedDomainClass {
         }
 
         return Promise.resolve(Result.Success(true));
+    }
+}
+
+export class DataSourceTemplate extends NakedDomainClass{
+    @IsOptional()
+    @IsUUID()
+    id?: string;
+
+    @IsString()
+    name?: string;
+
+    @CustomFieldEncrypted()
+    @CustomFieldRequired()
+    @Type(() => CustomTemplateField)
+    @ValidateNested({each: true})
+    custom_fields?: CustomTemplateField[]
+
+    // "redirect_address" and "authorized" will be used for auth redirects to authorize the given adapter
+    // to access this container. These two fields may be removed later when a better adapter auth system is
+    // put into place, but we need to leave them here for the time being.
+    @IsOptional()
+    @IsString()
+    redirect_address?: string;
+
+    @IsBoolean()
+    authorized = false;
+
+    constructor(input?: {
+        id?: string;
+        name: string;
+        custom_fields?: CustomTemplateField[]
+        redirect_address?: string;
+    }) {
+        super();
+        if (input) {
+            this.id = input.id ? input.id : uuidv4();
+            this.name = input.name;
+            if (input.custom_fields) this.custom_fields = input.custom_fields;
+            if (input.redirect_address) this.redirect_address = input.redirect_address;
+        }
+    }
+}
+
+export function CustomFieldRequired(validationOptions?: ValidationOptions) {
+    return (object: Object, propertyName: string) => {
+        registerDecorator({
+            name: 'All required fields must have a value present',
+            target: object.constructor,
+            propertyName,
+            constraints: [],
+            options: validationOptions,
+            validator: {
+                validate(value: any) {
+                    const fields = value as CustomTemplateField[];
+
+                    // Skip validation if fields are not defined or empty
+                    if (!fields || fields.length === 0) return true;
+
+                    for (const field of fields) {
+                        if (field.required === true && field.value === undefined) {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                }
+            }
+        })
+    }
+}
+
+export function CustomFieldEncrypted(validationOptions?: ValidationOptions) {
+    return (object: Object, propertyName: string) => {
+        registerDecorator({
+            name: 'All encrypted fields must be required and have a value present',
+            target: object.constructor,
+            propertyName,
+            constraints: [],
+            options: validationOptions,
+            validator: {
+                validate(value: any) {
+                    const fields = value as CustomTemplateField[];
+
+                    // Skip validation if fields are not defined or empty
+                    if (!fields || fields.length === 0) return true;
+
+                    for (const field of fields) { // fail validation if a field needs to be encrypted but is not required or unspecified
+                        if (field.encrypt === true && !field.required) {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                }
+            }
+        })
+    }
+}
+
+export class CustomTemplateField {
+    name?: string;
+
+    @Exclude({ toPlainOnly: true })
+    value?: string;
+
+    encrypt?: boolean;
+
+    required?: boolean;
+
+    constructor(
+        name?: string,
+        value?: string,
+        encrypt?: boolean,
+        required?: boolean
+    ) {
+        this.name = name;
+        this.value = value;
+        this.encrypt = encrypt;
+        this.required = required;
     }
 }

@@ -2,20 +2,10 @@ use crate::config::Configuration;
 use crate::timeseries::data_types::LegacyDataTypes;
 use crate::timeseries::ingestion;
 use crate::timeseries::timeseries_errors::TimeseriesError;
-use chrono::NaiveDateTime;
-use rand::distributions::Alphanumeric;
-use rand::Rng;
-use serde::{Deserialize, Serialize};
-use serde_json::json;
 use sqlx::postgres::PgPool;
-use sqlx::types::Json;
-use sqlx::{Executor, Postgres, Transaction};
-use std::collections::HashMap;
 use std::io::Read;
 use std::sync::Arc;
 use tokio::sync::mpsc::error::TryRecvError;
-use uuid::Uuid;
-use validator::{HasLen, Validate};
 
 #[derive(Clone, Debug)]
 #[napi(object)]

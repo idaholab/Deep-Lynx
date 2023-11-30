@@ -15,7 +15,6 @@
         <SelectDataSource
           :containerID="containerID"
           :show-archived="true"
-          :dataSourceID="argument"
           @selected="setDataSource">
         </SelectDataSource>
       </div>

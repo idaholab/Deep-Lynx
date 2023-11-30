@@ -91,7 +91,9 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
         }
     }
 
-    let nodesToInsert: Node[] = [];
+    let nodesToInsert: Node[] = []; // holds all nodes to insert
+    let nodesToMerge: Node[] = []; // holds node to be inserted via merge
+    let nodesToOverwrite: Node[] = []; // holds nodes to be inserted via overwrite
     const tagsToAttachNodes: NodeTagAttachment[] = [];
     let edgesToQueue: EdgeQueueItem[] = [];
 
@@ -125,6 +127,11 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
                             return result.original_data_id!;
                         }),
                     });
+                if (transformation.merge) {
+                    nodesToMerge.push(...results.value);
+                } else {
+                    nodesToOverwrite.push(...results.value);
+                }
             }
 
             if (IsEdges(results.value)) {
@@ -149,15 +156,30 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
     // duplicates because even if we inserted them they'd be overwritten, or overwrite, the original. Users should be made
     // aware that if their import is generating records with the same original ID only one instance is going to be inserted
     nodesToInsert = nodesToInsert.filter((value, index, self) => index === self.findIndex((t) => t.original_data_id === value.original_data_id));
+    nodesToMerge = nodesToMerge.filter((value, index, self) => index === self.findIndex((t) => t.original_data_id === value.original_data_id));
+    nodesToOverwrite = nodesToOverwrite.filter((value, index, self) => index === self.findIndex((t) => t.original_data_id === value.original_data_id));
 
     // insert all nodes and files
     if (nodesToInsert.length > 0) {
-        const inserted = await nodeRepository.bulkSave(staging.data_source_id!, nodesToInsert, transaction.value);
-        if (inserted.isError) {
-            await stagingMapper.rollbackTransaction(transaction.value);
+        // insert nodes grouped by merge/overwrite
+        if (nodesToMerge.length > 0) {
+            const inserted = await nodeRepository.bulkSave(staging.data_source_id!, nodesToMerge, transaction.value, true);
+            if (inserted.isError) {
+                await stagingMapper.rollbackTransaction(transaction.value);
 
-            await stagingRepo.setErrors(staging.id!, [`error attempting to insert nodes ${inserted.error?.error}`]);
-            return new Promise((resolve) => resolve(Result.DebugFailure(`error attempting to insert nodes ${inserted.error?.error}`)));
+                await stagingRepo.setErrors(staging.id!, [`error attempting to insert nodes ${inserted.error?.error}`]);
+                return new Promise((resolve) => resolve(Result.DebugFailure(`error attempting to insert nodes ${inserted.error?.error}`)));
+            }
+        }
+
+        if (nodesToOverwrite.length > 0) {
+            const inserted = await nodeRepository.bulkSave(staging.data_source_id!, nodesToOverwrite, transaction.value, false);
+            if (inserted.isError) {
+                await stagingMapper.rollbackTransaction(transaction.value);
+
+                await stagingRepo.setErrors(staging.id!, [`error attempting to insert nodes ${inserted.error?.error}`]);
+                return new Promise((resolve) => resolve(Result.DebugFailure(`error attempting to insert nodes ${inserted.error?.error}`)));
+            }
         }
 
         // now that the nodes are inserted, attempt to attach any files from their original staging records

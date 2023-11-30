@@ -152,6 +152,7 @@
                               v-if="rootArray"
                               :items="payloadKeys"
                               v-model="uniqueIdentifierKey"
+                              :rules="[validateIDRequired]"
                               clearable
                           >
                             <template v-slot:label>{{ $t('transformations.uniqueID') }}</template>
@@ -207,6 +208,18 @@
                               <info-tooltip :message="$t('help.tagMapping')"/>
                             </template>
                           </v-autocomplete>
+                        </v-col>
+
+                        <!-- merge flag -->
+                        <v-col cols="12" md="6" lg="4">
+                          <v-checkbox
+                              v-model="merge"
+                          >
+                            <template v-slot:label>{{$t('general.merge')}}</template>
+                            <template slot="prepend">
+                              <info-tooltip :message="$t('help.mergeHelp')"/>
+                            </template>
+                          </v-checkbox>
                         </v-col>
 
                         <v-col cols="12" md="6" lg="4" v-if="keysLoading">
@@ -337,7 +350,7 @@
                                       :rules="[validateRequired]"
                                       required
                                     >
-                                      <template v-slot:label>{{ $t('transformations.childID') }} 
+                                      <template v-slot:label>{{ $t('transformations.childID') }}
                                         <small style="color:red">{{ $t('validation.required') }}</small>
                                       </template>
                                       <template slot="append-outer">
@@ -445,7 +458,7 @@
 
                                       <v-col :cols="12" v-else-if="item.type === 'data_source'">
                                         <SelectDataSource
-                                          @selected="setFilterMetatypeID(item, $event)"
+                                          @selected="setFilterDataSourceID(item, $event)"
                                           :dataSourceID="item.value"
                                           :containerID="containerID"
                                         />
@@ -566,7 +579,7 @@
 
                                       <v-col :cols="12" v-else-if="item.type === 'data_source'">
                                         <SelectDataSource
-                                          @selected="setFilterMetatypeID(item, $event)"
+                                          @selected="setFilterDataSourceID(item, $event)"
                                           :dataSourceID="item.value"
                                           :containerID="containerID"
                                         />
@@ -691,7 +704,7 @@
                                   :value="propertyKey(key)"
                               >
                                 <template v-slot:append-outer>{{ $t("general.or") }}</template>
-                                <template v-slot:label>{{ $t('transformations.typeSelectKey') }} 
+                                <template v-slot:label>{{ $t('transformations.typeSelectKey') }}
                                   <small style="color:red" v-if="key.required">{{ $t('validation.required') }}</small>
                                 </template>
                                 <template v-slot:item="data">
@@ -1153,15 +1166,16 @@ interface TransformationDialogModel {
   propertyMapping: {[key: string]: any}[];
   tags: TagT[];
   selectedTags: TagT[];
+  merge: boolean;
 }
 
 export default Vue.extend ({
   name: 'TransformationDialog',
 
-  components: { 
-    SelectDataSource, 
+  components: {
+    SelectDataSource,
     SearchMetatypes,
-    MetatypeKeysSelect 
+    MetatypeKeysSelect
   },
 
   props: {
@@ -1171,7 +1185,7 @@ export default Vue.extend ({
     typeMappingID: {type: String, required: true},
     transformation: {
       type: Object as PropType<TypeMappingTransformationT | null>,
-      required: false, 
+      required: false,
       default: null
     },
     icon: {type: Boolean, required: false},
@@ -1206,6 +1220,7 @@ export default Vue.extend ({
         {text: this.$t('operators.lte'), value: "<=", requiresValue: true},
         {text: this.$t('operators.greaterThan'), value: ">", requiresValue: true},
         {text: this.$t('operators.gte'), value: ">=", requiresValue: true},
+        {text: this.$t('operators.in'), value: "in", requiresValue: true},
       ];
     },
     configFilterTypes() {
@@ -1221,15 +1236,15 @@ export default Vue.extend ({
     },
     conditionsHeader() {
       return [
-        {text: this.$t('general.key'), value: "key"}, 
-        {text: this.$t('operators.operator'), value: "operator"}, 
+        {text: this.$t('general.key'), value: "key"},
+        {text: this.$t('operators.operator'), value: "operator"},
         {text: this.$t('general.value'), value: "value"},
         {text: this.$t('general.actions'), value: "actions", sortable: false}
       ];
     },
     subexpressionHeader() {
       return [
-        {text: this.$t('transformations.expression'), value: "expression"}, 
+        {text: this.$t('transformations.expression'), value: "expression"},
         {text: this.$t('general.key'), value: "key"},
         {text: this.$t('operators.operator'), value: "operator"},
         {text: this.$t('general.value'), value: "value"},
@@ -1256,7 +1271,7 @@ export default Vue.extend ({
     },
     payloadTypes() {
       return [
-        {name: this.$t("nodes.node"), value: 'node'}, 
+        {name: this.$t("nodes.node"), value: 'node'},
         {name: this.$t("edges.edge"), value: 'edge'}
       ];
     },
@@ -1347,7 +1362,8 @@ export default Vue.extend ({
     uniqueIdentifierKey: null,
     propertyMapping: [],
     tags: [],
-    selectedTags: []
+    selectedTags: [],
+    merge: false,
   }),
 
   watch: {
@@ -1383,6 +1399,11 @@ export default Vue.extend ({
     },
     validatePostgresDate(value: string) {
       return !value.includes('%') || this.$t('help.postgresDate');
+    },
+    validateIDRequired(value: any) {
+      // original data id is required for merging node data from a transformation
+      if (this.merge) return !!value || this.$t('validation.required')
+      return true;
     },
     reset() {
       const mainForm: any = this.$refs.mainForm
@@ -1428,7 +1449,7 @@ export default Vue.extend ({
           //identical function for all tranformations no matter when they were created.
           this.$client.retrieveMetatypeRelationshipPair(this.containerID, this.transformation?.metatype_relationship_pair_id!)
             .then((pair) => {
-              this.selectedRelationshipPair = pair    
+              this.selectedRelationshipPair = pair
             })
             .catch(e => this.errorMessage = e)
         }
@@ -1461,7 +1482,11 @@ export default Vue.extend ({
         this.selectedTags = this.transformation.tags;
       }
 
-      this.name = this.transformation?.name!
+      if (this.transformation?.merge) {
+        this.merge = this.transformation?.merge
+      }
+
+      this.name = this.transformation?.name!;
       this.onConversionError = this.transformation?.config.on_conversion_error as TransformationErrorAction;
       this.onKeyExtractionError = this.transformation?.config.on_key_extraction_error as TransformationErrorAction;
     },
@@ -1720,6 +1745,7 @@ export default Vue.extend ({
 
       if (this.selectedTags.length > 0) payload.tags = this.selectedTags
 
+      payload.merge = this.merge
       payload.config.on_conversion_error = this.onConversionError
       payload.config.on_key_extraction_error = this.onKeyExtractionError
       payload.conditions = this.conditions
@@ -1766,6 +1792,7 @@ export default Vue.extend ({
       payload.conditions = this.conditions
       payload.keys = this.propertyMapping
       payload.type_mapping_id = this.typeMappingID
+      payload.merge = this.merge
       if (this.uniqueIdentifierKey) payload.unique_identifier_key = this.uniqueIdentifierKey
       if (this.rootArray) payload.root_array = this.rootArray
 
@@ -2107,6 +2134,9 @@ export default Vue.extend ({
     setFilterMetatypeID(item: EdgeConfigKeyT, metatype: MetatypeT): void {
       item.value = metatype.id;
     },
+    setFilterDataSourceID(item: EdgeConfigKeyT, dataSource: DataSourceT): void {
+      item.value = dataSource.id;
+    },
     setFilterPropertyKey(item: EdgeConfigKeyT, key: MetatypeKeyT): void {
       item.property = key.property_name
     },
@@ -2184,7 +2214,7 @@ export default Vue.extend ({
         this.relationshipPairs = pairs as MetatypeRelationshipPairT[]
       })
       .catch(e => this.errorMessage = e)
-        
+
     if (this.transformation) {
       if (this.transformation.origin_parameters) this.originConfigKeys = JSON.parse(JSON.stringify(this.transformation.origin_parameters));
       if (this.transformation.destination_parameters) this.destinationConfigKeys = JSON.parse(JSON.stringify(this.transformation.destination_parameters));

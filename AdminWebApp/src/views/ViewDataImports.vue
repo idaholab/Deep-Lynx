@@ -17,7 +17,6 @@
       <SelectDataSource
         :containerID="containerID"
         :showArchived="true"
-        :dataSourceID="argument"
         @selected="setDataSource"
         ref="selectDataSource"
       />

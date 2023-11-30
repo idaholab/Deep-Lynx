@@ -17,6 +17,7 @@ export default {
             columnNameRegex:
                 'Column Names must start with a lowercase letter or underscore and contain only lowercase letters, numbers and underscores. Spaces are not allowed and it must be between 2 and 30 characters in length.',
             conditions: 'Your transformation will only be applied to the data when these conditions are met.',
+            customTemplateFields: 'Use this section to specify any additional information your adapter may need from the user in order to function properly- things like userame and password, or project ID. More information can be found on the wiki.',
             tellUs: 'Tell Us!',
             dataRetention:
                 'This controls how many days DeepLynx will retain the raw data you import. A value of 0 will retain no raw data after processing and a value of -1 will retain raw data indefinitely.',
@@ -57,6 +58,8 @@ export default {
             help: 'Need Help? Learn more on our ',
             importDataSource: 'Imports new or updated data sources from the supplied container file.',
             importOntology: 'Imports a new ontology from the supplied container file.',
+            importTemplates: 
+                'Choose existing data source templates to import from another container. Note that any templates of the same name which exist in this container will be overwritten.',
             importTypeMapping: 'Imports new or updated type mappings from the supplied container file.',
             mapKey: 'Key on original payload to which the operator will be applied',
             mapping:
@@ -100,6 +103,8 @@ export default {
             strftimeDate: 'Date String should be in strftime datetime format',
             subexpressions:
                 'Subexpressions allow for more complicated conditions to be created by enabling the use of AND/OR expressions when applying conditions.',
+            templateRedirect:
+                'This field indicates the web address where your adapter is deployed. DeepLynx will attempt to reach the ${address}/redirect/${containerID} endpoint in order to authenticate your adapter.',
             timeseriesTableDesign: 'You must design a database table in which to store this timeseries data. More information can be found on our wiki.',
             transformationConfig: 'Transformation configuration options, generally how to deal with errors on key mapping and conversion.',
             typeMapping:
@@ -114,6 +119,8 @@ export default {
             createdAtManual: 'Select "Default" to use the import time as the "created at" value, or set the time manually',
             removedForSecurity: '(Removed for Security)',
             tagMapping: 'Nodes or edges may be associated with tags. Tags connect graph data with 2D/3D models.',
+            mergeHelp:
+                'Select this option to merge incoming properties and supplementary data with existing data on updates, otherwise data will be overwritten',
         },
         links: {
             timeseriesQuickStart: 'https://github.com/idaholab/Deep-Lynx/wiki/Timeseries-Quick-Start-Guide',
@@ -199,17 +206,16 @@ export default {
                 'Deleting this key will cause any integration which uses it to no longer be able to authenticate with DeepLynx. Only delete a key that you know is not in use or has been compromised. Deleting a key/pair cannot be undone.',
             deleteEvent:
                 'Deleting an Event Action means it will be unrecoverable to even administrative users. Only delete Event Actions you know are no longer needed or that were created in error.',
-            deleteProperty: 
-                'Are you sure you want to delete this property? It can be viewed later by clicking through the history seciton.',
-            deleteEdge:
-                'Deleting an edge will remove it from the graph. Are you sure you want to delete this edge?',
-            deleteNode: 
-                'Deleting a node will remove it, as well as any connected edges, from the graph. Are you sure you want to delete this node?',
+            deleteProperty: 'Are you sure you want to delete this property? It can be viewed later by clicking through the history seciton.',
+            deleteEdge: 'Deleting an edge will remove it from the graph. Are you sure you want to delete this edge?',
+            deleteNode: 'Deleting a node will remove it, as well as any connected edges, from the graph. Are you sure you want to delete this node?',
             deleteTag: 'Are you sure you want to detach this tag?',
             importContainer:
                 'Note that importing type mappings requires also importing data sources, and type mappings may require certain ontology elements in order to transfer completely.',
             inactiveMappings: 'Please note that any data sources or type mappings imported are set as inactive.',
             rootClass: 'Please note that this will create a root class with no parent class.',
+            deleteTemplate: 
+                'Deleting a Data Source Template means it will be unrecoverable to even administrative users. Only delete templates you know are no longer needed or that were created in error. Any data sources created from this template will be maintained (they will not be deleted).'
         },
         general: {
             default: 'Default',
@@ -306,6 +312,7 @@ export default {
             settings: 'Settings',
             constant: 'Constant Value',
             addColumn: 'Add Column',
+            addField: 'Add Field',
             keys: 'Keys',
             date: 'Date',
             dateFormat: 'Date Format',
@@ -331,6 +338,7 @@ export default {
             archive: 'Archive',
             parent: 'Parent',
             owner: 'Owner',
+            merge: 'Merge',
         },
         validation: {
             validEmail: 'Email must be valid',
@@ -615,11 +623,37 @@ export default {
             editConfigured: 'Edit Configured Source',
             deleteConfigured: 'Delete Configured Source',
             authorizeAdapter: 'Authorize Adapter for Container',
-            authContainerP6: 'The P6 adapter must be authorized to access this container before P6 data sources can be activated. Click the Authorize button to authorize this container.',
+            authContainerP6:
+                'The P6 adapter must be authorized to access this container before P6 data sources can be activated. Click the Authorize button to authorize this container.',
             deleteConfiguredConfirm: 'Would you like to delete this pre-set Data Source configuration?',
             selectEnabled: 'Select Enabled Data Source Types',
             reprocess: 'Reprocess Data Source',
             selected: 'Selected Data Sources',
+            customName: 'Custom',
+            customDescription: 'Custom data sources use Data Source Templates as their config object. Choose an existing template from the container, or select "New Template" to create a new one.'
+        },
+        dataSourceTemplates: {
+            title: 'Data Source Templates',
+            name: 'Template Name',
+            select: 'Select Data Source Template',
+            description:
+                "Data Source Templates are designed to prsdovide flexible structure for DeepLynx adapters. Custom fields can be used to store information that is necessary for adapters to function, such as log-in credentials or fields that specify the target resource.",
+            redirect: 'Redirect Address',
+            configure: 'Configure Data Source Templates',
+            new: 'New Data Source Template',
+            requireField: 'Require Field',
+            encryptField: 'Encrypt Field',
+            customFields: 'Custom Fields',
+            save: 'Save Template to Container',
+            create: 'Create Template',
+            import: 'Import Template(s)',
+            authorize: 'Authorize Template',
+            edit: 'Edit Template',
+            delete: 'Delete Template',
+            authorizeDescription:
+                'The custom adapter located at this redirect address needs to be granted access to this container in order to send it data. Click the Authorize button to grant this adapter access to the container.',
+            editNote:
+                'Note that editing this template will NOT alter existing copies of this template being used in data sources.'
         },
         timeseries: {
             fastloadEnabled: 'Fast Load Enabled',

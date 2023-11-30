@@ -332,6 +332,9 @@ export default class TypeTransformation extends BaseDomainClass {
     tags: MappingTag[] = [];
 
     @IsOptional()
+    merge?: boolean;
+
+    @IsOptional()
     transaction?: PoolClient;
 
     constructor(input: {
@@ -358,6 +361,7 @@ export default class TypeTransformation extends BaseDomainClass {
         tags?: MappingTag[];
         origin_parameters?: EdgeConnectionParameter[];
         destination_parameters?: EdgeConnectionParameter[];
+        merge?: boolean;
     }) {
         super();
 
@@ -385,6 +389,7 @@ export default class TypeTransformation extends BaseDomainClass {
             if (input.tags) this.tags = input.tags;
             if (input.destination_parameters) this.destination_parameters = input.destination_parameters;
             if (input.origin_parameters) this.origin_parameters = input.origin_parameters;
+            if (input.merge) this.merge = input.merge;
         }
     }
 

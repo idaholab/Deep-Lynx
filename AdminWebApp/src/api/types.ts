@@ -94,12 +94,12 @@ export type MetatypeKeyT = {
     data_type: 'number' | 'number64' | 'float' | 'float64' | 'date' | 'string' | 'boolean' | 'enumeration' | 'file';
     archived: boolean;
     validation:
-    | {
-        regex: string;
-        min: number;
-        max: number;
-    }
-    | undefined;
+        | {
+              regex: string;
+              min: number;
+              max: number;
+          }
+        | undefined;
     options: string[] | undefined;
     default_value: string | boolean | number | any[] | undefined;
     created_at?: string;
@@ -237,7 +237,13 @@ export type DataSourceT = {
     adapter_type: string | undefined;
     active: boolean;
     archived?: boolean;
-    config: StandardDataSourceConfig | HttpDataSourceConfig | AvevaDataSourceConfig | TimeseriesDataSourceConfig | P6DataSourceConfig | undefined;
+    config: StandardDataSourceConfig 
+        | HttpDataSourceConfig 
+        | AvevaDataSourceConfig 
+        | TimeseriesDataSourceConfig 
+        | P6DataSourceConfig 
+        | CustomDataSourceConfig
+        | undefined;
     created_at?: string;
     modified_at?: string;
     created_by?: string;
@@ -341,6 +347,31 @@ export type P6DataSourceConfig = {
     value_nodes?: string[];
     data_retention_days?: number;
     raw_retention_enabled?: boolean;
+};
+
+export type CustomDataSourceConfig = {
+    kind: 'custom';
+    template: DataSourceTemplateT;
+    stop_nodes?: string[];
+    value_nodes?: string[];
+    data_retention_days?: number;
+    raw_retention_enabled?: boolean;
+};
+
+export type DataSourceTemplateT = {
+    id?: string;
+    name: string;
+    custom_fields?: CustomTemplateFieldT[];
+    redirect_address: string;
+    authorized?: boolean;
+    saveable?: boolean;
+};
+
+export type CustomTemplateFieldT = {
+    name: string;
+    value?: string;
+    encrypt?: boolean;
+    required?: boolean;
 };
 
 export type EventActionT = {
@@ -504,6 +535,7 @@ export type TypeMappingTransformationT = {
     created_at_key?: string;
     created_at_format_string?: string;
     tags?: TypeMappingTransformationTagT[];
+    merge?: boolean;
 };
 
 export type TypeMappingTransformationPayloadT = {
@@ -804,4 +836,19 @@ export function DefaultTimeseriesDataSourceConfig(): TimeseriesDataSourceConfig 
         attachment_parameters: [],
         fast_load_enabled: true,
     };
+}
+
+export function DefaultCustomDataSourceConfig(): CustomDataSourceConfig {
+    return {
+        kind: 'custom',
+        template: DefaultDataSourceTemplate()
+    };
+}
+
+export function DefaultDataSourceTemplate(): DataSourceTemplateT {
+    return {
+        name: '',
+        custom_fields: [],
+        redirect_address: ''
+    }
 }

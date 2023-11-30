@@ -7,7 +7,6 @@ mod timeseries_tests;
 use crate::config::Configuration;
 use crate::timeseries::repository::{BucketRepository, LegacyTimeseriesColumn};
 use napi::bindgen_prelude::Buffer;
-use serde::{Deserialize, Serialize};
 
 #[napi(js_name = "BucketRepository")]
 pub struct JsBucketRepository {

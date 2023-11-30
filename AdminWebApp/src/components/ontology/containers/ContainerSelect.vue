@@ -28,6 +28,11 @@
       errorMessage: ""
     }),
 
+    props: {
+      exclude: {type: Boolean, required: false, default: false},
+      excludedID: {type: String, required: false}
+    },
+
     methods: {
       setActiveContainer(container: any) {
         this.$store.commit('setActiveContainer', container)
@@ -38,7 +43,12 @@
     mounted() {
       this.$client.listContainers()
         .then(containers => {
-            this.containers = containers
+            // there may be occaisions where you don't want the current container as a dropdown option
+            if (this.exclude && this.excludedID) {
+              this.containers = containers.filter(c => c.id !== this.excludedID);
+            } else {
+              this.containers = containers;
+            }
         })
         .catch(e => this.errorMessage = e)
     }

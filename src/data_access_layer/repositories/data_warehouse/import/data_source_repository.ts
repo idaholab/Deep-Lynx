@@ -14,7 +14,7 @@ import ImportRepository from './import_repository';
 import TimeseriesDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/timeseries_data_source';
 import File from '../../../../domain_objects/data_warehouse/data/file';
 import {plainToClass} from 'class-transformer';
-import TimeseriesService from '../../../../services/timeseries/timeseries';
+import CustomDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/custom_data_source';
 import DataStagingMapper from '../../../mappers/data_warehouse/import/data_staging_mapper';
 
 /*
@@ -31,7 +31,6 @@ export default class DataSourceRepository extends Repository implements Reposito
     #importRepo = new ImportRepository();
     #factory = new DataSourceFactory();
     #groupBy?: string[];
-    #timeseriesBucket = TimeseriesService.GetInstance;
 
     async delete(t: DataSource, options?: DeleteOptions): Promise<Result<boolean>> {
         if (!t.DataSourceRecord || !t.DataSourceRecord.id)
@@ -305,15 +304,6 @@ export default class DataSourceRepository extends Repository implements Reposito
         return this;
     }
 
-    inactive() {
-        super.query('active', 'eq', false);
-        return this;
-    }
-
-    timeseriesQuery(fieldName: string, operator: string, value?: any, dataType?: string): Repository {
-        return super.query(`"${fieldName}"`, operator, value, {dataType});
-    }
-
     async list(options?: QueryOptions, transaction?: PoolClient): Promise<Result<(DataSource | undefined)[]>> {
         const results = await super.findAll<DataSourceRecord>(options, {
             transaction,
@@ -400,12 +390,19 @@ export default class DataSourceRepository extends Repository implements Reposito
 }
 
 // as part of the data source repository we also include the Data Source factory, used
-// to take data source records and generate data source interfaces from them. Currently
-// the only implementations are the Http and Standard data sources.
+// to take data source records and generate data source interfaces from them.
 export class DataSourceFactory {
     async fromDataSourceRecord(
-        sourceRecord: DataSourceRecord,
-    ): Promise<StandardDataSourceImpl | HttpDataSourceImpl | AvevaDataSourceImpl | TimeseriesDataSourceImpl | P6DataSourceImpl | undefined> {
+        sourceRecord: DataSourceRecord
+    ): Promise<
+        | StandardDataSourceImpl
+        | HttpDataSourceImpl
+        | AvevaDataSourceImpl
+        | TimeseriesDataSourceImpl
+        | P6DataSourceImpl
+        | CustomDataSourceImpl
+        | undefined
+        > {
         switch (sourceRecord.adapter_type) {
             case 'http': {
                 return Promise.resolve(new HttpDataSourceImpl(sourceRecord));
@@ -426,6 +423,10 @@ export class DataSourceFactory {
 
             case 'p6': {
                 return Promise.resolve(new P6DataSourceImpl(sourceRecord));
+            }
+
+            case 'custom': {
+                return Promise.resolve(new CustomDataSourceImpl(sourceRecord));
             }
 
             case 'timeseries': {

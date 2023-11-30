@@ -1,6 +1,5 @@
 import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_domain_class';
 import {
-    ArrayMinSize,
     IsArray,
     IsBoolean,
     IsDefined,
@@ -16,13 +15,14 @@ import {
     ValidationOptions,
     registerDecorator,
     ValidationArguments,
-    IsNotEmpty,
+    IsNotEmpty
 } from 'class-validator';
 import {Exclude, Type} from 'class-transformer';
 import {PoolClient} from 'pg';
-import {Transform} from 'stream';
+import { Transform as TransformStream } from 'stream';
 import {DataRetentionDays} from '../../validators/data_retention_validator';
 import {WebSocket} from 'ws';
+import { DataSourceTemplate } from '../ontology/container';
 
 // ReceiveDataOptions will allow us to grow the potential options needed by the ReceiveData
 // function of various implementations without having to grow the parameter list
@@ -30,7 +30,7 @@ export class ReceiveDataOptions {
     transaction?: PoolClient;
     importID?: string;
     overrideJsonStream? = false; // needed if you're passing raw json objects or an object stream
-    transformStream?: Transform; // streams to pipe to, prior to piping to the JSONStream
+    transformStream?: TransformStream; // streams to pipe to, prior to piping to the JSONStream
     bufferSize = 1000; // buffer size for timeseries records to be inserted into the db, modify this at runtime if needed
     websocket?: WebSocket;
     has_files?: boolean = false; // dictates that this piece of data has files attached
@@ -46,7 +46,15 @@ export class ReceiveDataOptions {
  validate against
 */
 export class BaseDataSourceConfig extends NakedDomainClass {
-    kind: 'http' | 'standard' | 'manual' | 'aveva' | 'timeseries' | 'p6' | 'timeseries_bucket' = 'standard';
+    kind: 'http'
+    | 'standard'
+    | 'manual'
+    | 'aveva'
+    | 'timeseries'
+    | 'p6'
+    | 'timeseries_bucket'
+    | 'custom'
+    | 'test' = 'standard';
 
     // advanced configuration, while we allow the user to set these it's generally
     // assumed that only those with technical knowledge or experience would be modifying
@@ -198,7 +206,7 @@ export class AvevaDataSourceConfig extends BaseDataSourceConfig {
         'NXRUSION',
     ];
 
-    // element types for which IFC files hould be generated - these are sane defaults and should cover most use cases
+    // element types for which IFC files should be generated - these are sane defaults and should cover most use cases
     // as it will return the whole project as an ifc file, then separate by zones, sites etc. See Aveva's database documentation
     // for more information - https://help.aveva.com/AVEVA_Everything3D/1.1/NCUG/wwhelp/wwhimpl/js/html/wwhelp.htm#href=NCUG4.5.15.html#1021602
     @IsArray()
@@ -341,6 +349,25 @@ export class TimeseriesDataSourceConfig extends BaseDataSourceConfig {
     }
 }
 
+// the simplest config object yet- all the fields for the config are stored
+// within the template object itself.
+export class CustomDataSourceConfig extends BaseDataSourceConfig {
+    kind: 'custom' = 'custom';
+
+    @Type(() => DataSourceTemplate)
+    @ValidateNested({each: true})
+    template?: DataSourceTemplate
+
+    constructor(input?: {
+        template?: DataSourceTemplate;
+    }) {
+        super();
+        if (input) {
+            if (input.template) this.template = input.template;
+        }
+    }
+}
+
 /*
     DataSourceRecord represents a data source record in the DeepLynx database and the various
     validations required for said record to be considered valid.
@@ -356,7 +383,7 @@ export default class DataSourceRecord extends BaseDomainClass {
     name?: string;
 
     @IsString()
-    @IsIn(['http', 'standard', 'manual', 'aveva', 'timeseries', 'p6', 'timeseries_bucket'])
+    @IsIn(['http', 'standard', 'manual', 'aveva', 'timeseries', 'p6', 'timeseries_bucket', 'custom'])
     adapter_type = 'standard';
 
     @IsString()
@@ -381,26 +408,38 @@ export default class DataSourceRecord extends BaseDomainClass {
     @Type(() => BaseDataSourceConfig, {
         keepDiscriminatorProperty: true,
         discriminator: {
-            property: 'kind',
-            subTypes: [
-                {value: StandardDataSourceConfig, name: 'standard'},
-                {value: StandardDataSourceConfig, name: 'manual'},
-                {value: HttpDataSourceConfig, name: 'http'},
-                {value: AvevaDataSourceConfig, name: 'aveva'},
-                {value: TimeseriesDataSourceConfig, name: 'timeseries'},
-                {value: P6DataSourceConfig, name: 'p6'},
-            ],
+        property: 'kind',
+        subTypes: [
+        {value: StandardDataSourceConfig, name: 'standard'},
+        {value: StandardDataSourceConfig, name: 'manual'},
+        {value: HttpDataSourceConfig, name: 'http'},
+        {value: AvevaDataSourceConfig, name: 'aveva'},
+        {value: TimeseriesDataSourceConfig, name: 'timeseries'},
+        {value: P6DataSourceConfig, name: 'p6'},
+        {value: CustomDataSourceConfig, name: 'custom'}
+        ],
         },
-    })
-    config?: StandardDataSourceConfig | HttpDataSourceConfig | AvevaDataSourceConfig | TimeseriesDataSourceConfig | P6DataSourceConfig =
-        new StandardDataSourceConfig();
+        })
+    config?:
+    | StandardDataSourceConfig
+    | HttpDataSourceConfig
+    | AvevaDataSourceConfig
+    | TimeseriesDataSourceConfig
+    | P6DataSourceConfig
+    | CustomDataSourceConfig = new StandardDataSourceConfig();
 
     constructor(input: {
         container_id: string;
         name: string;
         adapter_type: string;
         active?: boolean;
-        config?: StandardDataSourceConfig | HttpDataSourceConfig | AvevaDataSourceConfig | TimeseriesDataSourceConfig | P6DataSourceConfig;
+        config?:
+        | StandardDataSourceConfig
+        | HttpDataSourceConfig
+        | AvevaDataSourceConfig
+        | TimeseriesDataSourceConfig
+        | P6DataSourceConfig
+        | CustomDataSourceConfig;
         data_format?: string;
         status?: 'ready' | 'polling' | 'error';
         status_message?: string;

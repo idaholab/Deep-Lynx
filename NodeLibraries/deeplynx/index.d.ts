@@ -56,5 +56,5 @@ export class RedisGraphLoader {
    * This function should be called before any work done on the object
    */
   init(config: Configuration): Promise<void>
-  generateRedisGraph(containerId: string, timestamp?: string | undefined | null): Promise<void>
+  generateRedisGraph(containerId: string, timestamp?: string | undefined | null, ttl?: number | undefined | null): Promise<string>
 }

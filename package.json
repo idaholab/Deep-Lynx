@@ -1,6 +1,6 @@
 {
     "name": "deep-lynx",
-    "version": "1.5.1",
+    "version": "1.5.2",
     "description": "DeepLynx allows for an integrated platform during design and operations of mega projects.",
     "main": "./dist/main.js",
     "author": "John Darrington and Christopher Ritter",
@@ -185,5 +185,5 @@
         "*.js": "eslint --cache --fix",
         "*.{js,css,md}": "prettier --write"
     },
-    "packageManager": "yarn@3.6.1"
+    "packageManager": "yarn@4.0.2"
 }

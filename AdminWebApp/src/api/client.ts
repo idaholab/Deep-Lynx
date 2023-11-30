@@ -34,6 +34,7 @@ import {
     TagT,
     TimeseriesRange,
     TimeseriesRowCount,
+    DataSourceTemplateT,
 } from '@/api/types';
 import {RetrieveJWT} from '@/auth/authentication_service';
 import {UserT} from '@/auth/types';
@@ -703,6 +704,18 @@ export class Client {
         if (options.limit) query.limit = options.limit;
 
         return this.post<EdgeT[]>(`/containers/${containerID}/graphs/nodes/edges`, {node_ids: nodeIDS}, query);
+    }
+
+    listDataSourceTemplates(containerID: string): Promise<DataSourceTemplateT[]> {
+        return this.get(`/containers/${containerID}/data_source_templates`);
+    }
+
+    saveDataSourceTemplates(containerID: string, templates: any[]): Promise<boolean> {
+        return this.post(`/containers/${containerID}/data_source_templates`, templates);
+    }
+
+    deleteDataSourceTemplate(containerID: string, templateID: string): Promise<boolean> {
+        return this.delete(`/containers/${containerID}/data_source_templates/${templateID}`);
     }
 
     listDataSources(containerID: string, archived = false, timeseries = false): Promise<DataSourceT[]> {

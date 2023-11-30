@@ -447,11 +447,11 @@ export default class UserRoutes {
 
     private static generateKeyPairForServiceUser(req: Request, res: Response, next: NextFunction) {
         const keyRepo = new KeyPairRepository();
-        if (req.serviceUser) {
+        if (req.serviceUser && req.container!.id) {
             const keyPair = new KeyPair(req.serviceUser.id, req.body.note);
 
             keyRepo
-                .save(keyPair, req.serviceUser)
+                .save(keyPair, req.serviceUser, req.container!.id)
                 .then((result) => {
                     if (result.isError) {
                         res.status(500);
@@ -470,7 +470,7 @@ export default class UserRoutes {
 
     private static listKeyPairsForServiceUser(req: Request, res: Response, next: NextFunction) {
         if (req.serviceUser) {
-            let note = req.query.note ? req.query.note as string : undefined;
+            const note = req.query.note ? req.query.note as string : undefined;
             KeyPairMapper.Instance.KeysForUser(req.serviceUser.id!, note)
                 .then((results) => {
                     results.asResponse(res);
@@ -487,7 +487,7 @@ export default class UserRoutes {
 
     private static listServiceKeysForContainer(req: Request, res: Response, next: NextFunction) {
         if (req.container) {
-            let note = req.query.note ? req.query.note as string : undefined;
+            const note = req.query.note ? req.query.note as string : undefined;
             KeyPairMapper.Instance.ServiceKeysForContainer(req.container.id!, note)
                 .then((results) => {
                     results.asResponse(res);

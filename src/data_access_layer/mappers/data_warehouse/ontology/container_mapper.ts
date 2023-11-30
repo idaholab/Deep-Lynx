@@ -1,4 +1,4 @@
-import Container from '../../../../domain_objects/data_warehouse/ontology/container';
+import Container, { DataSourceTemplate } from '../../../../domain_objects/data_warehouse/ontology/container';
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
@@ -94,6 +94,168 @@ export default class ContainerMapper extends Mapper {
         return super.runStatement(this.deleteStatement(containerID));
     }
 
+    public async CreateDataSourceTemplate(
+        template: DataSourceTemplate,
+        containerID: string,
+        transaction?: PoolClient
+    ): Promise<Result<DataSourceTemplate[]>> {
+        const r = await super.run(this.createDataSourceTemplateStatement([template], containerID), {
+            transaction,
+        });
+        if (r.isError) return Promise.resolve(Result.Pass(r));
+
+        // we have to convert the returned object into an array of DataSourceTemplates;
+        // unfortunately the class conversion in the root mapper doesn't work since
+        // the SQL returns the results as a single field
+        const resultsArray: DataSourceTemplate[] = (r.value[0] as {data_source_templates: any}).data_source_templates;
+
+        return Promise.resolve(Result.Success(resultsArray));
+    }
+
+    public async BulkCreateDataSourceTemplates(
+        templates: DataSourceTemplate[],
+        containerID: string,
+        transaction?: PoolClient
+    ): Promise<Result<DataSourceTemplate[]>> {
+        const r = await super.run(this.createDataSourceTemplateStatement(templates, containerID), {
+            transaction
+        });
+        if (r.isError) return Promise.resolve(Result.Pass(r));
+
+        // we have to convert the returned object into an array of DataSourceTemplates;
+        // unfortunately the class conversion in the root mapper doesn't work since
+        // the SQL returns the results as a single field
+        const resultsArray: DataSourceTemplate[] = (r.value[0] as {data_source_templates: any}).data_source_templates;
+
+        return Promise.resolve(Result.Success(resultsArray));
+    }
+
+    public async RetrieveDataSourceTemplateByID(templateID: string, containerID: string): Promise<Result<DataSourceTemplate>> {
+        const r = await super.retrieve(this.retrieveDataSourceTemplateByIDStatement(templateID, containerID));
+        if (r.isError) return Promise.resolve(Result.Pass(r));
+
+        // we have to convert the returned object into a proper DataSourceTemplate;
+        // unfortunately the class conversion in the root mapper doesn't work since
+        // the SQL returns the results as a single field
+        let result: DataSourceTemplate | undefined;
+        try {
+            result = (r.value as object)['jsonb_agg' as keyof object][0];
+        } catch {
+            return Promise.resolve(Result.Failure(`data source template ${templateID} not found`, 404));
+        }
+
+        return Promise.resolve(Result.Success(result));
+    }
+
+    public async RetrieveDataSourceTemplateByName(templateName: string, containerID: string): Promise<Result<DataSourceTemplate>> {
+        const r = await super.retrieve(this.retrieveDataSourceTemplateByNameStatement(templateName, containerID));
+        if (r.isError) return Promise.resolve(Result.Pass(r));
+
+        // we have to convert the returned object into a proper DataSourceTemplate;
+        // unfortunately the class conversion in the root mapper doesn't work since
+        // the SQL returns the results as a single field
+        let result: DataSourceTemplate | undefined;
+        try {
+            result = (r.value as object)['jsonb_agg' as keyof object][0];
+        } catch {
+            return Promise.resolve(Result.Failure(`data source template ${templateName} not found`, 404));
+        }
+
+        return Promise.resolve(Result.Success(result));
+    }
+
+    public async ListDataSourceTemplates(containerID: string): Promise<Result<DataSourceTemplate[]>> {
+        const r = await super.retrieve(this.listDataSourceTemplatesStatement(containerID));
+        if (r.isError) return Promise.resolve(Result.Pass(r));
+
+        // we have to convert the returned object into an array of DataSourceTemplates;
+        // unfortunately the class conversion in the root mapper doesn't work since
+        // the SQL returns the results as a single field
+        const resultsArray = JSON.parse((r.value as object)['data_source_templates' as keyof object]);
+
+        return Promise.resolve(Result.Success(resultsArray));
+    }
+
+    public async UpdateDataSourceTemplate(
+        template: DataSourceTemplate,
+        containerID: string,
+        transaction?: PoolClient
+    ): Promise<Result<DataSourceTemplate[]>> {
+        const r = await super.run(this.updateDataSourceTemplateStatement(template, containerID), {
+            transaction
+        });
+        if (r.isError) return Promise.resolve(Result.Pass(r));
+
+        // we have to convert the returned object into an array of DataSourceTemplates;
+        // unfortunately the class conversion in the root mapper doesn't work since
+        // the SQL returns the results as a single field
+        const resultsArray: DataSourceTemplate[] = JSON.parse(
+            (r.value[0] as {data_source_templates: string}).data_source_templates
+        );
+
+        return Promise.resolve(Result.Success(resultsArray));
+    }
+
+    public async DeleteDataSourceTemplate(
+        templateID: string,
+        containerID: string,
+        transaction?: PoolClient
+    ): Promise<Result<DataSourceTemplate[]>> {
+        const r = await super.run(this.deleteDataSourceTemplateStatement([templateID], containerID), {
+            transaction
+        });
+        if (r.isError) return Promise.resolve(Result.Pass(r));
+
+        // we have to convert the returned object into an array of DataSourceTemplates;
+        // unfortunately the class conversion in the root mapper doesn't work since
+        // the SQL returns the results as a single field
+        const resultsArray: DataSourceTemplate[] = JSON.parse(
+            (r.value[0] as {data_source_templates: string}).data_source_templates
+        );
+
+        return Promise.resolve(Result.Success(resultsArray));
+    }
+
+    public async BulkDeleteDataSourceTemplates(
+        templateIDs: string[],
+        containerID: string,
+        transaction?: PoolClient
+    ): Promise<Result<DataSourceTemplate[]>> {
+        const r = await super.run(this.deleteDataSourceTemplateStatement(templateIDs, containerID), {
+            transaction
+        });
+        if (r.isError) return Promise.resolve(Result.Pass(r));
+
+        // we have to convert the returned object into an array of DataSourceTemplates;
+        // unfortunately the class conversion in the root mapper doesn't work since
+        // the SQL returns the results as a single field
+        const resultsArray: DataSourceTemplate[] = JSON.parse(
+            (r.value[0] as {data_source_templates: string}).data_source_templates
+        );
+
+        return Promise.resolve(Result.Success(resultsArray));
+    }
+
+    public async AuthorizeDataSourceTemplate(
+        templateName: string,
+        containerID: string,
+        transaction?: PoolClient
+    ): Promise<Result<DataSourceTemplate[]>> {
+        const r = await super.run(this.authorizeDataSourceTemplateStatement(templateName, containerID), {
+            transaction
+        });
+        if (r.isError) return Promise.resolve(Result.Pass(r));
+
+        // we have to convert the returned object into an array of DataSourceTemplates;
+        // unfortunately the class conversion in the root mapper doesn't work since
+        // the SQL returns the results as a single field
+        const resultsArray: DataSourceTemplate[] = JSON.parse(
+            (r.value[0] as {data_source_templates: string}).data_source_templates
+        );
+
+        return Promise.resolve(Result.Success(resultsArray));
+    }
+
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
@@ -165,9 +327,8 @@ export default class ContainerMapper extends Mapper {
         const text = `SELECT c.*
                     FROM containers c
                     WHERE c.id IN(%L)`;
-        const values = ids;
 
-        return format(text, values);
+        return format(text, ids);
     }
 
     private listForServiceUserStatement(userID: string): QueryConfig {
@@ -178,5 +339,106 @@ export default class ContainerMapper extends Mapper {
                     WHERE cs.user_id = $1`,
             values: [userID],
         };
+    }
+
+    // add a new template to data_source_templates, or create the array if not exists
+    // only return the recently created data source template(s) for use in the repository
+    private createDataSourceTemplateStatement(templates: DataSourceTemplate[], containerID: string): QueryConfig {
+        const templateIDs = templates.map(t => t.id);
+        return {
+            text: `UPDATE containers AS c SET
+                config = jsonb_set(config, '{data_source_templates}',
+                    CASE
+                        WHEN config->'data_source_templates' IS NULL THEN $1::jsonb
+                        ELSE config->'data_source_templates' || $1::jsonb
+                    END
+                ) WHERE c.id = $2
+                RETURNING (
+                    SELECT jsonb_agg(e)
+                    FROM jsonb_array_elements(c.config->'data_source_templates') AS e
+                    WHERE e->>'id' = ANY($3)
+                ) AS data_source_templates`,
+            values: [JSON.stringify(templates), containerID, templateIDs]
+        }
+    }
+
+    private retrieveDataSourceTemplateByIDStatement(templateID: string, containerID: string): QueryConfig {
+        return {
+            text: `SELECT jsonb_agg(e)
+                FROM containers c, jsonb_array_elements(c.config->'data_source_templates') AS e
+                WHERE e->>'id' = $1 AND c.id = $2`,
+            values: [templateID, containerID]
+        }
+    }
+
+    private retrieveDataSourceTemplateByNameStatement(templateName: string, containerID: string): QueryConfig {
+        return {
+            text: `SELECT jsonb_agg(e)
+                FROM containers c, jsonb_array_elements(c.config->'data_source_templates') AS e
+                WHERE e->>'name' = $1 AND c.id = $2`,
+            values: [templateName, containerID]
+        }
+    }
+
+    private listDataSourceTemplatesStatement(containerID: string): QueryConfig {
+        return {
+            text: `SELECT c.config->>'data_source_templates' AS data_source_templates
+                FROM containers c
+                WHERE c.id = $1`,
+            values: [containerID],
+        }
+    }
+
+    // This is good enough for singular updates, but for bulk updates it is more straightforward
+    // to do a bulk delete followed by a bulk insert. The alternative is a very complex CTE or
+    // repeating this call (n) times. Bulk updates are performed in this manner in the repository
+    // layer, within a transaction.
+    private updateDataSourceTemplateStatement(template: DataSourceTemplate, containerID: string): QueryConfig {
+        return {
+            text: `UPDATE containers AS c SET
+                config = jsonb_set(config, '{data_source_templates}', (
+                    SELECT jsonb_agg(
+                        CASE
+                            WHEN e->>'id' = $1 THEN $2::jsonb
+                            ELSE e
+                        END
+                    ) FROM jsonb_array_elements(c.config->'data_source_templates') AS e
+                )) WHERE c.id = $3
+                RETURNING c.config->>'data_source_templates' AS data_source_templates`,
+            values: [template.id!, JSON.stringify(template), containerID]
+        }
+    }
+
+    // if all items are deleted, set the array to an empty array instead of null
+    private deleteDataSourceTemplateStatement(templateIDs: string[], containerID: string): QueryConfig {
+        return {
+            text: `UPDATE containers AS c SET
+                config = jsonb_set(config, '{data_source_templates}', (
+                    SELECT CASE
+                        WHEN COUNT(e) = 0 THEN '[]'::jsonb
+                        ELSE jsonb_agg(e)
+                    END
+                    FROM jsonb_array_elements(c.config->'data_source_templates') AS e
+                    WHERE e->>'id' <> ALL($1)
+                )) WHERE c.id = $2
+                RETURNING c.config->>'data_source_templates' AS data_source_templates`,
+            values: [templateIDs, containerID]
+        };
+    }
+
+    private authorizeDataSourceTemplateStatement(templateName: string, containerID: string): QueryConfig {
+        return {
+            text: `UPDATE containers AS c SET
+                config = jsonb_set(config, '{data_source_templates}', (
+                    SELECT jsonb_agg(
+                        CASE
+                            WHEN e->>'name' = $1 THEN jsonb_set(e, '{authorized}', 'true'::jsonb)
+                            ELSE e
+                        END
+                    ) FROM jsonb_array_elements(c.config->'data_source_templates') AS e
+                )) WHERE c.id = $2
+                RETURNING c.config->>'data_source_templates' AS data_source_templates`,
+            values: [templateName, containerID]
+        }
     }
 }

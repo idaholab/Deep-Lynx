@@ -2,14 +2,17 @@ import {Application, NextFunction, Request, Response} from 'express';
 import {authInContainer, authRequest} from '../../../middleware';
 import ContainerImport, {ContainerImportT} from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_import';
 import ContainerRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
-import {plainToClass} from 'class-transformer';
-import Container, {ContainerExport, ContainerConfig} from '../../../../domain_objects/data_warehouse/ontology/container';
+import {plainToClass, plainToInstance} from 'class-transformer';
+import Container, {
+    ContainerExport,
+    ContainerConfig,
+    DataSourceTemplate
+} from '../../../../domain_objects/data_warehouse/ontology/container';
 import Result from '../../../../common_classes/result';
 import {FileInfo} from 'busboy';
 import FileRepository from '../../../../data_access_layer/repositories/data_warehouse/data/file_repository';
 import DataSourceRepository from '../../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import {DataSource} from '../../../../interfaces_and_impl/data_warehouse/import/data_source';
-import pAll from 'p-all';
 import TypeMappingRepository from '../../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository';
 import TypeMapping from '../../../../domain_objects/data_warehouse/etl/type_mapping';
 
@@ -45,6 +48,15 @@ export default class ContainerRoutes {
 
         app.get('/containers/:containerID/alerts', ...middleware, authInContainer('read', 'ontology'), this.listAlerts);
         app.post('/containers/:containerID/alerts/:alertID', ...middleware, authInContainer('write', 'containers'), this.acknowledgeAlert);
+
+        app.get('/containers/:containerID/data_source_templates', ...middleware, authInContainer('write', 'containers'), this.listDataSourceTemplates);
+        app.post('/containers/:containerID/data_source_templates', ...middleware, authInContainer('write', 'containers'), this.saveDataSourceTemplates);
+        app.delete(
+            '/containers/:containerID/data_source_templates/:templateID', 
+            ...middleware, 
+            authInContainer('write', 'containers'), 
+            this.deleteDataSourceTemplate
+        );
     }
 
     private static createContainer(req: Request, res: Response, next: NextFunction) {
@@ -322,10 +334,22 @@ export default class ContainerRoutes {
             containerExport.data_sources = dataSourceExport.value as DataSource[];
         }
         if (String(req.query.exportTypeMappings).toLowerCase() === 'true') {
-            // Implement in future update
             const typeRepo = new TypeMappingRepository().where().containerID('eq', req.container?.id);
             const mappings = await typeRepo.list(true);
-            containerExport.type_mappings = mappings.value;
+
+            // we need to prepare the mappings with metatype/key names 
+            // for id lookup to work in the destination container
+            const preparedMappingsPromises = mappings.value.map(async mapping => {
+                // data source id is removed by this function but is needed prior to export
+                const dataSourceId = mapping.data_source_id;
+                const preparedMapping = await typeRepo.prepareForImport(mapping, undefined, true);
+                preparedMapping.data_source_id = dataSourceId;
+                return preparedMapping;
+            });
+
+            const preparedMappings = await Promise.all(preparedMappingsPromises);
+
+            containerExport.type_mappings = preparedMappings;
         }
 
         repository
@@ -464,5 +488,64 @@ export default class ContainerRoutes {
         });
 
         return req.pipe(busboy);
+    }
+
+    private static listDataSourceTemplates(req: Request, res: Response, next: NextFunction) {
+        if (req.container && req.container.id) {
+            repository
+                .listDataSourceTemplates(req.container.id)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`unable to find container`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static saveDataSourceTemplates(req: Request, res: Response, next: NextFunction) {
+        if (req.container && req.container.id) {
+            let toSave: DataSourceTemplate[];
+
+            if (Array.isArray(req.body)) {
+                toSave = plainToInstance(DataSourceTemplate, req.body);
+            } else {
+                toSave = [plainToInstance(DataSourceTemplate, req.body as object)];
+            }
+
+            repository
+                .bulkSaveDataSourceTemplates(toSave, req.container.id,)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`unable to find container`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static deleteDataSourceTemplate(req: Request, res: Response, next: NextFunction) {
+        if (req.container && req.container.id && req.params.templateID) {
+            repository
+                .bulkDeleteDataSourceTemplates([req.params.templateID], req.container.id,)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`unable to find container`, 404).asResponse(res);
+            next();
+        }
     }
 }
