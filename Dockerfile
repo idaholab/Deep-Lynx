@@ -3,7 +3,7 @@ RUN apk add build-base musl-dev openssl-dev
 RUN apk update add --update nodejs=18.16.0-r1
 RUN apk add --update npm
 RUN npm install -g @napi-rs/cli
-RUN npm install -g yarn
+RUN corepack enable
 
 RUN mkdir /srv/core_api
 WORKDIR /srv/core_api
