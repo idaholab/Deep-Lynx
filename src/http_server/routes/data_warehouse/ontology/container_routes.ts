@@ -334,10 +334,22 @@ export default class ContainerRoutes {
             containerExport.data_sources = dataSourceExport.value as DataSource[];
         }
         if (String(req.query.exportTypeMappings).toLowerCase() === 'true') {
-            // Implement in future update
             const typeRepo = new TypeMappingRepository().where().containerID('eq', req.container?.id);
             const mappings = await typeRepo.list(true);
-            containerExport.type_mappings = mappings.value;
+
+            // we need to prepare the mappings with metatype/key names 
+            // for id lookup to work in the destination container
+            const preparedMappingsPromises = mappings.value.map(async mapping => {
+                // data source id is removed by this function but is needed prior to export
+                const dataSourceId = mapping.data_source_id;
+                const preparedMapping = await typeRepo.prepareForImport(mapping, undefined, true);
+                preparedMapping.data_source_id = dataSourceId;
+                return preparedMapping;
+            });
+
+            const preparedMappings = await Promise.all(preparedMappingsPromises);
+
+            containerExport.type_mappings = preparedMappings;
         }
 
         repository
