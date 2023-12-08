@@ -163,6 +163,16 @@
                             fixed-header
                             dense
                         >
+                            <template v-slot:top v-if="(['line', 'markers', 'line and markers', 'bar'].includes(chartType))">
+                                <v-toolbar flat color="white">
+                                    <v-spacer></v-spacer>
+                                    <v-btn color="primary" @click="toggleSelectY">
+                                        <span v-if="ySelected === true">{{$t("timeseries.deselectAllYvals")}}</span>
+                                        <span v-if="ySelected === false">{{$t("timeseries.selectAllYvals")}}</span>
+                                    </v-btn>   
+                                </v-toolbar>
+                            </template>
+
                             <template v-slot:item.x="{item}">
                                 <v-simple-checkbox v-if="chartType === 'scatter 3D'" v-model="item.x" />
                                 <v-radio-group v-else v-model="selectedXColumn" @change="columnXChange(item.uniqueName)">
@@ -301,6 +311,7 @@
     indexesLoading: boolean
     chartLoading: boolean
     pageLoaded: boolean
+    ySelected: boolean
   }
 
   export default Vue.extend ({
@@ -360,7 +371,8 @@
       dataSourceLoading: false,
       indexesLoading: false,
       chartLoading: false,
-      pageLoaded: false
+      pageLoaded: false,
+      ySelected: true
     }),
 
     watch: {
@@ -494,6 +506,16 @@
                   column.x = false;
               }
           }
+      },
+      toggleSelectY() {
+        this.ySelected = !this.ySelected
+        this.selectedColumns.forEach(col => {
+            if(!col.x) {
+                col.y = this.ySelected
+            } else {
+                col.y = false
+            }
+        });
       },
       load() {
         this.dataSourceLoading = true;
@@ -805,6 +827,7 @@
                   }
               }
           }
+          this.ySelected = true;
           this.columnsLoading = false;
       },
       async determineDataSourceShape() {
