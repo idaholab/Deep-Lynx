@@ -173,17 +173,10 @@ export function activeOntologyVersionContext(): any {
 
         const repo = new OntologyVersionRepository();
 
-        // look for a "published" status if ontology versioning is enabled
-        // otherwise look for a "ready" status
-        let status = 'ready';
-        if (req.container && req.container.config?.ontology_versioning_enabled) {
-            status = 'published'
-        }
-
         repo.where()
             .containerID('eq', req.params.containerID)
             .and()
-            .status('eq', status)
+            .status('in', ['ready', 'published'])
             .list({sortDesc: true, sortBy: 'id', limit: 1})
             .then((result) => {
                 if (result.isError) {
