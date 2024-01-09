@@ -197,6 +197,15 @@
                 sort-by="name"
                 style="margin-top: 30px"
             >
+              <template v-slot:[`item.copy`]="{ item }">
+                <v-tooltip top>
+                  <template v-slot:activator="{on, attrs}">
+                    <v-icon v-bind="attrs" v-on="on" @click="copyID(item.id)">{{copy}}</v-icon>
+                  </template>
+                  <span>{{$t('general.copyID')}}</span>
+                  <span>{{item.id}}</span>
+                </v-tooltip>
+              </template>
 
               <template v-slot:top>
                 <v-toolbar flat color="white">
@@ -277,6 +286,8 @@
 
 <script lang="ts">
   import Vue, { PropType } from 'vue'
+  import {mdiFileDocumentMultiple} from "@mdi/js";
+
 
   import {MetatypeKeyT, MetatypeRelationshipPairT, MetatypeT} from "../../../api/types";
   import EditMetatypeKeyDialog from "@/components/ontology/metatypes/EditMetatypeKeyDialog.vue";
@@ -295,6 +306,7 @@
     dialog: boolean
     selectedMetatype: MetatypeT | null
     valid: boolean
+    copy: string
   }
 
   export default Vue.extend ({
@@ -326,7 +338,8 @@
       keysLoading: false,
       dialog: false,
       selectedMetatype: null,
-      valid: false
+      valid: false,
+      copy: mdiFileDocumentMultiple
     }),
 
     watch: {
@@ -361,8 +374,14 @@
         ]
       },
 
+      copyID(id: string) {
+      navigator.clipboard.writeText(id);
+    },
+
       relationshipHeaders(): { text: string; value: string; sortable: boolean }[] {
         return  [
+          { text: '', value: 'copy', sortable: false },
+          { text: this.$t('general.id'), value: 'id', sortable: false },
           { text: this.$t('general.name'), value: 'name', sortable: false },
           { text: this.$t('edges.origin'), value: 'origin_metatype_name', sortable: true},
           { text: this.$t('general.type'), value: 'relationship_name', sortable: true},
