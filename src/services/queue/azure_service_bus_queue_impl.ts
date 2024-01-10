@@ -8,6 +8,25 @@ const {ServiceBusClient} = require('@azure/service-bus');
 export default class AzureServiceBusQueue implements QueueInterface {
     client = new ServiceBusClient(Config.azure_service_bus_connection);
 
+    async ConsumeMultiple(queueName: string, count: number, callback: (messages: any[]) => Promise<void>): Promise<void> {
+        const receiver = this.client.createReceiver(queueName);
+
+        while (true) {
+            const messages: ServiceBusReceivedMessage[] = await receiver.receiveMessages(count);
+
+            try {
+                await callback(messages.map((m) => JSON.parse(m.body)));
+
+                messages.forEach((m) => {
+                    receiver.completeMessage(m).catch((e: any) => {
+                        `unable to mark message complete ${JSON.stringify(e)}`;
+                    });
+                });
+            } catch (e) {
+                Logger.error(`unable to process messages from azure service bus queue ${e}`);
+            }
+        }
+    }
     Init(): Promise<boolean> {
         return Promise.resolve(true);
     }

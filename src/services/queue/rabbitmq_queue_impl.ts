@@ -10,6 +10,43 @@ const amqp = require('amqplib');
 export default class RabbitMQQueue implements QueueInterface {
     channel: Channel | undefined;
 
+    ConsumeMultiple(queueName: string, count: number, callback: (messages: any[]) => Promise<void>): Promise<void> {
+        let messages: ConsumeMessage[] = [];
+
+        const loopFunction = () => {
+            const process = [...messages];
+            messages = [];
+
+            callback(process.map((p) => JSON.parse(p.content.toString())))
+                .then(() => {
+                    process.map((p) => this.channel?.ack(p));
+                })
+                .catch((e) => Logger.error(`unable to process messages off rabbitmq queue ${e}`));
+        };
+
+        // we need a timeout loop to handle messages when we don't hit the limit
+        setTimeout(loopFunction, 2000);
+
+        void this.channel
+            ?.assertQueue(queueName)
+            .then((ok) => {
+                this.channel?.consume(queueName, (msg: ConsumeMessage | null) => {
+                    if (msg) {
+                        messages.push(msg);
+
+                        if (messages.length >= count) {
+                            loopFunction();
+                        }
+                    }
+                });
+            })
+            .catch((e) => {
+                Logger.error(`unable to consume messages from rabbitmq ${e}`);
+            });
+
+        return Promise.resolve();
+    }
+
     Init(): Promise<boolean> {
         return new Promise((resolve) => {
             amqp.connect(Config.rabbitmq_url)

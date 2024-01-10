@@ -22,6 +22,9 @@ export interface QueueInterface {
     // queues and act on them - generally spawned for each possible queue
     Consume(queueName: string, destination: Writable): void;
 
+    // ConsumeMultiple
+    ConsumeMultiple(queueName: string, count: number, callback: (messages: any[]) => Promise<void>): Promise<void>;
+
     // Put sends a message to the queue
     Put(queueName: string, data: any): Promise<boolean>;
 }
