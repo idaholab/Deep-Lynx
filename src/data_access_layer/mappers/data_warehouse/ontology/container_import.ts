@@ -127,6 +127,28 @@ export default class ContainerImport {
         return str.replace(new RegExp(find, 'g'), replace);
     }
 
+    private findClassLabel(str: string) {
+        let classLabel = '';
+        // try # first and then /
+        const aboutSplit = str.split('#');
+        const aboutSplitSlash = str.split('/');
+
+        if (aboutSplit.length > 1) {
+            classLabel = aboutSplit[1];
+        } else if (aboutSplitSlash.length > 1) {
+            classLabel = aboutSplitSlash[aboutSplitSlash.length - 1];
+        } else if (str !== '') {
+            classLabel = str;
+        } else {
+            // if we still couldn't find a name this way, we can't provide a name for this class
+            // provide a useful error and return
+            return Result.Failure(`Unable to find a name for the class with rdf:resource "${str}".
+                            Please provide a name for classes via the rdfs:label annotation.`);
+        }
+
+        return classLabel;
+    }
+
     public async ImportOntology(
         user: User,
         input: ContainerImportT,
@@ -572,25 +594,28 @@ export default class ContainerImport {
 
                 let parentID;
                 const properties: {[key: string]: PropertyT} = {};
-                if (selectedClass['rdfs:subClassOf'] && typeof selectedClass['rdfs:subClassOf'][0] === 'undefined') {
-                    parentID = selectedClass['rdfs:subClassOf']['rdf:resource'];
-                } else if(selectedClass['rdfs:subClassOf']) {
-                    // if no other properties, subClassOf is not an array
-                    parentID = selectedClass['rdfs:subClassOf'][0]['rdf:resource'];
-
-                    // ensure that parentID actually points to a class, otherwise return an error that all children of owl:thing
-                    // must have a parent specified
-                    if (!parentID) {
-                        return resolve(Result.Failure(`Class ${classID} does not specify a parent class. 
-                            Please ensure all children of the root "owl:thing" class specify their parent.`));
+                // if rdfs:subClassOf is not provided, there are no properties on the class and no parent has been identified
+                // default the parent to owl:Thing at the highest level of the ontology
+                // else if rdfs:subClassOf is provided: 1) ensure it's an array 2) grab the rdf:resource and set as parent if found
+                // 3) loop through properties
+                if (!selectedClass['rdfs:subClassOf']) {
+                    parentID = 'owl#Thing';
+                } else {
+                    let classProperties = selectedClass['rdfs:subClassOf'];
+                    if (!Array.isArray(classProperties)) {
+                        classProperties = [classProperties];
                     }
 
                     // loop through properties
                     // if someValuesFrom -> rdf:resource !== "http://www*" then assume its a relationship, otherwise static property
-                    let j;
-                    // start at 1 since 0 is the parent ID property
-                    for (j = 1; j < selectedClass['rdfs:subClassOf'].length; j++) {
-                        const property = selectedClass['rdfs:subClassOf'][j]['owl:Restriction'];
+                    for (const item of classProperties) {
+                        // if this property details the parent, set parentID and continue the loop
+                        if (item['rdf:resource']) {
+                            parentID = item['rdf:resource']
+                            continue;
+                        }
+
+                        const property = item['owl:Restriction'];
                         // if the property is not found, continue
                         if (typeof(property) === 'undefined') {
                             continue;
@@ -664,6 +689,11 @@ export default class ContainerImport {
                         const propKey = propertyObj.value + propertyObj.target;
                         properties[propKey] = propertyObj;
                     }
+                }
+
+                // if we still don't have a parent ID at this point, set to owl:Thing
+                if (!parentID) {
+                    parentID = 'owl#Thing';
                 }
 
                 let classDescription = '';
@@ -755,6 +785,47 @@ export default class ContainerImport {
                             relationship['rdfs:comment']?.textNode : relationship['rdfs:comment'];
                     }
 
+                    // check for domains and ranges which could determine relationship pairs
+                    // only usable if both one or more domains and ranges are provided for complete relationship pairs
+                    if (relationship['rdfs:domain'] && relationship['rdfs:range']) {
+                        let domain = relationship['rdfs:domain']
+                        let range = relationship['rdfs:range']
+
+                        if (!Array.isArray(domain)) {
+                            domain = [domain]
+                        }
+                        if (!Array.isArray(range)) {
+                            range = [range]
+                        }
+
+                        // domainClass is an object with a single property, rdf:resource
+                        domain.forEach((domainClass: any) => {
+                            const classLabel = this.findClassLabel(domainClass['rdf:resource']);
+                            if (typeof classLabel !== 'string') {
+                                // classLabel is a failure result
+                                resolve(classLabel);
+                            }
+
+                            const domainListClass = classListMap.get(classLabel);
+                            const domainIDClass = classIDMap.get(domainClass['rdf:resource']);
+
+                            range.forEach((rangeClass: any) => {
+                                const propKey = domainClass['rdf:resource'] + rangeClass['rdf:resource'];
+                                const propertyObj = {
+                                    value: relationshipID,
+                                    target: rangeClass['rdf:resource'],
+                                    property_type: 'relationship',
+                                    restriction_type: 'some',
+                                    cardinality_quantity: 'none',
+                                }
+
+                                domainListClass.properties[propKey] = propertyObj;
+                                domainIDClass.properties[propKey] = propertyObj;
+                            });
+                        });
+                    }
+
+
                     relationshipMap.set(relationshipName, {
                         id: relationshipID,
                         name: relationshipName,
@@ -813,7 +884,7 @@ export default class ContainerImport {
                         dataProperty['rdfs:comment']?.textNode : dataProperty['rdfs:comment'];
                 }
 
-                let dpEnumRange = null;
+                let dpEnumRange: any[string] | null = null;
                 if (typeof dataProperty['rdfs:range'] !== 'undefined') {
                     dpEnumRange = dataProperty['rdfs:range']['rdfs:Datatype'] ? dataProperty['rdfs:range']['rdfs:Datatype'] : null;
 
@@ -829,6 +900,48 @@ export default class ContainerImport {
                         dpEnumRange = options;
                     }
                 }
+
+                // check for domains on the data property that should determine data properties to be added to classes
+                if (dataProperty['rdfs:domain']) {
+                    let domain = dataProperty['rdfs:domain']
+                    if (!Array.isArray(domain)) {
+                        domain = [domain]
+                    }
+
+                    // domainClass is an object with a single property, rdf:resource
+                    domain.forEach((domainClass: any) => {
+                        const classLabel = this.findClassLabel(domainClass['rdf:resource']);
+                        if (typeof classLabel !== 'string') {
+                            // classLabel is a failure result
+                            resolve(classLabel);
+                        }
+
+                        const domainListClass = classListMap.get(classLabel);
+                        const domainIDClass = classIDMap.get(domainClass['rdf:resource']);
+
+                        // if the data property range is not an enum of strings, determine the primitive type
+                        let target;
+                        if (dpEnumRange === null) {
+                            // supply a default type if one is not given
+                            target = dataProperty['rdfs:range'] ? dataProperty['rdfs:range']['rdf:resource'] : '#string';
+                            target = target.split('#')[1];
+                            target = this.ValidateTarget(target);
+                        }
+
+                        const propertyObj = {
+                            value: dpID,
+                            target: dpEnumRange !== null ? 'enumeration' : target,
+                            property_type: 'primitive',
+                            restriction_type: 'some',
+                            cardinality_quantity: 'none',
+                        }
+                        const propKey = propertyObj.value + propertyObj.target;
+
+                        domainListClass.properties[propKey] = propertyObj;
+                        domainIDClass.properties[propKey] = propertyObj;
+                    });
+                }
+
                 dataPropertyMap.set(dpID, {
                     name: dpName,
                     description: dpDescription,
@@ -1235,7 +1348,7 @@ export default class ContainerImport {
                         relationshipPairs.concat(updateRelationships);
                     }
 
-                    // add inheritance
+                    // add inheritance if applicable
                     if (thisClass.parent_id && !/owl#Thing/.exec(thisClass.parent_id)) {
                         const parent = classIDMap.get(thisClass.parent_id);
 
