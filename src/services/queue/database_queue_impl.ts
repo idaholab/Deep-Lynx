@@ -15,6 +15,40 @@ const QueryStream = require('pg-query-stream');
  */
 export default class DatabaseQueue implements QueueInterface {
     private pool!: Pool;
+    async ConsumeMultiple(queueName: string, count: number, callback: (messages: any[]) => Promise<void>): Promise<void> {
+        while (true) {
+            const client = await this.pool.connect();
+            try {
+                // Start transaction
+                await client.query('BEGIN');
+
+                // Select and consume multiple messages from queue
+                const result = await client.query('SELECT * FROM queue WHERE queue_name = $1 AND processed_at IS NULL ORDER BY created_at ASC LIMIT $2', [
+                    queueName,
+                    count,
+                ]);
+
+                // Collect messages
+                const messages = result.rows.map((row) => row.data);
+
+                // Pass all messages to callback
+                await callback(messages);
+
+                // Delete consumed messages from queue
+                const messageIds = result.rows.map((row) => row.id);
+                await client.query('DELETE FROM queue WHERE id = ANY($1)', [messageIds]);
+
+                // Commit transaction
+                await client.query('COMMIT');
+            } catch (e) {
+                // Rollback changes in case of any error
+                await client.query('ROLLBACK');
+            } finally {
+                // Release the client back to the pool
+                client.release();
+            }
+        }
+    }
 
     async Init(): Promise<boolean> {
         this.pool = new Pool({
