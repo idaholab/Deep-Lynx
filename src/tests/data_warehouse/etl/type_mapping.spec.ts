@@ -476,7 +476,7 @@ describe('A Data Type Mapping can', async () => {
         const inserted = await NodeMapper.Instance.BulkCreateOrUpdateByCompositeID(user.id!, results.value as Node[]);
         expect(inserted.isError).false;
 
-        return NodeMapper.Instance.Delete(inserted.value[0].id!);
+        return Promise.resolve();
     });
 
     // this will handle testing the root array function

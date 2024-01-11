@@ -204,7 +204,7 @@ export default class NodeMapper extends Mapper {
                       metadata_properties = nodes.metadata_properties || EXCLUDED.metadata_properties,
                       deleted_at = EXCLUDED.deleted_at
                   WHERE EXCLUDED.id = nodes.id AND EXCLUDED.properties IS DISTINCT FROM nodes.properties
-                        AND EXCLUDED.metadata_properties IS DISTINCT FROM nodes.metadata_properties
+                        OR EXCLUDED.metadata_properties IS DISTINCT FROM nodes.metadata_properties
                    RETURNING *`
             : `INSERT INTO nodes(
                   container_id,
@@ -224,8 +224,8 @@ export default class NodeMapper extends Mapper {
                       properties = EXCLUDED.properties,
                       metadata = EXCLUDED.metadata,
                       deleted_at = EXCLUDED.deleted_at
-                  WHERE EXCLUDED.id = nodes.id AND EXCLUDED.properties IS DISTINCT FROM nodes.properties
-                        AND EXCLUDED.metadata_properties IS DISTINCT FROM nodes.metadata_properties
+                  WHERE EXCLUDED.id = nodes.id AND (EXCLUDED.properties IS DISTINCT FROM nodes.properties
+                        OR EXCLUDED.metadata_properties IS DISTINCT FROM nodes.metadata_properties)
                    RETURNING *`;
 
         const values = nodes.map((n) => [
@@ -305,8 +305,8 @@ export default class NodeMapper extends Mapper {
                    metadata = EXCLUDED.metadata,
                    metadata_properties = nodes.metadata_properties || EXCLUDED.metadata_properties,
                    deleted_at = EXCLUDED.deleted_at
-            WHERE EXCLUDED.id = nodes.id AND EXCLUDED.properties IS DISTINCT FROM nodes.properties
-                AND EXCLUDED.metadata_properties IS DISTINCT FROM nodes.metadata_properties
+            WHERE EXCLUDED.id = nodes.id AND (EXCLUDED.properties IS DISTINCT FROM nodes.properties
+                OR EXCLUDED.metadata_properties IS DISTINCT FROM nodes.metadata_properties)
             RETURNING *`
             : `INSERT INTO nodes(
                   id,

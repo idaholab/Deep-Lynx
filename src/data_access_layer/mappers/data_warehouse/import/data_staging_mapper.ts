@@ -110,6 +110,12 @@ export default class DataStagingMapper extends Mapper {
         });
     }
 
+    public async SetInsertedMultiple(ids: string[], transaction?: PoolClient): Promise<Result<boolean>> {
+        return super.runStatement(this.setInsertedMultipleStatement(ids), {
+            transaction,
+        });
+    }
+
     public AddFile(stagingID: string, fileID: string): Promise<Result<boolean>> {
         return super.runStatement(this.addFile(stagingID, fileID));
     }
@@ -129,6 +135,12 @@ export default class DataStagingMapper extends Mapper {
     // completely overwrite the existing error set
     public SetErrors(id: string, errors: string[], transaction?: PoolClient): Promise<Result<boolean>> {
         return super.runStatement(this.setErrorsStatement(id, errors), {
+            transaction,
+        });
+    }
+
+    public SetErrorsMultiple(ids: string[], errors: string[], transaction?: PoolClient): Promise<Result<boolean>> {
+        return super.runStatement(this.setMultipleErrorsStatement(ids, errors), {
             transaction,
         });
     }
@@ -338,6 +350,12 @@ export default class DataStagingMapper extends Mapper {
         };
     }
 
+    private setInsertedMultipleStatement(ids: string[]): QueryConfig {
+        return {
+            text: format(`UPDATE data_staging SET inserted_at = NOW() WHERE id IN (%L)`, ids),
+        };
+    }
+
     private deleteStatement(id: string): QueryConfig {
         return {
             text: `DELETE FROM data_staging WHERE id = $1`,
@@ -349,6 +367,13 @@ export default class DataStagingMapper extends Mapper {
         return {
             text: `UPDATE data_staging SET errors = $1 WHERE id = $2`,
             values: [errors, id],
+        };
+    }
+
+    private setMultipleErrorsStatement(ids: string[], errors: string[]): QueryConfig {
+        return {
+            text: format(`UPDATE data_staging SET errors = $1 WHERE id IN (%L)`, ids),
+            values: [errors],
         };
     }
 

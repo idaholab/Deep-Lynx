@@ -25,7 +25,7 @@ export default class RabbitMQQueue implements QueueInterface {
         };
 
         // we need a timeout loop to handle messages when we don't hit the limit
-        setTimeout(loopFunction, 2000);
+        setInterval(loopFunction, 2000);
 
         void this.channel
             ?.assertQueue(queueName)
