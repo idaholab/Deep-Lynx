@@ -259,8 +259,8 @@ export default class DataStagingRepository extends Repository implements Reposit
         return this.#mapper.SetErrors(id, errors, transaction);
     }
 
-    setMultipleErrors(ids: string[], errors: string[], transaction?: PoolClient): Promise<Result<boolean>> {
-        return this.#mapper.SetMultipleErrors(ids, errors, transaction);
+    setErrorsMultiple(ids: string[], errors: string[], transaction?: PoolClient): Promise<Result<boolean>> {
+        return this.#mapper.SetErrorsMultiple(ids, errors, transaction);
     }
 
     // add an error to an existing error set

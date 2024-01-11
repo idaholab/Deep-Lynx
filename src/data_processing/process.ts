@@ -329,7 +329,7 @@ export async function ProcessData(...staging: DataStaging[]): Promise<Result<boo
         if (sent.isError) {
             await stagingMapper.rollbackTransaction(transaction.value);
 
-            await stagingRepo.setMultipleErrors(
+            await stagingRepo.setErrorsMultiple(
                 records.map((r) => r.id!),
                 [`error attempting to send edges to queue ${sent.error?.error}`],
             );
@@ -342,14 +342,14 @@ export async function ProcessData(...staging: DataStaging[]): Promise<Result<boo
         await stagingMapper.rollbackTransaction(transaction.value);
 
         // update the individual data row which failed
-        await stagingRepo.setMultipleErrors(
+        await stagingRepo.setErrorsMultiple(
             records.map((r) => r.id!),
             [`error attempting to mark data inserted ${marked.error}`],
         );
         return new Promise((resolve) => resolve(Result.DebugFailure(`error attempting to mark data inserted ${marked.error}`)));
     }
 
-    await stagingRepo.setMultipleErrors(
+    await stagingRepo.setErrorsMultiple(
         records.map((r) => r.id!),
         [],
         transaction.value,

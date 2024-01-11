@@ -199,8 +199,8 @@ export default class EdgeMapper extends Mapper {
             properties = edges.properties || EXCLUDED.properties,
             metadata_properties = edges.metadata_properties || EXCLUDED.metadata_properties,
             deleted_at = EXCLUDED.deleted_at
-                      WHERE EXCLUDED.id = edges.id AND EXCLUDED.properties IS DISTINCT FROM edges.properties
-                          OR EXCLUDED.metadata_properties IS DISTINCT FROM edges.metadata_properties
+                      WHERE EXCLUDED.id = edges.id AND (EXCLUDED.properties IS DISTINCT FROM edges.properties
+                          OR EXCLUDED.metadata_properties IS DISTINCT FROM edges.metadata_properties)
                           RETURNING edges.*`;
 
         const values = edges.map((e) => [

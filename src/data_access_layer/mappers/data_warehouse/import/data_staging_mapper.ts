@@ -139,7 +139,7 @@ export default class DataStagingMapper extends Mapper {
         });
     }
 
-    public SetMultipleErrors(ids: string[], errors: string[], transaction?: PoolClient): Promise<Result<boolean>> {
+    public SetErrorsMultiple(ids: string[], errors: string[], transaction?: PoolClient): Promise<Result<boolean>> {
         return super.runStatement(this.setMultipleErrorsStatement(ids, errors), {
             transaction,
         });
