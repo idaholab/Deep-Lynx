@@ -115,7 +115,9 @@ export default class FileMapper extends Mapper {
         });
     }
 
-    public async ListForDataStagingRaw(...stagingID: string[]): Promise<Result<DataStagingFile[]>> {
+    public async ListForDataStagingRaw(...stagingID: (string | undefined)[]): Promise<Result<DataStagingFile[]>> {
+        if (stagingID.length === 0) return Promise.resolve(Result.Success([]));
+
         return super.rows<DataStagingFile>(this.filesForDataStagingStatementRaw(stagingID), {
             resultClass: DataStagingFile,
         });
@@ -215,7 +217,7 @@ export default class FileMapper extends Mapper {
         return {
             text: `DELETE FROM node_files WHERE file_id = $1`,
             values: [fileID],
-        }
+        };
     }
 
     private retrieveByIdStatement(id: string): QueryConfig {
@@ -284,7 +286,7 @@ export default class FileMapper extends Mapper {
         return format(text, values);
     }
 
-    private filesForDataStagingStatementRaw(dataStagingID: string[]): QueryConfig {
+    private filesForDataStagingStatementRaw(dataStagingID: (string | undefined)[]): QueryConfig {
         const text = `SELECT * 
                         FROM data_staging_files 
                         WHERE data_staging_id IN (%L)`;
