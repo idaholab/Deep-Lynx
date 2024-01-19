@@ -11,6 +11,7 @@ extern crate napi_derive;
 /// so that we can share the underlying connections and memory spaces.
 pub mod timeseries;
 pub mod redis_graph;
+pub mod shape_hasher;
 pub mod errors;
 mod config;
 

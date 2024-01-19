@@ -1235,9 +1235,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node-int64@npm:*":
-  version: 0.4.32
-  resolution: "@types/node-int64@npm:0.4.32"
+"@types/node-rsa@^1.1.0":
+  version "1.1.1"
+  resolved "https://registry.npmjs.org/@types/node-rsa/-/node-rsa-1.1.1.tgz"
+  integrity sha512-itzxtaBgk4OMbrCawVCvas934waMZWjW17v7EYgFVlfYS/cl0/P7KZdojWCq9SDJMI5cnLQLUP8ayhVCTY8TEg==
   dependencies:
     "@types/node": "npm:*"
   checksum: eec30798c202dcf879d78d440fb48a6e26510701801653c0a7543a0843bfe4faa9c185a035fc35be13986bb45cf9b93ce8171215e37b32af3e828bbcc5eab2ed

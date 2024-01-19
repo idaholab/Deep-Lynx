@@ -19,6 +19,7 @@ profile-logs
 /tools/ontology_extractor/diamond.owl
 /private-key.pem
 /private-key.key
+/public-key.pem
 /src/tests/test-data.json
 /src/tests/test-data.csv
 /src/tests/private-key.pem

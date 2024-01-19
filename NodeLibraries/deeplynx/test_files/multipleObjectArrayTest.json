@@ -1,0 +1,33 @@
+[
+    {
+        "ManufacturingProcess": {
+            "keys": {
+                  "id": "ab9c492-b3f0-412b-ae68-c6dc2e21127d",
+                  "name": "Test process",
+                  "description": "an example",
+                  "array": []
+            }
+        }
+     },
+ 
+     {
+        "ManufacturingProcess": {
+            "keys": {
+                  "id": "ab9c492-b3f0-412b-ae68-c6dc2e21127d",
+                  "name": "Test process",
+                  "description": "an example",
+                  "array": [{"has": "stuff"}]
+            }
+        }
+     }, 
+     {
+       "ManufacturingProcess": {
+           "keys": {
+                 "id": "ab9c492-b3f0-412b-ae68-c6dc2e21127d",
+                 "name": "Test process",
+                 "description": "an example",
+                 "array": ["thing1", "thing2", "thing3"]
+           }
+       }
+    }
+ ]

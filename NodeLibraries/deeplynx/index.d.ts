@@ -11,6 +11,11 @@ export interface LegacyTimeseriesColumn {
   date_conversion_format_string?: string
 }
 export function inferLegacySchema(csv: Buffer): Array<LegacyTimeseriesColumn>
+export interface Options {
+  stopNodes?: Array<string>
+  valueNodes?: Array<string>
+}
+export function hash(a: string, options: Options): string
 export interface Configuration {
   dbConnectionString?: string
   redisConnectionString?: string
