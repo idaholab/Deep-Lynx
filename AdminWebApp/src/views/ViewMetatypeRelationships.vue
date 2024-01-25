@@ -260,7 +260,7 @@
                 this.$client.listMetatypeRelationships(this.containerID, {
                   ontologyVersion: this.$store.getters.currentOntologyVersionID,
                   nameIn,
-                  loadKeys: true
+                  loadKeys: false
                 })
                 .then((comparison) => {
                   this.loading = false
