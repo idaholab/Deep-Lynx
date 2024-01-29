@@ -1,6 +1,6 @@
 {
     "name": "deep-lynx",
-    "version": "1.5.3",
+    "version": "1.5.4",
     "description": "DeepLynx allows for an integrated platform during design and operations of mega projects.",
     "main": "./dist/main.js",
     "author": "John Darrington and Christopher Ritter",
@@ -88,7 +88,7 @@
         "prettier": "2.3.1",
         "run-script-os": "^1.1.5",
         "shx": "^0.3.4",
-        "ts-node": "^10.9.1",
+        "ts-node": "^10.9.2",
         "tsconfig-paths": "^3.11.0",
         "typescript": "^4.7.2",
         "uuid": "^8.3.2",

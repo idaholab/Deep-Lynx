@@ -1,0 +1,20 @@
+[
+    {
+       "objectId": 1,
+       "name": "EWR-9154-Beartooth_AR_2022_3DView_1:1",
+       "nickname": "kobe",
+       "creationDate": "2022-May-31 00:00:00"
+    },
+    {
+       "objectId": 2,
+       "name": "EWR-9154-Beartooth_AR_2022_3DView_2:1",
+       "creationDate": "2022-May-31 00:00:00",
+       "days": 4
+    },
+    {
+       "objectId": 3,
+       "name": "EWR-9154-Beartooth_AR_2022_3DView_3:1",
+       "creationDate": "2022-May-31 00:00:00"
+    }
+ ]
+ 

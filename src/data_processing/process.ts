@@ -3,7 +3,7 @@ import Result from '../common_classes/result';
 import DataStagingMapper from '../data_access_layer/mappers/data_warehouse/import/data_staging_mapper';
 import TypeMappingRepository from '../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository';
 import TypeMapping from '../domain_objects/data_warehouse/etl/type_mapping';
-import {ReturnSuperUser} from '../domain_objects/access_management/user';
+import {ReturnSuperUser, SuperUser} from '../domain_objects/access_management/user';
 import FileMapper from '../data_access_layer/mappers/data_warehouse/data/file_mapper';
 import Logger from '../services/logger';
 import NodeRepository from '../data_access_layer/repositories/data_warehouse/data/node_repository';
@@ -24,7 +24,7 @@ export type NodeTagAttachment = {
 
 // ProcessData accepts a data staging record and inserts nodes and edges based
 // on matching transformation records - this acts on a single record
-export async function ProcessData(staging: DataStaging): Promise<Result<boolean>> {
+export async function ProcessData(...staging: DataStaging[]): Promise<Result<boolean>> {
     const stagingMapper = DataStagingMapper.Instance;
     const stagingRepo = new DataStagingRepository();
     const mappingRepo = new TypeMappingRepository();
@@ -32,125 +32,149 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
 
     const transaction = await stagingMapper.startTransaction();
 
-    // pull the transformations, abort if none
-    if (!staging.shape_hash) {
-        const shapeHash = TypeMapping.objectToShapeHash(staging.data, {
-            value_nodes: staging.data_source_config?.value_nodes,
-            stop_nodes: staging.data_source_config?.stop_nodes,
-        });
-        staging.shape_hash = shapeHash;
-
-        await stagingRepo.save(staging);
-    }
-
-    const mapping = await mappingRepo.findByShapeHash(staging.shape_hash!, staging.data_source_id!, true);
-
-    const errors = await staging.validationErrors();
-    if (errors) {
-        await stagingRepo.addError(staging.id!, 'data does not pass validation for processing');
-        return Promise.resolve(Result.DebugFailure(`data staging does not pass validation ${errors.join(',')}`));
-    }
-
-    // if we don't have the mapping, create one and abort the processing, as we have no transformations
-    if (mapping.isError || !mapping.value.id) {
-        await stagingMapper.completeTransaction(transaction.value);
-
-        const inserted = await mappingRepo.save(
-            new TypeMapping({
-                container_id: staging.container_id!,
-                data_source_id: staging.data_source_id!,
-                sample_payload: staging.data,
-                shape_hash: staging.shape_hash,
-            }),
-            await ReturnSuperUser(),
-        );
-
-        await stagingRepo.setErrors(staging.id!, ['no active transformations for type mapping']);
-
-        if (inserted.isError) return Promise.resolve(Result.Pass(inserted));
-        return Promise.resolve(Result.Success(true));
-    }
-
-    if (!mapping.value.active) {
-        await stagingMapper.completeTransaction(transaction.value);
-        await stagingRepo.setErrors(staging.id!, ['no active type mapping for record']);
-
-        return Promise.resolve(Result.Success(true));
-    }
-
-    // we must fetch the file records for these data staging records, so that once they're processed we can attach
-    // the files to the resulting nodes/edges - this is not a failure state if we can't fetch them - log and move on
-    let stagingFiles: DataStagingFile[] = [];
-
-    if (staging.file_attached) {
-        const files = await FileMapper.Instance.ListForDataStagingRaw(staging.id!);
-        if (files.isError) {
-            Logger.error(`unable to fetch files for data staging records ${files.error?.error}`);
-        } else {
-            stagingFiles = files.value;
+    const records = staging.map((s) => {
+        if (!s.shape_hash) {
+            const shapeHash = TypeMapping.objectToShapeHash(s.data, {
+                value_nodes: s.data_source_config?.value_nodes,
+                stop_nodes: s.data_source_config?.stop_nodes,
+            });
+            s.shape_hash = shapeHash;
         }
-    }
 
+        return s;
+    });
+
+    // update the staging records with the shape-hash if needed
+    await stagingRepo.bulkSave(records, transaction.value);
+
+    // NOTE: this db call might return records which don't match the shapehash/data_source combo because we're passing
+    // a lot of records at once to the call to minimize db round-trips. I think this is a good trade-off, but if we start
+    // to see a lot of slowdowns - this might be a likely candidate
+    const all_mappings = await mappingRepo
+        .where()
+        .shape_hash(
+            'in',
+            records.map((s) => s.shape_hash),
+        )
+        .and()
+        .dataSourceID(
+            'in',
+            records.map((s) => s.data_source_id),
+        )
+        .list(true, undefined, transaction.value);
+
+    // hold for insert
     let nodesToInsert: Node[] = []; // holds all nodes to insert
     let nodesToMerge: Node[] = []; // holds node to be inserted via merge
     let nodesToOverwrite: Node[] = []; // holds nodes to be inserted via overwrite
     const tagsToAttachNodes: NodeTagAttachment[] = [];
     let edgesToQueue: EdgeQueueItem[] = [];
 
-    // for each transformation run the transformation process. Results will either be an array of nodes or an array of edges
-    // if we run into errors, add the error to the data staging row, and immediately return. Do not attempt to
-    // run any more transformations
-    if (mapping.value.transformations)
-        for (const transformation of mapping.value.transformations) {
-            // skip if the transformation is archived
-            if (transformation.archived) continue;
+    // we also need to pull any files attached to the staging records for eventual attachment ot nodes etc.
+    // we must fetch the file records for these data staging records, so that once they're processed we can attach
+    // the files to the resulting nodes/edges - this is not a failure state if we can't fetch them - log and move on
+    let stagingFiles: DataStagingFile[] = [];
 
-            // keep in mind that any conversion errors that didn't cause the complete failure of the transformation
-            // will be contained in the metadata object on the transformed object
-            const results = await transformation.applyTransformation(staging);
-            if (results.isError) {
-                await stagingMapper.rollbackTransaction(transaction.value);
-                await stagingRepo.setErrors(staging.id!, [`unable to apply transformation ${transformation.id} to data: ${results.error?.error}`]);
+    const files = await FileMapper.Instance.ListForDataStagingRaw(...records.filter((r) => r.file_attached).map((r) => r.id));
+    if (files.isError) {
+        Logger.error(`unable to fetch files for data staging records ${files.error?.error}`);
+    } else {
+        stagingFiles = files.value;
+    }
 
-                return new Promise((resolve) =>
-                    resolve(Result.DebugFailure(`unable to apply transformation ${transformation.id} to data: ${results.error?.error}`)),
-                );
-            }
-
-            // check to see result type, force into corresponding container
-            if (IsNodes(results.value)) {
-                nodesToInsert.push(...results.value);
-                if (transformation.tags)
-                    tagsToAttachNodes.push({
-                        tags: [transformation.tags].flat(),
-                        originalDataIDs: results.value.map((result) => {
-                            return result.original_data_id!;
-                        }),
-                    });
-                if (transformation.merge) {
-                    nodesToMerge.push(...results.value);
-                } else {
-                    nodesToOverwrite.push(...results.value);
-                }
-            }
-
-            if (IsEdges(results.value)) {
-                edgesToQueue = edgesToQueue.concat(
-                    results.value.map((e) => {
-                        if (transformation.tags) {
-                            return new EdgeQueueItem({
-                                edge: classToPlain(e),
-                                import_id: staging.import_id!,
-                                file_attached: staging.file_attached,
-                                tags: [transformation.tags].flat(),
-                            });
-                        } else {
-                            return new EdgeQueueItem({edge: classToPlain(e), import_id: staging.import_id!, file_attached: staging.file_attached});
-                        }
-                    }),
-                );
-            }
+    for (const record of records) {
+        const errors = await record.validationErrors();
+        if (errors) {
+            await stagingRepo.addError(record.id!, 'data does not pass validation for processing');
+            continue;
         }
+
+        // pull the mappings out
+        let mappings = all_mappings.value.filter((m) => m.data_source_id === record.data_source_id && m.shape_hash === record.shape_hash);
+
+        if (mappings.length === 0) {
+            const inserted = await mappingRepo.save(
+                new TypeMapping({
+                    container_id: record.container_id!,
+                    data_source_id: record.data_source_id!,
+                    sample_payload: record.data,
+                    shape_hash: record.shape_hash,
+                }),
+                await ReturnSuperUser(),
+            );
+
+            await stagingRepo.setErrors(record.id!, ['no active transformations for type mapping']);
+
+            if (inserted.isError) {
+                Logger.error('unable to insert mapping into database', inserted.error);
+            }
+
+            continue;
+        }
+
+        mappings = mappings.filter((m) => m.active);
+        if (mappings.length === 0) {
+            await stagingRepo.setErrors(record.id!, ['no active type mapping for record']);
+            continue;
+        }
+
+        // for each transformation run the transformation process. Results will either be an array of nodes or an array of edges
+        // if we run into errors, add the error to the data staging row, and immediately return. Do not attempt to
+        // run any more transformations
+        for (const mapping of mappings) {
+            if (mapping.transformations)
+                for (const transformation of mapping.transformations) {
+                    // skip if the transformation is archived
+                    if (transformation.archived) continue;
+
+                    // keep in mind that any conversion errors that didn't cause the complete failure of the transformation
+                    // will be contained in the metadata object on the transformed object
+                    const results = await transformation.applyTransformation(record);
+                    if (results.isError) {
+                        await stagingRepo.setErrors(record.id!, [`unable to apply transformation ${transformation.id} to data: ${results.error?.error}`]);
+                        continue;
+                    }
+
+                    // check to see result type, force into corresponding container
+                    if (IsNodes(results.value)) {
+                        nodesToInsert.push(...results.value);
+                        if (transformation.tags)
+                            tagsToAttachNodes.push({
+                                tags: [transformation.tags].flat(),
+                                originalDataIDs: results.value.map((result) => {
+                                    return result.original_data_id!;
+                                }),
+                            });
+                        if (transformation.merge) {
+                            nodesToMerge.push(...results.value);
+                        } else {
+                            nodesToOverwrite.push(...results.value);
+                        }
+                    }
+
+                    if (IsEdges(results.value)) {
+                        edgesToQueue = edgesToQueue.concat(
+                            results.value.map((e) => {
+                                if (transformation.tags) {
+                                    return new EdgeQueueItem({
+                                        edge: classToPlain(e),
+                                        import_id: record.import_id!,
+                                        file_attached: record.file_attached,
+                                        tags: [transformation.tags].flat(),
+                                    });
+                                } else {
+                                    return new EdgeQueueItem({
+                                        edge: classToPlain(e),
+                                        import_id: record.import_id!,
+                                        file_attached: record.file_attached,
+                                    });
+                                }
+                            }),
+                        );
+                    }
+                }
+        }
+    }
 
     // we must deduplicate nodes based on original ID in order to avoid a database transaction error. We toss out the
     // duplicates because even if we inserted them they'd be overwritten, or overwrite, the original. Users should be made
@@ -163,21 +187,25 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
     if (nodesToInsert.length > 0) {
         // insert nodes grouped by merge/overwrite
         if (nodesToMerge.length > 0) {
-            const inserted = await nodeRepository.bulkSave(staging.data_source_id!, nodesToMerge, transaction.value, true);
+            const inserted = await nodeRepository.bulkSave(SuperUser, nodesToMerge, transaction.value, true);
             if (inserted.isError) {
                 await stagingMapper.rollbackTransaction(transaction.value);
 
-                await stagingRepo.setErrors(staging.id!, [`error attempting to insert nodes ${inserted.error?.error}`]);
+                for (const record of records) {
+                    await stagingRepo.setErrors(record.id!, [`error attempting to insert nodes ${inserted.error?.error}`]);
+                }
                 return new Promise((resolve) => resolve(Result.DebugFailure(`error attempting to insert nodes ${inserted.error?.error}`)));
             }
         }
 
         if (nodesToOverwrite.length > 0) {
-            const inserted = await nodeRepository.bulkSave(staging.data_source_id!, nodesToOverwrite, transaction.value, false);
+            const inserted = await nodeRepository.bulkSave(SuperUser, nodesToOverwrite, transaction.value, false);
             if (inserted.isError) {
                 await stagingMapper.rollbackTransaction(transaction.value);
 
-                await stagingRepo.setErrors(staging.id!, [`error attempting to insert nodes ${inserted.error?.error}`]);
+                for (const record of records) {
+                    await stagingRepo.setErrors(record.id!, [`error attempting to insert nodes ${inserted.error?.error}`]);
+                }
                 return new Promise((resolve) => resolve(Result.DebugFailure(`error attempting to insert nodes ${inserted.error?.error}`)));
             }
         }
@@ -207,9 +235,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
                 )
                 .list();
 
-            if (listed.isError) {
-                await stagingRepo.addError(staging.id!, `unable to find node IDs for file attachment ${listed.error?.error}`);
-            } else {
+            if (!listed.isError) {
                 nodesToInsert.forEach((node) => {
                     let nodeID: string | undefined;
                     if (node.id) {
@@ -241,7 +267,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
 
             const attached = await NodeMapper.Instance.BulkAddFile(nodeFiles, transaction.value);
             if (attached.isError) {
-                await stagingRepo.addError(staging.id!, `unable to attach files to nodes during data staging process ${attached.error?.error}`);
+                Logger.error(`unable to attach files to nodes ${attached.error}`);
             }
         }
 
@@ -265,9 +291,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
                     )
                     .list();
 
-                if (listed.isError) {
-                    await stagingRepo.addError(staging.id!, `unable to find node IDs for tag attachment ${listed.error?.error}`);
-                } else {
+                if (!listed.isError) {
                     for (const node of nodesToInsert) {
                         let nodeID: string | undefined;
                         if (node.id && attachmentTag.originalDataIDs.includes(node.original_data_id!)) {
@@ -292,10 +316,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
                 for (const tag of [attachmentTag.tags].flat()) {
                     const tagResult = await TagMapper.Instance.BulkTagNode(tag.id!, nodeIDs, transaction.value);
                     if (tagResult.isError) {
-                        await stagingRepo.addError(
-                            staging.id!,
-                            `unable to attach tag ${tag.id} to nodes ${nodeIDs} during ` + `data staging process ${tagResult.error?.error}`,
-                        );
+                        Logger.error(`unable to attach tag ${tag.id} to nodes ${nodeIDs} during ` + `data staging process ${tagResult.error?.error}`);
                     }
                 }
             }
@@ -308,21 +329,31 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
         if (sent.isError) {
             await stagingMapper.rollbackTransaction(transaction.value);
 
-            await stagingRepo.setErrors(staging.id!, [`error attempting to send edges to queue ${sent.error?.error}`]);
+            await stagingRepo.setErrorsMultiple(
+                records.map((r) => r.id!),
+                [`error attempting to send edges to queue ${sent.error?.error}`],
+            );
             return new Promise((resolve) => resolve(Result.DebugFailure(`error attempting to send edges to queue ${sent.error?.error}`)));
         }
     }
 
-    const marked = await stagingRepo.setInserted(staging, transaction.value);
+    const marked = await stagingRepo.setMultipleInserted(records, transaction.value);
     if (marked.isError) {
         await stagingMapper.rollbackTransaction(transaction.value);
 
         // update the individual data row which failed
-        await stagingRepo.setErrors(staging.id!, [`error attempting to mark data inserted ${marked.error}`]);
+        await stagingRepo.setErrorsMultiple(
+            records.map((r) => r.id!),
+            [`error attempting to mark data inserted ${marked.error}`],
+        );
         return new Promise((resolve) => resolve(Result.DebugFailure(`error attempting to mark data inserted ${marked.error}`)));
     }
 
-    await stagingRepo.setErrors(staging.id!, [], transaction.value);
+    await stagingRepo.setErrorsMultiple(
+        records.map((r) => r.id!),
+        [],
+        transaction.value,
+    );
     await stagingMapper.completeTransaction(transaction.value);
     return Promise.resolve(Result.Success(true));
 }

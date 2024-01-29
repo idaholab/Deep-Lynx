@@ -887,6 +887,7 @@ export default class GraphQLRunner {
             node_type: {type: nodeInputType},
             edge_type: {type: edgeInputType},
             depth: {type: new GraphQLNonNull(GraphQLString)}, // depth must be specified
+            edge_direction: {type: GraphQLString},
             use_original_id: {type: GraphQLBoolean},
         };
 
@@ -2324,6 +2325,14 @@ export default class GraphQLRunner {
                 } else if (input.node_type.destination_uuid) {
                     const query = this.breakQuery(input.node_type.destination_uuid);
                     repo = repo.and().destinationMetatypeUUID(query[0], query[1]);
+                }
+            }
+
+            if (input.edge_direction) {
+                if (input.edge_direction === 'incoming' || input.edge_direction === 'outgoing') {
+                    repo = repo.and().edgeDirection('eq', input.edge_direction);
+                } else {
+                    return Promise.reject(`edge_direction must be "incoming" or "outgoing"`);
                 }
             }
 

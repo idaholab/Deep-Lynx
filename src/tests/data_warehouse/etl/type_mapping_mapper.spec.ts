@@ -14,6 +14,9 @@ import TypeMapping from '../../../domain_objects/data_warehouse/etl/type_mapping
 import MetatypeKey from '../../../domain_objects/data_warehouse/ontology/metatype_key';
 import DataSourceRecord from '../../../domain_objects/data_warehouse/import/data_source';
 
+const crypto = require('crypto');
+const flatten = require('flat');
+
 describe('A Data Type Mapping', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
 
@@ -389,6 +392,7 @@ describe('A Data Type Mapping', async () => {
         expect(normalHash).not.null;
 
         const arrayHash = TypeMapping.objectToShapeHash(test_payload_single_array);
+        expect(arrayHash).not.null;
         expect(arrayHash).eq(normalHash);
     });
 
@@ -406,16 +410,118 @@ describe('A Data Type Mapping', async () => {
         expect(normalIgnoredHash).eq(ignoredFieldHash);
     });
 
-    it('create valid shape hash of an object while using a key value', async () => {
-        const valueFieldHash = TypeMapping.objectToShapeHash(test_payload_single_array, {value_nodes: ['0.car.id']});
-        expect(valueFieldHash).not.null;
+    it('create valid shape hash of an object while using a key value', async () => { 
+        const valueNodesSet = new Set();
+        const regularSet = new Set();
+        test_payload_value_nodes.forEach(object=>{
+            valueNodesSet.add(TypeMapping.objectToRustShapeHash(object, {value_nodes: ['car.id']}))
+            regularSet.add(TypeMapping.objectToRustShapeHash(object))
+        })
 
-        const normalHash = TypeMapping.objectToShapeHash(test_payload);
-        expect(normalHash).not.null;
-
-        expect(valueFieldHash).not.eq(normalHash);
+        expect(valueNodesSet.size).eq(2);
+        expect(regularSet.size).eq(1);
+        expect(valueNodesSet).not.eq(regularSet);
     });
+
+    it('creates valid unique shape hashes of objects with nested arrays if one array is empty', async () => {
+        const regularSet = new Set();
+        test_payload_nested_array.forEach(object=>{
+            regularSet.add(TypeMapping.objectToRustShapeHash(object))
+        })
+
+        expect(regularSet).not.null;
+        expect(regularSet.size).eq(2);
+    });
+
+    it('creates valid unique shape hashes of objects with stop nodes', async () => {
+        const stopNodesSet = new Set();
+        const regularSet = new Set();
+        test_payload_stop_nodes.forEach(object=>{
+            stopNodesSet.add(TypeMapping.objectToRustShapeHash(object, {stop_nodes: ['days', 'nickname']}))
+            regularSet.add(TypeMapping.objectToRustShapeHash(object))
+        })
+
+        expect(stopNodesSet.size).eq(1);
+        expect(regularSet.size).eq(3);
+        expect(stopNodesSet).not.eq(regularSet);
+    });
+
+    it('creates valid unique shape hashes of objects with multiple objects/arrays', async () => {
+        const regularSet = new Set();
+        test_payload_multiple_object_array.forEach(object=>{
+            regularSet.add(TypeMapping.objectToRustShapeHash(object))
+        })
+
+        expect(regularSet).not.null;
+        expect(regularSet.size).eq(3);
+    });
+
+    it('creates valid unique shape hashes of objects with one or multiple of the same shapes and simplifies them to equate', async () => {
+        const regularSet = new Set();
+        test_payload_multiple_same_simplifier.forEach(object=>{
+            regularSet.add(TypeMapping.objectToRustShapeHash(object))
+        })
+
+        expect(regularSet).not.null;
+        expect(regularSet.size).eq(1);
+    });
+
+    it('creates valid unique shape hashes of simple objects', async () => {
+        const regularSet = new Set();
+        test_payload_simple.forEach(object=>{
+            regularSet.add(TypeMapping.objectToRustShapeHash(object))
+        })
+
+        expect(regularSet).not.null;
+        expect(regularSet.size).eq(1);
+    });
+
+    it('creates valid unique shape hashes of simple objects with different data types', async () => {
+        const regularSet = new Set();
+        test_payload_different_data_types.forEach(object=>{
+            regularSet.add(TypeMapping.objectToRustShapeHash(object))
+        })
+
+        expect(regularSet).not.null;
+        expect(regularSet.size).eq(3);
+    });
+
+    it('comparing old Hashes to New Hashes with a simple case', async () => {
+        const regularSet: Set<string> = new Set();
+        const oldSet: Set<string> = new Set();
+        test_payload_simple.forEach(object=>{
+            regularSet.add(TypeMapping.objectToRustShapeHash(object))
+            oldSet.add(TypeMapping.objectToShapeHash(object))
+        })
+        const areSetsEqual = compareSets(regularSet, oldSet);
+        expect(areSetsEqual).eq(true);
+    });
+
+    it('comparing old Hashes to New Hashes with a simple stop node case', async () => {
+        const stopNodesSet: Set<string> = new Set();
+        const oldSet: Set<string> = new Set();
+        test_payload_stop_nodes.forEach(object=>{
+            stopNodesSet.add(TypeMapping.objectToRustShapeHash(object, {stop_nodes: ['days', 'nickname']}))
+            oldSet.add(TypeMapping.objectToShapeHash(object, {stop_nodes: ['days', 'nickname']}))
+        })
+        const areSetsEqual = compareSets(stopNodesSet, oldSet);
+        expect(areSetsEqual).eq(true);
+    });
+
+    it('comparing old Hashes to New Hashes with a simple value nodes case', async () => {
+        const regularSet: Set<string> = new Set();
+        const oldSet: Set<string> = new Set();
+        test_payload_simple.forEach(object=>{
+            regularSet.add(TypeMapping.objectToRustShapeHash(object, {value_nodes: ['name']}))
+            oldSet.add(TypeMapping.objectToShapeHash(object, {value_nodes: ['name']}))
+        })
+        const areSetsEqual = compareSets(regularSet, oldSet);
+        expect(areSetsEqual).eq(true);
+    });
+
 });
+
+
 
 export const test_keys: MetatypeKey[] = [
     new MetatypeKey({
@@ -597,121 +703,119 @@ const test_payload_single_array = [
                     ],
                 },
             ],
-        },
-    },
+        }
+    }
 ];
 
-const test_payload_empty_array = [
+const test_payload_value_nodes = [
     {
         car: {
-            id: 'UUID',
-            name: 'test car',
+            id: "UUID",
+            name: "test car",
             manufacturer: {
-                id: 'UUID',
-                name: 'Test Cars Inc',
-                location: 'Seattle, WA',
-            },
-            tire_pressures: [],
-        },
-        car_maintenance: {
-            id: 'UUID',
-            name: "test car's maintenance",
-            start_date: '1/1/2020 12:00:00',
-            average_visits_per_year: 4,
-            maintenance_entries: [
-                {
-                    id: 1,
-                    check_engine_light_flag: true,
-                    type: 'oil change',
-                    parts_list: [
-                        {
-                            id: 'oil',
-                            name: 'synthetic oil',
-                            price: 45.66,
-                            quantity: 1,
-                        },
-                    ],
-                },
-                {
-                    id: 2,
-                    check_engine_light_flag: false,
-                    type: 'tire rotation',
-                    parts_list: [
-                        {
-                            id: 'tire',
-                            name: 'all terrain tire',
-                            price: 150.99,
-                            quantity: 4,
-                        },
-                    ],
-                },
-            ],
-        },
-    },
-];
-
-const test_payload_single_array_differing_objects = [
-    {
-        car: {
-            id: 'UUID',
-            name: 'test car',
-            manufacturer: {
-                id: 'UUID',
-                name: 'Test Cars Inc',
-                location: 'Seattle, WA',
+                id: "UUID",
+                name: "Test Cars Inc",
+                location: "Seattle, WA"
             },
             tire_pressures: [
                 {
-                    id: 'tire0',
-                    measurement_unit: 'PSI',
-                    measurement: 35.08,
-                    measurement_name: 'tire pressure',
-                },
-                {
-                    id: 'tire0',
-                    name: 'test',
-                    measurement_unit: 'PSI',
-                    measurement: 35.08,
-                    measurement_name: 'tire pressure',
-                },
-            ],
+                  id: "tire0",
+                  measurement_unit: "PSI",
+                  measurement: 35.08,
+                  measurement_name: "tire pressure"
+                }
+            ]
         },
         car_maintenance: {
-            id: 'UUID',
-            name: "test car's maintenance",
-            start_date: '1/1/2020 12:00:00',
-            average_visits_per_year: 4,
-            maintenance_entries: [
+          id: "UUID",
+          name: "test cars maintenance",
+          start_date: "1/1/2020 12:00:00",
+          average_visits_per_year: 4,
+          maintenance_entries: [
                 {
-                    id: 1,
-                    check_engine_light_flag: true,
-                    type: 'oil change',
-                    parts_list: [
+                  id: 1,
+                  check_engine_light_flag: true,
+                  type: "oil change",
+                  parts_list: [
                         {
-                            id: 'oil',
-                            name: 'synthetic oil',
-                            price: 45.66,
-                            quantity: 1,
-                        },
-                    ],
+                          id: "oil",
+                          name: "synthetic oil",
+                          price: 45.66,
+                          quantity: 1
+                        }
+                    ]
                 },
                 {
-                    id: 2,
-                    check_engine_light_flag: false,
-                    type: 'tire rotation',
-                    parts_list: [
+                  id: 2,
+                  check_engine_light_flag: false,
+                  type: "tire rotation",
+                  parts_list: [
                         {
-                            id: 'tire',
-                            name: 'all terrain tire',
-                            price: 150.99,
-                            quantity: 4,
-                        },
-                    ],
-                },
-            ],
-        },
+                          id: "tire",
+                          name: "all terrain tire",
+                          price: 150.99,
+                          quantity: 4
+                        }
+                    ]
+                }
+            ]
+        }
     },
+    {
+        car: {
+            id: "Honda",
+            name: "test car",
+            manufacturer: {
+                id: "UUID",
+                name: "Test Cars Inc",
+                location: "Seattle, WA"
+            },
+            tire_pressures: [
+                {
+                  id: "tire0",
+                  measurement_unit: "PSI",
+                  measurement: 35.08,
+                  measurement_name: "tire pressure"
+                }
+            ]
+        },
+        car_maintenance: {
+          id: "UUID",
+          name: "test cars maintenance",
+          start_date: "1/1/2020 12:00:00",
+          average_visits_per_year: 4,
+          maintenance_entries: [
+                {
+                  id: 1,
+                  check_engine_light_flag: true,
+                  type: "oil change",
+                  parts_list: [
+                        {
+                          id: "oil",
+                          name: "synthetic oil",
+                          price: 45.66,
+                          quantity: 1
+                        }
+                    ]
+                },
+                {
+                  id: 2,
+                  check_engine_light_flag: false,
+                  type: "tire rotation",
+                  parts_list: [
+                        {
+                          id: "tire",
+                          name: "all terrain tire",
+                          price: 150.99,
+                          quantity: 4
+                        }
+                    ]
+                }
+            ]
+        }
+    }
 ];
+
 
 // @ts-ignore
 const stop_nodes = ['tire_pressures', 'check_engine_light_flag'];
@@ -782,3 +886,155 @@ const test_payload_ignored_fields = [
         },
     },
 ];
+
+const test_payload_nested_array = [
+        {
+            ManufacturingProcess: {
+                keys: {
+                      id: "ab9c492-b3f0-412b-ae68-c6dc2e21127d",
+                      name: "Test process",
+                      description: "an example"
+                },
+                children: {
+                      ArrayOne: [],
+                      ArrayTwo: [{id: "123"}, {id: "456"}]
+                }
+            }
+         },
+         {
+            ManufacturingProcess: {
+                keys: {
+                      id: "ab9c492-b3f0-412b-ae68-c6dc2e21127d",
+                      name: "Test process",
+                      description: "an example"
+                },
+                children: {
+                      ArrayOne: [{id: "123"}, {id: "456"}],
+                      ArrayTwo: []
+                }
+            }
+         }
+];
+
+const test_payload_stop_nodes = [
+            {
+                objectId: 1,
+                name: "EWR-9154-Beartooth_AR_2022_3DView_1:1",
+                nickname: "kobe",
+                creationDate: "2022-May-31 00:00:00"
+            },
+            {
+                objectId: 2,
+                name: "EWR-9154-Beartooth_AR_2022_3DView_2:1",
+                creationDate: "2022-May-31 00:00:00",
+                days: 4
+            },
+            {
+                objectId: 3,
+                name: "EWR-9154-Beartooth_AR_2022_3DView_3:1",
+                creationDate: "2022-May-31 00:00:00"
+            }
+];
+     
+const test_payload_multiple_object_array = [
+        {
+            ManufacturingProcess: {
+                keys: {
+                      id: "ab9c492-b3f0-412b-ae68-c6dc2e21127d",
+                      name: "Test process",
+                      description: "an example",
+                      array: []
+                }
+            }
+         },
+         {
+            ManufacturingProcess: {
+                keys: {
+                      id: "ab9c492-b3f0-412b-ae68-c6dc2e21127d",
+                      name: "Test process",
+                      description: "an example",
+                      array: [{has: "stuff"}]
+                }
+            }
+         }, 
+         {
+           ManufacturingProcess: {
+               keys: {
+                     id: "ab9c492-b3f0-412b-ae68-c6dc2e21127d",
+                     name: "Test process",
+                     description: "an example",
+                     array: ["thing1", "thing2", "thing3"]
+               }
+           }
+        }
+];
+
+const test_payload_multiple_same_simplifier = [
+        [
+            {id: "1"},
+            {id: "2"}
+        ],
+        [
+            {id: "3"}
+        ]
+];
+
+const test_payload_simple = [
+        {
+           objectId: 1,
+           name: "EWR-9154-Beartooth_AR_2022_3DView_1:1",
+           creationDate: "2022-May-31 00:00:00"
+        },
+        {
+           objectId: 2,
+           name: "BOB",
+           creationDate: "2022-May-31 00:00:00"
+        },
+        {
+           objectId: 3,
+           name: "EWR-9154-Beartooth_AR_2022_3DView_3:1",
+           creationDate: "2022-May-31 00:00:00"
+        }
+];    
+
+const test_payload_different_data_types = [
+        {
+           objectId: 1,
+           name: true,
+           creationDate: "2022-May-31 00:00:00"
+        },
+        {
+           objectId: 2,
+           name: "BOB",
+           creationDate: "2022-May-31 00:00:00"
+        },
+        {
+           objectId: 3,
+           name: 15,
+           creationDate: "2022-May-31 00:00:00"
+        }
+];
+
+export class MappingShapeHashOptions {
+    stop_nodes?: string[];
+    value_nodes?: string[];
+    }
+
+// Helper comparison function to compare old and new hasher output
+function compareSets(set1: Set<string>, set2: Set<string>): boolean {
+    const array1 = Array.from(set1).sort();
+    const array2 = Array.from(set2).sort();
+
+    if (array1.length !== array2.length) {
+        return false;
+    }
+
+    for (let i = 0; i < array1.length; i++) {
+        if (array1[i] !== array2[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}
+

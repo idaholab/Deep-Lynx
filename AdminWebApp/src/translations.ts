@@ -690,6 +690,8 @@ export default {
             chunkInterval: 'Chunk Interval',
             indexType: 'Index Type',
             showTimestampColumns: 'Show Timestamp Columns',
+            deselectAllYvals: 'Deselect All Y Columns',
+            selectAllYvals: 'Select All Y Columns',
         },
         typeMappings: {
             mappingsMaybePlural: 'Mapping(s)',

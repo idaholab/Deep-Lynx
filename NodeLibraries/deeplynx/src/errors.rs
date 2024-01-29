@@ -13,7 +13,7 @@ pub enum DeepLynxError {
     IO(#[from] io::Error),
     #[error("serde json error {0}")]
     Json(#[from] serde_json::Error),
-    #[error("serde yame error {0}")]
+    #[error("serde yaml error {0}")]
     Yaml(#[from] serde_yaml::Error),
     #[error("redis loader error {0}")]
     RedisLoader(#[from] RedisLoaderError),

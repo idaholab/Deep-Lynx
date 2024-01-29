@@ -68,7 +68,7 @@
         this.metatypesLoading = true
         this.$client.listMetatypes(this.containerID, {
           name: (this.metatypeSearch !== "") ? this.metatypeSearch : undefined,
-          loadKeys: true,
+          loadKeys: false,
           ontologyVersion: this.$store.getters.activeOntologyVersionID
         })
             .then((metatypes) => {

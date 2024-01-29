@@ -755,6 +755,10 @@ export default class TypeMappingRepository extends Repository implements Reposit
         super.query('active', operator, value);
         return this;
     }
+    shape_hash(operator: string, value: any) {
+        super.query('shape_hash', operator, value);
+        return this;
+    }
 
     resultingMetatypeName(operator: string, value: any) {
         super.query('metatypes.name', operator, value);

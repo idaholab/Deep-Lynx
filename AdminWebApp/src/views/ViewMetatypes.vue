@@ -253,7 +253,7 @@
           sortDesc: sortDescParam,
           name: (this.name !== "") ? this.name : undefined,
           description: (this.description !== "") ? this.description : undefined,
-          loadKeys: true,
+          loadKeys: false,
           deleted: this.$store.getters.isEditMode
         })
             .then((results) => {
@@ -271,7 +271,7 @@
                 this.$client.listMetatypes(this.containerID, {
                   ontologyVersion: this.$store.getters.currentOntologyVersionID,
                   nameIn,
-                  loadKeys: true,
+                  loadKeys: false,
                 })
                 .then((comparison) => {
                   this.metatypesLoading = false

@@ -247,9 +247,20 @@ export default class DataStagingRepository extends Repository implements Reposit
         return Promise.resolve(Result.Failure(`data record must have id`));
     }
 
+    setMultipleInserted(t: DataStaging[], transaction?: PoolClient): Promise<Result<boolean>> {
+        return this.#mapper.SetInsertedMultiple(
+            t.map((d) => d.id!),
+            transaction,
+        );
+    }
+
     // completely override the error set
     setErrors(id: string, errors: string[], transaction?: PoolClient): Promise<Result<boolean>> {
         return this.#mapper.SetErrors(id, errors, transaction);
+    }
+
+    setErrorsMultiple(ids: string[], errors: string[], transaction?: PoolClient): Promise<Result<boolean>> {
+        return this.#mapper.SetErrorsMultiple(ids, errors, transaction);
     }
 
     // add an error to an existing error set

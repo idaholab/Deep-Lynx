@@ -2,6 +2,7 @@ import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_do
 import {IsBoolean, IsDefined, IsOptional, IsString, IsUUID} from 'class-validator';
 import TypeTransformation from './type_transformation';
 import {Type} from 'class-transformer';
+import {hash, Options} from 'deeplynx';
 
 const crypto = require('crypto');
 const flatten = require('flat');
@@ -118,7 +119,35 @@ export default class TypeMapping extends BaseDomainClass {
         extractPropsAndTypes(flattened, keyTypes);
 
         return crypto.createHash('sha256').update(keyTypes.sort().join('')).digest('base64');
+
     }
+
+    // creates a base64 encoded hash of an object's shape. An object shape is a combination
+    // of its keys and the type of data those keys are in - this method is static so users
+    // can access it to create type mapping shape hash without having to actually build
+    // a mapping
+    static objectToRustShapeHash(data: any, options?: MappingShapeHashOptions) {
+        const rustOptions: Options = {};
+        if (options) {
+            rustOptions.stopNodes = options.stop_nodes;
+            rustOptions.valueNodes = options.value_nodes;
+        }
+
+        // dataupdated is simply the full array being read in
+        const dataupdated: string = JSON.stringify(data);
+
+        // // rawHash is the string hash of numberso
+        const rawHash = hash(dataupdated, rustOptions);
+
+        // // Convert the raw hash to a base64 encoded string
+        // return crypto.createHash('sha256').update(rawHash).digest('base64');
+        console.log(rawHash);
+        return rawHash;
+    }
+
+
+
+
 
     get removedTransformations() {
         return this.#removedTransformations;

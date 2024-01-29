@@ -44,12 +44,12 @@ The initial startup might take a while as the operation must first fetch the pre
 _________
 #### **Requirements**
 
--   node.js 16.x, 17.x, 18.x, 19.x (untested)
--   Typescript ^4.x.x
--   npm ^6.x
--   yarn ^3.6.x
--   Rust ^1.x.x (set to default stable)
--   Docker ^18.x - _optional_ - for ease of use in development
+-   [node.js](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) ^16.x
+-   [Typescript](https://www.typescriptlang.org/download) ^4.x.x
+-   [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) ^6.x
+-   [yarn](https://classic.yarnpkg.com/lang/en/docs/install/) ^3.6.x
+-   [Rust](https://www.rust-lang.org/tools/install) ^1.x.x (set to default stable)
+-   [Docker](https://docs.docker.com/engine/install/) ^18.x - _optional_ - for ease of use in development
 
 **_Data Source Requirements_**
 

@@ -176,7 +176,7 @@ export function activeOntologyVersionContext(): any {
         repo.where()
             .containerID('eq', req.params.containerID)
             .and()
-            .status('eq', 'published')
+            .status('in', ['ready', 'published'])
             .list({sortDesc: true, sortBy: 'id', limit: 1})
             .then((result) => {
                 if (result.isError) {

@@ -332,8 +332,17 @@ export default class OAuthRoutes {
         const oauthRequest = oauthRepo.authorizationFromRequest(req);
 
         // Sanitize the query params since they are being passed through
-        for (const param in req.query) {
-            req.query[param] = DOMPurify.sanitize(req.query[param] as string);
+        const allowedParamNameRegex = /^[a-zA-Z0-9_-]+$/;
+
+        for (const [param, value] of Object.entries(req.query)) {
+            // detect and delete invalid param names
+            const isValidParam = allowedParamNameRegex.test(param);
+            if (!isValidParam) {
+                delete req.query[param];
+            } else {
+                // sanitize param values
+                req.query[param] = DOMPurify.sanitize(value as string);
+            }
         }
 
         return res.render('login', {
@@ -347,7 +356,7 @@ export default class OAuthRoutes {
                 queryParams: req.query,
             }),
             _success: req.query.success ? DOMPurify.sanitize(req.query.success as string) : undefined,
-            _error: req.query.error ? DOMPurify.sanitize(req.query.errory as string) : undefined,
+            _error: req.query.error ? DOMPurify.sanitize(req.query.error as string) : undefined,
             saml_enabled: Config.saml_enabled,
         });
     }
@@ -497,7 +506,7 @@ export default class OAuthRoutes {
                     application_id: req.query.application_id,
                     application_secret: req.query.application_secret,
                     applications: classToPlain(result.value),
-                    _error: req.query.error ? DOMPurify.sanitize(req.query.errory as string) : undefined,
+                    _error: req.query.error ? DOMPurify.sanitize(req.query.error as string) : undefined,
                     _success: req.query.success ? DOMPurify.sanitize(req.query.success as string) : undefined,
                 });
             })

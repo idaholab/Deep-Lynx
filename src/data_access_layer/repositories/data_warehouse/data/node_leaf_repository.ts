@@ -76,6 +76,11 @@ export default class NodeLeafRepository extends Repository {
         return this;
     }
 
+    edgeDirection(operator: string, value: any) {
+        super.query('nodeleafs.edge_direction', operator, value);
+        return this;
+    }
+
     async list(queryOptions?: QueryOptions, transaction?: PoolClient): Promise<Result<NodeLeaf[]>> {
         const results = await super.findAll<NodeLeaf>(queryOptions, {
             transaction,
