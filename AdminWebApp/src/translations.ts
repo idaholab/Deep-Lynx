@@ -412,6 +412,8 @@ export default {
             import: 'Import Container',
             export: 'Export Container',
             change: 'Change Container',
+            repair: 'Repair Permissions',
+            repaired: 'Permissions Repaired'
         },
         ontology: {
             ontology: 'Ontology',

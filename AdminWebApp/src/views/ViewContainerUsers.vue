@@ -12,6 +12,7 @@
         <v-toolbar flat color="white">
           <v-toolbar-title>{{$t("users.containerDescription")}}</v-toolbar-title>
           <v-spacer></v-spacer>
+          <v-btn color="primary" dark class="mt-2 mr-2" @click="repairPerms" >{{$t("containers.repair")}}</v-btn>
           <InviteUserToContainerDialog :containerID="containerID" @userInvited="flashSuccess"></InviteUserToContainerDialog>
         </v-toolbar>
       </template>
@@ -121,6 +122,7 @@
     errorMessage: string,
     successMessage: string,
     inviteSuccess: string,
+    repairSuccess: string,
     users: UserT[]
     toEdit: UserT | null,
     newUser: {
@@ -159,6 +161,7 @@
       errorMessage: '',
       successMessage: '',
       inviteSuccess: '',
+      repairSuccess: '',
       users: [],
       toEdit: null,
       newUser: {
@@ -223,6 +226,24 @@
       },
       flashSuccess(){
         this.inviteSuccess = this.$t('users.invited') as string
+      },
+      refreshSuccess(){
+        this.repairSuccess = this.$t('containers.repaired') as string
+      },
+      repairPerms() {
+          this.$client.refreshRepairPermissions(this.containerID)
+              .then(() => {
+                  
+                  this.errorMessage = ""
+                  this.$emit("Permissions Refreshed Succesfully!")
+              })
+              .catch(e => {
+                  const errJson = JSON.parse(e)
+                  if(errJson.severity == "ERROR"){
+                    this.errorMessage = "All permissions are already set."
+                    this.$emit("Permissions Already Set!")
+                  }
+          })
       },
       assignRole(role: string) {
         if(this.toEdit ) {

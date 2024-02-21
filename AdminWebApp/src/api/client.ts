@@ -499,6 +499,14 @@ export class Client {
         return this.put<boolean>(`/containers/${containerID}/service-users/${userID}/permissions`, set);
     }
 
+    refreshRepairPermissions(containerID: string): Promise<JSON>{
+
+        return new Promise((resolve, reject) => { 
+            this.post<JSON>(`containers/${containerID}/permissions`,String)
+            .then((results) => resolve(results))
+            .catch((e) => reject(e))})
+    }
+
     listMetatypeRelationships(
         containerID: string,
         {
