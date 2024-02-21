@@ -5,6 +5,7 @@
       :style="[noIndent ? '' : {'margin-left': '10px', 'margin-right': '10px'}]"
       :items="dataSources"
       item-text="name"
+      item-value="id"
       @change="setDataSource"
       :label="label ? label : selectDataSourceString()"
       :multiple="multiple"
@@ -19,7 +20,7 @@
           <v-list-item-title v-if="item.archived" class="text--disabled">
             {{ item.name }} - <i class="text-caption">{{$t('general.archived')}}</i>
           </v-list-item-title>
-          <v-list-item-title v-else>{{ item.name }}</v-list-item-title>
+          <v-list-item-title v-else>{{ item.name }} ({{item.id}})</v-list-item-title>
         </v-list-item-content>
       </template>
 
