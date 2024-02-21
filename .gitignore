@@ -24,6 +24,8 @@ profile-logs
 /src/tests/test-data.csv
 /src/tests/private-key.pem
 /src/tests/*_export.json
+/src/tests/mochawesome-report
+/src/tests/coverage
 /**/test-timeseries-datasource-graphql.json
 /NodeLibraries/dl-fast-load/target/
 /NodeLibraries/dl-fast-load/index.node

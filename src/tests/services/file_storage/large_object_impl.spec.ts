@@ -58,7 +58,7 @@ describe('Large object storage can', async () => {
         file.adapter_file_path = result.value.filepath;
         readable.close();
 
-        const append = fs.createReadStream('./.docker-env');
+        const append = fs.createReadStream('./.env-sample');
         // now append
         const appendResult = await provider.appendPipe(file, append);
         expect(appendResult.isError).false;
