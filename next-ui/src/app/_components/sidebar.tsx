@@ -31,7 +31,7 @@ function classNames(...classes: any[]) {
     return classes.filter(Boolean).join(' ')
 }
 
-export default function Example(): any {
+export default function Sidebar(props: any): any {
     const [sidebarOpen, setSidebarOpen] = useState(false)
 
     return (
@@ -241,7 +241,7 @@ export default function Example(): any {
                 </div>
 
                 <main className="py-10 lg:pl-72">
-                    <div className="px-4 sm:px-6 lg:px-8">{/* Your content */}</div>
+                    <div className="px-4 sm:px-6 lg:px-8">{props.children}</div>
                 </main>
             </div>
         </>

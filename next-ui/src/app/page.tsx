@@ -1,8 +1,9 @@
-import Image from "next/image";
-import Sidebar from "../components/sidebar"
+import Sidebar from "./_components/sidebar"
 
 export default function Home() {
     return (
-        <Sidebar></Sidebar>
+        <div>
+            <h1>Hello World</h1>
+        </div>
     );
 }
