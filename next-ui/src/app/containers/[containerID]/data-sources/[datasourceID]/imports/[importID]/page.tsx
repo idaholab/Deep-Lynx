@@ -1,7 +1,7 @@
-export default function Home() {
+export default function Home({params}: {params: {importID: string}}) {
     return (
         <div>
-            <h1>Hello World</h1>
+            <h1>Import ID: {params.importID}</h1>
         </div>
     );
 }

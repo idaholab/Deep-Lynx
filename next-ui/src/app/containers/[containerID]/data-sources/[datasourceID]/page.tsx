@@ -1,7 +1,7 @@
-export default function Home() {
+export default function Home({params}: {params: {datasourceID: string}}) {
     return (
         <div>
-            <h1>Hello World</h1>
+            <h1>Specific Data Source: {params.datasourceID}</h1>
         </div>
     );
 }
