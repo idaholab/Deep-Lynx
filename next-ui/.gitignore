@@ -34,3 +34,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+src/app/**/*.js
+src/app/**/*.js.map
+tailwind.config.js
+tailwind.config.js.map
