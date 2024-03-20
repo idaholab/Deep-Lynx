@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Sidebar from "./_components/sidebar"
-import React from "react";
+import { ThemeProvider }  from "./_components/theme-provider"
+
+import clsx from 'clsx'
+import { cookies } from 'next/headers'
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,9 +19,20 @@ export default function RootLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
+
+    const prefersDark = cookies().get('x-theme')?.value === 'dark'
     return (
-        <html>
-            <Sidebar>{children}</Sidebar>
+
+
+        <html lang="en">
+          <body>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+
+          <Sidebar />
+          {children}
+          </ThemeProvider>
+
+          </body>
         </html>
     );
 }
