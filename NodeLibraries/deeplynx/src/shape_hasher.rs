@@ -80,6 +80,7 @@ impl Options {
 //and types
 #[napi]
 pub fn hash(a: String, options: Options) -> Result<String, napi::Error> {
+  //Entry point of this file, serde_json::Value can reprsent any valid JSON, here we are parsing a string as JSON
   let data:serde_json::Value = serde_json::from_str(&a).map_err(|err| napi::Error::new(napi::Status::GenericFailure, format!("Failed to parse JSON: {}", err)))?;
   // Create a clone of the data to avoid manipulating the original object
   let mut to_hash = data.clone();
@@ -195,6 +196,7 @@ fn recurseData(v1: Value, s1: Vec<String>, options: &Options, path: &mut Vec<Str
         }
         //following line is reequired to maintain stop node functionality and to ensure proper breakdown of nested situations
         my_string = recurseObject(v.clone(), &mut my_string, &s1, options, path)?;
+        //serilizaing given data structure (v) into JSON string
         let v_str = serde_json::to_string(&v)?;
         let hash = json_object_to_hash(&v_str, options, path)?;
         my_string.push_str(&format!("{}", hash));

@@ -59,6 +59,22 @@ export default class TypeMappingRepository extends Repository implements Reposit
         return Promise.resolve(retrieved);
     }
 
+    async addShapeHash(typeMappingID: string, shapeHash: string): Promise<Result<boolean>> {
+        if (!typeMappingID || !shapeHash) {
+            return Promise.resolve(Result.Failure('Type Mapping ID must have an associated shape hash value'));
+        }
+
+        return this.#mapper.AddShapeHash(typeMappingID, shapeHash);
+    }
+
+    async removeShapeHash(typeMappingID: string, shapeHash: string): Promise<Result<boolean>> {
+        if (!typeMappingID || !shapeHash) {
+            return Promise.resolve(Result.Failure('Type Mapping ID must have an associated shape hash value'));
+        }
+
+        return this.#mapper.RemoveShapeHash(typeMappingID, shapeHash);
+    }
+
     // shape hashes are unique only to data sources, so it will need both to find one
     async findByShapeHash(shapeHash: string, dataSourceID: string, loadTransformations = true): Promise<Result<TypeMapping>> {
         const cached = await this.getCachedByShapeHash(shapeHash, dataSourceID);

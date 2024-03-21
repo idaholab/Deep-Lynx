@@ -1,5 +1,5 @@
 import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_domain_class';
-import {IsBoolean, IsDefined, IsOptional, IsString, IsUUID} from 'class-validator';
+import {IsArray, IsBoolean, IsDefined, IsOptional, IsString, IsUUID} from 'class-validator';
 import TypeTransformation from './type_transformation';
 import {Type} from 'class-transformer';
 import {hash, Options} from 'deeplynx';
@@ -141,7 +141,6 @@ export default class TypeMapping extends BaseDomainClass {
 
         // // Convert the raw hash to a base64 encoded string
         // return crypto.createHash('sha256').update(rawHash).digest('base64');
-        console.log(rawHash);
         return rawHash;
     }
 
@@ -223,3 +222,9 @@ export class MappingShapeHashOptions {
     stop_nodes?: string[];
     value_nodes?: string[];
 }
+
+export class ShapeHashArray extends NakedDomainClass {
+    @IsArray()
+    shape_hash_array?: string[];
+}
+
