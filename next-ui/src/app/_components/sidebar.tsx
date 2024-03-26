@@ -19,31 +19,40 @@ import {
     Bars3Icon,
     BellIcon,
     CalendarIcon,
+    ChartBarSquareIcon,
     ChartPieIcon,
     Cog6ToothIcon,
+    CubeTransparentIcon,
     DocumentDuplicateIcon,
+    DocumentIcon,
     FolderIcon,
     HomeIcon,
+    InboxArrowDownIcon,
+    MagnifyingGlassCircleIcon,
+    PaperAirplaneIcon,
+    RectangleStackIcon,
+    RocketLaunchIcon,
+    ShareIcon,
+    TagIcon,
     UsersIcon,
     XMarkIcon,
 } from '@heroicons/react/24/outline';
 import {ChevronDownIcon, MagnifyingGlassIcon} from '@heroicons/react/20/solid';
-import dynamic from 'next/dynamic';
-import {cookies} from 'next/headers';
+import Image from 'next/image';
 import DarkModeToggle from './dark-mode-toggle';
 
-const navigation = [
-    {name: 'Dashboard', href: '#', icon: HomeIcon, current: true},
-    {name: 'Team', href: '#', icon: UsersIcon, current: false},
-    {name: 'Projects', href: '#', icon: FolderIcon, current: false},
-    {name: 'Calendar', href: '#', icon: CalendarIcon, current: false},
-    {name: 'Documents', href: '#', icon: DocumentDuplicateIcon, current: false},
-    {name: 'Reports', href: '#', icon: ChartPieIcon, current: false},
+const dashboard = {name: 'Dashboard', href: '#', icon: HomeIcon, current: true};
+const data = [
+    {name: 'View', href: '#', icon: MagnifyingGlassCircleIcon, current: false},
+    {name: 'Model Viewer', href: '#', icon: CubeTransparentIcon, current: false},
+    {name: 'Files', href: '#', icon: DocumentIcon, current: false},
+    {name: 'Reports', href: '#', icon: ChartBarSquareIcon, current: false},
 ];
-const teams = [
-    {id: 1, name: 'Heroicons', href: '#', initial: 'H', current: false},
-    {id: 2, name: 'Tailwind Labs', href: '#', initial: 'T', current: false},
-    {id: 3, name: 'Workcation', href: '#', initial: 'W', current: false},
+const dataManagement = [
+    {name: 'Ontology', href: '#', icon: ShareIcon, current: false},
+    {name: 'Data Sources', href: '#', icon: InboxArrowDownIcon, current: false},
+    {name: 'Tags', href: '#', icon: TagIcon, current: false},
+    {name: 'Events', href: '#', icon: PaperAirplaneIcon, current: false},
 ];
 const userNavigation = [
     {name: 'Your profile', href: '#'},
@@ -104,18 +113,15 @@ export default function Sidebar(props: any) {
                                     {/* Sidebar component, swap this element with another sidebar if you like */}
                                     <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-4 ring-1 ring-white/10">
                                         <div className="flex h-16 shrink-0 items-center">
-                                            <img
-                                                className="h-8 w-auto"
-                                                src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"
-                                                alt="Your Company"
-                                            />
+                                            <Image className="h-8 w-auto" src="/public/lynx-white.png" alt="DeepLynx" />
                                         </div>
 
                                         <nav className="flex flex-1 flex-col">
                                             <ul role="list" className="flex flex-1 flex-col gap-y-7">
                                                 <li>
+                                                    <div className="text-xs font-semibold leading-6 text-gray-400">Your data</div>
                                                     <ul role="list" className="-mx-2 space-y-1">
-                                                        {navigation.map((item) => (
+                                                        {data.map((item) => (
                                                             <li key={item.name}>
                                                                 <a
                                                                     href={item.href}
@@ -136,21 +142,19 @@ export default function Sidebar(props: any) {
                                                 <li>
                                                     <div className="text-xs font-semibold leading-6 text-gray-400">Your teams</div>
                                                     <ul role="list" className="-mx-2 mt-2 space-y-1">
-                                                        {teams.map((team) => (
-                                                            <li key={team.name}>
+                                                        {dataManagement.map((item) => (
+                                                            <li key={item.name}>
                                                                 <a
-                                                                    href={team.href}
+                                                                    href={item.href}
                                                                     className={classNames(
-                                                                        team.current
+                                                                        item.current
                                                                             ? 'bg-gray-800 text-white'
                                                                             : 'text-gray-400 hover:text-white hover:bg-gray-800',
                                                                         'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',
                                                                     )}
                                                                 >
-                                                                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border border-gray-700 bg-gray-800 text-[0.625rem] font-medium text-gray-400 group-hover:text-white">
-                                                                        {team.initial}
-                                                                    </span>
-                                                                    <span className="truncate">{team.name}</span>
+                                                                    <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
+                                                                    {item.name}
                                                                 </a>
                                                             </li>
                                                         ))}
@@ -179,13 +183,30 @@ export default function Sidebar(props: any) {
                     {/* Sidebar component, swap this element with another sidebar if you like */}
                     <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-4">
                         <div className="flex h-16 shrink-0 items-center">
-                            <img className="h-8 w-auto" src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500" alt="Your Company" />
+                            <Image className="h-12 w-auto" src="/lynx-white.png" width="1153" height="497" alt="DeepLynx" />
                         </div>
                         <nav className="flex flex-1 flex-col">
                             <ul role="list" className="flex flex-1 flex-col gap-y-7">
                                 <li>
                                     <ul role="list" className="-mx-2 space-y-1">
-                                        {navigation.map((item) => (
+                                        <li key={dashboard.name}>
+                                            <a
+                                                href={dashboard.href}
+                                                className={classNames(
+                                                    dashboard.current ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800',
+                                                    'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',
+                                                )}
+                                            >
+                                                <dashboard.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
+                                                {dashboard.name}
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <div className="text-xs font-semibold leading-6 text-gray-400">Your data</div>
+                                    <ul role="list" className="-mx-2 mt-2 space-y-1">
+                                        {data.map((item) => (
                                             <li key={item.name}>
                                                 <a
                                                     href={item.href}
@@ -202,21 +223,19 @@ export default function Sidebar(props: any) {
                                     </ul>
                                 </li>
                                 <li>
-                                    <div className="text-xs font-semibold leading-6 text-gray-400">Your teams</div>
+                                    <div className="text-xs font-semibold leading-6 text-gray-400">Data Management</div>
                                     <ul role="list" className="-mx-2 mt-2 space-y-1">
-                                        {teams.map((team) => (
-                                            <li key={team.name}>
+                                        {dataManagement.map((item) => (
+                                            <li key={item.name}>
                                                 <a
-                                                    href={team.href}
+                                                    href={item.href}
                                                     className={classNames(
-                                                        team.current ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800',
+                                                        item.current ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800',
                                                         'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',
                                                     )}
                                                 >
-                                                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border border-gray-700 bg-gray-800 text-[0.625rem] font-medium text-gray-400 group-hover:text-white">
-                                                        {team.initial}
-                                                    </span>
-                                                    <span className="truncate">{team.name}</span>
+                                                    <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
+                                                    {item.name}
                                                 </a>
                                             </li>
                                         ))}
