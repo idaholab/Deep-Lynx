@@ -1,13 +1,14 @@
 import jwt_decode from 'jwt-decode';
-import { configInstance } from './config';
+import {configInstance} from './config';
 import buildURL from 'build-url';
-import { UserT } from './types';
-import { config } from 'process';
+import {UserT} from './types';
+import {config} from 'process';
 const axios = require('axios').default;
+import Cookies from 'js-cookie';
 
 export default class Authentication {
     IsAdmin(): boolean {
-        const user = window.localStorage.getItem('user');
+        const user = Cookies.get('user');
         if (user) {
             const userT: UserT = JSON.parse(user);
             return userT.admin;
@@ -16,7 +17,7 @@ export default class Authentication {
     }
 
     CurrentUser(): UserT | null {
-        const user = window.localStorage.getItem('user');
+        const user = Cookies.get('user');
         if (user) {
             const userT: UserT = JSON.parse(user);
             return userT;
@@ -25,7 +26,7 @@ export default class Authentication {
     }
 
     Auth(resource: string, action: string, containerID: string): boolean {
-        const user = window.localStorage.getItem('user');
+        const user = Cookies.get('user');
 
         if (user) {
             const userT: UserT = JSON.parse(user);
@@ -42,7 +43,7 @@ export default class Authentication {
     }
 
     async LoginFromToken(token: string, state: string): Promise<boolean> {
-        const storedState = window.localStorage.getItem('state');
+        const storedState = Cookies.get('state');
 
         if (state !== storedState) return false;
 
@@ -54,9 +55,9 @@ export default class Authentication {
                 code: token,
                 redirect_uri: `${configInstance.apiURI}`,
                 client_id: configInstance.deepLynxAppID,
-                code_verifier: window.localStorage.getItem('code_challenge'),
+                code_verifier: Cookies.get('code_challenge'),
             },
-            { headers: { 'Access-Controle-Allow-Origin': '*' } },
+            {headers: {'Access-Controle-Allow-Origin': '*'}},
         );
 
         if (resp.status < 200 || resp.status > 299 || resp.data.isError) {
@@ -66,34 +67,34 @@ export default class Authentication {
         const decodedToken = jwt_decode(resp.data.access_token);
 
         // store user
-        localStorage.setItem('user', JSON.stringify(decodedToken));
-        localStorage.setItem('user.token', resp.data.access_token);
+        Cookies.set('user', JSON.stringify(decodedToken));
+        Cookies.set('user.token', resp.data.access_token);
         return new Promise((resolve) => resolve(true));
     }
 
     RetrieveJWT(): string {
-        const jwt = localStorage.getItem('user.token');
+        const jwt = Cookies.get('user.token');
         return jwt ? jwt : '';
     }
 
     IsLoggedIn(): boolean {
-        const user = window.localStorage.getItem('user');
+        const user = Cookies.get('user');
 
         if (user) {
             const userT: UserT = JSON.parse(user);
             // check to see if login is expired
             if (Date.now() >= userT.exp * 1000) {
-                this.Logout()
-                return false
-            };
+                this.Logout();
+                return false;
+            }
             return true;
         }
         return false;
     }
 
     Logout() {
-        window.localStorage.removeItem('user');
-        window.localStorage.removeItem('user.token');
+        Cookies.remove('user');
+        Cookies.remove('user.token');
     }
 
     // retrieve user perms after login
@@ -104,19 +105,16 @@ export default class Authentication {
                 'Access-Control-Allow-Origin': '*',
                 Authorization: '',
             },
-            auth: {}
+            auth: {},
         };
 
         axiosConfig.headers.Authorization = `Bearer ${this.RetrieveJWT()}`;
         // @ts-ignore
         delete config.auth;
 
-        const user = localStorage.getItem('user');
+        const user = Cookies.get('user');
         // get user permissions
-        const resp = await axios.get(
-            buildURL(`${configInstance.apiURI}/users/permissions`),
-            axiosConfig
-        );
+        const resp = await axios.get(buildURL(`${configInstance.apiURI}/users/permissions`), axiosConfig);
 
         if (resp.status < 200 || resp.status > 299 || resp.data.isError) {
             return new Promise((resolve) => resolve(false));
@@ -125,8 +123,8 @@ export default class Authentication {
         if (user) {
             const userT: UserT = JSON.parse(user);
             userT.permissions = resp.data;
-            window.localStorage.setItem('user', JSON.stringify(userT));
-            window.localStorage.setItem('user.token', resp.data.access_token);
+            Cookies.set('user', JSON.stringify(userT));
+            Cookies.set('user.token', resp.data.access_token);
         }
 
         return new Promise((resolve) => resolve(true));

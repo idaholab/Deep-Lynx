@@ -1,7 +1,7 @@
 'use client';
 /*
   This example requires some changes to your config:
-  
+
   ```
   // tailwind.config.js
   module.exports = {
@@ -13,8 +13,8 @@
   }
   ```
 */
-import { Fragment, useState } from 'react'
-import { Dialog, Menu, Transition } from '@headlessui/react'
+import {Fragment, useState} from 'react';
+import {Dialog, Menu, Transition} from '@headlessui/react';
 import {
     Bars3Icon,
     BellIcon,
@@ -26,38 +26,36 @@ import {
     HomeIcon,
     UsersIcon,
     XMarkIcon,
-} from '@heroicons/react/24/outline'
-import { ChevronDownIcon, MagnifyingGlassIcon } from '@heroicons/react/20/solid'
-import dynamic from 'next/dynamic'
-import { cookies } from 'next/headers'
+} from '@heroicons/react/24/outline';
+import {ChevronDownIcon, MagnifyingGlassIcon} from '@heroicons/react/20/solid';
+import dynamic from 'next/dynamic';
+import {cookies} from 'next/headers';
 import DarkModeToggle from './dark-mode-toggle';
 
-
 const navigation = [
-    { name: 'Dashboard', href: '#', icon: HomeIcon, current: true },
-    { name: 'Team', href: '#', icon: UsersIcon, current: false },
-    { name: 'Projects', href: '#', icon: FolderIcon, current: false },
-    { name: 'Calendar', href: '#', icon: CalendarIcon, current: false },
-    { name: 'Documents', href: '#', icon: DocumentDuplicateIcon, current: false },
-    { name: 'Reports', href: '#', icon: ChartPieIcon, current: false },
-]
+    {name: 'Dashboard', href: '#', icon: HomeIcon, current: true},
+    {name: 'Team', href: '#', icon: UsersIcon, current: false},
+    {name: 'Projects', href: '#', icon: FolderIcon, current: false},
+    {name: 'Calendar', href: '#', icon: CalendarIcon, current: false},
+    {name: 'Documents', href: '#', icon: DocumentDuplicateIcon, current: false},
+    {name: 'Reports', href: '#', icon: ChartPieIcon, current: false},
+];
 const teams = [
-    { id: 1, name: 'Heroicons', href: '#', initial: 'H', current: false },
-    { id: 2, name: 'Tailwind Labs', href: '#', initial: 'T', current: false },
-    { id: 3, name: 'Workcation', href: '#', initial: 'W', current: false },
-]
+    {id: 1, name: 'Heroicons', href: '#', initial: 'H', current: false},
+    {id: 2, name: 'Tailwind Labs', href: '#', initial: 'T', current: false},
+    {id: 3, name: 'Workcation', href: '#', initial: 'W', current: false},
+];
 const userNavigation = [
-    { name: 'Your profile', href: '#' },
-    { name: 'Sign out', href: '#' },
-]
+    {name: 'Your profile', href: '#'},
+    {name: 'Sign out', href: '#'},
+];
 
 function classNames(...classes: any[]) {
-    return classes.filter(Boolean).join(' ')
+    return classes.filter(Boolean).join(' ');
 }
 
-
 export default function Sidebar(props: any) {
-    const [sidebarOpen, setSidebarOpen] = useState(false)
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     return (
         <>
@@ -113,7 +111,6 @@ export default function Sidebar(props: any) {
                                             />
                                         </div>
 
-
                                         <nav className="flex flex-1 flex-col">
                                             <ul role="list" className="flex flex-1 flex-col gap-y-7">
                                                 <li>
@@ -126,7 +123,7 @@ export default function Sidebar(props: any) {
                                                                         item.current
                                                                             ? 'bg-gray-800 text-white'
                                                                             : 'text-gray-400 hover:text-white hover:bg-gray-800',
-                                                                        'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
+                                                                        'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',
                                                                     )}
                                                                 >
                                                                     <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
@@ -147,7 +144,7 @@ export default function Sidebar(props: any) {
                                                                         team.current
                                                                             ? 'bg-gray-800 text-white'
                                                                             : 'text-gray-400 hover:text-white hover:bg-gray-800',
-                                                                        'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
+                                                                        'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',
                                                                     )}
                                                                 >
                                                                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border border-gray-700 bg-gray-800 text-[0.625rem] font-medium text-gray-400 group-hover:text-white">
@@ -182,11 +179,7 @@ export default function Sidebar(props: any) {
                     {/* Sidebar component, swap this element with another sidebar if you like */}
                     <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-4">
                         <div className="flex h-16 shrink-0 items-center">
-                            <img
-                                className="h-8 w-auto"
-                                src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"
-                                alt="Your Company"
-                            />
+                            <img className="h-8 w-auto" src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500" alt="Your Company" />
                         </div>
                         <nav className="flex flex-1 flex-col">
                             <ul role="list" className="flex flex-1 flex-col gap-y-7">
@@ -197,10 +190,8 @@ export default function Sidebar(props: any) {
                                                 <a
                                                     href={item.href}
                                                     className={classNames(
-                                                        item.current
-                                                            ? 'bg-gray-800 text-white'
-                                                            : 'text-gray-400 hover:text-white hover:bg-gray-800',
-                                                        'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
+                                                        item.current ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800',
+                                                        'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',
                                                     )}
                                                 >
                                                     <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
@@ -218,10 +209,8 @@ export default function Sidebar(props: any) {
                                                 <a
                                                     href={team.href}
                                                     className={classNames(
-                                                        team.current
-                                                            ? 'bg-gray-800 text-white'
-                                                            : 'text-gray-400 hover:text-white hover:bg-gray-800',
-                                                        'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
+                                                        team.current ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800',
+                                                        'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',
                                                     )}
                                                 >
                                                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border border-gray-700 bg-gray-800 text-[0.625rem] font-medium text-gray-400 group-hover:text-white">
@@ -282,7 +271,6 @@ export default function Sidebar(props: any) {
                                 </button>
                                 <DarkModeToggle />
 
-
                                 {/* Profile dropdown */}
                                 <Menu as="div" className="relative">
                                     <Menu.Button className="-m-1.5 flex items-center">
@@ -313,12 +301,12 @@ export default function Sidebar(props: any) {
                                         <Menu.Items className="absolute right-0 z-10 mt-2.5 w-32 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none">
                                             {userNavigation.map((item) => (
                                                 <Menu.Item key={item.name}>
-                                                    {({ active }) => (
+                                                    {({active}) => (
                                                         <a
                                                             href={item.href}
                                                             className={classNames(
                                                                 active ? 'bg-gray-50' : '',
-                                                                'block px-3 py-1 text-sm leading-6 text-gray-900'
+                                                                'block px-3 py-1 text-sm leading-6 text-gray-900',
                                                             )}
                                                         >
                                                             {item.name}
@@ -339,5 +327,5 @@ export default function Sidebar(props: any) {
                 </div>
             </div>
         </>
-    )
+    );
 }

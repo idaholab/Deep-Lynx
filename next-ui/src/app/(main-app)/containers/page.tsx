@@ -1,9 +1,8 @@
-import { client } from '../../_lib/api';
-import { ContainerT } from '../../_lib/types';
+import {client} from '../../_lib/api';
+import {ContainerT} from '../../_lib/types';
 
 export default async function Home() {
     const containers: ContainerT[] = await client.listContainers();
-    console.log(containers);
     return (
         <div>
             <h1>Containers</h1>
