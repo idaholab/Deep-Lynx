@@ -238,7 +238,8 @@ export default class ContainerImport {
         }
 
 
-        if (file.length === 0) {
+        // make an http request to retrieve the ontology file if a file or empty file is not present
+        if (file.length === 0 && input.path) {
             // configure and make an http request to retrieve the ontology file then parse ontology
             const axiosConfig: AxiosRequestConfig = {
                 headers: {
@@ -248,7 +249,7 @@ export default class ContainerImport {
             };
 
             try{
-                const resp = await axios.get(input.path!, axiosConfig);
+                const resp = await axios.get(input.path, axiosConfig);
                 return new Promise<Result<string>>((resolve, reject) => {
                     if (resp.status < 200 || resp.status > 299) reject(resp.status);
 
@@ -278,8 +279,7 @@ export default class ContainerImport {
                             ontologyVersionID!,
                             input.ontology_versioning_enabled,
                             update,
-                            err)
-
+                            `worker error for ontology importer ${err}`)
                         Logger.error(`worker error for ontology importer ${err}`)
                     })
 
@@ -315,8 +315,8 @@ export default class ContainerImport {
                                     ontologyVersionID!,
                                     input.ontology_versioning_enabled,
                                     update,
-                                    result.error)
-                                Logger.error(result.error)
+                                    result.error?.error)
+                                Logger.error(result.error?.error)
                             }
                             else Logger.info('ontology imported successfully')
                         })
@@ -426,7 +426,7 @@ export default class ContainerImport {
                         ontologyVersionID!,
                         input.ontology_versioning_enabled,
                         update,
-                        err)
+                        `worker error for ontology importer ${err}`)
                     Logger.error(`worker error for ontology importer ${err}`)
                 })
 
@@ -457,8 +457,8 @@ export default class ContainerImport {
                                 ontologyVersionID!,
                                 input.ontology_versioning_enabled,
                                 update,
-                                result.error)
-                            Logger.error(result.error)
+                                result.error?.error)
+                            Logger.error(result.error?.error)
                         }
                         else Logger.info('ontology imported successfully')
                     })
@@ -806,8 +806,8 @@ export default class ContainerImport {
                                 resolve(classLabel);
                             }
 
-                            const domainListClass = classListMap.get(classLabel);
                             const domainIDClass = classIDMap.get(domainClass['rdf:resource']);
+                            const domainListClass = classListMap.get(domainIDClass.name);
 
                             range.forEach((rangeClass: any) => {
                                 const propKey = domainClass['rdf:resource'] + rangeClass['rdf:resource'];
@@ -916,8 +916,8 @@ export default class ContainerImport {
                             resolve(classLabel);
                         }
 
-                        const domainListClass = classListMap.get(classLabel);
                         const domainIDClass = classIDMap.get(domainClass['rdf:resource']);
+                        const domainListClass = classListMap.get(domainIDClass.name);
 
                         // if the data property range is not an enum of strings, determine the primitive type
                         let target;
