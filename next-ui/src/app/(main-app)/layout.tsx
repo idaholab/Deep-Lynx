@@ -3,8 +3,6 @@ import {Inter} from 'next/font/google';
 import '@/app/globals.css';
 // import Navbar from '@/app/_components/navbar';
 import {ThemeProvider} from '@/app/_components/theme-provider';
-
-import clsx from 'clsx';
 import {cookies} from 'next/headers';
 
 const inter = Inter({subsets: ['latin']});

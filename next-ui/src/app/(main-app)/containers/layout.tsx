@@ -31,8 +31,8 @@ export default function RootLayout({
           <body>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
 
-          <Sidebar />
-          {children}
+          <Sidebar>{children}</Sidebar>
+
           </ThemeProvider>
 
           </body>

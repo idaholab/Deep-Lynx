@@ -265,8 +265,8 @@ export default function Sidebar(props: any) {
                         {/* Separator */}
                         <div className="h-6 w-px bg-gray-900/10 lg:hidden" aria-hidden="true" />
 
-                        <div className="flex flex-1 gap-x-4 lg:gap-x-6 flex-row-reverse">
-                            {/* <form className="relative flex flex-1" action="#" method="GET">
+                        <div className="flex flex-1 gap-x-4 lg:gap-x-6">
+                            <form className="relative flex flex-1" action="#" method="GET">
                                 <label htmlFor="search-field" className="sr-only">
                                     Search
                                 </label>
@@ -281,7 +281,13 @@ export default function Sidebar(props: any) {
                                     type="search"
                                     name="search"
                                 />
-                            </form> */}
+                            </form>
+
+                            <select id="location" name="location" className="block rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6" defaultValue="Canada">
+                                <option>CoreII</option>
+                                <option>Beartooth</option>
+                                <option>Container Home</option>
+                            </select>
 
                             <div className="flex items-center gap-x-4 lg:gap-x-6">
                                 <button type="button" className="-m-2.5 p-2.5 text-gray-400 hover:text-gray-500">
