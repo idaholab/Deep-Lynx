@@ -1,7 +1,7 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
-import TypeMapping from '../../../../domain_objects/data_warehouse/etl/type_mapping';
+import TypeMapping, { ShapeHashArray } from '../../../../domain_objects/data_warehouse/etl/type_mapping';
 
 const format = require('pg-format');
 
@@ -129,6 +129,18 @@ export default class TypeMappingMapper extends Mapper {
 
     public CopyTransformations(userID: string, sourceMappingID: string, targetMappingID: string): Promise<Result<boolean>> {
         return super.runAsTransaction(this.copyTransformations(userID, sourceMappingID, targetMappingID));
+    }
+
+    public AddShapeHash(typeMappingID: string, shapeHash: string): Promise<Result<boolean>> {
+        return super.runStatement(this.addShapeHash(typeMappingID, shapeHash));
+    }
+
+    public RemoveShapeHash(typeMappingID: string, shapeHash: string): Promise<Result<boolean>> {
+        return super.runStatement(this.removeShapeHash(typeMappingID, shapeHash));
+    }
+
+    public async GetShapeHash(typeMappingID: string): Promise<Result<ShapeHashArray>> {
+        return super.retrieve(this.getShapeHash(typeMappingID), {resultClass: ShapeHashArray});
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -387,6 +399,30 @@ export default class TypeMappingMapper extends Mapper {
                    WHERE type_mapping_id = $2
             `,
             values: [userID, sourceMappingID, targetMappingID],
+        };
+    }
+
+    private addShapeHash(typeMappingID: string, shapeHash: string): QueryConfig {
+        return {
+            text: `INSERT INTO hash_groupings(type_mapping_id, shape_hash) VALUES ($1, $2)`,
+            values: [typeMappingID, shapeHash],
+        };
+    }
+
+    private removeShapeHash(typeMappingID: string, shapeHash: string): QueryConfig {
+        return {
+            text: `DELETE FROM hash_groupings WHERE type_mapping_id = $1 AND shape_hash = $2`,
+            values: [typeMappingID, shapeHash],
+        };
+    }
+
+    private getShapeHash(typeMappingID: string): QueryConfig {
+        return {
+            text: `SELECT array_agg(shape_hash) AS shape_hash_array
+                    FROM hash_groupings
+                    WHERE type_mapping_id = $1
+                    GROUP BY type_mapping_id`,
+            values: [typeMappingID],
         };
     }
 }

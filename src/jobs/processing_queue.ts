@@ -29,15 +29,16 @@ if (Config.cache_provider === 'memory') {
     });
 }
 
+
 void PostgresAdapter.Instance.init()
     .then(() => {
         void QueueFactory()
-            .then((queue) => {
+            .then(async (queue) => {
                 const destination = new Writable({
                     objectMode: true,
-                    write(chunk: any, encoding: string, callback: (error?: Error | null) => void) {
-                        const stagingRecord = plainToInstance(DataStaging, chunk as object);
-                        ProcessData(stagingRecord)
+                    write: async(chunk: any[], encoding: string, callback: (error?: Error | null) => void) => {
+                        const stagingRecords: DataStaging[] = plainToInstance(DataStaging, chunk as object as DataStaging[]);
+                        await ProcessData(...stagingRecords)
                             .then((result) => {
                                 if (result.isError) {
                                     Logger.error(`processing error: ${result.error?.error}`);
@@ -48,11 +49,9 @@ void PostgresAdapter.Instance.init()
                                 Logger.error(`unable to process data from queue ${e}`);
                                 callback();
                             });
-
                         return true;
                     },
                 });
-
                 destination.on('error', (e: Error) => {
                     void PostgresAdapter.Instance.close();
 
@@ -62,8 +61,12 @@ void PostgresAdapter.Instance.init()
                         process.exit(1);
                     }
                 });
-
-                queue.Consume(Config.process_queue, destination);
+                await queue.ConsumeMultiple(Config.process_queue, 10, (messages) => {
+                    if(messages.length > 0){
+                        destination.write(messages)
+                    }
+                    return Promise.resolve()
+                });
             })
             .catch((e) => {
                 void PostgresAdapter.Instance.close();

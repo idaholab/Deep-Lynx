@@ -90,6 +90,19 @@ export default class TypeMappingRoutes {
             this.deleteTypeTransformation,
         );
 
+        app.post(
+            '/containers/:containerID/import/datasources/:sourceID/mappings/:mappingID/shapehash',
+            ...middleware,
+            authInContainer('write', 'data'),
+            this.addShapeHashToMapping,
+        );
+        app.delete(
+            '/containers/:containerID/import/datasources/:sourceID/mappings/:mappingID/shapehash',
+            ...middleware,
+            authInContainer('write', 'data'),
+            this.removeShapeHashFromMapping,
+        );
+
         app.get('/containers/:containerID/transformations/:transformationID', ...middleware, authInContainer('read', 'data'), this.retrieveTypeTransformation);
     }
 
@@ -578,6 +591,40 @@ export default class TypeMappingRoutes {
                 .finally(() => next());
         } else {
             Result.Failure(`target type transformation not found`).asResponse(res);
+            next();
+        }
+    }
+
+    private static addShapeHashToMapping(req: Request, res: Response, next: NextFunction) {
+        if (req.typeMapping) {
+            mappingRepo
+                .addShapeHash(req.typeMapping.id!, req.body.shape_hash)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`Type Mapping not found`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static removeShapeHashFromMapping(req: Request, res: Response, next: NextFunction) {
+        if (req.typeMapping) {
+            mappingRepo
+                .removeShapeHash(req.typeMapping.id!, req.body.shape_hash)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`Type Mapping not found`, 404).asResponse(res);
             next();
         }
     }
