@@ -1,10 +1,10 @@
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import PostgresAdapter from '../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import Logger from '../../services/logger';
 import UserMapper from '../../data_access_layer/mappers/access_management/user_mapper';
 import KeyPairMapper from '../../data_access_layer/mappers/access_management/keypair_mapper';
-import { KeyPair, User } from '../../domain_objects/access_management/user';
+import {KeyPair, User} from '../../domain_objects/access_management/user';
 import KeyPairRepository from '../../data_access_layer/repositories/access_management/keypair_repository';
 
 describe('A KeyPair', async () => {
@@ -32,8 +32,8 @@ describe('A KeyPair', async () => {
                 admin: false,
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),
-                roles: ['superuser']
-            })
+                roles: ['superuser'],
+            }),
         );
 
         expect(user.isError).false;
@@ -62,8 +62,8 @@ describe('A KeyPair', async () => {
                 admin: false,
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),
-                roles: ['superuser']
-            })
+                roles: ['superuser'],
+            }),
         );
 
         expect(user.isError).false;
@@ -87,5 +87,6 @@ describe('A KeyPair', async () => {
         expect(keypairDelete.isError).false;
 
         return storage.Delete(user.value.id!);
+        // @ts-ignore
     }).timeout(5000); // bcrypt takes its time
 });

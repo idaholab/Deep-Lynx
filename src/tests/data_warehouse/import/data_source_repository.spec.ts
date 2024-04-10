@@ -237,6 +237,7 @@ describe('A Datasource Repository', async () => {
             });
             downloadStream?.pipe(writer);
         });
+        // @ts-ignore
     }).timeout(4000);
 });
 

@@ -232,6 +232,7 @@ describe('A Container Repository', async () => {
 
         // fs.unlinkSync(`${container.id}_export.json`);
         return repository.delete(container);
+        // @ts-ignore
     }).timeout(2000);
 
     it('can import a container', async () => {
@@ -257,7 +258,7 @@ describe('A Container Repository', async () => {
         let downloadStream = await new FileRepository().downloadFile(file.value);
         expect(downloadStream).not.undefined;
 
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
             downloadStream?.on('end', async function () {
                 // perform ontology import
                 const fileBuffer = fs.readFileSync(`${container.id}_export.json`);
@@ -268,9 +269,10 @@ describe('A Container Repository', async () => {
                 fs.unlinkSync(`${container.id}_export.json`);
                 void repository.delete(container);
                 resolve(undefined);
-            })
+            });
             downloadStream?.pipe(writer);
         });
 
+        // @ts-ignore
     }).timeout(6000);
 });

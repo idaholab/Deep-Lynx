@@ -367,6 +367,7 @@ describe('A Node Repository', async () => {
 
         await nodeRepo.delete(mixed[0]);
         return nodeRepo.delete(mixed[1]);
+        // @ts-ignore
     }).timeout(30000);
 
     it('can query raw data on nodes', async () => {

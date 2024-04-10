@@ -29,7 +29,9 @@ describe('A Node Schema Generator', async () => {
     let user: User;
     let dataSource: DataSource;
 
-    if(process.env.TIMESCALEDB_ENABLED === "false") {return}
+    if (process.env.TIMESCALEDB_ENABLED === 'false') {
+        return;
+    }
 
     // this covers testing the hypertable creation and deletion as well
     before(async function () {
@@ -341,6 +343,7 @@ describe('A Node Schema Generator', async () => {
         }
 
         return Promise.resolve();
+        // @ts-ignore
     }).timeout(300000);
 });
 

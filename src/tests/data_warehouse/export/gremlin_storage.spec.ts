@@ -189,6 +189,7 @@ describe('Gremlin Exporter', async () => {
         expect(associatedNodes.value).empty;
 
         return Promise.resolve();
+        // @ts-ignore
     }).timeout(300000);
 });
 

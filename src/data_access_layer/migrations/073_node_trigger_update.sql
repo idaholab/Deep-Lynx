@@ -41,6 +41,7 @@ END;
 $$ language plpgsql;
 
 DROP TRIGGER IF EXISTS node_insert_trigger ON nodes;
+DROP TRIGGER IF EXISTS node_insert_trigger ON default_node_partition;
 
 CREATE TRIGGER node_insert_trigger BEFORE INSERT ON nodes
     FOR EACH ROW EXECUTE PROCEDURE node_insert_trigger();
