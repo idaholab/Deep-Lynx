@@ -22,7 +22,7 @@ Leveraging this rich set of integrations allows for projects to efficiently cons
 `DeepLynx` is documented in the following ways
 
 1. [Wiki](https://github.com/idaholab/Deep-Lynx/wiki/Home)
-2. API level documentation in the form of an OpenAPI (Swagger) collection - found in the `API Documentation` folder
+2. API level documentation in the form of an OpenAPI (Swagger) collection - found in the `documentation` folder
 
 ## **Installation and Running DeepLynx**
 
@@ -41,7 +41,10 @@ The initial startup might take a while as the operation must first fetch the pre
 
 
 ### **Build From Source**
-_________
+________
+### Legacy Server
+
+These instructions build out the legacy node.js backend and the UI for DeepLynx. As of 4/2024 development of new features on the legacy node.js backend of DeepLynx has been frozen in favor of a Rust server that will proxy requests to the legacy server when needed.
 #### **Requirements**
 
 -   [node.js](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) ^16.x
@@ -51,7 +54,7 @@ _________
 -   [Rust](https://www.rust-lang.org/tools/install) ^1.x.x (set to default stable)
 -   [Docker](https://docs.docker.com/engine/install/) ^18.x - _optional_ - for ease of use in development
 
-**_Data Source Requirements_**
+**_Data Persistence Requirements_**
 
 - **Required** - PostgreSQL ^12.x
 - **Required** - `pg-crypto` Postgres extension (automatically included with Postgres > 12 and in the Docker images)
@@ -63,15 +66,17 @@ You must follow these steps in the exact order given. Failure to do so will caus
 
 2. Clone the DeepLynx [repository](https://github.inl.gov/Digital-Engineering/DeepLynx/tree/main).
 
-3. Run `yarn install` to set up all the node library dependencies.
+3. Navigate to `server/legacy`.
 
-4. Copy and rename `.env-sample` to `.env`.
+4. Run `yarn install` to set up all the node library dependencies.
 
-5. Update `.env` file. See the `readme` or comments in the file itself for details. The main setting people usually change is setting `TIMESCALEDB_ENABLED=true` if they plan on ever working with timeseries data.
+5. Copy and rename `.env-sample` to `.env`.
 
-6. To build the database using docker, follow step **a**. To use a dedicated PostgreSQL database, follow step **b**. Then continue to step 7.   
+6. Update `.env` file. See the `readme` or comments in the file itself for details. The main setting people usually change is setting `TIMESCALEDB_ENABLED=true` if they plan on ever working with time-series data.
 
-- 6a) Building the database using Docker:  
+7. To build the database using docker, follow step **a**. To use a dedicated PostgreSQL database, follow step **b**. Then continue to step 7.   
+
+- 7a) Building the database using Docker:  
      - Ensure Docker is installed. You can find the download here: https://www.docker.com/products/docker-desktop.  
      - Run `npm run docker:postgres:build` to create a docker image containing a Postgres data source.  
      - Mac users may need to create the directory to mount to the docker container at `/private/var/lib/docker/basedata`. If this directory does not exist, please create it (you may need to use `sudo` as in `sudo mkdir /private/var/lib/docker/basedata`).  
@@ -79,12 +84,12 @@ You must follow these steps in the exact order given. Failure to do so will caus
 ![image](uploads/e1d906d0399b1e4f890bf61035e5b64c/image.png)
      - Run `npm run docker:postgres:run` to run the created docker image (For Mac users, there is an alternative command `npm run mac:docker:postgres:run`).  
      - **Alternatively** you may use `npm run docker:timescale:run` (`npm run mac:docker:timescale:run` for Mac)to run a Postgres Docker image with the TimescaleDB extension already installed - to use TimescaleDB change the `.env` environment variable `TIMESCALEDB_ENABLED` to be `true`
-- 6b) Building the database using a dedicated PostgreSQL database:  
+- 7b) Building the database using a dedicated PostgreSQL database:  
      - Ensure PostgreSQL is installed. You can find the download here: https://www.postgresql.org/download/. Please see [this page](DeepLynx-Requirements) for the latest requirements on PostgreSQL version.  
      - Run pgAdmin and create a new database. The database name should match whatever value is provided in the `CORE_DB_CONNECTION_STRING` of the `.env` file. The default value is `deep_lynx`.  
      - Ensure a user has been created that also matches the `CORE_DB_CONNECTION_STRING` and that the user's password has been set appropriately. The default username is `postgres` and the default password is `deeplynxcore`.  
 
-7. Run `yarn run build` to build the internal modules and bundled administration GUI. **Note** You must re-run this command  if you make changes to the administration GUI.
+8Run `yarn run build` to build the internal modules and bundled administration GUI. **Note** You must re-run this command  if you make changes to the administration GUI.
 
 * NOTE: If you are on some sort of encrypted network, you may encounter an error similar to the following when attempting to set up any rust libraries: `warning: spurious network error... SSL connect error... The revocation function was unable to check revocation for the certificate.` This can be solved by navigating to your root cargo config file (`~/.cargo/config.toml`) file and adding the following lines. If you do not have an existing config.toml file at your root `.cargo` directory, you will need to make one:
 
@@ -124,28 +129,13 @@ In order to facilitate local development, a method has been provided to configur
 
 A database migration step takes place each time you launch the application. This ensures that your local database always has the correct schema for your branch.
 
-### **Enabling TimescaleDB**
-
-DeepLynx ships with the capability to utilize a Postgres plugin called TimescaleDB. We use this for the storage of time-series data as well as a potential target for raw data retention. This is a powerful tool and you must have it enabled in order to store time-series data on nodes.
-
-1. Change the `TIMESCALEDB_ENABLED` environment variable to read `true`
-2. Restart the application
-
-**Note:** Once you enable TimescaleDB you **cannot** disable it. Please make sure you absolutely need this extension of DeepLynx before taking steps to enable.
-
 ## **Testing**
 
 This application uses [Mocha](https://mochajs.org/) and [Chai](https://www.chaijs.com/) for its unit and integration tests. Visit their respective websites and documentation to learn more about how to use and develop tests with their platforms.
 
-**IMPORTANT NOTE**
-
-If you decide to test graph functionality (Gremlin functionality in particular) in isolation or use something other than a CosmosDB or CosmosDB emulator you _must_ ensure that the `DATA_SOURCE_GRAPHSON_V1` environment variable is left blank. Failure to do so means you might be communicating in an unsupported format, or an unsupported combination of formats.
-
-You must also have run DeepLynx at least once in order to run the testing suite.
-
 ## **Available Commands**
 
-Below is a list of all `npm run` commands as listed in the `package.json` file.
+Below is a list of all `yarn run` commands as listed in the `package.json` file.
 
 - `docker:api:build` Creates a docker image of DeepLynx injecting the .env file for configuration.
 - `docker:api:run` Runs previously created DeepLynx image.

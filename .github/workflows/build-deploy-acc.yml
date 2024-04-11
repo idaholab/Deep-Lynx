@@ -39,7 +39,7 @@ jobs:
           az cloud set --name AzureUSGovernment
           az login --service-principal -u $ACR_SP_USER -p $ACR_SP_PASSWORD --tenant $ACR_SP_TENANT
           az account set --subscription $ACR_SUBSCRIPTION
-          az acr build -r $ACR_REGISTRY -f $GITHUB_WORKSPACE/deeplynx/Dockerfile -t $ACR_PATH:$GITHUB_SHA-latest .
+          az acr build -r $ACR_REGISTRY -f $GITHUB_WORKSPACE/deeplynx/server/legacy/Dockerfile -t $ACR_PATH:$GITHUB_SHA-latest .
 
 #  scan-deeplynx-acc:
 #    runs-on: [ self-hosted ]
@@ -225,10 +225,10 @@ jobs:
           git clone ${{ secrets.DL_PY_SDK }} ~/deeplynx-py-sdk && sudo chmod -R 777 ~/deeplynx-py-sdk
           git clone ${{ secrets.DL_CSHARP_SDK }} ~/deeplynx-csharp-sdk && sudo chmod -R 777 ~/deeplynx-csharp-sdk
           git clone ${{ secrets.DL_R_SDK }} ~/deeplynx-r-sdk && sudo chmod -R 777 ~/deeplynx-r-sdk
-          java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l typescript-axios -o ~/deeplynx-js-sdk
-          java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l csharp -o ~/deeplynx-csharp-sdk
-          java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l r -o ~/deeplynx-r-sdk
-          java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l python -o ~/deeplynx-py-sdk --additional-properties packageName=deep_lynx projectName=deep_lynx
+          java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/documentation/Core.swagger_collection.yaml -l typescript-axios -o ~/deeplynx-js-sdk
+          java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/documentation/Core.swagger_collection.yaml -l csharp -o ~/deeplynx-csharp-sdk
+          java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/documentation/Core.swagger_collection.yaml -l r -o ~/deeplynx-r-sdk
+          java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/documentation/Core.swagger_collection.yaml -l python -o ~/deeplynx-py-sdk --additional-properties packageName=deep_lynx projectName=deep_lynx
           cd ~/deeplynx-js-sdk
           git config --global user.email "${{ secrets.GH_ENTERPRISE_EMAIL }}" && git config --global user.name "${{ secrets.GH_ENTERPRISE_USERNAME }}"
           git add . && git commit -m $GITHUB_SHA || true
