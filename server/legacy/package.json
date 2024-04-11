@@ -33,7 +33,7 @@
         "start:docker": "node ./dist/main.js",
         "test": "cross-env TS_NODE_FILES=true npm run test:raw",
         "test:raw": " cd src/tests && cross-env-shell nyc --reporter=html --report-dir=./src/tests/coverage mocha --exit -r ts-node/register -r dotenv/config --recursive \"**/*.spec.ts\" \"**/**/*.spec.ts\" \"**/**/**/*.spec.ts\" --prof --timeout 30000 --reporter mochawesome --require mochawesome/register ",
-        "prepare": "husky install"
+        "prepare": "cd ../../ && husky install server/legacy/.husky"
     },
     "devDependencies": {
         "@azure/storage-blob": "^12.1.2",
