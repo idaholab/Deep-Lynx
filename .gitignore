@@ -59,3 +59,4 @@ devenv.local.nix
 /.yarn/
 /server/legacy/public-key.pem
 /server/legacy/private-key.pem
+/server/deeplynx/target/
