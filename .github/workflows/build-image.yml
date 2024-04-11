@@ -25,8 +25,8 @@ jobs:
           ACR_SUBSCRIPTION: ${{ secrets.CI_ACR_SUBSCRIPTION }}
           NODE_ENV: ${{ secrets.NODE_ENV }}
         run: |
-          cd $GITHUB_WORKSPACE/deeplynx
+          cd $GITHUB_WORKSPACE/deeplynx/server/legacy
           az cloud set --name AzureUSGovernment
           az login --service-principal -u $ACR_SP_USER -p $ACR_SP_PASSWORD --tenant $ACR_SP_TENANT
           az account set --subscription $ACR_SUBSCRIPTION
-          az acr build -r $ACR_REGISTRY -f ./server/legacy/Dockerfile -t $ACR_PATH:$GITHUB_SHA-manual .
+          az acr build -r $ACR_REGISTRY -f Dockerfile -t $ACR_PATH:$GITHUB_SHA-manual .
