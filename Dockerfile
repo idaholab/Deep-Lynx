@@ -11,7 +11,7 @@ WORKDIR /srv/core_api
 COPY . .
 ENV RUSTFLAGS="-C target-feature=-crt-static"
 
-WORKDIR /srv/core_api/NodeLibraries/deeplynx
+WORKDIR /srv/core_api/server/legacy/NodeLibraries/deeplynx
 RUN yarn install
 RUN yarn run build
 
@@ -35,11 +35,11 @@ ENV RUN_JOBS=false
 ENV CORE_DB_CONNECTION_STRING=postgresql://postgres:root@timescaledb:5432/deep_lynx_dev
 
 # Create the base directory and set the rust version to use default stable
-RUN mkdir /srv/core_api
+RUN mkdir /srv/core_api/server/legacy
 
-WORKDIR /srv/core_api
-COPY package*.json ./
-COPY yarn.lock ./
+WORKDIR /srv/core_api/server/legacy
+COPY server/legacy/package*.json ./
+COPY server/legacy/yarn.lock ./
 
 RUN corepack enable
 RUN npm install npm@latest --location=global
@@ -48,10 +48,12 @@ RUN npm install pm2 --location=global
 RUN npm install cargo-cp-artifact --location=global
 
 # Bundle app source
+WORKDIR /srv/core_api
 COPY . .
-RUN rm -rf /srv/core_api/NodeLibraries/deeplynx
-COPY --from=build-rust /srv/core_api/NodeLibraries/deeplynx /srv/core_api/NodeLibraries/deeplynx
+RUN rm -rf /srv/core_api/server/legacy/NodeLibraries/deeplynx
+COPY --from=build-rust /srv/core_api/server/legacy/NodeLibraries/deeplynx /srv/core_api/server/legacy/NodeLibraries/deeplynx
 
+WORKDIR /srv/core_api/server/legacy
 RUN yarn install
 RUN yarn run build:docker
 # Build the Viewer and Webapp

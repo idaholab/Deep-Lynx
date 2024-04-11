@@ -57,3 +57,5 @@ devenv.local.nix
 /public-key.pem
 /yarn-error.log
 /.yarn/
+/server/legacy/public-key.pem
+/server/legacy/private-key.pem

@@ -28,8 +28,8 @@
     "forceConsistentCasingInFileNames": true
   },
   "exclude": [
-    "./AdminWebApp",
+    "../../ui/AdminWebApp",
     "./NodeLibraries",
-    "./WebGLViewer"
+    "../../ui/WebGLViewer"
   ]
 }
