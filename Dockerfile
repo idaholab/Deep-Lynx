@@ -5,7 +5,7 @@ RUN apk add --update npm
 RUN npm install -g @napi-rs/cli
 RUN corepack enable
 
-RUN mkdir /srv/core_api
+RUN mkdir -p /srv/core_api
 WORKDIR /srv/core_api
 
 COPY . .
@@ -35,7 +35,7 @@ ENV RUN_JOBS=false
 ENV CORE_DB_CONNECTION_STRING=postgresql://postgres:root@timescaledb:5432/deep_lynx_dev
 
 # Create the base directory and set the rust version to use default stable
-RUN mkdir /srv/core_api/server/legacy
+RUN mkdir -p /srv/core_api/server/legacy
 
 WORKDIR /srv/core_api/server/legacy
 COPY server/legacy/package*.json ./
