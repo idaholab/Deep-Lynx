@@ -334,9 +334,11 @@ export class Repository {
     // is necessary.
     and(repo?: Repository) {
         // create a where clause if there isn't one present
-        if (!this._query.WHERE) {this._query.WHERE = []}
+        if (!this._query.WHERE) {
+            this._query.WHERE = [];
+        }
         // if where clause is empty, use WHERE instead of AND
-        const conjunction = (this._query.WHERE?.length === 0) ? 'WHERE' : 'AND';
+        const conjunction = this._query.WHERE?.length === 0 ? 'WHERE' : 'AND';
 
         if (repo?._query.WHERE) {
             let query = repo._query.WHERE.join(' ');
@@ -355,9 +357,11 @@ export class Repository {
     // is necessary.
     or(repo?: Repository) {
         // create a where clause if there isn't one present
-        if (!this._query.WHERE) {this._query.WHERE = []}
+        if (!this._query.WHERE) {
+            this._query.WHERE = [];
+        }
         // if where clause is empty, use WHERE instead of OR
-        const conjunction = (this._query.WHERE?.length === 0) ? 'WHERE' : 'OR';
+        const conjunction = this._query.WHERE?.length === 0 ? 'WHERE' : 'OR';
 
         if (repo?._query.WHERE) {
             let query = repo._query.WHERE.join(' ');
@@ -964,6 +968,7 @@ export class Repository {
                 }
 
                 case 'csv': {
+                    // @ts-ignore
                     stream.pipe(csvStringify({header: true})).pipe(pass);
                     contentType = 'text/csv';
                     break;

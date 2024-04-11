@@ -613,5 +613,6 @@ describe('We can generate test data', async () => {
         expect(edges.value.length).gt(1);
 
         return Promise.resolve();
+        // @ts-ignore
     }).timeout(120000);
 });

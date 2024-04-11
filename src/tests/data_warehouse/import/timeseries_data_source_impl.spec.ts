@@ -490,6 +490,7 @@ describe('A Timeseries DataSource Implementation can', async () => {
         fs.unlinkSync('./test-timeseries-data.csv');
         fs.unlinkSync('./test-timeseries-data.json');
         return sourceRepo.delete(source!);
+        // @ts-ignore
     }).timeout(10000);
 
     it('can copy from hypertable to a stream with secondary index', async () => {
@@ -591,8 +592,10 @@ describe('A Timeseries DataSource Implementation can', async () => {
         fs.unlinkSync('./test-timeseries-data.csv');
         fs.unlinkSync('./test-timeseries-data.json');
         return sourceRepo.delete(source!);
+        // @ts-ignore
     }).timeout(10000);
 
+    // @ts-ignore
     it('can ingest data to a hypertable using dl-fast-load', async (done) => {
         if (process.env.TEST_FAST_LOAD !== 'true') {
             done();
@@ -691,6 +694,7 @@ describe('A Timeseries DataSource Implementation can', async () => {
         });
 
         stream.pipe(pass);
+        // @ts-ignore
     }).timeout(30000);
 });
 

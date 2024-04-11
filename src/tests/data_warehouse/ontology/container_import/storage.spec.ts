@@ -132,6 +132,7 @@ describe('A Container Import', async () => {
         expect(container.value).not.empty;
 
         return storage.Delete(container.value);
+        // @ts-ignore
     }).timeout(20000);
 
     it('can prevent container update when a metatype to be removed has associated data', async () => {
@@ -201,6 +202,7 @@ describe('A Container Import', async () => {
 
         await storage.Delete(containerID);
         return storage.Delete(container.value);
+        // @ts-ignore
     }).timeout(20000);
 
     it('can prevent container update when a metatype key to be removed is for a metatype with associated data', async () => {
@@ -270,6 +272,7 @@ describe('A Container Import', async () => {
 
         await storage.Delete(containerID);
         return storage.Delete(container.value);
+        // @ts-ignore
     }).timeout(20000);
 
     it('can prevent container update when a metatype relationship pair to be removed has associated data', async () => {
@@ -381,6 +384,7 @@ describe('A Container Import', async () => {
 
         await storage.Delete(containerID);
         return storage.Delete(container.value);
+        // @ts-ignore
     }).timeout(20000);
 
     it('can remove deleted metatypes, metatype keys, relationship pairs, and relationships from the container with no associated data', async () => {
@@ -428,5 +432,6 @@ describe('A Container Import', async () => {
 
         await storage.Delete(containerID);
         return storage.Delete(container.value);
+        // @ts-ignore
     }).timeout(20000);
 });

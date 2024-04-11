@@ -29,7 +29,7 @@ import TypeTransformationMapper from '../../data_access_layer/mappers/data_wareh
 import TypeMappingMapper from '../../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper';
 import {ProcessData} from '../../data_processing/process';
 
-describe('The GraphQL Schema Generator', async () => {
+describe('The GraphQL Schema Generator', async function () {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let typeMappingID: string = '';
     let typeMapping: TypeMapping | undefined;
@@ -655,7 +655,8 @@ describe('The GraphQL Schema Generator', async () => {
         return PostgresAdapter.Instance.close();
     });
 
-    it('can generate a valid schema', async () => {
+    // @ts-ignore
+    it('can generate a valid schema', async function () {
         const schemaGenerator = new GraphQLRunner();
 
         const containerSchema = await schemaGenerator.ForContainer(containerID, {fullSchema: true});
@@ -718,6 +719,7 @@ describe('The GraphQL Schema Generator', async () => {
         expect((typeMap['Part'] as GraphQLObjectType).getFields()['name'].type).eq(GraphQLString);
         expect((typeMap['Part'] as GraphQLObjectType).getFields()['price'].type).eq(GraphQLFloat);
         expect((typeMap['Part'] as GraphQLObjectType).getFields()['quantity'].type).eq(GraphQLFloat);
+        // @ts-ignore
     }).timeout(10000);
 
     // the processed data should generate 1 Maintenance record and 2 Maintenance Entry records by this point
