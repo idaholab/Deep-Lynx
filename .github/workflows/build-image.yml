@@ -29,4 +29,4 @@ jobs:
           az cloud set --name AzureUSGovernment
           az login --service-principal -u $ACR_SP_USER -p $ACR_SP_PASSWORD --tenant $ACR_SP_TENANT
           az account set --subscription $ACR_SUBSCRIPTION
-          az acr build -r $ACR_REGISTRY -f server/legacy/Dockerfile -t $ACR_PATH:$GITHUB_SHA-manual .
+          az acr build -r $ACR_REGISTRY -f ./server/legacy/Dockerfile -t $ACR_PATH:$GITHUB_SHA-manual .
