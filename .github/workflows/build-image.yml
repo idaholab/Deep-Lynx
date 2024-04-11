@@ -25,7 +25,7 @@ jobs:
           ACR_SUBSCRIPTION: ${{ secrets.CI_ACR_SUBSCRIPTION }}
           NODE_ENV: ${{ secrets.NODE_ENV }}
         run: |
-          cd deeplynx/server/legacy
+          cd server/legacy
           az cloud set --name AzureUSGovernment
           az login --service-principal -u $ACR_SP_USER -p $ACR_SP_PASSWORD --tenant $ACR_SP_TENANT
           az account set --subscription $ACR_SUBSCRIPTION
