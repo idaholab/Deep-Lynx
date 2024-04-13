@@ -1,6 +1,11 @@
+use std::env;
 use std::process::{Command, Stdio};
 
 fn main() {
+    if env::var("SKIP_BUILDING_LEGACY").unwrap_or("0".to_string()) == "1" {
+        return;
+    }
+
     // we only want the build script to rerun if we make changes to the webapps and they need
     // to be recompiled or rebuilt in order for the nodejs process to pick them up
     println!("cargo::rerun-if-changed=../../ui/AdminWebApp/src");

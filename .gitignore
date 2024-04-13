@@ -61,3 +61,4 @@ devenv.local.nix
 /server/legacy/private-key.pem
 /server/deeplynx/target/
 /server/legacy/.yarn/
+/CAINLROOT.cer

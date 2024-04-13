@@ -13,7 +13,6 @@ use axum::{
     extract::{Request, State},
     http::uri::Uri,
     response::{IntoResponse, Response},
-    routing::get,
     Router,
 };
 use hyper::StatusCode;
@@ -47,10 +46,7 @@ async fn main() -> Result<(), ApplicationError> {
     let app = Router::new().fallback(handler).with_state(state);
 
     // if we're in development mode - start the legacy DeepLynx server
-    if config
-        .development_mode
-        .ok_or(ApplicationError::Application)?
-    {
+    if config.development_mode.unwrap_or(false) {
         tokio::spawn(async move {
             Command::new("yarn")
                 .args(["run", "start"])
