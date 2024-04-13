@@ -1,7 +1,4 @@
 FROM rust:alpine3.19 as build
-# REMOVE
-COPY CAINLROOT.cer /etc/ssl/certs/CAINLROOT.cer
-RUN sed -ie "s/https/http/g" /etc/apk/repositories
 
 ENV RUSTFLAGS="-C target-feature=-crt-static"
 ENV RUN_MODE="build"
@@ -48,10 +45,6 @@ RUN cargo install --path .
 
 FROM node:alpine3.19 as production
 ENV DEVELOPMENT_MODE=false
-# REMOVE
-COPY CAINLROOT.cer /etc/ssl/certs/CAINLROOT.cer
-RUN sed -ie "s/https/http/g" /etc/apk/repositories
-RUN npm config set strict-ssl false
 
 RUN apk update && apk add supervisor
 RUN mkdir -p /srv/deeplynx/server/legacy
