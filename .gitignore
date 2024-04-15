@@ -62,3 +62,13 @@ devenv.local.nix
 /server/deeplynx/target/
 /server/legacy/.yarn/
 /CAINLROOT.cer
+# ignore artifacts of rust modules both pre- and post- switch- 
+# this will make branch switching easier for existing branches
+# during the transition period
+/server/legacy/NodeLibraries/deeplynx/Cargo.lock
+/server/legacy/NodeLibraries/deeplynx/target
+/server/legacy/NodeLibraries/deeplynx/*.node
+
+/NodeLibraries/deeplynx/Cargo.lock
+/NodeLibraries/deeplynx/target
+/NodeLibraries/deeplynx/*.node
