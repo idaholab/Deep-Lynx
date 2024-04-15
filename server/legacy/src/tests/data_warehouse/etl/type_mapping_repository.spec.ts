@@ -194,13 +194,6 @@ describe('A Type Mapping Repository', async () => {
         return Promise.resolve();
     });
 
-    after(async () => {
-        await UserMapper.Instance.Delete(user.id!);
-        await ContainerMapper.Instance.Delete(container2ID);
-        await ContainerMapper.Instance.Delete(containerID);
-        return PostgresAdapter.Instance.close();
-    });
-
     it('can save a Type Mapping', async () => {
         const repo = new TypeMappingRepository();
         const mapping = new TypeMapping({

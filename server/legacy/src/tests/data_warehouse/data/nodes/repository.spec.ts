@@ -240,9 +240,8 @@ describe('A Node Repository', async () => {
 
         saved = await nodeRepo.bulkSave(user, mixed);
         expect(saved.isError, JSON.stringify(saved.error)).false;
-        mixed.forEach((node) => {
-            expect(node.id).oneOf([originalID1, originalID2]);
-        });
+        expect(mixed[0].id).oneOf([originalID1,originalID2])
+        expect(mixed[1].id).oneOf([originalID1,originalID2])
 
         await nodeRepo.delete(mixed[0]);
         return nodeRepo.delete(mixed[1]);

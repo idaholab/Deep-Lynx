@@ -262,8 +262,9 @@ describe('A Container Repository', async () => {
             downloadStream?.on('end', async function () {
                 // perform ontology import
                 const fileBuffer = fs.readFileSync(`${container.id}_export.json`);
+                const jsonFile = JSON.parse(fileBuffer.toString())
 
-                const containerImport = await repository.importOntology(container.id!, user, fileBuffer);
+                const containerImport = await repository.importOntology(container.id!, user, jsonFile);
                 expect(containerImport.isError).false;
 
                 fs.unlinkSync(`${container.id}_export.json`);

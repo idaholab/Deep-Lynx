@@ -227,8 +227,9 @@ describe('A Datasource Repository', async () => {
             downloadStream?.on('end', async function () {
                 // perform data source import
                 const fileBuffer = fs.readFileSync(`${containerID}_export.json`);
+                const jsonFile = JSON.parse(fileBuffer.toString())
 
-                const dataSourceImport = await sourceRepo.importDataSources(containerID!, user, fileBuffer);
+                const dataSourceImport = await sourceRepo.importDataSources(containerID!, user, jsonFile);
                 expect(dataSourceImport.isError).false;
 
                 fs.unlinkSync(`${containerID}_export.json`);
