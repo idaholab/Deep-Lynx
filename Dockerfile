@@ -1,22 +1,7 @@
-FROM rust:alpine3.18 as build-rust
-RUN apk add build-base musl-dev openssl-dev
-RUN apk update add --update nodejs=18.16.0-r1
-RUN apk add --update npm
-RUN npm install -g @napi-rs/cli
-RUN corepack enable
+FROM rust:alpine3.19 as build
 
-RUN mkdir -p /srv/core_api
-WORKDIR /srv/core_api
-
-COPY . .
 ENV RUSTFLAGS="-C target-feature=-crt-static"
-
-WORKDIR /srv/core_api/server/legacy/NodeLibraries/deeplynx
-RUN yarn install
-RUN yarn run build
-
-
-FROM node:lts-alpine3.18 as production
+ENV RUN_MODE="build"
 # these settings are needed for the admin web gui build, these variables are all baked into the Vue application and thus
 # are available to any end user that wants to dig deep enough in the webpage - as such we don't feel it a security risk
 # to have these env variables available to anyone running the history commmand on the container/image
@@ -34,38 +19,50 @@ ENV RUN_JOBS=false
 # set the default db to the one we'd see in the docker compose
 ENV CORE_DB_CONNECTION_STRING=postgresql://postgres:root@timescaledb:5432/deep_lynx_dev
 
-# Create the base directory and set the rust version to use default stable
-RUN mkdir -p /srv/core_api/server/legacy
+RUN apk update
+RUN apk add build-base musl-dev openssl-dev
+RUN apk update add --update nodejs=21.7.3
+RUN apk add --update npm
+RUN npm config set strict-ssl false
+RUN npm install -g @napi-rs/cli # this is needed for the Rust/Node library interopt
+RUN npm install npm@latest --location=global
+RUN npm update --location=global
+RUN npm install cargo-cp-artifact --location=global
+RUN corepack enable # enables the yarn commands
 
-WORKDIR /srv/core_api/server/legacy
-COPY server/legacy/package*.json ./
-COPY server/legacy/yarn.lock ./
+RUN mkdir -p /srv/deeplynx
+WORKDIR /srv/deeplynx
 
-RUN corepack enable
+COPY . .
+
+# triple check we're not pulling in node_modules from the host system
+RUN rm -rf /srv/deeplynx/server/legacy/node_modules
+RUN rm -rf /srv/deeplynx/ui/AdminWebApp/node_modules
+RUN rm -rf /srv/deeplynx/ui/WebGLViewer/node_modules
+
+WORKDIR /srv/deeplynx/server/deeplynx
+RUN cargo install --path .
+
+FROM node:alpine3.19 as production
+ENV DEVELOPMENT_MODE=false
+
+RUN apk update && apk add supervisor
+RUN mkdir -p /srv/deeplynx/server/legacy
+
+# need pm2 to run legacy server
 RUN npm install npm@latest --location=global
 RUN npm update --location=global
 RUN npm install pm2 --location=global
-RUN npm install cargo-cp-artifact --location=global
 
-# Bundle app source
-WORKDIR /srv/core_api
-COPY . .
-RUN rm -rf /srv/core_api/server/legacy/NodeLibraries/deeplynx
-COPY --from=build-rust /srv/core_api/server/legacy/NodeLibraries/deeplynx /srv/core_api/server/legacy/NodeLibraries/deeplynx
-
-WORKDIR /srv/core_api/server/legacy
-RUN yarn install
-RUN yarn run build:docker
-# Build the Viewer and Webapp
-RUN yarn run build:web
-RUN yarn run build:webgl
-# catch any env file a user might have accidentally built into the container
-RUN rm -rf .env
-
+COPY --from=build /srv/deeplynx/server/legacy /srv/deeplynx/server/legacy
+COPY --from=build /usr/local/cargo/bin/deeplynx /usr/local/bin/deeplynx
+COPY --from=build /srv/deeplynx/server/deeplynx/configs /configs
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Add docker-compose-wait tool ----------------------
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait
 RUN chmod +x /wait
 
 EXPOSE 8090
-CMD /wait && pm2-runtime ecosystem.config.js
+EXPOSE 4000
+CMD /wait && /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
