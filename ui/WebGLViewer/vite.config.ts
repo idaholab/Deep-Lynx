@@ -8,7 +8,7 @@ export default defineConfig({
   ],
   build: {
     emptyOutDir: true,
-    outDir: '../dist/http_server/web_gl',
+    outDir: './../../server/legacy/dist/http_server/web_gl',
     assetsDir: 'viewer',
     rollupOptions: {
       onwarn(warning, warn) {
