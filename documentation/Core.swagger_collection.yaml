@@ -226,7 +226,7 @@ paths:
         - Containers
       summary: List Data Source Templates
       description: List all Data Source Templates for the container.
-      operationId: RetrieveContainer
+      operationId: ListDataTemplates
       parameters:
         - name: container_id
           in: path
@@ -401,13 +401,44 @@ paths:
                   - id: 87da60d8-1445-3298-713a-957ad01549b8
                     name: Jazz
                     redirect_address: 'localhost:8282'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: boolean
+                    description: The result of the operation.
+                    example: true
+                  isError:
+                    type: boolean
+                    description: Indicates if the operation resulted in an error.
+                    example: false
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isError:
+                    type: boolean
+                    description: Indicates if the operation resulted in an error.
+                    example: true
+                  error:
+                    type: string
+                    description: Detailed error message including specific validation failures.
+                    example: "{\"errorCode\":500,\"error\":\"some data source templates do not pass validation An instance of DataSourceTemplate has failed the validation:\\n - property id has failed the following constraints: isUuid \\n\"}"
   '/containers/{container_id}/data_source_templates/{template_id}':
     delete:
       tags:
         - Containers
       summary: Delete Data Source Template
       description: Deletes a Data Source Template based on its UUID as supplied in the route.
-      operationId: ArchiveContainer
+      operationId: DeleteDataTemplate
       parameters:
         - name: container_id
           in: path
@@ -725,9 +756,14 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Node'
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Node'
+                    isError:
+                      type: boolean
       deprecated: false
       x-codegen-request-body-name: Body
   '/containers/{container_id}/graphs/nodes/{node_id}':
@@ -1248,6 +1284,17 @@ paths:
     get:
       summary: List Timeseries Sources for Node
       operationId: list-ts-for-node
+      parameters:
+        - schema:
+            type: string
+          name: container_id
+          in: path
+          required: true
+        - schema:
+            type: string
+          name: node_id
+          in: path
+          required: true
       responses:
         '200':
           description: OK
@@ -1406,6 +1453,7 @@ paths:
       tags:
         - Graph
       summary: Create or Update Edges
+      description: 'This endpoint will attempt to create a connection between two nodes. You can either pass in the node''s DeepLynx IDs, or the node''s original id, metatype id, and data source id to create these edges.'
       operationId: CreateOrUpdateEdges
       parameters:
         - name: container_id
@@ -1413,21 +1461,26 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateEdgesRequest'
+        required: true
       responses:
         '200':
           description: ''
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Edge'
-      description: 'This endpoint will attempt to create a connection between two nodes. You can either pass in the node''s DeepLynx IDs, or the node''s original id, metatype id, and data source id to create these edges.'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateOrUpdateEdgesRequest'
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Edge'
+                    isError:
+                      type: boolean
   '/containers/{container_id}/graphs/edges/{edge_id}':
     get:
       tags:
@@ -1860,7 +1913,7 @@ paths:
       summary: Create Metatype Key
       description: |-
         Creates a new key for a metatype. Keys consist of a unique key name (unique to the metatype only), key type, default values, and allowed values. Of those, only the first two are required.
-        The `dataType` field accepts only one of the following values: number, string, date, boolean, enumeration, file. 
+        The `dataType` field accepts only one of the following values: number, string, date, boolean, enumeration, file.
         The fields `defaultValue` and `options` will only accept an array of the following types: string, boolean, number, float.
         Pass in an array for bulk creation.
         Currently the validation and cardinality functionality of keys are NOT checked at data insertion.
@@ -2223,7 +2276,7 @@ paths:
       summary: Create Metatype Relationship Key
       description: |-
         Creates a new key for a metatype relationship. Keys consist of a unique key name (unique to the metatype relationship), key type, default values, and allowed values. Of those, only the first two are required.
-        The `dataType` field accepts only one of the following values: number, string, date, boolean, enumeration, file. 
+        The `dataType` field accepts only one of the following values: number, string, date, boolean, enumeration, file.
         The fields `defaultValue` and `options` will only accept an array of the following types: string, boolean, number, float.
       operationId: CreateMetatypeRelationshipKey
       parameters:
@@ -2794,78 +2847,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/GetDataSourceResponse'
       deprecated: false
-    put:
-      tags:
-        - Data Sources
-      summary: Set Data Source Configuration
-      description: Updates a data source's configuration in storage. Note that this request body's structure must match that of the data source's adapter type.
-      operationId: SetDataSourceConfiguration
-      parameters:
-        - name: container_id
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: data_source_id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateDataSourceConfig'
-        required: true
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UpdateDataSourceResponse'
-      deprecated: false
-      x-codegen-request-body-name: Body
-    delete:
-      tags:
-        - Data Sources
-      summary: Archive Data Source
-      description: 'Archive a data source, with options to permanently remove it (and associated data).'
-      operationId: ArchiveDataSource
-      parameters:
-        - name: container_id
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: data_source_id
-          in: path
-          required: true
-          schema:
-            type: string
-        - schema:
-            type: string
-          in: query
-          name: archive
-          description: Set to true to archive the data source.
-        - schema:
-            type: string
-          in: query
-          name: forceDelete
-          description: Set to true to force deletion of the data source.
-        - schema:
-            type: string
-          in: query
-          name: removeData
-          description: Set to true to remove data associated with the data source.
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Generic200Response'
-      deprecated: false
     parameters:
       - schema:
           type: string
@@ -3161,7 +3142,7 @@ paths:
         - Data Sources
       summary: Upload File
       description: |-
-        Uploads a file and it's metadata to DeepLynx. All additional fields on the multipart form will be processed and added as metadata to the file upload itself. 
+        Uploads a file and it's metadata to DeepLynx. All additional fields on the multipart form will be processed and added as metadata to the file upload itself.
         This should be a collection of files and normal fields. If you include a file field and call that "metadata" - you can include a normal metadata upload as either a json, csv, or xml file. This data will be processed like a normal import and the files attached to the processed data. Once DeepLynx generates nodes and edges from that data, any files attached will automatically be attached to the resulting nodes/edges as well.
         NOTE: The metadata file you upload, if json, must be wrapped in an array. If you do not pass in an array of objects, even if it's a single object, then DeepLynx will attempt to split up your metadata into its parts instead of treating it like a whole object.
       operationId: UploadFile
@@ -3224,8 +3205,16 @@ paths:
             type: string
       responses:
         '200':
-          description: ''
-          content: {}
+          description: File downloaded successfully
+          content:
+            application/octet-stream:
+              schema:
+                type: file
+                format: binary
+        '404':
+          description: File not found
+        '500':
+          description: Internal server error
       deprecated: false
   '/containers/{container_id}/files/{file_id}':
     get:
@@ -3657,7 +3646,11 @@ paths:
       operationId: CreateServiceUser
       responses:
         '200':
-          description: OK
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateServiceUserResponse'
       description: Creates a new service user for container
       requestBody:
         content:
@@ -3704,7 +3697,16 @@ paths:
       operationId: SetServiceUserPermissions
       responses:
         '200':
-          description: OK
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: boolean
+                  isError:
+                    type: boolean
       description: Set service user permissions.
       requestBody:
         content:
@@ -3755,7 +3757,15 @@ paths:
       operationId: GetServiceUserPermissions
       responses:
         '200':
-          description: OK
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: string
       tags:
         - Users
       description: Get service user permissions.
@@ -3791,7 +3801,16 @@ paths:
       operationId: CreateServiceUserKeyPair
       responses:
         '200':
-          description: OK
+          description: Successfully created a service user keypair.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: object
+                  isError:
+                    type: boolean
       description: Creates a new api/secret keypair. This will return the secret as well - this is the only time that you will be able to see the secret.
       tags:
         - Users
@@ -4837,8 +4856,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/RSAResponse'
       description: |-
-        Used to begin (and optionally complete) an RSA authentication. Either a user's ID may be provided and the SecurID provided in a later `verify` request, 
-        or else the user may provide both the user ID (`subjectName`) and `securID` at once to `initialize` to complete the authentication request. 
+        Used to begin (and optionally complete) an RSA authentication. Either a user's ID may be provided and the SecurID provided in a later `verify` request,
+        or else the user may provide both the user ID (`subjectName`) and `securID` at once to `initialize` to complete the authentication request.
         The `securID` is the combination of the user's memorized token and 6 digit temporary RSA pin (with no spaces or characters between them).
       requestBody:
         content:
@@ -5298,7 +5317,7 @@ paths:
               type: object
               properties: {}
         description: |-
-          Key/value pair where the key is named 'file' and the file is any file. 
+          Key/value pair where the key is named 'file' and the file is any file.
           Optionally, any metadata can be added
       x-internal: false
     delete:
@@ -5336,14 +5355,11 @@ paths:
                   type: string
                 metadata:
                   type: object
-                  properties:
-                    '':
-                      type: string
-            examples:
-              example-1:
-                value:
-                  tag_name: example tag
-        description: ''
+              example:
+                tag_name: "example tag"
+                metadata:
+                  key1: "value1"
+                  key2: "value2"
     get:
       tags:
         - Tags
@@ -5579,29 +5595,6 @@ paths:
         '200':
           description: OK
       description: Detach Tag from Multiple Nodes
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                node_ids:
-                  type: array
-                  items:
-                    type: string
-              x-examples:
-                Example 1:
-                  node_ids:
-                    - '123'
-                    - '456'
-                    - '789'
-            examples:
-              Example 1:
-                value:
-                  node_ids:
-                    - '123'
-                    - '456'
-                    - '789'
   '/containers/{container_id}/graphs/tags/{tag_id}/files':
     parameters:
       - schema:
@@ -5681,29 +5674,6 @@ paths:
         '200':
           description: OK
       description: Detach Tag from Multiple Edges
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                edge_ids:
-                  type: array
-                  items:
-                    type: string
-              x-examples:
-                Example 1:
-                  edge_ids:
-                    - '123'
-                    - '456'
-                    - '789'
-            examples:
-              Example 1:
-                value:
-                  edge_ids:
-                    - '123'
-                    - '456'
-                    - '789'
   '/containers/{container_id}/graphs/tags/{tag_id}':
     parameters:
       - schema:
@@ -5818,7 +5788,6 @@ paths:
       tags:
         - Users
         - Authentication
-      responses: {}
       operationId: list-service-keys-for-container
       description: Used to list all service-user keys in a container. Useful for obtaining keys in a container with a certain note to verify an application has ben authorized for a container.
       parameters:
@@ -5827,6 +5796,38 @@ paths:
           in: query
           name: note
           description: note with which keypair was created
+      responses:
+        '200':
+          description: A list of service user keys for the container.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        key:
+                          type: string
+                          description: The unique identifier for the service user key.
+                        secret_raw:
+                          type: string
+                          description: The secret part of the service user key, in raw form.
+                        user_id:
+                          type: string
+                          description: The identifier of the user associated with this key.
+                        note:
+                          type: string
+                          description: A note associated with the key, possibly indicating its purpose or the application it authorizes.
+                  isError:
+                    type: boolean
+                    description: Indicates if the operation resulted in an error.
+        '400':
+          description: Bad request. The request was invalid.
+        '404':
+          description: Not found. The specified container does not exist.
   '/containers/{container_id}/graphs/nodes/edges':
     parameters:
       - schema:
@@ -7378,8 +7379,6 @@ components:
         modified_by:
           type: string
           minLength: 1
-      required:
-        - container_id
     NodeMetatypeBody:
       title: NodeMetatypeBody
       type: object
@@ -7463,9 +7462,6 @@ components:
         modified_by:
           type: string
           minLength: 1
-      required:
-        - container_id
-        - relationship_pair_id
     Metatype:
       description: ''
       type: object
@@ -9285,7 +9281,8 @@ components:
         value:
           type: array
           items:
-            $ref: '#/components/schemas/ServiceUser'
+            # $ref: '#/components/schemas/ServiceUser' # Invalid value for `reset_required`, must not be `None`
+            type: object
         isError:
           type: boolean
     CreateServiceUser:
@@ -9296,6 +9293,15 @@ components:
           type: string
       required:
         - display_name
+    CreateServiceUserResponse:
+      title: CreateServiceUserResponse
+      type: object
+      properties:
+        value:
+          type: object
+          # $ref: '#/components/schemas/ServiceUser'
+        isError:
+          type: boolean
     ImportDataTypeMappingsRequest:
       title: ImportDataTypeMappingsRequest
       oneOf:
