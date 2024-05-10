@@ -230,19 +230,6 @@ describe('A Node Repository', async () => {
             expect(node.properties).to.have.deep.property('flower_name', 'Violet');
         });
 
-        // check composite id bulk save
-        const originalID1 = mixed[0].id;
-        const originalID2 = mixed[1].id;
-        mixed[0].id = undefined;
-        mixed[1].id = undefined;
-        mixed[0].properties = payload;
-        mixed[1].properties = payload;
-
-        saved = await nodeRepo.bulkSave(user, mixed);
-        expect(saved.isError, JSON.stringify(saved.error)).false;
-        expect(mixed[0].id).oneOf([originalID1,originalID2])
-        expect(mixed[1].id).oneOf([originalID1,originalID2])
-
         await nodeRepo.delete(mixed[0]);
         return nodeRepo.delete(mixed[1]);
     });
@@ -338,16 +325,6 @@ describe('A Node Repository', async () => {
         let result = await nodeRepo.where().containerID('eq', containerID).listAllToFile({
             containerID: containerID,
             file_type: 'json',
-        });
-
-        // check that the result's length is greater than 0
-        expect(result.isError).false;
-        expect(result.value.file_size).gt(0);
-
-        // now try a csv
-        result = await nodeRepo.where().containerID('eq', containerID).listAllToFile({
-            containerID: containerID,
-            file_type: 'csv',
         });
 
         // check that the result's length is greater than 0

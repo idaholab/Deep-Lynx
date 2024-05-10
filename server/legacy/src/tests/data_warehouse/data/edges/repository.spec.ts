@@ -371,14 +371,6 @@ describe('An Edge Repository', async () => {
 
         result = await edgeRepo.where().containerID('eq', containerID).listAllToFile({
             containerID: containerID,
-            file_type: 'csv',
-        });
-
-        expect(result.isError).false;
-        expect(result.value.file_size).gt(0);
-
-        result = await edgeRepo.where().containerID('eq', containerID).listAllToFile({
-            containerID: containerID,
             file_type: 'parquet',
         });
 

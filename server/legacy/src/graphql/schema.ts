@@ -1084,7 +1084,7 @@ export default class GraphQLRunner {
             if (resolverOptions?.pointInTime) {
                 // custom subquery with point in time filters
                 const pointInTime = new Repository('nodes')
-                    .distinctOn('id', 'n').select('*', 'n').from('nodes', 'n')
+                    .distinctOn(['original_data_id', 'data_source_id', 'container_id'], 'n').select('*', 'n').from('nodes', 'n')
                     .addFields({uuid: 'metatype_uuid', name: 'metatype_name'}, 'm')
                     .join('metatypes', {origin_col: 'metatype_id', destination_col: 'id'}, {destination_alias: 'm'})
                     .where()
@@ -1096,7 +1096,7 @@ export default class GraphQLRunner {
                     )
                     .and().query('container_id', 'eq', containerID, {tableAlias: 'n'})
                     .and().query('uuid', 'eq', metatype.uuid, {tableAlias: 'm'})
-                    .sortBy('id')
+                    .sortBy(['original_data_id', 'data_source_id', 'container_id'])
                     .sortBy('created_at', undefined, true);
 
                 repo = new NodeRepository(true)
@@ -1476,7 +1476,7 @@ export default class GraphQLRunner {
             if (resolverOptions?.pointInTime) {
                 // custom subquery with point in time filters
                 const pointInTime = new Repository('nodes')
-                    .distinctOn('id', 'n').select('*', 'n').from('nodes', 'n')
+                    .distinctOn(['original_data_id', 'data_source_id', 'container_id'], 'n').select('*', 'n').from('nodes', 'n')
                     .addFields({uuid: 'metatype_uuid', name: 'metatype_name'}, 'm')
                     .join('metatypes', {origin_col: 'metatype_id', destination_col: 'id'}, {destination_alias: 'm'})
                     .where()
@@ -1487,7 +1487,7 @@ export default class GraphQLRunner {
                         .query('deleted_at', 'is null', undefined, {tableAlias: 'n'})
                     )
                     .and().query('container_id', 'eq', containerID, {tableAlias: 'n'})
-                    .sortBy('id')
+                    .sortBy(['original_data_id', 'data_source_id', 'container_id'])
                     .sortBy('created_at', undefined, true);
 
                 repo = new NodeRepository(true)

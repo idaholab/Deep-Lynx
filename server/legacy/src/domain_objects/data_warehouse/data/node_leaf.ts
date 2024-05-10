@@ -2,7 +2,7 @@ import {BaseDomainClass} from '../../../common_classes/base_domain_class';
 import {Type} from 'class-transformer';
 import {EdgeMetadata} from './edge';
 import {NodeMetadata} from './node';
-import { QueryConfig } from 'pg';
+import {QueryConfig} from 'pg';
 
 const format = require('pg-format');
 
@@ -92,9 +92,9 @@ export default class NodeLeaf extends BaseDomainClass {
 
     destination_metatype_uuid?: string;
 
-	// cardinality of edge. if 'outgoing', origin_id is true origin.
-	// if 'incoming', destination_id is true origin in edge.
-	edge_direction?: string;
+    // cardinality of edge. if 'outgoing', origin_id is true origin.
+    // if 'incoming', destination_id is true origin in edge.
+    edge_direction?: string;
 
     // level of depth
     depth?: string;
@@ -109,14 +109,12 @@ export default class NodeLeaf extends BaseDomainClass {
 }
 
 export function getNodeLeafQuery(nodeID: string, containerID: string, depth: string, use_original_id?: boolean) {
-	// if use original id is specified, center the graph based on 
-	// original data id instead of auto-assigned DeepLynx id
-	const root_node = (use_original_id && use_original_id === true)
-		? format(`o.original_data_id = ('%s')::text`, nodeID)
-		: format(`o.id = %s`, nodeID);
+    // if use original id is specified, center the graph based on
+    // original data id instead of auto-assigned DeepLynx id
+    const root_node = use_original_id && use_original_id === true ? format(`o.original_data_id = ('%s')::text`, nodeID) : format(`o.id = %s`, nodeID);
 
-	// container ID is used twice in the query, so it's mentioned twice in the params list
-	return format(nodeLeafQuery, root_node, containerID, containerID, depth);
+    // container ID is used twice in the query, so it's mentioned twice in the params list
+    return format(nodeLeafQuery, root_node, containerID, containerID, depth);
 }
 
 const nodeLeafQuery = `SELECT nodeleafs.* FROM
@@ -129,7 +127,8 @@ const nodeLeafQuery = `SELECT nodeleafs.* FROM
 	destination_properties, destination_created_by, destination_created_at, destination_modified_by,
 	destination_modified_at, destination_metatype_id, edge_direction, depth, path
 ) AS (
-	(SELECT DISTINCT ON (e.origin_id, e.destination_id, e.relationship_pair_id, e.data_source_id)
+	(SELECT DISTINCT ON 
+        (e.origin_original_id, e.destination_original_id, e.origin_data_source_id, e.destination_data_source_id, e.relationship_pair_id, e.data_source_id)
 	 	o.id AS origin_id, o.data_source_id AS origin_data_source, o.metadata AS origin_metadata, 
 		o.metadata_properties AS origin_metadata_properties, o.properties AS origin_properties, 
 		o.created_by AS origin_created_by, o.created_at AS origin_created_at, 
@@ -149,10 +148,11 @@ const nodeLeafQuery = `SELECT nodeleafs.* FROM
 		LEFT JOIN nodes o ON o.id IN (e.origin_id, e.destination_id)
 		LEFT JOIN nodes d ON d.id IN (e.origin_id, e.destination_id) AND o.id != d.id
 	WHERE e.deleted_at IS NULL AND %s AND e.container_id = %s
-	ORDER BY e.origin_id, e.destination_id, e.relationship_pair_id, 
+	ORDER BY e.origin_original_id, e.destination_original_id, e.origin_data_source_id, e.destination_data_source_id, e.relationship_pair_id, 
 	 	e.data_source_id, e.created_at DESC, o.created_at DESC, d.created_at DESC)
 UNION
-	(SELECT DISTINCT ON (e.origin_id, e.destination_id, e.relationship_pair_id, e.data_source_id)
+	(SELECT DISTINCT ON 
+        (e.origin_original_id, e.destination_original_id, e.origin_data_source_id, e.destination_data_source_id, e.relationship_pair_id, e.data_source_id)
 		g.destination_id AS origin_id, g.destination_data_source AS origin_data_source, 
 		g.destination_metadata AS origin_metadata, g.destination_metadata_properties AS origin_metadata_properties, 
 		g.destination_properties AS origin_properties, g.destination_created_by AS origin_created_by, 
@@ -177,7 +177,7 @@ UNION
 	 		IN (e.origin_id, e.destination_id)
 			AND g.destination_id != d.id
 	WHERE e.container_id = %s AND depth < %s AND d.id <> ALL(path)
-	ORDER BY e.origin_id, e.destination_id, e.relationship_pair_id, 
+	ORDER BY e.origin_original_id, e.destination_original_id, e.origin_data_source_id, e.destination_data_source_id, e.relationship_pair_id, 
 	 	e.data_source_id, e.created_at DESC, g.destination_created_at DESC, d.created_at DESC)
 ) SELECT 
 	g.origin_id, origin_data_source, origin_metadata, origin_metadata_properties, 

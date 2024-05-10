@@ -193,7 +193,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
                                             this.validateRelationship(edges[i], transaction)
                                                 .then((valid) => {
                                                     if (valid.isError) {
-                                                        resolve(Result.Failure(valid.error?.error!));
+                                                        resolve(Result.Failure(valid.error?.error));
                                                         return;
                                                     }
 
@@ -332,6 +332,14 @@ export default class EdgeRepository extends Repository implements RepositoryInte
                     newEdge.origin_id = origin.id;
                     newEdge.destination_id = dest.id;
 
+                    // we need to fill in the columns that allow us to keep edges across node versions
+                    newEdge.origin_data_source_id = origin.data_source_id;
+                    newEdge.origin_metatype_id = origin.metatype_id;
+                    newEdge.destination_data_source_id = dest.data_source_id;
+                    newEdge.origin_original_id = origin.original_data_id;
+                    newEdge.destination_metatype_id = origin.metatype_id;
+                    newEdge.destination_original_id = dest.original_data_id;
+
                     edges.push(newEdge);
                 });
             });
@@ -355,6 +363,14 @@ export default class EdgeRepository extends Repository implements RepositoryInte
                 const newEdge: Edge = plainToInstance(Edge, {...instanceToPlain(e)});
                 newEdge.origin_id = origin.id;
                 newEdge.destination_id = dest.id;
+
+                // we need to fill in the columns that allow us to keep edges across node versions
+                newEdge.origin_data_source_id = origin.data_source_id;
+                newEdge.origin_metatype_id = origin.metatype_id;
+                newEdge.destination_data_source_id = dest.data_source_id;
+                newEdge.origin_original_id = origin.original_data_id;
+                newEdge.destination_original_id = dest.original_data_id;
+                newEdge.destination_metatype_id = dest.metatype_id;
 
                 edges.push(newEdge);
             });

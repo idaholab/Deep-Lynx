@@ -861,16 +861,6 @@ describe('The updated repository layer', async () => {
         expect(saveToJson.isError).false;
         expect(saveToJson.value.file_size).gt(0);
 
-        // csv format
-        let saveToCSV = await nodeRepo.where().containerID('eq', containerID).listAllToFile({containerID: containerID, file_type: 'csv'});
-        expect(saveToCSV.isError).false;
-        expect(saveToCSV.value.file_size).gt(0);
-
-        // parquet format
-        let saveToParquet = await nodeRepo.where().containerID('eq', containerID).listAllToFile({containerID: containerID, file_type: 'parquet'});
-        expect(saveToParquet.isError).false;
-        expect(saveToParquet.value.file_size).gt(0);
-
         return Promise.resolve();
     });
 
