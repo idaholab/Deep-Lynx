@@ -11,3 +11,5 @@ ALTER TABLE nodes ADD CONSTRAINT node_unique_constraint_nodes UNIQUE(original_da
 ALTER TABLE default_node_partition ADD CONSTRAINT default_node_partition_unique_constraint_nodes UNIQUE(original_data_id, container_id, data_source_id, created_at);
 ALTER TABLE nodes ALTER COLUMN original_data_id SET DEFAULT uuid_generate_v4();
 ALTER TABLE default_node_partition ALTER COLUMN original_data_id SET DEFAULT uuid_generate_v4();
+
+
