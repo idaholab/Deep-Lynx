@@ -1,12 +1,3 @@
-/*
- In this migration we need to do the following:
- - Remove the node_insert_trigger completely
- - Remove all current indexes on nodes so that we can reindex the table once we change keys
- - Remove the unique constraint/primary key on (id,created_at)
- - Generate a UUID for any node with a blank original ID
- - Set the primary key as a composite key (original_data_id, container, data_source_id, created_at)
- - Rebuild the indexes on container, data_source, metatype_id
- */
 -- Drop the trigger
 DROP TRIGGER IF EXISTS node_insert_trigger ON nodes;
 DROP TRIGGER IF EXISTS node_insert_trigger ON default_node_partition;
