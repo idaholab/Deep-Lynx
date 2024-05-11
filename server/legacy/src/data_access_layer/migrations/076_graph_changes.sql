@@ -20,8 +20,3 @@ ALTER TABLE nodes ADD CONSTRAINT node_unique_constraint_nodes UNIQUE(original_da
 ALTER TABLE default_node_partition ADD CONSTRAINT default_node_partition_unique_constraint_nodes UNIQUE(original_data_id, container_id, data_source_id, created_at);
 ALTER TABLE nodes ALTER COLUMN original_data_id SET DEFAULT uuid_generate_v4();
 ALTER TABLE default_node_partition ALTER COLUMN original_data_id SET DEFAULT uuid_generate_v4();
-
--- Rebuild the indexes on container, data_source, metatype_id
-CREATE INDEX nodes_container_index ON nodes USING btree (container_id);
-CREATE INDEX nodes_data_source_index ON nodes USING btree (data_source_id);
-CREATE INDEX nodes_metatype_id_index ON nodes USING btree (metatype_id);

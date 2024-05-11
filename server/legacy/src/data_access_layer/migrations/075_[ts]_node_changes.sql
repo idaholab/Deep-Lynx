@@ -1,22 +1,9 @@
 /*
  In this migration we're moving the nodes/edges table off of the hypertables since we're going to abandon timescaledb
  due to the fact that its performance hasn't been great. We're only moving the tables off hypertables. Next migration
- will take care of all the primary keys. We won't worry about recreating the indexes here since we're about to drop
- them all anyways
+ will take care of all the primary keys.
  */
-SELECT * INTO nodes_migration FROM nodes;
-SELECT * INTO edges_migration FROM edges;
-
-/* must remove all the views and functions before dropping the tables */
-DROP VIEW current_edges;
-DROP VIEW current_nodes;
-DROP MATERIALIZED VIEW current_nodes_cache;
-DROP TABLE nodes;
-DROP TABLE edges;
-DROP FUNCTION link_edge;
-
-/* we're going to recreate the tables so we get the foreign keys */
-CREATE TABLE IF NOT EXISTS nodes
+CREATE TABLE IF NOT EXISTS nodes_migration
 (
     id bigserial NOT NULL,
     container_id bigint NOT NULL,
@@ -58,7 +45,7 @@ CREATE TABLE IF NOT EXISTS nodes
 ) PARTITION BY RANGE (created_at);
 
 
-CREATE TABLE IF NOT EXISTS edges
+CREATE TABLE IF NOT EXISTS edges_migration
 (
     id bigserial NOT NULL,
     container_id bigint NOT NULL,
@@ -122,5 +109,103 @@ CREATE TABLE IF NOT EXISTS edges
         ON DELETE SET NULL
 ) PARTITION BY RANGE (created_at);
 
-SELECT * INTO nodes FROM nodes_migration;
-SELECT * INTO edges FROM edges_migration;
+/* move the data over now, this part could take a while */
+INSERT INTO nodes_migration SELECT * FROM nodes;
+INSERT INTO edges_migration SELECT * FROM edges;
+
+/* must remove all the views and functions before dropping the tables */
+DROP VIEW IF EXISTS current_edges;
+DROP VIEW IF EXISTS current_nodes;
+DROP MATERIALIZED VIEW IF EXISTS current_nodes_cache;
+DROP TABLE IF EXISTS nodes;
+DROP TABLE IF EXISTS edges;
+DROP FUNCTION IF EXISTS link_edge;
+
+/* now rebuild the tables and views */
+ALTER TABLE nodes_migration RENAME TO nodes;
+ALTER TABLE edges_migration RENAME TO edges;
+
+CREATE TABLE IF NOT EXISTS default_node_partition PARTITION OF nodes DEFAULT;
+
+CREATE VIEW current_edges AS(SELECT DISTINCT ON (edges.origin_id, edges.destination_id, edges.data_source_id, edges.relationship_pair_id) edges.id,
+        edges.container_id,
+        edges.relationship_pair_id,
+        edges.data_source_id,
+        edges.import_data_id,
+        edges.data_staging_id,
+        edges.type_mapping_transformation_id,
+        edges.origin_id,
+        edges.origin_original_id,
+        edges.origin_data_source_id,
+        edges.origin_metatype_id,
+        origin.uuid AS origin_metatype_uuid,
+    edges.destination_id,
+    edges.destination_original_id,
+    edges.destination_data_source_id,
+    edges.destination_metatype_id,
+    destination.uuid AS destination_metatype_uuid,
+    edges.properties,
+    edges.metadata_properties,
+    edges.metadata,
+    edges.created_at,
+    edges.modified_at,
+    edges.deleted_at,
+    edges.created_by,
+    edges.modified_by,
+    metatype_relationship_pairs.relationship_id,
+    metatype_relationships.name AS metatype_relationship_name,
+    metatype_relationships.uuid AS metatype_relationship_uuid,
+    metatype_relationship_pairs.uuid AS metatype_relationship_pair_uuid
+    FROM ((((edges
+    LEFT JOIN metatype_relationship_pairs ON ((edges.relationship_pair_id = metatype_relationship_pairs.id)))
+    LEFT JOIN metatype_relationships ON ((metatype_relationship_pairs.relationship_id = metatype_relationships.id)))
+    LEFT JOIN metatypes origin ON ((edges.origin_metatype_id = origin.id)))
+    LEFT JOIN metatypes destination ON ((edges.destination_metatype_id = destination.id)))
+    WHERE (edges.deleted_at IS NULL)
+    ORDER BY edges.origin_id, edges.destination_id, edges.data_source_id, edges.relationship_pair_id, edges.id, edges.created_at DESC);
+
+CREATE VIEW current_nodes AS(SELECT DISTINCT ON (nodes.id) nodes.id,
+    nodes.container_id,
+    nodes.metatype_id,
+    nodes.data_source_id,
+    nodes.import_data_id,
+    nodes.data_staging_id,
+    nodes.type_mapping_transformation_id,
+    nodes.original_data_id,
+    nodes.properties,
+    nodes.metadata_properties,
+    nodes.metadata,
+    nodes.created_at,
+    nodes.modified_at,
+    nodes.deleted_at,
+    nodes.created_by,
+    nodes.modified_by,
+    metatypes.name AS metatype_name,
+    metatypes.uuid AS metatype_uuid
+FROM (nodes
+LEFT JOIN metatypes ON ((metatypes.id = nodes.metatype_id)))
+WHERE (nodes.deleted_at IS NULL)
+ORDER BY nodes.id, nodes.created_at DESC);
+
+CREATE MATERIALIZED VIEW current_nodes_cache AS( SELECT DISTINCT ON (nodes.id) nodes.id,
+   nodes.container_id,
+   nodes.metatype_id,
+   nodes.data_source_id,
+   nodes.import_data_id,
+   nodes.data_staging_id,
+   nodes.type_mapping_transformation_id,
+   nodes.original_data_id,
+   nodes.properties,
+   nodes.metadata_properties,
+   nodes.metadata,
+   nodes.created_at,
+   nodes.modified_at,
+   nodes.deleted_at,
+   nodes.created_by,
+   nodes.modified_by,
+   metatypes.name AS metatype_name,
+   metatypes.uuid AS metatype_uuid
+FROM (nodes
+LEFT JOIN metatypes ON ((metatypes.id = nodes.metatype_id)))
+WHERE (nodes.deleted_at IS NULL)
+ORDER BY nodes.id, nodes.created_at DESC);
