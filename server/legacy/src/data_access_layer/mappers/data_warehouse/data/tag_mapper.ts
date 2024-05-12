@@ -111,8 +111,8 @@ export default class TagMapper extends Mapper {
         return super.runStatement(this.tagEdgeStatement(tagID, edgeID));
     }
 
-    public async TagsForNode(nodeID: string): Promise<Result<Tag[]>> {
-        return super.rows<Tag>(this.tagsForNode(nodeID), {
+    public async TagsForNode(nodeID: string, revisionOnly?: boolean): Promise<Result<Tag[]>> {
+        return super.rows<Tag>(this.tagsForNode(nodeID, revisionOnly), {
             resultClass: this.resultClass,
         });
     }
@@ -123,8 +123,8 @@ export default class TagMapper extends Mapper {
         });
     }
 
-    public async TagsForEdge(edgeID: string): Promise<Result<Tag[]>> {
-        return super.rows<Tag>(this.tagsForEdge(edgeID), {
+    public async TagsForEdge(edgeID: string, revisionOnly?: boolean): Promise<Result<Tag[]>> {
+        return super.rows<Tag>(this.tagsForEdge(edgeID, revisionOnly), {
             resultClass: this.resultClass,
         });
     }
@@ -300,11 +300,27 @@ export default class TagMapper extends Mapper {
         };
     }
 
-    private tagsForNode(nodeID: string): QueryConfig {
-        return {
-            text: `SELECT tags.* FROM node_tags LEFT JOIN tags ON tags.id = node_tags.tag_id WHERE node_id = $1`,
-            values: [nodeID],
-        };
+    private tagsForNode(nodeID: string, revisionOnly?: boolean): QueryConfig {
+        if (revisionOnly) {
+            return {
+                text: `SELECT tags.* FROM node_tags LEFT JOIN tags ON tags.id = node_tags.tag_id WHERE node_id = $1`,
+                values: [nodeID],
+            };
+        } else {
+            return {
+                text: `SELECT tags.* 
+            FROM node_tags 
+            LEFT JOIN tags ON tags.id = node_tags.tag_id 
+            WHERE node_id IN (
+            SELECT id 
+            FROM nodes 
+            WHERE data_source_id = (SELECT data_source_id FROM nodes WHERE id = $1) 
+            AND original_data_id = (SELECT original_data_id FROM nodes WHERE id = $1) 
+            AND container_id = (SELECT container_id FROM nodes WHERE id = $1)
+            );`,
+                values: [nodeID],
+            };
+        }
     }
 
     private tagsForFile(fileID: string): QueryConfig {
@@ -314,11 +330,24 @@ export default class TagMapper extends Mapper {
         };
     }
 
-    private tagsForEdge(edgeID: string): QueryConfig {
-        return {
-            text: `SELECT tags.* FROM edge_tags LEFT JOIN tags ON tags.id = edge_tags.tag_id WHERE edge_id = $1`,
-            values: [edgeID],
-        };
+    private tagsForEdge(edgeID: string, revisionOnly?: boolean): QueryConfig {
+        if (revisionOnly) {
+            return {
+                text: `SELECT tags.* FROM edge_tags LEFT JOIN tags ON tags.id = edge_tags.tag_id WHERE edge_id = $1`,
+                values: [edgeID],
+            };
+        } else {
+            return {
+                text: `SELECT tags.* FROM edge_tags LEFT JOIN tags ON tags.id = edge_tags.tag_id WHERE edge_id IN(
+                    SELECT id FROM edges 
+                    WHERE destination_original_id = (SELECT destination_original_id FROM edges WHERE id = $1)
+                    AND destination_data_source_id = (SELECT destination_data_source_id FROM edges WHERE id = $1)
+                    AND origin_original_id = (SELECT origin_original_id FROM edges WHERE id = $1)
+                    AND origin_data_source_id = (SELECT origin_data_source_id FROM edges WHERE id = $1)
+                    )`,
+                values: [edgeID],
+            };
+        }
     }
 
     private nodesWithTag(tagID: string): QueryConfig {
