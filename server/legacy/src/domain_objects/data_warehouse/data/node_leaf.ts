@@ -127,9 +127,8 @@ const nodeLeafQuery = `SELECT nodeleafs.* FROM
 	destination_properties, destination_created_by, destination_created_at, destination_modified_by,
 	destination_modified_at, destination_metatype_id, edge_direction, depth, path
 ) AS (
-	(SELECT DISTINCT ON 
-        (e.origin_original_id, e.destination_original_id, e.origin_data_source_id, e.destination_data_source_id, e.relationship_pair_id, e.data_source_id)
-	 	o.id AS origin_id, o.data_source_id AS origin_data_source, o.metadata AS origin_metadata, 
+	(SELECT DISTINCT ON (e.id)
+		o.id AS origin_id, o.data_source_id AS origin_data_source, o.metadata AS origin_metadata, 
 		o.metadata_properties AS origin_metadata_properties, o.properties AS origin_properties, 
 		o.created_by AS origin_created_by, o.created_at AS origin_created_at, 
 		o.modified_by AS origin_modified_by, o.modified_at AS origin_modified_at, 
@@ -148,11 +147,9 @@ const nodeLeafQuery = `SELECT nodeleafs.* FROM
 		LEFT JOIN nodes o ON o.id IN (e.origin_id, e.destination_id)
 		LEFT JOIN nodes d ON d.id IN (e.origin_id, e.destination_id) AND o.id != d.id
 	WHERE e.deleted_at IS NULL AND %s AND e.container_id = %s
-	ORDER BY e.origin_original_id, e.destination_original_id, e.origin_data_source_id, e.destination_data_source_id, e.relationship_pair_id, 
-	 	e.data_source_id, e.created_at DESC, o.created_at DESC, d.created_at DESC)
+	ORDER BY e.id)
 UNION
-	(SELECT DISTINCT ON 
-        (e.origin_original_id, e.destination_original_id, e.origin_data_source_id, e.destination_data_source_id, e.relationship_pair_id, e.data_source_id)
+	(SELECT DISTINCT ON (e.id)
 		g.destination_id AS origin_id, g.destination_data_source AS origin_data_source, 
 		g.destination_metadata AS origin_metadata, g.destination_metadata_properties AS origin_metadata_properties, 
 		g.destination_properties AS origin_properties, g.destination_created_by AS origin_created_by, 
@@ -177,9 +174,8 @@ UNION
 	 		IN (e.origin_id, e.destination_id)
 			AND g.destination_id != d.id
 	WHERE e.container_id = %s AND depth < %s AND d.id <> ALL(path)
-	ORDER BY e.origin_original_id, e.destination_original_id, e.origin_data_source_id, e.destination_data_source_id, e.relationship_pair_id, 
-	 	e.data_source_id, e.created_at DESC, g.destination_created_at DESC, d.created_at DESC)
-) SELECT 
+	ORDER BY e.id)
+) SELECT
 	g.origin_id, origin_data_source, origin_metadata, origin_metadata_properties, 
 	origin_properties, origin_created_by, origin_created_at, origin_modified_by, 
 	origin_modified_at, g.origin_metatype_id, ometa.name AS origin_metatype_name,

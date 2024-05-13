@@ -919,7 +919,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
         expect(response.errors).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.graph;
-        expect(data.length).eq(3);
+        expect(data.length).eq(4);
 
         for (const nL of data) {
             expect(nL.depth).not.undefined;

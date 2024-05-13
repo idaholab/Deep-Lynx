@@ -126,6 +126,7 @@ CREATE TABLE IF NOT EXISTS data_staging_migration(
 /* move the data over now, this part could take a while */
 INSERT INTO nodes_migration SELECT * FROM nodes;
 INSERT INTO edges_migration SELECT * FROM edges;
+INSERT INTO data_staging_migration SELECT * FROM data_staging;
 
 /* must remove all the views and functions before dropping the tables */
 DROP VIEW IF EXISTS current_edges;
@@ -133,6 +134,7 @@ DROP VIEW IF EXISTS current_nodes;
 DROP MATERIALIZED VIEW IF EXISTS current_nodes_cache;
 DROP TABLE IF EXISTS nodes;
 DROP TABLE IF EXISTS edges;
+DROP TABLE IF EXISTS data_staging;
 DROP FUNCTION IF EXISTS link_edge;
 
 /* now rebuild the tables and views */
