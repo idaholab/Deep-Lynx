@@ -59,10 +59,6 @@ COPY --from=build /usr/local/cargo/bin/deeplynx /usr/local/bin/deeplynx
 COPY --from=build /srv/deeplynx/server/deeplynx/configs /configs
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Add docker-compose-wait tool ----------------------
-ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait
-RUN chmod +x /wait
-
 EXPOSE 8090
 EXPOSE 4000
-CMD /wait && /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+CMD /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf

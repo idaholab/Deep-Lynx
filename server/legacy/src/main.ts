@@ -14,7 +14,7 @@ import {Migrator} from './data_access_layer/migrate';
 import {ReturnSuperUser} from './domain_objects/access_management/user';
 
 process.on('unhandledRejection', (reason, promise) => {
-    BackedLogger.error(`Unhandled rejection at ${promise} reason: ${reason}`);
+    BackedLogger.error(`Unhandled rejection at ${JSON.stringify(promise)} reason: ${reason}`);
     process.exit(1);
 });
 
@@ -27,7 +27,7 @@ async function Start(): Promise<any> {
 
     void Cache.Instance.cache.flush();
 
-    // if enabled, create an inital SuperUser for easier system management
+    // if enabled, create an initial SuperUser for easier system management
     // if SAML is configured, the initial SAML user will be assigned admin status
     // if the superuser hasn't been created
     if (Config.initial_super_user) {
@@ -47,48 +47,13 @@ async function Start(): Promise<any> {
             root: path.resolve('dist/jobs'),
             jobs: [
                 {
+                    name: 'data_source_process',
+                    interval: '1m',
+                    timeout: 0,
+                },
+                {
                     name: 'export', // will run export.ts
                     interval: Config.export_data_interval, // exports take longer to process, more time in-between instances is needed
-                },
-                {
-                    name: 'data_source_emitter', // will run data_source_emitter.js - puts data sources on queue to run
-                    interval: '1m',
-                    timeout: 0,
-                },
-                /*      {
-                name: 'data_target_emitter', // will run data_target_emitter.ts - puts data targets on queue to run
-                interval: '30s',
-                timeout: 0,
-            },*/
-                {
-                    name: 'edge_queue_emitter', // will run edge_queue_emitter on an infinite loop
-                    interval: Config.emitter_interval,
-                    timeout: 0,
-                },
-                {
-                    name: 'events_queue', // will run events_queue.ts - a never ending processing of the events queue
-                    interval: '1m',
-                    timeout: 0,
-                },
-                {
-                    name: 'processing_queue', // will run processing_queue.ts
-                    interval: '1m',
-                    timeout: 0,
-                },
-                {
-                    name: 'data_source_queue', // will run data_source_queue.ts
-                    interval: '1m',
-                    timeout: 0,
-                },
-                /*      {
-                name: 'data_target_queue', // will run data_target_queue.ts
-                interval: '1m',
-                timeout: 0,
-            },*/
-                {
-                    name: 'edge_item_queue', // will run edge_item_queue.js
-                    interval: '1m',
-                    timeout: 0,
                 },
                 {
                     name: 'metatype_keys_refresh', // will run metatype_keys_refresh.js

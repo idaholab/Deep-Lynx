@@ -1,7 +1,7 @@
 /*
     This starts a never-ending loop of consuming data processing messages from the queue.
     Each of those messages consists of a data staging record id which is then fetched and
-    sent to be be processed.
+    sent to be processed.
  */
 import {QueueFactory} from '../services/queue/queue';
 import Config from '../services/config';
@@ -17,7 +17,7 @@ import Cache from '../services/cache/cache';
 // handle cache clears from parent IF memory cache
 if (Config.cache_provider === 'memory') {
     parentPort?.on('message', (message: any) => {
-        const parts = message.split('|');
+        const parts: string[] = message.split('|');
         // if a two part message it's a deleted key
         if (parts.length === 2 && parts[0] === 'deleted') {
             void Cache.del(parts[1]);
@@ -29,14 +29,13 @@ if (Config.cache_provider === 'memory') {
     });
 }
 
-
 void PostgresAdapter.Instance.init()
     .then(() => {
         void QueueFactory()
             .then(async (queue) => {
                 const destination = new Writable({
                     objectMode: true,
-                    write: async(chunk: any[], encoding: string, callback: (error?: Error | null) => void) => {
+                    write: async (chunk: any[], encoding: string, callback: (error?: Error | null) => void) => {
                         const stagingRecords: DataStaging[] = plainToInstance(DataStaging, chunk as object as DataStaging[]);
                         await ProcessData(...stagingRecords)
                             .then((result) => {
@@ -62,10 +61,10 @@ void PostgresAdapter.Instance.init()
                     }
                 });
                 await queue.ConsumeMultiple(Config.process_queue, 10, (messages) => {
-                    if(messages.length > 0){
-                        destination.write(messages)
+                    if (messages.length > 0) {
+                        destination.write(messages);
                     }
-                    return Promise.resolve()
+                    return Promise.resolve();
                 });
             })
             .catch((e) => {
