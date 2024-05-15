@@ -115,6 +115,10 @@ export default class EdgeMapper extends Mapper {
         return super.runStatement(this.deleteStatement(id));
     }
 
+    public async RowCount(containerID: string): Promise<Result<number>> {
+        return super.retrieve(this.getRowCount(containerID));
+    }
+
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
@@ -339,5 +343,9 @@ export default class EdgeMapper extends Mapper {
             text: `DELETE FROM edge_files WHERE edge_id = $1 AND file_id = $2`,
             values: [edgeID, fileID],
         };
+    }
+
+    private getRowCount(containerID: string): QueryConfig {
+        return format(`SELECT COUNT(*) FROM edges WHERE container_id = (%L)`, containerID);
     }
 }

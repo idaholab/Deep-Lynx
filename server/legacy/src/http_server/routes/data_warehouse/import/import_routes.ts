@@ -84,6 +84,18 @@ export default class ImportRoutes {
             authInContainer('write', 'data'),
             this.deleteImportData,
         );
+        app.get(
+            '/containers/:containerID/import/imports/:importID/start',
+            ...middleware,
+            authInContainer('read', 'data'),
+            this.getImportStart,
+        );
+        app.get(
+            '/containers/:containerID/import/imports/:importID/end',
+            ...middleware,
+            authInContainer('read', 'data'),
+            this.getImportEnd,
+        );
     }
 
     private static createImport(req: Request, res: Response, next: NextFunction) {
@@ -418,6 +430,26 @@ export default class ImportRoutes {
                     Result.Error(err).asResponse(res);
                 })
                 .finally(() => next());
+        } else {
+            Result.Failure(`unable to find data source or import`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static getImportStart(req: Request, res: Response, next: NextFunction) {
+        if (req.dataImport) {
+            Result.Success(req.dataImport.process_start).asResponse(res);
+            next();
+        } else {
+            Result.Failure(`unable to find data source or import`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static getImportEnd(req: Request, res: Response, next: NextFunction) {
+        if (req.dataImport) {
+            Result.Success(req.dataImport.process_end).asResponse(res);
+            next();
         } else {
             Result.Failure(`unable to find data source or import`, 404).asResponse(res);
             next();

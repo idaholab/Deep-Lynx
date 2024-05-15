@@ -13,6 +13,7 @@ import {parentPort} from 'worker_threads';
 import {plainToInstance} from 'class-transformer';
 import {DataStaging} from '../domain_objects/data_warehouse/import/import';
 import Cache from '../services/cache/cache';
+import ImportRepository from "../data_access_layer/repositories/data_warehouse/import/import_repository";
 
 // handle cache clears from parent IF memory cache
 if (Config.cache_provider === 'memory') {
@@ -38,6 +39,16 @@ void PostgresAdapter.Instance.init()
                     objectMode: true,
                     write: async(chunk: any[], encoding: string, callback: (error?: Error | null) => void) => {
                         const stagingRecords: DataStaging[] = plainToInstance(DataStaging, chunk as object as DataStaging[]);
+
+                        const importRepo = new ImportRepository();
+                        for (const record of stagingRecords) {
+                            const importID = record.import_id;
+                            if (importID) {
+                                Logger.info(`setting start time ${new Date().toISOString()} for import ${importID}`)
+                                await importRepo.setStart(new Date(), importID)
+                            }
+                        }
+
                         await ProcessData(...stagingRecords)
                             .then((result) => {
                                 if (result.isError) {
