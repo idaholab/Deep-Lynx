@@ -7,7 +7,7 @@ import {
     HttpDataSourceConfig,
     StandardDataSourceConfig,
     P6DataSourceConfig,
-    CustomDataSourceConfig
+    CustomDataSourceConfig,
 } from './data_source';
 
 /*
@@ -43,6 +43,9 @@ export default class Import extends BaseDomainClass {
     @IsOptional()
     @IsNumber()
     total_errors?: number;
+
+    @IsOptional()
+    container_id?: string;
 
     constructor(input: {data_source_id: string; status_message?: string; reference?: string}) {
         super();
@@ -95,6 +98,10 @@ export class DataStaging extends NakedDomainClass {
     @IsOptional()
     container_id?: string;
 
+    @IsOptional()
+    @IsNumber()
+    files_count?: number;
+
     // we need to have this so we can stop spamming the database on the db on processing
     @IsOptional()
     file_attached?: boolean = false;
@@ -113,13 +120,8 @@ export class DataStaging extends NakedDomainClass {
             ],
         },
     })
-    data_source_config?:
-    StandardDataSourceConfig
-    | HttpDataSourceConfig
-    | AvevaDataSourceConfig
-    | P6DataSourceConfig
-    | CustomDataSourceConfig =
-    new StandardDataSourceConfig();
+    data_source_config?: StandardDataSourceConfig | HttpDataSourceConfig | AvevaDataSourceConfig | P6DataSourceConfig | CustomDataSourceConfig =
+        new StandardDataSourceConfig();
 
     constructor(input: {data_source_id: string; import_id: string; data: any; shape_hash?: string; container_id?: string; file_attached?: boolean}) {
         super();

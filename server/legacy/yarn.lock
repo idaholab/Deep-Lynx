@@ -1387,6 +1387,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/papaparse@npm:^5":
+  version: 5.3.14
+  resolution: "@types/papaparse@npm:5.3.14"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 10c0/feb4d215903b67442feaa9836a6a5771e78dc6a9da24781e399c6f891622fa82245cd783ab2613c5be43e4a2d6a94da52325538e4485af258166864576ecd0d8
+  languageName: node
+  linkType: hard
+
 "@types/parquetjs@npm:^0.10.3":
   version: 0.10.6
   resolution: "@types/parquetjs@npm:0.10.6"
@@ -1451,6 +1460,16 @@ __metadata:
   dependencies:
     "@types/express": "npm:*"
   checksum: 10c0/7120c1186c8c67e3818683b5b6a4439d102f67da93cc1c7d8f32484f7bf10e8438dd5de0bf571910b23d06caa43dd1ad501933b48618bfaf54e63219500993fe
+  languageName: node
+  linkType: hard
+
+"@types/pg-copy-streams@npm:^1.2.5":
+  version: 1.2.5
+  resolution: "@types/pg-copy-streams@npm:1.2.5"
+  dependencies:
+    "@types/node": "npm:*"
+    "@types/pg": "npm:*"
+  checksum: 10c0/fccb3c4e3df5dd579d1c30538036450be34d586e3f8531be0f8876d72751193ce8fc779a26f4b7a314539e3dbb0d8fb9a0d61c85da96b8fced43e127fa87d1c8
   languageName: node
   linkType: hard
 
@@ -4453,11 +4472,13 @@ __metadata:
     "@types/node": "npm:^17.0.45"
     "@types/node-rsa": "npm:^1.1.0"
     "@types/nodemailer": "npm:^6.4.1"
+    "@types/papaparse": "npm:^5"
     "@types/parquetjs": "npm:^0.10.3"
     "@types/passport-http": "npm:^0.3.9"
     "@types/passport-jwt": "npm:^3.0.8"
     "@types/passport-local": "npm:^1.0.35"
     "@types/pg": "npm:^7.14.11"
+    "@types/pg-copy-streams": "npm:^1.2.5"
     "@types/pg-large-object": "npm:^2.0.5"
     "@types/safe-timers": "npm:^1.1.0"
     "@types/uuid": "npm:^3.4.9"
@@ -4543,6 +4564,7 @@ __metadata:
     p-limit: "npm:^3.1.0"
     p-map: "npm:^4.0.0"
     p-queue: "npm:^6.6.2"
+    papaparse: "npm:^5.4.1"
     parquetjs: "npm:^0.11.2"
     passport: "npm:^0.7.0"
     passport-http: "npm:^0.3.0"
@@ -4551,7 +4573,7 @@ __metadata:
     pem-jwk: "npm:^2.0.0"
     pg: "npm:^8.8.0"
     pg-connection-string: "npm:^2.5.0"
-    pg-copy-streams: "npm:^6.0.4"
+    pg-copy-streams: "npm:^6.0.6"
     pg-format: "npm:^1.0.4"
     pg-large-object: "npm:^2.0.0"
     pg-query-stream: "npm:^4.2.1"
@@ -9331,6 +9353,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"papaparse@npm:^5.4.1":
+  version: 5.4.1
+  resolution: "papaparse@npm:5.4.1"
+  checksum: 10c0/201f37c4813453fed5bfb4c01816696b099d2db9ff1e8fb610acc4771fdde91d2a22b6094721edb0fedb21ca3c46f04263f68be4beb3e35b8c72278f0cedc7b7
+  languageName: node
+  linkType: hard
+
 "param-case@npm:^3.0.4":
   version: 3.0.4
   resolution: "param-case@npm:3.0.4"
@@ -9597,7 +9626,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pg-copy-streams@npm:^6.0.4":
+"pg-copy-streams@npm:^6.0.6":
   version: 6.0.6
   resolution: "pg-copy-streams@npm:6.0.6"
   dependencies:

@@ -1,7 +1,5 @@
 /*
-  Standalone loop for emitting data source run events. These are emitted every
-  minute for each data source, a separate processing thread will take care of
-  the messages from the queue
+  Standalone loop for processing data sources.
  */
 
 import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/postgres';

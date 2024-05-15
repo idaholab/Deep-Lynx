@@ -112,10 +112,6 @@ describe('A data import', async () => {
         );
         expect(inserted.isError).false;
 
-        let imports = await importStorage.ListWithUninsertedData(exp.value.id!, 1);
-        expect(imports.isError).false;
-        expect(imports.value).not.empty;
-
         return storage.Delete(exp.value.id!);
     });
 

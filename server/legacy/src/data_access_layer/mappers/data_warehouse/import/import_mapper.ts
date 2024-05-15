@@ -115,10 +115,11 @@ export default class ImportMapper extends Mapper {
         return super.runStatement(this.setStatusStatement(importID, status, message), {transaction});
     }
 
-    // list all imports which have data with an uninserted status - while we used to check status of the import,
-    // checking for uninserted records is a far better method when attempting to gauge if an import still needs processed
-    public async ListWithUninsertedData(dataSourceID: string, limit: number): Promise<Result<Import[]>> {
-        return super.rows(this.listWithUninsertedDataStatement(dataSourceID, limit), {resultClass: this.resultClass});
+    // list all imports which have data with an inserted status - while we used to check status of the import,
+    // checking for inserted records is a far better method when attempting to gauge if an import still needs processed
+    // note: this will always list in the order the imports were received - and grouped by container_id
+    public async ListWithUninsertedData(): Promise<Result<Import[]>> {
+        return super.rows(this.listWithUninsertedDataStatement(), {resultClass: this.resultClass});
     }
 
     public async Count(): Promise<Result<number>> {
@@ -334,20 +335,19 @@ export default class ImportMapper extends Mapper {
         };
     }
 
-    private listWithUninsertedDataStatement(dataSourceID: string, limit: number): QueryConfig {
+    public listWithUninsertedDataStatement(): QueryConfig {
         return {
-            text: `SELECT imports.*,
+            text: `SELECT imports.*, data_sources.container_id,
                           SUM(CASE WHEN data_staging.inserted_at <> NULL AND data_staging.import_id = imports.id THEN 1 ELSE 0 END) AS records_inserted,
                           SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records
                    FROM imports
                    LEFT JOIN data_staging ON data_staging.import_id = imports.id
-                     WHERE imports.data_source_id = $1
-                     AND EXISTS (SELECT * FROM data_staging WHERE data_staging.import_id = imports.id AND data_staging.inserted_at IS NULL)
+                   LEFT JOIN data_sources ON data_sources.id = imports.data_source_id
+                     WHERE EXISTS (SELECT * FROM data_staging WHERE data_staging.import_id = imports.id AND data_staging.inserted_at IS NULL)
                      AND EXISTS(SELECT * FROM data_staging WHERE data_staging.import_id = imports.id)
-                   GROUP BY imports.id
+                   GROUP BY imports.id, container_id
                    ORDER BY imports.created_at ASC
-                   LIMIT $2 `,
-            values: [dataSourceID, limit],
+                   `,
         };
     }
 

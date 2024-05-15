@@ -8,7 +8,7 @@ import FileMapper from '../data_access_layer/mappers/data_warehouse/data/file_ma
 import Logger from '../services/logger';
 import NodeRepository from '../data_access_layer/repositories/data_warehouse/data/node_repository';
 import Node, {IsNodes} from '../domain_objects/data_warehouse/data/node';
-import {EdgeQueueItem, IsEdges} from '../domain_objects/data_warehouse/data/edge';
+import Edge, {EdgeQueueItem, IsEdges} from '../domain_objects/data_warehouse/data/edge';
 import DataStagingRepository from '../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import {DataStagingFile, NodeFile} from '../domain_objects/data_warehouse/data/file';
 import NodeMapper from '../data_access_layer/mappers/data_warehouse/data/node_mapper';
@@ -16,6 +16,7 @@ import EdgeQueueItemMapper from '../data_access_layer/mappers/data_warehouse/dat
 import {classToPlain} from 'class-transformer';
 import {MappingTag} from '../domain_objects/data_warehouse/etl/type_transformation';
 import TagMapper from '../data_access_layer/mappers/data_warehouse/data/tag_mapper';
+import EdgeRepository from '../data_access_layer/repositories/data_warehouse/data/edge_repository';
 
 export type NodeTagAttachment = {
     tags: MappingTag[];
@@ -124,10 +125,11 @@ export async function ProcessData(...staging: DataStaging[]): Promise<Result<boo
                     // will be contained in the metadata object on the transformed object
                     const results = await transformation.applyTransformation(record);
                     if (results.isError) {
-                        await stagingRepo
-                            .setErrors(record.id!,
-                                [`unable to apply transformation ${transformation.id} to data: ${results.error?.error}`]
-                                , transaction.value);
+                        await stagingRepo.setErrors(
+                            record.id!,
+                            [`unable to apply transformation ${transformation.id} to data: ${results.error?.error}`],
+                            transaction.value,
+                        );
                         continue;
                     }
 
@@ -326,7 +328,8 @@ export async function ProcessData(...staging: DataStaging[]): Promise<Result<boo
 
             await stagingRepo.setErrorsMultiple(
                 records.map((r) => r.id!),
-                [`error attempting to send edges to queue ${sent.error?.error}`], transaction.value
+                [`error attempting to send edges to queue ${sent.error?.error}`],
+                transaction.value,
             );
             return new Promise((resolve) => resolve(Result.DebugFailure(`error attempting to send edges to queue ${sent.error?.error}`)));
         }
@@ -339,7 +342,8 @@ export async function ProcessData(...staging: DataStaging[]): Promise<Result<boo
         // update the individual data row which failed
         await stagingRepo.setErrorsMultiple(
             records.map((r) => r.id!),
-            [`error attempting to mark data inserted ${marked.error}`], transaction.value
+            [`error attempting to mark data inserted ${marked.error}`],
+            transaction.value,
         );
         return new Promise((resolve) => resolve(Result.DebugFailure(`error attempting to mark data inserted ${marked.error}`)));
     }
@@ -351,4 +355,232 @@ export async function ProcessData(...staging: DataStaging[]): Promise<Result<boo
     );
     await stagingMapper.completeTransaction(transaction.value);
     return Promise.resolve(Result.Success(true));
+}
+
+export async function GenerateNodes(...staging: DataStaging[]): Promise<Node[]> {
+    const stagingMapper = DataStagingMapper.Instance;
+    const stagingRepo = new DataStagingRepository();
+    const mappingRepo = new TypeMappingRepository();
+
+    const transaction = await stagingMapper.startTransaction();
+
+    const updated: DataStaging[] = [];
+    const records = staging.map((s) => {
+        if (!s.shape_hash) {
+            const shapeHash = TypeMapping.objectToShapeHash(s.data, {
+                value_nodes: s.data_source_config?.value_nodes,
+                stop_nodes: s.data_source_config?.stop_nodes,
+            });
+            s.shape_hash = shapeHash;
+
+            updated.push(s);
+        }
+
+        return s;
+    });
+    // update the staging records with the shape-hash if needed
+    await stagingRepo.bulkSave(updated, transaction.value);
+
+    // NOTE: this db call might return records which don't match the shapehash/data_source combo because we're passing
+    // a lot of records at once to the call to minimize db round-trips. I think this is a good trade-off, but if we start
+    // to see a lot of slowdowns - this might be a likely candidate
+    const all_mappings = await mappingRepo
+        .where()
+        .shape_hash(
+            'in',
+            records.map((s) => s.shape_hash),
+        )
+        .and()
+        .dataSourceID(
+            'in',
+            records.map((s) => s.data_source_id),
+        )
+        .list(true, undefined, transaction.value);
+
+    const nodesToInsert: Node[] = []; // holds all nodes to insert
+
+    for (const record of records) {
+        const errors = await record.validationErrors();
+        if (errors) {
+            await stagingRepo.addError(record.id!, 'data does not pass validation for processing');
+            continue;
+        }
+        // pull the mappings out
+        let mappings = all_mappings.value.filter((m) => m.data_source_id === record.data_source_id && m.shape_hash === record.shape_hash);
+        if (mappings.length === 0) {
+            const inserted = await mappingRepo.save(
+                new TypeMapping({
+                    container_id: record.container_id!,
+                    data_source_id: record.data_source_id!,
+                    sample_payload: record.data,
+                    shape_hash: record.shape_hash,
+                }),
+                await ReturnSuperUser(),
+            );
+            await stagingRepo.setErrors(record.id!, ['no active transformations for type mapping'], transaction.value);
+            if (inserted.isError) {
+                Logger.error('unable to insert mapping into database', inserted.error);
+            }
+            continue;
+        }
+
+        mappings = mappings.filter((m) => m.active);
+        if (mappings.length === 0) {
+            await stagingRepo.setErrors(record.id!, ['no active type mapping for record'], transaction.value);
+            continue;
+        }
+
+        // for each transformation run the transformation process. Results will either be an array of nodes or an array of edges
+        // if we run into errors, add the error to the data staging row, and immediately return. Do not attempt to
+        // run any more transformations
+        for (const mapping of mappings) {
+            if (mapping.transformations)
+                // we're only doing node transformations here
+                for (const transformation of mapping.transformations.filter((t) => t.type === 'node')) {
+                    // skip if the transformation is archived
+                    if (transformation.archived) continue;
+
+                    // keep in mind that any conversion errors that didn't cause the complete failure of the transformation
+                    // will be contained in the metadata object on the transformed object
+                    const results = await transformation.applyTransformation(record);
+                    if (results.isError) {
+                        await stagingRepo.setErrors(
+                            record.id!,
+                            [`unable to apply transformation ${transformation.id} to data: ${results.error?.error}`],
+                            transaction.value,
+                        );
+                        continue;
+                    }
+
+                    // check to see result type, force into corresponding container
+                    if (IsNodes(results.value)) {
+                        nodesToInsert.push(...results.value);
+                    }
+                }
+        }
+    }
+    // we must deduplicate nodes based on original ID in order to avoid a database transaction error. We toss out the
+    // duplicates because even if we inserted them they'd be overwritten, or overwrite, the original. Users should be made
+    // aware that if their import is generating records with the same original ID only one instance is going to be inserted
+    return Promise.resolve(
+        nodesToInsert.filter(
+            (value, index, self) =>
+                index ===
+                self.findIndex(
+                    (t) => t.original_data_id === value.original_data_id && t.data_source_id === value.data_source_id && t.container_id === value.container_id,
+                ),
+        ),
+    );
+}
+
+export async function GenerateEdges(...staging: DataStaging[]): Promise<Edge[]> {
+    const stagingMapper = DataStagingMapper.Instance;
+    const stagingRepo = new DataStagingRepository();
+    const mappingRepo = new TypeMappingRepository();
+
+    const transaction = await stagingMapper.startTransaction();
+
+    const updated: DataStaging[] = [];
+    const records = staging.map((s) => {
+        if (!s.shape_hash) {
+            const shapeHash = TypeMapping.objectToShapeHash(s.data, {
+                value_nodes: s.data_source_config?.value_nodes,
+                stop_nodes: s.data_source_config?.stop_nodes,
+            });
+            s.shape_hash = shapeHash;
+
+            updated.push(s);
+        }
+
+        return s;
+    });
+    // update the staging records with the shape-hash if needed
+    await stagingRepo.bulkSave(updated, transaction.value);
+
+    // NOTE: this db call might return records which don't match the shapehash/data_source combo because we're passing
+    // a lot of records at once to the call to minimize db round-trips. I think this is a good trade-off, but if we start
+    // to see a lot of slowdowns - this might be a likely candidate
+    const all_mappings = await mappingRepo
+        .where()
+        .shape_hash(
+            'in',
+            records.map((s) => s.shape_hash),
+        )
+        .and()
+        .dataSourceID(
+            'in',
+            records.map((s) => s.data_source_id),
+        )
+        .list(true, undefined, transaction.value);
+
+    const rawEdges: Edge[] = [];
+
+    for (const record of records) {
+        const errors = await record.validationErrors();
+        if (errors) {
+            await stagingRepo.addError(record.id!, 'data does not pass validation for processing');
+            continue;
+        }
+        // pull the mappings out
+        let mappings = all_mappings.value.filter((m) => m.data_source_id === record.data_source_id && m.shape_hash === record.shape_hash);
+        if (mappings.length === 0) {
+            const inserted = await mappingRepo.save(
+                new TypeMapping({
+                    container_id: record.container_id!,
+                    data_source_id: record.data_source_id!,
+                    sample_payload: record.data,
+                    shape_hash: record.shape_hash,
+                }),
+                await ReturnSuperUser(),
+            );
+            await stagingRepo.setErrors(record.id!, ['no active transformations for type mapping'], transaction.value);
+            if (inserted.isError) {
+                Logger.error('unable to insert mapping into database', inserted.error);
+            }
+            continue;
+        }
+
+        mappings = mappings.filter((m) => m.active);
+        if (mappings.length === 0) {
+            await stagingRepo.setErrors(record.id!, ['no active type mapping for record'], transaction.value);
+            continue;
+        }
+
+        // for each transformation run the transformation process. Results will either be an array of nodes or an array of edges
+        // if we run into errors, add the error to the data staging row, and immediately return. Do not attempt to
+        // run any more transformations
+        for (const mapping of mappings) {
+            if (mapping.transformations)
+                for (const transformation of mapping.transformations.filter((t) => t.type === 'edge')) {
+                    // skip if the transformation is archived
+                    if (transformation.archived) continue;
+
+                    // keep in mind that any conversion errors that didn't cause the complete failure of the transformation
+                    // will be contained in the metadata object on the transformed object
+                    const results = await transformation.applyTransformation(record);
+                    if (results.isError) {
+                        await stagingRepo.setErrors(
+                            record.id!,
+                            [`unable to apply transformation ${transformation.id} to data: ${results.error?.error}`],
+                            transaction.value,
+                        );
+                        continue;
+                    }
+
+                    if (IsEdges(results.value)) rawEdges.push(...results.value);
+                }
+        }
+    }
+
+    const finishedEdges: Edge[] = [];
+    for (const rawEdge of rawEdges) {
+        const edges = await new EdgeRepository().populateFromParameters(rawEdge);
+        if (edges.isError) {
+            Logger.error(`unable to create edges from parameters: ${edges.error?.error}`);
+            continue;
+        }
+        finishedEdges.push(...edges.value);
+    }
+
+    return Promise.resolve(finishedEdges);
 }
