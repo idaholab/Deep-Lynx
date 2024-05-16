@@ -54,6 +54,7 @@ async function Start(): Promise<void> {
     const MAX_WORKERS = os.availableParallelism();
     const workers: Worker[] = new Array(MAX_WORKERS);
     const containerIDs = Object.keys(containerImportMap);
+    const incompleteContainerIDs = Object.keys(containerImportMap);
 
     for (let i = 0; i < workers.length; i++) {
         if (containerIDs.length > 0) {
@@ -66,6 +67,8 @@ async function Start(): Promise<void> {
             });
 
             workers[i].on('exit', () => {
+                // doesn't matter what id we get here, we're just using it to indicate completed status
+                incompleteContainerIDs.pop();
                 if (containerIDs.length > 0) {
                     const nextContainerID = containerIDs.pop();
 
@@ -75,15 +78,17 @@ async function Start(): Promise<void> {
                         },
                     });
                 }
+
+                if (incompleteContainerIDs.length === 0) {
+                    // complete the transaction so we release the advisory lock
+                    void ImportMapper.Instance.completeTransaction(transaction.value);
+
+                    if (parentPort) parentPort.postMessage('done');
+                    else process.exit(0);
+                }
             });
         }
     }
-
-    // complete the transaction so we release the advisory lock
-    await ImportMapper.Instance.completeTransaction(transaction.value);
-
-    if (parentPort) parentPort.postMessage('done');
-    else process.exit(0);
 }
 
 void Start();

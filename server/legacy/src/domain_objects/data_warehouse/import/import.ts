@@ -99,7 +99,6 @@ export class DataStaging extends NakedDomainClass {
     container_id?: string;
 
     @IsOptional()
-    @IsNumber()
     files_count?: number;
 
     // we need to have this so we can stop spamming the database on the db on processing

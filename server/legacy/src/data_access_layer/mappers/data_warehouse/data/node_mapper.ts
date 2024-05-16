@@ -486,7 +486,7 @@ export default class NodeMapper extends Mapper {
                      LEFT JOIN type_mapping_transformations ts ON ts.id = nodes.type_mapping_transformation_id
                      LEFT JOIN tags ON tags.id IN (SELECT id::bigint FROM jsonb_to_recordset(ts.tags) AS x("id" text))
             WHERE nodes.import_data_id IN (%L)`;
-        const values = [importIDs];
+        const values = [...importIDs];
 
         return format(text, values);
     }
@@ -500,7 +500,7 @@ export default class NodeMapper extends Mapper {
                      LEFT JOIN data_staging_files ON data_staging_files.data_staging_id = data_staging.id
                      LEFT JOIN files ON files.id = data_staging_files.file_id
             WHERE nodes.import_data_id IN (%L)`;
-        const values = [importIDs];
+        const values = [...importIDs];
 
         return format(text, values);
     }

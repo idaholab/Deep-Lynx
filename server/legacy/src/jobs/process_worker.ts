@@ -11,6 +11,8 @@ import Papa from 'papaparse';
 import Logger from '../services/logger';
 import NodeMapper from '../data_access_layer/mappers/data_warehouse/data/node_mapper';
 import EdgeMapper from '../data_access_layer/mappers/data_warehouse/data/edge_mapper';
+import {pipeline} from 'node:stream/promises';
+const devnull = require('dev-null');
 
 async function Start(): Promise<void> {
     await PostgresAdapter.Instance.init();
@@ -26,7 +28,7 @@ async function Start(): Promise<void> {
     // and the COPY ON CONFLICT command to update the data staging records with nodes_inserted flag updated to show
     // we've generated and inserted the nodes - do the same thing for edges
     const nodeReadStream = client.query(new QueryStream(DataStagingMapper.Instance.listImportActiveMappingStatementNodes(importIDs)));
-    const nodeTableStream = client.query(copyFrom('COPY nodes FROM STDIN ON CONFLICT DO NOTHING'));
+    const nodeTableStream = client.query(copyFrom('COPY nodes FROM STDIN'));
 
     let firstIteration = true;
     // build a transform stream that outputs nodes as csv data
@@ -41,10 +43,14 @@ async function Start(): Promise<void> {
                         .then((nodes) => {
                             // convert to csv, only outputting the headers on the first iteration through to avoid
                             // breaking the copy from
-                            this.push(firstIteration ? Papa.unparse(nodes, {header: true}) : Papa.unparse(nodes, {header: false}));
+                            if (nodes.length > 0) this.push(firstIteration ? Papa.unparse(nodes, {header: true}) : Papa.unparse(nodes, {header: false}));
                             firstIteration = false;
+                            callback();
                         })
-                        .catch((e: Error) => callback(e, null));
+                        .catch((e: Error) => {
+                            Logger.error(`error in generating nodes ${JSON.stringify(e)}`);
+                            callback();
+                        });
                 },
             });
         }
@@ -52,29 +58,22 @@ async function Start(): Promise<void> {
 
     nodeReadStream.on('error', (e: Error) => {
         Logger.error(`unexpected error in querying nodes for processing thread ${JSON.stringify(e)}`);
-        if (parentPort) parentPort.postMessage('done');
-        else {
-            process.exit(1);
-        }
     });
 
     nodeTableStream.on('error', (e: Error) => {
         Logger.error(`unexpected error in inserting nodes in the processing thread ${JSON.stringify(e)}`);
-        if (parentPort) parentPort.postMessage('done');
-        else {
-            process.exit(1);
-        }
     });
 
     // pipe the query stream first to the transform stream to generate nodes, then to the table stream to insert them
-    nodeReadStream.pipe(new NodeTransform()).pipe(nodeTableStream);
+    await pipeline(nodeReadStream, new NodeTransform(), nodeTableStream);
+
     // mark the nodes processed
     const nodesProcessed = await DataStagingMapper.Instance.MarkNodesProcessed(importIDs);
     if (nodesProcessed.isError) Logger.error(`unexpected error marking nodes processed in the processing thread ${JSON.stringify(nodesProcessed.error)}`);
 
     // now that we've done the nodes - move on and do the same thing for the edges
     const edgeReadStream = client.query(new QueryStream(DataStagingMapper.Instance.listImportActiveMappingStatementEdges(importIDs)));
-    const edgeTableStream = client.query(copyFrom('COPY edges FROM STDIN ON CONFLICT DO NOTHING'));
+    const edgeTableStream = client.query(copyFrom('COPY edges FROM STDIN'));
 
     firstIteration = true;
 
@@ -90,10 +89,14 @@ async function Start(): Promise<void> {
                         .then((edges) => {
                             // convert to csv, only outputting the headers on the first iteration through to avoid
                             // breaking the copy from
-                            this.push(firstIteration ? Papa.unparse(edges, {header: true}) : Papa.unparse(edges, {header: false}));
+                            if (edges.length > 0) this.push(firstIteration ? Papa.unparse(edges, {header: true}) : Papa.unparse(edges, {header: false}));
                             firstIteration = false;
+                            callback();
                         })
-                        .catch((e: Error) => callback(e, null));
+                        .catch((e: Error) => {
+                            Logger.error(`error in generating edges ${JSON.stringify(e)}`);
+                            callback();
+                        });
                 },
             });
         }
@@ -101,22 +104,14 @@ async function Start(): Promise<void> {
 
     edgeReadStream.on('error', (e: Error) => {
         Logger.error(`unexpected error in querying edges for processing thread ${JSON.stringify(e)}`);
-        if (parentPort) parentPort.postMessage('done');
-        else {
-            process.exit(1);
-        }
     });
 
     edgeTableStream.on('error', (e: Error) => {
         Logger.error(`unexpected error in inserting edges in the processing thread ${JSON.stringify(e)}`);
-        if (parentPort) parentPort.postMessage('done');
-        else {
-            process.exit(1);
-        }
     });
 
     // pipe the query stream first to the transform stream to generate edges, then to the table stream to insert them
-    edgeReadStream.pipe(new EdgeTransform()).pipe(edgeTableStream);
+    await pipeline(edgeReadStream, new EdgeTransform(), edgeTableStream);
     // mark the edges processed
     const edgesProcessed = await DataStagingMapper.Instance.MarkEdgesProcessed(importIDs);
     if (edgesProcessed.isError) Logger.error(`unexpected error marking edges processed in the processing thread ${JSON.stringify(edgesProcessed.error)}`);
@@ -133,6 +128,8 @@ async function Start(): Promise<void> {
 
     result = await EdgeMapper.Instance.AttachFilesForImport(importIDs);
     if (result.isError) Logger.error(`unexpected error attaching files to edges in the processing thread ${JSON.stringify(result.error)}`);
+
+    process.exit(0);
 }
 
 void Start();
