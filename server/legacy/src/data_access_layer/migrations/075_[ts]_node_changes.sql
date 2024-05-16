@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS nodes_migration
         REFERENCES public.type_mapping_transformations (id) MATCH SIMPLE
         ON UPDATE CASCADE
         ON DELETE SET NULL
-) PARTITION BY RANGE (created_at);
+);
 
 
 CREATE TABLE IF NOT EXISTS edges_migration
@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS edges_migration
         REFERENCES public.type_mapping_transformations (id) MATCH SIMPLE
         ON UPDATE CASCADE
         ON DELETE SET NULL
-) PARTITION BY RANGE (created_at);
+);
 
 CREATE TABLE IF NOT EXISTS data_staging_migration(
      "data_source_id" int8,
@@ -138,11 +138,121 @@ DROP TABLE IF EXISTS data_staging;
 DROP FUNCTION IF EXISTS link_edge;
 
 /* now rebuild the tables and views */
-ALTER TABLE nodes_migration RENAME TO nodes;
-ALTER TABLE edges_migration RENAME TO edges;
 ALTER TABLE data_staging_migration RENAME TO data_staging;
 
+CREATE TABLE IF NOT EXISTS nodes
+(
+    id bigserial NOT NULL,
+    container_id bigint NOT NULL,
+    metatype_id bigint NOT NULL,
+    data_source_id bigint,
+    import_data_id bigint,
+    type_mapping_transformation_id bigint,
+    original_data_id text COLLATE pg_catalog."default",
+    properties jsonb NOT NULL,
+    metadata jsonb,
+    created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    modified_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    deleted_at timestamp without time zone,
+    created_by character varying COLLATE pg_catalog."default",
+    modified_by character varying COLLATE pg_catalog."default",
+    data_staging_id uuid,
+    metadata_properties jsonb,
+    CONSTRAINT nodes_m__pkey PRIMARY KEY (id, created_at),
+    CONSTRAINT nodes_m_container_id_fkey FOREIGN KEY (container_id)
+        REFERENCES public.containers (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT nodes_m_data_source_id_fkey FOREIGN KEY (data_source_id)
+        REFERENCES public.data_sources (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE SET NULL,
+    CONSTRAINT nodes_m_import_data_id_fkey FOREIGN KEY (import_data_id)
+        REFERENCES public.imports (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE SET NULL,
+    CONSTRAINT nodes_m_metatype_id_fkey FOREIGN KEY (metatype_id)
+        REFERENCES public.metatypes (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT nodes_m_type_mapping_transformation_id_fkey FOREIGN KEY (type_mapping_transformation_id)
+        REFERENCES public.type_mapping_transformations (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE SET NULL
+)PARTITION BY RANGE(created_at);
+
+
+CREATE TABLE IF NOT EXISTS edges
+(
+    id bigserial NOT NULL,
+    container_id bigint NOT NULL,
+    relationship_pair_id bigint NOT NULL,
+    data_source_id bigint,
+    import_data_id bigint,
+    type_mapping_transformation_id bigint,
+    origin_id bigint,
+    destination_id bigint,
+    origin_original_id text COLLATE pg_catalog."default",
+    origin_data_source_id bigint,
+    origin_metatype_id bigint,
+    destination_original_id text COLLATE pg_catalog."default",
+    destination_data_source_id bigint,
+    destination_metatype_id bigint,
+    properties jsonb,
+    metadata jsonb,
+    created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    modified_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at timestamp without time zone,
+    created_by character varying COLLATE pg_catalog."default",
+    modified_by character varying COLLATE pg_catalog."default",
+    data_staging_id uuid,
+    metadata_properties jsonb,
+    CONSTRAINT edges_m_pkey PRIMARY KEY (id, created_at),
+    CONSTRAINT edges_m_container_id_fkey FOREIGN KEY (container_id)
+        REFERENCES public.containers (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT edges_m_data_source_id_fkey FOREIGN KEY (data_source_id)
+        REFERENCES public.data_sources (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE SET NULL,
+    CONSTRAINT edges_m_destination_data_source_id_fkey FOREIGN KEY (destination_data_source_id)
+        REFERENCES public.data_sources (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE SET NULL,
+    CONSTRAINT edges_m_destination_metatype_id_fkey FOREIGN KEY (destination_metatype_id)
+        REFERENCES public.metatypes (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE SET NULL,
+    CONSTRAINT edges_m_import_data_id_fkey FOREIGN KEY (import_data_id)
+        REFERENCES public.imports (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE SET NULL,
+    CONSTRAINT edges_m_origin_data_source_id_fkey FOREIGN KEY (origin_data_source_id)
+        REFERENCES public.data_sources (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE SET NULL,
+    CONSTRAINT edges_m_origin_metatype_id_fkey FOREIGN KEY (origin_metatype_id)
+        REFERENCES public.metatypes (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE SET NULL,
+    CONSTRAINT edges_m_relationship_pair_id_fkey FOREIGN KEY (relationship_pair_id)
+        REFERENCES public.metatype_relationship_pairs (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT edges_m_type_mapping_transformation_id_fkey FOREIGN KEY (type_mapping_transformation_id)
+        REFERENCES public.type_mapping_transformations (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE SET NULL
+)PARTITION BY RANGE(created_at);;
+
+
 CREATE TABLE IF NOT EXISTS default_node_partition PARTITION OF nodes DEFAULT;
+CREATE TABLE IF NOT EXISTS default_edge_partition PARTITION OF edges DEFAULT;
+INSERT INTO nodes SELECT * FROM nodes_migration;
+INSERT INTO edges SELECT * FROM edges_migration;
+DROP TABLE IF EXISTS nodes_migration;
+DROP TABLE IF EXISTS edges_migration;
 
 CREATE VIEW current_edges AS(SELECT DISTINCT ON (edges.origin_id, edges.destination_id, edges.data_source_id, edges.relationship_pair_id) edges.id,
         edges.container_id,
