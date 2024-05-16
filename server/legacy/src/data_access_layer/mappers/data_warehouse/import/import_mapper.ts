@@ -216,6 +216,14 @@ export default class ImportMapper extends Mapper {
         return Promise.resolve(Result.Success(true));
     }
 
+    public async SetProcessStart(start: Date, importID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.setProcessStartStatement(importID));
+    }
+
+    public async SetProcessEnd(end: Date, importID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.setProcessEndStatement(importID));
+    }
+
     private setProcessedNull(importID: string): QueryConfig {
         return {
             text: `UPDATE ${DataStagingMapper.tableName} SET inserted_at = NULL WHERE import_id = $1`,
@@ -367,5 +375,19 @@ export default class ImportMapper extends Mapper {
             text: `SELECT COUNT(*) FROM imports WHERE data_source_id = $1 LIMIT 1`,
             values: [datasourceID],
         };
+    }
+
+    private setProcessStartStatement(importID: string): QueryConfig {
+        return {
+            text: `UPDATE imports SET process_start = NOW() WHERE id = $1`,
+            values: [importID]
+        }
+    }
+
+    private setProcessEndStatement(importID: string): QueryConfig {
+        return {
+            text: `UPDATE imports SET process_end = NOW() WHERE id = $1`,
+            values: [importID]
+        }
     }
 }

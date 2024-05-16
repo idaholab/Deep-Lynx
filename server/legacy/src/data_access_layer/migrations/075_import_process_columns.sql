@@ -1,0 +1,2 @@
+ALTER TABLE imports ADD COLUMN process_start TIMESTAMP;
+ALTER TABLE imports ADD COLUMN process_end TIMESTAMP;

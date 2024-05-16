@@ -48,6 +48,14 @@ export default class ImportRepository extends Repository implements RepositoryIn
         return this.#mapper.SetStatus(importID, status, message, transaction);
     }
 
+    setStart(start: Date, importID: string): Promise<Result<boolean>> {
+        return this.#mapper.SetProcessStart(start, importID);
+    }
+
+    setEnd(end: Date, importID: string): Promise<Result<boolean>> {
+        return this.#mapper.SetProcessEnd(end, importID);
+    }
+
     // We do NOT allow updates on an import, too much room for error
     async save(importRecord: Import, user: User): Promise<Result<boolean>> {
         const errors = await importRecord.validationErrors();

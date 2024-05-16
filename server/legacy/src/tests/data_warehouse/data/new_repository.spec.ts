@@ -3,17 +3,17 @@ import PostgresAdapter from '../../../data_access_layer/mappers/db_adapters/post
 import MetatypeKeyMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper';
 import MetatypeMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper';
 import faker from 'faker';
-import {expect} from 'chai';
+import { expect } from 'chai';
 import NodeMapper from '../../../data_access_layer/mappers/data_warehouse/data/node_mapper';
 import Container from '../../../domain_objects/data_warehouse/ontology/container';
 import Metatype from '../../../domain_objects/data_warehouse/ontology/metatype';
 import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import MetatypeKey from '../../../domain_objects/data_warehouse/ontology/metatype_key';
 import Node from '../../../domain_objects/data_warehouse/data/node';
-import {User} from '../../../domain_objects/access_management/user';
+import { User } from '../../../domain_objects/access_management/user';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
-import DataSourceRecord, {TimeseriesColumn, TimeseriesDataSourceConfig} from '../../../domain_objects/data_warehouse/import/data_source';
+import DataSourceRecord, { TimeseriesColumn, TimeseriesDataSourceConfig } from '../../../domain_objects/data_warehouse/import/data_source';
 import MetatypeRelationshipMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper';
 import MetatypeRelationship from '../../../domain_objects/data_warehouse/ontology/metatype_relationship';
 import MetatypeRelationshipKey from '../../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
@@ -22,17 +22,18 @@ import MetatypeRelationshipPair from '../../../domain_objects/data_warehouse/ont
 import MetatypeRelationshipPairMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper';
 import EdgeMapper from '../../../data_access_layer/mappers/data_warehouse/data/edge_mapper';
 import Edge from '../../../domain_objects/data_warehouse/data/edge';
-import {plainToInstance} from 'class-transformer';
+import { plainToInstance } from 'class-transformer';
 import MetatypeRepository from '../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository';
 import MetatypeRelationshipRepository from '../../../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_repository';
 import NodeRepository from '../../../data_access_layer/repositories/data_warehouse/data/node_repository';
 import EdgeRepository from '../../../data_access_layer/repositories/data_warehouse/data/edge_repository';
 import MetatypeRelationshipPairRepository from '../../../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_pair_repository';
-import DataSourceRepository, {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
+import DataSourceRepository, { DataSourceFactory } from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import fs from 'fs';
 import DataStagingRepository from '../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
-import {Repository} from '../../../data_access_layer/repositories/repository';
+import { Repository } from '../../../data_access_layer/repositories/repository';
 import NodeLeafRepository from '../../../data_access_layer/repositories/data_warehouse/data/node_leaf_repository';
+import Config from '../../../services/config';
 
 describe('The updated repository layer', async () => {
     let containerID: string;
@@ -339,6 +340,7 @@ describe('The updated repository layer', async () => {
         expect(albums.length).eq(6);
         expect(albums[0].metatype!.id).eq(metatypes[3].id);
         expect(albums[5].metatype!.id).eq(metatypes[3].id);
+
 
         const relList = [
             new MetatypeRelationship({
@@ -732,84 +734,87 @@ describe('The updated repository layer', async () => {
         expect(relPairs.value).not.empty;
         expect(edgeResults.value.length).eq(72);
 
-        // setup for timeseries query
+        // setup for timeseries query (skip if not timescale)
+        if (Config.timescaledb_enabled) {
+            const sourceRepo = new DataSourceRepository();
 
-        const sourceRepo = new DataSourceRepository();
-
-        let source = await new DataSourceFactory().fromDataSourceRecord(
-            new DataSourceRecord({
-                container_id: containerID,
-                name: 'Test Data Source Timeseries GraphQL',
-                active: false,
-                adapter_type: 'timeseries',
-                config: new TimeseriesDataSourceConfig({
-                    columns: [
-                        {
-                            column_name: 'primary_timestamp',
-                            property_name: 'Timestamp',
-                            is_primary_timestamp: true,
-                            type: 'date',
-                            date_conversion_format_string: 'YYYY-MM-DD HH:MI:SS',
-                        },
-                        {
-                            column_name: 'temperature',
-                            property_name: 'Temperature (K)',
-                            is_primary_timestamp: false,
-                            type: 'number',
-                        },
-                        {
-                            column_name: 'velocity_i',
-                            property_name: 'Velocity[i] (m/s)',
-                            is_primary_timestamp: false,
-                            type: 'number',
-                        },
-                        {
-                            column_name: 'velocity_j',
-                            property_name: 'Velocity[j] (m/s)',
-                            is_primary_timestamp: false,
-                            type: 'number',
-                        },
-                        {
-                            column_name: 'x',
-                            property_name: 'X (m)',
-                            is_primary_timestamp: false,
-                            type: 'number',
-                        },
-                        {
-                            column_name: 'y',
-                            property_name: 'Y (m)',
-                            is_primary_timestamp: false,
-                            type: 'number',
-                        },
-                        {
-                            column_name: 'z',
-                            property_name: 'Z (m)',
-                            is_primary_timestamp: false,
-                            type: 'number',
-                        },
-                    ] as TimeseriesColumn[],
+            let source = await new DataSourceFactory().fromDataSourceRecord(
+                new DataSourceRecord({
+                    container_id: containerID,
+                    name: 'Test Data Source Timeseries GraphQL',
+                    active: false,
+                    adapter_type: 'timeseries',
+                    config: new TimeseriesDataSourceConfig({
+                        columns: [
+                            {
+                                column_name: 'primary_timestamp',
+                                property_name: 'Timestamp',
+                                is_primary_timestamp: true,
+                                type: 'date',
+                                date_conversion_format_string: 'YYYY-MM-DD HH:MI:SS',
+                            },
+                            {
+                                column_name: 'temperature',
+                                property_name: 'Temperature (K)',
+                                is_primary_timestamp: false,
+                                type: 'number',
+                            },
+                            {
+                                column_name: 'velocity_i',
+                                property_name: 'Velocity[i] (m/s)',
+                                is_primary_timestamp: false,
+                                type: 'number',
+                            },
+                            {
+                                column_name: 'velocity_j',
+                                property_name: 'Velocity[j] (m/s)',
+                                is_primary_timestamp: false,
+                                type: 'number',
+                            },
+                            {
+                                column_name: 'x',
+                                property_name: 'X (m)',
+                                is_primary_timestamp: false,
+                                type: 'number',
+                            },
+                            {
+                                column_name: 'y',
+                                property_name: 'Y (m)',
+                                is_primary_timestamp: false,
+                                type: 'number',
+                            },
+                            {
+                                column_name: 'z',
+                                property_name: 'Z (m)',
+                                is_primary_timestamp: false,
+                                type: 'number',
+                            },
+                        ] as TimeseriesColumn[],
+                    }),
                 }),
-            }),
-        );
+            );
 
-        let results = await sourceRepo.save(source!, user);
-        expect(results.isError, results.error?.error).false;
-        expect(source!.DataSourceRecord?.id).not.undefined;
-        timeSourceID = source!.DataSourceRecord!.id!;
+            let results = await sourceRepo.save(source!, user);
+            expect(results.isError, results.error?.error).false;
+            expect(source!.DataSourceRecord?.id).not.undefined;
+            timeSourceID = source!.DataSourceRecord!.id!;
 
-        // write the json test data out to a temporary file
-        fs.writeFileSync('./test-timeseries-datasource-graphql.json', sampleJSON);
+            // write the json test data out to a temporary file
+            fs.writeFileSync('./test-timeseries-datasource-graphql.json', sampleJSON);
 
-        // now we create an import through the datasource
-        let received = await source!.ReceiveData(fs.createReadStream('./test-timeseries-datasource-graphql.json'), user);
-        expect(received.isError, received.error?.error).false;
+            // now we create an import through the datasource
+            let received = await source!.ReceiveData(fs.createReadStream('./test-timeseries-datasource-graphql.json'), user);
+            expect(received.isError, received.error?.error).false;
+        }
 
         return Promise.resolve();
     });
 
     after(async function () {
         await DataSourceMapper.Instance.Delete(dataSourceID);
-        await DataSourceMapper.Instance.DeleteWithData(timeSourceID);
+        if (Config.timescaledb_enabled) {
+            await DataSourceMapper.Instance.DeleteWithData(timeSourceID);
+        }
         await ContainerMapper.Instance.Delete(containerID);
         await UserMapper.Instance.Delete(user.id!);
         void PostgresAdapter.Instance.close();
@@ -857,7 +862,7 @@ describe('The updated repository layer', async () => {
         const nodeRepo = new NodeRepository();
 
         // json format
-        let saveToJson = await nodeRepo.where().containerID('eq', containerID).listAllToFile({containerID: containerID, file_type: 'json'});
+        let saveToJson = await nodeRepo.where().containerID('eq', containerID).listAllToFile({ containerID: containerID, file_type: 'json' });
         expect(saveToJson.isError).false;
         expect(saveToJson.value.file_size).gt(0);
 
@@ -1110,11 +1115,11 @@ describe('The updated repository layer', async () => {
         const query = nodeRepo
             .where()
             .containerID('eq', containerID)
-            .join(edgeRepo._tableName, {origin_col: 'id', destination_col: 'origin_id'}, {join_type: 'INNER'})
+            .join(edgeRepo._tableName, { origin_col: 'id', destination_col: 'origin_id' }, { join_type: 'INNER' })
             .join(
                 nodeRepo2._tableName,
-                {origin_col: 'destination_id', destination_col: 'id', operator: '<>'},
-                {destination_alias: 'dest', origin: edgeRepo._tableName},
+                { origin_col: 'destination_id', destination_col: 'id', operator: '<>' },
+                { destination_alias: 'dest', origin: edgeRepo._tableName },
             );
         expect(query._query.JOINS).not.undefined;
         let check = new RegExp(`INNER JOIN ${edgeRepo._tableName} .* ON .*id = .*origin_id`);
@@ -1135,8 +1140,8 @@ describe('The updated repository layer', async () => {
         const query = nodeRepo
             .where()
             .containerID('eq', containerID)
-            .join(edgeRepo._tableName, {origin_col: 'id', destination_col: 'origin_id'}, {join_type: 'INNER'})
-            .addFields({id: 'edge_id', properties: 'edge_properties'}, edgeRepo._tableName)
+            .join(edgeRepo._tableName, { origin_col: 'id', destination_col: 'origin_id' }, { join_type: 'INNER' })
+            .addFields({ id: 'edge_id', properties: 'edge_properties' }, edgeRepo._tableName)
             .addFields('relationship_pair_id', edgeRepo._tableName)
             .addFields(['origin_id', 'destination_id'], edgeRepo._tableName);
         expect(query._query.JOINS).not.undefined;
@@ -1174,14 +1179,14 @@ describe('The updated repository layer', async () => {
         const query = nodeRepo
             .where()
             .containerID('eq', containerID)
-            .join(edgeRepo._tableName, {origin_col: 'id', destination_col: 'origin_id'}, {join_type: 'INNER'})
-            .addFields({id: 'edge_id', properties: 'edge_properties'}, edgeRepo._tableName)
+            .join(edgeRepo._tableName, { origin_col: 'id', destination_col: 'origin_id' }, { join_type: 'INNER' })
+            .addFields({ id: 'edge_id', properties: 'edge_properties' }, edgeRepo._tableName)
             .where()
             .containerID('eq', containerID)
             .and()
             .property('genre', 'in', genres)
             .and()
-            .query('id', 'in', test_edge_ids, {tableName: edgeRepo._tableName});
+            .query('id', 'in', test_edge_ids, { tableName: edgeRepo._tableName });
         expect(query._query.JOINS).not.undefined;
         const edgeAlias = nodeRepo._aliasMap.get(edgeRepo._tableName);
         const nodeAlias = nodeRepo._tableAlias;
@@ -1226,8 +1231,8 @@ describe('The updated repository layer', async () => {
         const edgeRepo = new EdgeRepository();
 
         const query = nodeRepo
-            .join(edgeRepo._tableName, {origin_col: 'id', destination_col: 'origin_id'}, {join_type: 'INNER'})
-            .addFields({"properties #>> '{genre}'": 'genre'})
+            .join(edgeRepo._tableName, { origin_col: 'id', destination_col: 'origin_id' }, { join_type: 'INNER' })
+            .addFields({ "properties #>> '{genre}'": 'genre' })
             .where()
             .containerID('eq', containerID)
             .and()
@@ -1235,7 +1240,7 @@ describe('The updated repository layer', async () => {
         // hijack the query to use count * (count function only returns one row, but we're expecting 4)
         query._query.SELECT[0] = 'COUNT(*)';
 
-        const results = await query.list(false, {groupBy: `properties #>> '{genre}'`});
+        const results = await query.list(false, { groupBy: `properties #>> '{genre}'` });
         expect(results.isError, JSON.stringify(results.error)).false;
         let totalCount = 0;
         results.value.forEach((result) => {
@@ -1253,15 +1258,15 @@ describe('The updated repository layer', async () => {
 
         const results = await metatypeRepo
             .select(['id', 'container_id', 'name', 'description', 'uuid'])
-            .join('current_nodes', {origin_col: 'id', destination_col: 'metatype_id'}, {destination_alias: 'n'})
-            .addFields({'COUNT(id)': 'node_count'}, 'n')
+            .join('current_nodes', { origin_col: 'id', destination_col: 'metatype_id' }, { destination_alias: 'n' })
+            .addFields({ 'COUNT(id)': 'node_count' }, 'n')
             .groupBy(`${metatypeRepo._tableAlias}.container_id`) // test with a qualified column
             .groupBy('name', metatypeRepo._tableAlias) // test with a table arg
             .groupBy(['description', 'uuid']) // test with no table arg and a list
             .where()
             .containerID('eq', containerID)
             .sortBy('COUNT(id)', 'n', true)
-            .list(false, false, {groupBy: 'id', limit: 3}); // test grouping in list function
+            .list(false, false, { groupBy: 'id', limit: 3 }); // test grouping in list function
         expect(results.isError, JSON.stringify(results.error)).false;
         expect(results.value.length).eq(3);
         // test to see our results match what they're supposed to
@@ -1273,21 +1278,23 @@ describe('The updated repository layer', async () => {
     });
 
     it('supports timeseries queries', async () => {
-        const repo = new DataSourceRepository();
-        // const config = source.DataSourceRecord.config as TimeseriesDataSourceConfig;
+        if (Config.timescaledb_enabled) {
+            const repo = new DataSourceRepository();
+            // const config = source.DataSourceRecord.config as TimeseriesDataSourceConfig;
 
-        const query = repo.where().query('temperature', '>', 250, {
-            dataType: 'integer',
-            tableName: `y_${timeSourceID}`,
-        });
-        expect(query._query.WHERE![1]).contains(`temperature::text > '250'::text`);
+            const query = repo.where().query('temperature', '>', 250, {
+                dataType: 'integer',
+                tableName: `y_${timeSourceID}`,
+            });
+            expect(query._query.WHERE![1]).contains(`temperature::text > '250'::text`);
 
-        const results = await query.listTimeseries(timeSourceID);
-        expect(results.value.length).eq(6);
-        results.value.forEach((entry) => {
-            expect(entry.temperature).greaterThan(250);
-            expect(entry.z).eq(0);
-        });
+            const results = await query.listTimeseries(timeSourceID);
+            expect(results.value.length).eq(6);
+            results.value.forEach((entry) => {
+                expect(entry.temperature).greaterThan(250);
+                expect(entry.z).eq(0);
+            });
+        }
 
         return Promise.resolve();
     });
@@ -1312,7 +1319,7 @@ describe('The updated repository layer', async () => {
         expect(query._query.JOINS![0]).match(check);
 
         // second join (duplicate)
-        query = query.join(stagingRepo._tableName, {origin_col: 'data_staging_id', destination_col: 'id'});
+        query = query.join(stagingRepo._tableName, { origin_col: 'data_staging_id', destination_col: 'id' });
         // this second (duplicate) join shouldn't have been added
         expect(query._query.JOINS?.length).eq(1);
 
@@ -1328,7 +1335,7 @@ describe('The updated repository layer', async () => {
         expect(query._query.JOINS![1]).match(check);
 
         // testing a duplicate join with an alternate alias
-        query = query.join(stagingRepo._tableName, {origin_col: 'data_staging_id', destination_col: 'id'}, {destination_alias: 'new_alias'});
+        query = query.join(stagingRepo._tableName, { origin_col: 'data_staging_id', destination_col: 'id' }, { destination_alias: 'new_alias' });
         // this join should have been added as it has a unique alias
         expect(query._query.JOINS?.length).eq(3);
         // ensure that the join added was the right one
@@ -1343,48 +1350,37 @@ describe('The updated repository layer', async () => {
     it('can perform subqueries', async () => {
         const nodeRepo = new NodeRepository();
 
-        let date = new Date();
-
         // create a subquery and save it to this variable
         const sub = nodeRepo.subquery(
             new NodeRepository(true)
-                .select(['id', 'MAX(created_at) AS created_at'], 'sub_nodes')
+                .select(['metatype_id', 'COUNT(*) AS type_count'], 'sub_nodes')
                 .from('nodes', 'sub_nodes')
                 .where()
-                .query('created_at', '<', date, {dataType: 'date'})
-                .and()
                 .query('container_id', 'eq', containerID)
-                .and(new NodeRepository(true).query('deleted_at', '>', date, {dataType: 'date'}).or().query('deleted_at', 'is null'))
-                .groupBy('id', 'sub_nodes'),
+                .groupBy('metatype_id', 'sub_nodes')
         );
 
-        let query = nodeRepo.join(
+        const query = new Repository('metatypes')
+        .select(['name AS "Type Name"'], 'mt')
+        .addFields(['type_count AS "Type Count"'], 'sub')
+        .from('metatypes', 'mt')
+        .where()
+        .query('container_id', 'eq', containerID)
+        .join(
             sub,
             [
-                {origin_col: 'id', destination_col: 'id'},
-                {origin_col: 'created_at', destination_col: 'created_at'},
+                { origin_col: 'id', destination_col: 'metatype_id' }
             ],
-            {destination_alias: 'sub', join_type: 'INNER', origin: 'nodes'},
-        );
-        let results = await query.list();
+            { destination_alias: 'sub', join_type: 'INNER', origin: 'mt' },
+        )
+        .sortBy('name', 'mt');
+        const results = await query.findAll();
         expect(results.isError, JSON.stringify(results.error)).false;
-        expect(results.value.length).eq(75);
-
-        // now add a filter to ensure that repository chaining still works
-        query = nodeRepo
-            .join(
-                sub,
-                [
-                    {origin_col: 'id', destination_col: 'id'},
-                    {origin_col: 'created_at', destination_col: 'created_at'},
-                ],
-                {destination_alias: 'sub', join_type: 'INNER', origin: 'nodes'},
-            )
-            .where()
-            .query('name', 'eq', 'Musician', {tableName: 'metatypes'});
-        results = await query.list();
-        expect(results.isError, JSON.stringify(results.error)).false;
-        expect(results.value.length).eq(16);
+        expect(results.value.length).eq(4);
+        expect(results.value[0]!['Type Count' as keyof object]).eq('6');
+        expect(results.value[1]!['Type Count' as keyof object]).eq('3');
+        expect(results.value[2]!['Type Count' as keyof object]).eq('16');
+        expect(results.value[3]!['Type Count' as keyof object]).eq('50');
     });
 
     it('does not qualify a null table', async () => {
@@ -1392,7 +1388,7 @@ describe('The updated repository layer', async () => {
 
         repo = repo
             .select('origin_id')
-            .addFields({'COUNT(*)': 'outgoing_edges'})
+            .addFields({ 'COUNT(*)': 'outgoing_edges' })
             .where()
             .containerID('eq', containerID)
             .groupBy('origin_id', null)
@@ -1409,26 +1405,15 @@ describe('The updated repository layer', async () => {
     });
 
     it('can sort in multiple formats', async () => {
-        let repo = new NodeLeafRepository(nodes[20].id!, containerID, '10');
-
-        repo = repo.sortBy('origin_metatype_id').sortBy('origin_metatype_uuid', null).sortBy('origin_metatype_name', 'fake_alias').options({});
-        const orderby = repo._query.ORDERBY!;
-        expect(orderby[0]).eq('nodeleafs.origin_metatype_id ASC');
-        expect(orderby[1]).eq('origin_metatype_uuid ASC');
-        expect(orderby[2]).eq('fake_alias.origin_metatype_name ASC');
-        repo._query.ORDERBY?.pop();
-        expect(orderby[2]).undefined;
-
-        repo = repo.options({
-            sortBy: 'destination_metatype_id,destination_id',
-            sortDesc: true,
-        });
-        expect(orderby[2]).eq('nodeleafs.destination_metatype_id DESC');
-        expect(orderby[3]).eq('nodeleafs.destination_id DESC');
-
-        const results = await repo.list();
-        expect(results.value[0].depth).eq(8);
-        expect(results.value[0].path?.length).eq(8);
+        let repo = new NodeRepository(true);
+        let results = await repo.sortBy('metatype_id').list();
+        expect(results.isError, results.error?.error).false;
+        expect(results.value[0]!['metatype_name' as keyof object]).eq('Musician');
+        
+        repo = new NodeRepository(true);
+        results = await repo.options({sortBy: 'metatype_id', sortDesc: true}).list();
+        expect(results.isError, results.error?.error).false;
+        expect(results.value[0]!['metatype_name' as keyof object]).eq('Album');
     });
 });
 
@@ -1482,7 +1467,7 @@ const test_rel_keys: MetatypeRelationshipKey[] = [
     }),
 ];
 
-const relPayload: {[key: string]: any} = {
+const relPayload: { [key: string]: any } = {
     inspiration: faker.name.findName(),
     color: 'red',
     notRequired: 12345,
