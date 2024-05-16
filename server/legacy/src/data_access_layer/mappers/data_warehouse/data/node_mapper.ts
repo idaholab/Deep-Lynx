@@ -144,6 +144,10 @@ export default class NodeMapper extends Mapper {
         });
     }
 
+    public async RowCount(containerID: string): Promise<Result<number>> {
+        return super.retrieve(this.getRowCount(containerID));
+    }
+
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
@@ -485,5 +489,9 @@ export default class NodeMapper extends Mapper {
              WHERE node_id = $1`,
             values: [nodeID],
         };
+    }
+
+    private getRowCount(containerID: string): QueryConfig {
+        return format(`SELECT COUNT(*) FROM nodes WHERE container_id = (%L)`, containerID);
     }
 }

@@ -13,6 +13,8 @@ import {NextFunction, Request, Response} from 'express';
 // Repository
 import NodeRepository from '../../../../../data_access_layer/repositories/data_warehouse/data/node_repository';
 import NodeLeafRepository from '../../../../../data_access_layer/repositories/data_warehouse/data/node_leaf_repository';
+import NodeMapper from "../../../../../data_access_layer/mappers/data_warehouse/data/node_mapper";
+import EdgeMapper from "../../../../../data_access_layer/mappers/data_warehouse/data/edge_mapper";
 const nodeRepo = new NodeRepository();
 
 export default class NodeFunctions {
@@ -198,6 +200,38 @@ export default class NodeFunctions {
                 .finally(() => next());
         } else {
             Result.Failure('node not found', 404).asResponse(res);
+            next();
+        }
+    }
+
+    public static countNodes(req: Request, res: Response, next: NextFunction) {
+        if (req.container) {
+            NodeMapper.Instance.RowCount(req.container.id!)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`container not found`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    public static countEdges(req: Request, res: Response, next: NextFunction) {
+        if (req.container) {
+            EdgeMapper.Instance.RowCount(req.container.id!)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`container not found`, 404).asResponse(res);
             next();
         }
     }

@@ -14,6 +14,7 @@ import {EdgeQueueItem} from '../domain_objects/data_warehouse/data/edge';
 import {InsertEdge} from '../data_processing/edge_inserter';
 import Cache from '../services/cache/cache';
 import BackedLogger from '../services/logger';
+import ImportRepository from "../data_access_layer/repositories/data_warehouse/import/import_repository";
 
 // handle cache clears from parent IF memory cache
 if (Config.cache_provider === 'memory') {
@@ -35,6 +36,8 @@ process.on('unhandledRejection', (reason, promise) => {
     process.exit(1);
 });
 
+const importRepo = new ImportRepository();
+
 void PostgresAdapter.Instance.init()
     .then(() => {
         void QueueFactory()
@@ -54,6 +57,11 @@ void PostgresAdapter.Instance.init()
                                 Logger.error(`unable to insert edge from queue ${e}`);
                                 callback();
                             });
+
+                        if (item.import_id && item.attempts < 1) {
+                            Logger.info(`setting end time ${new Date().toISOString()} for import ${item.import_id}`)
+                            void importRepo.setEnd(new Date(), item.import_id)
+                        }
 
                         return true;
                     },

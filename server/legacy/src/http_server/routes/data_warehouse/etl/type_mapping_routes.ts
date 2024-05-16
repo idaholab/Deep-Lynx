@@ -104,6 +104,18 @@ export default class TypeMappingRoutes {
         );
 
         app.get('/containers/:containerID/transformations/:transformationID', ...middleware, authInContainer('read', 'data'), this.retrieveTypeTransformation);
+        app.post(
+            '/containers/:containerID/import/datasources/:sourceID/mappings/:mappingID/active',
+            ...middleware,
+            authInContainer('write', 'data'),
+            this.setMappingActive,
+        );
+        app.delete(
+            '/containers/:containerID/import/datasources/:sourceID/mappings/:mappingID/active',
+            ...middleware,
+            authInContainer('write', 'data'),
+            this.setMappingInactive,
+        );
     }
 
     private static retrieveTypeMapping(req: Request, res: Response, next: NextFunction) {
@@ -197,7 +209,7 @@ export default class TypeMappingRoutes {
                         const prepared = [];
 
                         for (const mapping of results.value) {
-                            prepared.push(mappingRepo.prepareForImport(mapping, req.dataSource?.DataSourceRecord!, true));
+                            prepared.push(mappingRepo.prepareForImport(mapping, req.dataSource?.DataSourceRecord, true));
                         }
 
                         Promise.all(prepared)
@@ -625,6 +637,40 @@ export default class TypeMappingRoutes {
                 .finally(() => next());
         } else {
             Result.Failure(`Type Mapping not found`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static setMappingActive(req: Request, res: Response, next: NextFunction) {
+        if (req.typeMapping) {
+            TypeMappingMapper.Instance
+                .SetActive(req.typeMapping.id!)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`unable to find type mapping`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static setMappingInactive(req: Request, res: Response, next: NextFunction) {
+        if (req.typeMapping) {
+            TypeMappingMapper.Instance
+                .SetInActive(req.typeMapping.id!)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`unable to find type mapping`, 404).asResponse(res);
             next();
         }
     }
