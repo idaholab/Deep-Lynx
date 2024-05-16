@@ -118,8 +118,9 @@ export default class ImportMapper extends Mapper {
     // list all imports which have data with an inserted status - while we used to check status of the import,
     // checking for inserted records is a far better method when attempting to gauge if an import still needs processed
     // note: this will always list in the order the imports were received - and grouped by container_id
-    public async ListWithUninsertedData(): Promise<Result<Import[]>> {
-        return super.rows(this.listWithUninsertedDataStatement(), {resultClass: this.resultClass});
+    // we also use an advisory lock here on the import_ids to avoid duplicate processing when in a cluster
+    public async ListWithUninsertedDataLock(transaction?: PoolClient): Promise<Result<Import[]>> {
+        return super.rows(this.listWithUninsertedDataStatement(), {resultClass: this.resultClass, transaction});
     }
 
     public async Count(): Promise<Result<number>> {
@@ -338,6 +339,7 @@ export default class ImportMapper extends Mapper {
     public listWithUninsertedDataStatement(): QueryConfig {
         return {
             text: `SELECT imports.*, data_sources.container_id,
+                          pg_advisory_xact_lock(imports.id),
                           SUM(CASE WHEN data_staging.inserted_at <> NULL AND data_staging.import_id = imports.id THEN 1 ELSE 0 END) AS records_inserted,
                           SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records
                    FROM imports

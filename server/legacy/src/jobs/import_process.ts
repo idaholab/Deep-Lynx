@@ -30,9 +30,10 @@ if (Config.cache_provider === 'memory') {
 
 async function Start(): Promise<void> {
     await postgresAdapter.init();
+    const transaction = await ImportMapper.Instance.startTransaction();
 
     // we _should_ be able to load all the imports into memory because this job is running often enough
-    const importsResult = await ImportMapper.Instance.ListWithUninsertedData();
+    const importsResult = await ImportMapper.Instance.ListWithUninsertedDataLock(transaction.value);
 
     if (importsResult.isError) {
         Logger.error(`unexpected error in import processing thread ${JSON.stringify(importsResult.error)}`);
@@ -77,6 +78,9 @@ async function Start(): Promise<void> {
             });
         }
     }
+
+    // complete the transaction so we release the advisory lock
+    await ImportMapper.Instance.completeTransaction(transaction.value);
 
     if (parentPort) parentPort.postMessage('done');
     else process.exit(0);
