@@ -127,6 +127,9 @@ async function Start(): Promise<void> {
     // we pipe to devnull because we need to trigger the stream and don't
     // care where the data ultimately ends up
     stream.pipe(emitterStream).pipe(devnull({objectMode: true}));
+
+    if (parentPort) parentPort.postMessage('done');
+    else process.exit(0);
 }
 
 void Start();

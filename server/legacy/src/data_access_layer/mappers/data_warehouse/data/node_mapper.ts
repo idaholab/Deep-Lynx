@@ -99,6 +99,14 @@ export default class NodeMapper extends Mapper {
         return super.runStatement(this.removeFile(id, transformationID));
     }
 
+    public AttachTagsForImport(importIDs: string[]): Promise<Result<boolean>> {
+        return super.runStatement(this.attachTagsForImport(importIDs));
+    }
+
+    public AttachFilesForImport(importIDs: string[]): Promise<Result<boolean>> {
+        return super.runStatement(this.attachFilesForImport(importIDs));
+    }
+
     public ListTransformationsForNode(nodeID: string): Promise<Result<NodeTransformation[]>> {
         return super.rows<NodeTransformation>(this.listTransformationsStatement(nodeID), {
             resultClass: NodeTransformation,
@@ -466,6 +474,33 @@ export default class NodeMapper extends Mapper {
                        RETURNING *`;
 
         const values = nodeTransformations.map((nt) => [nt.node_id, nt.transformation_id]);
+
+        return format(text, values);
+    }
+
+    private attachTagsForImport(importIDs: string[]): string {
+        const text = `
+            INSERT INTO node_tags
+            SELECT nodes.id, tags.id
+            FROM nodes
+                     LEFT JOIN type_mapping_transformations ts ON ts.id = nodes.type_mapping_transformation_id
+                     LEFT JOIN tags ON tags.id IN (SELECT id::bigint FROM jsonb_to_recordset(ts.tags) AS x("id" text))
+            WHERE nodes.import_data_id IN (%L)`;
+        const values = [importIDs];
+
+        return format(text, values);
+    }
+
+    private attachFilesForImport(importIDs: string[]): string {
+        const text = `
+            INSERT INTO node_files
+            SELECT nodes.id, files.id
+            FROM nodes
+                     LEFT JOIN data_staging ON data_staging.id = nodes.data_staging_id
+                     LEFT JOIN data_staging_files ON data_staging_files.data_staging_id = data_staging.id
+                     LEFT JOIN files ON files.id = data_staging_files.file_id
+            WHERE nodes.import_data_id IN (%L)`;
+        const values = [importIDs];
 
         return format(text, values);
     }

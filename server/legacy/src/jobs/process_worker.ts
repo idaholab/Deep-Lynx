@@ -9,6 +9,8 @@ import {GenerateEdges, GenerateNodes} from '../data_processing/process';
 import {DataStaging} from '../domain_objects/data_warehouse/import/import';
 import Papa from 'papaparse';
 import Logger from '../services/logger';
+import NodeMapper from '../data_access_layer/mappers/data_warehouse/data/node_mapper';
+import EdgeMapper from '../data_access_layer/mappers/data_warehouse/data/edge_mapper';
 
 async function Start(): Promise<void> {
     await PostgresAdapter.Instance.init();
@@ -66,6 +68,9 @@ async function Start(): Promise<void> {
 
     // pipe the query stream first to the transform stream to generate nodes, then to the table stream to insert them
     nodeReadStream.pipe(new NodeTransform()).pipe(nodeTableStream);
+    // mark the nodes processed
+    const nodesProcessed = await DataStagingMapper.Instance.MarkNodesProcessed(importIDs);
+    if (nodesProcessed.isError) Logger.error(`unexpected error marking nodes processed in the processing thread ${JSON.stringify(nodesProcessed.error)}`);
 
     // now that we've done the nodes - move on and do the same thing for the edges
     const edgeReadStream = client.query(new QueryStream(DataStagingMapper.Instance.listImportActiveMappingStatementEdges(importIDs)));
@@ -112,6 +117,22 @@ async function Start(): Promise<void> {
 
     // pipe the query stream first to the transform stream to generate edges, then to the table stream to insert them
     edgeReadStream.pipe(new EdgeTransform()).pipe(edgeTableStream);
+    // mark the edges processed
+    const edgesProcessed = await DataStagingMapper.Instance.MarkEdgesProcessed(importIDs);
+    if (edgesProcessed.isError) Logger.error(`unexpected error marking edges processed in the processing thread ${JSON.stringify(edgesProcessed.error)}`);
+
+    // now we need to attach the tags/files for all the newly created nodes and edges
+    let result = await NodeMapper.Instance.AttachTagsForImport(importIDs);
+    if (result.isError) Logger.error(`unexpected error attaching tags to nodes in the processing thread ${JSON.stringify(result.error)}`);
+
+    result = await EdgeMapper.Instance.AttachTagsForImport(importIDs);
+    if (result.isError) Logger.error(`unexpected error attaching tags to edges in the processing thread ${JSON.stringify(result.error)}`);
+
+    result = await NodeMapper.Instance.AttachFilesForImport(importIDs);
+    if (result.isError) Logger.error(`unexpected error attaching files to nodes in the processing thread ${JSON.stringify(result.error)}`);
+
+    result = await EdgeMapper.Instance.AttachFilesForImport(importIDs);
+    if (result.isError) Logger.error(`unexpected error attaching files to edges in the processing thread ${JSON.stringify(result.error)}`);
 }
 
 void Start();

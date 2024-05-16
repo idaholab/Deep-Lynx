@@ -52,6 +52,11 @@ async function Start(): Promise<any> {
                     timeout: 0,
                 },
                 {
+                    name: 'import_process',
+                    interval: '1m',
+                    timeout: 0,
+                },
+                {
                     name: 'export', // will run export.ts
                     interval: Config.export_data_interval, // exports take longer to process, more time in-between instances is needed
                 },

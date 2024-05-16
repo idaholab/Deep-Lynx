@@ -77,6 +77,9 @@ async function Start(): Promise<void> {
             });
         }
     }
+
+    if (parentPort) parentPort.postMessage('done');
+    else process.exit(0);
 }
 
 void Start();

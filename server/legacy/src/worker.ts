@@ -27,6 +27,11 @@ async function Start(): Promise<any> {
                 timeout: 0,
             },
             {
+                name: 'import_process',
+                interval: '1m',
+                timeout: 0,
+            },
+            {
                 name: 'export', // will run export.ts
                 interval: Config.export_data_interval, // exports take longer to process, more time in-between instances is needed
             },
@@ -37,6 +42,11 @@ async function Start(): Promise<any> {
             {
                 name: 'metatype_keys_refresh', // will run metatype_keys_refresh.ts
                 interval: '1m',
+            },
+            {
+                name: 'metatype_pairs_refresh', // will run metatype_pairs_refresh.js
+                interval: '1m',
+                timeout: 0,
             },
         ],
     });

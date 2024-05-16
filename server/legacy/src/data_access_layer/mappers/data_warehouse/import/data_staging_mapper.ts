@@ -145,7 +145,14 @@ export default class DataStagingMapper extends Mapper {
         });
     }
 
-    // add an error to an existing error set
+    public MarkNodesProcessed(importIDs: string[]): Promise<Result<boolean>> {
+        return super.runStatement(this.markNodesProcessed(importIDs));
+    } // add an error to an existing error set
+
+    public MarkEdgesProcessed(importIDs: string[]): Promise<Result<boolean>> {
+        return super.runStatement(this.markEdgesProcessed(importIDs));
+    } // add an error to an existing error set
+
     public AddError(id: string, errors: string, transaction?: PoolClient): Promise<Result<boolean>> {
         return super.runStatement(this.addErrorsStatement(id, errors), {
             transaction,
@@ -463,6 +470,22 @@ export default class DataStagingMapper extends Mapper {
                         WHERE data_staging.created_at < NOW() - ((ds.config->>'data_retention_days') || ' days')::interval 
                         AND (ds.config->>'data_retention_days')::int > 0 
                         AND (ds.config->>'data_retention_days')::int IS NOT NULL)`;
+    }
+
+    private markNodesProcessed(importIDs: string[]): string {
+        const text = `UPDATE data_staging SET nodes_processed_at = NOW() 
+                      WHERE data_staging.id IN(SELECT data_staging_id FROM nodes WHERE nodes.import_data_id IN(%L) )`;
+        const values = [importIDs];
+
+        return format(text, values);
+    }
+
+    private markEdgesProcessed(importIDs: string[]): string {
+        const text = `UPDATE data_staging SET edges_processed_at = NOW() 
+                      WHERE data_staging.id IN(SELECT data_staging_id FROM edges WHERE edges.import_data_id IN(%L) )`;
+        const values = [importIDs];
+
+        return format(text, values);
     }
 
     // we have to vacuum manually if we're cleaning in order to free up space taken by dead tuples

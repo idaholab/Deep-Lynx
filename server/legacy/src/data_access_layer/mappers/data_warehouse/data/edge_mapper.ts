@@ -115,6 +115,14 @@ export default class EdgeMapper extends Mapper {
         return super.runStatement(this.deleteStatement(id));
     }
 
+    public AttachTagsForImport(importIDs: string[]): Promise<Result<boolean>> {
+        return super.runStatement(this.attachTagsForImport(importIDs));
+    }
+
+    public AttachFilesForImport(importIDs: string[]): Promise<Result<boolean>> {
+        return super.runStatement(this.attachFilesForImport(importIDs));
+    }
+
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
@@ -330,6 +338,33 @@ export default class EdgeMapper extends Mapper {
                        file_id) VALUES %L RETURNING *`;
 
         const values = edgeFiles.map((ef) => [ef.edge_id, ef.file_id]);
+
+        return format(text, values);
+    }
+
+    private attachTagsForImport(importIDs: string[]): string {
+        const text = `
+            INSERT INTO edge_tags
+            SELECT edges.id, tags.id
+            FROM edges 
+                     LEFT JOIN type_mapping_transformations ts ON ts.id = edges.type_mapping_transformation_id
+                     LEFT JOIN tags ON tags.id IN (SELECT id::bigint FROM jsonb_to_recordset(ts.tags) AS x("id" text))
+            WHERE edges.import_data_id IN (%L)`;
+        const values = [importIDs];
+
+        return format(text, values);
+    }
+
+    private attachFilesForImport(importIDs: string[]): string {
+        const text = `
+            INSERT INTO edge_files
+            SELECT edges.id, files.id
+            FROM edges 
+                     LEFT JOIN data_staging ON data_staging.id = edges.data_staging_id
+                     LEFT JOIN data_staging_files ON data_staging_files.data_staging_id = data_staging.id
+                     LEFT JOIN files ON files.id = data_staging_files.file_id
+            WHERE edges.import_data_id IN (%L)`;
+        const values = [importIDs];
 
         return format(text, values);
     }
