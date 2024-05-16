@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS nodes_migration
     modified_by character varying COLLATE pg_catalog."default",
     data_staging_id uuid,
     metadata_properties jsonb,
-    CONSTRAINT nodes_m__pkey PRIMARY KEY (id, created_at),
+    CONSTRAINT nodes_m_pkey PRIMARY KEY (id, created_at),
     CONSTRAINT nodes_m_container_id_fkey FOREIGN KEY (container_id)
         REFERENCES public.containers (id) MATCH SIMPLE
         ON UPDATE CASCADE
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS edges_migration
     properties jsonb,
     metadata jsonb,
     created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    modified_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    modified_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     deleted_at timestamp without time zone,
     created_by character varying COLLATE pg_catalog."default",
     modified_by character varying COLLATE pg_catalog."default",
@@ -158,24 +158,24 @@ CREATE TABLE IF NOT EXISTS nodes
     modified_by character varying COLLATE pg_catalog."default",
     data_staging_id uuid,
     metadata_properties jsonb,
-    CONSTRAINT nodes_m__pkey PRIMARY KEY (id, created_at),
-    CONSTRAINT nodes_m_container_id_fkey FOREIGN KEY (container_id)
+    CONSTRAINT nodes_mx_pkey PRIMARY KEY (id, created_at),
+    CONSTRAINT nodes_mx_container_id_fkey FOREIGN KEY (container_id)
         REFERENCES public.containers (id) MATCH SIMPLE
         ON UPDATE CASCADE
         ON DELETE CASCADE,
-    CONSTRAINT nodes_m_data_source_id_fkey FOREIGN KEY (data_source_id)
+    CONSTRAINT nodes_mx_data_source_id_fkey FOREIGN KEY (data_source_id)
         REFERENCES public.data_sources (id) MATCH SIMPLE
         ON UPDATE CASCADE
         ON DELETE SET NULL,
-    CONSTRAINT nodes_m_import_data_id_fkey FOREIGN KEY (import_data_id)
+    CONSTRAINT nodes_mx_import_data_id_fkey FOREIGN KEY (import_data_id)
         REFERENCES public.imports (id) MATCH SIMPLE
         ON UPDATE CASCADE
         ON DELETE SET NULL,
-    CONSTRAINT nodes_m_metatype_id_fkey FOREIGN KEY (metatype_id)
+    CONSTRAINT nodes_mx_metatype_id_fkey FOREIGN KEY (metatype_id)
         REFERENCES public.metatypes (id) MATCH SIMPLE
         ON UPDATE CASCADE
         ON DELETE CASCADE,
-    CONSTRAINT nodes_m_type_mapping_transformation_id_fkey FOREIGN KEY (type_mapping_transformation_id)
+    CONSTRAINT nodes_mx_type_mapping_transformation_id_fkey FOREIGN KEY (type_mapping_transformation_id)
         REFERENCES public.type_mapping_transformations (id) MATCH SIMPLE
         ON UPDATE CASCADE
         ON DELETE SET NULL
@@ -201,46 +201,46 @@ CREATE TABLE IF NOT EXISTS edges
     properties jsonb,
     metadata jsonb,
     created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    modified_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    modified_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     deleted_at timestamp without time zone,
     created_by character varying COLLATE pg_catalog."default",
     modified_by character varying COLLATE pg_catalog."default",
     data_staging_id uuid,
     metadata_properties jsonb,
-    CONSTRAINT edges_m_pkey PRIMARY KEY (id, created_at),
-    CONSTRAINT edges_m_container_id_fkey FOREIGN KEY (container_id)
+    CONSTRAINT edges_mx_pkey PRIMARY KEY (id, created_at),
+    CONSTRAINT edges_mx_container_id_fkey FOREIGN KEY (container_id)
         REFERENCES public.containers (id) MATCH SIMPLE
         ON UPDATE CASCADE
         ON DELETE CASCADE,
-    CONSTRAINT edges_m_data_source_id_fkey FOREIGN KEY (data_source_id)
+    CONSTRAINT edges_mx_data_source_id_fkey FOREIGN KEY (data_source_id)
         REFERENCES public.data_sources (id) MATCH SIMPLE
         ON UPDATE CASCADE
         ON DELETE SET NULL,
-    CONSTRAINT edges_m_destination_data_source_id_fkey FOREIGN KEY (destination_data_source_id)
+    CONSTRAINT edges_mx_destination_data_source_id_fkey FOREIGN KEY (destination_data_source_id)
         REFERENCES public.data_sources (id) MATCH SIMPLE
         ON UPDATE CASCADE
         ON DELETE SET NULL,
-    CONSTRAINT edges_m_destination_metatype_id_fkey FOREIGN KEY (destination_metatype_id)
+    CONSTRAINT edges_mx_destination_metatype_id_fkey FOREIGN KEY (destination_metatype_id)
         REFERENCES public.metatypes (id) MATCH SIMPLE
         ON UPDATE CASCADE
         ON DELETE SET NULL,
-    CONSTRAINT edges_m_import_data_id_fkey FOREIGN KEY (import_data_id)
+    CONSTRAINT edges_mx_import_data_id_fkey FOREIGN KEY (import_data_id)
         REFERENCES public.imports (id) MATCH SIMPLE
         ON UPDATE CASCADE
         ON DELETE SET NULL,
-    CONSTRAINT edges_m_origin_data_source_id_fkey FOREIGN KEY (origin_data_source_id)
+    CONSTRAINT edges_mx_origin_data_source_id_fkey FOREIGN KEY (origin_data_source_id)
         REFERENCES public.data_sources (id) MATCH SIMPLE
         ON UPDATE CASCADE
         ON DELETE SET NULL,
-    CONSTRAINT edges_m_origin_metatype_id_fkey FOREIGN KEY (origin_metatype_id)
+    CONSTRAINT edges_mx_origin_metatype_id_fkey FOREIGN KEY (origin_metatype_id)
         REFERENCES public.metatypes (id) MATCH SIMPLE
         ON UPDATE CASCADE
         ON DELETE SET NULL,
-    CONSTRAINT edges_m_relationship_pair_id_fkey FOREIGN KEY (relationship_pair_id)
+    CONSTRAINT edges_mx_relationship_pair_id_fkey FOREIGN KEY (relationship_pair_id)
         REFERENCES public.metatype_relationship_pairs (id) MATCH SIMPLE
         ON UPDATE CASCADE
         ON DELETE CASCADE,
-    CONSTRAINT edges_m_type_mapping_transformation_id_fkey FOREIGN KEY (type_mapping_transformation_id)
+    CONSTRAINT edges_mx_type_mapping_transformation_id_fkey FOREIGN KEY (type_mapping_transformation_id)
         REFERENCES public.type_mapping_transformations (id) MATCH SIMPLE
         ON UPDATE CASCADE
         ON DELETE SET NULL
