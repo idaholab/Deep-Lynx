@@ -20,10 +20,14 @@ profile-logs
 /private-key.pem
 /private-key.key
 /public-key.pem
-/src/tests/test-data.json
-/src/tests/test-data.csv
-/src/tests/private-key.pem
-/src/tests/*_export.json
+/server/legacy/src/tests/test-data.json
+/server/legacy/src/tests/test-data.csv
+/server/legacy/src/tests/*.csv
+/server/legacy/src/tests/private-key.pem
+/server/legacy/src/tests/public-key.pem
+/server/legacy/src/tests/*_export.json
+/server/legacy/src/tests/mochawesome-report
+/server/legacy/src/tests/coverage
 /**/test-timeseries-datasource-graphql.json
 /NodeLibraries/dl-fast-load/target/
 /NodeLibraries/dl-fast-load/index.node
@@ -54,3 +58,19 @@ devenv.local.nix
 !.yarn/versions
 /public-key.pem
 /yarn-error.log
+/.yarn/
+/server/legacy/public-key.pem
+/server/legacy/private-key.pem
+/server/deeplynx/target/
+/server/legacy/.yarn/
+/CAINLROOT.cer
+# ignore artifacts of rust modules both pre- and post- switch- 
+# this will make branch switching easier for existing branches
+# during the transition period
+/server/legacy/NodeLibraries/deeplynx/Cargo.lock
+/server/legacy/NodeLibraries/deeplynx/target
+/server/legacy/NodeLibraries/deeplynx/*.node
+
+/NodeLibraries/deeplynx/Cargo.lock
+/NodeLibraries/deeplynx/target
+/NodeLibraries/deeplynx/*.node
