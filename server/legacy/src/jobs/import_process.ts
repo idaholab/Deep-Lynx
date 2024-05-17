@@ -56,6 +56,15 @@ async function Start(): Promise<void> {
     const containerIDs = Object.keys(containerImportMap);
     const incompleteContainerIDs = Object.keys(containerImportMap);
 
+    // if no containers exit
+    if (containerIDs.length === 0)
+        if (parentPort) {
+            parentPort.postMessage('done');
+            return;
+        } else {
+            process.exit(1);
+        }
+
     for (let i = 0; i < workers.length; i++) {
         if (containerIDs.length > 0) {
             const containerID = containerIDs.pop();
@@ -68,7 +77,6 @@ async function Start(): Promise<void> {
 
             workers[i].on('exit', () => {
                 // doesn't matter what id we get here, we're just using it to indicate completed status
-                incompleteContainerIDs.pop();
                 if (containerIDs.length > 0) {
                     const nextContainerID = containerIDs.pop();
 
@@ -83,8 +91,7 @@ async function Start(): Promise<void> {
                     // complete the transaction so we release the advisory lock
                     void ImportMapper.Instance.completeTransaction(transaction.value);
 
-                    if (parentPort) parentPort.postMessage('done');
-                    else process.exit(0);
+                    process.exit(0);
                 }
             });
         }
