@@ -111,7 +111,7 @@ CREATE TABLE IF NOT EXISTS edges_migration
 
 CREATE TABLE IF NOT EXISTS data_staging_migration(
      "data_source_id" int8,
-     "import_id" int8 NOT NULL,
+     "import_id" int8,
      "errors" text,
      "data" jsonb,
      "inserted_at" timestamp,
@@ -119,8 +119,12 @@ CREATE TABLE IF NOT EXISTS data_staging_migration(
      "shape_hash" text,
      "id" uuid DEFAULT gen_random_uuid(),
      "file_attached" bool DEFAULT false,
-     CONSTRAINT data_staging_m_data_source_id_fkey FOREIGN KEY ("data_source_id") REFERENCES "public"."data_sources"("id") ON DELETE CASCADE ON UPDATE CASCADE
+     CONSTRAINT data_staging_m_data_source_id_fkey FOREIGN KEY ("data_source_id") REFERENCES "public"."data_sources"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+     CONSTRAINT "fk_m_imports" FOREIGN KEY ("import_id") REFERENCES "public"."imports"("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+UPDATE data_staging SET import_id = NULL WHERE data_staging.import_id NOT IN(SELECT id FROM imports);
+UPDATE data_staging SET data_source_id = NULL WHERE data_staging.data_source_id NOT IN(SELECT id FROM data_sources);
 
 /* move the data over now, this part could take a while */
 INSERT INTO nodes_migration SELECT * FROM nodes;
