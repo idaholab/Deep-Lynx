@@ -182,16 +182,16 @@ export default class TagRepository extends Repository implements RepositoryInter
         return Promise.resolve(Result.Success(results.value));
     }
 
-    async listTagsForNode(node: Node): Promise<Result<Tag[]>> {
-        return this.#mapper.TagsForNode(node.id!);
+    async listTagsForNode(node: Node, revisionOnly?: boolean): Promise<Result<Tag[]>> {
+        return this.#mapper.TagsForNode(node.id!, revisionOnly);
     }
 
     async listTagsForFile(file: File): Promise<Result<Tag[]>> {
         return this.#mapper.TagsForFile(file.id!);
     }
 
-    async listTagsForEdge(edge: Edge): Promise<Result<Tag[]>> {
-        return this.#mapper.TagsForEdge(edge.id!);
+    async listTagsForEdge(edge: Edge, revisionOnly?: boolean): Promise<Result<Tag[]>> {
+        return this.#mapper.TagsForEdge(edge.id!, revisionOnly);
     }
 
     async listNodesWithTag(tag: Tag): Promise<Result<Node[]>> {

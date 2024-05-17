@@ -4,6 +4,7 @@ import {PoolClient, QueryConfig} from 'pg';
 import Node, {NodeTransformation} from '../../../../domain_objects/data_warehouse/data/node';
 import {NodeFile} from '../../../../domain_objects/data_warehouse/data/file';
 
+import {v4 as uuidv4} from 'uuid';
 const format = require('pg-format');
 
 /*
@@ -202,12 +203,12 @@ export default class NodeMapper extends Mapper {
                    AND u.data_source_id::int8 = n.data_source_id
                 WHERE n.created_at < u.created_at::TIMESTAMP
                 ORDER BY n.created_at DESC LIMIT 1
-                  ON CONFLICT(created_at, id) DO UPDATE SET
+                  ON CONFLICT(created_at, original_data_id, container_id, data_source_id) DO UPDATE SET
                       properties = nodes.properties || EXCLUDED.properties,
                       metadata = EXCLUDED.metadata,
                       metadata_properties = nodes.metadata_properties || EXCLUDED.metadata_properties,
                       deleted_at = EXCLUDED.deleted_at
-                  WHERE EXCLUDED.id = nodes.id AND EXCLUDED.properties IS DISTINCT FROM nodes.properties
+                  WHERE EXCLUDED.original_data_id = nodes.original_data_id AND EXCLUDED.container_id = nodes.container_id AND EXCLUDED.data_source_id = nodes.data_source_id AND EXCLUDED.properties IS DISTINCT FROM nodes.properties
                         OR EXCLUDED.metadata_properties IS DISTINCT FROM nodes.metadata_properties
                    RETURNING *`
             : `INSERT INTO nodes(
@@ -224,11 +225,11 @@ export default class NodeMapper extends Mapper {
                   created_by,
                   modified_by,
                   created_at) VALUES %L
-                  ON CONFLICT(created_at, id) DO UPDATE SET
+                  ON CONFLICT(created_at, original_data_id, container_id, data_source_id) DO UPDATE SET
                       properties = EXCLUDED.properties,
                       metadata = EXCLUDED.metadata,
                       deleted_at = EXCLUDED.deleted_at
-                  WHERE EXCLUDED.id = nodes.id AND (EXCLUDED.properties IS DISTINCT FROM nodes.properties
+                  WHERE EXCLUDED.original_data_id = nodes.original_data_id AND EXCLUDED.container_id = nodes.container_id AND EXCLUDED.data_source_id = nodes.data_source_id AND (EXCLUDED.properties IS DISTINCT FROM nodes.properties
                         OR EXCLUDED.metadata_properties IS DISTINCT FROM nodes.metadata_properties)
                    RETURNING *`;
 
@@ -237,7 +238,7 @@ export default class NodeMapper extends Mapper {
             n.metatype ? n.metatype.id : n.metatype_id,
             JSON.stringify(n.properties),
             JSON.stringify(n.metadata_properties),
-            n.original_data_id,
+            n.original_data_id ? n.original_data_id : uuidv4(),
             n.data_source_id,
             n.type_mapping_transformation_id,
             n.import_data_id,
@@ -304,12 +305,12 @@ export default class NodeMapper extends Mapper {
             LEFT JOIN nodes n ON u.id::int8 = n.id
             WHERE n.created_at < u.created_at::TIMESTAMP
             ORDER BY n.created_at DESC LIMIT 1
-            ON CONFLICT(created_at, id) DO UPDATE SET
+            ON CONFLICT(created_at, original_data_id, container_id, data_source_id) DO UPDATE SET
                    properties = nodes.properties || EXCLUDED.properties,
                    metadata = EXCLUDED.metadata,
                    metadata_properties = nodes.metadata_properties || EXCLUDED.metadata_properties,
                    deleted_at = EXCLUDED.deleted_at
-            WHERE EXCLUDED.id = nodes.id AND (EXCLUDED.properties IS DISTINCT FROM nodes.properties
+            WHERE EXCLUDED.original_data_id = nodes.original_data_id AND EXCLUDED.container_id = nodes.container_id AND EXCLUDED.data_source_id = nodes.data_source_id AND (EXCLUDED.properties IS DISTINCT FROM nodes.properties
                 OR EXCLUDED.metadata_properties IS DISTINCT FROM nodes.metadata_properties)
             RETURNING *`
             : `INSERT INTO nodes(
@@ -334,7 +335,7 @@ export default class NodeMapper extends Mapper {
             n.metatype ? n.metatype.id : n.metatype_id,
             JSON.stringify(n.properties),
             JSON.stringify(n.metadata_properties),
-            n.original_data_id,
+            n.original_data_id ? n.original_data_id : uuidv4(),
             n.data_source_id,
             n.type_mapping_transformation_id,
             n.import_data_id,
