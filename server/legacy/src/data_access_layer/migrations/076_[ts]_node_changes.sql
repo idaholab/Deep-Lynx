@@ -118,18 +118,18 @@ CREATE TABLE IF NOT EXISTS data_staging_migration(
      "created_at" timestamp NOT NULL DEFAULT clock_timestamp(),
      "shape_hash" text,
      "id" uuid DEFAULT gen_random_uuid(),
-     "file_attached" bool DEFAULT false,
-     CONSTRAINT data_staging_m_data_source_id_fkey FOREIGN KEY ("data_source_id") REFERENCES "public"."data_sources"("id") ON DELETE CASCADE ON UPDATE CASCADE,
-     CONSTRAINT "fk_m_imports" FOREIGN KEY ("import_id") REFERENCES "public"."imports"("id") ON DELETE CASCADE ON UPDATE CASCADE
+     "file_attached" bool DEFAULT false
 );
 
-UPDATE data_staging SET import_id = NULL WHERE data_staging.import_id NOT IN(SELECT id FROM imports);
-UPDATE data_staging SET data_source_id = NULL WHERE data_staging.data_source_id NOT IN(SELECT id FROM data_sources);
+
 
 /* move the data over now, this part could take a while */
 INSERT INTO nodes_migration SELECT * FROM nodes;
 INSERT INTO edges_migration SELECT * FROM edges;
 INSERT INTO data_staging_migration SELECT * FROM data_staging;
+
+UPDATE data_staging_migration SET import_id = NULL WHERE data_staging.import_id NOT IN(SELECT id FROM imports);
+UPDATE data_staging_migration SET data_source_id = NULL WHERE data_staging.data_source_id NOT IN(SELECT id FROM data_sources);
 
 /* must remove all the views and functions before dropping the tables */
 DROP VIEW IF EXISTS current_edges;
@@ -142,6 +142,8 @@ DROP FUNCTION IF EXISTS link_edge;
 
 /* now rebuild the tables and views */
 ALTER TABLE data_staging_migration RENAME TO data_staging;
+ALTER TABLE data_staging ADD CONSTRAINT data_staging_m_data_source_id_fkey FOREIGN KEY ("data_source_id") REFERENCES "public"."data_sources"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE data_staging ADD CONSTRAINT "fk_m_imports" FOREIGN KEY ("import_id") REFERENCES "public"."imports"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 CREATE TABLE IF NOT EXISTS nodes
 (
