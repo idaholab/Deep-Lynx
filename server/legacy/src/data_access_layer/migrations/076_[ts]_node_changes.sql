@@ -128,8 +128,8 @@ INSERT INTO nodes_migration SELECT * FROM nodes;
 INSERT INTO edges_migration SELECT * FROM edges;
 INSERT INTO data_staging_migration SELECT * FROM data_staging;
 
-UPDATE data_staging_migration SET import_id = NULL WHERE data_staging.import_id NOT IN(SELECT id FROM imports);
-UPDATE data_staging_migration SET data_source_id = NULL WHERE data_staging.data_source_id NOT IN(SELECT id FROM data_sources);
+UPDATE data_staging_migration SET import_id = NULL WHERE data_staging_migration.import_id NOT IN(SELECT id FROM imports);
+UPDATE data_staging_migration SET data_source_id = NULL WHERE data_staging_migration.data_source_id NOT IN(SELECT id FROM data_sources);
 
 /* must remove all the views and functions before dropping the tables */
 DROP VIEW IF EXISTS current_edges;
