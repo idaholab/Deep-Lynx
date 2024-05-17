@@ -119,8 +119,7 @@ CREATE TABLE IF NOT EXISTS data_staging_migration(
      "shape_hash" text,
      "id" uuid DEFAULT gen_random_uuid(),
      "file_attached" bool DEFAULT false,
-     CONSTRAINT data_staging_m_data_source_id_fkey FOREIGN KEY ("data_source_id") REFERENCES "public"."data_sources"("id") ON DELETE CASCADE ON UPDATE CASCADE,
-     CONSTRAINT "fk_m_imports" FOREIGN KEY ("import_id") REFERENCES "public"."imports"("id") ON DELETE CASCADE ON UPDATE CASCADE
+     CONSTRAINT data_staging_m_data_source_id_fkey FOREIGN KEY ("data_source_id") REFERENCES "public"."data_sources"("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 /* move the data over now, this part could take a while */
