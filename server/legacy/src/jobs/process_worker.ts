@@ -1,4 +1,4 @@
-import {parentPort, workerData} from 'worker_threads';
+import {workerData} from 'worker_threads';
 import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/postgres';
 import QueryStream from 'pg-query-stream';
 import DataStagingMapper from '../data_access_layer/mappers/data_warehouse/import/data_staging_mapper';
@@ -12,7 +12,6 @@ import Logger from '../services/logger';
 import NodeMapper from '../data_access_layer/mappers/data_warehouse/data/node_mapper';
 import EdgeMapper from '../data_access_layer/mappers/data_warehouse/data/edge_mapper';
 import {pipeline} from 'node:stream/promises';
-const devnull = require('dev-null');
 
 async function Start(): Promise<void> {
     await PostgresAdapter.Instance.init();

@@ -12,6 +12,7 @@ import {plainToClass} from 'class-transformer';
 import Logger from '../../../../services/logger';
 import DataStagingMapper from './data_staging_mapper';
 import DataSourceRepository from '../../../repositories/data_warehouse/import/data_source_repository';
+import {Worker} from 'worker_threads';
 
 const format = require('pg-format');
 const devnull = require('dev-null');
@@ -150,68 +151,21 @@ export default class ImportMapper extends Mapper {
         await super.runAsTransaction(...this.deleteDataStatement(importID));
         await super.runStatement(this.setProcessedNull(importID));
 
-        // now we stream process this part because an import might have a large number of
-        // records and we really don't want to read that into memory - we also don't wait
-        // for this to complete as it could take a night and a day
-        const queue = await QueueFactory();
-        void PostgresAdapter.Instance.Pool.connect((err, client, done) => {
-            const stream = client.query(new QueryStream(this.listStagingForImportStreaming(importID)));
-            const putPromises: Promise<boolean>[] = [];
+        // now we start the import process job in the background
 
-            stream.on('data', (data) => {
-                putPromises.push(queue.Put(Config.process_queue, plainToClass(DataStaging, data as object)));
-            });
-
-            stream.on('end', () => {
-                Promise.all(putPromises)
-                    .then(() => {
-                        void this.SetStatus(importID, 'processing', 'reprocessing completed');
-                        done();
-                    })
-                    .catch((e) => {
-                        done();
-                        Logger.error(`error reprocessing import ${e}`);
-                    });
-            });
-
-            // we pipe to devnull because we need to trigger the stream and don't
-            // care where the data ultimately ends up
-            stream.pipe(devnull({objectMode: true}));
+        const worker = new Worker(__dirname + '../../../../../jobs/process_worker.js', {
+            workerData: {
+                input: [importID],
+            },
         });
 
-        return Promise.resolve(Result.Success(true));
-    }
-
-    public async SendToQueue(importID: string): Promise<Result<boolean>> {
-        // now we stream process this part because an import might have a large number of
-        // records, and we really don't want to read that into memory - we also don't wait
-        // for this to complete as it could take a night and a day
-        const queue = await QueueFactory();
-        void PostgresAdapter.Instance.Pool.connect((err, client, done) => {
-            const stream = client.query(new QueryStream(this.listStagingForImportStreaming(importID)));
-            const putPromises: Promise<boolean>[] = [];
-
-            stream.on('data', (data) => {
-                putPromises.push(queue.Put(Config.process_queue, plainToClass(DataStaging, data as object)));
-            });
-
-            stream.on('end', () => {
-                Promise.all(putPromises)
-                    .then(() => {
-                        done();
-                    })
-                    .catch((e) => {
-                        done();
-                        Logger.error(`error reprocessing import ${e}`);
-                    });
-            });
-
-            // we pipe to devnull because we need to trigger the stream and don't
-            // care where the data ultimately ends up
-            stream.pipe(devnull({objectMode: true}));
+        worker.on('error', (e) => {
+            this.setStatusStatement(importID, 'error', `error in reprocessing ${JSON.stringify(e)}`);
         });
 
-        await this.SetStatus(importID, 'processing');
+        worker.on('exit', () => {
+            void this.SetStatus(importID, 'completed', 'reprocessing completed');
+        });
 
         return Promise.resolve(Result.Success(true));
     }
@@ -226,7 +180,7 @@ export default class ImportMapper extends Mapper {
 
     private setProcessedNull(importID: string): QueryConfig {
         return {
-            text: `UPDATE ${DataStagingMapper.tableName} SET inserted_at = NULL WHERE import_id = $1`,
+            text: `UPDATE ${DataStagingMapper.tableName} SET inserted_at = NULL, nodes_processed_at = NULL, edges_processed_at = NULL WHERE import_id = $1`,
             values: [importID],
         };
     }
@@ -380,14 +334,14 @@ export default class ImportMapper extends Mapper {
     private setProcessStartStatement(importID: string): QueryConfig {
         return {
             text: `UPDATE imports SET process_start = NOW() WHERE id = $1`,
-            values: [importID]
-        }
+            values: [importID],
+        };
     }
 
     private setProcessEndStatement(importID: string): QueryConfig {
         return {
             text: `UPDATE imports SET process_end = NOW() WHERE id = $1`,
-            values: [importID]
-        }
+            values: [importID],
+        };
     }
 }

@@ -1,4 +1,4 @@
-import Edge, {EdgeQueueItem, IsEdges} from '../domain_objects/data_warehouse/data/edge';
+import Edge, {EdgeQueueItem} from '../domain_objects/data_warehouse/data/edge';
 import Result from '../common_classes/result';
 import EdgeRepository from '../data_access_layer/repositories/data_warehouse/data/edge_repository';
 import EdgeMapper from '../data_access_layer/mappers/data_warehouse/data/edge_mapper';
@@ -6,12 +6,14 @@ import Config from '../services/config';
 import Logger from '../services/logger';
 import EdgeQueueItemMapper from '../data_access_layer/mappers/data_warehouse/data/edge_queue_item_mapper';
 import FileMapper from '../data_access_layer/mappers/data_warehouse/data/file_mapper';
-import {DataStagingFile, EdgeFile} from '../domain_objects/data_warehouse/data/file';
+import {EdgeFile} from '../domain_objects/data_warehouse/data/file';
 import {plainToClass} from 'class-transformer';
 import TagMapper from '../data_access_layer/mappers/data_warehouse/data/tag_mapper';
 
 // InsertEdge takes a single EdgeQueueItem and attempts to insert it into the database without making any changes
+// @deprecated no longer used
 export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<boolean>> {
+    Logger.info('calling deprecated function: InsertEdge');
     const mapper = EdgeMapper.Instance;
     const queueMapper = EdgeQueueItemMapper.Instance;
     const repo = new EdgeRepository();
@@ -80,7 +82,7 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
     // now we attach the files
 
     if (edgeQueueItem.file_attached) {
-        const stagingFiles = await FileMapper.Instance.ListForDataStagingRaw(edge.data_staging_id!);
+        const stagingFiles = await FileMapper.Instance.ListForDataStagingRaw(edge.data_staging_id);
         if (stagingFiles.isError) {
             Logger.error(`unable to fetch files for data staging records ${stagingFiles.error?.error}`);
         }

@@ -77,6 +77,7 @@ async function Start(): Promise<void> {
 
             workers[i].on('exit', () => {
                 // doesn't matter what id we get here, we're just using it to indicate completed status
+                incompleteContainerIDs.pop();
                 if (containerIDs.length > 0) {
                     const nextContainerID = containerIDs.pop();
 

@@ -25,7 +25,9 @@ export type NodeTagAttachment = {
 
 // ProcessData accepts a data staging record and inserts nodes and edges based
 // on matching transformation records - this acts on a single record
+// @deprecated The method should not be used
 export async function ProcessData(...staging: DataStaging[]): Promise<Result<boolean>> {
+    Logger.info('calling deprecated function: ProcessData');
     const stagingMapper = DataStagingMapper.Instance;
     const stagingRepo = new DataStagingRepository();
     const mappingRepo = new TypeMappingRepository();
