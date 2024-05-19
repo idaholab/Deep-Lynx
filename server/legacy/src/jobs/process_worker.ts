@@ -4,7 +4,7 @@ import QueryStream from 'pg-query-stream';
 import DataStagingMapper from '../data_access_layer/mappers/data_warehouse/import/data_staging_mapper';
 import {Transform, TransformCallback} from 'stream';
 import {from as copyFrom} from 'pg-copy-streams';
-import {plainToInstance} from 'class-transformer';
+import {instanceToPlain, plainToInstance} from 'class-transformer';
 import {GenerateEdges, GenerateNodes} from '../data_processing/process';
 import {DataStaging} from '../domain_objects/data_warehouse/import/import';
 import Papa from 'papaparse';
@@ -16,6 +16,7 @@ import {pipeline} from 'node:stream/promises';
 async function Start(): Promise<void> {
     await PostgresAdapter.Instance.init();
     const client = await PostgresAdapter.Instance.Pool.connect();
+    const insertClient = await PostgresAdapter.Instance.Pool.connect();
 
     // we're going to use the importIDs three times; once to process all the nodes
     // once to process all the edges and once to attach tags and files to nodes/edges
@@ -24,12 +25,41 @@ async function Start(): Promise<void> {
     const importIDs: string[] = workerData.input;
 
     // iterate through the staging data stream and generate the nodes, use the COPY command to insert the nodes
-    // and the COPY ON CONFLICT command to update the data staging records with nodes_inserted flag updated to show
-    // we've generated and inserted the nodes - do the same thing for edges
+    // into a temporary holding table without indexes, then pull them out again - note we're using two clients here,
+    // we don't want to mix and match the insert stream with the query stream
     const nodeReadStream = client.query(new QueryStream(DataStagingMapper.Instance.listImportActiveMappingStatementNodes(importIDs)));
-    const nodeTableStream = client.query(copyFrom('COPY nodes FROM STDIN'));
+    const nodeTableStream = insertClient.query(
+        copyFrom(`COPY 
+    nodes_temp (
+    properties,
+    metadata_properties,
+    container_id,
+    metatype_id,
+    data_staging_id,
+    data_source_id,
+    type_mapping_transformation_id,
+    metadata,
+    created_at,
+    original_data_id
+    ) 
+    FROM STDIN WITH DELIMITER '|' CSV`),
+    );
 
-    let firstIteration = true;
+    // we use these columns to ensure that each object meets our strict definition prior to converting to CSV
+    // unless we do this, a single object with an extra field will break the entire COPY function
+    const cols = [
+        'properties',
+        'metadata_properties',
+        'container_id',
+        'metatype_id',
+        'data_staging_id',
+        'data_source_id',
+        'type_mapping_transformation_id',
+        'metadata',
+        'created_at',
+        'original_data_id',
+    ];
+
     // build a transform stream that outputs nodes as csv data
     class NodeTransform extends Transform {
         constructor() {
@@ -40,10 +70,23 @@ async function Start(): Promise<void> {
                     // take the chunk, which is a data staging record, and generate nodes from it.
                     GenerateNodes(stagingRecord)
                         .then((nodes) => {
-                            // convert to csv, only outputting the headers on the first iteration through to avoid
-                            // breaking the copy from
-                            if (nodes.length > 0) this.push(firstIteration ? Papa.unparse(nodes, {header: true}) : Papa.unparse(nodes, {header: false}));
-                            firstIteration = false;
+                            if (nodes.length > 0) {
+                                // ensure all the nodes match the same structure
+                                const parsedNodes = nodes.map((n) => {
+                                    // eslint-disable-next-line security/detect-object-injection
+                                    return Object.fromEntries(cols.map((col: string) => [col, instanceToPlain(n)[col]]));
+                                });
+
+                                const row = Papa.unparse(parsedNodes, {
+                                    header: false,
+                                    delimiter: '|',
+                                });
+
+                                // you must add a carriage return since we're emulating the STDIN, and they expect each
+                                // line to be ended by a carriage return
+                                this.push(Buffer.from(row + '\r', 'utf-8'));
+                            }
+
                             callback();
                         })
                         .catch((e: Error) => {
@@ -65,6 +108,18 @@ async function Start(): Promise<void> {
 
     // pipe the query stream first to the transform stream to generate nodes, then to the table stream to insert them
     await pipeline(nodeReadStream, new NodeTransform(), nodeTableStream);
+    insertClient.release();
+
+    // before we can mark things processed, or attach files/tags to them, we need to move everything from the temp table
+    // into the full nodes table - this patterns is repeated for the edges. This is still by far the fastest way to handle
+    // these large inserts - instead of doing batch inserts of 1k nodes and having n/1000 number of statements, we're able
+    // to cut every import to 3 statements no matter how large - the COPY, the move into the real table, the DELETE from temp
+    // note that this function covers the deletion from temp as well
+    const moved = await NodeMapper.Instance.MoveFromTemp(importIDs);
+    if (moved.isError) {
+        Logger.error(`unexpected error in moving nodes from temp table in processing thread ${JSON.stringify(moved.error)}`);
+        process.exit(0);
+    }
 
     // mark the nodes processed
     const nodesProcessed = await DataStagingMapper.Instance.MarkNodesProcessed(importIDs);
@@ -72,9 +127,61 @@ async function Start(): Promise<void> {
 
     // now that we've done the nodes - move on and do the same thing for the edges
     const edgeReadStream = client.query(new QueryStream(DataStagingMapper.Instance.listImportActiveMappingStatementEdges(importIDs)));
-    const edgeTableStream = client.query(copyFrom('COPY edges FROM STDIN'));
+    const edgeInsertClient = await PostgresAdapter.Instance.Pool.connect();
+    const edgeTableStream = edgeInsertClient.query(
+        copyFrom(`COPY 
+           edges_temp (
+           properties,
+           metadata_properties,
+           id,
+           container_id,
+           relationship_pair_id,
+           data_source_id,
+           import_data_id,
+           type_mapping_transformation_id,
+           origin_id,
+           destination_id,
+           origin_original_id,
+           origin_data_source_id,
+           origin_metatype_id,
+           destination_original_id,
+           destination_data_source_id,
+           destination_metatype_id,
+           metadata,
+           created_at,
+           modified_at,
+           deleted_at,
+           created_by,
+           modified_by,
+           data_staging_id
+    )
+    FROM STDIN WITH DELIMITER '|' CSV`),
+    );
 
-    firstIteration = true;
+    const edgeCols = [
+        'container_id',
+        'relationship_pair_id',
+        'data_source_id',
+        'import_data_id',
+        'type_mapping_transformation_id',
+        'origin_id',
+        'destination_id',
+        'origin_original_id',
+        'origin_data_source_id',
+        'origin_metatype_id',
+        'destination_original_id',
+        'destination_data_source_id',
+        'destination_metatype_id',
+        'properties',
+        'metadata',
+        'created_at',
+        'modified_at',
+        'deleted_at',
+        'created_by',
+        'modified_by',
+        'data_staging_id',
+        'metadata_properties',
+    ];
 
     // build a transform stream that outputs edges as csv data
     class EdgeTransform extends Transform {
@@ -86,10 +193,20 @@ async function Start(): Promise<void> {
                     // take the chunk, which is a data staging record, and generate nodes from it.
                     GenerateEdges(stagingRecord)
                         .then((edges) => {
-                            // convert to csv, only outputting the headers on the first iteration through to avoid
-                            // breaking the copy from
-                            if (edges.length > 0) this.push(firstIteration ? Papa.unparse(edges, {header: true}) : Papa.unparse(edges, {header: false}));
-                            firstIteration = false;
+                            if (edges.length > 0) {
+                                // ensure all the edges match the same structure
+                                const parsedEdges = edges.map((e) => {
+                                    return Object.fromEntries(edgeCols.map((col: string) => [col, instanceToPlain(e)[col]]));
+                                });
+
+                                const row = Papa.unparse(parsedEdges, {
+                                    header: false,
+                                    delimiter: '|',
+                                });
+
+                                this.push(Buffer.from(row + '\r', 'utf-8'));
+                            }
+
                             callback();
                         })
                         .catch((e: Error) => {
@@ -111,6 +228,14 @@ async function Start(): Promise<void> {
 
     // pipe the query stream first to the transform stream to generate edges, then to the table stream to insert them
     await pipeline(edgeReadStream, new EdgeTransform(), edgeTableStream);
+
+    // again, move from temp table before the edges go through the rest of the process
+    const edgesMoved = await EdgeMapper.Instance.MoveFromTemp(importIDs);
+    if (edgesMoved.isError) {
+        Logger.error(`unexpected error in moving nodes from temp table in processing thread ${JSON.stringify(edgesMoved.error)}`);
+        process.exit(0);
+    }
+
     // mark the edges processed
     const edgesProcessed = await DataStagingMapper.Instance.MarkEdgesProcessed(importIDs);
     if (edgesProcessed.isError) Logger.error(`unexpected error marking edges processed in the processing thread ${JSON.stringify(edgesProcessed.error)}`);

@@ -123,6 +123,11 @@ export default class EdgeMapper extends Mapper {
         return super.runStatement(this.attachFilesForImport(importIDs));
     }
 
+    // we wrap this in a transaction
+    public MoveFromTemp(importIDs: string[]): Promise<Result<boolean>> {
+        return super.runAsTransaction(this.moveFromTemp(importIDs), this.deleteFromTemp(importIDs));
+    }
+
     public async RowCount(containerID: string): Promise<Result<number>> {
         return super.retrieve(this.getRowCount(containerID));
     }
@@ -382,5 +387,77 @@ export default class EdgeMapper extends Mapper {
 
     private getRowCount(containerID: string): QueryConfig {
         return format(`SELECT COUNT(*) FROM edges WHERE container_id = (%L)`, containerID);
+    }
+
+    private moveFromTemp(importIDs: string[]): string {
+        const text = `
+       INSERT INTO edges(
+           container_id,
+           relationship_pair_id,
+           data_source_id,
+           import_data_id,
+           type_mapping_transformation_id,
+           origin_id,
+           destination_id,
+           origin_original_id,
+           origin_data_source_id,
+           origin_metatype_id,
+           destination_original_id,
+           destination_data_source_id,
+           destination_metatype_id,
+           properties,
+           metadata,
+           created_at,
+           modified_at,
+           deleted_at,
+           created_by,
+           modified_by,
+           data_staging_id,
+           metadata_properties
+           )
+           SELECT container_id,
+                  relationship_pair_id,
+                  data_source_id,
+                  import_data_id,
+                  type_mapping_transformation_id,
+                  origin_id,
+                  destination_id,
+                  origin_original_id,
+                  origin_data_source_id,
+                  origin_metatype_id,
+                  destination_original_id,
+                  destination_data_source_id,
+                  destination_metatype_id,
+                  properties,
+                  metadata,
+                  created_at,
+                  modified_at,
+                  deleted_at,
+                  created_by,
+                  modified_by,
+                  data_staging_id,
+                  metadata_properties FROM edges_temp WHERE import_data_id IN(%L) AND id IN 
+            (SELECT id FROM 
+              (SELECT id, ROW_NUMBER() OVER 
+                (partition BY 
+                      container_id,
+                      destination_original_id,
+                      relationship_pair_id,
+                      data_source_id,
+                      created_at,
+                      origin_original_id ORDER BY created_at) AS rnum 
+              FROM edges_temp) t
+            WHERE t.rnum > 1);`;
+
+        const values = [...importIDs];
+
+        return format(text, values);
+    }
+
+    private deleteFromTemp(importIDs: string[]): string {
+        const text = `DELETE FROM edges_temp WHERE import_data_id IN(%L)`;
+        const values = [...importIDs];
+
+        return format(text, values);
     }
 }
