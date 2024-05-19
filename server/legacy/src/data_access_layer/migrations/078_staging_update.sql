@@ -4,7 +4,7 @@ ALTER TABLE data_staging ADD COLUMN edges_processed_at TIMESTAMP DEFAULT NULL;
 /*
  These two tables are temp tables that allow use to quickly insert nodes and edges from the processing stream without
  any of the unique constraints - the only index we keep is import-id since we will need to remove records by import-id
- at the end of the process - no id key needed
+ at the end of the process - id key is unique to this table to let us deduplicate later
  */
 CREATE TABLE IF NOT EXISTS nodes_temp
 (
