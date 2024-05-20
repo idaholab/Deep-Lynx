@@ -40,6 +40,7 @@ async function Start(): Promise<void> {
     type_mapping_transformation_id,
     metadata,
     created_at,
+    import_data_id,
     original_data_id
     ) 
     FROM STDIN WITH DELIMITER '|' CSV`),
@@ -57,6 +58,7 @@ async function Start(): Promise<void> {
         'type_mapping_transformation_id',
         'metadata',
         'created_at',
+        'import_data_id',
         'original_data_id',
     ];
 
@@ -80,6 +82,7 @@ async function Start(): Promise<void> {
                                 const row = Papa.unparse(parsedNodes, {
                                     header: false,
                                     delimiter: '|',
+                                    newline: '\r',
                                 });
 
                                 // you must add a carriage return since we're emulating the STDIN, and they expect each
@@ -130,30 +133,28 @@ async function Start(): Promise<void> {
     const edgeInsertClient = await PostgresAdapter.Instance.Pool.connect();
     const edgeTableStream = edgeInsertClient.query(
         copyFrom(`COPY 
-           edges_temp (
-           properties,
-           metadata_properties,
-           id,
-           container_id,
-           relationship_pair_id,
-           data_source_id,
-           import_data_id,
-           type_mapping_transformation_id,
-           origin_id,
-           destination_id,
-           origin_original_id,
-           origin_data_source_id,
-           origin_metatype_id,
-           destination_original_id,
-           destination_data_source_id,
-           destination_metatype_id,
-           metadata,
-           created_at,
-           modified_at,
-           deleted_at,
-           created_by,
-           modified_by,
-           data_staging_id
+          edges_temp (
+          container_id,
+          relationship_pair_id,
+          data_source_id,
+          import_data_id,
+          type_mapping_transformation_id,
+          origin_id,
+          destination_id,
+          origin_original_id,
+          origin_data_source_id,
+          origin_metatype_id,
+          destination_original_id,
+          destination_data_source_id,
+          destination_metatype_id,
+          properties,
+          metadata,
+          created_at,
+          deleted_at,
+          created_by,
+          modified_by,
+          data_staging_id,
+          metadata_properties
     )
     FROM STDIN WITH DELIMITER '|' CSV`),
     );
@@ -175,7 +176,6 @@ async function Start(): Promise<void> {
         'properties',
         'metadata',
         'created_at',
-        'modified_at',
         'deleted_at',
         'created_by',
         'modified_by',
@@ -202,6 +202,7 @@ async function Start(): Promise<void> {
                                 const row = Papa.unparse(parsedEdges, {
                                     header: false,
                                     delimiter: '|',
+                                    newline: '\r',
                                 });
 
                                 this.push(Buffer.from(row + '\r', 'utf-8'));
