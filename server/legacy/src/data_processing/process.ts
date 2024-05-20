@@ -364,6 +364,7 @@ export async function GenerateNodes(...staging: DataStaging[]): Promise<Node[]> 
     const mappingRepo = new TypeMappingRepository();
 
     const updated: DataStaging[] = [];
+    let nodeHashUpdate = false;
     const records = staging.map((s) => {
         if (!s.shape_hash) {
             const shapeHash = TypeMapping.objectToShapeHash(s.data, {
@@ -373,12 +374,13 @@ export async function GenerateNodes(...staging: DataStaging[]): Promise<Node[]> 
             s.shape_hash = shapeHash;
 
             updated.push(s);
+            nodeHashUpdate = true;
         }
 
         return s;
     });
     // update the staging records with the shape-hash if needed
-    await stagingRepo.bulkSave(updated);
+    if (nodeHashUpdate) await stagingRepo.bulkSave(updated);
 
     // NOTE: this db call might return records which don't match the shapehash/data_source combo because we're passing
     // a lot of records at once to the call to minimize db round-trips. I think this is a good trade-off, but if we start
@@ -478,6 +480,7 @@ export async function GenerateEdges(...staging: DataStaging[]): Promise<Edge[]> 
     const mappingRepo = new TypeMappingRepository();
 
     const updated: DataStaging[] = [];
+    let edgeHashUpdate = false;
     const records = staging.map((s) => {
         if (!s.shape_hash) {
             const shapeHash = TypeMapping.objectToShapeHash(s.data, {
@@ -487,12 +490,13 @@ export async function GenerateEdges(...staging: DataStaging[]): Promise<Edge[]> 
             s.shape_hash = shapeHash;
 
             updated.push(s);
+            edgeHashUpdate = true;
         }
 
         return s;
     });
     // update the staging records with the shape-hash if needed
-    await stagingRepo.bulkSave(updated);
+    if (edgeHashUpdate) await stagingRepo.bulkSave(updated);
 
     // NOTE: this db call might return records which don't match the shapehash/data_source combo because we're passing
     // a lot of records at once to the call to minimize db round-trips. I think this is a good trade-off, but if we start
