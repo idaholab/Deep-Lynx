@@ -454,18 +454,7 @@ export default class EdgeMapper extends Mapper {
                   created_by,
                   modified_by,
                   data_staging_id,
-                  metadata_properties FROM edges_temp WHERE import_data_id IN(%L) AND id IN 
-            (SELECT id FROM 
-              (SELECT id, ROW_NUMBER() OVER 
-                (partition BY 
-                      container_id,
-                      destination_original_id,
-                      relationship_pair_id,
-                      data_source_id,
-                      created_at,
-                      origin_original_id ORDER BY created_at) AS rnum 
-              FROM edges_temp) t
-            WHERE t.rnum > 1);`;
+                  metadata_properties FROM edges_temp WHERE import_data_id IN(%L);`;
 
         const values = [...importIDs];
 
