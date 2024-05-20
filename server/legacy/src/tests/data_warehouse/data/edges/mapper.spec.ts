@@ -22,6 +22,8 @@ import Edge from '../../../../domain_objects/data_warehouse/data/edge';
 import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
 import FileMapper from '../../../../data_access_layer/mappers/data_warehouse/data/file_mapper';
 import File, {EdgeFile} from '../../../../domain_objects/data_warehouse/data/file';
+import Papa from 'papaparse';
+import {instanceToPlain} from 'class-transformer';
 
 describe('An Edge Mapper', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';

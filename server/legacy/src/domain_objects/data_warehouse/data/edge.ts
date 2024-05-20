@@ -64,10 +64,22 @@ export default class Edge extends BaseDomainClass {
     metatype_relationship_name?: string;
 
     @IsObject()
+    @Transform(
+        ({value}) => {
+            return JSON.stringify(value);
+        },
+        {toPlainOnly: true},
+    )
     properties: object = {};
 
     @IsObject()
     @IsOptional()
+    @Transform(
+        ({value}) => {
+            return JSON.stringify(value);
+        },
+        {toPlainOnly: true},
+    )
     metadata_properties: object = {};
 
     @IsString()
@@ -121,6 +133,12 @@ export default class Edge extends BaseDomainClass {
     @IsOptional()
     @ValidateNested()
     @Type(() => EdgeMetadata)
+    @Transform(
+        ({value}) => {
+            return JSON.stringify(value);
+        },
+        {toPlainOnly: true},
+    )
     metadata?: EdgeMetadata;
 
     @IsOptional()

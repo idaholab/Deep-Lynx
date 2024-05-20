@@ -1,8 +1,7 @@
 # should be in the format postgresql://user:password@hostname:port/database_name
 # :port is optional and if included will usually be :5432
 CORE_DB_CONNECTION_STRING=postgresql://postgres:root@timescaledb/deep_lynx_dev
-TIMESCALEDB_ENABLED=true
-WAIT_HOSTS=rabbitmq:5672
+TIMESCALEDB_ENABLED=false
 
 # valid options are blank (defaults to memory), memory, or redis
 CACHE_PROVIDER=redis
@@ -20,11 +19,6 @@ ENCRYPTION_KEY_PATH=
 
 # plaintext secret used to generate secure session markers
 SESSION_SECRET=CHANGEME
-
-# controls which queue system to use, possible values are database, rabbitmq and azure_service_bus
-QUEUE_SYSTEM=rabbitmq
-# RabbitMQ connection string
-RABBITMQ_URL=amqp://deeplynx:root@rabbitmq:5672
 
 # controls whether or not DeepLynx should emit data events
 EMIT_EVENTS=true

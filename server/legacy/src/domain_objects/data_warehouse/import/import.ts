@@ -7,7 +7,7 @@ import {
     HttpDataSourceConfig,
     StandardDataSourceConfig,
     P6DataSourceConfig,
-    CustomDataSourceConfig
+    CustomDataSourceConfig,
 } from './data_source';
 
 /*
@@ -16,33 +16,36 @@ import {
  */
 export default class Import extends BaseDomainClass {
     @IsOptional()
-        id?: string;
+    id?: string;
 
     @IsString()
-        data_source_id?: string;
+    data_source_id?: string;
 
     @IsOptional()
     @IsString()
-        status_message?: string;
+    status_message?: string;
 
     @IsString()
-        status: 'ready' | 'processing' | 'error' | 'stopped' | 'completed' = 'ready';
+    status: 'ready' | 'processing' | 'error' | 'stopped' | 'completed' = 'ready';
 
     @IsOptional()
-        reference?: string;
+    reference?: string;
 
     // composite properties pulled in by JOIN statements when the db fetches this record
     @IsOptional()
     @IsNumber()
-        total_records?: number;
+    total_records?: number;
 
     @IsOptional()
     @IsNumber()
-        records_inserted?: number;
+    records_inserted?: number;
 
     @IsOptional()
     @IsNumber()
-        total_errors?: number;
+    total_errors?: number;
+
+    @IsOptional()
+    container_id?: string;
 
     @IsOptional()
         process_start?: Date;
@@ -69,41 +72,44 @@ export default class Import extends BaseDomainClass {
 export class DataStaging extends NakedDomainClass {
     @IsOptional()
     @IsString()
-        id?: string;
+    id?: string;
 
     @IsString()
-        data_source_id?: string;
+    data_source_id?: string;
 
     @IsString()
-        import_id?: string;
+    import_id?: string;
 
     @IsOptional()
     @IsString()
-        shape_hash?: string;
+    shape_hash?: string;
 
     @IsOptional()
-        errors: string[] = [];
+    errors: string[] = [];
 
     @IsDefined()
-        data: any;
+    data: any;
 
     @IsOptional()
     @IsDate()
     @Type(() => Date)
-        created_at?: Date;
+    created_at?: Date;
 
     @IsOptional()
     @IsDate()
     @Type(() => Date)
-        inserted_at?: Date;
+    inserted_at?: Date;
 
     // The fields below are fields generally fetched on a join
     @IsOptional()
-        container_id?: string;
+    container_id?: string;
+
+    @IsOptional()
+    files_count?: number;
 
     // we need to have this so we can stop spamming the database on the db on processing
     @IsOptional()
-        file_attached?: boolean = false;
+    file_attached?: boolean = false;
 
     @Type(() => BaseDataSourceConfig, {
         keepDiscriminatorProperty: true,
@@ -119,13 +125,8 @@ export class DataStaging extends NakedDomainClass {
             ],
         },
     })
-        data_source_config?:
-    StandardDataSourceConfig
-    | HttpDataSourceConfig
-    | AvevaDataSourceConfig
-    | P6DataSourceConfig
-    | CustomDataSourceConfig =
-                new StandardDataSourceConfig();
+    data_source_config?: StandardDataSourceConfig | HttpDataSourceConfig | AvevaDataSourceConfig | P6DataSourceConfig | CustomDataSourceConfig =
+        new StandardDataSourceConfig();
 
     constructor(input: {data_source_id: string; import_id: string; data: any; shape_hash?: string; container_id?: string; file_attached?: boolean}) {
         super();

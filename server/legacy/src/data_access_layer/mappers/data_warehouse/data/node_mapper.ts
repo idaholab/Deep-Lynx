@@ -99,6 +99,20 @@ export default class NodeMapper extends Mapper {
         return super.runStatement(this.removeFile(id, transformationID));
     }
 
+    public AttachTagsForImport(importIDs: string[]): Promise<Result<boolean>> {
+        return super.runStatement(this.attachTagsForImport(importIDs));
+    }
+
+    public AttachFilesForImport(importIDs: string[]): Promise<Result<boolean>> {
+        return super.runStatement(this.attachFilesForImport(importIDs));
+    }
+
+    // this function covers moving and deleting them from the temp table. Since we don't want to leave anything hanging
+    // we wrap this in a transaction
+    public MoveFromTemp(importIDs: string[]): Promise<Result<boolean>> {
+        return super.runAsTransaction(this.deduplicateFromTemp(importIDs), this.moveFromTemp(importIDs), this.deleteFromTemp(importIDs));
+    }
+
     public ListTransformationsForNode(nodeID: string): Promise<Result<NodeTransformation[]>> {
         return super.rows<NodeTransformation>(this.listTransformationsStatement(nodeID), {
             resultClass: NodeTransformation,
@@ -470,6 +484,90 @@ export default class NodeMapper extends Mapper {
                        RETURNING *`;
 
         const values = nodeTransformations.map((nt) => [nt.node_id, nt.transformation_id]);
+
+        return format(text, values);
+    }
+
+    private attachTagsForImport(importIDs: string[]): string {
+        const text = `
+            INSERT INTO node_tags
+            SELECT nodes.id, tags.id
+            FROM nodes
+                     LEFT JOIN type_mapping_transformations ts ON ts.id = nodes.type_mapping_transformation_id
+                     LEFT JOIN tags ON tags.id IN (SELECT id::bigint FROM jsonb_to_recordset(ts.tags) AS x("id" text))
+            WHERE nodes.import_data_id IN (%L)`;
+        const values = [...importIDs];
+
+        return format(text, values);
+    }
+
+    private attachFilesForImport(importIDs: string[]): string {
+        const text = `
+            INSERT INTO node_files
+            SELECT nodes.id, files.id
+            FROM nodes
+                     LEFT JOIN data_staging ON data_staging.id = nodes.data_staging_id
+                     LEFT JOIN data_staging_files ON data_staging_files.data_staging_id = data_staging.id
+                     LEFT JOIN files ON files.id = data_staging_files.file_id
+            WHERE nodes.import_data_id IN (%L)`;
+        const values = [...importIDs];
+
+        return format(text, values);
+    }
+
+    private deduplicateFromTemp(importIDs: string[]): string {
+        const text = `DELETE FROM nodes_temp WHERE import_data_id IN(%L) AND id IN(SELECT id FROM 
+              (SELECT id, ROW_NUMBER() OVER 
+                (partition BY original_data_id, data_source_id, created_at,container_id ORDER BY created_at DESC) AS rnum 
+              FROM nodes_temp) t
+            WHERE t.rnum > 1)`;
+        const values = [...importIDs];
+
+        return format(text, values);
+    }
+
+    private moveFromTemp(importIDs: string[]): string {
+        const text = `
+       INSERT INTO nodes(
+           original_data_id, 
+           data_source_id, 
+           created_at,
+           container_id, 
+           metatype_id,
+           import_data_id,
+           type_mapping_transformation_id,
+           properties,
+           metadata,
+           modified_at,
+           deleted_at,
+           created_by,
+           modified_by,
+           data_staging_id,
+           metadata_properties)
+        SELECT original_data_id, 
+               data_source_id, 
+               created_at,
+               container_id, 
+               metatype_id,
+               import_data_id,
+               type_mapping_transformation_id,
+               properties,
+               metadata,
+               modified_at,
+               deleted_at,
+               created_by,
+               modified_by,
+               data_staging_id,
+               metadata_properties FROM nodes_temp WHERE import_data_id IN(%L);`;
+
+        const values = [...importIDs];
+
+        return format(text, values);
+    }
+
+    private deleteFromTemp(importIDs: string[]): string {
+        const text = `DELETE FROM nodes_temp WHERE import_data_id IN(%L)`;
+        const values = [...importIDs];
 
         return format(text, values);
     }

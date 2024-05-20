@@ -145,7 +145,14 @@ export default class DataStagingMapper extends Mapper {
         });
     }
 
-    // add an error to an existing error set
+    public MarkNodesProcessed(importIDs: string[]): Promise<Result<boolean>> {
+        return super.runStatement(this.markNodesProcessed(importIDs));
+    } // add an error to an existing error set
+
+    public MarkEdgesProcessed(importIDs: string[]): Promise<Result<boolean>> {
+        return super.runStatement(this.markEdgesProcessed(importIDs));
+    } // add an error to an existing error set
+
     public AddError(id: string, errors: string, transaction?: PoolClient): Promise<Result<boolean>> {
         return super.runStatement(this.addErrorsStatement(id, errors), {
             transaction,
@@ -406,21 +413,49 @@ export default class DataStagingMapper extends Mapper {
         };
     }
 
-    public listImportUninsertedActiveMappingStatement(): string {
-        return `SELECT data_staging.*, data_sources.container_id, data_sources.config as data_source_config
+    public listImportActiveMappingStatementNodes(importIDs: string[]): string {
+        const text = `SELECT data_staging.*, data_sources.container_id, data_sources.config as data_source_config,
+                (SELECT COUNT(*) FROM data_staging_files WHERE data_staging.id = data_staging_files.data_staging_id) as files_count
                 FROM data_staging
                          LEFT JOIN type_mappings ON type_mappings.shape_hash = data_staging.shape_hash
                     AND type_mappings.data_source_id = data_staging.data_source_id
                          LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id
-                WHERE (data_staging.inserted_at IS NULL
-
+                WHERE (data_staging.import_id IN(%L)
+                    AND data_staging.nodes_processed_at IS NULL 
                     AND (type_mappings.active IS TRUE
                         AND EXISTS
                              (SELECT * from type_mapping_transformations
                               WHERE type_mapping_transformations.type_mapping_id = type_mappings.id))) 
                               OR type_mappings.id IS NULL 
-                              AND data_sources.container_id IS NOT NULL;
-                   `;
+                              AND data_sources.container_id IS NOT NULL
+                    ORDER BY data_staging.created_at ASC;`;
+
+        const values = [...importIDs];
+
+        return format(text, values);
+    }
+
+    public listImportActiveMappingStatementEdges(importIDs: string[]): string {
+        const text = `SELECT data_staging.*, data_sources.container_id, data_sources.config as data_source_config,
+                (SELECT COUNT(*) FROM data_staging_files WHERE data_staging.id = data_staging_files.data_staging_id) as files_count
+                FROM data_staging
+                         LEFT JOIN type_mappings ON type_mappings.shape_hash = data_staging.shape_hash
+                    AND type_mappings.data_source_id = data_staging.data_source_id
+                         LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id
+                WHERE (data_staging.import_id IN(%L)
+                    AND data_staging.inserted_at IS NULL
+                    AND data_staging.edges_processed_at IS NULL
+                    AND (type_mappings.active IS TRUE
+                        AND EXISTS
+                             (SELECT * from type_mapping_transformations
+                              WHERE type_mapping_transformations.type_mapping_id = type_mappings.id))) 
+                              OR type_mappings.id IS NULL 
+                              AND data_sources.container_id IS NOT NULL
+                    ORDER BY data_staging.created_at ASC;`;
+
+        const values = [...importIDs];
+
+        return format(text, values);
     }
 
     // this deletes all data staging records older than the attached data sources data retention period, this will
@@ -434,6 +469,22 @@ export default class DataStagingMapper extends Mapper {
                         WHERE data_staging.created_at < NOW() - ((ds.config->>'data_retention_days') || ' days')::interval 
                         AND (ds.config->>'data_retention_days')::int > 0 
                         AND (ds.config->>'data_retention_days')::int IS NOT NULL)`;
+    }
+
+    private markNodesProcessed(importIDs: string[]): string {
+        const text = `UPDATE data_staging SET nodes_processed_at = NOW() 
+                      WHERE data_staging.id IN(SELECT data_staging_id FROM nodes WHERE nodes.import_data_id IN(%L) )`;
+        const values = [...importIDs];
+
+        return format(text, values);
+    }
+
+    private markEdgesProcessed(importIDs: string[]): string {
+        const text = `UPDATE data_staging SET edges_processed_at = NOW() 
+                      WHERE data_staging.id IN(SELECT data_staging_id FROM edges WHERE edges.import_data_id IN(%L) )`;
+        const values = [...importIDs];
+
+        return format(text, values);
     }
 
     // we have to vacuum manually if we're cleaning in order to free up space taken by dead tuples

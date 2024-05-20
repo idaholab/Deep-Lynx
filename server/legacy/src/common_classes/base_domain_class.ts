@@ -1,5 +1,5 @@
 import {IsDate, IsOptional, validate} from 'class-validator';
-import {Type} from 'class-transformer';
+import {Transform, Type} from 'class-transformer';
 import 'reflect-metadata';
 import {Errors, ValidationError} from 'io-ts';
 import Result from './result';
@@ -21,36 +21,35 @@ export class NakedDomainClass {
         return (e: ValidationError[]) => {
             const errorStrings: string[] = [];
             // init prevKeyName to first key name
-            let prevKeyName = e[0].context[e[0].context.length - 2].key
-            let errorValue
-            let possibleTypes: string[] = []
+            let prevKeyName = e[0].context[e[0].context.length - 2].key;
+            let errorValue;
+            let possibleTypes: string[] = [];
 
             for (const error of e) {
-                const keyName = error.context[error.context.length - 2].key
-                errorValue = error.value
+                const keyName = error.context[error.context.length - 2].key;
+                errorValue = error.value;
 
                 // if we are looking at a previous key, append the type and continue
                 // else if we are looking at a new key, push previous to errorStrings and set new value and keyName
                 if (keyName === prevKeyName) {
                     // concatenate possible types to handle union types
-                    possibleTypes.push(error.context[error.context.length - 1].type.name)
+                    possibleTypes.push(error.context[error.context.length - 1].type.name);
                 } else {
-                    errorStrings.push(`Invalid value '${errorValue}' supplied for field '${prevKeyName}'. ` +
-                        `Type supplied should be ${possibleTypes.join(' or ')}.`);
+                    errorStrings.push(
+                        `Invalid value '${errorValue}' supplied for field '${prevKeyName}'. ` + `Type supplied should be ${possibleTypes.join(' or ')}.`,
+                    );
 
                     // reset possibleTypes and update prevKeyName
-                    possibleTypes = []
-                    prevKeyName = keyName
+                    possibleTypes = [];
+                    prevKeyName = keyName;
 
                     // the previous validation has been taken care of, handle this validation by adding to possibleTypes
-                    possibleTypes.push(error.context[error.context.length - 1].type.name)
+                    possibleTypes.push(error.context[error.context.length - 1].type.name);
                 }
-
             }
 
             // last error needs to be pushed to errorStrings
-            errorStrings.push(`Invalid value '${errorValue}' supplied for '${prevKeyName}'. ` +
-                `Type supplied should be ${possibleTypes.join(' or ')}.`);
+            errorStrings.push(`Invalid value '${errorValue}' supplied for '${prevKeyName}'. ` + `Type supplied should be ${possibleTypes.join(' or ')}.`);
 
             resolve(Result.Failure(errorStrings.join(' ')));
         };
@@ -70,7 +69,13 @@ export class BaseDomainClass extends NakedDomainClass {
     modified_by?: string;
 
     @IsOptional()
-    @Type(() => Date)
+    @Type(() => Date, {})
+    @Transform(
+        ({value}) => {
+            return value.toUTCString();
+        },
+        {toPlainOnly: true},
+    )
     created_at?: Date;
 
     @IsOptional()

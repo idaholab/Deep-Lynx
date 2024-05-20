@@ -7,7 +7,7 @@ const Graceful = require('@ladjs/graceful');
 import 'reflect-metadata';
 
 process.on('unhandledRejection', (reason, promise) => {
-    BackedLogger.error(`Unhandled rejection at ${promise} reason: ${reason}`);
+    BackedLogger.error(`Unhandled rejection at ${JSON.stringify(promise)} reason: ${reason}`);
     process.exit(1);
 });
 
@@ -22,19 +22,31 @@ async function Start(): Promise<any> {
         root: path.resolve('dist/jobs'),
         jobs: [
             {
-                name: 'data_source_emitter', // will run data_source_emitter.js - puts data sources on queue to run
+                name: 'data_source_process',
                 interval: '1m',
-                timeout: '1m',
-            },
-            /*      {
-                name: 'data_target_emitter', // will run data_target_emitter.ts - puts data targets on queue to run
-                interval: '30s',
                 timeout: 0,
-            },*/
+            },
             {
-                name: 'edge_queue_emitter', // will run edge_queue_emitter on an infinite loop
-                interval: Config.emitter_interval,
-                timeout: '1m',
+                name: 'import_process',
+                interval: '1m',
+                timeout: 0,
+            },
+            {
+                name: 'export', // will run export.ts
+                interval: Config.export_data_interval, // exports take longer to process, more time in-between instances is needed
+            },
+            {
+                name: 'staging_clean', // will run staging_clean.ts
+                interval: '1 day',
+            },
+            {
+                name: 'metatype_keys_refresh', // will run metatype_keys_refresh.ts
+                interval: '1m',
+            },
+            {
+                name: 'metatype_pairs_refresh', // will run metatype_pairs_refresh.js
+                interval: '1m',
+                timeout: 0,
             },
         ],
     });
@@ -44,7 +56,7 @@ async function Start(): Promise<any> {
 
     await bree.start();
 
-    // eslint-disable-next-line no-bitwise,@typescript-eslint/no-empty-function
+    // eslint-disable-next-line no-bitwise,@typescript-eslint/no-empty-function,no-empty-function
     setInterval(() => {}, 1 << 30);
 }
 

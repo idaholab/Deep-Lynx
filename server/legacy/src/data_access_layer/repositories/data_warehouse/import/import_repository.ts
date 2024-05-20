@@ -48,12 +48,12 @@ export default class ImportRepository extends Repository implements RepositoryIn
         return this.#mapper.SetStatus(importID, status, message, transaction);
     }
 
-    setStart(start: Date, importID: string): Promise<Result<boolean>> {
-        return this.#mapper.SetProcessStart(start, importID);
+    setStart(start: Date, importIDs: string[]): Promise<Result<boolean>> {
+        return this.#mapper.SetProcessStart(start, ...importIDs);
     }
 
-    setEnd(end: Date, importID: string): Promise<Result<boolean>> {
-        return this.#mapper.SetProcessEnd(end, importID);
+    setEnd(end: Date, importIDs: string[]): Promise<Result<boolean>> {
+        return this.#mapper.SetProcessEnd(end, ...importIDs);
     }
 
     // We do NOT allow updates on an import, too much room for error
@@ -77,7 +77,8 @@ export default class ImportRepository extends Repository implements RepositoryIn
         super(ImportMapper.tableName);
 
         // in order to select the composite fields we must redo the initial query
-        this._query.SELECT = [`${this._tableAlias}.*,
+        this._query.SELECT = [
+            `${this._tableAlias}.*,
             SUM(CASE WHEN (data_staging.errors IS NOT NULL 
                 AND data_staging.errors != '{}') 
                 AND data_staging.import_id = ${this._tableAlias}.id 
@@ -86,16 +87,10 @@ export default class ImportRepository extends Repository implements RepositoryIn
                 AND data_staging.import_id = ${this._tableAlias}.id 
                 THEN 1 ELSE 0 END) AS records_inserted,
             SUM(CASE WHEN data_staging.import_id = ${this._tableAlias}.id 
-                THEN 1 ELSE 0 END) as total_records`
+                THEN 1 ELSE 0 END) as total_records`,
         ];
         this._query.FROM = `FROM imports ${this._tableAlias} 
             LEFT JOIN data_staging ON data_staging.import_id = ${this._tableAlias}.id`;
-    }
-
-    // this function will always return imports in the order in which they were received - insuring that older data is
-    // always processed first
-    listIncompleteWithUninsertedData(dataSourceID: string, limit: number): Promise<Result<Import[]>> {
-        return this.#mapper.ListWithUninsertedData(dataSourceID, limit);
     }
 
     reprocess(importID: string): Promise<Result<boolean>> {
@@ -116,12 +111,13 @@ export default class ImportRepository extends Repository implements RepositoryIn
         const results = await super.count(transaction, queryOptions);
 
         // in order to select the composite fields we must redo the initial query
-        this._query.SELECT = [`${this._tableAlias}.*`,
+        this._query.SELECT = [
+            `${this._tableAlias}.*`,
             `SUM(CASE WHEN data_staging.inserted_at IS NOT NULL 
                 AND data_staging.import_id = ${this._tableAlias}.id 
                 THEN 1 ELSE 0 END) AS records_inserted`,
             `SUM(CASE WHEN data_staging.import_id = ${this._tableAlias}.id 
-                THEN 1 ELSE 0 END) as total_records`
+                THEN 1 ELSE 0 END) as total_records`,
         ];
         this._query.FROM = `FROM imports ${this._tableAlias} 
             LEFT JOIN data_staging ON data_staging.import_id = ${this._tableAlias}.id`;
@@ -137,15 +133,16 @@ export default class ImportRepository extends Repository implements RepositoryIn
             resultClass: Import,
         });
         // in order to select the composite fields we must redo the initial query
-        this._query.SELECT = [`${this._tableAlias}.*`,
+        this._query.SELECT = [
+            `${this._tableAlias}.*`,
             `SUM(CASE WHEN data_staging.inserted_at IS NOT NULL 
                 AND data_staging.import_id = ${this._tableAlias}.id 
                 THEN 1 ELSE 0 END) AS records_inserted`,
             `SUM(CASE WHEN data_staging.import_id = ${this._tableAlias}.id 
-                THEN 1 ELSE 0 END) as total_records`
+                THEN 1 ELSE 0 END) as total_records`,
         ];
         this._query.FROM = `FROM imports ${this._tableAlias} 
-            LEFT JOIN data_staging ON data_staging.import_id = ${this._tableAlias}.id`
+            LEFT JOIN data_staging ON data_staging.import_id = ${this._tableAlias}.id`;
 
         return Promise.resolve(Result.Pass(results));
     }
