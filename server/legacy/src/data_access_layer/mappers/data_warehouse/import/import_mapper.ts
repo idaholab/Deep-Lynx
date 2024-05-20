@@ -170,12 +170,12 @@ export default class ImportMapper extends Mapper {
         return Promise.resolve(Result.Success(true));
     }
 
-    public async SetProcessStart(start: Date, importID: string): Promise<Result<boolean>> {
-        return super.runStatement(this.setProcessStartStatement(importID));
+    public async SetProcessStart(start: Date, importIDs: string[]): Promise<Result<boolean>> {
+        return super.runStatement(this.setProcessStartStatement(importIDs));
     }
 
-    public async SetProcessEnd(end: Date, importID: string): Promise<Result<boolean>> {
-        return super.runStatement(this.setProcessEndStatement(importID));
+    public async SetProcessEnd(end: Date, importIDs: string[]): Promise<Result<boolean>> {
+        return super.runStatement(this.setProcessEndStatement(importIDs));
     }
 
     private setProcessedNull(importID: string): QueryConfig {
@@ -331,17 +331,17 @@ export default class ImportMapper extends Mapper {
         };
     }
 
-    private setProcessStartStatement(importID: string): QueryConfig {
+    private setProcessStartStatement(importIDs: string[]): QueryConfig {
         return {
-            text: `UPDATE imports SET process_start = NOW() WHERE id = $1`,
-            values: [importID],
+            text: `UPDATE imports SET process_start = NOW() WHERE id IN $1`,
+            values: [importIDs],
         };
     }
 
-    private setProcessEndStatement(importID: string): QueryConfig {
+    private setProcessEndStatement(importIDs: string[]): QueryConfig {
         return {
-            text: `UPDATE imports SET process_end = NOW() WHERE id = $1`,
-            values: [importID],
+            text: `UPDATE imports SET process_end = NOW() WHERE id IN $1`,
+            values: [importIDs],
         };
     }
 }

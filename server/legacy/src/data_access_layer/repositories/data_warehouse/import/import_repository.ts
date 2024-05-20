@@ -48,12 +48,12 @@ export default class ImportRepository extends Repository implements RepositoryIn
         return this.#mapper.SetStatus(importID, status, message, transaction);
     }
 
-    setStart(start: Date, importID: string): Promise<Result<boolean>> {
-        return this.#mapper.SetProcessStart(start, importID);
+    setStart(start: Date, importIDs: string[]): Promise<Result<boolean>> {
+        return this.#mapper.SetProcessStart(start, importIDs);
     }
 
-    setEnd(end: Date, importID: string): Promise<Result<boolean>> {
-        return this.#mapper.SetProcessEnd(end, importID);
+    setEnd(end: Date, importIDs: string[]): Promise<Result<boolean>> {
+        return this.#mapper.SetProcessEnd(end, importIDs);
     }
 
     // We do NOT allow updates on an import, too much room for error

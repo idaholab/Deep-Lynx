@@ -12,7 +12,7 @@ services:
   postgres:
     environment:
       - POSTGRES_PASSWORD=root
-    image: "postgres/postgres:16.3"
+    image: "library/postgres:16.3"
     ports:
       - "5432:5432"
   redis:
