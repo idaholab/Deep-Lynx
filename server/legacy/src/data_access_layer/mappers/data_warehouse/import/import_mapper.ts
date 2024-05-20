@@ -333,14 +333,14 @@ export default class ImportMapper extends Mapper {
 
     private setProcessStartStatement(importIDs: string[]): string {
         const text = `UPDATE imports SET process_start = NOW() WHERE id IN(%L)`;
-        const values = [importIDs];
+        const values = [...importIDs];
 
         return format(text, values);
     }
 
     private setProcessEndStatement(importIDs: string[]): string {
         const text = `UPDATE imports SET process_end= NOW() WHERE id IN(%L)`;
-        const values = [importIDs];
+        const values = [...importIDs];
 
         return format(text, values);
     }
