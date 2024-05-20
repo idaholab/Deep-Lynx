@@ -170,11 +170,11 @@ export default class ImportMapper extends Mapper {
         return Promise.resolve(Result.Success(true));
     }
 
-    public async SetProcessStart(start: Date, importIDs: string[]): Promise<Result<boolean>> {
+    public async SetProcessStart(start: Date, ...importIDs: string[]): Promise<Result<boolean>> {
         return super.runStatement(this.setProcessStartStatement(importIDs));
     }
 
-    public async SetProcessEnd(end: Date, importIDs: string[]): Promise<Result<boolean>> {
+    public async SetProcessEnd(end: Date, ...importIDs: string[]): Promise<Result<boolean>> {
         return super.runStatement(this.setProcessEndStatement(importIDs));
     }
 
@@ -331,17 +331,17 @@ export default class ImportMapper extends Mapper {
         };
     }
 
-    private setProcessStartStatement(importIDs: string[]): QueryConfig {
-        return {
-            text: `UPDATE imports SET process_start = NOW() WHERE id IN $1`,
-            values: [importIDs],
-        };
+    private setProcessStartStatement(importIDs: string[]): string {
+        const text = `UPDATE imports SET process_start = NOW() WHERE id IN(%L)`;
+        const values = [importIDs];
+
+        return format(text, values);
     }
 
-    private setProcessEndStatement(importIDs: string[]): QueryConfig {
-        return {
-            text: `UPDATE imports SET process_end = NOW() WHERE id IN $1`,
-            values: [importIDs],
-        };
+    private setProcessEndStatement(importIDs: string[]): string {
+        const text = `UPDATE imports SET process_end= NOW() WHERE id IN(%L)`;
+        const values = [importIDs];
+
+        return format(text, values);
     }
 }
