@@ -125,7 +125,7 @@ export default class EdgeMapper extends Mapper {
 
     // we wrap this in a transaction
     public MoveFromTemp(importIDs: string[]): Promise<Result<boolean>> {
-        return super.runAsTransaction(this.moveFromTemp(importIDs), this.deleteFromTemp(importIDs));
+        return super.runAsTransaction(this.deduplicateFromTemp(importIDs), this.moveFromTemp(importIDs), this.deleteFromTemp(importIDs));
     }
 
     public async RowCount(containerID: string): Promise<Result<number>> {
@@ -387,6 +387,24 @@ export default class EdgeMapper extends Mapper {
 
     private getRowCount(containerID: string): QueryConfig {
         return format(`SELECT COUNT(*) FROM edges WHERE container_id = (%L)`, containerID);
+    }
+
+    private deduplicateFromTemp(importIDs: string[]): string {
+        const text = ` DELETE FROM edges_temp WHERE import_data_id IN(%L) AND id IN(SELECT id FROM 
+              (SELECT id, ROW_NUMBER() OVER 
+                (partition BY 
+                      container_id,
+                      destination_original_id,
+                      relationship_pair_id,
+                      data_source_id,
+                      created_at,
+                      origin_original_id ORDER BY created_at) AS rnum 
+              FROM edges_temp) t
+            WHERE t.rnum > 1)`;
+
+        const values = [...importIDs];
+
+        return format(text, values);
     }
 
     private moveFromTemp(importIDs: string[]): string {

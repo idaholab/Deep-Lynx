@@ -110,7 +110,7 @@ export default class NodeMapper extends Mapper {
     // this function covers moving and deleting them from the temp table. Since we don't want to leave anything hanging
     // we wrap this in a transaction
     public MoveFromTemp(importIDs: string[]): Promise<Result<boolean>> {
-        return super.runAsTransaction(this.moveFromTemp(importIDs), this.deleteFromTemp(importIDs));
+        return super.runAsTransaction(this.deduplicateFromTemp(importIDs), this.moveFromTemp(importIDs), this.deleteFromTemp(importIDs));
     }
 
     public ListTransformationsForNode(nodeID: string): Promise<Result<NodeTransformation[]>> {
@@ -515,6 +515,17 @@ export default class NodeMapper extends Mapper {
         return format(text, values);
     }
 
+    private deduplicateFromTemp(importIDs: string[]): string {
+        const text = `DELETE FROM nodes_temp WHERE import_data_id IN(%L) AND id IN(SELECT id FROM 
+              (SELECT id, ROW_NUMBER() OVER 
+                (partition BY original_data_id, data_source_id, created_at,container_id ORDER BY created_at DESC) AS rnum 
+              FROM nodes_temp) t
+            WHERE t.rnum > 1)`;
+        const values = [...importIDs];
+
+        return format(text, values);
+    }
+
     private moveFromTemp(importIDs: string[]): string {
         const text = `
        INSERT INTO nodes(
@@ -547,12 +558,7 @@ export default class NodeMapper extends Mapper {
                created_by,
                modified_by,
                data_staging_id,
-               metadata_properties FROM nodes_temp WHERE import_data_id IN(%L) AND id IN 
-            (SELECT id FROM 
-              (SELECT id, ROW_NUMBER() OVER 
-                (partition BY original_data_id, data_source_id, created_at,container_id ORDER BY created_at) AS rnum 
-              FROM nodes_temp) t
-            WHERE t.rnum > 1);`;
+               metadata_properties FROM nodes_temp WHERE import_data_id IN(%L);`;
 
         const values = [...importIDs];
 
