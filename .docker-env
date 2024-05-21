@@ -1,6 +1,6 @@
 # should be in the format postgresql://user:password@hostname:port/database_name
 # :port is optional and if included will usually be :5432
-CORE_DB_CONNECTION_STRING=postgresql://postgres:root@timescaledb/deep_lynx_dev
+CORE_DB_CONNECTION_STRING=postgresql://postgres:root@postgres/deep_lynx_dev
 TIMESCALEDB_ENABLED=false
 
 # valid options are blank (defaults to memory), memory, or redis
