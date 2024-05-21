@@ -83,7 +83,9 @@ export default class ImportRepository extends Repository implements RepositoryIn
                 AND data_staging.errors != '{}') 
                 AND data_staging.import_id = ${this._tableAlias}.id 
                 THEN 1 ELSE 0 END) AS total_errors,
-            SUM(CASE WHEN data_staging.inserted_at IS NOT NULL 
+            SUM(CASE WHEN (data_staging.inserted_at IS NOT NULL 
+                OR data_staging.nodes_processed_at IS NOT NULL
+                OR data_staging.edges_processed_at IS NOT NULL)
                 AND data_staging.import_id = ${this._tableAlias}.id 
                 THEN 1 ELSE 0 END) AS records_inserted,
             SUM(CASE WHEN data_staging.import_id = ${this._tableAlias}.id 
@@ -113,7 +115,9 @@ export default class ImportRepository extends Repository implements RepositoryIn
         // in order to select the composite fields we must redo the initial query
         this._query.SELECT = [
             `${this._tableAlias}.*`,
-            `SUM(CASE WHEN data_staging.inserted_at IS NOT NULL 
+            `SUM(CASE WHEN (data_staging.inserted_at IS NOT NULL 
+                OR data_staging.nodes_processed_at IS NOT NULL
+                OR data_staging.edges_processed_at IS NOT NULL)
                 AND data_staging.import_id = ${this._tableAlias}.id 
                 THEN 1 ELSE 0 END) AS records_inserted`,
             `SUM(CASE WHEN data_staging.import_id = ${this._tableAlias}.id 
@@ -135,7 +139,9 @@ export default class ImportRepository extends Repository implements RepositoryIn
         // in order to select the composite fields we must redo the initial query
         this._query.SELECT = [
             `${this._tableAlias}.*`,
-            `SUM(CASE WHEN data_staging.inserted_at IS NOT NULL 
+            `SUM(CASE WHEN(data_staging.inserted_at IS NOT NULL 
+                OR data_staging.nodes_processed_at IS NOT NULL
+                OR data_staging.edges_processed_at IS NOT NULL)
                 AND data_staging.import_id = ${this._tableAlias}.id 
                 THEN 1 ELSE 0 END) AS records_inserted`,
             `SUM(CASE WHEN data_staging.import_id = ${this._tableAlias}.id 
