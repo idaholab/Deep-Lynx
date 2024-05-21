@@ -1,12 +1,62 @@
-import {client} from '../../_lib/api';
-import {ContainerT} from '../../_lib/types';
+"use client";
 
-export default async function Home() {
-    const containers: ContainerT[] = await client.listContainers();
+// Hooks
+import useSWR from "swr";
+import { useEffect, useState } from "react";
+
+// Types
+import { ContainerT } from "@/app/_lib/types";
+import { SelectChangeEvent } from "@mui/material";
+
+// MUI
+import {
+    Container,
+    InputLabel,
+    FormControl,
+    MenuItem,
+    Select,
+} from "@mui/material";
+
+// Axios
+import axios from "axios";
+
+const fetcher = (url: string) => axios.get(url).then((res) => res.data.value);
+
+const ContainerSelect = () => {
+    const [container, setContainer] = useState<string>("");
+    const { data, error, isLoading } = useSWR("/api/containers", fetcher);
+
+    // Handlers
+    const handleContainer = (event: SelectChangeEvent) => {
+        setContainer(event.target.value as string);
+    };
+
     return (
-        <div>
-            <h1>Containers</h1>
-            <div>{containers[2].id}</div>
-        </div>
+        <>
+            <Container>
+                <FormControl fullWidth>
+                    <InputLabel id="Container Select">Containers</InputLabel>
+                    <Select
+                        labelId="Container Select"
+                        id="/containers/ContainerSelect"
+                        label="Containers"
+                        value={container ? container : ""}
+                        onChange={handleContainer}
+                    >
+                        {data
+                            ? data.map((container: ContainerT) => {
+                                  return (
+                                      <MenuItem key={container.id}>
+                                          {container.name}
+                                      </MenuItem>
+                                  );
+                              })
+                            : null}
+                    </Select>
+                </FormControl>
+            </Container>
+        </>
     );
-}
+};
+
+export default ContainerSelect;
