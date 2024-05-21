@@ -422,6 +422,7 @@ export default class DataStagingMapper extends Mapper {
                          LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id
                 WHERE (data_staging.import_id IN(%L)
                     AND data_staging.nodes_processed_at IS NULL 
+                    AND data_staging.inserted_at IS NULL
                     AND (type_mappings.active IS TRUE
                         AND EXISTS
                              (SELECT * from type_mapping_transformations
@@ -445,6 +446,7 @@ export default class DataStagingMapper extends Mapper {
                 WHERE (data_staging.import_id IN(%L)
                     AND data_staging.inserted_at IS NULL
                     AND data_staging.edges_processed_at IS NULL
+                    AND data_staging.inserted_at IS NULL
                     AND (type_mappings.active IS TRUE
                         AND EXISTS
                              (SELECT * from type_mapping_transformations
