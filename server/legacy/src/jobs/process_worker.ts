@@ -12,7 +12,7 @@ import Logger from '../services/logger';
 import NodeMapper from '../data_access_layer/mappers/data_warehouse/data/node_mapper';
 import EdgeMapper from '../data_access_layer/mappers/data_warehouse/data/edge_mapper';
 import {pipeline} from 'node:stream/promises';
-import ImportRepository from "../data_access_layer/repositories/data_warehouse/import/import_repository";
+import ImportRepository from '../data_access_layer/repositories/data_warehouse/import/import_repository';
 
 async function Start(): Promise<void> {
     await PostgresAdapter.Instance.init();
@@ -27,7 +27,7 @@ async function Start(): Promise<void> {
 
     // set process start time
     const importRepo = new ImportRepository();
-    void importRepo.setStart(new Date(), importIDs)
+    void (await importRepo.setStart(new Date(), importIDs));
 
     // iterate through the staging data stream and generate the nodes, use the COPY command to insert the nodes
     // into a temporary holding table without indexes, then pull them out again - note we're using two clients here,
@@ -260,7 +260,7 @@ async function Start(): Promise<void> {
     if (result.isError) Logger.error(`unexpected error attaching files to edges in the processing thread ${JSON.stringify(result.error)}`);
 
     // set end time of imports
-    void importRepo.setEnd(new Date(), importIDs)
+    void (await importRepo.setEnd(new Date(), importIDs));
 
     process.exit(0);
 }
