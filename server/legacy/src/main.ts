@@ -22,8 +22,11 @@ const postgresAdapter = PostgresAdapter.Instance;
 
 async function Start(): Promise<any> {
     await postgresAdapter.init();
-    const migrator = new Migrator();
-    await migrator.Run();
+
+    if (!Config.is_node) {
+        const migrator = new Migrator();
+        await migrator.Run();
+    }
 
     void Cache.Instance.cache.flush();
 
@@ -38,28 +41,26 @@ async function Start(): Promise<any> {
     // configure the default superuser
     void (await ReturnSuperUser());
 
-    if (Config.run_jobs) {
-        // Bree is a job runner that allows us to start and schedule independent processes across threads
-        // We use it primarily for data processing and mapping, as those cpu heavy tasks tend to block the
-        // main execution thread frequently
-        const bree = new Bree({
-            logger: Config.log_jobs ? BackedLogger.logger : false,
-            root: path.resolve('dist/jobs'),
-            jobs: [
-                {
-                    name: 'data_source_process',
-                    interval: '1m',
-                    timeout: 0,
-                },
-                {
-                    name: 'import_process',
-                    interval: '1m',
-                    timeout: 0,
-                },
-                {
-                    name: 'export', // will run export.ts
-                    interval: Config.export_data_interval, // exports take longer to process, more time in-between instances is needed
-                },
+    const jobs = [
+        {
+            name: 'data_source_process',
+            interval: '1m',
+            timeout: 0,
+        },
+        {
+            name: 'import_process',
+            interval: '1m',
+            timeout: 0,
+        },
+        {
+            name: 'export', // will run export.ts
+            interval: Config.export_data_interval, // exports take longer to process, more time in-between instances is needed
+        },
+    ];
+
+    if (!Config.is_node) {
+        jobs.push(
+            ...[
                 {
                     name: 'metatype_keys_refresh', // will run metatype_keys_refresh.js
                     interval: '1m',
@@ -76,25 +77,34 @@ async function Start(): Promise<any> {
                     timeout: 0,
                 },
             ],
-        });
-
-        const graceful = new Graceful({brees: [bree]});
-        graceful.listen();
-
-        await bree.start();
-
-        Cache.Instance.on('deleted', (key) => {
-            bree.workers.forEach((worker) => {
-                worker.postMessage(`deleted|${key}`);
-            });
-        });
-
-        Cache.Instance.on('flush', () => {
-            bree.workers.forEach((worker) => {
-                worker.postMessage(`flush`);
-            });
-        });
+        );
     }
+
+    // Bree is a job runner that allows us to start and schedule independent processes across threads
+    // We use it primarily for data processing and mapping, as those cpu heavy tasks tend to block the
+    // main execution thread frequently
+    const bree = new Bree({
+        logger: Config.log_jobs ? BackedLogger.logger : false,
+        root: path.resolve('dist/jobs'),
+        jobs,
+    });
+
+    const graceful = new Graceful({brees: [bree]});
+    graceful.listen();
+
+    await bree.start();
+
+    Cache.Instance.on('deleted', (key) => {
+        bree.workers.forEach((worker) => {
+            worker.postMessage(`deleted|${key}`);
+        });
+    });
+
+    Cache.Instance.on('flush', () => {
+        bree.workers.forEach((worker) => {
+            worker.postMessage(`flush`);
+        });
+    });
 
     if (Config.vue_app_id !== '') {
         const oauthRepo = new OAuthRepository();
