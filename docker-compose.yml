@@ -4,16 +4,15 @@ services:
     image: "idaholab/deeplynx:latest"
     restart: on-failure
     depends_on:
-      - timescaledb
-      - rabbitmq
+      - postgres
     ports:
       - "8090:8090"
     env_file:
       - "./.docker-env"
-  timescaledb:
+  postgres:
     environment:
       - POSTGRES_PASSWORD=root
-    image: "timescale/timescaledb:latest-pg12"
+    image: "library/postgres:16.3"
     ports:
       - "5432:5432"
   redis:
@@ -21,11 +20,3 @@ services:
     ports:
       - "6379:6379"
       - "8001:8001"
-  rabbitmq:
-    environment:
-      - RABBITMQ_DEFAULT_USER=deeplynx
-      - RABBITMQ_DEFAULT_PASS=root
-    image: "rabbitmq"
-    ports:
-      - "5672:5672"
-      - "15672:15672"

@@ -4,6 +4,7 @@ import {PoolClient, QueryConfig} from 'pg';
 import Node, {NodeTransformation} from '../../../../domain_objects/data_warehouse/data/node';
 import {NodeFile} from '../../../../domain_objects/data_warehouse/data/file';
 
+import {v4 as uuidv4} from 'uuid';
 const format = require('pg-format');
 
 /*
@@ -98,6 +99,20 @@ export default class NodeMapper extends Mapper {
         return super.runStatement(this.removeFile(id, transformationID));
     }
 
+    public AttachTagsForImport(importIDs: string[]): Promise<Result<boolean>> {
+        return super.runStatement(this.attachTagsForImport(importIDs));
+    }
+
+    public AttachFilesForImport(importIDs: string[]): Promise<Result<boolean>> {
+        return super.runStatement(this.attachFilesForImport(importIDs));
+    }
+
+    // this function covers moving and deleting them from the temp table. Since we don't want to leave anything hanging
+    // we wrap this in a transaction
+    public MoveFromTemp(importIDs: string[]): Promise<Result<boolean>> {
+        return super.runAsTransaction(this.deduplicateFromTemp(importIDs), this.moveFromTemp(importIDs), this.deleteFromTemp(importIDs));
+    }
+
     public ListTransformationsForNode(nodeID: string): Promise<Result<NodeTransformation[]>> {
         return super.rows<NodeTransformation>(this.listTransformationsStatement(nodeID), {
             resultClass: NodeTransformation,
@@ -141,6 +156,10 @@ export default class NodeMapper extends Mapper {
             transaction,
             resultClass: this.resultClass,
         });
+    }
+
+    public async RowCount(containerID: string): Promise<Result<number>> {
+        return super.retrieve(this.getRowCount(containerID));
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -198,12 +217,12 @@ export default class NodeMapper extends Mapper {
                    AND u.data_source_id::int8 = n.data_source_id
                 WHERE n.created_at < u.created_at::TIMESTAMP
                 ORDER BY n.created_at DESC LIMIT 1
-                  ON CONFLICT(created_at, id) DO UPDATE SET
+                  ON CONFLICT(created_at, original_data_id, container_id, data_source_id) DO UPDATE SET
                       properties = nodes.properties || EXCLUDED.properties,
                       metadata = EXCLUDED.metadata,
                       metadata_properties = nodes.metadata_properties || EXCLUDED.metadata_properties,
                       deleted_at = EXCLUDED.deleted_at
-                  WHERE EXCLUDED.id = nodes.id AND EXCLUDED.properties IS DISTINCT FROM nodes.properties
+                  WHERE EXCLUDED.original_data_id = nodes.original_data_id AND EXCLUDED.container_id = nodes.container_id AND EXCLUDED.data_source_id = nodes.data_source_id AND EXCLUDED.properties IS DISTINCT FROM nodes.properties
                         OR EXCLUDED.metadata_properties IS DISTINCT FROM nodes.metadata_properties
                    RETURNING *`
             : `INSERT INTO nodes(
@@ -220,11 +239,11 @@ export default class NodeMapper extends Mapper {
                   created_by,
                   modified_by,
                   created_at) VALUES %L
-                  ON CONFLICT(created_at, id) DO UPDATE SET
+                  ON CONFLICT(created_at, original_data_id, container_id, data_source_id) DO UPDATE SET
                       properties = EXCLUDED.properties,
                       metadata = EXCLUDED.metadata,
                       deleted_at = EXCLUDED.deleted_at
-                  WHERE EXCLUDED.id = nodes.id AND (EXCLUDED.properties IS DISTINCT FROM nodes.properties
+                  WHERE EXCLUDED.original_data_id = nodes.original_data_id AND EXCLUDED.container_id = nodes.container_id AND EXCLUDED.data_source_id = nodes.data_source_id AND (EXCLUDED.properties IS DISTINCT FROM nodes.properties
                         OR EXCLUDED.metadata_properties IS DISTINCT FROM nodes.metadata_properties)
                    RETURNING *`;
 
@@ -233,7 +252,7 @@ export default class NodeMapper extends Mapper {
             n.metatype ? n.metatype.id : n.metatype_id,
             JSON.stringify(n.properties),
             JSON.stringify(n.metadata_properties),
-            n.original_data_id,
+            n.original_data_id ? n.original_data_id : uuidv4(),
             n.data_source_id,
             n.type_mapping_transformation_id,
             n.import_data_id,
@@ -300,12 +319,12 @@ export default class NodeMapper extends Mapper {
             LEFT JOIN nodes n ON u.id::int8 = n.id
             WHERE n.created_at < u.created_at::TIMESTAMP
             ORDER BY n.created_at DESC LIMIT 1
-            ON CONFLICT(created_at, id) DO UPDATE SET
+            ON CONFLICT(created_at, original_data_id, container_id, data_source_id) DO UPDATE SET
                    properties = nodes.properties || EXCLUDED.properties,
                    metadata = EXCLUDED.metadata,
                    metadata_properties = nodes.metadata_properties || EXCLUDED.metadata_properties,
                    deleted_at = EXCLUDED.deleted_at
-            WHERE EXCLUDED.id = nodes.id AND (EXCLUDED.properties IS DISTINCT FROM nodes.properties
+            WHERE EXCLUDED.original_data_id = nodes.original_data_id AND EXCLUDED.container_id = nodes.container_id AND EXCLUDED.data_source_id = nodes.data_source_id AND (EXCLUDED.properties IS DISTINCT FROM nodes.properties
                 OR EXCLUDED.metadata_properties IS DISTINCT FROM nodes.metadata_properties)
             RETURNING *`
             : `INSERT INTO nodes(
@@ -330,7 +349,7 @@ export default class NodeMapper extends Mapper {
             n.metatype ? n.metatype.id : n.metatype_id,
             JSON.stringify(n.properties),
             JSON.stringify(n.metadata_properties),
-            n.original_data_id,
+            n.original_data_id ? n.original_data_id : uuidv4(),
             n.data_source_id,
             n.type_mapping_transformation_id,
             n.import_data_id,
@@ -469,6 +488,90 @@ export default class NodeMapper extends Mapper {
         return format(text, values);
     }
 
+    private attachTagsForImport(importIDs: string[]): string {
+        const text = `
+            INSERT INTO node_tags
+            SELECT nodes.id, tags.id
+            FROM nodes
+                     LEFT JOIN type_mapping_transformations ts ON ts.id = nodes.type_mapping_transformation_id
+                     LEFT JOIN tags ON tags.id IN (SELECT id::bigint FROM jsonb_to_recordset(ts.tags) AS x("id" text))
+            WHERE nodes.import_data_id IN (%L)`;
+        const values = [...importIDs];
+
+        return format(text, values);
+    }
+
+    private attachFilesForImport(importIDs: string[]): string {
+        const text = `
+            INSERT INTO node_files
+            SELECT nodes.id, files.id
+            FROM nodes
+                     LEFT JOIN data_staging ON data_staging.id = nodes.data_staging_id
+                     LEFT JOIN data_staging_files ON data_staging_files.data_staging_id = data_staging.id
+                     LEFT JOIN files ON files.id = data_staging_files.file_id
+            WHERE nodes.import_data_id IN (%L)`;
+        const values = [...importIDs];
+
+        return format(text, values);
+    }
+
+    private deduplicateFromTemp(importIDs: string[]): string {
+        const text = `DELETE FROM nodes_temp WHERE import_data_id IN(%L) AND id IN(SELECT id FROM 
+              (SELECT id, ROW_NUMBER() OVER 
+                (partition BY original_data_id, data_source_id, created_at,container_id ORDER BY created_at DESC) AS rnum 
+              FROM nodes_temp) t
+            WHERE t.rnum > 1)`;
+        const values = [...importIDs];
+
+        return format(text, values);
+    }
+
+    private moveFromTemp(importIDs: string[]): string {
+        const text = `
+       INSERT INTO nodes(
+           original_data_id, 
+           data_source_id, 
+           created_at,
+           container_id, 
+           metatype_id,
+           import_data_id,
+           type_mapping_transformation_id,
+           properties,
+           metadata,
+           modified_at,
+           deleted_at,
+           created_by,
+           modified_by,
+           data_staging_id,
+           metadata_properties)
+        SELECT original_data_id, 
+               data_source_id, 
+               created_at,
+               container_id, 
+               metatype_id,
+               import_data_id,
+               type_mapping_transformation_id,
+               properties,
+               metadata,
+               modified_at,
+               deleted_at,
+               created_by,
+               modified_by,
+               data_staging_id,
+               metadata_properties FROM nodes_temp WHERE import_data_id IN(%L);`;
+
+        const values = [...importIDs];
+
+        return format(text, values);
+    }
+
+    private deleteFromTemp(importIDs: string[]): string {
+        const text = `DELETE FROM nodes_temp WHERE import_data_id IN(%L)`;
+        const values = [...importIDs];
+
+        return format(text, values);
+    }
+
     private removeTransformation(nodeID: string, transformationID: string): QueryConfig {
         return {
             text: `DELETE FROM node_transformations WHERE node_id = $1 AND transformation_id = $2`,
@@ -484,5 +587,9 @@ export default class NodeMapper extends Mapper {
              WHERE node_id = $1`,
             values: [nodeID],
         };
+    }
+
+    private getRowCount(containerID: string): QueryConfig {
+        return format(`SELECT COUNT(*) FROM nodes WHERE container_id = (%L)`, containerID);
     }
 }

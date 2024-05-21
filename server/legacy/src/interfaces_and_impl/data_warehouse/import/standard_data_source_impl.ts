@@ -39,10 +39,6 @@ export default class StandardDataSourceImpl implements DataSource {
     // see the interface declaration's explanation of ReceiveData
     async ReceiveData(payloadStream: Readable, user: User, options?: ReceiveDataOptions): Promise<Result<Import | boolean>> {
         if (!this.DataSourceRecord || !this.DataSourceRecord.id) {
-            return Promise.resolve(Result.Failure('cannot receive data, no underlying or saved data source record'));
-        }
-
-        if (!this.DataSourceRecord || !this.DataSourceRecord.id) {
             if (options?.transaction) await this.#mapper.rollbackTransaction(options?.transaction);
             return Promise.resolve(
                 Result.Failure(

@@ -67,10 +67,22 @@ export default class Node extends BaseDomainClass {
     metatype_name?: string;
 
     @IsObject()
+    @Transform(
+        ({value}) => {
+            return JSON.stringify(value);
+        },
+        {toPlainOnly: true},
+    )
     properties: object = {};
 
     @IsObject()
     @IsOptional()
+    @Transform(
+        ({value}) => {
+            return JSON.stringify(value).substring(1, JSON.stringify(value).length - 1);
+        },
+        {toPlainOnly: true},
+    )
     metadata_properties: object = {};
 
     @IsString()
@@ -96,6 +108,12 @@ export default class Node extends BaseDomainClass {
     @IsOptional()
     @ValidateNested()
     @Type(() => NodeMetadata)
+    @Transform(
+        ({value}) => {
+            return JSON.stringify(value);
+        },
+        {toPlainOnly: true},
+    )
     metadata?: NodeMetadata;
 
     @IsOptional()

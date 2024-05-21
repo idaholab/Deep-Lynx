@@ -12,6 +12,7 @@ import {plainToClass} from 'class-transformer';
 import Logger from '../../../../services/logger';
 import DataStagingMapper from './data_staging_mapper';
 import DataSourceRepository from '../../../repositories/data_warehouse/import/data_source_repository';
+import {Worker} from 'worker_threads';
 
 const format = require('pg-format');
 const devnull = require('dev-null');
@@ -115,10 +116,12 @@ export default class ImportMapper extends Mapper {
         return super.runStatement(this.setStatusStatement(importID, status, message), {transaction});
     }
 
-    // list all imports which have data with an uninserted status - while we used to check status of the import,
-    // checking for uninserted records is a far better method when attempting to gauge if an import still needs processed
-    public async ListWithUninsertedData(dataSourceID: string, limit: number): Promise<Result<Import[]>> {
-        return super.rows(this.listWithUninsertedDataStatement(dataSourceID, limit), {resultClass: this.resultClass});
+    // list all imports which have data with an inserted status - while we used to check status of the import,
+    // checking for inserted records is a far better method when attempting to gauge if an import still needs processed
+    // note: this will always list in the order the imports were received - and grouped by container_id
+    // we also use an advisory lock here on the import_ids to avoid duplicate processing when in a cluster
+    public async ListWithUninsertedDataLock(transaction?: PoolClient): Promise<Result<Import[]>> {
+        return super.rows(this.listWithUninsertedDataStatement(), {resultClass: this.resultClass, transaction});
     }
 
     public async Count(): Promise<Result<number>> {
@@ -148,75 +151,36 @@ export default class ImportMapper extends Mapper {
         await super.runAsTransaction(...this.deleteDataStatement(importID));
         await super.runStatement(this.setProcessedNull(importID));
 
-        // now we stream process this part because an import might have a large number of
-        // records and we really don't want to read that into memory - we also don't wait
-        // for this to complete as it could take a night and a day
-        const queue = await QueueFactory();
-        void PostgresAdapter.Instance.Pool.connect((err, client, done) => {
-            const stream = client.query(new QueryStream(this.listStagingForImportStreaming(importID)));
-            const putPromises: Promise<boolean>[] = [];
+        // now we start the import process job in the background
 
-            stream.on('data', (data) => {
-                putPromises.push(queue.Put(Config.process_queue, plainToClass(DataStaging, data as object)));
-            });
+        const worker = new Worker(__dirname + '../../../../../jobs/process_worker.js', {
+            workerData: {
+                input: [importID],
+            },
+        });
 
-            stream.on('end', () => {
-                Promise.all(putPromises)
-                    .then(() => {
-                        void this.SetStatus(importID, 'processing', 'reprocessing completed');
-                        done();
-                    })
-                    .catch((e) => {
-                        done();
-                        Logger.error(`error reprocessing import ${e}`);
-                    });
-            });
+        worker.on('error', (e) => {
+            this.setStatusStatement(importID, 'error', `error in reprocessing ${JSON.stringify(e)}`);
+        });
 
-            // we pipe to devnull because we need to trigger the stream and don't
-            // care where the data ultimately ends up
-            stream.pipe(devnull({objectMode: true}));
+        worker.on('exit', () => {
+            void this.SetStatus(importID, 'completed', 'reprocessing completed');
         });
 
         return Promise.resolve(Result.Success(true));
     }
 
-    public async SendToQueue(importID: string): Promise<Result<boolean>> {
-        // now we stream process this part because an import might have a large number of
-        // records, and we really don't want to read that into memory - we also don't wait
-        // for this to complete as it could take a night and a day
-        const queue = await QueueFactory();
-        void PostgresAdapter.Instance.Pool.connect((err, client, done) => {
-            const stream = client.query(new QueryStream(this.listStagingForImportStreaming(importID)));
-            const putPromises: Promise<boolean>[] = [];
+    public async SetProcessStart(start: Date, ...importIDs: string[]): Promise<Result<boolean>> {
+        return super.runStatement(this.setProcessStartStatement(importIDs));
+    }
 
-            stream.on('data', (data) => {
-                putPromises.push(queue.Put(Config.process_queue, plainToClass(DataStaging, data as object)));
-            });
-
-            stream.on('end', () => {
-                Promise.all(putPromises)
-                    .then(() => {
-                        done();
-                    })
-                    .catch((e) => {
-                        done();
-                        Logger.error(`error reprocessing import ${e}`);
-                    });
-            });
-
-            // we pipe to devnull because we need to trigger the stream and don't
-            // care where the data ultimately ends up
-            stream.pipe(devnull({objectMode: true}));
-        });
-
-        await this.SetStatus(importID, 'processing');
-
-        return Promise.resolve(Result.Success(true));
+    public async SetProcessEnd(end: Date, ...importIDs: string[]): Promise<Result<boolean>> {
+        return super.runStatement(this.setProcessEndStatement(importIDs));
     }
 
     private setProcessedNull(importID: string): QueryConfig {
         return {
-            text: `UPDATE ${DataStagingMapper.tableName} SET inserted_at = NULL WHERE import_id = $1`,
+            text: `UPDATE ${DataStagingMapper.tableName} SET inserted_at = NULL, nodes_processed_at = NULL, edges_processed_at = NULL WHERE import_id = $1`,
             values: [importID],
         };
     }
@@ -334,20 +298,20 @@ export default class ImportMapper extends Mapper {
         };
     }
 
-    private listWithUninsertedDataStatement(dataSourceID: string, limit: number): QueryConfig {
+    public listWithUninsertedDataStatement(): QueryConfig {
         return {
-            text: `SELECT imports.*,
+            text: `SELECT imports.*, data_sources.container_id,
+                          pg_advisory_xact_lock(imports.id),
                           SUM(CASE WHEN data_staging.inserted_at <> NULL AND data_staging.import_id = imports.id THEN 1 ELSE 0 END) AS records_inserted,
                           SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records
                    FROM imports
                    LEFT JOIN data_staging ON data_staging.import_id = imports.id
-                     WHERE imports.data_source_id = $1
-                     AND EXISTS (SELECT * FROM data_staging WHERE data_staging.import_id = imports.id AND data_staging.inserted_at IS NULL)
+                   LEFT JOIN data_sources ON data_sources.id = imports.data_source_id
+                     WHERE EXISTS (SELECT * FROM data_staging WHERE data_staging.import_id = imports.id AND data_staging.inserted_at IS NULL)
                      AND EXISTS(SELECT * FROM data_staging WHERE data_staging.import_id = imports.id)
-                   GROUP BY imports.id
+                   GROUP BY imports.id, container_id
                    ORDER BY imports.created_at ASC
-                   LIMIT $2 `,
-            values: [dataSourceID, limit],
+                   `,
         };
     }
 
@@ -365,5 +329,19 @@ export default class ImportMapper extends Mapper {
             text: `SELECT COUNT(*) FROM imports WHERE data_source_id = $1 LIMIT 1`,
             values: [datasourceID],
         };
+    }
+
+    private setProcessStartStatement(importIDs: string[]): string {
+        const text = `UPDATE imports SET process_start = NOW() WHERE id IN(%L)`;
+        const values = [...importIDs];
+
+        return format(text, values);
+    }
+
+    private setProcessEndStatement(importIDs: string[]): string {
+        const text = `UPDATE imports SET process_end= NOW() WHERE id IN(%L)`;
+        const values = [...importIDs];
+
+        return format(text, values);
     }
 }

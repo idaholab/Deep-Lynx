@@ -35,6 +35,7 @@ export default class GraphRoutes {
         app.delete('/containers/:containerID/graphs/nodes/:nodeID', ...middleware, authInContainer('write', 'data'), NodeFunctions.deleteNode);
         // This should return a node and all connected nodes and connecting edges for n layers.
         app.get('/containers/:containerID/graphs/nodes/:nodeID/graph', ...middleware, authInContainer('read', 'data'), NodeFunctions.retrieveNthNodes);
+        app.get('/containers/:containerID/graphs/nodeCount', ...middleware, authInContainer('read', 'data'), NodeFunctions.countNodes);
 
         // Timeseries Routes
         app.post(
@@ -120,6 +121,7 @@ export default class GraphRoutes {
         // This should return all edges which contain one of the ids in the payload
         app.post('/containers/:containerID/graphs/nodes/edges', ...middleware, authInContainer('read', 'data'), EdgeFunctions.retrieveEdges);
         app.delete('/containers/:containerID/graphs/edges/:edgeID', ...middleware, authInContainer('write', 'data'), EdgeFunctions.archiveEdge);
+        app.get('/containers/:containerID/graphs/edgeCount', ...middleware, authInContainer('read', 'data'), NodeFunctions.countEdges);
 
         // Tag Routes
         app.get('/containers/:containerID/graphs/tags', ...middleware, authInContainer('write', 'data'), TagFunctions.listTags);
