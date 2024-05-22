@@ -7,7 +7,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::{PgPool, Pool, Postgres, Row};
 use std::collections::HashMap;
-use futures_util::stream::BoxStream;
 use tokio_util::compat::FuturesAsyncReadCompatExt;
 
 #[derive(Clone)]
@@ -56,10 +55,7 @@ impl RedisGraphLoader {
     let key: String = format!("{}-{}", container_id, timestamp_val);
     self.verify_redis_key(key.clone()).await?;
 
-    let stream;
-    if timestamp_val == "default" {
-      stream = connection
-            .copy_out_raw(
+    let query= if timestamp_val == "default" {
               format!(
                 r#"
  COPY (SELECT q.*,  ROW_NUMBER () OVER(ORDER BY metatype_id) as new_id FROM (SELECT DISTINCT ON (nodes.id) nodes.id,
@@ -87,12 +83,7 @@ impl RedisGraphLoader {
 TO STDOUT WITH (FORMAT csv, HEADER true) ;
     "#
               )
-                  .as_str(),
-            )
-            .await?;
     } else {
-      stream = connection
-          .copy_out_raw(
             format!(
               r#"
  COPY (SELECT q.*,  ROW_NUMBER () OVER(ORDER BY metatype_id) as new_id FROM (SELECT DISTINCT ON (nodes.id) nodes.id,
@@ -122,12 +113,9 @@ TO STDOUT WITH (FORMAT csv, HEADER true) ;
 TO STDOUT WITH (FORMAT csv, HEADER true) ;
     "#
             )
-                .as_str(),
-          )
-          .await?;
-    }
+    };
 
-    let async_reader = stream
+    let async_reader = connection.copy_out_raw(query.as_str()).await?
       // we have to convert the error so that we can turn it into an AsyncReader
       .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
       .into_async_read();
@@ -438,7 +426,7 @@ TO STDOUT WITH (FORMAT csv, HEADER true);"#
 
   async fn verify_redis_key(&self, key: String) -> Result<(), RedisLoaderError> {
     // check if the key (graph) already exists, and remove if found
-    let mut async_conn = self.redis_client.get_async_connection().await?;
+    let mut async_conn = self.redis_client.get_multiplexed_async_connection().await?;
 
     let key_exists:i32 = redis::cmd("EXISTS")
       .arg(key.clone())
@@ -464,7 +452,7 @@ TO STDOUT WITH (FORMAT csv, HEADER true);"#
     edges_types: (u64, u64),
     has_txed: bool,
   ) -> Result<(), RedisLoaderError> {
-    let mut async_conn = self.redis_client.get_async_connection().await?;
+    let mut async_conn = self.redis_client.get_multiplexed_async_connection().await?;
 
     // BEGIN starts a new graph if the key doesn't exist, if it does - then we ignore this and add
     if !has_txed {
@@ -498,7 +486,7 @@ TO STDOUT WITH (FORMAT csv, HEADER true);"#
     key: String,
     ttl: Option<i64>,
   ) -> Result<(), RedisLoaderError> {
-    let mut async_conn = self.redis_client.get_async_connection().await?;
+    let mut async_conn = self.redis_client.get_multiplexed_async_connection().await?;
 
     // use provided ttl or else default
     let graph_ttl = ttl.unwrap_or(3600);
@@ -631,17 +619,17 @@ impl Node {
     property_final.extend(self.modified_by.as_bytes());
     property_final.extend("\0".as_bytes());
 
-    match self.import_data_id.clone() {
+    match self.import_data_id {
       None => property_final.extend(0_i8.to_ne_bytes()),
-      Some(value) => {
+      Some(_value) => {
         property_final.extend(4_i8.to_ne_bytes());
         property_final.extend(self.import_data_id.unwrap().to_ne_bytes());
       }
     }
 
-    match self.type_mapping_transformation_id.clone() {
+    match self.type_mapping_transformation_id {
       None => property_final.extend(0_i8.to_ne_bytes()),
-      Some(value) => {
+      Some(_value) => {
         property_final.extend(4_i8.to_ne_bytes());
         property_final.extend(self.type_mapping_transformation_id.unwrap().to_ne_bytes());
       }

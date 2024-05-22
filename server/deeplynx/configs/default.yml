@@ -1,4 +1,0 @@
-debug: true
-log_level: info
-development_mode: true
-deeplynx_legacy_url: "http://localhost:8090"

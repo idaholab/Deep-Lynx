@@ -25,7 +25,6 @@ pub struct LegacyTimeseriesColumn {
 #[derive(Clone)]
 pub struct BucketRepository {
   db: PgPool,
-  config: Configuration,
   // this is the channel that we pass data into once the data pipeline has been initiated
   stream_reader_channel: Option<Arc<tokio::sync::mpsc::UnboundedSender<StreamMessage>>>,
   // this is how we receive status updates from the reader
@@ -46,7 +45,6 @@ impl BucketRepository {
 
     Ok(BucketRepository {
       db,
-      config,
       stream_reader_channel: None,
       reader_status_channel: None,
     })

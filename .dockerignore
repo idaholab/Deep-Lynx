@@ -1,7 +1,7 @@
-server/legacy/.env
-server/legacy/.env-sample
-server/legacy/node_modules
+server/.env
+server/.env-sample
+server/node_modules
 npm-debug.log
-server/legacy/dist
+server/dist
 ui/AdminWebApp/node_modules
 ui/WebGLViewer/node_modules
