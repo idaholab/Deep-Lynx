@@ -22,15 +22,15 @@
         "docker:postgres:clean": "docker stop $(docker ps -q --filter ancestor=postgres:16.3) && docker rmi postgres:16.3 -f",
         "build": "tsc -p ./tsconfig.json && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && copyfiles -u 1 \"src/http_server/assets/**\" ./dist && yarn run build:web && yarn run build:webgl && yarn run build:rust",
         "build:docker": "tsc -p ./tsconfig.json && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && copyfiles -u 1 \"src/http_server/assets/**\" ./dist",
-        "build:web": "npm --prefix ../../ui/AdminWebApp install && npm --prefix ../../ui/AdminWebApp run build -- --dest ./../../server/legacy/dist/http_server/web_gui --mode bundled",
-        "build:webgl": "npm --prefix ../../ui/WebGLViewer install && npm --prefix ../../ui/WebGLViewer run build -- --base=/viewer/ --config=./vite.config.ts",
+        "build:web": "npm --prefix ../ui/AdminWebApp install && npm --prefix ../ui/AdminWebApp run build -- --dest ./../server/dist/http_server/web_gui --mode bundled",
+        "build:webgl": "npm --prefix ../ui/WebGLViewer install && npm --prefix ../ui/WebGLViewer run build -- --base=/viewer/ --config=./vite.config.ts",
         "build:rust": "cd ./NodeLibraries/deeplynx && yarn install && yarn run build",
         "watch": "nodemon",
         "start": "tsc && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && copyfiles -u 1 \"./src/http_server/assets/**\" ./dist && node --no-deprecation -r dotenv/config ./dist/main.js",
         "start:docker": "node ./dist/main.js",
         "test": "cross-env TS_NODE_FILES=true npm run test:raw",
         "test:raw": " cd src/tests && cross-env-shell nyc --reporter=html --report-dir=./src/tests/coverage mocha --exit -r ts-node/register -r dotenv/config --recursive \"**/*.spec.ts\" \"**/**/*.spec.ts\" \"**/**/**/*.spec.ts\" --prof --timeout 30000 --reporter mochawesome --require mochawesome/register ",
-        "prepare": "cd ../../ && husky install server/legacy/.husky"
+        "prepare": "cd ../ && husky install server/.husky"
     },
     "devDependencies": {
         "@azure/storage-blob": "^12.1.2",

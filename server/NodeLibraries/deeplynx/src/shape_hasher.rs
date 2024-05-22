@@ -5,11 +5,12 @@ mod shapehasher_errors;
 mod shapehasher_tests;
 
 use serde::{Deserialize, Serialize};
+use base64::{engine::general_purpose::STANDARD, Engine as _};
 //use serde_json::{Value, Map};
 use serde::de; // You need this to use de::Error::custom
 
 //use serde_json;
-use std::hash::{Hash, Hasher, self};
+use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
 
 //use sha2::{Sha256, Digest};
@@ -147,7 +148,7 @@ fn json_object_to_hash(data: &str, options: &Options, path: &[String]) -> Result
         // Finalize the hash
         let hash_bytes = hasher.finalize();
         // Encode the hash in Base64
-        let hash_base64 = base64::encode(hash_bytes);
+        let hash_base64 = STANDARD.encode(hash_bytes);
         Ok(hash_base64)
     } else {
         // Handle the case where value is not an object
@@ -177,11 +178,11 @@ fn recurseData(v1: Value, s1: Vec<String>, options: &Options, path: &mut Vec<Str
   match v1 {  
       serde_json::Value::Null => {
       },
-      serde_json::Value::Bool(resBool) => {
+      serde_json::Value::Bool(_resBool) => {
       },
-      serde_json::Value::Number(resNum) => {
+      serde_json::Value::Number(_resNum) => {
       },
-      serde_json::Value::String(resString) => {
+      serde_json::Value::String(_resString) => {
       },
       serde_json::Value::Array(mut resArray) => {
         for value in resArray.iter_mut(){
@@ -222,11 +223,11 @@ fn recurseArray(v2: Vec<Value>, s5: &mut String, s2: &Vec<String>, options: &Opt
       match val {
           serde_json::Value::Null => {
           },
-          serde_json::Value::Bool(resBool) => {
+          serde_json::Value::Bool(_resBool) => {
           },
-          serde_json::Value::Number(resNum) => {
+          serde_json::Value::Number(_resNum) => {
           },
-          serde_json::Value::String(resString) => {
+          serde_json::Value::String(_resString) => {
           },
           serde_json::Value::Array(mut resArray) => {
             for value in resArray.iter_mut(){
@@ -267,11 +268,11 @@ fn recurseObject(v3: Map<String, Value>, s6: &mut String, s3: &Vec<String>, opti
       match values {
           serde_json::Value::Null => {
           },
-          serde_json::Value::Bool(resBool) => {
+          serde_json::Value::Bool(_resBool) => {
           },
-          serde_json::Value::Number(resNum) => {
+          serde_json::Value::Number(_resNum) => {
           },
-          serde_json::Value::String(resString) => {
+          serde_json::Value::String(_resString) => {
           },
           serde_json::Value::Array(mut resArray) => {
             for value in resArray.iter_mut(){
