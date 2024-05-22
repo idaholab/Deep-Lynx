@@ -97,6 +97,12 @@ export default class FileMapper extends Mapper {
         });
     }
 
+    public async ListForContainer(containerID: string): Promise<Result<File[]>> {
+        return super.rows<File>(this.filesForContainerStatement(containerID), {
+            resultClass: this.resultClass,
+        });
+    }
+
     public async ListForReport(reportID: string): Promise<Result<File[]>> {
         return super.rows<File>(this.filesForReportStatement(reportID), {
             resultClass: this.resultClass,
@@ -262,7 +268,16 @@ export default class FileMapper extends Mapper {
             };
         }
     }
+   
 
+
+    private filesForContainerStatement(containerID: string): QueryConfig {
+        return {
+            text: `SELECT * FROM files WHERE container_id = $1`,
+            values: [containerID],
+        };
+    }
+    
     private filesForEdgeStatement(edgeID: string, revisionOnly?: boolean): QueryConfig {
         if (revisionOnly) {
             return {

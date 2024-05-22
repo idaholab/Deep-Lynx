@@ -202,4 +202,8 @@ export default class FileRepository extends Repository implements RepositoryInte
     async list(options?: QueryOptions, transaction?: PoolClient): Promise<Result<File[]>> {
         return super.findAll<File>(options, {transaction, resultClass: File});
     }
+
+    listFiles(containerID: string): Promise<Result<File[]>> {
+        return this.#mapper.ListForContainer(containerID);
+    }
 }

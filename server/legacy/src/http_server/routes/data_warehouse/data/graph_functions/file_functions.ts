@@ -391,6 +391,23 @@ export default class FileFunctions {
         return req.pipe(busboy);
     }
 
+    public static listFilesForContainer(req: Request, res: Response, next: NextFunction) {
+        if (req.params.containerID) {
+            fileRepo
+                .listFiles(req.params.containerID)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`container not found`, 404).asResponse(res);
+            next();
+        }
+    }
+
     public static listFilesForNode(req: Request, res: Response, next: NextFunction) {
         if (req.node) {
             nodeRepo

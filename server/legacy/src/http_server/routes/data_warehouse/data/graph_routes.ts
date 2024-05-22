@@ -98,6 +98,10 @@ export default class GraphRoutes {
             FileFunctions.deleteFile,
         );
         app.get('/containers/:containerID/graphs/nodes/:nodeID/files', ...middleware, authInContainer('read', 'data'), FileFunctions.listFilesForNode);
+
+        //Files for Container
+        app.get('/containers/:containerID/files', ...middleware, authInContainer('read', 'data'), FileFunctions.listFilesForContainer);
+
         app.put('/containers/:containerID/graphs/nodes/:nodeID/files/:fileID', ...middleware, authInContainer('write', 'data'), FileFunctions.attachFileToNode);
         app.delete(
             '/containers/:containerID/graphs/nodes/:nodeID/files/:fileID',
