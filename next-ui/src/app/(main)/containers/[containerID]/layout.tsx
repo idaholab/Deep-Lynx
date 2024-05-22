@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "@/app/globals.css";
-import Sidebar from "@/app/components/sidebar";
+import Wireframe from "@/app/components/wireframe";
 
 import { cookies } from "next/headers";
 
@@ -24,7 +24,7 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body>
-                <Sidebar>{children}</Sidebar>
+                <Wireframe>{children}</Wireframe>
             </body>
         </html>
     );
