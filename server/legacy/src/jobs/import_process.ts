@@ -30,10 +30,9 @@ if (Config.cache_provider === 'memory') {
 
 async function Start(): Promise<void> {
     await postgresAdapter.init();
-    const transaction = await ImportMapper.Instance.startTransaction();
 
     // we _should_ be able to load all the imports into memory because this job is running often enough
-    const importsResult = await ImportMapper.Instance.ListWithUninsertedDataLock(transaction.value);
+    const importsResult = await ImportMapper.Instance.ListWithUninsertedDataLock();
 
     if (importsResult.isError) {
         Logger.error(`unexpected error in import processing thread ${JSON.stringify(importsResult.error)}`);
@@ -54,7 +53,7 @@ async function Start(): Promise<void> {
     const MAX_WORKERS = os.availableParallelism();
     const workers: Worker[] = new Array(MAX_WORKERS);
     const containerIDs = Object.keys(containerImportMap);
-    const incompleteContainerIDs = Object.keys(containerImportMap);
+    const incompleteContainerIDs: any[] = [];
 
     // if no containers exit
     if (containerIDs.length === 0)
@@ -68,6 +67,7 @@ async function Start(): Promise<void> {
     for (let i = 0; i < workers.length; i++) {
         if (containerIDs.length > 0) {
             const containerID = containerIDs.pop();
+            incompleteContainerIDs.push(containerID);
 
             workers[i] = new Worker(__dirname + '/process_worker.js', {
                 workerData: {
@@ -75,26 +75,52 @@ async function Start(): Promise<void> {
                 },
             });
 
-            workers[i].on('exit', () => {
-                // doesn't matter what id we get here, we're just using it to indicate completed status
+            // this exit function allows us to keep the workers going as long as there is data to process for containers
+            // while not stepping on the toes of any other container being processed elsewhere - it's recursive OoooooOO
+            const exitFunc = () => {
+                delete containerImportMap[containerID!];
+                // we don't care about the ids, just if it's empty
                 incompleteContainerIDs.pop();
-                if (containerIDs.length > 0) {
-                    const nextContainerID = containerIDs.pop();
 
-                    workers[i] = new Worker(__dirname + '/process_worker.js', {
-                        workerData: {
-                            input: containerImportMap[nextContainerID!].map((i) => i.id),
-                        },
+                ImportMapper.Instance.ListWithUninsertedDataLock(undefined, containerIDs)
+                    .then((result) => {
+                        if (result.isError) {
+                            Logger.error(`unable to list more imports in import process ${JSON.stringify(result.error)}`);
+                            return;
+                        }
+
+                        if (result.value.length > 0) {
+                            result.value.forEach((j) => {
+                                containerImportMap[j.container_id!] ? containerImportMap[j.container_id!].push(j) : (containerImportMap[j.container_id!] = [j]);
+                            });
+
+                            containerIDs.push(...Object.keys(containerImportMap));
+                        }
+                    })
+                    .catch((e) => {
+                        Logger.error(`unable to list more imports in import process ${JSON.stringify(e)}`);
+                    })
+                    .finally(() => {
+                        if (containerIDs.length > 0) {
+                            const nextContainerID = containerIDs.pop();
+                            incompleteContainerIDs.push(containerID);
+
+                            workers[i] = new Worker(__dirname + '/process_worker.js', {
+                                workerData: {
+                                    input: containerImportMap[nextContainerID!].map((i) => i.id),
+                                },
+                            });
+
+                            workers[i].on('exit', exitFunc);
+                        }
+
+                        if (incompleteContainerIDs.length === 0) {
+                            process.exit(0);
+                        }
                     });
-                }
+            };
 
-                if (incompleteContainerIDs.length === 0) {
-                    // complete the transaction so we release the advisory lock
-                    void ImportMapper.Instance.completeTransaction(transaction.value);
-
-                    process.exit(0);
-                }
-            });
+            workers[i].on('exit', exitFunc);
         }
     }
 }
