@@ -346,8 +346,6 @@ export default class ImportMapper extends Mapper {
 
             return format(text);
         }
-        // note we take two advisory locks out here - one on the container and one on the import itself
-        // this is to make sure we're not attempting to process things more than once
     }
 
     private countStatement(): QueryConfig {
