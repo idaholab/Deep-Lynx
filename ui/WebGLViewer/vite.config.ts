@@ -3,19 +3,18 @@ import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [
-    react({ jsxRuntime: 'classic' })
-  ],
+  plugins: [react({ jsxRuntime: 'classic' })],
   build: {
     emptyOutDir: true,
-    outDir: './../../server/legacy/dist/http_server/web_gl',
+    outDir: './../../server/dist/http_server/web_gl',
     assetsDir: 'viewer',
     rollupOptions: {
       onwarn(warning, warn) {
         if (warning.code === 'MODULE_LEVEL_DIRECTIVE') {
-          return
+          return;
         }
-        warn(warning)
-      }}
+        warn(warning);
+      },
+    },
   },
 });

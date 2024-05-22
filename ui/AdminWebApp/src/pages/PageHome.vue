@@ -799,7 +799,7 @@ import ViewContainerExport from "@/views/ViewContainerExport.vue";
 import ViewContainerImport from "@/views/ViewContainerImport.vue";
 import ViewFileManager from "@/views/ViewFileManager.vue";
 import ViewOverviewGraph from "@/views/ViewOverviewGraph.vue";
-const packageJson = require("../../../../server/legacy/package.json");
+const packageJson = require("../../../../server/package.json");
 
 interface HomeModel {
   errorMessage: string;

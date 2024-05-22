@@ -5,8 +5,6 @@ use thiserror::Error;
 pub enum TimeseriesError {
   #[error("missing connection string")]
   MissingConnectionString,
-  #[error("record not found")]
-  NotFound,
   #[error("unwrap error {0}")]
   Unwrap(String),
   #[error("thread error {0}")]
@@ -53,6 +51,4 @@ pub enum TestError {
   SqlXMigration(#[from] sqlx::migrate::MigrateError),
   #[error("system IO error: {0}")]
   IO(#[from] std::io::Error),
-  #[error("unwrap error {0}")]
-  Unwrap(String),
 }
