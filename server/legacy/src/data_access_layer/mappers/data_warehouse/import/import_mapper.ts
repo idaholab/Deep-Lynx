@@ -119,9 +119,13 @@ export default class ImportMapper extends Mapper {
     // list all imports which have data with an inserted status - while we used to check status of the import,
     // checking for inserted records is a far better method when attempting to gauge if an import still needs processed
     // note: this will always list in the order the imports were received - and grouped by container_id
-    // we also use an advisory lock here on the import_ids to avoid duplicate processing when in a cluster
-    public async ListWithUninsertedDataLock(transaction?: PoolClient): Promise<Result<Import[]>> {
-        return super.rows(this.listWithUninsertedDataStatement(), {resultClass: this.resultClass, transaction});
+    // we also use an advisory lock here on the container_id to avoid duplicate processing when in a cluster
+    public async ListWithUninsertedDataLock(transaction?: PoolClient, excludeContainers?: string[]): Promise<Result<Import[]>> {
+        return super.rows(this.listWithUninsertedDataStatement(excludeContainers), {resultClass: this.resultClass, transaction});
+    }
+
+    public async ReleaseLock(containerID: string, transaction?: PoolClient): Promise<Result<boolean>> {
+        return super.runStatement(this.unlockStatement(containerID), {resultClass: this.resultClass, transaction});
     }
 
     public async Count(): Promise<Result<number>> {
@@ -298,10 +302,37 @@ export default class ImportMapper extends Mapper {
         };
     }
 
-    public listWithUninsertedDataStatement(): QueryConfig {
+    public unlockStatement(containerID: string): QueryConfig {
         return {
-            text: `SELECT imports.*, data_sources.container_id,
-                          pg_advisory_xact_lock(imports.id),
+            text: `SELECT pg_advisory_unlock(%1)`,
+            values: [containerID],
+        };
+    }
+
+    public listWithUninsertedDataStatement(excludeContainers?: string[]): QueryConfig {
+        // we have to use the advisory lock at the session level so that clustered deeplynx doesn't start multiple
+        // process threads for the same container
+        if (excludeContainers && excludeContainers.length > 0) {
+            const text = `SELECT imports.*, data_sources.container_id,
+                          pg_advisory_lock(data_sources.container_id),
+                          SUM(CASE WHEN data_staging.inserted_at <> NULL AND data_staging.import_id = imports.id THEN 1 ELSE 0 END) AS records_inserted,
+                          SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records
+                   FROM imports
+                   LEFT JOIN data_staging ON data_staging.import_id = imports.id
+                   LEFT JOIN data_sources ON data_sources.id = imports.data_source_id
+                     WHERE EXISTS (SELECT * FROM data_staging WHERE data_staging.import_id = imports.id AND data_staging.inserted_at IS NULL)
+                     AND EXISTS(SELECT * FROM data_staging WHERE data_staging.import_id = imports.id)
+                     AND data_sources.container_id NOT IN(%L)
+                   GROUP BY imports.id, container_id
+                   ORDER BY imports.created_at ASC
+                   `;
+
+            const values = excludeContainers;
+
+            return format(text, values);
+        } else {
+            const text = `SELECT imports.*, data_sources.container_id,
+                          pg_advisory_lock(data_sources.container_id),
                           SUM(CASE WHEN data_staging.inserted_at <> NULL AND data_staging.import_id = imports.id THEN 1 ELSE 0 END) AS records_inserted,
                           SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records
                    FROM imports
@@ -311,8 +342,10 @@ export default class ImportMapper extends Mapper {
                      AND EXISTS(SELECT * FROM data_staging WHERE data_staging.import_id = imports.id)
                    GROUP BY imports.id, container_id
                    ORDER BY imports.created_at ASC
-                   `,
-        };
+                   `;
+
+            return format(text);
+        }
     }
 
     private countStatement(): QueryConfig {
