@@ -17,7 +17,7 @@ ENV VUE_APP_DEEP_LYNX_APP_ID="root"
 # turn off jobs on the main thread as this spins up PM2 with the worker
 ENV RUN_JOBS=false
 # set the default db to the one we'd see in the docker compose
-ENV CORE_DB_CONNECTION_STRING=postgresql://postgres:root@timescaledb:5432/deep_lynx_dev
+ENV CORE_DB_CONNECTION_STRING=postgresql://postgres:root@postgres:5432/deep_lynx_dev
 
 RUN apk update
 RUN apk add build-base musl-dev openssl-dev
