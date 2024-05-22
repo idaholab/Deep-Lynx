@@ -129,7 +129,7 @@ export class Config {
         this._root_address = process.env.ROOT_ADDRESS || 'http://localhost:8090';
         this._email_address = process.env.EMAIL_ADDRESS || 'do+not+reply@deeplynx.org';
         this._email_enabled = process.env.EMAIL_ENABLED === 'true';
-        this._is_node = process.env.IS_NODE ? process.env.IS_NODE === 'true' : true;
+        this._is_node = process.env.IS_NODE ? process.env.IS_NODE === 'true' : false;
 
         this._email_validation_enforced = process.env.EMAIL_VALIDATION_ENFORCED === 'false';
         this._container_invite_url = process.env.CONTAINER_INVITE_URL || 'http://localhost:8090/container-invite';
