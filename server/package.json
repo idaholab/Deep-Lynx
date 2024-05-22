@@ -22,7 +22,7 @@
         "docker:postgres:clean": "docker stop $(docker ps -q --filter ancestor=postgres:16.3) && docker rmi postgres:16.3 -f",
         "build": "tsc -p ./tsconfig.json && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && copyfiles -u 1 \"src/http_server/assets/**\" ./dist && yarn run build:web && yarn run build:webgl && yarn run build:rust",
         "build:docker": "tsc -p ./tsconfig.json && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && copyfiles -u 1 \"src/http_server/assets/**\" ./dist",
-        "build:web": "npm --prefix ../ui/AdminWebApp install && npm --prefix ../ui/AdminWebApp run build -- --dest ./../server/dist/http_server/web_gui --mode bundled",
+        "build:web": "npm --prefix ../ui/AdminWebApp install && npm --prefix ../ui/AdminWebApp run build -- --dest ./../../server/dist/http_server/web_gui --mode bundled",
         "build:webgl": "npm --prefix ../ui/WebGLViewer install && npm --prefix ../ui/WebGLViewer run build -- --base=/viewer/ --config=./vite.config.ts",
         "build:rust": "cd ./NodeLibraries/deeplynx && yarn install && yarn run build",
         "watch": "nodemon",
