@@ -21,18 +21,27 @@ import {
 // Axios
 import axios from "axios";
 
+// Store
+import { useAppDispatch } from "@/lib/store/hooks";
+import { containerActions } from "@/lib/store/features/container/containerSlice";
+
 const fetcher = (url: string) => axios.get(url).then((res) => res.data.value);
 
 const ContainerSelect = () => {
+    // Store
+    const storeDispatch = useAppDispatch();
+
     // Hooks
     const [container, setContainer] = useState<string>("");
     const { data, error, isLoading } = useSWR("/api/containers", fetcher);
     const router = useRouter();
     useEffect(() => {
+        // When the user selects a container, dispatch that container's metadata to the Redux store, and navigate to the dashboard
         if (data) {
-            const selection = data.find(
+            const selection: ContainerT = data.find(
                 (item: ContainerT) => item.name === container
             );
+            storeDispatch(containerActions.setContainer(selection));
             router.push(`/containers/${selection.id}`);
         }
     }, [container]);

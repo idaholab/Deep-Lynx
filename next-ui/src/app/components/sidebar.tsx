@@ -29,13 +29,22 @@ import SendIcon from "@mui/icons-material/Send";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import LogoutIcon from "@mui/icons-material/Logout";
 
+// Store
+import { useAppSelector } from "@/lib/store/hooks";
+
+// Types
+import { ContainerT } from "@/lib/types";
 type PropsT = {
     drawer: boolean;
     handleDrawer: Function;
 };
 
 export default function Sidebar(props: PropsT) {
+    // Hooks
     const router = useRouter();
+    const container: ContainerT = useAppSelector(
+        (state) => state.container.container!
+    );
 
     return (
         <>
@@ -132,7 +141,11 @@ export default function Sidebar(props: PropsT) {
                         >
                             <Button
                                 sx={{ width: "100%", justifyContent: "start" }}
-                                onClick={() => router.push("/model-viewer")}
+                                onClick={() =>
+                                    router.push(
+                                        `/containers/${container.id}/model-viewer`
+                                    )
+                                }
                             >
                                 <ViewInArIcon />
                                 <Typography
