@@ -98,19 +98,16 @@ export default function Sidebar(props: PropsT) {
                         <Typography variant="overline">DeepLynx</Typography>
                         <Divider />
                         <br />
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                            }}
-                        >
+                        <Box>
                             <Button
                                 sx={{ width: "100%", justifyContent: "start" }}
                                 startIcon={<HomeIcon />}
                             >
                                 <Typography
                                     variant="button"
-                                    sx={{ padding: "0 1rem" }}
+                                    sx={{
+                                        padding: "0 1rem",
+                                    }}
                                 >
                                     Dashboard
                                 </Typography>
@@ -120,12 +117,7 @@ export default function Sidebar(props: PropsT) {
                         <Typography variant="overline">Data</Typography>
                         <Divider />
                         <br />
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                            }}
-                        >
+                        <Box>
                             <Button
                                 sx={{ width: "100%", justifyContent: "start" }}
                                 startIcon={<SearchIcon />}
@@ -138,12 +130,7 @@ export default function Sidebar(props: PropsT) {
                                 </Typography>
                             </Button>
                         </Box>
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                            }}
-                        >
+                        <Box>
                             <Button
                                 sx={{ width: "100%", justifyContent: "start" }}
                                 startIcon={<ViewInArIcon />}
@@ -161,12 +148,7 @@ export default function Sidebar(props: PropsT) {
                                 </Typography>
                             </Button>
                         </Box>
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                            }}
-                        >
+                        <Box>
                             <Button
                                 sx={{ width: "100%", justifyContent: "start" }}
                                 startIcon={<FilePresentIcon />}
@@ -179,12 +161,7 @@ export default function Sidebar(props: PropsT) {
                                 </Typography>
                             </Button>
                         </Box>
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                            }}
-                        >
+                        <Box>
                             <Button
                                 sx={{ width: "100%", justifyContent: "start" }}
                                 startIcon={<InsightsIcon />}
@@ -203,12 +180,7 @@ export default function Sidebar(props: PropsT) {
                         </Typography>
                         <Divider />
                         <br />
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                            }}
-                        >
+                        <Box>
                             <Button
                                 sx={{ width: "100%", justifyContent: "start" }}
                                 startIcon={<AccountTreeIcon />}
@@ -221,12 +193,7 @@ export default function Sidebar(props: PropsT) {
                                 </Typography>
                             </Button>
                         </Box>
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                            }}
-                        >
+                        <Box>
                             <Button
                                 sx={{ width: "100%", justifyContent: "start" }}
                                 startIcon={<MoveToInboxIcon />}
@@ -239,12 +206,7 @@ export default function Sidebar(props: PropsT) {
                                 </Typography>
                             </Button>
                         </Box>
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                            }}
-                        >
+                        <Box>
                             <Button
                                 sx={{ width: "100%", justifyContent: "start" }}
                                 startIcon={<StyleIcon />}
@@ -257,12 +219,7 @@ export default function Sidebar(props: PropsT) {
                                 </Typography>
                             </Button>
                         </Box>
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                            }}
-                        >
+                        <Box>
                             <Button
                                 sx={{ width: "100%", justifyContent: "start" }}
                                 startIcon={<SendIcon />}
@@ -297,12 +254,7 @@ export default function Sidebar(props: PropsT) {
                                 </Typography>
                             </Button>
                         </Box>
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                            }}
-                        >
+                        <Box>
                             <Button
                                 sx={{ width: "100%", justifyContent: "start" }}
                                 startIcon={<LogoutIcon />}
