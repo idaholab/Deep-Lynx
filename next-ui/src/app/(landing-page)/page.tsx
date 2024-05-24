@@ -34,7 +34,7 @@ import Image from 'next/image';
     },
     {
       name: 'Adapter Ecosystem.',
-      description: 'connect to a vast ecosystem of software applications, including AutoDesk Revit, IBM DOORS, and Innoslate.',
+      description: 'Connect to a vast ecosystem of software applications, including AutoDesk Revit, IBM DOORS, and Innoslate.',
       icon: ServerIcon,
     },
   ]
@@ -103,8 +103,23 @@ const navigation = [
 
 const footerNavigation = [
     {
+      name: 'GitHub',
+      href: 'https://github.com/idaholab/Deep-Lynx',
+      target: '_blank',
+      icon: (props: any) => (
+          <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
+            <path
+                fillRule="evenodd"
+                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                clipRule="evenodd"
+            />
+          </svg>
+      ),
+    },
+    {
       name: 'Facebook',
       href: 'https://www.facebook.com/IdahoNationalLaboratory',
+      target: '_blank',
       icon: (props: any) => (
         <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
           <path
@@ -118,6 +133,7 @@ const footerNavigation = [
     {
       name: 'Instagram',
       href: 'https://www.instagram.com/idaho_national_lab/',
+      target: '_blank',
       icon: (props: any) => (
         <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
           <path
@@ -131,6 +147,7 @@ const footerNavigation = [
     {
       name: 'X',
       href: 'https://twitter.com/inl',
+      target: '_blank',
       icon: (props: any) => (
         <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
           <path d="M13.6823 10.6218L20.2391 3H18.6854L12.9921 9.61788L8.44486 3H3.2002L10.0765 13.0074L3.2002 21H4.75404L10.7663 14.0113L15.5685 21H20.8131L13.6819 10.6218H13.6823ZM11.5541 13.0956L10.8574 12.0991L5.31391 4.16971H7.70053L12.1742 10.5689L12.8709 11.5655L18.6861 19.8835H16.2995L11.5541 13.096V13.0956Z" />
@@ -138,21 +155,9 @@ const footerNavigation = [
       ),
     },
     {
-      name: 'GitHub',
-      href: 'https://github.com/idaholab/Deep-Lynx',
-      icon: (props: any) => (
-        <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
-          <path
-            fillRule="evenodd"
-            d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
-            clipRule="evenodd"
-          />
-        </svg>
-      ),
-    },
-    {
       name: 'YouTube',
       href: 'https://www.youtube.com/user/IdahoNationalLab  ',
+      target: '_blank',
       icon: (props: any) => (
         <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
           <path
@@ -196,7 +201,7 @@ export default function Home() {
             ))}
           </div>
           <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-            <a href="#" className="text-sm font-semibold leading-6 text-white">
+            <a href="/login" className="text-sm font-semibold leading-6 text-white">
               Log in <span aria-hidden="true">&rarr;</span>
             </a>
           </div>
@@ -239,7 +244,7 @@ export default function Home() {
                 </div>
                 <div className="py-6">
                   <a
-                    href="#"
+                    href="/login"
                     className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-white hover:bg-gray-800"
                   >
                     Log in
@@ -264,7 +269,7 @@ export default function Home() {
             }}
           />
         </div>
-        <div id="product"className="py-24 sm:py-32 lg:pb-40">
+        <div id="product" className="py-24 sm:py-32 lg:pb-40">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <div className="mx-auto max-w-2xl text-center">
               <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
@@ -275,12 +280,12 @@ export default function Home() {
               </p>
               <div className="mt-10 flex items-center justify-center gap-x-6">
                 <a
-                  href="#"
+                  href="/login"
                   className="rounded-md bg-indigo-500 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
                 >
                   Get started
                 </a>
-                <a href="#" className="text-sm font-semibold leading-6 text-white">
+                <a target="_blank" href="https://github.com/idaholab/Deep-Lynx" className="text-sm font-semibold leading-6 text-white">
                   Learn more <span aria-hidden="true">→</span>
                 </a>
               </div>
@@ -310,7 +315,7 @@ export default function Home() {
           <div className="bg-gray-900 py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl lg:text-center">
-          <h2 id="features"className="text-base font-semibold leading-7 text-indigo-600">Rapid Data Insights</h2>
+          <h2 id="features" className="text-base font-semibold leading-7 text-indigo-600">Rapid Data Insights</h2>
           <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
             Everything you need for your data
           </p>
@@ -415,12 +420,12 @@ export default function Home() {
         </h2>
         <div className="mt-10 flex items-center gap-x-6 lg:mt-0 lg:flex-shrink-0">
           <a
-            href="#"
+            href="/login"
             className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
           >
             Get started
           </a>
-          <a href="#" className="text-sm font-semibold leading-6 text-white">
+          <a target="_blank" href="https://github.com/idaholab/Deep-Lynx" className="text-sm font-semibold leading-6 text-white">
             Learn more <span aria-hidden="true">→</span>
           </a>
         </div>
@@ -430,7 +435,7 @@ export default function Home() {
       <div className="mx-auto max-w-7xl px-6 py-12 md:flex md:items-center md:justify-between lg:px-8">
         <div className="flex justify-center space-x-6 md:order-2">
           {footerNavigation.map((item) => (
-            <a key={item.name} href={item.href} className="text-gray-400 hover:text-gray-500">
+            <a key={item.name} href={item.href} target={item.target} className="text-gray-400 hover:text-gray-500">
               <span className="sr-only">{item.name}</span>
               <item.icon className="h-6 w-6" aria-hidden="true" />
             </a>

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "../globals.css";
-import LandingPage from "../_components/landing-page"
 import { ThemeProvider }  from "../_components/theme-provider"
 
 import clsx from 'clsx'
