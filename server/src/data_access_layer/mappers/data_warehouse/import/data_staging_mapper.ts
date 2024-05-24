@@ -297,7 +297,10 @@ export default class DataStagingMapper extends Mapper {
             const text = `SELECT data_staging.*, data_sources.container_id, data_sources.config as data_source_config
                 FROM data_staging
                     LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id
-                    WHERE data_staging.inserted_at IS NULL AND data_staging.data_source_id = $1 `;
+                WHERE data_staging.inserted_at IS NULL
+                    AND data_staging.nodes_processed_at IS NULL
+                    AND data_staging.edges_processed_at IS NULL
+                    AND data_staging.data_source_id = $1 `;
             const values = [dataSourceID];
 
             return format(text, values);
@@ -306,7 +309,11 @@ export default class DataStagingMapper extends Mapper {
         const text = `SELECT data_staging.*, data_sources.container_id, data_sources.config as data_source_config
                 FROM data_staging
                     LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id
-                    WHERE data_staging.inserted_at IS NULL AND data_staging.data_source_id = $1 AND data_staging.shape_hash = $2 `;
+                WHERE data_staging.inserted_at IS NULL
+                    AND data_staging.nodes_processed_at IS NULL
+                    AND data_staging.edges_processed_at IS NULL
+                    AND data_staging.data_source_id = $1 
+                    AND data_staging.shape_hash = $2 `;
         const values = [dataSourceID, shapehash];
 
         return format(text, values);
@@ -444,7 +451,6 @@ export default class DataStagingMapper extends Mapper {
                     AND type_mappings.data_source_id = data_staging.data_source_id
                          LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id
                 WHERE (data_staging.import_id IN(%L)
-                    AND data_staging.inserted_at IS NULL
                     AND data_staging.edges_processed_at IS NULL
                     AND data_staging.inserted_at IS NULL
                     AND (type_mappings.active IS TRUE
