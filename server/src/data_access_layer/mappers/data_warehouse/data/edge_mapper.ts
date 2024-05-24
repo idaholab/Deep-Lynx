@@ -356,8 +356,8 @@ export default class EdgeMapper extends Mapper {
             INSERT INTO edge_tags
             SELECT edges.id, tags.id
             FROM edges 
-                     LEFT JOIN type_mapping_transformations ts ON ts.id = edges.type_mapping_transformation_id
-                     LEFT JOIN tags ON tags.id IN (SELECT id::bigint FROM jsonb_to_recordset(ts.tags) AS x("id" text))
+                INNER JOIN type_mapping_transformations ts ON ts.id = edges.type_mapping_transformation_id
+                INNER JOIN tags ON tags.id IN (SELECT id::bigint FROM jsonb_to_recordset(ts.tags) AS x("id" text))
             WHERE edges.import_data_id IN (%L)`;
         const values = [...importIDs];
 
@@ -369,9 +369,9 @@ export default class EdgeMapper extends Mapper {
             INSERT INTO edge_files
             SELECT edges.id, files.id
             FROM edges 
-                     LEFT JOIN data_staging ON data_staging.id = edges.data_staging_id
-                     LEFT JOIN data_staging_files ON data_staging_files.data_staging_id = data_staging.id
-                     LEFT JOIN files ON files.id = data_staging_files.file_id
+                INNER JOIN data_staging ON data_staging.id = edges.data_staging_id
+                INNER JOIN data_staging_files ON data_staging_files.data_staging_id = data_staging.id
+                INNER JOIN files ON files.id = data_staging_files.file_id
             WHERE edges.import_data_id IN (%L)`;
         const values = [...importIDs];
 
