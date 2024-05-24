@@ -486,6 +486,13 @@ export default class NodeRepository extends Repository implements RepositoryInte
         return Promise.resolve(Result.Success(results.value));
     }
 
+    raw_sql(queryOptions?: QueryOptions): string {
+        const results = super.raw_sql(queryOptions);
+
+        this.reset();
+        return results;
+    }
+
     // note that listStreaming and listAllToFile will not automatically fill in the metatype information apart from the
     // join already happening on the table. Users calling this function are responsible for filling the metatype object
     // if they require it

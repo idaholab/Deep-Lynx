@@ -63,3 +63,7 @@ export class RedisGraphLoader {
   init(config: Configuration): Promise<void>
   generateRedisGraph(containerId: string, timestamp?: string | undefined | null, ttl?: number | undefined | null): Promise<string>
 }
+export type JsSnapshotGenerator = SnapshotGenerator
+export class SnapshotGenerator {
+  constructor()
+}
