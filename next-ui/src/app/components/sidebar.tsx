@@ -53,9 +53,11 @@ export default function Sidebar(props: PropsT) {
                 onClose={() => props.handleDrawer()}
                 sx={{
                     width: "15vw",
+                    minWidth: "325px",
                     flexShrink: 0,
                     "& .MuiDrawer-paper": {
                         width: "15vw",
+                        minWidth: "325px",
                         boxSizing: "border-box",
                     },
                 }}
@@ -86,12 +88,16 @@ export default function Sidebar(props: PropsT) {
                 </AppBar>
                 <Container
                     sx={{
+                        padding: "1rem",
                         display: "flex",
                         alignItems: "center",
-                        minHeight: "80vh",
+                        flexGrow: 1,
                     }}
                 >
-                    <Box>
+                    <Box sx={{ width: "100%" }}>
+                        <Typography variant="overline">DeepLynx</Typography>
+                        <Divider />
+                        <br />
                         <Box
                             sx={{
                                 display: "flex",
@@ -100,19 +106,18 @@ export default function Sidebar(props: PropsT) {
                         >
                             <Button
                                 sx={{ width: "100%", justifyContent: "start" }}
+                                startIcon={<HomeIcon />}
                             >
-                                <HomeIcon />
                                 <Typography
-                                    variant="subtitle1"
-                                    sx={{ padding: "0 1.5rem" }}
+                                    variant="button"
+                                    sx={{ padding: "0 1rem" }}
                                 >
                                     Dashboard
                                 </Typography>
                             </Button>
                         </Box>
-                        <Divider />
                         <br />
-                        <Typography variant="subtitle1">Data</Typography>
+                        <Typography variant="overline">Data</Typography>
                         <Divider />
                         <br />
                         <Box
@@ -123,11 +128,11 @@ export default function Sidebar(props: PropsT) {
                         >
                             <Button
                                 sx={{ width: "100%", justifyContent: "start" }}
+                                startIcon={<SearchIcon />}
                             >
-                                <SearchIcon />
                                 <Typography
-                                    variant="subtitle1"
-                                    sx={{ padding: "0 1.5rem" }}
+                                    variant="button"
+                                    sx={{ padding: "0 1rem" }}
                                 >
                                     View
                                 </Typography>
@@ -141,16 +146,16 @@ export default function Sidebar(props: PropsT) {
                         >
                             <Button
                                 sx={{ width: "100%", justifyContent: "start" }}
+                                startIcon={<ViewInArIcon />}
                                 onClick={() =>
                                     router.push(
                                         `/containers/${container.id}/model-viewer`
                                     )
                                 }
                             >
-                                <ViewInArIcon />
                                 <Typography
-                                    variant="subtitle1"
-                                    sx={{ padding: "0 1.5rem" }}
+                                    variant="button"
+                                    sx={{ padding: "0 1rem" }}
                                 >
                                     Model Viewer
                                 </Typography>
@@ -164,11 +169,11 @@ export default function Sidebar(props: PropsT) {
                         >
                             <Button
                                 sx={{ width: "100%", justifyContent: "start" }}
+                                startIcon={<FilePresentIcon />}
                             >
-                                <FilePresentIcon />
                                 <Typography
-                                    variant="subtitle1"
-                                    sx={{ padding: "0 1.5rem" }}
+                                    variant="button"
+                                    sx={{ padding: "0 1rem" }}
                                 >
                                     Files
                                 </Typography>
@@ -182,18 +187,18 @@ export default function Sidebar(props: PropsT) {
                         >
                             <Button
                                 sx={{ width: "100%", justifyContent: "start" }}
+                                startIcon={<InsightsIcon />}
                             >
-                                <InsightsIcon />
                                 <Typography
-                                    variant="subtitle1"
-                                    sx={{ padding: "0 1.5rem" }}
+                                    variant="button"
+                                    sx={{ padding: "0 1rem" }}
                                 >
                                     Reports
                                 </Typography>
                             </Button>
                         </Box>
                         <br />
-                        <Typography variant="subtitle1">
+                        <Typography variant="overline">
                             Data Management
                         </Typography>
                         <Divider />
@@ -206,11 +211,11 @@ export default function Sidebar(props: PropsT) {
                         >
                             <Button
                                 sx={{ width: "100%", justifyContent: "start" }}
+                                startIcon={<AccountTreeIcon />}
                             >
-                                <AccountTreeIcon />
                                 <Typography
-                                    variant="subtitle1"
-                                    sx={{ padding: "0 1.5rem" }}
+                                    variant="button"
+                                    sx={{ padding: "0 1rem" }}
                                 >
                                     Ontology
                                 </Typography>
@@ -224,11 +229,11 @@ export default function Sidebar(props: PropsT) {
                         >
                             <Button
                                 sx={{ width: "100%", justifyContent: "start" }}
+                                startIcon={<MoveToInboxIcon />}
                             >
-                                <MoveToInboxIcon />
                                 <Typography
-                                    variant="subtitle1"
-                                    sx={{ padding: "0 1.5rem" }}
+                                    variant="button"
+                                    sx={{ padding: "0 1rem" }}
                                 >
                                     Data Sources
                                 </Typography>
@@ -242,11 +247,11 @@ export default function Sidebar(props: PropsT) {
                         >
                             <Button
                                 sx={{ width: "100%", justifyContent: "start" }}
+                                startIcon={<StyleIcon />}
                             >
-                                <StyleIcon />
                                 <Typography
-                                    variant="subtitle1"
-                                    sx={{ padding: "0 1.5rem" }}
+                                    variant="button"
+                                    sx={{ padding: "0 1rem" }}
                                 >
                                     Tags
                                 </Typography>
@@ -260,18 +265,18 @@ export default function Sidebar(props: PropsT) {
                         >
                             <Button
                                 sx={{ width: "100%", justifyContent: "start" }}
+                                startIcon={<SendIcon />}
                             >
-                                <SendIcon />
                                 <Typography
-                                    variant="subtitle1"
-                                    sx={{ padding: "0 1.5rem" }}
+                                    variant="button"
+                                    sx={{ padding: "0 1rem" }}
                                 >
                                     Events
                                 </Typography>
                             </Button>
                         </Box>
                         <br />
-                        <Typography variant="subtitle1">User</Typography>
+                        <Typography variant="overline">User</Typography>
                         <Divider />
                         <br />
                         <Box
@@ -282,11 +287,11 @@ export default function Sidebar(props: PropsT) {
                         >
                             <Button
                                 sx={{ width: "100%", justifyContent: "start" }}
+                                startIcon={<AccountBoxIcon />}
                             >
-                                <AccountBoxIcon />
                                 <Typography
-                                    variant="subtitle1"
-                                    sx={{ padding: "0 1.5rem" }}
+                                    variant="button"
+                                    sx={{ padding: "0 1rem" }}
                                 >
                                     Profile
                                 </Typography>
@@ -300,15 +305,29 @@ export default function Sidebar(props: PropsT) {
                         >
                             <Button
                                 sx={{ width: "100%", justifyContent: "start" }}
+                                startIcon={<LogoutIcon />}
                             >
-                                <LogoutIcon />
                                 <Typography
-                                    variant="subtitle1"
-                                    sx={{ padding: "0 1.5rem" }}
+                                    variant="button"
+                                    sx={{ padding: "0 1rem" }}
                                 >
                                     Sign Out
                                 </Typography>
                             </Button>
+                        </Box>
+                        <Box
+                            flexGrow={1}
+                            sx={{
+                                display: "flex",
+                                padding: "2.5rem 0 0 0",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                minHeight: "15vh",
+                            }}
+                        >
+                            <Typography variant="caption">
+                                Developed by Digital Engineering
+                            </Typography>
                         </Box>
                     </Box>
                 </Container>
