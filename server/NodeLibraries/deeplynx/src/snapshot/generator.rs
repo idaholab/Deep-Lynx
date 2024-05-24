@@ -2,15 +2,20 @@ use crate::config::Configuration;
 use crate::snapshot::errors::SnapshotError;
 use futures_util::{StreamExt, TryStreamExt};
 use polars::frame::DataFrame;
-use polars::prelude::{NamedFrom, Series};
+use polars::prelude::{col, IntoLazy, LazyFrame, NamedFrom, Series};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use sqlx::PgPool;
+use std::collections::HashMap;
 use tokio_util::compat::FuturesAsyncReadCompatExt;
 
 #[derive(Clone)]
 pub struct SnapshotGenerator {
   db: PgPool,
+  // be warned - DataFrame is NOT Copy, you will have to Clone to work with it. That's why we build
+  // a map of smaller DataFrames to search against, so we're cloning the bare minimum of data
   frame: Option<DataFrame>,
+  by_metatype_ids: HashMap<u64, DataFrame>,
   _config: Configuration,
 }
 
@@ -26,6 +31,7 @@ impl SnapshotGenerator {
     Ok(SnapshotGenerator {
       db,
       frame: None,
+      by_metatype_ids: Default::default(),
       _config: config,
     })
   }
@@ -94,6 +100,7 @@ impl SnapshotGenerator {
     let mut async_reader = csv_async::AsyncDeserializer::from_reader(async_reader.compat());
     let mut records = async_reader.deserialize::<Node>();
 
+    let mut ids: Vec<u64> = Vec::with_capacity(count.0 as usize);
     let mut container_ids: Vec<u64> = Vec::with_capacity(count.0 as usize);
     let mut metatype_ids: Vec<u64> = Vec::with_capacity(count.0 as usize);
     let mut data_source_ids: Vec<u64> = Vec::with_capacity(count.0 as usize);
@@ -104,6 +111,7 @@ impl SnapshotGenerator {
 
     while let Some(record) = records.next().await {
       let n = record?;
+      ids.push(n.id);
       container_ids.push(n.container_id);
       metatype_ids.push(n.metatype_id);
       data_source_ids.push(n.data_source_id);
@@ -113,6 +121,7 @@ impl SnapshotGenerator {
       metatype_uuid.push(n.metatype_uuid);
     }
 
+    let ids: Series = Series::new("ids", ids);
     let container_ids: Series = Series::new("container_id", container_ids);
     let metatype_ids: Series = Series::new("metatype_id", metatype_ids);
     let datasource_ids: Series = Series::new("datasource_id", data_source_ids);
@@ -122,6 +131,7 @@ impl SnapshotGenerator {
     let metatype_uuid: Series = Series::new("metatype_uuid", metatype_uuid);
 
     let df = DataFrame::new(vec![
+      ids,
       container_ids,
       metatype_ids,
       datasource_ids,
@@ -131,14 +141,72 @@ impl SnapshotGenerator {
       metatype_uuid,
     ])?;
 
+    // sort the frame in place so we have faster lookups on common fields
+    let df = df.sort(["metatype_id", "data_source_id"], Default::default())?;
+
     self.frame = Some(df);
     Ok(())
+  }
+
+  async fn find_nodes(
+    &mut self,
+    params: Vec<SnapshotParameters>,
+  ) -> Result<Vec<Node>, SnapshotError> {
+    // first we need to check the hashmap to see if we already have a dataframe for the metatype id
+    // note: it is guaranteed that only one of the snapshot parameters will be a metatype_id parameter
+    // due to how edges must work
+    let metatype_filter: Vec<&SnapshotParameters> = params
+      .iter()
+      .filter(|p| p.param_type == "metatype_id")
+      .collect();
+
+    if metatype_filter.len() > 1 || metatype_filter.is_empty() {
+      return Err(SnapshotError::General(String::from(
+        "you must include at least one metatype_id filter in order to find nodes",
+      )));
+    }
+
+    // now we can fetch the first filter without worrying
+    let metatype_filter = metatype_filter.first().unwrap();
+
+    let metatype_id = match metatype_filter.value.clone() {
+      Value::Number(n) => n.as_u64().unwrap(),
+      _ => 0,
+    };
+
+    if metatype_id == 0 {
+      return Err(SnapshotError::General(String::from(
+        "metatype id not valid",
+      )));
+    }
+
+    if let std::collections::hash_map::Entry::Vacant(e) = self.by_metatype_ids.entry(metatype_id) {
+      // unfortunately now we have to clone the dataframe to build out the metatype_id filter
+      let df = self.frame.clone().unwrap().lazy(); // yes I know I'm unwrapping, it's fine
+
+      e.insert(df.filter(col("metatype_id").eq(metatype_id)).collect()?);
+    }
+
+    // ok now that we're sure we have a dataframe in there for our metatype_id, let's pull it out
+    let df = self
+      .by_metatype_ids
+      .get_mut(&metatype_id)
+      .ok_or(SnapshotError::General(String::from(
+        "unable to fetch dataframe for metatype_id",
+      )))?;
+
+    // now we build up an expression built on the rest of the parameters
+    // note: the properties filter requires a secondary pass after this first one so that we can deserialize
+    // the JSON it contains and check the value against the value presented in the filter.
+
+    Ok(vec![])
   }
 }
 
 #[derive(Deserialize, Serialize, Debug)]
 /// Node represents the structure contained in the DeepLynx table.
 struct Node {
+  id: u64,
   container_id: u64,
   metatype_id: u64,
   data_source_id: u64,
@@ -146,4 +214,16 @@ struct Node {
   properties: String,
   metatype_name: String,
   metatype_uuid: String,
+}
+
+// unfortunately we have to pass in the params as JSON so that we can get the proper type for
+// the value field
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct SnapshotParameters {
+  #[serde(rename(serialize = "type", deserialize = "type"))]
+  pub param_type: String,
+  pub operator: String,
+  pub key: String,
+  pub property: String,
+  pub value: Value,
 }
