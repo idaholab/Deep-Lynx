@@ -2,7 +2,7 @@ use crate::config::Configuration;
 use crate::snapshot::errors::SnapshotError;
 use futures_util::{StreamExt, TryStreamExt};
 use polars::frame::DataFrame;
-use polars::prelude::{col, IntoLazy, LazyFrame, NamedFrom, Series};
+use polars::prelude::{col, len, lit, Expr, IntoLazy, LazyFrame, NamedFrom, Series};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::PgPool;
@@ -121,10 +121,10 @@ impl SnapshotGenerator {
       metatype_uuid.push(n.metatype_uuid);
     }
 
-    let ids: Series = Series::new("ids", ids);
+    let ids: Series = Series::new("id", ids);
     let container_ids: Series = Series::new("container_id", container_ids);
     let metatype_ids: Series = Series::new("metatype_id", metatype_ids);
-    let datasource_ids: Series = Series::new("datasource_id", data_source_ids);
+    let datasource_ids: Series = Series::new("data_source_id", data_source_ids);
     let original_data_ids: Series = Series::new("original_data_id", original_data_ids);
     let properties: Series = Series::new("properties", properties);
     let metatype_names: Series = Series::new("metatype_name", metatype_name);
@@ -148,10 +148,12 @@ impl SnapshotGenerator {
     Ok(())
   }
 
-  async fn find_nodes(
+  /// find_nodes takes a set of parameters and returns the node ids of those nodes that match all
+  /// parameters. Parameters are done an AND filter
+  pub async fn find_nodes(
     &mut self,
     params: Vec<SnapshotParameters>,
-  ) -> Result<Vec<Node>, SnapshotError> {
+  ) -> Result<Vec<u64>, SnapshotError> {
     // first we need to check the hashmap to see if we already have a dataframe for the metatype id
     // note: it is guaranteed that only one of the snapshot parameters will be a metatype_id parameter
     // due to how edges must work
@@ -198,14 +200,58 @@ impl SnapshotGenerator {
     // now we build up an expression built on the rest of the parameters
     // note: the properties filter requires a secondary pass after this first one so that we can deserialize
     // the JSON it contains and check the value against the value presented in the filter.
+    let mut errors = vec![];
+    let mut expressions: Vec<Expr> = params
+      .iter()
+      .filter(|p| {
+        p.param_type != "metatype_id"
+          && p.param_type != "metatype_uuid"
+          && p.param_type != "metatype_name"
+      })
+      .map(|p| match p.param_type.as_str() {
+        "data_source" => Ok(col("data_source_id").eq(p.value.as_u64().ok_or(
+          SnapshotError::General(String::from("unable to unwrap data_source_id")),
+        )?)),
+        "original_id" => Ok(col("original_data_id").eq(p.value.as_str().ok_or(
+          SnapshotError::General(String::from("unable to unwrap original_id")),
+        )?)),
+        "id" => Ok(
+          col("id").eq(
+            p.value
+              .as_u64()
+              .ok_or(SnapshotError::General(String::from("unable to unwrap id")))?,
+          ),
+        ),
+        "property" => Ok(
+          col("properties")
+            .str()
+            .contains(lit(p.property.as_str()), false),
+        ),
+        _ => Err(SnapshotError::General(String::from(
+          "unsupported edge parameter",
+        ))),
+      })
+      .filter_map(|s| s.map_err(|e| errors.push(e)).ok())
+      .collect();
 
-    Ok(vec![])
+    if !errors.is_empty() {
+      return Err(SnapshotError::General(String::from(
+        "unsupported edge parameters",
+      )));
+    };
+    expressions.push(col("*"));
+
+    let df = df.clone().lazy().select(expressions).collect()?;
+
+    let ids: Vec<Option<u64>> = df.column("id")?.u64()?.iter().collect();
+
+    Ok(ids.iter().copied().flatten().collect())
   }
 }
 
 #[derive(Deserialize, Serialize, Debug)]
 /// Node represents the structure contained in the DeepLynx table.
-struct Node {
+pub struct Node {
   id: u64,
   container_id: u64,
   metatype_id: u64,
