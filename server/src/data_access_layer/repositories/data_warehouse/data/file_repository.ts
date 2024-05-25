@@ -48,6 +48,10 @@ export default class FileRepository extends Repository implements RepositoryInte
         return this.#mapper.RetrieveByID(id);
     }
 
+    findNodeByID(id: string): Promise<Result<File>> {
+        return this.#mapper.RetrieveNodeByID(id);
+    }
+
     findByIDAndContainer(id: string, containerID: string): Promise<Result<File>> {
         return this.#mapper.DomainRetrieve(id, containerID);
     }
