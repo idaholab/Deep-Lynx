@@ -3,7 +3,7 @@
 // Hooks
 import useSWR from "swr";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 // Types
 import { ContainerT } from "@/lib/types";
@@ -11,6 +11,7 @@ import { SelectChangeEvent } from "@mui/material";
 
 // MUI
 import {
+    Card,
     Container,
     InputLabel,
     FormControl,
@@ -25,7 +26,8 @@ import axios from "axios";
 import { useAppDispatch } from "@/lib/store/hooks";
 import { containerActions } from "@/lib/store/features/container/containerSlice";
 
-const fetcher = (url: string) => axios.get(url).then((res) => res.data.value);
+const fetcher = (url: string): Promise<ContainerT[]> =>
+    axios.get(url).then((res) => res.data.value);
 
 const ContainerSelect = () => {
     // Store
@@ -40,7 +42,7 @@ const ContainerSelect = () => {
         if (data) {
             const selection: ContainerT = data.find(
                 (item: ContainerT) => item.name === container
-            );
+            )!;
             storeDispatch(containerActions.setContainer(selection));
             router.push(`/containers/${selection.id}`);
         }
@@ -53,30 +55,50 @@ const ContainerSelect = () => {
 
     return (
         <>
-            <Container>
-                <FormControl fullWidth>
-                    <InputLabel id="Container Select">Containers</InputLabel>
-                    <Select
-                        labelId="Container Select"
-                        id="/containers/ContainerSelect"
-                        label="Containers"
-                        value={container}
-                        onChange={handleContainer}
-                    >
-                        {data
-                            ? data.map((container: ContainerT) => {
-                                  return (
-                                      <MenuItem
-                                          key={container.id}
-                                          value={container.name}
-                                      >
-                                          {container.name}
-                                      </MenuItem>
-                                  );
-                              })
-                            : null}
-                    </Select>
-                </FormControl>
+            <Container
+                sx={{
+                    height: "100vh",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                }}
+            >
+                <Card
+                    elevation={21}
+                    sx={{
+                        height: "50%",
+                        width: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                >
+                    <FormControl sx={{ width: "50%" }}>
+                        <InputLabel id="Container Select">
+                            Containers
+                        </InputLabel>
+                        <Select
+                            labelId="Container Select"
+                            id="/containers/ContainerSelect"
+                            label="Containers"
+                            value={container}
+                            onChange={handleContainer}
+                        >
+                            {data
+                                ? data.map((container: ContainerT) => {
+                                      return (
+                                          <MenuItem
+                                              key={container.id}
+                                              value={container.name}
+                                          >
+                                              {container.name}
+                                          </MenuItem>
+                                      );
+                                  })
+                                : null}
+                        </Select>
+                    </FormControl>
+                </Card>
             </Container>
         </>
     );

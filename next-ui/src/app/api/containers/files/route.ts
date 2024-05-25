@@ -7,7 +7,7 @@ const base = process.env.DEEPLYNX_URL!;
 const token = process.env.TOKEN!;
 
 export const GET = async (req: Request, res: Response) => {
-    const url = new URL("containers", base);
+    const url = new URL("", base);
 
     let response = await axios
         .get(`${url}`, {
@@ -21,6 +21,5 @@ export const GET = async (req: Request, res: Response) => {
         .catch((error) => {
             return error;
         });
-
     return NextResponse.json(response);
 };
