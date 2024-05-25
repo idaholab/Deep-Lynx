@@ -2,7 +2,7 @@ use crate::config::Configuration;
 use crate::snapshot::errors::SnapshotError;
 use futures_util::{StreamExt, TryStreamExt};
 use polars::frame::DataFrame;
-use polars::prelude::{col, len, lit, Expr, IntoLazy, LazyFrame, NamedFrom, Series};
+use polars::prelude::{col, lit, Expr, IntoLazy, NamedFrom, Series};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::PgPool;
@@ -83,8 +83,8 @@ impl SnapshotGenerator {
       .fetch_one(&self.db)
       .await?;
 
-    // you must LIMIT the query so we don't overload the Vec
-    let mut async_reader = connection
+    // you must LIMIT the query, so we don't overload the Vec
+    let async_reader = connection
       .copy_out_raw(
         format!(
           "COPY ({} LIMIT {}) TO STDOUT WITH (FORMAT csv, HEADER true);",
