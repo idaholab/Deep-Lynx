@@ -120,7 +120,6 @@ import { RetrieveJWT } from "@/auth/authentication_service";
 import buildURL from "build-url";
 import ViewMediaFileDialog from "../components/dialogs/ViewMediaFileDialog.vue";
 import VideoPlayer from "../components/media/VideoPlayer.vue";
-import FindNodeById from "server/src/data_access_layer/repositories/data_warehouse/data/file_repository.ts";
 import SelectDataSource from "../components/dataSources/SelectDataSource.vue";
 
 interface FilesDialogModel {
@@ -128,6 +127,7 @@ interface FilesDialogModel {
   fileLoading: boolean;
   addFileDialog: boolean;
   errorMessage: string;
+  datasourceID: string | null;
   files: FileT[];
   copy: string;
   imageViewers: Map<string, Viewer>;
@@ -164,7 +164,7 @@ export default Vue.extend({
       this.loadFiles();
     },
     setDataSourceID(dataSource: DataSourceT) {
-      this.datasourceID = dataSource.id;
+      this.datasourceID = dataSource.id!;
     },
     generateThumbnail(file: FileT) {
       const imageElm = document.getElementById(file.file_name);
@@ -231,7 +231,7 @@ export default Vue.extend({
       this.fileLoading = true;
 
       this.$client
-        .uploadFile(this.container.id, this.datasourceID, file)
+        .uploadFile(this.container.id, this.datasourceID!, file)
         .then(() => {
           this.loadFiles();
         })
@@ -243,7 +243,6 @@ export default Vue.extend({
         });
     },
     removeFile(file: FileT) {
-      console.log(file.data);
       this.$client
         .deleteFile(this.container.id, file.data_source_id, file.id)
         .then(() => this.loadFiles())
