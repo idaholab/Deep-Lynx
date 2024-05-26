@@ -13,6 +13,8 @@ import NodeMapper from '../data_access_layer/mappers/data_warehouse/data/node_ma
 import EdgeMapper from '../data_access_layer/mappers/data_warehouse/data/edge_mapper';
 import {pipeline} from 'node:stream/promises';
 import ImportRepository from '../data_access_layer/repositories/data_warehouse/import/import_repository';
+import {SnapshotGenerator} from 'deeplynx';
+import Config from '../services/config';
 
 async function Start(): Promise<void> {
     await PostgresAdapter.Instance.init();
@@ -23,7 +25,8 @@ async function Start(): Promise<void> {
     // once to process all the edges and once to attach tags and files to nodes/edges
     // this allows us to at least ensure some kind of order in dealing with building edges
     // without having to do edge queues and gets us some performance gains vs constantly reaching back to the db
-    const importIDs: string[] = workerData.input;
+    const importIDs: string[] = workerData.input.importIDs;
+    const containerID: string = workerData.input.containerID;
 
     // set process start time
     const importRepo = new ImportRepository();
@@ -188,6 +191,9 @@ async function Start(): Promise<void> {
         'metadata_properties',
     ];
 
+    const snapshot = new SnapshotGenerator();
+    await snapshot.init({dbConnectionString: Config.core_db_connection_string}, containerID);
+
     // build a transform stream that outputs edges as csv data
     class EdgeTransform extends Transform {
         constructor() {
@@ -196,7 +202,7 @@ async function Start(): Promise<void> {
                 transform(chunk: any, encoding: BufferEncoding, callback: TransformCallback) {
                     const stagingRecord = plainToInstance(DataStaging, chunk as object);
                     // take the chunk, which is a data staging record, and generate nodes from it.
-                    GenerateEdges(stagingRecord)
+                    GenerateEdges(snapshot, stagingRecord)
                         .then((edges) => {
                             if (edges.length > 0) {
                                 // ensure all the edges match the same structure

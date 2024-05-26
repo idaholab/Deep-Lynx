@@ -13,6 +13,7 @@ import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
 import QueryStream from 'pg-query-stream';
 import {EdgeConnectionParameter} from '../../../../domain_objects/data_warehouse/etl/type_transformation';
 import {instanceToPlain, plainToInstance} from 'class-transformer';
+import {SnapshotGenerator} from 'deeplynx';
 
 /*
     EdgeRepository contains methods for persisting and retrieving edges
@@ -296,7 +297,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
 
     // populateFromParameters takes an edge record contains parameters and generates edges to be inserted based on those
     // filters
-    async populateFromParameters(e: Edge): Promise<Result<Edge[]>> {
+    async populateFromParameters(e: Edge, snapshot?: SnapshotGenerator): Promise<Result<Edge[]>> {
         const edges: Edge[] = [];
 
         // if we already have id's or original id's set, then return a new instance of the edge
@@ -352,29 +353,52 @@ export default class EdgeRepository extends Repository implements RepositoryInte
             return Promise.resolve(Result.Success(edges));
         }
 
-        const originNodes = await this.parametersRepoBuilder(e.container_id!, e.origin_parameters).list(false);
-        if (originNodes.isError) return Promise.resolve(Result.Pass(originNodes));
+        // if any of the parameters have the "like" filter, we have to use the old method vs. the rust snapshot
+        if (e.origin_parameters.filter((p) => p.operator === 'like').length > 0 || e.destination_parameters.filter((p) => p.operator === 'like').length === 0) {
+            const originNodes = await this.parametersRepoBuilder(e.container_id!, e.origin_parameters).list(false);
+            if (originNodes.isError) return Promise.resolve(Result.Pass(originNodes));
 
-        const destNodes = await this.parametersRepoBuilder(e.container_id!, e.destination_parameters).list(false);
-        if (destNodes.isError) return Promise.resolve(Result.Pass(destNodes));
+            const destNodes = await this.parametersRepoBuilder(e.container_id!, e.destination_parameters).list(false);
+            if (destNodes.isError) return Promise.resolve(Result.Pass(destNodes));
 
-        originNodes.value.forEach((origin) => {
-            destNodes.value.forEach((dest) => {
-                const newEdge: Edge = plainToInstance(Edge, {...instanceToPlain(e)});
-                newEdge.origin_id = origin.id;
-                newEdge.destination_id = dest.id;
+            originNodes.value.forEach((origin) => {
+                destNodes.value.forEach((dest) => {
+                    const newEdge: Edge = plainToInstance(Edge, {...instanceToPlain(e)});
+                    newEdge.origin_id = origin.id;
+                    newEdge.destination_id = dest.id;
 
-                // we need to fill in the columns that allow us to keep edges across node versions
-                newEdge.origin_data_source_id = origin.data_source_id;
-                newEdge.origin_metatype_id = origin.metatype_id;
-                newEdge.destination_data_source_id = dest.data_source_id;
-                newEdge.origin_original_id = origin.original_data_id;
-                newEdge.destination_original_id = dest.original_data_id;
-                newEdge.destination_metatype_id = dest.metatype_id;
+                    // we need to fill in the columns that allow us to keep edges across node versions
+                    newEdge.origin_data_source_id = origin.data_source_id;
+                    newEdge.origin_metatype_id = origin.metatype_id;
+                    newEdge.destination_data_source_id = dest.data_source_id;
+                    newEdge.origin_original_id = origin.original_data_id;
+                    newEdge.destination_original_id = dest.original_data_id;
+                    newEdge.destination_metatype_id = dest.metatype_id;
 
-                edges.push(newEdge);
+                    edges.push(newEdge);
+                });
             });
-        });
+        } else {
+            // use the snapshot to build the edges to insert - a backfill statement will take care off building
+            // the rest of the values later
+            Logger.info('utilizing edge parameter snapshot method');
+            try {
+                const origin_ids: string[] = await snapshot!.findNodes(JSON.stringify(e.origin_parameters));
+                const destination_ids: string[] = await snapshot!.findNodes(JSON.stringify(e.destination_parameters));
+
+                origin_ids.forEach((origin) => {
+                    destination_ids.forEach((dest) => {
+                        const newEdge: Edge = plainToInstance(Edge, {...instanceToPlain(e)});
+                        newEdge.origin_id = origin;
+                        newEdge.destination_id = dest;
+                        edges.push(newEdge);
+                    });
+                });
+            } catch (e: any) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+                return Promise.resolve(Result.Failure(e));
+            }
+        }
 
         return Promise.resolve(Result.Success(edges));
     }
