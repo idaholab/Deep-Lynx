@@ -1,9 +1,8 @@
 use crate::config::Configuration;
 use crate::snapshot::errors::SnapshotError;
-use arrow::compute::filter;
 use futures_util::{StreamExt, TryStreamExt};
 use polars::frame::DataFrame;
-use polars::prelude::{col, fold_exprs, lit, Expr, IntoLazy, NamedFrom, Series};
+use polars::prelude::{col, lit, Expr, IntoLazy, NamedFrom, Series};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::PgPool;
@@ -234,6 +233,11 @@ impl SnapshotGenerator {
                   .eq(lit(value))
                   .alias("original_data_id_1"),
               ),
+              "!=" => Ok(
+                col("original_data_id")
+                  .neq(lit(value))
+                  .alias("original_data_id_1"),
+              ),
               "like" => Ok(
                 col("original_data_id")
                   .str()
@@ -252,12 +256,6 @@ impl SnapshotGenerator {
               .str()
               .contains(lit(p.property.clone().unwrap().as_str()), false),
           ),
-          _ => Err(SnapshotError::General(format!(
-            "unsupported edge parameter {}",
-            p.param_type.as_str(),
-          ))),
-          // this is only the first pass for properties, we just check for the property existence in
-          // properties json string, so we don't have to serialize things
           _ => Err(SnapshotError::General(format!(
             "unsupported edge parameter {}",
             p.param_type.as_str(),

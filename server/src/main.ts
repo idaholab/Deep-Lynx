@@ -49,7 +49,7 @@ async function Start(): Promise<any> {
         },
         {
             name: 'import_process',
-            interval: '1m',
+            interval: '10s',
             timeout: 0,
         },
         {
