@@ -31,6 +31,7 @@ mod main_tests {
         operator: "==".to_string(),
         key: "".to_string(),
         property: "".to_string(),
+        // TODO: make sure you change the value to something that matches the nodes you have
         value: json!(297),
       }])
       .await?;

@@ -1,5 +1,6 @@
 use crate::config::Configuration;
 use crate::snapshot::generator::{SnapshotGenerator, SnapshotParameters};
+use std::sync::Arc;
 
 mod errors;
 mod generator;
@@ -7,7 +8,7 @@ mod snapshot_tests;
 
 #[napi(js_name = "SnapshotGenerator")]
 pub struct JsSnapshotGenerator {
-  inner: Option<SnapshotGenerator>,
+  inner: Option<Arc<SnapshotGenerator>>,
 }
 
 #[napi]
@@ -21,30 +22,22 @@ impl JsSnapshotGenerator {
   /// # Safety
   ///
   /// This function should be called before any work done on the object
+  /// This generates the node snapshot dataframe and stores it on the SnapshotGenerator instance. This
+  /// MUST be run before you attempt to find any nodes.
   #[napi]
-  pub async unsafe fn init(&mut self, config: Configuration) -> Result<(), napi::Error> {
-    let inner = match crate::snapshot::generator::SnapshotGenerator::new(config).await {
+  pub async unsafe fn init(
+    &mut self,
+    config: Configuration,
+    container_id: String,
+    timestamp: Option<String>,
+  ) -> Result<(), napi::Error> {
+    let mut inner = match crate::snapshot::generator::SnapshotGenerator::new(config).await {
       Ok(b) => b,
       Err(e) => return Err(e.into()),
     };
 
-    self.inner = Some(inner);
-    Ok(())
-  }
-
-  #[napi]
-  pub async fn generate_redis_graph(
-    &self,
-    container_id: String,
-    timestamp: Option<String>,
-  ) -> Result<(), napi::Error> {
-    let mut inner = self.inner.clone().ok_or(napi::Error::new(
-      napi::Status::GenericFailure,
-      "must call init before calling functions",
-    ))?;
-
     // we convert to a u64 here because js can't handle 64bit numbers
-    match inner
+    let result = match inner
       .generate_snapshot(
         container_id
           .parse::<u64>()
@@ -58,12 +51,19 @@ impl JsSnapshotGenerator {
         napi::Status::GenericFailure,
         e.to_string(),
       )),
-    }
+    };
+
+    self.inner = Some(Arc::new(inner));
+    result
   }
 
+  /// Find all the nodes that match a given set of parameters. Parameters must be EdgeParameters passed
+  /// in as JSON in order to handle the fact that the value could be any valid JSON data-type. This function
+  /// returns only the _database_ ids of the matching nodes - this is in order to avoid expensive serialization
+  /// across the border.
   #[napi]
   pub async fn find_nodes(&self, parameters_json: String) -> Result<Vec<String>, napi::Error> {
-    let mut inner = self.inner.clone().ok_or(napi::Error::new(
+    let inner = self.inner.clone().ok_or(napi::Error::new(
       napi::Status::GenericFailure,
       "must call init before calling functions",
     ))?;

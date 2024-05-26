@@ -6,16 +6,14 @@ use polars::prelude::{col, lit, Expr, IntoLazy, NamedFrom, Series};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::PgPool;
-use std::collections::HashMap;
 use tokio_util::compat::FuturesAsyncReadCompatExt;
 
 #[derive(Clone)]
 pub struct SnapshotGenerator {
   db: PgPool,
-  // be warned - DataFrame is NOT Copy, you will have to Clone to work with it. That's why we build
-  // a map of smaller DataFrames to search against, so we're cloning the bare minimum of data
+  // be warned - DataFrame is NOT Copy, you will have to Clone to work with it.
+  // TODO: if this is too memory intensive for large graphs, we'll need to separate by metatype_ids
   frame: Option<DataFrame>,
-  by_metatype_ids: HashMap<u64, DataFrame>,
   _config: Configuration,
 }
 
@@ -31,11 +29,12 @@ impl SnapshotGenerator {
     Ok(SnapshotGenerator {
       db,
       frame: None,
-      by_metatype_ids: Default::default(),
       _config: config,
     })
   }
 
+  // this builds the raw dataframe for use in other functions. This snapshot is of all the nodes at
+  // a given point in time and used for quick lookups.
   pub async fn generate_snapshot(
     &mut self,
     container_id: u64,
@@ -43,6 +42,7 @@ impl SnapshotGenerator {
   ) -> Result<(), SnapshotError> {
     let mut connection = self.db.acquire().await?;
 
+    // we use this query for both count and copy, so easy to just work with it once
     let query = match timestamp {
       None => format!(
         r#"SELECT q.*,  ROW_NUMBER () OVER(ORDER BY metatype_id) as new_id FROM (SELECT DISTINCT ON (nodes.id) nodes.id,
@@ -77,8 +77,8 @@ impl SnapshotGenerator {
       ),
     };
 
-    // first get the count of rows - we do this so we can do Vec::with_capacity to avoid memory
-    // issues or slowdowns attempting to grow Vec
+    // first get the count of rows - we do this in order to do Vec::with_capacity to avoid memory
+    // issues or slowdowns attempting to grow a Vec with each append
     let count: (i64,) = sqlx::query_as(format!("SELECT COUNT(*) FROM ({})", query).as_str())
       .fetch_one(&self.db)
       .await?;
@@ -100,6 +100,8 @@ impl SnapshotGenerator {
     let mut async_reader = csv_async::AsyncDeserializer::from_reader(async_reader.compat());
     let mut records = async_reader.deserialize::<Node>();
 
+    // the raw holders for the values for each row - these will be converted into Series so we can
+    // build the DataFrame - order isn't important
     let mut ids: Vec<u64> = Vec::with_capacity(count.0 as usize);
     let mut container_ids: Vec<u64> = Vec::with_capacity(count.0 as usize);
     let mut metatype_ids: Vec<u64> = Vec::with_capacity(count.0 as usize);
@@ -109,6 +111,7 @@ impl SnapshotGenerator {
     let mut metatype_name: Vec<String> = Vec::with_capacity(count.0 as usize);
     let mut metatype_uuid: Vec<String> = Vec::with_capacity(count.0 as usize);
 
+    // might need to do some testing on whether or not serialization into Node is the right way to go
     while let Some(record) = records.next().await {
       let n = record?;
       ids.push(n.id);
@@ -130,6 +133,7 @@ impl SnapshotGenerator {
     let metatype_names: Series = Series::new("metatype_name", metatype_name);
     let metatype_uuid: Series = Series::new("metatype_uuid", metatype_uuid);
 
+    // build the actual dataframe
     let df = DataFrame::new(vec![
       ids,
       container_ids,
@@ -141,7 +145,7 @@ impl SnapshotGenerator {
       metatype_uuid,
     ])?;
 
-    // sort the frame in place so we have faster lookups on common fields
+    // sort the frame in place, so we have faster lookups on common fields
     let df = df.sort(["metatype_id", "data_source_id"], Default::default())?;
 
     self.frame = Some(df);
@@ -151,77 +155,52 @@ impl SnapshotGenerator {
   /// find_nodes takes a set of parameters and returns the node ids of those nodes that match all
   /// parameters. Parameters are done an AND filter
   pub async fn find_nodes(
-    &mut self,
+    &self,
     params: Vec<SnapshotParameters>,
   ) -> Result<Vec<u64>, SnapshotError> {
-    // first we need to check the hashmap to see if we already have a dataframe for the metatype id
-    // note: it is guaranteed that only one of the snapshot parameters will be a metatype_id parameter
-    // due to how edges must work
-    let metatype_filter: Vec<&SnapshotParameters> = params
-      .iter()
-      .filter(|p| p.param_type == "metatype_id")
-      .collect();
-
-    if metatype_filter.len() > 1 || metatype_filter.is_empty() {
-      return Err(SnapshotError::General(String::from(
-        "you must include at least one metatype_id filter in order to find nodes",
-      )));
-    }
-
-    // now we can fetch the first filter without worrying
-    let metatype_filter = metatype_filter.first().unwrap();
-
-    let metatype_id = match metatype_filter.value.clone() {
-      Value::Number(n) => n.as_u64().unwrap(),
-      _ => 0,
-    };
-
-    if metatype_id == 0 {
-      return Err(SnapshotError::General(String::from(
-        "metatype id not valid",
-      )));
-    }
-
-    if let std::collections::hash_map::Entry::Vacant(e) = self.by_metatype_ids.entry(metatype_id) {
-      // unfortunately now we have to clone the dataframe to build out the metatype_id filter
-      let df = self.frame.clone().unwrap().lazy(); // yes I know I'm unwrapping, it's fine
-
-      e.insert(df.filter(col("metatype_id").eq(metatype_id)).collect()?);
-    }
-
-    // ok now that we're sure we have a dataframe in there for our metatype_id, let's pull it out
-    let df = self
-      .by_metatype_ids
-      .get_mut(&metatype_id)
-      .ok_or(SnapshotError::General(String::from(
-        "unable to fetch dataframe for metatype_id",
-      )))?;
-
     // now we build up an expression built on the rest of the parameters
     // note: the properties filter requires a secondary pass after this first one so that we can deserialize
-    // the JSON it contains and check the value against the value presented in the filter.
+    // the JSON it contains and check the value against the value presented in the filter - this secondary
+    // pass is performed by the calling node.js function and is run directly against the Postgres database
     let mut errors = vec![];
+
+    // Expr are the raw filters built that we will run against the data frane
     let mut expressions: Vec<Expr> = params
       .iter()
-      .filter(|p| {
-        p.param_type != "metatype_id"
-          && p.param_type != "metatype_uuid"
-          && p.param_type != "metatype_name"
-      })
+      // the metatype_name and metatype_uuid are not supported any longer, any params using these
+      // deprecated param types will be handled in node.js
+      .filter(|p| p.param_type != "metatype_uuid" && p.param_type != "metatype_name")
       .map(|p| match p.param_type.as_str() {
-        "data_source" => Ok(col("data_source_id").eq(p.value.as_u64().ok_or(
-          SnapshotError::General(String::from("unable to unwrap data_source_id")),
-        )?)),
-        "original_id" => Ok(col("original_data_id").eq(p.value.as_str().ok_or(
-          SnapshotError::General(String::from("unable to unwrap original_id")),
-        )?)),
-        "id" => Ok(
-          col("id").eq(
-            p.value
-              .as_u64()
-              .ok_or(SnapshotError::General(String::from("unable to unwrap id")))?,
-          ),
+        "metatype_id" => to_expr(
+          "metatype_id",
+          p.operator.clone(),
+          p.value.as_u64().ok_or(SnapshotError::General(String::from(
+            "unable to unwrap data_source_id",
+          )))?,
         ),
+        "data_source" => to_expr(
+          "data_source_id",
+          p.operator.clone(),
+          p.value.as_u64().ok_or(SnapshotError::General(String::from(
+            "unable to unwrap data_source_id",
+          )))?,
+        ),
+        "original_id" => to_expr(
+          "original_data_id",
+          p.operator.clone(),
+          p.value.as_str().ok_or(SnapshotError::General(String::from(
+            "unable to unwrap original_id",
+          )))?,
+        ),
+        "id" => to_expr(
+          "id",
+          p.operator.clone(),
+          p.value.as_u64().ok_or(SnapshotError::General(String::from(
+            "unable to unwrap data_source_id",
+          )))?,
+        ),
+        // this is only the first pass for properties, we just check for the property existence in
+        // properties json string, so we don't have to serialize things
         "property" => Ok(
           col("properties")
             .str()
@@ -241,10 +220,19 @@ impl SnapshotGenerator {
     };
     expressions.push(col("*"));
 
+    // ok now let's pull the frame out
+    let df = self
+      .frame
+      .clone()
+      .ok_or(SnapshotError::General(String::from(
+        "no dataframe initiated",
+      )))?;
+
     let df = df.clone().lazy().select(expressions).collect()?;
 
+    // we only return the ids of the nodes to avoid having to build rows out of the dataframe, or
+    // serialize into Node records
     let ids: Vec<Option<u64>> = df.column("id")?.u64()?.iter().collect();
-
     Ok(ids.iter().copied().flatten().collect())
   }
 }
@@ -272,4 +260,20 @@ pub struct SnapshotParameters {
   pub key: String,
   pub property: String,
   pub value: Value,
+}
+
+fn to_expr<E: Into<Expr>>(
+  col_name: &str,
+  operator: String,
+  value: E,
+) -> Result<Expr, SnapshotError> {
+  match operator.as_str() {
+    "==" => Ok(col(col_name).eq(value)),
+    "!=" => Ok(col(col_name).neq(value)),
+    "<" => Ok(col(col_name).lt(value)),
+    "<=" => Ok(col(col_name).lt_eq(value)),
+    ">" => Ok(col(col_name).gt(value)),
+    ">=" => Ok(col(col_name).gt_eq(value)),
+    _ => Err(SnapshotError::General(String::from("unsupported operator"))),
+  }
 }

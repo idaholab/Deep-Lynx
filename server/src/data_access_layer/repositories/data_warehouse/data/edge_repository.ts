@@ -382,9 +382,6 @@ export default class EdgeRepository extends Repository implements RepositoryInte
     private parametersRepoBuilder(containerID: string, parameters: EdgeConnectionParameter[]): NodeRepository {
         let nodeRepo = new NodeRepository().where().containerID('eq', containerID);
 
-        // **NOTE** for now we are just going to do equality on the operators, no matter what the filter might say
-        // this is because the UI will default to equality for now and it helps cut down our calls to listing nodes
-        // which might be a considerably expensive call
         parameters.forEach((p) => {
             switch (p.type) {
                 case 'data_source': {
