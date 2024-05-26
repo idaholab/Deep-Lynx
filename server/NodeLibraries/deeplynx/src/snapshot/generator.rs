@@ -1,8 +1,9 @@
 use crate::config::Configuration;
 use crate::snapshot::errors::SnapshotError;
+use arrow::compute::filter;
 use futures_util::{StreamExt, TryStreamExt};
 use polars::frame::DataFrame;
-use polars::prelude::{col, lit, Expr, IntoLazy, NamedFrom, Series};
+use polars::prelude::{col, fold_exprs, lit, Expr, IntoLazy, NamedFrom, Series};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::PgPool;
@@ -164,62 +165,6 @@ impl SnapshotGenerator {
     // pass is performed by the calling node.js function and is run directly against the Postgres database
     let mut errors = vec![];
 
-    // Expr are the raw filters built that we will run against the data frane
-    let mut expressions: Vec<Expr> = params
-      .iter()
-      // the metatype_name and metatype_uuid are not supported any longer, any params using these
-      // deprecated param types will be handled in node.js
-      .filter(|p| p.param_type != "metatype_uuid" && p.param_type != "metatype_name")
-      .map(|p| match p.param_type.as_str() {
-        "metatype_id" => to_expr(
-          "metatype_id",
-          p.operator.clone(),
-          p.value.as_u64().ok_or(SnapshotError::General(String::from(
-            "unable to unwrap data_source_id",
-          )))?,
-        ),
-        "data_source" => to_expr(
-          "data_source_id",
-          p.operator.clone(),
-          p.value.as_u64().ok_or(SnapshotError::General(String::from(
-            "unable to unwrap data_source_id",
-          )))?,
-        ),
-        "original_id" => to_expr(
-          "original_data_id",
-          p.operator.clone(),
-          p.value.as_str().ok_or(SnapshotError::General(String::from(
-            "unable to unwrap original_id",
-          )))?,
-        ),
-        "id" => to_expr(
-          "id",
-          p.operator.clone(),
-          p.value.as_u64().ok_or(SnapshotError::General(String::from(
-            "unable to unwrap data_source_id",
-          )))?,
-        ),
-        // this is only the first pass for properties, we just check for the property existence in
-        // properties json string, so we don't have to serialize things
-        "property" => Ok(
-          col("properties")
-            .str()
-            .contains(lit(p.property.as_str()), false),
-        ),
-        _ => Err(SnapshotError::General(String::from(
-          "unsupported edge parameter",
-        ))),
-      })
-      .filter_map(|s| s.map_err(|e| errors.push(e)).ok())
-      .collect();
-
-    if !errors.is_empty() {
-      return Err(SnapshotError::General(String::from(
-        "unsupported edge parameters",
-      )));
-    };
-    expressions.push(col("*"));
-
     // ok now let's pull the frame out
     let df = self
       .frame
@@ -228,7 +173,109 @@ impl SnapshotGenerator {
         "no dataframe initiated",
       )))?;
 
-    let df = df.clone().lazy().select(expressions).collect()?;
+    // Expr are the raw filters built that we will run against the data frane
+    let lazy_frame = params
+      .iter()
+      // the metatype_name and metatype_uuid are not supported any longer, any params using these
+      // deprecated param types will be handled in node.js
+      .filter(|p| p.param_type != "metatype_uuid" && p.param_type != "metatype_name")
+      .map(|p| {
+        // we must handle the fact that almost every field could be either a number or a string type
+        // it's annoying yes, but better to handle it here than try to preemptively convert
+        match p.param_type.as_str() {
+          "metatype_id" => {
+            let value = match p.value.clone() {
+              Value::Number(n) => n.as_u64().ok_or(SnapshotError::General(String::from(
+                "unable to convert metatype_id",
+              )))?,
+              Value::String(n) => n.as_str().parse::<u64>()?,
+              _ => return Err(SnapshotError::General("unsupported value type".to_string())),
+            };
+
+            to_expr("metatype_id", p.operator.clone(), value)
+          }
+          "data_source" => {
+            let value = match p.value.clone() {
+              Value::Number(n) => n.as_u64().ok_or(SnapshotError::General(String::from(
+                "unable to convert data_source_id",
+              )))?,
+              Value::String(n) => n.as_str().parse::<u64>()?,
+              _ => return Err(SnapshotError::General("unsupported value type".to_string())),
+            };
+
+            to_expr("data_source_id", p.operator.clone(), value)
+          }
+          "id" => {
+            let value = match p.value.clone() {
+              Value::Number(n) => n
+                .as_u64()
+                .ok_or(SnapshotError::General(String::from("unable to convert id")))?,
+              Value::String(n) => n.as_str().parse::<u64>()?,
+              _ => return Err(SnapshotError::General("unsupported value type".to_string())),
+            };
+
+            to_expr("id", p.operator.clone(), value)
+          }
+          "original_id" => {
+            let value = match p.value.clone() {
+              Value::Number(n) => n
+                .as_u64()
+                .ok_or(SnapshotError::General(String::from(
+                  "unable to convert original_data_id",
+                )))?
+                .to_string(),
+              Value::String(n) => n,
+              _ => return Err(SnapshotError::General("unsupported value type".to_string())),
+            };
+
+            return match p.operator.clone().as_str() {
+              "==" => Ok(
+                col("original_data_id")
+                  .eq(lit(value))
+                  .alias("original_data_id_1"),
+              ),
+              "like" => Ok(
+                col("original_data_id")
+                  .str()
+                  .contains(lit(value), false)
+                  .alias("original_data_id_1"),
+              ),
+              _ => Err(SnapshotError::General(String::from(
+                "unsupported operator for original_id",
+              ))),
+            };
+          }
+          // this is only the first pass for properties, we just check for the property existence in
+          // properties json string, so we don't have to serialize things
+          "property" => Ok(
+            col("properties")
+              .str()
+              .contains(lit(p.property.clone().unwrap().as_str()), false),
+          ),
+          _ => Err(SnapshotError::General(format!(
+            "unsupported edge parameter {}",
+            p.param_type.as_str(),
+          ))),
+          // this is only the first pass for properties, we just check for the property existence in
+          // properties json string, so we don't have to serialize things
+          _ => Err(SnapshotError::General(format!(
+            "unsupported edge parameter {}",
+            p.param_type.as_str(),
+          ))),
+        }
+      })
+      .filter_map(|s| s.map_err(|e| errors.push(e)).ok())
+      // we fold this into a select filter that will allow us to build a query plan
+      .fold(df.clone().lazy(), |acc, e| acc.filter(e));
+
+    if !errors.is_empty() {
+      return Err(SnapshotError::General(format!(
+        "unsupported edge parameters: {:?}",
+        errors
+      )));
+    };
+
+    let df = lazy_frame.collect()?;
 
     // we only return the ids of the nodes to avoid having to build rows out of the dataframe, or
     // serialize into Node records
@@ -257,8 +304,8 @@ pub struct SnapshotParameters {
   #[serde(rename(serialize = "type", deserialize = "type"))]
   pub param_type: String,
   pub operator: String,
-  pub key: String,
-  pub property: String,
+  pub key: Option<String>,
+  pub property: Option<String>,
   pub value: Value,
 }
 

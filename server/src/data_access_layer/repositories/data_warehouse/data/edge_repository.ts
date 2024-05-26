@@ -354,7 +354,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         }
 
         // if any of the parameters have the "like" filter, we have to use the old method vs. the rust snapshot
-        if (e.origin_parameters.filter((p) => p.operator === 'like').length > 0 || e.destination_parameters.filter((p) => p.operator === 'like').length === 0) {
+        if (e.origin_parameters.filter((p) => p.operator === 'like').length > 0 || e.destination_parameters.filter((p) => p.operator === 'like').length > 0) {
             const originNodes = await this.parametersRepoBuilder(e.container_id!, e.origin_parameters).list(false);
             if (originNodes.isError) return Promise.resolve(Result.Pass(originNodes));
 
@@ -381,7 +381,6 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         } else {
             // use the snapshot to build the edges to insert - a backfill statement will take care off building
             // the rest of the values later
-            Logger.info('utilizing edge parameter snapshot method');
             try {
                 const origin_ids: string[] = await snapshot!.findNodes(JSON.stringify(e.origin_parameters));
                 const destination_ids: string[] = await snapshot!.findNodes(JSON.stringify(e.destination_parameters));

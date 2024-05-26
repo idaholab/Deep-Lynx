@@ -24,16 +24,26 @@ mod main_tests {
         .await?;
 
     // TODO: make sure you change this for an existing DeepLynx container in the db, no way I was going to try and recreate a graph simply for this test
-    generator.generate_snapshot(104, None).await?;
+    generator.generate_snapshot(1, None).await?;
     let ids = generator
-      .find_nodes(vec![SnapshotParameters {
-        param_type: "metatype_id".to_string(),
-        operator: "==".to_string(),
-        key: "".to_string(),
-        property: "".to_string(),
-        // TODO: make sure you change the value to something that matches the nodes you have
-        value: json!(297),
-      }])
+      .find_nodes(vec![
+        SnapshotParameters {
+          param_type: "metatype_id".to_string(),
+          operator: "==".to_string(),
+          key: Some("".to_string()),
+          property: Some("".to_string()),
+          // TODO: make sure you change the value to something that matches the nodes you have
+          value: json!(1),
+        },
+        SnapshotParameters {
+          param_type: "original_id".to_string(),
+          operator: "==".to_string(),
+          key: Some("".to_string()),
+          property: Some("".to_string()),
+          // TODO: make sure you change the value to something that matches the nodes you have
+          value: json!(1),
+        },
+      ])
       .await?;
 
     dbg!(ids);
