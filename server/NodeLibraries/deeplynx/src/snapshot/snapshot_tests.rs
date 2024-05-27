@@ -24,7 +24,7 @@ mod main_tests {
         .await?;
 
     // TODO: make sure you change this for an existing DeepLynx container in the db, no way I was going to try and recreate a graph simply for this test
-    generator.generate_snapshot(1, None).await?;
+    generator.generate_snapshot(13, None).await?;
     let ids = generator
       .find_nodes(vec![
         SnapshotParameters {
@@ -33,7 +33,7 @@ mod main_tests {
           key: Some("".to_string()),
           property: Some("".to_string()),
           // TODO: make sure you change the value to something that matches the nodes you have
-          value: json!(1),
+          value: json!(13),
         },
         SnapshotParameters {
           param_type: "original_id".to_string(),

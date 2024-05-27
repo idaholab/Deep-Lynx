@@ -12,7 +12,6 @@ use tokio_util::compat::FuturesAsyncReadCompatExt;
 pub struct SnapshotGenerator {
   db: PgPool,
   // be warned - DataFrame is NOT Copy, you will have to Clone to work with it.
-  // TODO: if this is too memory intensive for large graphs, we'll need to separate by metatype_ids
   frame: Option<DataFrame>,
   _config: Configuration,
 }
@@ -100,7 +99,7 @@ impl SnapshotGenerator {
     let mut async_reader = csv_async::AsyncDeserializer::from_reader(async_reader.compat());
     let mut records = async_reader.deserialize::<Node>();
 
-    // the raw holders for the values for each row - these will be converted into Series so we can
+    // the raw holders for the values for each row - these will be converted into Series, so we can
     // build the DataFrame - order isn't important
     let mut ids: Vec<u64> = Vec::with_capacity(count.0 as usize);
     let mut container_ids: Vec<u64> = Vec::with_capacity(count.0 as usize);
@@ -111,7 +110,6 @@ impl SnapshotGenerator {
     let mut metatype_name: Vec<String> = Vec::with_capacity(count.0 as usize);
     let mut metatype_uuid: Vec<String> = Vec::with_capacity(count.0 as usize);
 
-    // might need to do some testing on whether or not serialization into Node is the right way to go
     while let Some(record) = records.next().await {
       let n = record?;
       ids.push(n.id);
@@ -228,22 +226,9 @@ impl SnapshotGenerator {
             };
 
             return match p.operator.clone().as_str() {
-              "==" => Ok(
-                col("original_data_id")
-                  .eq(lit(value))
-                  .alias("original_data_id_1"),
-              ),
-              "!=" => Ok(
-                col("original_data_id")
-                  .neq(lit(value))
-                  .alias("original_data_id_1"),
-              ),
-              "like" => Ok(
-                col("original_data_id")
-                  .str()
-                  .contains(lit(value), false)
-                  .alias("original_data_id_1"),
-              ),
+              "==" => Ok(col("original_data_id").eq(lit(value))),
+              "!=" => Ok(col("original_data_id").neq(lit(value))),
+              "like" => Ok(col("original_data_id").str().contains(lit(value), false)),
               _ => Err(SnapshotError::General(String::from(
                 "unsupported operator for original_id",
               ))),
@@ -251,11 +236,20 @@ impl SnapshotGenerator {
           }
           // this is only the first pass for properties, we just check for the property existence in
           // properties json string, so we don't have to serialize things
-          "property" => Ok(
-            col("properties")
-              .str()
-              .contains(lit(p.property.clone().unwrap().as_str()), false),
-          ),
+          "property" => {
+            let value = match p.value.clone() {
+              Value::Number(n) => n
+                .as_u64()
+                .ok_or(SnapshotError::General(String::from(
+                  "unable to convert original_data_id",
+                )))?
+                .to_string(),
+              Value::String(n) => n,
+              _ => return Err(SnapshotError::General("unsupported value type".to_string())),
+            };
+
+            Ok(col("properties").str().contains(lit(value), false))
+          }
           _ => Err(SnapshotError::General(format!(
             "unsupported edge parameter {}",
             p.param_type.as_str(),

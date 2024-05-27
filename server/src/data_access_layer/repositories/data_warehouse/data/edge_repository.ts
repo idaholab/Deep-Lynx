@@ -306,7 +306,11 @@ export default class EdgeRepository extends Repository implements RepositoryInte
             return Promise.resolve(Result.Success(edges));
         }
 
-        if (e.origin_original_id && e.destination_original_id) {
+        if (
+            e.origin_original_id &&
+            e.destination_original_id &&
+            (!e.origin_parameters || e.origin_parameters.length === 0 || !e.destination_parameters || e.destination_parameters.length === 0)
+        ) {
             const originNodes = await new NodeRepository()
                 .where()
                 .containerID('eq', e.container_id)
