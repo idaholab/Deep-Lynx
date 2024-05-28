@@ -15,6 +15,7 @@ import {pipeline} from 'node:stream/promises';
 import ImportRepository from '../data_access_layer/repositories/data_warehouse/import/import_repository';
 import {SnapshotGenerator} from 'deeplynx';
 import Config from '../services/config';
+import Edge from '../domain_objects/data_warehouse/data/edge';
 
 async function Start(): Promise<void> {
     await PostgresAdapter.Instance.init();
@@ -196,35 +197,46 @@ async function Start(): Promise<void> {
 
     // build a transform stream that outputs edges as csv data
     class EdgeTransform extends Transform {
+        public generatePromises: Promise<Edge[]>[] = [];
+
         constructor() {
             super({
                 objectMode: true,
-                transform(chunk: any, encoding: BufferEncoding, callback: TransformCallback) {
+                transform: (chunk: any, encoding: BufferEncoding, callback: TransformCallback) => {
                     const stagingRecord = plainToInstance(DataStaging, chunk as object);
-                    // take the chunk, which is a data staging record, and generate nodes from it.
-                    GenerateEdges(snapshot, stagingRecord)
-                        .then((edges) => {
-                            if (edges.length > 0) {
-                                // ensure all the edges match the same structure
-                                const parsedEdges = edges.map((e) => {
-                                    return Object.fromEntries(edgeCols.map((col: string) => [col, instanceToPlain(e)[col]]));
-                                });
+                    this.generatePromises.push(GenerateEdges(snapshot, stagingRecord));
 
-                                const row = Papa.unparse(parsedEdges, {
-                                    header: false,
-                                    delimiter: '|',
-                                    newline: '\r',
-                                });
+                    if (this.generatePromises.length > 100) {
+                        const buffer = [...this.generatePromises];
+                        this.generatePromises = [];
 
-                                this.push(Buffer.from(row + '\r', 'utf-8'));
-                            }
+                        void Promise.all(buffer)
+                            .then((edges) => {
+                                const flat = edges.flat();
+                                if (flat.length > 0) {
+                                    // ensure all the edges match the same structure
+                                    const parsedEdges = flat.map((e) => {
+                                        return Object.fromEntries(edgeCols.map((col: string) => [col, instanceToPlain(e)[col]]));
+                                    });
 
-                            callback();
-                        })
-                        .catch((e: Error) => {
-                            Logger.error(`error in generating edges ${JSON.stringify(e)}`);
-                            callback();
-                        });
+                                    const row = Papa.unparse(parsedEdges, {
+                                        header: false,
+                                        delimiter: '|',
+                                        newline: '\r',
+                                    });
+
+                                    this.push(Buffer.from(row + '\r', 'utf-8'));
+                                }
+
+                                callback();
+                            })
+                            .catch((e: Error) => {
+                                Logger.error(`error in generating edges ${JSON.stringify(e)}`);
+                                callback();
+                            });
+                    } else {
+                        callback();
+                    }
                 },
             });
         }
