@@ -4,7 +4,7 @@
 import { createContext, useContext } from "react";
 
 // Components
-import Wireframe from "@/app/components/wireframe";
+import Wireframe from "@/app/_components/wireframe";
 
 // Store
 import { useAppSelector } from "@/lib/store/hooks";
