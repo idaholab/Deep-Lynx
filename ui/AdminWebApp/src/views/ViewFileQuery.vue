@@ -84,17 +84,6 @@
               :file="item"
               :icon="true"
             ></ifc-viewer>
-
-            <div @click="viewImage(item)" style="display: flex; height: 100%">
-              <img
-                :id="item.file_name"
-                v-if="isImage(item.file_name)"
-                v-observe-visibility="generateThumbnail(item)"
-                :src="fileURL(item)"
-                style="max-height: 50px; max-width: 150px"
-                :alt="item.file_name"
-              />
-            </div>
           </v-flex>
         </template>
       </v-data-table>
@@ -120,7 +109,6 @@ import { RetrieveJWT } from "@/auth/authentication_service";
 import buildURL from "build-url";
 import ViewMediaFileDialog from "../components/dialogs/ViewMediaFileDialog.vue";
 import VideoPlayer from "../components/media/VideoPlayer.vue";
-import FindNodeById from "server/src/data_access_layer/repositories/data_warehouse/data/file_repository.ts";
 import SelectDataSource from "../components/dataSources/SelectDataSource.vue";
 
 interface FilesDialogModel {
@@ -128,6 +116,7 @@ interface FilesDialogModel {
   fileLoading: boolean;
   addFileDialog: boolean;
   errorMessage: string;
+  datasourceID?: string;
   files: FileT[];
   copy: string;
   imageViewers: Map<string, Viewer>;
@@ -149,7 +138,7 @@ export default Vue.extend({
     addFileDialog: false,
     errorMessage: "",
     files: [],
-    datasourceID: null,
+    datasourceID: "",
     copy: mdiFileDocumentMultiple,
     imageViewers: new Map(),
     dataSourceCompleted: false,
@@ -231,7 +220,7 @@ export default Vue.extend({
       this.fileLoading = true;
 
       this.$client
-        .uploadFile(this.container.id, this.datasourceID, file)
+        .uploadFile(this.container.id, this.datasourceID!, file)
         .then(() => {
           this.loadFiles();
         })
@@ -243,7 +232,6 @@ export default Vue.extend({
         });
     },
     removeFile(file: FileT) {
-      console.log(file.data);
       this.$client
         .deleteFile(this.container.id, file.data_source_id, file.id)
         .then(() => this.loadFiles())
