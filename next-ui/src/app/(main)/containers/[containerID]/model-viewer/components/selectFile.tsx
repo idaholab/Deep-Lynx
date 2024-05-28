@@ -42,6 +42,7 @@ const supportedFileTypes =
 const SelectFile = (props: Props) => {
     // Hooks
     const [node, setNode] = useState<string>("");
+    useEffect(() => {}, [node]);
 
     // Handlers
     const handleNode = (event: SelectChangeEvent) => {

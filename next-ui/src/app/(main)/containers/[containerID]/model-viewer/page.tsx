@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { useContainer } from "../layout";
 
 // Components
-import SelectFile from "./components/select";
+import SelectFile from "./components/selectFile";
 
 // Types
 import { ContainerT, FileT, NodeT } from "@/lib/types";
@@ -58,12 +58,14 @@ const files = [
     },
 ];
 
-const fetcher = (params: [url: string, id: string]) => {
-    const [url, id] = params;
+const fetcher = (params: [url: string, containerId: string]) => {
+    const [url, containerId] = params;
 
-    const res = axios.get(url, { params: { id: id } }).then((res) => {
-        return res.data.value;
-    });
+    const res = axios
+        .get(url, { params: { containerId: containerId } })
+        .then((res) => {
+            return res.data.value;
+        });
 
     return res;
 };
