@@ -53,6 +53,7 @@ class Client {
             })
             .catch((e: any) => {
                 const error = JSON.parse(e);
+                // @ts-ignore
                 const resp: AxiosResponse = { data: {}, status: 500, statusText: 'internal server error', headers: '', config: error.config };
                 if (error.response) {
                     // The request was made and the server responded with a status code
@@ -128,6 +129,7 @@ class Client {
             return true;
         };
         config.headers = { Authorization: `Bearer ${auth.RetrieveJWT()}` };
+        console.log(config.headers)
 
         let url: string;
 

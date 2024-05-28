@@ -17,7 +17,7 @@ ENV VUE_APP_DEEP_LYNX_APP_ID="root"
 # turn off jobs on the main thread as this spins up PM2 with the worker
 ENV RUN_JOBS=false
 # set the default db to the one we'd see in the docker compose
-ENV CORE_DB_CONNECTION_STRING=postgresql://postgres:root@timescaledb:5432/deep_lynx_dev
+ENV CORE_DB_CONNECTION_STRING=postgresql://postgres:root@postgres:5432/deep_lynx_dev
 
 RUN apk update
 RUN apk add build-base musl-dev openssl-dev
@@ -36,33 +36,27 @@ WORKDIR /srv/deeplynx
 COPY . .
 
 # triple check we're not pulling in node_modules from the host system
-RUN rm -rf /srv/deeplynx/server/legacy/node_modules
+RUN rm -rf /srv/deeplynx/server/node_modules
 RUN rm -rf /srv/deeplynx/ui/AdminWebApp/node_modules
 RUN rm -rf /srv/deeplynx/ui/WebGLViewer/node_modules
 
-WORKDIR /srv/deeplynx/server/deeplynx
-RUN cargo install --path .
+WORKDIR /srv/deeplynx/server
+RUN yarn install;
+RUN yarn run build;
 
 FROM node:alpine3.19 as production
 ENV DEVELOPMENT_MODE=false
 
 RUN apk update && apk add supervisor
-RUN mkdir -p /srv/deeplynx/server/legacy
+RUN mkdir -p /srv/deeplynx/server
 
 # need pm2 to run legacy server
 RUN npm install npm@latest --location=global
 RUN npm update --location=global
 RUN npm install pm2 --location=global
 
-COPY --from=build /srv/deeplynx/server/legacy /srv/deeplynx/server/legacy
-COPY --from=build /usr/local/cargo/bin/deeplynx /usr/local/bin/deeplynx
-COPY --from=build /srv/deeplynx/server/deeplynx/configs /configs
+COPY --from=build /srv/deeplynx/server /srv/deeplynx/server
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Add docker-compose-wait tool ----------------------
-ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait
-RUN chmod +x /wait
-
 EXPOSE 8090
-EXPOSE 4000
-CMD /wait && /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+CMD /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf

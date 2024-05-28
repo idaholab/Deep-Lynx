@@ -161,7 +161,11 @@
                       this.$emit("error", `${this.$t('errors.containerCreation')} ${e.detail}`)
                     }
                   } else {
-                    this.$emit("error", `${this.$t('errors.containerCreation')} ${this.$t('errors.checkLogs')}`)
+                    let errorStr = '';
+                    for (const [key, value] of Object.entries(e)) {
+                      errorStr += key + ": " + value + " ";
+                    }
+                    this.$emit("error", `${this.$t('errors.containerCreation')} ${errorStr} ${this.$t('errors.checkLogs')}`)
                   }
                 } else {
                   this.$emit("error", `${this.$t('errors.loadOntology')} ${e}` )

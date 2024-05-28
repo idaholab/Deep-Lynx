@@ -57,7 +57,7 @@ export default class Authentication {
                 client_id: configInstance.deepLynxAppID,
                 code_verifier: Cookies.get('code_challenge'),
             },
-            {headers: {'Access-Controle-Allow-Origin': '*'}},
+            {headers: {'Access-Control-Allow-Origin': '*'}},
         );
 
         if (resp.status < 200 || resp.status > 299 || resp.data.isError) {
