@@ -84,17 +84,6 @@
               :file="item"
               :icon="true"
             ></ifc-viewer>
-
-            <div @click="viewImage(item)" style="display: flex; height: 100%">
-              <img
-                :id="item.file_name"
-                v-if="isImage(item.file_name)"
-                v-observe-visibility="generateThumbnail(item)"
-                :src="fileURL(item)"
-                style="max-height: 50px; max-width: 150px"
-                :alt="item.file_name"
-              />
-            </div>
           </v-flex>
         </template>
       </v-data-table>
