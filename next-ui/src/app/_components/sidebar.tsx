@@ -39,28 +39,30 @@ type PropsT = {
     handleDrawer: Function;
 };
 
+// Styles
+import { Styles } from "@/lib/theme/styles";
+
+// Theme
+import { useTheme } from "../(main)/containers/[containerID]/layout";
+
 export default function Sidebar(props: PropsT) {
     // Hooks
     const router = useRouter();
     const container: ContainerT = useAppSelector(
         (state) => state.container.container!
     );
+    const theme = useTheme();
 
     return (
         <>
             <Drawer
                 open={props.drawer}
                 onClose={() => props.handleDrawer()}
-                sx={{
-                    width: "15vw",
-                    minWidth: "325px",
-                    flexShrink: 0,
-                    "& .MuiDrawer-paper": {
-                        width: "15vw",
-                        minWidth: "325px",
-                        boxSizing: "border-box",
-                    },
-                }}
+                sx={
+                    theme === "light"
+                        ? Styles.Sidebar.Drawer.light
+                        : Styles.Sidebar.Drawer.dark
+                }
             >
                 <AppBar
                     position="sticky"
@@ -71,13 +73,7 @@ export default function Sidebar(props: PropsT) {
                         justifyContent: "center",
                     }}
                 >
-                    <Toolbar
-                        sx={{
-                            height: "100%",
-                            padding: 0,
-                            backgroundColor: "black",
-                        }}
-                    >
+                    <Toolbar sx={Styles.Navbar.Toolbar}>
                         <Button
                             onClick={() => props.handleDrawer()}
                             sx={{ color: "white" }}
@@ -95,12 +91,25 @@ export default function Sidebar(props: PropsT) {
                     }}
                 >
                     <Box sx={{ width: "100%" }}>
-                        <Typography variant="overline">DeepLynx</Typography>
-                        <Divider />
+                        <Typography
+                            sx={
+                                theme === "light"
+                                    ? Styles.Sidebar.Header.light
+                                    : Styles.Sidebar.Header.dark
+                            }
+                            variant="overline"
+                        >
+                            DeepLynx
+                        </Typography>
+                        <Divider sx={Styles.Sidebar.Divider} />
                         <br />
                         <Box>
                             <Button
-                                sx={{ width: "100%", justifyContent: "start" }}
+                                sx={
+                                    theme === "light"
+                                        ? Styles.Sidebar.Button.light
+                                        : Styles.Sidebar.Button.dark
+                                }
                                 startIcon={<HomeIcon />}
                             >
                                 <Typography
@@ -114,12 +123,25 @@ export default function Sidebar(props: PropsT) {
                             </Button>
                         </Box>
                         <br />
-                        <Typography variant="overline">Data</Typography>
-                        <Divider />
+                        <Typography
+                            sx={
+                                theme === "light"
+                                    ? Styles.Sidebar.Header.light
+                                    : Styles.Sidebar.Header.dark
+                            }
+                            variant="overline"
+                        >
+                            Data
+                        </Typography>
+                        <Divider sx={Styles.Sidebar.Divider} />
                         <br />
                         <Box>
                             <Button
-                                sx={{ width: "100%", justifyContent: "start" }}
+                                sx={
+                                    theme === "light"
+                                        ? Styles.Sidebar.Button.light
+                                        : Styles.Sidebar.Button.dark
+                                }
                                 startIcon={<SearchIcon />}
                             >
                                 <Typography
@@ -132,7 +154,11 @@ export default function Sidebar(props: PropsT) {
                         </Box>
                         <Box>
                             <Button
-                                sx={{ width: "100%", justifyContent: "start" }}
+                                sx={
+                                    theme === "light"
+                                        ? Styles.Sidebar.Button.light
+                                        : Styles.Sidebar.Button.dark
+                                }
                                 startIcon={<ViewInArIcon />}
                                 onClick={() =>
                                     router.push(
@@ -150,7 +176,11 @@ export default function Sidebar(props: PropsT) {
                         </Box>
                         <Box>
                             <Button
-                                sx={{ width: "100%", justifyContent: "start" }}
+                                sx={
+                                    theme === "light"
+                                        ? Styles.Sidebar.Button.light
+                                        : Styles.Sidebar.Button.dark
+                                }
                                 startIcon={<FilePresentIcon />}
                             >
                                 <Typography
@@ -163,7 +193,11 @@ export default function Sidebar(props: PropsT) {
                         </Box>
                         <Box>
                             <Button
-                                sx={{ width: "100%", justifyContent: "start" }}
+                                sx={
+                                    theme === "light"
+                                        ? Styles.Sidebar.Button.light
+                                        : Styles.Sidebar.Button.dark
+                                }
                                 startIcon={<InsightsIcon />}
                             >
                                 <Typography
@@ -175,14 +209,25 @@ export default function Sidebar(props: PropsT) {
                             </Button>
                         </Box>
                         <br />
-                        <Typography variant="overline">
+                        <Typography
+                            sx={
+                                theme === "light"
+                                    ? Styles.Sidebar.Header.light
+                                    : Styles.Sidebar.Header.dark
+                            }
+                            variant="overline"
+                        >
                             Data Management
                         </Typography>
-                        <Divider />
+                        <Divider sx={Styles.Sidebar.Divider} />
                         <br />
                         <Box>
                             <Button
-                                sx={{ width: "100%", justifyContent: "start" }}
+                                sx={
+                                    theme === "light"
+                                        ? Styles.Sidebar.Button.light
+                                        : Styles.Sidebar.Button.dark
+                                }
                                 startIcon={<AccountTreeIcon />}
                             >
                                 <Typography
@@ -195,7 +240,11 @@ export default function Sidebar(props: PropsT) {
                         </Box>
                         <Box>
                             <Button
-                                sx={{ width: "100%", justifyContent: "start" }}
+                                sx={
+                                    theme === "light"
+                                        ? Styles.Sidebar.Button.light
+                                        : Styles.Sidebar.Button.dark
+                                }
                                 startIcon={<MoveToInboxIcon />}
                             >
                                 <Typography
@@ -208,7 +257,11 @@ export default function Sidebar(props: PropsT) {
                         </Box>
                         <Box>
                             <Button
-                                sx={{ width: "100%", justifyContent: "start" }}
+                                sx={
+                                    theme === "light"
+                                        ? Styles.Sidebar.Button.light
+                                        : Styles.Sidebar.Button.dark
+                                }
                                 startIcon={<StyleIcon />}
                             >
                                 <Typography
@@ -221,7 +274,11 @@ export default function Sidebar(props: PropsT) {
                         </Box>
                         <Box>
                             <Button
-                                sx={{ width: "100%", justifyContent: "start" }}
+                                sx={
+                                    theme === "light"
+                                        ? Styles.Sidebar.Button.light
+                                        : Styles.Sidebar.Button.dark
+                                }
                                 startIcon={<SendIcon />}
                             >
                                 <Typography
@@ -233,8 +290,17 @@ export default function Sidebar(props: PropsT) {
                             </Button>
                         </Box>
                         <br />
-                        <Typography variant="overline">User</Typography>
-                        <Divider />
+                        <Typography
+                            sx={
+                                theme === "light"
+                                    ? Styles.Sidebar.Header.light
+                                    : Styles.Sidebar.Header.dark
+                            }
+                            variant="overline"
+                        >
+                            User
+                        </Typography>
+                        <Divider sx={Styles.Sidebar.Divider} />
                         <br />
                         <Box
                             sx={{
@@ -243,7 +309,11 @@ export default function Sidebar(props: PropsT) {
                             }}
                         >
                             <Button
-                                sx={{ width: "100%", justifyContent: "start" }}
+                                sx={
+                                    theme === "light"
+                                        ? Styles.Sidebar.Button.light
+                                        : Styles.Sidebar.Button.dark
+                                }
                                 startIcon={<AccountBoxIcon />}
                             >
                                 <Typography
@@ -256,7 +326,11 @@ export default function Sidebar(props: PropsT) {
                         </Box>
                         <Box>
                             <Button
-                                sx={{ width: "100%", justifyContent: "start" }}
+                                sx={
+                                    theme === "light"
+                                        ? Styles.Sidebar.Button.light
+                                        : Styles.Sidebar.Button.dark
+                                }
                                 startIcon={<LogoutIcon />}
                             >
                                 <Typography
@@ -277,7 +351,14 @@ export default function Sidebar(props: PropsT) {
                                 minHeight: "15vh",
                             }}
                         >
-                            <Typography variant="caption">
+                            <Typography
+                                sx={
+                                    theme === "light"
+                                        ? Styles.Sidebar.Header.light
+                                        : Styles.Sidebar.Header.dark
+                                }
+                                variant="caption"
+                            >
                                 Developed by Digital Engineering
                             </Typography>
                         </Box>

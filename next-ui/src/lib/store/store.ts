@@ -3,11 +3,13 @@ import { configureStore } from "@reduxjs/toolkit";
 
 // Reducers
 import { containerReducer } from "./features/container/containerSlice";
+import { themeReducer } from "./features/themeSlice";
 
 export const makeStore = () => {
     return configureStore({
         reducer: {
             container: containerReducer,
+            theme: themeReducer,
         },
     });
 };

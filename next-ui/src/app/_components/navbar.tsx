@@ -4,17 +4,16 @@
 import { useState } from "react";
 
 // MUI
-import { AppBar, Button, Toolbar } from "@mui/material";
+import { AppBar, Box, Button, Toolbar } from "@mui/material";
 
 // Icons
 import MenuIcon from "@mui/icons-material/Menu";
 
-import {
-    ChevronDownIcon,
-    MagnifyingGlassIcon,
-} from "@heroicons/react/20/solid";
-import Image from "next/image";
+// Components
 import DarkModeToggle from "./dark-mode-toggle";
+
+// Styles
+import { Styles } from "@/lib/theme/styles";
 
 type PropsT = {
     handleDrawer: Function;
@@ -23,22 +22,8 @@ type PropsT = {
 export default function Navbar(props: PropsT) {
     return (
         <>
-            <AppBar
-                position="sticky"
-                sx={{
-                    color: "white",
-                    height: "7.5vh",
-                    display: "flex",
-                    justifyContent: "center",
-                }}
-            >
-                <Toolbar
-                    sx={{
-                        height: "100%",
-                        padding: 0,
-                        backgroundColor: "black",
-                    }}
-                >
+            <AppBar position="sticky" sx={Styles.Navbar.Appbar}>
+                <Toolbar sx={Styles.Navbar.Toolbar}>
                     <Button
                         onClick={() => {
                             props.handleDrawer();
@@ -47,6 +32,8 @@ export default function Navbar(props: PropsT) {
                     >
                         <MenuIcon />
                     </Button>
+                    <Box flexGrow={1}></Box>
+                    <DarkModeToggle />
                 </Toolbar>
             </AppBar>
         </>

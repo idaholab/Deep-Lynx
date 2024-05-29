@@ -3,7 +3,7 @@
 // Hooks
 import useSWR from "swr";
 import { useRouter } from "next/navigation";
-import { useContext, useEffect, useState } from "react";
+import { ChangeEvent, useContext, useEffect, useState } from "react";
 
 // Types
 import { ContainerT } from "@/lib/types";
@@ -22,6 +22,9 @@ import {
 // Axios
 import axios from "axios";
 
+// Styles
+import { styles } from "@/lib/theme/styles";
+
 // Store
 import { useAppDispatch } from "@/lib/store/hooks";
 import { containerActions } from "@/lib/store/features/container/containerSlice";
@@ -39,7 +42,7 @@ const ContainerSelect = () => {
     const router = useRouter();
     useEffect(() => {
         // When the user selects a container, dispatch that container's metadata to the Redux store, and navigate to the dashboard
-        if (data) {
+        if (data && container) {
             const selection: ContainerT = data.find(
                 (item: ContainerT) => item.name === container
             )!;
@@ -51,6 +54,9 @@ const ContainerSelect = () => {
     // Handlers
     const handleContainer = (event: SelectChangeEvent) => {
         setContainer(event.target.value);
+    };
+    const handleTailwindContainer = (event: ChangeEvent) => {
+        setContainer((event.target as HTMLInputElement).value);
     };
 
     return (

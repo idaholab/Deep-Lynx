@@ -4,26 +4,23 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 // Store
 import type { RootState } from "@/lib/store/store";
 
-// Types
-import { ContainerT } from "@/lib/types";
-
 // Define a type for the slice state
-interface ContainerStateI {
-    container: ContainerT | null;
+interface ThemeStateI {
+    theme: string;
 }
 
 // Define the initial state using that type
-const initialState: ContainerStateI = {
-    container: null,
+const initialState: ThemeStateI = {
+    theme: "light",
 };
 
-export const containerSlice = createSlice({
-    name: "container",
+export const themeSlice = createSlice({
+    name: "theme",
     initialState, // `createSlice` will infer the state type from the `initialState` argument
     reducers: {
         // Use the PayloadAction type to declare the contents of `action.payload`
-        setContainer: (state, action: PayloadAction<ContainerT>) => {
-            state.container = action.payload;
+        setTheme: (state, action: PayloadAction<string>) => {
+            state.theme = action.payload;
         },
     },
 });
@@ -32,7 +29,7 @@ export const containerSlice = createSlice({
  * Import the ACTIONS into your component to change the state held by this slice
  * Import the SELECTORS into your component to read the state held by this slice
  */
-export const containerActions = containerSlice.actions;
-export const containerSelector = (state: RootState) => state.container;
+export const themeActions = themeSlice.actions;
+export const themeSelector = (state: RootState) => state.theme;
 
-export const containerReducer = containerSlice.reducer;
+export const themeReducer = themeSlice.reducer;

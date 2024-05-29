@@ -16,6 +16,7 @@ import { ContainerT } from "@/lib/types";
 let ContainerContext: Context<ContainerT> = createContext<ContainerT>(
     {} as ContainerT
 );
+let ThemeContext: Context<string> = createContext<string>("light");
 
 export default function RootLayout({
     children,
@@ -27,17 +28,22 @@ export default function RootLayout({
      * and as such, wraps the UX in the container context,
      * and the wireframe (sidebar and navbar)
      */
+
+    const theme: string = useAppSelector((state) => state.theme.theme);
     const container: ContainerT = useAppSelector(
         (state) => state.container.container!
     );
     ContainerContext = createContext(container);
 
     return (
-        <ContainerContext.Provider value={container}>
-            <Wireframe>{children}</Wireframe>
-        </ContainerContext.Provider>
+        <ThemeContext.Provider value={theme}>
+            <ContainerContext.Provider value={container}>
+                <Wireframe>{children}</Wireframe>
+            </ContainerContext.Provider>
+        </ThemeContext.Provider>
     );
 }
 
-// Export the custom useContainer hook, allowing all child components to access the container
+// Export the custom hooks, allowing all child components to access them
+export const useTheme = () => useContext(ThemeContext);
 export const useContainer = () => useContext(ContainerContext);

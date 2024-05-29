@@ -31,9 +31,6 @@ import {
 // Axios
 import axios from "axios";
 
-// Store
-import { useAppSelector } from "@/lib/store/hooks";
-
 // Development only
 const files = [
     {
