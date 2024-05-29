@@ -389,7 +389,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
         return Promise.resolve(Result.Success(out));
     }
 
-    id(operator: string, value: any) {
+    id(operator: string, value?: any) {
         super.query('id', operator, value);
         return this;
     }
