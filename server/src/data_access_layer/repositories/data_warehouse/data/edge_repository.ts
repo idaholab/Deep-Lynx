@@ -389,14 +389,45 @@ export default class EdgeRepository extends Repository implements RepositoryInte
                 const origin_ids: string[] = await snapshot!.findNodes(JSON.stringify(e.origin_parameters));
                 const destination_ids: string[] = await snapshot!.findNodes(JSON.stringify(e.destination_parameters));
 
-                origin_ids.forEach((origin) => {
-                    destination_ids.forEach((dest) => {
-                        const newEdge: Edge = plainToInstance(Edge, {...instanceToPlain(e)});
-                        newEdge.origin_id = origin;
-                        newEdge.destination_id = dest;
-                        edges.push(newEdge);
+                // if we have property filters, we need to basically do what we do above and filter by ids - this is
+                // because currently the rust method doesn't do more than a value match on the whole json string
+                if (
+                    e.origin_parameters.filter((p) => p.type === 'property').length > 0 ||
+                    e.destination_parameters.filter((p) => p.type !== 'property').length > 0
+                ) {
+                    const originNodes = await this.parametersRepoBuilder(e.container_id!, e.origin_parameters).id('in', origin_ids).list(false);
+                    if (originNodes.isError) return Promise.resolve(Result.Pass(originNodes));
+
+                    const destNodes = await this.parametersRepoBuilder(e.container_id!, e.destination_parameters).id('in', destination_ids).list(false);
+                    if (destNodes.isError) return Promise.resolve(Result.Pass(destNodes));
+
+                    originNodes.value.forEach((origin) => {
+                        destNodes.value.forEach((dest) => {
+                            const newEdge: Edge = plainToInstance(Edge, {...instanceToPlain(e)});
+                            newEdge.origin_id = origin.id;
+                            newEdge.destination_id = dest.id;
+
+                            // we need to fill in the columns that allow us to keep edges across node versions
+                            newEdge.origin_data_source_id = origin.data_source_id;
+                            newEdge.origin_metatype_id = origin.metatype_id;
+                            newEdge.destination_data_source_id = dest.data_source_id;
+                            newEdge.origin_original_id = origin.original_data_id;
+                            newEdge.destination_original_id = dest.original_data_id;
+                            newEdge.destination_metatype_id = dest.metatype_id;
+
+                            edges.push(newEdge);
+                        });
                     });
-                });
+                } else {
+                    origin_ids.forEach((origin) => {
+                        destination_ids.forEach((dest) => {
+                            const newEdge: Edge = plainToInstance(Edge, {...instanceToPlain(e)});
+                            newEdge.origin_id = origin;
+                            newEdge.destination_id = dest;
+                            edges.push(newEdge);
+                        });
+                    });
+                }
             } catch (e: any) {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                 return Promise.resolve(Result.Failure(e));
