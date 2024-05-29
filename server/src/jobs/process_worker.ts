@@ -16,6 +16,7 @@ import ImportRepository from '../data_access_layer/repositories/data_warehouse/i
 import {SnapshotGenerator} from 'deeplynx';
 import Config from '../services/config';
 import Edge from '../domain_objects/data_warehouse/data/edge';
+import Node from '../domain_objects/data_warehouse/data/node';
 
 async function Start(): Promise<void> {
     await PostgresAdapter.Instance.init();
@@ -73,38 +74,50 @@ async function Start(): Promise<void> {
 
     // build a transform stream that outputs nodes as csv data
     class NodeTransform extends Transform {
+        public generatePromises: Promise<Node[]>[] = [];
+
         constructor() {
             super({
                 objectMode: true,
-                transform(chunk: any, encoding: BufferEncoding, callback: TransformCallback) {
+                transform: (chunk: any, encoding: BufferEncoding, callback: TransformCallback) => {
                     const stagingRecord = plainToInstance(DataStaging, chunk as object);
+                    this.generatePromises.push(GenerateNodes(stagingRecord));
                     // take the chunk, which is a data staging record, and generate nodes from it.
-                    GenerateNodes(stagingRecord)
-                        .then((nodes) => {
-                            if (nodes.length > 0) {
-                                // ensure all the nodes match the same structure
-                                const parsedNodes = nodes.map((n) => {
-                                    // eslint-disable-next-line security/detect-object-injection
-                                    return Object.fromEntries(cols.map((col: string) => [col, instanceToPlain(n)[col]]));
-                                });
 
-                                const row = Papa.unparse(parsedNodes, {
-                                    header: false,
-                                    delimiter: '|',
-                                    newline: '\r',
-                                });
+                    if (this.generatePromises.length > 100) {
+                        const buffer = [...this.generatePromises];
+                        this.generatePromises = [];
 
-                                // you must add a carriage return since we're emulating the STDIN, and they expect each
-                                // line to be ended by a carriage return
-                                this.push(Buffer.from(row + '\r', 'utf-8'));
-                            }
+                        void Promise.all(buffer)
+                            .then((nodes) => {
+                                const flat = nodes.flat();
+                                if (flat.length > 0) {
+                                    // ensure all the nodes match the same structure
+                                    const parsedNodes = flat.map((n) => {
+                                        // eslint-disable-next-line security/detect-object-injection
+                                        return Object.fromEntries(cols.map((col: string) => [col, instanceToPlain(n)[col]]));
+                                    });
 
-                            callback();
-                        })
-                        .catch((e: Error) => {
-                            Logger.error(`error in generating nodes ${JSON.stringify(e)}`);
-                            callback();
-                        });
+                                    const row = Papa.unparse(parsedNodes, {
+                                        header: false,
+                                        delimiter: '|',
+                                        newline: '\r',
+                                    });
+
+                                    // you must add a carriage return since we're emulating the STDIN, and they expect each
+                                    // line to be ended by a carriage return
+                                    this.push(Buffer.from(row + '\r', 'utf-8'));
+                                }
+
+                                callback();
+                            })
+                            .catch((e: Error) => {
+                                Logger.error(`error in generating nodes ${JSON.stringify(e)}`);
+                                callback();
+                            });
+                    } else {
+                        callback();
+                    }
                 },
             });
         }
