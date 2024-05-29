@@ -290,6 +290,9 @@ async function Start(): Promise<void> {
     result = await EdgeMapper.Instance.AttachFilesForImport(importIDs);
     if (result.isError) Logger.error(`unexpected error attaching files to edges in the processing thread ${JSON.stringify(result.error)}`);
 
+    result = await EdgeMapper.Instance.BackfillIDs(importIDs);
+    if (result.isError) Logger.error(`unexpected error backfilling ids for edges in the processing thread ${JSON.stringify(result.error)}`);
+
     // set end time of imports
     void (await importRepo.setEnd(new Date(), importIDs));
 
