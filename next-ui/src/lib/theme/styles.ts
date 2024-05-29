@@ -9,6 +9,9 @@ export const Styles = {
             display: "flex",
             justifyContent: "center",
         },
+        Button: {
+            color: grey[200],
+        },
         Toolbar: {
             height: "100%",
             padding: 0,

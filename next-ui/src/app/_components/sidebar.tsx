@@ -43,7 +43,7 @@ type PropsT = {
 import { Styles } from "@/lib/theme/styles";
 
 // Theme
-import { useTheme } from "../(main)/containers/[containerID]/layout";
+import { useTheme } from "../../lib/context/ThemeProvider";
 
 export default function Sidebar(props: PropsT) {
     // Hooks

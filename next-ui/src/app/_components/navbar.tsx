@@ -1,8 +1,5 @@
 "use client";
 
-// Hooks
-import { useState } from "react";
-
 // MUI
 import { AppBar, Box, Button, Toolbar } from "@mui/material";
 

@@ -22,9 +22,6 @@ import {
 // Axios
 import axios from "axios";
 
-// Styles
-import { styles } from "@/lib/theme/styles";
-
 // Store
 import { useAppDispatch } from "@/lib/store/hooks";
 import { containerActions } from "@/lib/store/features/container/containerSlice";
