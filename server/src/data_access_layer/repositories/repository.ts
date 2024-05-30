@@ -886,6 +886,33 @@ export class Repository {
         return storage.rows<T>(query, options);
     }
 
+    raw_sql(queryOptions?: QueryOptions): string {
+        // set query options (group by, order by, offset, limit, distinct)
+        this.options(queryOptions);
+
+        const text = [
+            this._selectRoot,
+            this._query.SELECT.join(', '),
+            this._query.FROM,
+            this._query.JOINS?.join(' '),
+            this._query.WHERE?.join(' '),
+            this._query.OPTIONS?.join(' '),
+        ].join(' ');
+
+        const query = {text, values: this._query.VALUES};
+
+        // reset the filter
+        this._selectRoot = 'SELECT';
+        this._query = {
+            SELECT: [format(`%s.*`, this._tableAlias)],
+            FROM: format(`FROM %s %s`, this._tableName, this._tableAlias),
+            VALUES: [],
+        };
+        this._aliasMap.clear();
+
+        return format(query.text, query.values);
+    }
+
     findAllStreaming(queryOptions?: QueryOptions, options?: Options<any>): Promise<QueryStream> {
         const storage = new Mapper();
 

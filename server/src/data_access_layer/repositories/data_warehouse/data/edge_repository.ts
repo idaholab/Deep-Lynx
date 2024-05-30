@@ -13,6 +13,7 @@ import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
 import QueryStream from 'pg-query-stream';
 import {EdgeConnectionParameter} from '../../../../domain_objects/data_warehouse/etl/type_transformation';
 import {instanceToPlain, plainToInstance} from 'class-transformer';
+import {SnapshotGenerator} from 'deeplynx';
 
 /*
     EdgeRepository contains methods for persisting and retrieving edges
@@ -296,7 +297,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
 
     // populateFromParameters takes an edge record contains parameters and generates edges to be inserted based on those
     // filters
-    async populateFromParameters(e: Edge): Promise<Result<Edge[]>> {
+    async populateFromParameters(e: Edge, snapshot?: SnapshotGenerator): Promise<Result<Edge[]>> {
         const edges: Edge[] = [];
 
         // if we already have id's or original id's set, then return a new instance of the edge
@@ -305,7 +306,11 @@ export default class EdgeRepository extends Repository implements RepositoryInte
             return Promise.resolve(Result.Success(edges));
         }
 
-        if (e.origin_original_id && e.destination_original_id) {
+        if (
+            e.origin_original_id &&
+            e.destination_original_id &&
+            (!e.origin_parameters || e.origin_parameters.length === 0 || !e.destination_parameters || e.destination_parameters.length === 0)
+        ) {
             const originNodes = await new NodeRepository()
                 .where()
                 .containerID('eq', e.container_id)
@@ -352,29 +357,92 @@ export default class EdgeRepository extends Repository implements RepositoryInte
             return Promise.resolve(Result.Success(edges));
         }
 
-        const originNodes = await this.parametersRepoBuilder(e.container_id!, e.origin_parameters).list(false);
-        if (originNodes.isError) return Promise.resolve(Result.Pass(originNodes));
+        // if any of the parameters have the "like" filter, we have to use the old method vs. the rust snapshot
+        if (e.origin_parameters.filter((p) => p.operator === 'like').length > 0 || e.destination_parameters.filter((p) => p.operator === 'like').length > 0) {
+            const originNodes = await this.parametersRepoBuilder(e.container_id!, e.origin_parameters).list(false);
+            if (originNodes.isError) return Promise.resolve(Result.Pass(originNodes));
 
-        const destNodes = await this.parametersRepoBuilder(e.container_id!, e.destination_parameters).list(false);
-        if (destNodes.isError) return Promise.resolve(Result.Pass(destNodes));
+            const destNodes = await this.parametersRepoBuilder(e.container_id!, e.destination_parameters).list(false);
+            if (destNodes.isError) return Promise.resolve(Result.Pass(destNodes));
 
-        originNodes.value.forEach((origin) => {
-            destNodes.value.forEach((dest) => {
-                const newEdge: Edge = plainToInstance(Edge, {...instanceToPlain(e)});
-                newEdge.origin_id = origin.id;
-                newEdge.destination_id = dest.id;
+            originNodes.value.forEach((origin) => {
+                destNodes.value.forEach((dest) => {
+                    const newEdge: Edge = plainToInstance(Edge, {...instanceToPlain(e)});
+                    newEdge.origin_id = origin.id;
+                    newEdge.destination_id = dest.id;
 
-                // we need to fill in the columns that allow us to keep edges across node versions
-                newEdge.origin_data_source_id = origin.data_source_id;
-                newEdge.origin_metatype_id = origin.metatype_id;
-                newEdge.destination_data_source_id = dest.data_source_id;
-                newEdge.origin_original_id = origin.original_data_id;
-                newEdge.destination_original_id = dest.original_data_id;
-                newEdge.destination_metatype_id = dest.metatype_id;
+                    // we need to fill in the columns that allow us to keep edges across node versions
+                    newEdge.origin_data_source_id = origin.data_source_id;
+                    newEdge.origin_metatype_id = origin.metatype_id;
+                    newEdge.destination_data_source_id = dest.data_source_id;
+                    newEdge.origin_original_id = origin.original_data_id;
+                    newEdge.destination_original_id = dest.original_data_id;
+                    newEdge.destination_metatype_id = dest.metatype_id;
 
-                edges.push(newEdge);
+                    edges.push(newEdge);
+                });
             });
-        });
+        } else {
+            // use the snapshot to build the edges to insert - a backfill statement will take care off building
+            // the rest of the values later
+            try {
+                const origin_ids: string[] = await snapshot!.findNodes(JSON.stringify(e.origin_parameters));
+                const destination_ids: string[] = await snapshot!.findNodes(JSON.stringify(e.destination_parameters));
+
+                // if we have property filters, we need to basically do what we do above and filter by ids - this is
+                // because currently the rust method doesn't do more than a value match on the whole json string
+                if (
+                    e.origin_parameters.filter((p) => p.type === 'property').length > 0 ||
+                    e.destination_parameters.filter((p) => p.type !== 'property').length > 0
+                ) {
+                    let originNodes;
+                    if (origin_ids.length > 0) {
+                        originNodes = await this.parametersRepoBuilder(e.container_id!, e.origin_parameters).and().id('in', origin_ids).list(false);
+                    } else { // if no origin_ids were supplied, return an empty array
+                        originNodes = await this.parametersRepoBuilder(e.container_id!, e.origin_parameters).and().id('is null').list(false);
+                    }
+                    if (originNodes.isError) return Promise.resolve(Result.Pass(originNodes));
+
+                    let destNodes;
+                    if (destination_ids.length > 0) {
+                        destNodes = await this.parametersRepoBuilder(e.container_id!, e.destination_parameters).and().id('in', destination_ids).list(false);
+                    } else { // if no destination_ids were supplied, return an empty array
+                        destNodes = await this.parametersRepoBuilder(e.container_id!, e.destination_parameters).and().id('is null').list(false);
+                    }
+                    if (destNodes.isError) return Promise.resolve(Result.Pass(destNodes));
+
+                    originNodes.value.forEach((origin) => {
+                        destNodes.value.forEach((dest) => {
+                            const newEdge: Edge = plainToInstance(Edge, {...instanceToPlain(e)});
+                            newEdge.origin_id = origin.id;
+                            newEdge.destination_id = dest.id;
+
+                            // we need to fill in the columns that allow us to keep edges across node versions
+                            newEdge.origin_data_source_id = origin.data_source_id;
+                            newEdge.origin_metatype_id = origin.metatype_id;
+                            newEdge.destination_data_source_id = dest.data_source_id;
+                            newEdge.origin_original_id = origin.original_data_id;
+                            newEdge.destination_original_id = dest.original_data_id;
+                            newEdge.destination_metatype_id = dest.metatype_id;
+
+                            edges.push(newEdge);
+                        });
+                    });
+                } else {
+                    origin_ids.forEach((origin) => {
+                        destination_ids.forEach((dest) => {
+                            const newEdge: Edge = plainToInstance(Edge, {...instanceToPlain(e)});
+                            newEdge.origin_id = origin;
+                            newEdge.destination_id = dest;
+                            edges.push(newEdge);
+                        });
+                    });
+                }
+            } catch (e: any) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+                return Promise.resolve(Result.Failure(e));
+            }
+        }
 
         return Promise.resolve(Result.Success(edges));
     }
@@ -382,9 +450,6 @@ export default class EdgeRepository extends Repository implements RepositoryInte
     private parametersRepoBuilder(containerID: string, parameters: EdgeConnectionParameter[]): NodeRepository {
         let nodeRepo = new NodeRepository().where().containerID('eq', containerID);
 
-        // **NOTE** for now we are just going to do equality on the operators, no matter what the filter might say
-        // this is because the UI will default to equality for now and it helps cut down our calls to listing nodes
-        // which might be a considerably expensive call
         parameters.forEach((p) => {
             switch (p.type) {
                 case 'data_source': {

@@ -61,7 +61,7 @@ async function Start(): Promise<void> {
             parentPort.postMessage('done');
             return;
         } else {
-            process.exit(1);
+            process.exit(0);
         }
 
     for (let i = 0; i < workers.length; i++) {
@@ -71,7 +71,10 @@ async function Start(): Promise<void> {
 
             workers[i] = new Worker(__dirname + '/process_worker.js', {
                 workerData: {
-                    input: containerImportMap[containerID!].map((i) => i.id),
+                    input: {
+                        importIDs: containerImportMap[containerID!].map((i) => i.id),
+                        containerID: containerID!,
+                    },
                 },
             });
 
@@ -90,9 +93,9 @@ async function Start(): Promise<void> {
                         }
 
                         if (result.value.length > 0) {
-                            result.value.forEach((j) => {
+                            for (const j of result.value) {
                                 containerImportMap[j.container_id!] ? containerImportMap[j.container_id!].push(j) : (containerImportMap[j.container_id!] = [j]);
-                            });
+                            }
 
                             containerIDs.push(...Object.keys(containerImportMap));
                         }
@@ -103,15 +106,20 @@ async function Start(): Promise<void> {
                     .finally(() => {
                         if (containerIDs.length > 0) {
                             const nextContainerID = containerIDs.pop();
-                            incompleteContainerIDs.push(containerID);
+                            if (nextContainerID && containerImportMap[nextContainerID]) {
+                                incompleteContainerIDs.push(nextContainerID);
 
-                            workers[i] = new Worker(__dirname + '/process_worker.js', {
-                                workerData: {
-                                    input: containerImportMap[nextContainerID!].map((i) => i.id),
-                                },
-                            });
+                                workers[i] = new Worker(__dirname + '/process_worker.js', {
+                                    workerData: {
+                                        input: {
+                                            importIDs: containerImportMap[nextContainerID].map((i) => i.id),
+                                            containerID: nextContainerID,
+                                        },
+                                    },
+                                });
 
-                            workers[i].on('exit', exitFunc);
+                                workers[i].on('exit', exitFunc);
+                            }
                         }
 
                         if (incompleteContainerIDs.length === 0) {

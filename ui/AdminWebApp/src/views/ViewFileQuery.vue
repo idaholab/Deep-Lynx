@@ -116,7 +116,7 @@ interface FilesDialogModel {
   fileLoading: boolean;
   addFileDialog: boolean;
   errorMessage: string;
-  datasourceID?: string;
+  datasourceID: string | null;
   files: FileT[];
   copy: string;
   imageViewers: Map<string, Viewer>;
@@ -138,7 +138,7 @@ export default Vue.extend({
     addFileDialog: false,
     errorMessage: "",
     files: [],
-    datasourceID: "",
+    datasourceID: null,
     copy: mdiFileDocumentMultiple,
     imageViewers: new Map(),
     dataSourceCompleted: false,
@@ -153,7 +153,7 @@ export default Vue.extend({
       this.loadFiles();
     },
     setDataSourceID(dataSource: DataSourceT) {
-      this.datasourceID = dataSource.id;
+      this.datasourceID = dataSource.id!;
     },
     generateThumbnail(file: FileT) {
       const imageElm = document.getElementById(file.file_name);

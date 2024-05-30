@@ -12,7 +12,7 @@ pub struct Configuration {
 }
 
 impl Configuration {
-  pub fn new(path: Option<String>) -> Result<Configuration, DeepLynxError> {
+  pub fn from_path(path: Option<String>) -> Result<Configuration, DeepLynxError> {
     let path = path.unwrap_or("./.config.yml".to_string());
 
     let config_file = File::open(path)?;
@@ -20,4 +20,12 @@ impl Configuration {
 
     Ok(config)
   }
+    
+    pub fn from_connection_string(db_connection_string: String) -> Result<Configuration, DeepLynxError> {
+        Ok(Configuration{
+            db_connection_string: Some(db_connection_string),
+            redis_connection_string: None,
+            max_columns: None
+        })
+    } 
 }

@@ -63,3 +63,22 @@ export class RedisGraphLoader {
   init(config: Configuration): Promise<void>
   generateRedisGraph(containerId: string, timestamp?: string | undefined | null, ttl?: number | undefined | null): Promise<string>
 }
+export type JsSnapshotGenerator = SnapshotGenerator
+export class SnapshotGenerator {
+  constructor()
+  /**
+   * # Safety
+   *
+   * This function should be called before any work done on the object
+   * This generates the node snapshot dataframe and stores it on the SnapshotGenerator instance. This
+   * MUST be run before you attempt to find any nodes.
+   */
+  init(config: Configuration, containerId: string, timestamp?: string | undefined | null): Promise<void>
+  /**
+   * Find all the nodes that match a given set of parameters. Parameters must be EdgeParameters passed
+   * in as JSON in order to handle the fact that the value could be any valid JSON data-type. This function
+   * returns only the _database_ ids of the matching nodes - this is in order to avoid expensive serialization
+   * across the border.
+   */
+  findNodes(parametersJson: string): Promise<Array<string>>
+}
