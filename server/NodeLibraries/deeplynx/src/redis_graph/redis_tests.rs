@@ -8,7 +8,7 @@ mod main_tests {
     #[tokio::test]
     #[serial]
     async fn test_redis_graph_load() -> Result<(), RedisLoaderError> {
-        let redis_loader = RedisGraphLoader::new(Configuration::new(None).unwrap()).await?;
+        let redis_loader = RedisGraphLoader::new(Configuration::from_path(None).unwrap()).await?;
 
         // TODO: make sure you change this for an existing DeepLynx container in the db
         // no way I was going to try and recreate a graph simply for this test

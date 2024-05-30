@@ -14,4 +14,5 @@ pub mod redis_graph;
 pub mod shape_hasher;
 pub mod errors;
 mod config;
+mod snapshot;
 

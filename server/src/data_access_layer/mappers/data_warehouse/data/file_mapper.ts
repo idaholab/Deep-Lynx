@@ -75,6 +75,13 @@ export default class FileMapper extends Mapper {
         });
     }
 
+    public async RetrieveNodeByID(id: string, transaction?: PoolClient): Promise<Result<File>> {
+        return super.retrieve<File>(this.retrieveNodeByIdStatement(id), {
+            transaction,
+            resultClass: this.resultClass,
+        });
+    }
+
     public async DomainRetrieve(id: string, containerID: string): Promise<Result<File>> {
         return super.retrieve<File>(this.domainRetrieveStatement(id, containerID), {resultClass: this.resultClass});
     }
@@ -229,6 +236,13 @@ export default class FileMapper extends Mapper {
     private retrieveByIdStatement(id: string): QueryConfig {
         return {
             text: `SELECT * FROM files WHERE id = $1`,
+            values: [id],
+        };
+    }
+
+    private retrieveNodeByIdStatement(id: string): QueryConfig {
+        return {
+            text: `SELECT * FROM node_files WHERE file_id = $1`,
             values: [id],
         };
     }

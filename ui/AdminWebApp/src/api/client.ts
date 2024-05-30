@@ -706,6 +706,11 @@ export class Client {
         return this.get<FileT[]>(`/containers/${containerID}/graphs/nodes/${nodeID}/files`);
     }
 
+    listContainerFiles(containerID: string): Promise<FileT[]> {
+        return this.get<FileT[]>(`/containers/${containerID}/files`);
+    }
+
+
     listEdgesForNodeIDs(containerID: string, nodeIDS: string[], options: {[key: string]: any}): Promise<EdgeT[]> {
         const query: {[key: string]: any} = {};
         if (options.pointInTime) query.pointInTime = options.pointInTime;

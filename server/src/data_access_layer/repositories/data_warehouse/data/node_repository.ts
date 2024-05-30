@@ -389,7 +389,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
         return Promise.resolve(Result.Success(out));
     }
 
-    id(operator: string, value: any) {
+    id(operator: string, value?: any) {
         super.query('id', operator, value);
         return this;
     }
@@ -484,6 +484,13 @@ export default class NodeRepository extends Repository implements RepositoryInte
 
         this.reset();
         return Promise.resolve(Result.Success(results.value));
+    }
+
+    raw_sql(queryOptions?: QueryOptions): string {
+        const results = super.raw_sql(queryOptions);
+
+        this.reset();
+        return results;
     }
 
     // note that listStreaming and listAllToFile will not automatically fill in the metatype information apart from the

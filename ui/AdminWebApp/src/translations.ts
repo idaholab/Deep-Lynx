@@ -862,8 +862,10 @@ export default {
             nameMissing: 'Name Missing',
             nodeContaining: "Node containing Label '",
             labelNotFound: "' not found",
+            data: "Data",
             viewer: 'Data Viewer',
             viewerDescription: 'Query and Edit Data',
+            fileViewer: 'File Viewer',
             // the following are component names and are dynamically translated,
             // which is why they are capitalized
             FilterDataSource: 'Filter by Data Source',
@@ -895,6 +897,7 @@ export default {
             createSet: 'Create New File Set',
             webGL: 'WebGL Files',
             attached: 'Attached Files',
+            container: 'Container Files',
             add: 'Add File',
             selectToUpload: 'Select File(s) to Upload',
             name: 'File Name',
@@ -902,6 +905,7 @@ export default {
             file: 'File',
             fileSize: 'File Size (KB)',
             files: 'Files',
+            chooseSource: "Select Data Source to upload a File"
         },
         modelExplorer: {
             title: '2D/3D Model Explorer',
