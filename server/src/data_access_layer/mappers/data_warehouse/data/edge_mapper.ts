@@ -123,6 +123,11 @@ export default class EdgeMapper extends Mapper {
         return super.runStatement(this.attachFilesForImport(importIDs));
     }
 
+    // Backfill ids based on Origin and Destination Node IDs
+    public BackfillIDs(importIDs: string[]): Promise<Result<boolean>> {
+        return super.runStatement(this.backfillIDs(importIDs));
+    }
+
     // we wrap this in a transaction
     public MoveFromTemp(importIDs: string[]): Promise<Result<boolean>> {
         return super.runAsTransaction(this.deduplicateFromTemp(importIDs), this.moveFromTemp(importIDs), this.deleteFromTemp(importIDs));
@@ -356,8 +361,8 @@ export default class EdgeMapper extends Mapper {
             INSERT INTO edge_tags
             SELECT edges.id, tags.id
             FROM edges 
-                     LEFT JOIN type_mapping_transformations ts ON ts.id = edges.type_mapping_transformation_id
-                     LEFT JOIN tags ON tags.id IN (SELECT id::bigint FROM jsonb_to_recordset(ts.tags) AS x("id" text))
+                INNER JOIN type_mapping_transformations ts ON ts.id = edges.type_mapping_transformation_id
+                INNER JOIN tags ON tags.id IN (SELECT id::bigint FROM jsonb_to_recordset(ts.tags) AS x("id" text))
             WHERE edges.import_data_id IN (%L)`;
         const values = [...importIDs];
 
@@ -369,10 +374,30 @@ export default class EdgeMapper extends Mapper {
             INSERT INTO edge_files
             SELECT edges.id, files.id
             FROM edges 
-                     LEFT JOIN data_staging ON data_staging.id = edges.data_staging_id
-                     LEFT JOIN data_staging_files ON data_staging_files.data_staging_id = data_staging.id
-                     LEFT JOIN files ON files.id = data_staging_files.file_id
+                INNER JOIN data_staging ON data_staging.id = edges.data_staging_id
+                INNER JOIN data_staging_files ON data_staging_files.data_staging_id = data_staging.id
+                INNER JOIN files ON files.id = data_staging_files.file_id
             WHERE edges.import_data_id IN (%L)`;
+        const values = [...importIDs];
+
+        return format(text, values);
+    }
+
+    private backfillIDs(importIDs: string[]): string {
+        const text = `
+            UPDATE edges e
+            SET
+                origin_original_id = o.original_data_id,
+                origin_metatype_id = o.metatype_id,
+                origin_data_source_id = o.data_source_id,
+                destination_original_id = d.original_data_id,
+                destination_metatype_id = d.metatype_id,
+                destination_data_source_id = d.data_source_id
+            FROM
+                nodes o, nodes d
+            WHERE
+                e.origin_id = o.id AND e.destination_id = d.id
+            AND e.import_data_id IN (%L);`;
         const values = [...importIDs];
 
         return format(text, values);

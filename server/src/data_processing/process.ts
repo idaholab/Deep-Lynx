@@ -17,6 +17,7 @@ import {classToPlain} from 'class-transformer';
 import {MappingTag} from '../domain_objects/data_warehouse/etl/type_transformation';
 import TagMapper from '../data_access_layer/mappers/data_warehouse/data/tag_mapper';
 import EdgeRepository from '../data_access_layer/repositories/data_warehouse/data/edge_repository';
+import {SnapshotGenerator} from 'deeplynx';
 
 export type NodeTagAttachment = {
     tags: MappingTag[];
@@ -475,7 +476,7 @@ export async function GenerateNodes(...staging: DataStaging[]): Promise<Node[]> 
     );
 }
 
-export async function GenerateEdges(...staging: DataStaging[]): Promise<Edge[]> {
+export async function GenerateEdges(snapshot: SnapshotGenerator, ...staging: DataStaging[]): Promise<Edge[]> {
     const stagingRepo = new DataStagingRepository();
     const mappingRepo = new TypeMappingRepository();
 
@@ -576,7 +577,7 @@ export async function GenerateEdges(...staging: DataStaging[]): Promise<Edge[]> 
 
     const finishedEdges: Edge[] = [];
     for (const rawEdge of rawEdges) {
-        const edges = await new EdgeRepository().populateFromParameters(rawEdge);
+        const edges = await new EdgeRepository().populateFromParameters(rawEdge, snapshot);
         if (edges.isError) {
             Logger.error(`unable to create edges from parameters: ${edges.error?.error}`);
             continue;

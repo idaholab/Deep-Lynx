@@ -173,10 +173,6 @@ export default class TypeMappingRepository extends Repository implements Reposit
             }
         }
 
-        if (t.active) {
-            await DataStagingMapper.Instance.SendToQueue(t.data_source_id!, t.shape_hash);
-        }
-
         await this.deleteCached(t);
         return Promise.resolve(Result.Success(true));
     }
@@ -382,7 +378,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
                         const saved = await this.save(mapping, user, true);
 
                         // on failure, we return the original, unmodified mapping for review
-                        if (saved.isError) resolve(Result.Failure(saved.error?.error!, 500, mappings[index]));
+                        if (saved.isError) resolve(Result.Failure(saved.error?.error, 500, mappings[index]));
 
                         resolve(Result.Success(mapping));
                     } catch (e: any) {

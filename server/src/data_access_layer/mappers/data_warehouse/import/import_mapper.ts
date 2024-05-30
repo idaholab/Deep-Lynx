@@ -258,7 +258,11 @@ export default class ImportMapper extends Mapper {
     private retrieveStatement(logID: string): QueryConfig {
         return {
             text: `SELECT imports.*,
-                SUM(CASE WHEN data_staging.inserted_at <> NULL AND data_staging.import_id = imports.id THEN 1 ELSE 0 END) AS records_inserted,
+                SUM(CASE WHEN (data_staging.inserted_at IS NOT NULL 
+                    OR data_staging.nodes_processed_at IS NOT NULL
+                    OR data_staging.edges_processed_at IS NOT NULL)
+                    AND data_staging.import_id = imports.id 
+                    THEN 1 ELSE 0 END) AS records_inserted,
                 SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records
             FROM imports
                 LEFT JOIN data_staging ON data_staging.import_id = imports.id 
@@ -315,12 +319,19 @@ export default class ImportMapper extends Mapper {
         if (excludeContainers && excludeContainers.length > 0) {
             const text = `SELECT imports.*, data_sources.container_id,
                           pg_advisory_lock(data_sources.container_id),
-                          SUM(CASE WHEN data_staging.inserted_at <> NULL AND data_staging.import_id = imports.id THEN 1 ELSE 0 END) AS records_inserted,
+                          SUM(CASE WHEN (data_staging.inserted_at IS NOT NULL 
+                            OR data_staging.nodes_processed_at IS NOT NULL
+                            OR data_staging.edges_processed_at IS NOT NULL)
+                            AND data_staging.import_id = imports.id 
+                            THEN 1 ELSE 0 END) AS records_inserted,
                           SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records
                    FROM imports
                    LEFT JOIN data_staging ON data_staging.import_id = imports.id
                    LEFT JOIN data_sources ON data_sources.id = imports.data_source_id
-                     WHERE EXISTS (SELECT * FROM data_staging WHERE data_staging.import_id = imports.id AND data_staging.inserted_at IS NULL)
+                     WHERE EXISTS (SELECT * FROM data_staging WHERE data_staging.import_id = imports.id 
+                                    AND data_staging.inserted_at IS NULL
+                                    AND data_staging.nodes_processed_at IS NULL
+                                    AND data_staging.edges_processed_at IS NULL)
                      AND EXISTS(SELECT * FROM data_staging WHERE data_staging.import_id = imports.id)
                      AND data_sources.container_id NOT IN(%L)
                    GROUP BY imports.id, container_id
@@ -333,12 +344,19 @@ export default class ImportMapper extends Mapper {
         } else {
             const text = `SELECT imports.*, data_sources.container_id,
                           pg_advisory_lock(data_sources.container_id),
-                          SUM(CASE WHEN data_staging.inserted_at <> NULL AND data_staging.import_id = imports.id THEN 1 ELSE 0 END) AS records_inserted,
+                          SUM(CASE WHEN (data_staging.inserted_at IS NOT NULL 
+                            OR data_staging.nodes_processed_at IS NOT NULL
+                            OR data_staging.edges_processed_at IS NOT NULL)
+                            AND data_staging.import_id = imports.id 
+                            THEN 1 ELSE 0 END) AS records_inserted,
                           SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records
                    FROM imports
                    LEFT JOIN data_staging ON data_staging.import_id = imports.id
                    LEFT JOIN data_sources ON data_sources.id = imports.data_source_id
-                     WHERE EXISTS (SELECT * FROM data_staging WHERE data_staging.import_id = imports.id AND data_staging.inserted_at IS NULL)
+                     WHERE EXISTS (SELECT * FROM data_staging WHERE data_staging.import_id = imports.id 
+                                    AND data_staging.inserted_at IS NULL
+                                    AND data_staging.nodes_processed_at IS NULL
+                                    AND data_staging.edges_processed_at IS NULL)
                      AND EXISTS(SELECT * FROM data_staging WHERE data_staging.import_id = imports.id)
                    GROUP BY imports.id, container_id
                    ORDER BY imports.created_at ASC

@@ -17,7 +17,7 @@ profile-logs
 /src/http_server/authentication/saml/localhost.cert
 /src/http_server/authentication/saml/localhost.xml
 /tools/ontology_extractor/diamond.owl
-/private-key.pem
+**/private-key.pem
 /private-key.key
 /public-key.pem
 /server/src/tests/test-data.json
@@ -33,8 +33,8 @@ profile-logs
 /NodeLibraries/dl-fast-load/index.node
 /RedisLoader/target/
 /RedisLoader/RedisLoader.iml
-/AdminWebApp/src/**/*.js
-/AdminWebApp/src/**/*.js.map
+*/AdminWebApp/src/**/*.js
+*/AdminWebApp/src/**/*.js.map
 /NodeLibraries/dl-fast-load/build-output.txt
 /NodeLibraries/deeplynx-timeseries/
 /NodeLibraries/redis-graph-loader/
@@ -56,14 +56,14 @@ devenv.local.nix
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
-/public-key.pem
+**/public-key.pem
 /yarn-error.log
 /.yarn/
 /server/public-key.pem
 /server/private-key.pem
 /server/.yarn/
 /CAINLROOT.cer
-# ignore artifacts of rust modules both pre- and post- switch- 
+# ignore artifacts of rust modules both pre- and post- switch-
 # this will make branch switching easier for existing branches
 # during the transition period
 /server/NodeLibraries/deeplynx/Cargo.lock
