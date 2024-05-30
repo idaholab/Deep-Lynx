@@ -4,7 +4,6 @@
 import useSWR from "swr";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useContainer } from "../../layout";
 
 // Types
 import { NodeT } from "@/lib/types";
@@ -31,6 +30,9 @@ import axios from "axios";
 // Store
 import { useAppSelector } from "@/lib/store/hooks";
 
+// Translations
+import translations from "@/lib/translations";
+
 type Props = {
     nodes: NodeT[];
 };
@@ -52,16 +54,14 @@ const SelectFile = (props: Props) => {
     return (
         <>
             <Typography variant="body2">
-                Select a file attached to a node in DeepLynx, and transform it
-                into an interactive model.
+                {translations.en.modelExplorer.instructions.select}
                 <br />
                 <br />
-                Behind the scenes, a DeepLynx module extracts metadata from the
-                geometry in your model, and transforms the geometry into a .glb.
+                {translations.en.modelExplorer.instructions.explainer}
                 <br />
                 <br />
                 <Typography variant="caption">
-                    Supported file extensions are: <b>{supportedFileTypes}</b>
+                    {translations.en.modelExplorer.instructions.fileExtensions}
                 </Typography>
             </Typography>
             <br />

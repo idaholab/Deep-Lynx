@@ -31,6 +31,9 @@ import {
 // Axios
 import axios from "axios";
 
+// Translations
+import translations from "@/lib/translations";
+
 // Development only
 const files = [
     {
@@ -109,18 +112,23 @@ const ModelViewer = () => {
                     {tab === "upload" ? (
                         <>
                             <Typography variant="body2">
-                                Upload a file to DeepLynx, and transform it into
-                                an interactive model.
+                                {
+                                    translations.en.modelExplorer.instructions
+                                        .upload
+                                }
                                 <br />
                                 <br />
-                                Behind the scenes, a DeepLynx module extracts
-                                metadata from the geometry in your model, and
-                                transforms the geometry into a .glb.
+                                {
+                                    translations.en.modelExplorer.instructions
+                                        .explainer
+                                }
                                 <br />
                                 <br />
                                 <Typography variant="caption">
-                                    Supported file extensions are:{" "}
-                                    <b>{supportedFileTypes}</b>
+                                    {
+                                        translations.en.modelExplorer
+                                            .instructions.fileExtensions
+                                    }
                                 </Typography>
                             </Typography>
                             <br />
