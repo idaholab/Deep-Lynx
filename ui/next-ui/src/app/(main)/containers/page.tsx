@@ -52,9 +52,6 @@ const ContainerSelect = () => {
     const handleContainer = (event: SelectChangeEvent) => {
         setContainer(event.target.value);
     };
-    const handleTailwindContainer = (event: ChangeEvent) => {
-        setContainer((event.target as HTMLInputElement).value);
-    };
 
     return (
         <>
