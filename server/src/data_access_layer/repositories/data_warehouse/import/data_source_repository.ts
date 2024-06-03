@@ -239,8 +239,6 @@ export default class DataSourceRepository extends Repository implements Reposito
             const set = await this.#mapper.SetActive(t.DataSourceRecord.id, user.id!);
             if (set.isError) return Promise.resolve(Result.Pass(set));
 
-            await DataStagingMapper.Instance.SendToQueue(t.DataSourceRecord.id);
-
             return Promise.resolve(Result.Success(true));
         } else return Promise.resolve(Result.Failure(`data source's record must be instantiated and have an id`));
     }
@@ -393,16 +391,10 @@ export default class DataSourceRepository extends Repository implements Reposito
 // to take data source records and generate data source interfaces from them.
 export class DataSourceFactory {
     async fromDataSourceRecord(
-        sourceRecord: DataSourceRecord
+        sourceRecord: DataSourceRecord,
     ): Promise<
-        | StandardDataSourceImpl
-        | HttpDataSourceImpl
-        | AvevaDataSourceImpl
-        | TimeseriesDataSourceImpl
-        | P6DataSourceImpl
-        | CustomDataSourceImpl
-        | undefined
-        > {
+        StandardDataSourceImpl | HttpDataSourceImpl | AvevaDataSourceImpl | TimeseriesDataSourceImpl | P6DataSourceImpl | CustomDataSourceImpl | undefined
+    > {
         switch (sourceRecord.adapter_type) {
             case 'http': {
                 return Promise.resolve(new HttpDataSourceImpl(sourceRecord));

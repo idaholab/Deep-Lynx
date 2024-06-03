@@ -45,17 +45,41 @@
               }}</v-list-item-title>
             </v-list-item-content>
           </v-list-item>
-          <v-list-item
-            link
-            v-if="$auth.Auth('data', 'write', containerID)"
-            @click="setActiveComponent('data-query')"
-            :input-value="currentMainComponent === 'ViewDataQuery'"
-            :ripple="{ class: 'list-ripple' }"
-          >
-            <v-list-item-content>
-              <v-list-item-title>{{ $t("query.viewer") }}</v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
+
+          <v-list-group :value="false" dense :ripple="{ class: 'list-ripple' }">
+            <template v-slot:activator>
+              <v-list-item-title>{{ $t("query.data") }}</v-list-item-title>
+            </template>
+
+            <v-list-item
+              two-line
+              link
+              v-if="$auth.Auth('data', 'write', containerID)"
+              @click="setActiveComponent('data-query')"
+              :input-value="currentMainComponent === 'ViewDataQuery'"
+              :ripple="{ class: 'list-ripple' }"
+            >
+              <v-list-item-content>
+                <v-list-item-title>{{ $t("query.viewer") }}</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+
+            <v-list-item
+              two-line
+              link
+              v-if="$auth.Auth('data', 'write', containerID)"
+              @click="setActiveComponent('file-query')"
+              :input-value="currentMainComponent === 'NodeFilesDialog'"
+              :ripple="{ class: 'list-ripple' }"
+            >
+              <v-list-item-content>
+                <v-list-item-title>{{
+                  $t("query.fileViewer")
+                }}</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list-group>
+
           <v-list-group :value="false" dense :ripple="{ class: 'list-ripple' }">
             <template v-slot:activator>
               <v-list-item-title>{{
@@ -799,6 +823,8 @@ import ViewContainerExport from "@/views/ViewContainerExport.vue";
 import ViewContainerImport from "@/views/ViewContainerImport.vue";
 import ViewFileManager from "@/views/ViewFileManager.vue";
 import ViewOverviewGraph from "@/views/ViewOverviewGraph.vue";
+import ViewFileQuery from "@/views/ViewFileQuery.vue";
+
 const packageJson = require("../../../../server/package.json");
 
 interface HomeModel {
@@ -844,6 +870,7 @@ export default Vue.extend({
     ViewContainerImport,
     ViewFileManager,
     ViewOverviewGraph,
+    ViewFileQuery,
   },
 
   props: {
@@ -936,6 +963,13 @@ export default Vue.extend({
           this.currentMainComponent = "ViewDataQuery";
           this.componentName = this.$t("query.viewer");
           this.$router.replace(`/containers/${this.containerID}/data-query`);
+          break;
+        }
+
+        case "file-query": {
+          this.currentMainComponent = "ViewFileQuery";
+          this.componentName = this.$t("query.fileViewer");
+          this.$router.replace(`/containers/${this.containerID}/files`);
           break;
         }
 

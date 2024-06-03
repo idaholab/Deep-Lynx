@@ -165,68 +165,6 @@ export default class DataStagingMapper extends Mapper {
         return super.runAsTransaction(this.deleteDataOlderThanRetention());
     }
 
-    // this sends all data staging records for a given data source and potentially a type mapping shape hashe to the queue to be
-    // processed - this is mainly used in the reactive type mapping process
-    public async SendToQueue(dataSourceID: string, shapehash?: string): Promise<Result<boolean>> {
-        // now we stream process this part because we might have a large number of
-        // records, and we really don't want to read that into memory - we also don't wait
-        // for this to complete as it could take a night and a day
-        const queue = await QueueFactory();
-        void PostgresAdapter.Instance.Pool.connect((err, client, done) => {
-            const stream = client.query(new QueryStream(this.listForQueue(dataSourceID, shapehash)));
-            let putPromises: Promise<boolean>[] = [];
-
-            class transform extends Transform {
-                constructor() {
-                    super({
-                        objectMode: true,
-                        transform(data: any, encoding: BufferEncoding, callback: TransformCallback) {
-                            const staging = plainToClass(DataStaging, data as object);
-
-                            putPromises.push(queue.Put(Config.process_queue, staging));
-
-                            // check the buffer, await if needed
-                            if (putPromises.length > 500) {
-                                const buffer = [...putPromises];
-                                putPromises = [];
-                                void Promise.all(buffer)
-                                    .catch((e) => {
-                                        Logger.error(`error while awaiting put promises ${JSON.stringify(e)}`);
-                                        callback(e, null);
-                                    })
-                                    .finally(() => {
-                                        callback(null, staging);
-                                    });
-                            } else {
-                                callback(null, staging);
-                            }
-                        },
-                    });
-                }
-            }
-
-            const emitterStream = new transform();
-
-            emitterStream.on('end', () => {
-                done();
-            });
-
-            emitterStream.on('error', (e: Error) => {
-                Logger.error(`unexpected error in emitting records to processing thread ${JSON.stringify(e)}`);
-            });
-
-            stream.on('error', (e: Error) => {
-                Logger.error(`unexpected error in emitting records to processing thread ${JSON.stringify(e)}`);
-            });
-
-            // we pipe to devnull because we need to trigger the stream and don't
-            // care where the data ultimately ends up
-            stream.pipe(emitterStream).pipe(devnull({objectMode: true}));
-        });
-
-        return Promise.resolve(Result.Success(true));
-    }
-
     // we must also vacuum as part of the data retention delete, but you can't run vacuum as part of a transaction
     // so we pull it out into its own statement
     public Vacuum(): Promise<Result<boolean>> {
