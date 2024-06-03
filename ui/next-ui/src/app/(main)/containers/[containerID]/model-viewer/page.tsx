@@ -79,13 +79,9 @@ const ModelViewer = () => {
     const container: ContainerT = useContainer();
 
     // Hooks
-    const [nodes, setNodes] = useState<NodeT[]>();
-    const [file, setFile] = useState();
+    const [nodes, setNodes] = useState<NodeT[]>([]);
+    const [files, setFiles] = useState<FileT[]>([]);
     const [tab, setTab] = useState<string>("upload");
-    const { data, error, isLoading } = useSWR(
-        ["/api/containers/graphs/nodes", container.id],
-        fetcher
-    );
 
     // Handlers
     const handleTab = (event: React.SyntheticEvent, tab: string) => {
@@ -94,10 +90,18 @@ const ModelViewer = () => {
     function handleFile(event: SelectChangeEvent) {}
 
     useEffect(() => {
-        if (data) {
-            setNodes(data);
+        async function fetchNodes() {
+            let nodes = await fetch(
+                `/api/containers/${container.id}/graphs/nodes`
+            ).then((response) => {
+                return response.json();
+            });
+
+            setNodes(nodes);
         }
-    }, [data]);
+
+        fetchNodes();
+    }, []);
 
     return (
         <>
@@ -142,7 +146,11 @@ const ModelViewer = () => {
                     ) : null}
                     {tab === "select" ? (
                         nodes ? (
-                            <SelectFile nodes={nodes} />
+                            <SelectFile
+                                nodes={nodes}
+                                files={files}
+                                setFiles={setFiles}
+                            />
                         ) : null
                     ) : null}
                 </Box>

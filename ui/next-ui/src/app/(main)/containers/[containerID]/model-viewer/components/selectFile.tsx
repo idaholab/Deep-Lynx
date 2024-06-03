@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 // Types
-import { NodeT } from "@/lib/types";
+import { NodeT, FileT } from "@/lib/types";
 import { SelectChangeEvent, Typography } from "@mui/material";
 
 // MUI
@@ -32,23 +32,60 @@ import { useAppSelector } from "@/lib/store/hooks";
 
 // Translations
 import translations from "@/lib/translations";
+import { useContainer } from "@/lib/context/ContainerProvider";
 
 type Props = {
     nodes: NodeT[];
+    files: FileT[];
+    setFiles: Function;
 };
 
 // These are file types that Pythagoras presently knows how to transform into .glb
 const supportedFileTypes =
     ".ipt, .rvt, .stp, .step, .stpz, .stepz, .stpx, .stpxz";
 
+const fetcher = (
+    params: [url: string, containerId: string, nodeId: string]
+) => {
+    const [url, containerId, nodeId] = params;
+
+    const res = axios
+        .get(url, { params: { containerId: containerId, nodeId: nodeId } })
+        .then((res) => {
+            return res.data.value;
+        });
+
+    return res;
+};
+
 const SelectFile = (props: Props) => {
     // Hooks
-    const [node, setNode] = useState<string>("");
-    useEffect(() => {}, [node]);
+    const [node, setNode] = useState<NodeT>({ id: "" } as NodeT);
+    const [file, setFile] = useState<FileT>({ id: "" } as FileT);
+    const container = useContainer();
+
+    useEffect(() => {
+        async function fetchFiles() {
+            let files = await fetch(
+                `/api/containers/${container.id}/graphs/nodes/${node.id}/files`
+            ).then((response) => {
+                return response.json();
+            });
+            props.setFiles(files.value);
+        }
+
+        if (node.id) {
+            fetchFiles();
+            console.log(props.files);
+        }
+    }, [node]);
 
     // Handlers
     const handleNode = (event: SelectChangeEvent) => {
-        setNode(event.target.value);
+        setNode(props.nodes.find((node) => node.id === event.target.value)!);
+    };
+    const handleFile = (event: SelectChangeEvent) => {
+        setFile(props.files.find((file) => file.id === event.target.value)!);
     };
 
     return (
@@ -69,9 +106,9 @@ const SelectFile = (props: Props) => {
                 <InputLabel id="Node Select">Nodes</InputLabel>
                 <Select
                     labelId="Node Select"
-                    id="/model-viewer/components/SelectFile"
+                    id="/model-viewer/components/SelectFile/node"
                     label="Nodes"
-                    value={node}
+                    value={node.id}
                     onChange={handleNode}
                 >
                     {props.nodes
@@ -85,6 +122,30 @@ const SelectFile = (props: Props) => {
                         : null}
                 </Select>
             </FormControl>
+            <br />
+            <br />
+            {node.id ? (
+                <FormControl fullWidth>
+                    <InputLabel id="Node Select">Files</InputLabel>
+                    <Select
+                        labelId="Node Select"
+                        id="/model-viewer/components/SelectFile/file"
+                        label="Nodes"
+                        value={file.id}
+                        onChange={handleFile}
+                    >
+                        {props.files
+                            ? props.files.map((file: FileT) => {
+                                  return (
+                                      <MenuItem key={file.id} value={file.id}>
+                                          {JSON.stringify(file)}
+                                      </MenuItem>
+                                  );
+                              })
+                            : null}
+                    </Select>
+                </FormControl>
+            ) : null}
         </>
     );
 };
