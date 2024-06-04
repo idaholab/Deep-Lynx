@@ -19,7 +19,7 @@ profile-logs
 /tools/ontology_extractor/diamond.owl
 **/private-key.pem
 /private-key.key
-**/public-key.pem
+/public-key.pem
 /server/src/tests/test-data.json
 /server/src/tests/test-data.csv
 /server/src/tests/*.csv
@@ -70,6 +70,6 @@ devenv.local.nix
 /server/NodeLibraries/deeplynx/target
 /server/NodeLibraries/deeplynx/*.node
 
-**/NodeLibraries/deeplynx/Cargo.lock
-**/NodeLibraries/deeplynx/target
-**/NodeLibraries/deeplynx/*.node
+/NodeLibraries/deeplynx/Cargo.lock
+/NodeLibraries/deeplynx/target
+/NodeLibraries/deeplynx/*.node

@@ -230,6 +230,7 @@ describe('A Node Repository', async () => {
             expect(node.properties).to.have.deep.property('flower_name', 'Violet');
         });
 
+
         // check composite id bulk save
         const originalID1 = mixed[0].id;
         const originalID2 = mixed[1].id;
