@@ -58,7 +58,6 @@ These instructions build out the legacy node.js backend and the UI for DeepLynx.
 
 - **Required** - PostgreSQL ^12.x
 - **Required** - `pg-crypto` Postgres extension (automatically included with Postgres > 12 and in the Docker images)
-- [TimescaleDB Postgres Extension](https://www.timescale.com/) - needed for raw data retention and time-series data
 
 You must follow these steps in the exact order given. Failure to do so will cause DeepLynx to either fail to launch, or launch with problems.
 
@@ -66,15 +65,15 @@ You must follow these steps in the exact order given. Failure to do so will caus
 
 2. Clone the DeepLynx [repository](https://github.inl.gov/Digital-Engineering/DeepLynx/tree/main).
 
-3. Navigate to `server/legacy`.
+3. Navigate to the `server` directory.
 
 4. Run `yarn install` to set up all the node library dependencies.
 
 5. Copy and rename `.env-sample` to `.env`.
 
-6. Update `.env` file. See the `readme` or comments in the file itself for details. The main setting people usually change is setting `TIMESCALEDB_ENABLED=true` if they plan on ever working with time-series data.
+6. Update `.env` file. See the `readme` or comments in the file itself for details.
 
-7. To build the database using docker, follow step **a**. To use a dedicated PostgreSQL database, follow step **b**. Then continue to step 7.   
+7. To build a dockerized PostgreSQL database, follow step **a**. To use a native PostgreSQL database, follow step **b**. Then continue to step 8.   
 
 - 7a) Building the database using Docker:  
      - Ensure Docker is installed. You can find the download here: https://www.docker.com/products/docker-desktop.  
@@ -82,14 +81,13 @@ You must follow these steps in the exact order given. Failure to do so will caus
      - Mac users may need to create the directory to mount to the docker container at `/private/var/lib/docker/basedata`. If this directory does not exist, please create it (you may need to use `sudo` as in `sudo mkdir /private/var/lib/docker/basedata`).  
      - Verify that image is properly created. See the screenshot below from Docker Desktop.
 ![image](uploads/e1d906d0399b1e4f890bf61035e5b64c/image.png)
-     - Run `npm run docker:postgres:run` to run the created docker image (For Mac users, there is an alternative command `npm run mac:docker:postgres:run`).  
-     - **Alternatively** you may use `npm run docker:timescale:run` (`npm run mac:docker:timescale:run` for Mac)to run a Postgres Docker image with the TimescaleDB extension already installed - to use TimescaleDB change the `.env` environment variable `TIMESCALEDB_ENABLED` to be `true`
+     - Run `npm run docker:postgres:run` to run the created docker image (For Mac users, there is an alternative command `npm run mac:docker:postgres:run`).
 - 7b) Building the database using a dedicated PostgreSQL database:  
      - Ensure PostgreSQL is installed. You can find the download here: https://www.postgresql.org/download/. Please see [this page](DeepLynx-Requirements) for the latest requirements on PostgreSQL version.  
      - Run pgAdmin and create a new database. The database name should match whatever value is provided in the `CORE_DB_CONNECTION_STRING` of the `.env` file. The default value is `deep_lynx`.  
      - Ensure a user has been created that also matches the `CORE_DB_CONNECTION_STRING` and that the user's password has been set appropriately. The default username is `postgres` and the default password is `deeplynxcore`.  
 
-8. Run `yarn run build` to build the internal modules and bundled administration GUI. **Note** You must re-run this command  if you make changes to the administration GUI.
+8. Run `yarn run build` to build the internal modules and bundled administration GUI. **Note** You must re-run this command if you make changes to the administration GUI.
 
 * NOTE: If you are on some sort of encrypted network, you may encounter an error similar to the following when attempting to set up any rust libraries: `warning: spurious network error... SSL connect error... The revocation function was unable to check revocation for the certificate.` This can be solved by navigating to your root cargo config file (`~/.cargo/config.toml`) file and adding the following lines. If you do not have an existing config.toml file at your root `.cargo` directory, you will need to make one:
 
@@ -107,23 +105,12 @@ check-revoke = false
 **Note:** DeepLynx ships with a Vue single page application which serves as the primary UI for the DeepLynx system. You can run this [separately](Administration-Web-App-Installation) (and it's recommended to do so if you're developing it).
 
 **The bundled admin web GUI can be accessed at `{{your base URL}}` - default is `localhost:8090`**
-
-### **Enabling TimescaleDB**
-
-DeepLynx ships with the capability to utilize a Postgres plugin called TimescaleDB. We use this for the storage of time-series data as well as a potential target for raw data retention. This is a powerful tool and you must have it enabled in order to store time-series data on nodes.
-
-1. Change the `TIMESCALEDB_ENABLED` environment variable to read `true`
-2. Restart the application.
-
-**Note:** Once you enable TimescaleDB you **cannot** disable it. Please make sure you absolutely need this extension of DeepLynx before taking steps to enable.
-
-**The bundled admin web GUI can be accessed at `{{your base URL}}` - default is `localhost:8090`**
  
 ### **Configuration**
 
 This application's configuration relies on environment variables of its host system. It is best to rely on your CI/CD pipeline to inject those variables into your runtime environment.
 
-In order to facilitate local development, a method has been provided to configure the application as if you were setting environment variables on your local machine. Including a `.env` file at the projects root and using the `npm run watch`, `npm run start`, or any of the `npm run docker:*` commands will start the application loading the listed variables in that file. See the `.env-sample` file included as part of the project for a list of required variables and formatting help.
+In order to facilitate local development, a method has been provided to configure the application as if you were setting environment variables on your local machine. Including a `.env` file at the projects root and using the `yarn run watch`, `yarn run start`, or any of the `yarn run docker:*` commands will start the application loading the listed variables in that file. See the `.env-sample` file included as part of the project for a list of required variables and formatting help.
 
 ### **Database Migrations**
 
@@ -143,7 +130,6 @@ Below is a list of all `yarn run` commands as listed in the `package.json` file.
 - `docker:postgres:build` Creates a Docker image containing a Postgres 12 data source.
 - `docker:postgres:run` Runs previously created Postgres image.
 - `docker:postgres:clean` Stops the Postgres Docker container run by the command above and deletes the container and image.
-- `docker:timescale:run` Runs a Postgres 12 Docker container with TimescaleDB already installed.
 - `build` Compiles the application
 - `start` Runs the compiled application 
 - `watch` Starts the application and rebuilds it each time you make a change to the code. **Note:** this command will not rebuild the bundled Admin Web Application
