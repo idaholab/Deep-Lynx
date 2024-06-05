@@ -6,10 +6,16 @@ import axios from "axios";
 const base = process.env.DEEPLYNX_URL!;
 const token = process.env.TOKEN!;
 
-export const GET = async (req: Request, res: Response) => {
-    const { searchParams } = new URL(req.url);
-    const containerId = searchParams.get("containerId");
-    const url = new URL(`containers/${containerId}/graphs/nodes`, base);
+export const GET = async (
+    req: NextRequest,
+    { params }: { params: { containerId: string; nodeId: string } }
+) => {
+    const { containerId, nodeId } = params;
+
+    const url = new URL(
+        `containers/${containerId}/graphs/nodes/${nodeId}/files`,
+        base
+    );
 
     let response = await axios
         .get(`${url}`, {
