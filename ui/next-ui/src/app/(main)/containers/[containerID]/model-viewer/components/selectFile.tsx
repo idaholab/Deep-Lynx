@@ -1,34 +1,28 @@
 "use client";
 
 // Hooks
-import useSWR from "swr";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 // Types
 import { NodeT, FileT } from "@/lib/types";
-import { SelectChangeEvent, Typography } from "@mui/material";
+import { SelectChangeEvent } from "@mui/material";
 
 // MUI
 import {
     Box,
     Button,
-    Divider,
-    Container,
-    Input,
     InputLabel,
     FormControl,
+    Grid,
     MenuItem,
     Select,
-    Tab,
-    Tabs,
+    Typography,
 } from "@mui/material";
 
-// Axios
-import axios from "axios";
-
-// Store
-import { useAppSelector } from "@/lib/store/hooks";
+// Icons
+import CloudSyncIcon from "@mui/icons-material/CloudSync";
+import DoneAllIcon from "@mui/icons-material/DoneAll";
+import StartIcon from "@mui/icons-material/Start";
 
 // Translations
 import translations from "@/lib/translations";
@@ -38,24 +32,6 @@ type Props = {
     nodes: NodeT[];
     files: FileT[];
     setFiles: Function;
-};
-
-// These are file types that Pythagoras presently knows how to transform into .glb
-const supportedFileTypes =
-    ".ipt, .rvt, .stp, .step, .stpz, .stepz, .stpx, .stpxz";
-
-const fetcher = (
-    params: [url: string, containerId: string, nodeId: string]
-) => {
-    const [url, containerId, nodeId] = params;
-
-    const res = axios
-        .get(url, { params: { containerId: containerId, nodeId: nodeId } })
-        .then((res) => {
-            return res.data.value;
-        });
-
-    return res;
 };
 
 const SelectFile = (props: Props) => {
@@ -71,12 +47,11 @@ const SelectFile = (props: Props) => {
             ).then((response) => {
                 return response.json();
             });
-            props.setFiles(files.value);
+            props.setFiles(files);
         }
 
         if (node.id) {
             fetchFiles();
-            console.log(props.files);
         }
     }, [node]);
 
@@ -125,26 +100,88 @@ const SelectFile = (props: Props) => {
             <br />
             <br />
             {node.id ? (
-                <FormControl fullWidth>
-                    <InputLabel id="Node Select">Files</InputLabel>
-                    <Select
-                        labelId="Node Select"
-                        id="/model-viewer/components/SelectFile/file"
-                        label="Nodes"
-                        value={file.id}
-                        onChange={handleFile}
-                    >
-                        {props.files
-                            ? props.files.map((file: FileT) => {
-                                  return (
-                                      <MenuItem key={file.id} value={file.id}>
-                                          {JSON.stringify(file)}
-                                      </MenuItem>
-                                  );
-                              })
-                            : null}
-                    </Select>
-                </FormControl>
+                // If there are any unprocessed files, select one to start processing
+                props.files.filter((file) => !/\.glb$/.test(file.file_name))
+                    .length ? (
+                    <FormControl fullWidth>
+                        <InputLabel id="File Select">Files</InputLabel>
+                        <Select
+                            labelId="File Select"
+                            id="/model-viewer/components/SelectFile/file"
+                            label="Files"
+                            value={file.id}
+                            onChange={handleFile}
+                        >
+                            {props.files.map((file: FileT) => {
+                                const processed = /\.glb$/.test(file.file_name);
+                                if (!processed) {
+                                    return (
+                                        <MenuItem key={file.id} value={file.id}>
+                                            {JSON.stringify(file)}
+                                        </MenuItem>
+                                    );
+                                }
+                            })}
+                        </Select>
+                    </FormControl>
+                ) : (
+                    <>
+                        <Grid container>
+                            <Grid item xs={1}>
+                                <DoneAllIcon />
+                            </Grid>
+                            <Grid item xs={11}>
+                                <Typography variant="body2">
+                                    There are no unprocessed files attached to
+                                    this node. You can select another node, or
+                                    proceed to the model viewer with these
+                                    files:
+                                    <br />
+                                    <br />
+                                    {props.files.map((file: FileT) => {
+                                        const processed =
+                                            (file.metadata as any).processed ===
+                                            "true";
+                                        if (processed) {
+                                            return (
+                                                <Typography
+                                                    key={file.id}
+                                                    variant="body1"
+                                                >
+                                                    {file.file_name}
+                                                </Typography>
+                                            );
+                                        }
+                                    })}
+                                </Typography>
+                            </Grid>
+                        </Grid>
+                        <br />
+                        <Box
+                            sx={{
+                                width: "100%",
+                                display: "flex",
+                                justifyContent: "end",
+                            }}
+                        >
+                            <Button startIcon={<StartIcon />}>Start</Button>
+                        </Box>
+                    </>
+                )
+            ) : null}
+            <br />
+            <br />
+            <br />
+            {file.id ? (
+                <>
+                    <Typography variant="body1">
+                        File Selected: {file.file_name}
+                    </Typography>
+                    <br />
+                    <Button startIcon={<CloudSyncIcon />}>
+                        Start Processing
+                    </Button>
+                </>
             ) : null}
         </>
     );
