@@ -47,7 +47,7 @@ const SelectFile = (props: Props) => {
             ).then((response) => {
                 return response.json();
             });
-            props.setFiles(files.value);
+            props.setFiles(files);
         }
 
         if (node.id) {
@@ -113,9 +113,7 @@ const SelectFile = (props: Props) => {
                             onChange={handleFile}
                         >
                             {props.files.map((file: FileT) => {
-                                const processed = !/\.glb$/.test(
-                                    file.file_name
-                                );
+                                const processed = /\.glb$/.test(file.file_name);
                                 if (!processed) {
                                     return (
                                         <MenuItem key={file.id} value={file.id}>
