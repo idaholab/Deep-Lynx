@@ -6,7 +6,7 @@ import axios from "axios";
 const base = process.env.DEEPLYNX_URL!;
 const token = process.env.TOKEN!;
 
-export const GET = async (req: Request, res: Response) => {
+export const GET = async () => {
     const url = new URL("containers", base);
 
     let response = await axios
@@ -16,7 +16,7 @@ export const GET = async (req: Request, res: Response) => {
             },
         })
         .then((response) => {
-            return response.data;
+            return response.data.value;
         })
         .catch((error) => {
             return error;

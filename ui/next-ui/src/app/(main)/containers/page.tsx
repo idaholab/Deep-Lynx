@@ -1,9 +1,8 @@
 "use client";
 
 // Hooks
-import useSWR from "swr";
 import { useRouter } from "next/navigation";
-import { ChangeEvent, useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 // Types
 import { ContainerT } from "@/lib/types";
@@ -19,38 +18,50 @@ import {
     Select,
 } from "@mui/material";
 
-// Axios
-import axios from "axios";
-
 // Store
 import { useAppDispatch } from "@/lib/store/hooks";
 import { containerActions } from "@/lib/store/features/container/containerSlice";
-
-const fetcher = (url: string): Promise<ContainerT[]> =>
-    axios.get(url).then((res) => res.data.value);
 
 const ContainerSelect = () => {
     // Store
     const storeDispatch = useAppDispatch();
 
     // Hooks
-    const [container, setContainer] = useState<string>("");
-    const { data, error, isLoading } = useSWR("/api/containers", fetcher);
+    const [containers, setContainers] = useState<ContainerT[]>(
+        [] as ContainerT[]
+    );
+    const [selectedContainer, setSelectedContainer] = useState<string>("");
+
     const router = useRouter();
+
+    useEffect(() => {
+        async function fetchContainers() {
+            let containers = await fetch("/api/containers/").then(
+                (response) => {
+                    return response.json();
+                }
+            );
+
+            setContainers(containers);
+        }
+
+        fetchContainers();
+    }, []);
+
     useEffect(() => {
         // When the user selects a container, dispatch that container's metadata to the Redux store, and navigate to the dashboard
-        if (data && container) {
-            const selection: ContainerT = data.find(
-                (item: ContainerT) => item.name === container
+        if (containers && selectedContainer) {
+            const selection: ContainerT = containers.find(
+                (item: ContainerT) => item.name === selectedContainer
             )!;
             storeDispatch(containerActions.setContainer(selection));
             router.push(`/containers/${selection.id}`);
         }
-    }, [container]);
+    }, [selectedContainer]);
 
     // Handlers
     const handleContainer = (event: SelectChangeEvent) => {
-        setContainer(event.target.value);
+        setSelectedContainer(event.target.value);
     };
 
     return (
@@ -81,11 +92,11 @@ const ContainerSelect = () => {
                             labelId="Container Select"
                             id="/containers/ContainerSelect"
                             label="Containers"
-                            value={container}
+                            value={selectedContainer}
                             onChange={handleContainer}
                         >
-                            {data
-                                ? data.map((container: ContainerT) => {
+                            {containers.length
+                                ? containers.map((container: ContainerT) => {
                                       return (
                                           <MenuItem
                                               key={container.id}

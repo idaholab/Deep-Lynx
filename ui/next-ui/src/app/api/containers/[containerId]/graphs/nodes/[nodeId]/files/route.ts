@@ -24,7 +24,7 @@ export const GET = async (
             },
         })
         .then((response) => {
-            return response.data;
+            return response.data.value;
         })
         .catch((error) => {
             return error;
