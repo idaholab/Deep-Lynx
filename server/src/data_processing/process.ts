@@ -462,18 +462,8 @@ export async function GenerateNodes(...staging: DataStaging[]): Promise<Node[]> 
             }
         }
     }
-    // we must deduplicate nodes based on original ID in order to avoid a database transaction error. We toss out the
-    // duplicates because even if we inserted them they'd be overwritten, or overwrite, the original. Users should be made
-    // aware that if their import is generating records with the same original ID only one instance is going to be inserted
-    return Promise.resolve(
-        nodesToInsert.filter(
-            (value, index, self) =>
-                index ===
-                self.findIndex(
-                    (t) => t.original_data_id === value.original_data_id && t.data_source_id === value.data_source_id && t.container_id === value.container_id,
-                ),
-        ),
-    );
+    // we used to have a deduplication step here, that's now handled by the move from temp to full table
+    return Promise.resolve(nodesToInsert);
 }
 
 export async function GenerateEdges(snapshot: SnapshotGenerator, ...staging: DataStaging[]): Promise<Edge[]> {

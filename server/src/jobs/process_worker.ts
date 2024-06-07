@@ -15,6 +15,7 @@ import {pipeline} from 'node:stream/promises';
 import ImportRepository from '../data_access_layer/repositories/data_warehouse/import/import_repository';
 import {SnapshotGenerator} from 'deeplynx';
 import Config from '../services/config';
+import ContainerMapper from '../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 
 async function Start(): Promise<void> {
     await PostgresAdapter.Instance.init();
@@ -27,6 +28,23 @@ async function Start(): Promise<void> {
     // without having to do edge queues and gets us some performance gains vs constantly reaching back to the db
     const importIDs: string[] = workerData.input.importIDs;
     const containerID: string = workerData.input.containerID;
+
+    // we need to run a lock on the container first so that we can maintain we're the only process running on it
+    const transactionResult = await ContainerMapper.Instance.startTransaction();
+    if (transactionResult.isError) {
+        Logger.error(`unexpected error in obtaining a transaction in processing thread ${JSON.stringify(transactionResult.error)}`);
+        process.exit(0);
+    }
+
+    // we only use this transaction to hold the lock, nothing else. Everything else is as either their own client transaction
+    // or doesn't need one
+    const transaction = transactionResult.value;
+
+    const lockResult = await ContainerMapper.Instance.AdvisoryLockContainer(containerID, transaction);
+    if (lockResult.isError) {
+        Logger.error(`unable to lock container for processing in processing thread ${JSON.stringify(lockResult.error)}`);
+        process.exit(0);
+    }
 
     // set process start time
     const importRepo = new ImportRepository();
@@ -270,6 +288,8 @@ async function Start(): Promise<void> {
     // set end time of imports
     void (await importRepo.setEnd(new Date(), importIDs));
 
+    // we don't technically need to release the lock as closing the connection closes the transaction, but it's good form
+    await ContainerMapper.Instance.completeTransaction(transaction);
     process.exit(0);
 }
 

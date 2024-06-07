@@ -1,4 +1,4 @@
-import Container, { DataSourceTemplate } from '../../../../domain_objects/data_warehouse/ontology/container';
+import Container, {DataSourceTemplate} from '../../../../domain_objects/data_warehouse/ontology/container';
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
@@ -94,11 +94,16 @@ export default class ContainerMapper extends Mapper {
         return super.runStatement(this.deleteStatement(containerID));
     }
 
-    public async CreateDataSourceTemplate(
-        template: DataSourceTemplate,
-        containerID: string,
-        transaction?: PoolClient
-    ): Promise<Result<DataSourceTemplate[]>> {
+    // open an advisory lock on the container, will wait until the lock is available
+    // we need to run this in a transaction so we hold a connection open throughout the processes that
+    // use it, the pool will close otherwise
+    public async AdvisoryLockContainer(containerID: string, transaction: PoolClient): Promise<Result<boolean>> {
+        return super.runStatement(this.lockContainerStatement(containerID), {
+            transaction,
+        });
+    }
+
+    public async CreateDataSourceTemplate(template: DataSourceTemplate, containerID: string, transaction?: PoolClient): Promise<Result<DataSourceTemplate[]>> {
         const r = await super.run(this.createDataSourceTemplateStatement([template], containerID), {
             transaction,
         });
@@ -115,10 +120,10 @@ export default class ContainerMapper extends Mapper {
     public async BulkCreateDataSourceTemplates(
         templates: DataSourceTemplate[],
         containerID: string,
-        transaction?: PoolClient
+        transaction?: PoolClient,
     ): Promise<Result<DataSourceTemplate[]>> {
         const r = await super.run(this.createDataSourceTemplateStatement(templates, containerID), {
-            transaction
+            transaction,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -176,82 +181,58 @@ export default class ContainerMapper extends Mapper {
         return Promise.resolve(Result.Success(resultsArray));
     }
 
-    public async UpdateDataSourceTemplate(
-        template: DataSourceTemplate,
-        containerID: string,
-        transaction?: PoolClient
-    ): Promise<Result<DataSourceTemplate[]>> {
+    public async UpdateDataSourceTemplate(template: DataSourceTemplate, containerID: string, transaction?: PoolClient): Promise<Result<DataSourceTemplate[]>> {
         const r = await super.run(this.updateDataSourceTemplateStatement(template, containerID), {
-            transaction
+            transaction,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
         // we have to convert the returned object into an array of DataSourceTemplates;
         // unfortunately the class conversion in the root mapper doesn't work since
         // the SQL returns the results as a single field
-        const resultsArray: DataSourceTemplate[] = JSON.parse(
-            (r.value[0] as {data_source_templates: string}).data_source_templates
-        );
+        const resultsArray: DataSourceTemplate[] = JSON.parse((r.value[0] as {data_source_templates: string}).data_source_templates);
 
         return Promise.resolve(Result.Success(resultsArray));
     }
 
-    public async DeleteDataSourceTemplate(
-        templateID: string,
-        containerID: string,
-        transaction?: PoolClient
-    ): Promise<Result<DataSourceTemplate[]>> {
+    public async DeleteDataSourceTemplate(templateID: string, containerID: string, transaction?: PoolClient): Promise<Result<DataSourceTemplate[]>> {
         const r = await super.run(this.deleteDataSourceTemplateStatement([templateID], containerID), {
-            transaction
+            transaction,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
         // we have to convert the returned object into an array of DataSourceTemplates;
         // unfortunately the class conversion in the root mapper doesn't work since
         // the SQL returns the results as a single field
-        const resultsArray: DataSourceTemplate[] = JSON.parse(
-            (r.value[0] as {data_source_templates: string}).data_source_templates
-        );
+        const resultsArray: DataSourceTemplate[] = JSON.parse((r.value[0] as {data_source_templates: string}).data_source_templates);
 
         return Promise.resolve(Result.Success(resultsArray));
     }
 
-    public async BulkDeleteDataSourceTemplates(
-        templateIDs: string[],
-        containerID: string,
-        transaction?: PoolClient
-    ): Promise<Result<DataSourceTemplate[]>> {
+    public async BulkDeleteDataSourceTemplates(templateIDs: string[], containerID: string, transaction?: PoolClient): Promise<Result<DataSourceTemplate[]>> {
         const r = await super.run(this.deleteDataSourceTemplateStatement(templateIDs, containerID), {
-            transaction
+            transaction,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
         // we have to convert the returned object into an array of DataSourceTemplates;
         // unfortunately the class conversion in the root mapper doesn't work since
         // the SQL returns the results as a single field
-        const resultsArray: DataSourceTemplate[] = JSON.parse(
-            (r.value[0] as {data_source_templates: string}).data_source_templates
-        );
+        const resultsArray: DataSourceTemplate[] = JSON.parse((r.value[0] as {data_source_templates: string}).data_source_templates);
 
         return Promise.resolve(Result.Success(resultsArray));
     }
 
-    public async AuthorizeDataSourceTemplate(
-        templateName: string,
-        containerID: string,
-        transaction?: PoolClient
-    ): Promise<Result<DataSourceTemplate[]>> {
+    public async AuthorizeDataSourceTemplate(templateName: string, containerID: string, transaction?: PoolClient): Promise<Result<DataSourceTemplate[]>> {
         const r = await super.run(this.authorizeDataSourceTemplateStatement(templateName, containerID), {
-            transaction
+            transaction,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
         // we have to convert the returned object into an array of DataSourceTemplates;
         // unfortunately the class conversion in the root mapper doesn't work since
         // the SQL returns the results as a single field
-        const resultsArray: DataSourceTemplate[] = JSON.parse(
-            (r.value[0] as {data_source_templates: string}).data_source_templates
-        );
+        const resultsArray: DataSourceTemplate[] = JSON.parse((r.value[0] as {data_source_templates: string}).data_source_templates);
 
         return Promise.resolve(Result.Success(resultsArray));
     }
@@ -323,6 +304,10 @@ export default class ContainerMapper extends Mapper {
         };
     }
 
+    private lockContainerStatement(containerID: string): string {
+        return format(`SELECT pg_advisory_xact_lock(%L);`, [containerID]);
+    }
+
     private listFromIDsStatement(ids: string[]): string {
         const text = `SELECT c.*
                     FROM containers c
@@ -344,7 +329,7 @@ export default class ContainerMapper extends Mapper {
     // add a new template to data_source_templates, or create the array if not exists
     // only return the recently created data source template(s) for use in the repository
     private createDataSourceTemplateStatement(templates: DataSourceTemplate[], containerID: string): QueryConfig {
-        const templateIDs = templates.map(t => t.id);
+        const templateIDs = templates.map((t) => t.id);
         return {
             text: `UPDATE containers AS c SET
                 config = jsonb_set(config, '{data_source_templates}',
@@ -358,8 +343,8 @@ export default class ContainerMapper extends Mapper {
                     FROM jsonb_array_elements(c.config->'data_source_templates') AS e
                     WHERE e->>'id' = ANY($3)
                 ) AS data_source_templates`,
-            values: [JSON.stringify(templates), containerID, templateIDs]
-        }
+            values: [JSON.stringify(templates), containerID, templateIDs],
+        };
     }
 
     private retrieveDataSourceTemplateByIDStatement(templateID: string, containerID: string): QueryConfig {
@@ -367,8 +352,8 @@ export default class ContainerMapper extends Mapper {
             text: `SELECT jsonb_agg(e)
                 FROM containers c, jsonb_array_elements(c.config->'data_source_templates') AS e
                 WHERE e->>'id' = $1 AND c.id = $2`,
-            values: [templateID, containerID]
-        }
+            values: [templateID, containerID],
+        };
     }
 
     private retrieveDataSourceTemplateByNameStatement(templateName: string, containerID: string): QueryConfig {
@@ -376,8 +361,8 @@ export default class ContainerMapper extends Mapper {
             text: `SELECT jsonb_agg(e)
                 FROM containers c, jsonb_array_elements(c.config->'data_source_templates') AS e
                 WHERE e->>'name' = $1 AND c.id = $2`,
-            values: [templateName, containerID]
-        }
+            values: [templateName, containerID],
+        };
     }
 
     private listDataSourceTemplatesStatement(containerID: string): QueryConfig {
@@ -386,7 +371,7 @@ export default class ContainerMapper extends Mapper {
                 FROM containers c
                 WHERE c.id = $1`,
             values: [containerID],
-        }
+        };
     }
 
     // This is good enough for singular updates, but for bulk updates it is more straightforward
@@ -405,8 +390,8 @@ export default class ContainerMapper extends Mapper {
                     ) FROM jsonb_array_elements(c.config->'data_source_templates') AS e
                 )) WHERE c.id = $3
                 RETURNING c.config->>'data_source_templates' AS data_source_templates`,
-            values: [template.id!, JSON.stringify(template), containerID]
-        }
+            values: [template.id!, JSON.stringify(template), containerID],
+        };
     }
 
     // if all items are deleted, set the array to an empty array instead of null
@@ -422,7 +407,7 @@ export default class ContainerMapper extends Mapper {
                     WHERE e->>'id' <> ALL($1)
                 )) WHERE c.id = $2
                 RETURNING c.config->>'data_source_templates' AS data_source_templates`,
-            values: [templateIDs, containerID]
+            values: [templateIDs, containerID],
         };
     }
 
@@ -438,7 +423,7 @@ export default class ContainerMapper extends Mapper {
                     ) FROM jsonb_array_elements(c.config->'data_source_templates') AS e
                 )) WHERE c.id = $2
                 RETURNING c.config->>'data_source_templates' AS data_source_templates`,
-            values: [templateName, containerID]
-        }
+            values: [templateName, containerID],
+        };
     }
 }

@@ -1,4 +1,4 @@
-FROM rust:alpine3.19 as build
+FROM rust:alpine3.20 as build
 
 ENV RUSTFLAGS="-C target-feature=-crt-static"
 ENV RUN_MODE="build"
@@ -44,7 +44,7 @@ WORKDIR /srv/deeplynx/server
 RUN yarn install;
 RUN yarn run build;
 
-FROM node:alpine3.19 as production
+FROM node:alpine3.20 as production
 ENV DEVELOPMENT_MODE=false
 
 RUN apk update && apk add supervisor

@@ -398,16 +398,18 @@ export default class EdgeRepository extends Repository implements RepositoryInte
                     let originNodes;
                     if (origin_ids.length > 0) {
                         originNodes = await this.parametersRepoBuilder(e.container_id!, e.origin_parameters).and().id('in', origin_ids).list(false);
-                    } else { // if no origin_ids were supplied, return an empty array
-                        originNodes = await this.parametersRepoBuilder(e.container_id!, e.origin_parameters).and().id('is null').list(false);
+                    } else {
+                        // if no origin_ids were supplied, return an empty array
+                        originNodes = await this.parametersRepoBuilder(e.container_id!, e.origin_parameters).list(false);
                     }
                     if (originNodes.isError) return Promise.resolve(Result.Pass(originNodes));
 
                     let destNodes;
                     if (destination_ids.length > 0) {
                         destNodes = await this.parametersRepoBuilder(e.container_id!, e.destination_parameters).and().id('in', destination_ids).list(false);
-                    } else { // if no destination_ids were supplied, return an empty array
-                        destNodes = await this.parametersRepoBuilder(e.container_id!, e.destination_parameters).and().id('is null').list(false);
+                    } else {
+                        // if no destination_ids were supplied, return an empty array
+                        destNodes = await this.parametersRepoBuilder(e.container_id!, e.destination_parameters).list(false);
                     }
                     if (destNodes.isError) return Promise.resolve(Result.Pass(destNodes));
 
