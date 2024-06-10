@@ -1,5 +1,5 @@
 import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_domain_class';
-import {IsIn, IsNumber, IsObject, IsOptional, IsString} from 'class-validator';
+import {IsArray, IsBoolean, IsIn, IsNumber, IsObject, IsOptional, IsString} from 'class-validator';
 
 /*
     File represents a file record in the DeepLynx database and the various
@@ -42,6 +42,10 @@ export default class File extends BaseDomainClass {
     @IsOptional()
     short_uuid?: string;
 
+    @IsBoolean()
+    @IsOptional()
+    timeseries?: boolean;
+
     constructor(input: {
         id?: string;
         container_id: string;
@@ -53,6 +57,7 @@ export default class File extends BaseDomainClass {
         adapter: string;
         metadata?: {[key: string]: any};
         short_uuid?: string;
+        timeseries?: boolean;
     }) {
         super();
 
@@ -67,6 +72,7 @@ export default class File extends BaseDomainClass {
             this.adapter = input.adapter;
             if (input.metadata) this.metadata = input.metadata;
             if (input.short_uuid) this.short_uuid = input.short_uuid;
+            if (input.timeseries) this.timeseries = input.timeseries;
         }
     }
 }
@@ -121,4 +127,47 @@ export class EdgeFile extends NakedDomainClass {
             this.file_id = input.file_id;
         }
     }
+}
+
+export class FilePathMetadata extends NakedDomainClass {
+    @IsString()
+    @IsOptional()
+    id?: string;
+
+    @IsString()
+    adapter_file_path?: string;
+
+    @IsString()
+    @IsIn(['filesystem', 'azure_blob', 'mock', 'largeobject'])
+    adapter?: string;
+}
+
+export class FileDescriptionColumn extends NakedDomainClass {
+    @IsString()
+    column_name?: string;
+
+    @IsString()
+    data_type?: string;
+}
+
+export class FileDescription extends NakedDomainClass {
+    @IsString()
+    file_id?: string;
+
+    @IsArray()
+    column_info?: FileDescriptionColumn[];
+}
+
+export class TimeseriesInfo extends NakedDomainClass {
+    @IsString()
+    id?: string;
+
+    @IsBoolean()
+    timeseries?: boolean;
+}
+
+// additional options for uploading a file
+export type FileUploadOptions = {
+    timeseries?: boolean | undefined;
+    describe?: boolean | undefined;
 }

@@ -128,7 +128,7 @@ export default class UserMapper extends Mapper {
     }
 
     public ListServiceUsersForContainer(containerID: string): Promise<Result<User[]>> {
-        return super.rows(this.listServiceUsersForContainerStatement(containerID));
+        return super.rows(this.listServiceUsersForContainerStatement(containerID), {resultClass: this.resultClass});
     }
 
     // Below are a set of query building functions. So far they're very simple
