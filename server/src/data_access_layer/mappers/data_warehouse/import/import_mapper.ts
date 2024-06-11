@@ -149,16 +149,18 @@ export default class ImportMapper extends Mapper {
     // Reprocess an import will take an importID and attempt to first clear all data processed
     // from it by setting the deleted_at tag of any nodes or edges that have been created. Then
     // it will attempt to re-queue all data staging records for that import
-    public async ReprocessImport(importID: string): Promise<Result<boolean>> {
+    public async ReprocessImport(containerID: string, importID: string): Promise<Result<boolean>> {
         await this.SetStatus(importID, 'processing', 'reprocessing initiated');
         await super.runAsTransaction(...this.deleteDataStatement(importID));
         await super.runStatement(this.setProcessedNull(importID));
 
         // now we start the import process job in the background
-
         const worker = new Worker(__dirname + '../../../../../jobs/process_worker.js', {
             workerData: {
-                input: [importID],
+                input: {
+                    importIDs: [importID],
+                    containerID: containerID
+                },
             },
         });
 

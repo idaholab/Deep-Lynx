@@ -422,7 +422,7 @@ export default class ImportRoutes {
     private static reprocessImport(req: Request, res: Response, next: NextFunction) {
         if (req.dataImport) {
             importRepo
-                .reprocess(req.dataImport.id!)
+                .reprocess(req.container!.id!, req.dataImport.id!)
                 .then((result) => {
                     result.asResponse(res);
                 })
