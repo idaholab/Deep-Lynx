@@ -335,7 +335,14 @@ export default class UserRepository extends Repository implements RepositoryInte
 
         return Promise.resolve(Result.Success(deleted));
     }
+    async removeSelfRoles(user: User, userID: string, domain: string): Promise<Result<boolean>> {
+	// NOTE: unauthorized if admin == TRUE. admin cannot leave a container.
+        if (user.admin) return Promise.resolve(Result.Error(ErrorUnauthorized));
 
+        const deleted = await Authorization.DeleteAllRoles(userID, domain);
+
+        return Promise.resolve(Result.Success(deleted));
+    }
     async rolesInContainer(user: User, containerID: string): Promise<Result<string[]>> {
         const roles = await Authorization.RolesForUser(user.id!, containerID);
 

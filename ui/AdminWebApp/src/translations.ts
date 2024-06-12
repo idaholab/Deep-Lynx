@@ -412,6 +412,9 @@ export default {
             import: 'Import Container',
             export: 'Export Container',
             change: 'Change Container',
+	    leaveContainer:  'Leave Container',
+	    leaveConfirmation:  'Are you sure you want to leave this container?',
+	    leaveDescription:  'You will need to be invited back.',
             repair: 'Repair Permissions',
             repaired: 'Permissions Repaired'
         },
