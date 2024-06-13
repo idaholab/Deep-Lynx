@@ -152,7 +152,7 @@ export default class ImportMapper extends Mapper {
             workerData: {
                 input: {
                     importIDs: [importID],
-                    containerID: containerID
+                    containerID
                 },
             },
         });
