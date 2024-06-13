@@ -78,7 +78,7 @@ describe('A Container Import', async () => {
             false,
             false,
             '',
-            '../../server/legacy/dist/data_access_layer/mappers/data_warehouse/ontology',
+            '../../dist/data_access_layer/mappers/data_warehouse/ontology',
         );
 
         expect(container.isError, `container creation from ontology failed: ${container.error}`).false;
@@ -109,7 +109,7 @@ describe('A Container Import', async () => {
             false,
             false,
             '',
-            '../../server/legacy/dist/data_access_layer/mappers/data_warehouse/ontology',
+            '../../dist/data_access_layer/mappers/data_warehouse/ontology',
         );
 
         expect(container.isError).false;
@@ -125,7 +125,7 @@ describe('A Container Import', async () => {
             false,
             true,
             containerID,
-            '../../server/legacy/dist/data_access_layer/mappers/data_warehouse/ontology',
+            '../../dist/data_access_layer/mappers/data_warehouse/ontology',
         );
 
         expect(container.isError).false;
@@ -159,7 +159,7 @@ describe('A Container Import', async () => {
             false,
             false,
             '',
-            '../../server/legacy/dist/data_access_layer/mappers/data_warehouse/ontology',
+            '../../dist/data_access_layer/mappers/data_warehouse/ontology',
         );
 
         expect(container.isError).false;
@@ -195,7 +195,7 @@ describe('A Container Import', async () => {
             false,
             true,
             containerID,
-            '../../server/legacy/dist/data_access_layer/mappers/data_warehouse/ontology',
+            '../../dist/data_access_layer/mappers/data_warehouse/ontology',
         );
 
         expect(container.isError).true;
@@ -229,7 +229,7 @@ describe('A Container Import', async () => {
             false,
             false,
             '',
-            '../../server/legacy/dist/data_access_layer/mappers/data_warehouse/ontology',
+            '../../dist/data_access_layer/mappers/data_warehouse/ontology',
         );
 
         expect(container.isError).false;
@@ -265,7 +265,7 @@ describe('A Container Import', async () => {
             false,
             true,
             containerID,
-            '../../server/legacy/dist/data_access_layer/mappers/data_warehouse/ontology',
+            '../../dist/data_access_layer/mappers/data_warehouse/ontology',
         );
 
         expect(container.isError).true;
@@ -302,7 +302,7 @@ describe('A Container Import', async () => {
             false,
             false,
             '',
-            '../../server/legacy/dist/data_access_layer/mappers/data_warehouse/ontology',
+            '../../dist/data_access_layer/mappers/data_warehouse/ontology',
         );
 
         expect(container.isError).false;
@@ -377,7 +377,7 @@ describe('A Container Import', async () => {
             false,
             true,
             containerID,
-            '../../server/legacy/dist/data_access_layer/mappers/data_warehouse/ontology',
+            '../../dist/data_access_layer/mappers/data_warehouse/ontology',
         );
 
         expect(container.isError).true;
@@ -409,7 +409,7 @@ describe('A Container Import', async () => {
             false,
             false,
             '',
-            '../../server/legacy/dist/data_access_layer/mappers/data_warehouse/ontology',
+            '../../dist/data_access_layer/mappers/data_warehouse/ontology',
         );
 
         expect(container.isError).false;
@@ -424,7 +424,7 @@ describe('A Container Import', async () => {
             false,
             true,
             containerID,
-            '../../server/legacy/dist/data_access_layer/mappers/data_warehouse/ontology',
+            '../../dist/data_access_layer/mappers/data_warehouse/ontology',
         );
 
         expect(container.isError).false;

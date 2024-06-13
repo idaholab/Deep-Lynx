@@ -2,14 +2,6 @@ import Mapper from '../../mapper';
 import Result from '../../../../common_classes/result';
 import {PoolClient, QueryConfig} from 'pg';
 import {DataStaging} from '../../../../domain_objects/data_warehouse/import/import';
-import {QueueFactory} from '../../../../services/queue/queue';
-import PostgresAdapter from '../../db_adapters/postgres/postgres';
-import QueryStream from 'pg-query-stream';
-import {plainToClass} from 'class-transformer';
-import Config from '../../../../services/config';
-import Logger from '../../../../services/logger';
-import {Transform, TransformCallback} from 'stream';
-const devnull = require('dev-null');
 
 const format = require('pg-format');
 
@@ -228,33 +220,6 @@ export default class DataStagingMapper extends Mapper {
                    OFFSET $2 LIMIT $3`,
             values: [importID, offset, limit],
         };
-    }
-
-    private listForQueue(dataSourceID: string, shapehash?: string): string {
-        if (!shapehash) {
-            const text = `SELECT data_staging.*, data_sources.container_id, data_sources.config as data_source_config
-                FROM data_staging
-                    LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id
-                WHERE data_staging.inserted_at IS NULL
-                    AND data_staging.nodes_processed_at IS NULL
-                    AND data_staging.edges_processed_at IS NULL
-                    AND data_staging.data_source_id = $1 `;
-            const values = [dataSourceID];
-
-            return format(text, values);
-        }
-
-        const text = `SELECT data_staging.*, data_sources.container_id, data_sources.config as data_source_config
-                FROM data_staging
-                    LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id
-                WHERE data_staging.inserted_at IS NULL
-                    AND data_staging.nodes_processed_at IS NULL
-                    AND data_staging.edges_processed_at IS NULL
-                    AND data_staging.data_source_id = $1 
-                    AND data_staging.shape_hash = $2 `;
-        const values = [dataSourceID, shapehash];
-
-        return format(text, values);
     }
 
     private listIDOnly(importID: string): QueryConfig {

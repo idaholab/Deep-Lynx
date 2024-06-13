@@ -16,7 +16,6 @@ export class LongRunningTransactions {
 }
 
 export class Statistics {
-    edge_queue_items?: string;
     containers?: string;
     metatypes?: string;
     metatype_keys?: string;

@@ -1,4 +1,4 @@
-import {workerData} from 'worker_threads';
+import {workerData, isMainThread} from 'worker_threads';
 import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/postgres';
 import QueryStream from 'pg-query-stream';
 import DataStagingMapper from '../data_access_layer/mappers/data_warehouse/import/data_staging_mapper';
@@ -290,7 +290,9 @@ export async function ProcessWorkerStart(importIDs: string[], containerID: strin
 // once to process all the edges and once to attach tags and files to nodes/edges
 // this allows us to at least ensure some kind of order in dealing with building edges
 // without having to do edge queues and gets us some performance gains vs constantly reaching back to the db
-const importIDs: string[] = workerData.input.importIDs;
-const containerID: string = workerData.input.containerID;
+if (!isMainThread) {
+    const importIDs: string[] = workerData.input.importIDs;
+    const containerID: string = workerData.input.containerID;
 
-void ProcessWorkerStart(importIDs, containerID);
+    void ProcessWorkerStart(importIDs, containerID);
+}

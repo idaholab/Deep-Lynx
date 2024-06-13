@@ -234,15 +234,17 @@ describe('A Node Repository', async () => {
         // check composite id bulk save
         const originalID1 = mixed[0].id;
         const originalID2 = mixed[1].id;
+        const originalID3 = mixed[2].id;
         mixed[0].id = undefined;
         mixed[1].id = undefined;
         mixed[0].properties = payload;
         mixed[1].properties = payload;
+        mixed[2].created_at = new Date();
 
         saved = await nodeRepo.bulkSave(user, mixed);
         expect(saved.isError, JSON.stringify(saved.error)).false;
-        expect(mixed[0].id).oneOf([originalID1,originalID2])
-        expect(mixed[1].id).oneOf([originalID1,originalID2])
+        expect(mixed[0].id).oneOf([originalID1,originalID2,originalID3])
+        expect(mixed[1].id).oneOf([originalID1,originalID2,originalID3])
 
         await nodeRepo.delete(mixed[0]);
         return nodeRepo.delete(mixed[1]);

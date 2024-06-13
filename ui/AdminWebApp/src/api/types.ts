@@ -656,7 +656,6 @@ export type LongRunningTransactions = {
 };
 
 export type Statistics = {
-    edge_queue_items: string;
     containers: string;
     metatypes: string;
     metatype_keys: string;

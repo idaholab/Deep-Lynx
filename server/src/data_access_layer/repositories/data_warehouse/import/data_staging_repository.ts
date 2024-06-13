@@ -6,12 +6,8 @@ import {PoolClient} from 'pg';
 import {User} from '../../../../domain_objects/access_management/user';
 import File from '../../../../domain_objects/data_warehouse/data/file';
 import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
-import {QueueFactory} from '../../../../services/queue/queue';
 import Logger from '../../../../services/logger';
 import Config from '../../../../services/config';
-import DataSourceMapper from '../../../mappers/data_warehouse/import/data_source_mapper';
-import {instanceToPlain} from 'class-transformer';
-import Import from '../../../../domain_objects/data_warehouse/import/import';
 
 /*
     DataStaging contains methods for persisting and retrieving an import's data
@@ -157,88 +153,6 @@ export default class DataStagingRepository extends Repository implements Reposit
         return Promise.resolve(Result.Success(true));
     }
 
-    // bulkSaveAndSend is almost identical to bulkSave except that we also send the messagees to the processing queue
-    // I needed separate function because the ReceiveData doesn't hold on to the records it saves for me to eventually
-    // send them - and for the websocket one I can't wait until after this function (also can't edit the bulk save function
-    // signature as it's part of the interface)
-    async bulkSaveAndSend(records: DataStaging[], transaction?: PoolClient): Promise<Result<boolean>> {
-        const queue = await QueueFactory();
-        let internalTransaction = false;
-        if (!transaction) {
-            const newTransaction = await this.#mapper.startTransaction();
-            if (newTransaction.isError) return Promise.resolve(Result.Failure('unable to initiate db transaction'));
-
-            transaction = newTransaction.value;
-            internalTransaction = true;
-        }
-
-        const operations: Promise<Result<boolean>>[] = [];
-        const toCreate: DataStaging[] = [];
-        const toUpdate: DataStaging[] = [];
-        const toReturn: DataStaging[] = [];
-
-        for (const record of records) {
-            operations.push(
-                new Promise((resolve) => {
-                    record
-                        .validationErrors()
-                        .then((errors) => {
-                            if (errors) {
-                                resolve(Result.Failure(`data staging record fails validation ${errors.join(',')}`));
-                                return;
-                            }
-
-                            resolve(Result.Success(true));
-                        })
-                        .catch((e) => resolve(Result.Failure(`data staging record fails validation ${e}`)));
-                }),
-            );
-
-            record.id ? toUpdate.push(record) : toCreate.push(record);
-        }
-
-        const completed = await Promise.all(operations);
-        for (const complete of completed) {
-            if (complete.isError) {
-                if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
-                return Promise.resolve(Result.Failure(`one or more data staging records failed ${complete.error?.error}`));
-            }
-        }
-
-        if (toUpdate.length > 0) {
-            const saved = await this.#mapper.BulkUpdate(toUpdate, transaction);
-            if (saved.isError) {
-                if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
-                return Promise.resolve(Result.Pass(saved));
-            }
-
-            toReturn.push(...saved.value);
-        }
-
-        if (toCreate.length > 0) {
-            const saved = await this.#mapper.BulkCreate(toCreate, transaction);
-            if (saved.isError) {
-                if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
-                return Promise.resolve(Result.Pass(saved));
-            }
-
-            toReturn.push(...saved.value);
-        }
-
-        toReturn.forEach((result, i) => {
-            Object.assign(records[i], result);
-            // we ignore any errors apart from logging
-            void queue.Put(Config.process_queue, records[i]).catch((e) => Logger.error(e));
-        });
-
-        if (internalTransaction) {
-            const commit = await this.#mapper.completeTransaction(transaction);
-            if (commit.isError) return Promise.resolve(Result.Pass(commit));
-        }
-
-        return Promise.resolve(Result.Success(true));
-    }
-
     setInserted(t: DataStaging, transaction?: PoolClient): Promise<Result<boolean>> {
         if (t.id) {
             return this.#mapper.SetInserted(t.id, transaction);
@@ -290,28 +204,6 @@ export default class DataStagingRepository extends Repository implements Reposit
         }
 
         return this.#fileMapper.ListForDataStaging(t.id);
-    }
-
-    // sendToQueueForImport will queue up all data staging records for a given import
-    // needed for us to reprocess an import individually, and as part of the receive
-    // data call
-    async sendToQueueForImport(importID: string): Promise<void> {
-        const queue = await QueueFactory();
-
-        const records = await this.#mapper.ListIDOnly(importID);
-        if (records.isError) {
-            Logger.error('unable to list staging records for sending to queue');
-        }
-
-        const queuePromises: Promise<boolean>[] = [];
-
-        records.value.forEach((record) => {
-            queuePromises.push(queue.Put(Config.process_queue, record.id));
-        });
-
-        await Promise.all(queuePromises);
-
-        return Promise.resolve();
     }
 
     constructor() {
