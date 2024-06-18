@@ -52,9 +52,9 @@ export default class ContainerRoutes {
         app.get('/containers/:containerID/data_source_templates', ...middleware, authInContainer('write', 'containers'), this.listDataSourceTemplates);
         app.post('/containers/:containerID/data_source_templates', ...middleware, authInContainer('write', 'containers'), this.saveDataSourceTemplates);
         app.delete(
-            '/containers/:containerID/data_source_templates/:templateID', 
-            ...middleware, 
-            authInContainer('write', 'containers'), 
+            '/containers/:containerID/data_source_templates/:templateID',
+            ...middleware,
+            authInContainer('write', 'containers'),
             this.deleteDataSourceTemplate
         );
     }
@@ -337,7 +337,7 @@ export default class ContainerRoutes {
             const typeRepo = new TypeMappingRepository().where().containerID('eq', req.container?.id);
             const mappings = await typeRepo.list(true);
 
-            // we need to prepare the mappings with metatype/key names 
+            // we need to prepare the mappings with metatype/key names
             // for id lookup to work in the destination container
             const preparedMappingsPromises = mappings.value.map(async mapping => {
                 // data source id is removed by this function but is needed prior to export
