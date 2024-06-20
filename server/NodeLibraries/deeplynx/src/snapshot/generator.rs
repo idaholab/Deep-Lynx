@@ -54,7 +54,7 @@ impl SnapshotGenerator {
                     metatypes.uuid AS metatype_uuid
                    FROM (nodes
                      LEFT JOIN metatypes ON ((metatypes.id = nodes.metatype_id)))
-                  WHERE (nodes.deleted_at IS NULL) AND (nodes.container_id = {container_id}::bigint)
+                  WHERE (nodes.deleted_at IS NULL) AND (nodes.container_id = {container_id}::bigint) AND (nodes.data_source_id IS NOT NULL)
                   ORDER BY nodes.id, nodes.created_at) q ORDER BY q.metatype_id"#
       ),
       Some(ts) => format!(
@@ -71,7 +71,7 @@ impl SnapshotGenerator {
                      LEFT JOIN metatypes ON ((metatypes.id = nodes.metatype_id)))
                   WHERE (nodes.container_id = {container_id})
                   AND nodes.created_at <= '{ts}'
-                  AND (nodes.deleted_at > '{ts}' OR nodes.deleted_at IS NULL)
+                  AND (nodes.deleted_at > '{ts}' OR nodes.deleted_at IS NULL) AND (nodes.data_source_id IS NOT NULL)
                   ORDER BY nodes.id, nodes.created_at) q ORDER BY q.metatype_id"#
       ),
     };
