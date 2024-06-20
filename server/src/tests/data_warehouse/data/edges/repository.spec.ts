@@ -23,6 +23,7 @@ import EdgeRepository from '../../../../data_access_layer/repositories/data_ware
 import DataSourceMapper from '../../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
 import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
 import {EdgeConnectionParameter} from '../../../../domain_objects/data_warehouse/etl/type_transformation';
+import {SnapshotGenerator} from "deeplynx";
 
 describe('An Edge Repository', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -325,9 +326,14 @@ describe('An Edge Repository', async () => {
             ],
         });
 
-        let edges = await edgeRepo.populateFromParameters(edge);
+        const snapshot = new SnapshotGenerator();
+        await snapshot.init({dbConnectionString: process.env.CORE_DB_CONNECTION_STRING}, containerID);
+
+        let edges = await edgeRepo.populateFromParameters(edge, snapshot);
         expect(edges.isError, JSON.stringify(edges.error)).false;
         expect(edges.value.length).eq(1);
+        edges.value[0].properties = JSON.parse(JSON.parse(JSON.stringify(edges.value[0].properties)))
+        edges.value[0].metadata_properties = JSON.parse(JSON.parse(JSON.stringify(edges.value[0].metadata_properties)))
 
         // normal save first
         let saved = await edgeRepo.bulkSave(user, edges.value);

@@ -1,4 +1,10 @@
 import {Readable} from 'stream';
+import jwt from 'jsonwebtoken';
+import Config from './config';
+import UserRepository from '../data_access_layer/repositories/access_management/user_repository';
+import { ContainerPermissionSet } from '../domain_objects/data_warehouse/ontology/container';
+import Result from '../common_classes/result';
+import { classToPlain } from 'class-transformer';
 
 // toStream will recreate a read stream out of the supplied array of objects. This is generally used to prepare
 // data to be sent to the Data Source interface's ReceiveData function. Users should avoid using this when possible
@@ -32,6 +38,25 @@ export function stringToValidPropertyName(input: string): string {
     }
 
     return output;
+}
+
+// create a temp token to allow external apps to communicate with DL
+// without having to store any credentials within the app
+export async function newTempToken(containerID: string, userID: string, expiry?: string): Promise<Result<string>> {
+    // create service user
+    const userRepo = new UserRepository();
+    const perms = new ContainerPermissionSet({data: ['write', 'read']});
+    const user = await userRepo.createServiceUserWithPerms(containerID, userID, perms);
+    if (user.isError) {return Promise.resolve(Result.Pass(user))}
+    const serviceUser = user.value;
+
+    const token = jwt.sign(classToPlain(serviceUser), Config.encryption_key_secret, {
+        expiresIn: '',
+        algorithm: 'RS256',
+        allowInsecureKeySizes: true
+    });
+
+    return Promise.resolve(Result.Success(token));
 }
 
 export function dataTypeToParquetType(input: string): string {

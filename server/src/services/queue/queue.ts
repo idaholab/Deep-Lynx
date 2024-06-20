@@ -5,6 +5,7 @@ import RabbitMQQueue from './rabbitmq_queue_impl';
 import AzureServiceBusQueue from './azure_service_bus_queue_impl';
 
 /*
+    NOTE: Queues are currently DEPRECATED and unused.
     QueueInterface defines a very simple interface for a queue processor to
     implement. Planned implementations are Azure Service Bus, RabbitMQ, and
     a simple database processor
@@ -18,7 +19,7 @@ export interface QueueInterface {
     // returns false if the connection could not be made
     Init(): Promise<boolean>;
 
-    // Consume should start a worker-like thread who's job is to read messages from
+    // Consume should start a worker-like thread whose job is to read messages from
     // queues and act on them - generally spawned for each possible queue
     Consume(queueName: string, destination: Writable): void;
 

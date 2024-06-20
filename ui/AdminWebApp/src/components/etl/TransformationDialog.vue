@@ -1598,6 +1598,9 @@ export default Vue.extend ({
           value: this.selectedRelationshipPair?.destination_metatype_id // yes it needs to be the uuid, but the search box will auto handle this
         } as EdgeConfigKeyT
 
+      this.origin_metatype_id = this.selectedRelationshipPair?.origin_metatype_id
+      this.destination_metatype_id = this.selectedRelationshipPair?.destination_metatype_id
+
       this.$client.listMetatypeRelationshipKeys(this.containerID, newPair.relationship_id!)
           .then(keys => {
             this.selectedMetatypeRelationshipPairKeys = keys
@@ -1733,8 +1736,10 @@ export default Vue.extend ({
         payload.origin_id_key = this.origin_key
         payload.origin_data_source_id = this.origin_data_source_id
         payload.origin_metatype_id = this.origin_metatype_id
+        payload.origin_metatype_name = this.selectedRelationshipPair.origin_metatype_name
         payload.destination_id_key = this.destination_key
         payload.destination_metatype_id = this.destination_metatype_id
+        payload.destination_metatype_name = this.selectedRelationshipPair.destination_metatype_name
         payload.destination_data_source_id = this.destination_data_source_id
         payload.destination_parameters = this.destinationConfigKeys
         payload.origin_parameters = this.originConfigKeys
@@ -1781,8 +1786,10 @@ export default Vue.extend ({
       payload.origin_id_key = this.origin_key
       payload.origin_data_source_id = this.origin_data_source_id
       payload.origin_metatype_id = this.origin_metatype_id
+      payload.origin_metatype_name = (this.selectedRelationshipPair) ? this.selectedRelationshipPair.origin_metatype_name : null
       payload.destination_id_key = this.destination_key
       payload.destination_metatype_id = this.destination_metatype_id
+      payload.destination_metatype_name = (this.selectedRelationshipPair) ? this.selectedRelationshipPair.destination_metatype_name : null
       payload.destination_data_source_id = this.destination_data_source_id
       payload.destination_parameters = this.destinationConfigKeys
       payload.origin_parameters = this.originConfigKeys

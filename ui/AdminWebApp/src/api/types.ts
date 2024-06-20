@@ -515,7 +515,9 @@ export type TypeMappingTransformationT = {
     };
     metatype_id?: string;
     metatype_relationship_pair_id?: string;
+    origin_metatype_name?: string;
     selected_relationship_pair_name?: string;
+    destination_metatype_name?: string;
     origin_id_key?: string;
     origin_metatype_id?: string;
     origin_data_source_id?: string;
@@ -542,7 +544,9 @@ export type TypeMappingTransformationPayloadT = {
     conditions?: TypeMappingTransformationCondition[];
     metatype_id?: string;
     metatype_relationship_pair_id?: string;
+    origin_metatype_name?: string;
     selected_relationship_pair_name?: string;
+    destination_metatype_name?: string;
     origin_id_key?: string;
     origin_metatype_id?: string;
     origin_data_source_id?: string;
@@ -656,7 +660,6 @@ export type LongRunningTransactions = {
 };
 
 export type Statistics = {
-    edge_queue_items: string;
     containers: string;
     metatypes: string;
     metatype_keys: string;

@@ -303,7 +303,13 @@ export default class TypeTransformation extends BaseDomainClass {
     metatype_relationship_pair_name?: string;
 
     @IsOptional()
+    origin_metatype_name?: string;
+
+    @IsOptional()
     selected_relationship_pair_name?: string;
+
+    @IsOptional()
+    destination_metatype_name?: string;
 
     @IsOptional()
     metatype_relationship_pair_ontology_version?: string;

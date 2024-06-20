@@ -80,8 +80,7 @@ export default class StatsMapper extends Mapper {
 
     private statistics(): string {
         const text = `
-            SELECT (SELECT COUNT(*) FROM edge_queue_items WHERE attempts < 11) as edge_queue_items,
-                   (SELECT COUNT(*) FROM containers)                           as containers,
+            SELECT (SELECT COUNT(*) FROM containers)                           as containers,
                    (SELECT COUNT(*) FROM metatypes)                            as metatypes,
                    (SELECT COUNT(*) FROM metatype_keys)                        as metatype_keys,
                    (SELECT COUNT(*) FROM metatype_relationships)               as metatype_relationships,

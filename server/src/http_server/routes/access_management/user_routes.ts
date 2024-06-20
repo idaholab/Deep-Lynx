@@ -44,6 +44,7 @@ export default class UserRoutes {
 
         app.post('/containers/:containerID/users/invite', ...middleware, authInContainer('write', 'users'), this.inviteUserToContainer);
         app.get('/containers/:containerID/users/invite', ...middleware, authInContainer('read', 'users'), this.listInvitedUsers);
+        app.delete('/containers/:containerID/container-leave/:userID', ...middleware, authInContainer('read', 'containers'), this.removeSelfUserRoles);
 
         app.get('/containers/:containerID/service-users', ...middleware, authInContainer('read', 'users'), this.listServiceUsersForContainer);
         app.post('/containers/:containerID/service-users', ...middleware, authInContainer('write', 'users'), this.createServiceUserForContainer);
@@ -212,6 +213,26 @@ export default class UserRoutes {
             next();
         }
     }
+    private static removeSelfUserRoles(req: Request, res: Response, next: NextFunction) {
+        if (req.container && req.currentUser && !req.currentUser.admin) {
+            userRepo
+                .removeSelfRoles(req.currentUser, req.currentUser.id!, req.container.id!)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => Result.Error(err).asResponse(res))
+                .finally(() => next());
+        } 
+	else if (req.container && req.currentUser && req.currentUser.admin) {
+		Result.Failure('user is admin', 403).asResponse(res);
+		next();
+	}
+	else {
+            Result.Failure('user not found', 404).asResponse(res);
+            next();
+        }
+    }
+
 
     private static listUserPermissions(req: Request, res: Response, next: NextFunction) {
         if (req.currentUser) {

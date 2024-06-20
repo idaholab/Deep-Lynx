@@ -335,7 +335,14 @@ export default class UserRepository extends Repository implements RepositoryInte
 
         return Promise.resolve(Result.Success(deleted));
     }
+    async removeSelfRoles(user: User, userID: string, domain: string): Promise<Result<boolean>> {
+	// NOTE: unauthorized if admin == TRUE. admin cannot leave a container.
+        if (user.admin) return Promise.resolve(Result.Error(ErrorUnauthorized));
 
+        const deleted = await Authorization.DeleteAllRoles(userID, domain);
+
+        return Promise.resolve(Result.Success(deleted));
+    }
     async rolesInContainer(user: User, containerID: string): Promise<Result<string[]>> {
         const roles = await Authorization.RolesForUser(user.id!, containerID);
 
@@ -485,6 +492,30 @@ export default class UserRepository extends Repository implements RepositoryInte
 
     listServiceUsersForContainer(containerID: string): Promise<Result<User[]>> {
         return this.#mapper.ListServiceUsersForContainer(containerID);
+    }
+
+    async createServiceUserWithPerms(containerID: string, userID: string, permissions: ContainerPermissionSet): Promise<Result<User>> {
+        // create and save a service user
+        const service = new User({
+            identity_provider: 'service',
+            admin: false,
+            display_name: 'test service user',
+            type: 'service'
+        })
+        const saved = await this.#mapper.Create(userID, service);
+        if (saved.isError) {return Promise.resolve(Result.Pass(saved))}
+        Object.assign(service, saved.value);
+
+        // add user to container
+        const added = await this.#mapper.AddServiceUserToContainer(service.id!, containerID);
+        if (added.isError) {return Promise.resolve(Result.Pass(added))}
+
+        // set perms
+        const set = await this.setContainerPermissions(service.id!, containerID, permissions);
+        if (set.isError) {return Promise.resolve(Result.Pass(set))}
+
+        // return saved user
+        return Promise.resolve(Result.Success(service));
     }
 
     constructor() {

@@ -1,4 +1,4 @@
-import {workerData} from 'worker_threads';
+import {workerData, isMainThread} from 'worker_threads';
 import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/postgres';
 import QueryStream from 'pg-query-stream';
 import DataStagingMapper from '../data_access_layer/mappers/data_warehouse/import/data_staging_mapper';
@@ -17,17 +17,10 @@ import {SnapshotGenerator} from 'deeplynx';
 import Config from '../services/config';
 import ContainerMapper from '../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 
-async function Start(): Promise<void> {
+export async function ProcessWorkerStart(importIDs: string[], containerID: string): Promise<void> {
     await PostgresAdapter.Instance.init();
     const client = await PostgresAdapter.Instance.Pool.connect();
     const insertClient = await PostgresAdapter.Instance.Pool.connect();
-
-    // we're going to use the importIDs three times; once to process all the nodes
-    // once to process all the edges and once to attach tags and files to nodes/edges
-    // this allows us to at least ensure some kind of order in dealing with building edges
-    // without having to do edge queues and gets us some performance gains vs constantly reaching back to the db
-    const importIDs: string[] = workerData.input.importIDs;
-    const containerID: string = workerData.input.containerID;
 
     // we need to run a lock on the container first so that we can maintain we're the only process running on it
     const transactionResult = await ContainerMapper.Instance.startTransaction();
@@ -293,4 +286,13 @@ async function Start(): Promise<void> {
     process.exit(0);
 }
 
-void Start();
+// we're going to use the importIDs three times; once to process all the nodes
+// once to process all the edges and once to attach tags and files to nodes/edges
+// this allows us to at least ensure some kind of order in dealing with building edges
+// without having to do edge queues and gets us some performance gains vs constantly reaching back to the db
+if (!isMainThread) {
+    const importIDs: string[] = workerData.input.importIDs;
+    const containerID: string = workerData.input.containerID;
+
+    void ProcessWorkerStart(importIDs, containerID);
+}

@@ -149,6 +149,96 @@ export default class ContainerImport {
         return classLabel;
     }
 
+    // takes an object and looks for the classes specified by rdf:Description or rdf:resource and returns an array of these classes
+    private findClasses(value: any) {
+        const toReturn: string[] = [];
+
+        // rdf:Description and rdf:resource should be exclusive
+        // if found, they will contain the classes to include or exclude
+        if (typeof value['rdf:Description'] !== 'undefined') {
+            if (!Array.isArray(value['rdf:Description'])) {
+                value['rdf:Description'] = [value['rdf:Description']] as any[]
+            }
+
+            for (const description of value['rdf:Description']) {
+                if (description['rdf:about'] && typeof description['rdf:about'] === 'string') toReturn.push(description['rdf:about']);
+            }
+        } else if (typeof value['rdf:resource'] !== 'undefined') {
+            if (typeof value['rdf:resource'] === 'string') toReturn.push(value['rdf:resource']);
+        }
+
+        return toReturn;
+    }
+
+    // parses an owl:Class for the children owl:Class, owl:unionOf, owl:intersectionOf, and owl:complementOf
+    // these properties may be used in making more complex determinations of classes that are included or excluded
+    // for the purposes of object properties applied to a class or the domain/range of an object property
+    // or data property. This logic is simplified to returning an object containing two arrays indicating the classes to include or exclude
+    // since DeepLynx is not an ontology reasoner.
+    private parseOwlClass(owlClass: any) {
+        // intersectionOf - any instance of the first class is also an instances of all classes in the specified list
+        // unionOf - any instance of the first class is an instance of at least one of the classes in the specified list
+        // complementOf - the first class is equivalent to everything not in the second class
+
+        const includedClasses: string[] = [];
+        const excludedClasses: string[] = [];
+        let include = true;
+
+        // the owl:Class provided might be either an object or array. recurse with each object if array
+        if (Array.isArray(owlClass)) {
+            owlClass.forEach((classObject: any) => {
+                const classes = this.parseOwlClass(classObject)
+                includedClasses.push(...classes.includedClasses);
+                excludedClasses.push(...classes.excludedClasses);
+            })
+        }
+
+        // loop through each property
+        for (const property in owlClass) {
+            const value = owlClass[property];
+
+            switch(property) {
+                // owl:unionOf and owl:intersectionOf are currently being treated the same, but could be broken out in the future
+                // to support ontology reasoner type capability
+                case 'owl:unionOf' || 'owl:intersectionOf':
+                    include ? includedClasses.push(...this.findClasses(value)) : excludedClasses.push(...this.findClasses(value));
+
+                    // the property being examined (e.g. owl:unionOf) may have an owl:Class property. Recurse
+                    if (typeof value['owl:Class'] !== 'undefined') {
+                        const classes = this.parseOwlClass(value['owl:Class']);
+                        includedClasses.push(...classes.includedClasses);
+                        excludedClasses.push(...classes.excludedClasses);
+                    }
+
+                    break;
+                case 'owl:complementOf':
+                    include = !include;
+
+                    include ? includedClasses.push(...this.findClasses(value)) : excludedClasses.push(...this.findClasses(value));
+
+                    // the property being examined (e.g. owl:unionOf) may have an owl:Class property. Recurse
+                    if (typeof value['owl:Class'] !== 'undefined') {
+                        const classes = this.parseOwlClass(value['owl:Class']);
+                        includedClasses.push(...classes.includedClasses);
+                        excludedClasses.push(...classes.excludedClasses);
+                    }
+
+                    break;
+                case 'owl:Class':
+                    const classes = this.parseOwlClass(owlClass[property]);
+                    includedClasses.push(...classes.includedClasses);
+                    excludedClasses.push(...classes.excludedClasses);
+                    break;
+            }
+        }
+
+        return {
+            includedClasses,
+            excludedClasses
+        };
+
+    }
+
     public async ImportOntology(
         user: User,
         input: ContainerImportT,
@@ -650,13 +740,47 @@ export default class ContainerImport {
                                     ? property['owl:onClass']['rdf:resource']
                                     : 'unknown data range';
 
+                            // an object property may use the owl:allValuesFrom to specify the target (destination) class
+                            if (typeof property['owl:allValuesFrom'] !== 'undefined') {
+                                // this may contain either a simple to retrieve rdf:resource property and value, or a complex owl:Class
+                                // if an owl:Class is found, parse out to find the classes to ultimately include or exclude
+                                if (typeof property['owl:allValuesFrom']['owl:Class'] !== 'undefined') {
+                                    const classes = this.parseOwlClass(property['owl:allValuesFrom']['owl:Class']);
+                                    // classes is an object containing the properties includedClasses and excludedClasses.
+                                    // for this use case, we will loop through the includedClasses to determine what relationship
+                                    // properties we should add for this class and ignore excludedClasses
+                                    for (const includedClass of classes.includedClasses) {
+                                        const propertyObj = {
+                                            value: onProperty,
+                                            target: includedClass,
+                                            property_type: 'relationship',
+                                            restriction_type: restrictionType,
+                                            cardinality_quantity: cardinalityQuantity,
+                                        };
+                                        const propKey = propertyObj.value + propertyObj.target;
+                                        properties[propKey] = propertyObj;
+                                    }
+
+                                    // done with this class property, move to the next
+                                    continue;
+                                } else {
+                                    dataRange = property['owl:allValuesFrom']['rdf:resource'];
+                                }
+                            }
+
                             target = dataRange; // This contains the class or datatype with a cardinality
                             target = this.ValidateTarget(target);
 
-                            // Determine if primitive or relationship property by looking for :
-                            // This will indicate that the target is another class (e.g. ontologyName:0001)
                             const regex = new RegExp('[:-]');
-                            if (regex.test(target)) {
+
+                            // Determine if primitive or relationship property by first looking for http://www.w3.org
+                            // which indicates a primitive property (see below note) and then looking for :
+                            // which may indicate that the target is another class (e.g. ontologyName:0001)
+                            if (/http:\/\/www\.w3\.org/.exec(target)) {
+                                propertyType = 'primitive';
+                                target = target.split('#')[1];
+                                target = this.ValidateTarget(target);
+                            } else if (regex.test(target)) {
                                 // The target is an identifier for another class
                                 propertyType = 'relationship';
                             } else {
@@ -785,46 +909,15 @@ export default class ContainerImport {
                             relationship['rdfs:comment']?.textNode : relationship['rdfs:comment'];
                     }
 
-                    // check for domains and ranges which could determine relationship pairs
-                    // only usable if both one or more domains and ranges are provided for complete relationship pairs
-                    if (relationship['rdfs:domain'] && relationship['rdfs:range']) {
-                        let domain = relationship['rdfs:domain']
-                        let range = relationship['rdfs:range']
-
-                        if (!Array.isArray(domain)) {
-                            domain = [domain]
-                        }
-                        if (!Array.isArray(range)) {
-                            range = [range]
-                        }
-
-                        // domainClass is an object with a single property, rdf:resource
-                        domain.forEach((domainClass: any) => {
-                            const classLabel = this.findClassLabel(domainClass['rdf:resource']);
-                            if (typeof classLabel !== 'string') {
-                                // classLabel is a failure result
-                                resolve(classLabel);
-                            }
-
-                            const domainIDClass = classIDMap.get(domainClass['rdf:resource']);
-                            const domainListClass = classListMap.get(domainIDClass.name);
-
-                            range.forEach((rangeClass: any) => {
-                                const propKey = domainClass['rdf:resource'] + rangeClass['rdf:resource'];
-                                const propertyObj = {
-                                    value: relationshipID,
-                                    target: rangeClass['rdf:resource'],
-                                    property_type: 'relationship',
-                                    restriction_type: 'some',
-                                    cardinality_quantity: 'none',
-                                }
-
-                                domainListClass.properties[propKey] = propertyObj;
-                                domainIDClass.properties[propKey] = propertyObj;
-                            });
-                        });
-                    }
-
+                    // domains and ranges on object and data properties should not be seen as constraints
+                    // and generally may be used in various ways depending on the application.
+                    // since DeepLynx is not an ontology reasoner to make inferences on domain and range properties,
+                    // we take no action on domains and ranges. For object properties,
+                    // this means we will not use them to determine metatype relationship pairs and that pairs must be
+                    // specified as properties on classes (using the SubClassOf like data properties).
+                    // if we were to support domains and ranges somehow, it will be necessary to fully support
+                    // the various owl classes that might be joined in any combination (owl:Class, owl:unionOf, owl:intersectionOf,
+                    // owl:complementOf) to fully parse out and realize a domain or range intersection.
 
                     relationshipMap.set(relationshipName, {
                         id: relationshipID,
@@ -901,46 +994,8 @@ export default class ContainerImport {
                     }
                 }
 
-                // check for domains on the data property that should determine data properties to be added to classes
-                if (dataProperty['rdfs:domain']) {
-                    let domain = dataProperty['rdfs:domain']
-                    if (!Array.isArray(domain)) {
-                        domain = [domain]
-                    }
-
-                    // domainClass is an object with a single property, rdf:resource
-                    domain.forEach((domainClass: any) => {
-                        const classLabel = this.findClassLabel(domainClass['rdf:resource']);
-                        if (typeof classLabel !== 'string') {
-                            // classLabel is a failure result
-                            resolve(classLabel);
-                        }
-
-                        const domainIDClass = classIDMap.get(domainClass['rdf:resource']);
-                        const domainListClass = classListMap.get(domainIDClass.name);
-
-                        // if the data property range is not an enum of strings, determine the primitive type
-                        let target;
-                        if (dpEnumRange === null) {
-                            // supply a default type if one is not given
-                            target = dataProperty['rdfs:range'] ? dataProperty['rdfs:range']['rdf:resource'] : '#string';
-                            target = target.split('#')[1];
-                            target = this.ValidateTarget(target);
-                        }
-
-                        const propertyObj = {
-                            value: dpID,
-                            target: dpEnumRange !== null ? 'enumeration' : target,
-                            property_type: 'primitive',
-                            restriction_type: 'some',
-                            cardinality_quantity: 'none',
-                        }
-                        const propKey = propertyObj.value + propertyObj.target;
-
-                        domainListClass.properties[propKey] = propertyObj;
-                        domainIDClass.properties[propKey] = propertyObj;
-                    });
-                }
+                // see the description above for why domains and ranges on data properties (and object properties)
+                // are not currently supported
 
                 dataPropertyMap.set(dpID, {
                     name: dpName,

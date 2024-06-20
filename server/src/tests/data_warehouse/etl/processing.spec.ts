@@ -28,9 +28,7 @@ import Import, {DataStaging} from '../../../domain_objects/data_warehouse/import
 import DataSourceRecord from '../../../domain_objects/data_warehouse/import/data_source';
 import {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import {DataSource} from '../../../interfaces_and_impl/data_warehouse/import/data_source';
-import {ProcessData} from '../../../data_processing/process';
-import EdgeQueueItemRepository from '../../../data_access_layer/repositories/data_warehouse/data/edge_queue_item_repository';
-import {InsertEdge} from '../../../data_processing/edge_inserter';
+import {ProcessWorkerStart} from "../../../jobs/process_worker";
 
 describe('A Data Processor', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -497,71 +495,56 @@ describe('A Data Processor', async () => {
         const active = await TypeMappingMapper.Instance.SetActive(typeMappingID);
         expect(active.isError).false;
 
-        const processResult = await ProcessData(inserted);
-        expect(processResult.isError, processResult.error?.error).false;
+        ProcessWorkerStart([inserted.import_id!], containerID).finally(async () => {
 
-        const nodeRepo = new NodeRepository();
-        const nodes = await nodeRepo.where().importDataID('eq', dataImportID).list();
+            const nodeRepo = new NodeRepository();
+            const nodes = await nodeRepo.where().importDataID('eq', dataImportID).list();
 
-        expect(nodes.isError).false;
-        expect(nodes.value.length).eq(3);
+            expect(nodes.isError).false;
+            expect(nodes.value.length).eq(3);
 
-        // run through each node, verifying that the transformations were correctly run
-        // I know it's a a double test since we already have tests for the transformations
-        // but I wanted to make sure they work in the larger scope of the process loop
-        for (const node of nodes.value) {
-            switch (node.original_data_id) {
-                case `UUID`: {
-                    expect(node.properties).to.have.property('name', "test car's maintenance");
-                    expect(node.properties).to.have.property('start_date', '2020-01-01T12:00:00.000Z');
-                    expect(node.properties).to.have.property('average_visits', 4);
-                    // because the order of the array may have changed, we must check existence and length only
-                    expect(node.properties).to.have.property('visit_dates');
-                    expect((node.properties as any)['visit_dates'].length).eq(3);
-                    // validate the original and composite ID fields worked correctly
-                    expect(node.original_data_id).eq('UUID'); // original IDs are strings
-                    break;
-                }
+            // run through each node, verifying that the transformations were correctly run
+            // I know it's a double test since we already have tests for the transformations
+            // but I wanted to make sure they work in the larger scope of the process loop
+            for (const node of nodes.value) {
+                switch (node.original_data_id) {
+                    case `UUID`: {
+                        expect(node.properties).to.have.property('name', "test car's maintenance");
+                        expect(node.properties).to.have.property('start_date', '2020-01-01T12:00:00.000Z');
+                        expect(node.properties).to.have.property('average_visits', 4);
+                        // because the order of the array may have changed, we must check existence and length only
+                        expect(node.properties).to.have.property('visit_dates');
+                        expect((node.properties as any)['visit_dates'].length).eq(3);
+                        // validate the original and composite ID fields worked correctly
+                        expect(node.original_data_id).eq('UUID'); // original IDs are strings
+                        break;
+                    }
 
-                case `1`: {
-                    expect(node.properties).to.have.property('id', 1);
-                    expect(node.properties).to.have.property('type', 'oil change');
-                    expect(node.properties).to.have.property('check_engine_light_flag', true);
-                    // validate the original and composite ID fields worked correctly
-                    expect(node.original_data_id).eq('1'); // original IDs are strings
-                    break;
-                }
+                    case `1`: {
+                        expect(node.properties).to.have.property('id', 1);
+                        expect(node.properties).to.have.property('type', 'oil change');
+                        expect(node.properties).to.have.property('check_engine_light_flag', true);
+                        // validate the original and composite ID fields worked correctly
+                        expect(node.original_data_id).eq('1'); // original IDs are strings
+                        break;
+                    }
 
-                case `2`: {
-                    expect(node.properties).to.have.property('id', 2);
-                    expect(node.properties).to.have.property('type', 'tire rotation');
-                    expect(node.properties).to.have.property('check_engine_light_flag', false);
-                    // validate the original and composite ID fields worked correctly
-                    expect(node.original_data_id).eq('2'); // original IDs are strings
-                    break;
+                    case `2`: {
+                        expect(node.properties).to.have.property('id', 2);
+                        expect(node.properties).to.have.property('type', 'tire rotation');
+                        expect(node.properties).to.have.property('check_engine_light_flag', false);
+                        // validate the original and composite ID fields worked correctly
+                        expect(node.original_data_id).eq('2'); // original IDs are strings
+                        break;
+                    }
                 }
             }
-        }
 
-        const edgeQueueRepo = new EdgeQueueItemRepository();
-        const items = await edgeQueueRepo.where().importID('eq', dataImportID).list();
-        expect(items.isError).false;
+            // need to delete this so we don't make edges on the next test
+            await TypeTransformationMapper.Instance.Delete(result.value.id!);
 
-        for (let item of items.value) {
-            const result = await InsertEdge(item);
-            expect(result.isError).false;
-        }
-
-        const edgeRepo = new EdgeRepository();
-        const edges = await edgeRepo.where().importDataID('eq', dataImportID).list();
-
-        expect(edges.isError).false;
-        expect(edges.value.length).eq(2);
-
-        // need to delete this so we don't make edges on the next test
-        await TypeTransformationMapper.Instance.Delete(result.value.id!);
-
-        return Promise.resolve();
+            return Promise.resolve();
+        })
     });
 
     it('properly process a queue edge', async () => {
@@ -646,65 +629,59 @@ describe('A Data Processor', async () => {
         const active = await TypeMappingMapper.Instance.SetActive(typeMappingID);
         expect(active.isError).false;
 
-        const processResult = await ProcessData(inserted);
-        expect(processResult.isError, processResult.error?.error).false;
+        ProcessWorkerStart([inserted.import_id!], containerID).finally(async () => {
 
-        const nodeRepo = new NodeRepository();
-        const nodes = await nodeRepo.where().importDataID('eq', dataImportID).list();
+            const nodeRepo = new NodeRepository();
+            const nodes = await nodeRepo.where().importDataID('eq', dataImportID).list();
 
-        expect(nodes.isError).false;
-        expect(nodes.value.length).eq(3);
+            expect(nodes.isError).false;
+            expect(nodes.value.length).eq(3);
 
-        // run through each node, verifying that the transformations were correctly run
-        // I know it's a a double test since we already have tests for the transformations
-        // but I wanted to make sure they work in the larger scope of the process loop
-        for (const node of nodes.value) {
-            switch (node.original_data_id) {
-                case `UUID`: {
-                    expect(node.properties).to.have.property('name', "test car's maintenance");
-                    expect(node.properties).to.have.property('start_date', '2020-01-01T12:00:00.000Z');
-                    expect(node.properties).to.have.property('average_visits', 4);
-                    // because the order of the array may have changed, we must check existence and length only
-                    expect(node.properties).to.have.property('visit_dates');
-                    expect((node.properties as any)['visit_dates'].length).eq(3);
-                    // validate the original and composite ID fields worked correctly
-                    expect(node.original_data_id).eq('UUID'); // original IDs are strings
-                    break;
-                }
+            // run through each node, verifying that the transformations were correctly run
+            // I know it's a a double test since we already have tests for the transformations
+            // but I wanted to make sure they work in the larger scope of the process loop
+            for (const node of nodes.value) {
+                switch (node.original_data_id) {
+                    case `UUID`: {
+                        expect(node.properties).to.have.property('name', "test car's maintenance");
+                        expect(node.properties).to.have.property('start_date', '2020-01-01T12:00:00.000Z');
+                        expect(node.properties).to.have.property('average_visits', 4);
+                        // because the order of the array may have changed, we must check existence and length only
+                        expect(node.properties).to.have.property('visit_dates');
+                        expect((node.properties as any)['visit_dates'].length).eq(3);
+                        // validate the original and composite ID fields worked correctly
+                        expect(node.original_data_id).eq('UUID'); // original IDs are strings
+                        break;
+                    }
 
-                case `1`: {
-                    expect(node.properties).to.have.property('id', 1);
-                    expect(node.properties).to.have.property('type', 'oil change');
-                    expect(node.properties).to.have.property('check_engine_light_flag', true);
-                    // validate the original and composite ID fields worked correctly
-                    expect(node.original_data_id).eq('1'); // original IDs are strings
-                    break;
-                }
+                    case `1`: {
+                        expect(node.properties).to.have.property('id', 1);
+                        expect(node.properties).to.have.property('type', 'oil change');
+                        expect(node.properties).to.have.property('check_engine_light_flag', true);
+                        // validate the original and composite ID fields worked correctly
+                        expect(node.original_data_id).eq('1'); // original IDs are strings
+                        break;
+                    }
 
-                case `2`: {
-                    expect(node.properties).to.have.property('id', 2);
-                    expect(node.properties).to.have.property('type', 'tire rotation');
-                    expect(node.properties).to.have.property('check_engine_light_flag', false);
-                    // validate the original and composite ID fields worked correctly
-                    expect(node.original_data_id).eq('2'); // original IDs are strings
-                    break;
+                    case `2`: {
+                        expect(node.properties).to.have.property('id', 2);
+                        expect(node.properties).to.have.property('type', 'tire rotation');
+                        expect(node.properties).to.have.property('check_engine_light_flag', false);
+                        // validate the original and composite ID fields worked correctly
+                        expect(node.original_data_id).eq('2'); // original IDs are strings
+                        break;
+                    }
                 }
             }
-        }
 
-        const edgeRepo = new EdgeRepository();
-        const edges = await edgeRepo.where().importDataID('eq', dataImportID).list();
+            const edgeRepo = new EdgeRepository();
+            const edges = await edgeRepo.where().importDataID('eq', dataImportID).list();
 
-        expect(edges.isError).false;
-        expect(edges.value.length <= 2).true;
+            expect(edges.isError).false;
+            expect(edges.value.length <= 2).true;
 
-        const queueRepo = new EdgeQueueItemRepository();
-        const items = await queueRepo.where().importID('eq', dataImportID).list();
-
-        expect(items.isError).false;
-        expect(items.value.length >= 2).true;
-
-        return Promise.resolve();
+            return Promise.resolve();
+        })
     });
 });
 

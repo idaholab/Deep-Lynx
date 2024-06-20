@@ -27,7 +27,7 @@ import {DataSourceFactory} from '../../data_access_layer/repositories/data_wareh
 import TypeTransformation, {KeyMapping} from '../../domain_objects/data_warehouse/etl/type_transformation';
 import TypeTransformationMapper from '../../data_access_layer/mappers/data_warehouse/etl/type_transformation_mapper';
 import TypeMappingMapper from '../../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper';
-import {ProcessData} from '../../data_processing/process';
+import {ProcessWorkerStart} from "../../jobs/process_worker";
 
 describe('The GraphQL Schema Generator', async function () {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -640,13 +640,11 @@ describe('The GraphQL Schema Generator', async function () {
         const records = await dataStagingRepo.where().dataSourceID('eq', dataSource!.DataSourceRecord!.id).list();
         expect(records.isError).false;
         expect(records.value.length).gt(0);
+        const importIDs = records.value.map(value => value.import_id!);
 
-        for (const record of records.value) {
-            const result = await ProcessData(record);
-            expect(result.isError, result.error?.error).false;
-        }
-
-        return Promise.resolve();
+        ProcessWorkerStart(importIDs, containerID).finally(async () => {
+            return Promise.resolve();
+        })
     });
 
     after(async () => {

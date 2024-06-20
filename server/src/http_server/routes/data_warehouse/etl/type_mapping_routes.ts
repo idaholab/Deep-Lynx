@@ -184,7 +184,7 @@ export default class TypeMappingRoutes {
     private static exportTypeMappings(req: Request, res: Response, next: NextFunction) {
         const user = req.currentUser!;
         const mappingRepo = new TypeMappingRepository();
-
+        
         if (req.dataSource) {
             let payload: TypeMappingExportPayload | undefined;
             if (req.body) payload = plainToClass(TypeMappingExportPayload, req.body as object);
@@ -216,7 +216,7 @@ export default class TypeMappingRoutes {
                             .then((preparedMappings) => {
                                 res.setHeader('Content-disposition', 'attachment; filename= exportedMappings.json');
                                 res.setHeader('Content-type', 'application/json');
-                                res.write(serialize(preparedMappings), (err) => {
+                                res.write(JSON.stringify(preparedMappings), (err) => {
                                     res.end();
                                 });
                             })

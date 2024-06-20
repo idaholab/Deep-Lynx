@@ -297,7 +297,7 @@ export default class DataSourceRoutes {
     private static reprocessDataSource(req: Request, res: Response, next: NextFunction) {
         if (req.dataSource) {
             dataSourceRepo
-                .reprocess(req.dataSource.DataSourceRecord!.id!)
+                .reprocess(req.container!.id!, req.dataSource.DataSourceRecord!.id!)
                 .then((result) => {
                     result.asResponse(res);
                 })

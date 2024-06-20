@@ -135,9 +135,9 @@ UPDATE data_staging_migration SET data_source_id = NULL WHERE data_staging_migra
 DROP VIEW IF EXISTS current_edges;
 DROP VIEW IF EXISTS current_nodes;
 DROP MATERIALIZED VIEW IF EXISTS current_nodes_cache;
-DROP TABLE IF EXISTS nodes;
-DROP TABLE IF EXISTS edges;
-DROP TABLE IF EXISTS data_staging;
+DROP TABLE IF EXISTS nodes CASCADE;
+DROP TABLE IF EXISTS edges CASCADE;
+DROP TABLE IF EXISTS data_staging CASCADE;
 DROP FUNCTION IF EXISTS link_edge;
 
 /* now rebuild the tables and views */

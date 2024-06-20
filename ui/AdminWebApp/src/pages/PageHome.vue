@@ -455,6 +455,20 @@
             </v-list-item-content>
           </v-list-item>
 
+         <v-list-item
+	    v-if="!$auth.IsAdmin()"
+            link
+            @click="setActiveComponent('container-leave')"
+            :input-value="currentMainComponent === 'ViewContainerLeave'"
+            :ripple="{ class: 'list-ripple' }"
+          >
+            <v-list-item-content>
+              <v-list-item-title>{{
+                $t("containers.leaveContainer")
+              }}</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+
           <v-list-item link @click="logout" :ripple="{ class: 'list-ripple' }">
             <v-list-item-content>
               <v-list-item-title>{{ $t("general.logout") }}</v-list-item-title>
@@ -809,6 +823,7 @@ import ViewUsers from "@/views/ViewUsers.vue";
 import ViewContainerUsers from "@/views/ViewContainerUsers.vue";
 import ViewContainers from "@/views/ViewContainers.vue";
 import ViewApiKeys from "@/views/ViewApiKeys.vue";
+import ViewContainerLeave from "@/views/ViewContainerLeave.vue";
 import LanguageSelect from "@/components/general/LanguageSelect.vue";
 import ContainerSelect from "@/components/ontology/containers/ContainerSelect.vue";
 import { TranslateResult } from "vue-i18n";
@@ -869,6 +884,7 @@ export default Vue.extend({
     ViewContainerExport,
     ViewContainerImport,
     ViewFileManager,
+    ViewContainerLeave,
     ViewOverviewGraph,
     ViewFileQuery,
   },
@@ -1088,6 +1104,15 @@ export default Vue.extend({
           this.componentName = this.$t("containers.import");
           this.$router.replace(
             `/containers/${this.containerID}/container-import`
+          );
+          break;
+        }
+
+        case "container-leave": {
+          this.currentMainComponent = "ViewContainerLeave";
+          this.componentName = this.$t("containers.leaveContainer");
+          this.$router.replace(
+            `/containers/${this.containerID}/container-leave`
           );
           break;
         }
