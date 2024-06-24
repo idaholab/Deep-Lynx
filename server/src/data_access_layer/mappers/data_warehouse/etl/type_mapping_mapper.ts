@@ -74,6 +74,10 @@ export default class TypeMappingMapper extends Mapper {
         return super.retrieve<TypeMapping>(this.retrieveByShapeHashStatement(dataSourceID, shapeHash), {resultClass: this.resultClass});
     }
 
+    public async ListByIDs(ids: string[]): Promise<Result<TypeMapping[]>> {
+        return super.rows<TypeMapping>(this.listByIdsStatement(ids), {resultClass: this.resultClass});
+    }
+
     public List(containerID: string, dataSourceID: string, offset: number, limit: number, sortBy?: string, sortDesc?: boolean): Promise<Result<TypeMapping[]>> {
         if (limit === -1) {
             return super.rows<TypeMapping>(this.listAllStatement(containerID, dataSourceID), {resultClass: this.resultClass});
@@ -132,15 +136,11 @@ export default class TypeMappingMapper extends Mapper {
     }
 
     public AddShapeHash(typeMappingID: string, shapeHash: string): Promise<Result<boolean>> {
-        return super.runStatement(this.addShapeHash(typeMappingID, shapeHash));
-    }
-
-    public RemoveShapeHash(typeMappingID: string, shapeHash: string): Promise<Result<boolean>> {
-        return super.runStatement(this.removeShapeHash(typeMappingID, shapeHash));
+        return super.runStatement(this.addShapeHashStatement(typeMappingID, shapeHash));
     }
 
     public async GetShapeHash(typeMappingID: string): Promise<Result<ShapeHashArray>> {
-        return super.retrieve(this.getShapeHash(typeMappingID), {resultClass: ShapeHashArray});
+        return super.retrieve(this.getShapeHashStatement(typeMappingID), {resultClass: ShapeHashArray});
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -402,21 +402,14 @@ export default class TypeMappingMapper extends Mapper {
         };
     }
 
-    private addShapeHash(typeMappingID: string, shapeHash: string): QueryConfig {
+    private addShapeHashStatement(typeMappingID: string, shapeHash: string): QueryConfig {
         return {
             text: `INSERT INTO hash_groupings(type_mapping_id, shape_hash) VALUES ($1, $2)`,
             values: [typeMappingID, shapeHash],
         };
     }
 
-    private removeShapeHash(typeMappingID: string, shapeHash: string): QueryConfig {
-        return {
-            text: `DELETE FROM hash_groupings WHERE type_mapping_id = $1 AND shape_hash = $2`,
-            values: [typeMappingID, shapeHash],
-        };
-    }
-
-    private getShapeHash(typeMappingID: string): QueryConfig {
+    private getShapeHashStatement(typeMappingID: string): QueryConfig {
         return {
             text: `SELECT array_agg(shape_hash) AS shape_hash_array
                     FROM hash_groupings
@@ -424,5 +417,12 @@ export default class TypeMappingMapper extends Mapper {
                     GROUP BY type_mapping_id`,
             values: [typeMappingID],
         };
+    }
+
+    private listByIdsStatement(typeMappingIDs: string []): QueryConfig {
+        const text = `SELECT * FROM type_mappings WHERE id IN (%L)`;
+        const values = typeMappingIDs;
+
+        return format(text, values);
     }
 }

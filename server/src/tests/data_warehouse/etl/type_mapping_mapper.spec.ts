@@ -419,17 +419,36 @@ describe('A Data Type Mapping', async () => {
         const array = results.value.shape_hash_array!;
         expect(array.length).eq(2);
         expect(array).eql(hashes.slice(0,2));
-
-        let removed = await mappingStorage.RemoveShapeHash(mappingID, hashes[1]);
-        expect(removed.isError).false;
-        const resultsTwo = await mappingStorage.GetShapeHash(mappingID);
-        expect(resultsTwo.isError).false;
-        const arrayTwo = resultsTwo.value.shape_hash_array!;
-        expect(arrayTwo.length).eq(1);
-        expect(arrayTwo).eql(hashes.slice(0,1));
-        
     
         return Promise.resolve();
+    });
+
+    it('can formulate greatest common payload from array of payloads simple case', async () => {
+
+        const result = TypeMapping.objectToGreatestCommonShape([test_payload_greatest_common_payload_input_one, test_payload_greatest_common_payload_input_two, test_payload_greatest_common_payload_input_three]);
+
+        // Sort the expected output for comparison (result is already sorted in type mapping)
+        const sortedExpected = sortObjectKeys(test_payload_greatest_common_payload_output);
+
+        // Convert sorted expected out to JSON strings for comparison (result is already converted in type mapping)
+        const expectedJson = JSON.stringify(sortedExpected);
+
+        // Assert deep equality
+        expect(result).to.equal(expectedJson);
+    });
+
+    it('can formulate greatest common payload from array of payloads advanced case', async () => {
+
+        const result = TypeMapping.objectToGreatestCommonShape([test_payload_value_nodes_one, test_payload_value_nodes_two]);
+
+        // Sort the expected output for comparison (result is already sorted in type mapping)
+        const sortedExpected = sortObjectKeys(test_payload_greatest_car_ouput);
+
+        // Convert sorted expected out to JSON strings for comparison (result is already converted in type mapping)
+        const expectedJson = JSON.stringify(sortedExpected);
+
+        // Assert deep equality
+        expect(result).to.equal(expectedJson);
     });
 
 });
@@ -928,6 +947,212 @@ const test_payload_different_data_types = [
         }
 ];
 
+const test_payload_greatest_common_payload_input_one = 
+    {
+        objectId: 1,
+        name: "EWR-9154-Beartooth_AR_2022_3DView_1:1",
+        nickname: "kobe",
+        creationDate: "2022-May-31 00:00:00",
+    };
+
+const test_payload_greatest_common_payload_input_two = 
+    {
+        objectId: 2,
+        name: "EWR-9154-Beartooth_AR_2022_3DView_1:2",
+        creationDate: "2022-May-31 00:00:00",
+        days: 4
+    };
+
+const test_payload_greatest_common_payload_input_three = 
+    {
+        objectId: 3,
+        name: "EWR-9154-Beartooth_AR_2022_3DView_1:3",
+        creationDate: "2022-May-31 00:00:00"
+    };
+
+const test_payload_greatest_common_payload_output = [
+    {
+        creationDate: "2022-May-31 00:00:00",
+        days: 4,
+        name: "EWR-9154-Beartooth_AR_2022_3DView_1:3",
+        nickname: "kobe",
+        objectId: 3
+    }
+];
+
+const test_payload_greatest_car_ouput = [
+    {
+        "car":
+            {
+                "id":"Honda",
+                "manufacturer":
+                {
+                    "id":"UUID",
+                    "location":"Seattle, WA",
+                    "name":"Test Cars Inc"
+                },
+                "name":"test car",
+                "tire_pressures":
+                [
+                    {
+                        "id":"tire0",
+                        "measurement":35.08,
+                        "measurement_name":"tire pressure",
+                        "measurement_unit":"PSI"
+                    }
+                ]
+            },
+            "car_maintenance":
+            {
+                "average_visits_per_year":4,
+                "id":"UUID",
+                "maintenance_entries":
+                [
+                    {
+                        "check_engine_light_flag":true,
+                        "id":1,
+                        "parts_list":
+                        [
+                            {
+                                "id":"oil",
+                                "name":"synthetic oil",
+                                "price":45.66,
+                                "quantity":1
+                            }
+                        ],
+                        "type":"oil change"
+                    },
+                    {
+                        "check_engine_light_flag":false,
+                        "id":2,
+                        "parts_list":
+                        [
+                            {
+                                "id":"tire",
+                                "name":"all terrain tire",
+                                "price":150.99,
+                                "quantity":4
+                            }
+                        ],
+                        "type":"tire rotation"
+                    }
+                ],
+                "name":"test cars maintenance",
+                "start_date":"1/1/2020 12:00:00"
+            }
+        }
+    ];
+
+const test_payload_value_nodes_one = 
+    {
+        car: {
+            id: "UUID",
+            name: "test car",
+            manufacturer: {
+                id: "UUID",
+                name: "Test Cars Inc",
+                location: "Seattle, WA"
+            },
+            tire_pressures: [
+                {
+                  id: "tire0",
+                  measurement_unit: "PSI",
+                  measurement: 35.08,
+                  measurement_name: "tire pressure"
+                }
+            ]
+        },
+        car_maintenance: {
+          id: "UUID",
+          name: "test cars maintenance",
+          start_date: "1/1/2020 12:00:00",
+          average_visits_per_year: 4,
+          maintenance_entries: [
+                {
+                  id: 1,
+                  check_engine_light_flag: true,
+                  type: "oil change",
+                  parts_list: [
+                        {
+                          id: "oil",
+                          name: "synthetic oil",
+                          price: 45.66,
+                          quantity: 1
+                        }
+                    ]
+                },
+                {
+                  id: 2,
+                  check_engine_light_flag: false,
+                  type: "tire rotation",
+                  parts_list: [
+                        {
+                          id: "tire",
+                          name: "all terrain tire",
+                          price: 150.99,
+                          quantity: 4
+                        }
+                    ]
+                }
+            ]
+        }
+    };
+    
+const test_payload_value_nodes_two = 
+    {
+        car: {
+            id: "Honda",
+            name: "test car",
+            manufacturer: {
+                id: "UUID",
+                name: "Test Cars Inc",
+                location: "Seattle, WA"
+            },
+            tire_pressures: [
+                {
+                  id: "tire0",
+                  measurement_unit: "PSI",
+                  measurement: 35.08,
+                  measurement_name: "tire pressure"
+                }
+            ]
+        },
+        car_maintenance: {
+          id: "UUID",
+          name: "test cars maintenance",
+          start_date: "1/1/2020 12:00:00",
+          average_visits_per_year: 4,
+          maintenance_entries: [
+                {
+                  id: 1,
+                  check_engine_light_flag: true,
+                  type: "oil change",
+                  parts_list: [
+                        {
+                          id: "oil",
+                          name: "synthetic oil",
+                          price: 45.66,
+                          quantity: 1
+                        }
+                    ]
+                },
+                {
+                  id: 2,
+                  check_engine_light_flag: false,
+                  type: "tire rotation",
+                  parts_list: [
+                        {
+                          id: "tire",
+                          name: "all terrain tire",
+                          price: 150.99,
+                          quantity: 4
+                        }
+                    ]
+                }
+            ]
+        }
+    };
+
 export class MappingShapeHashOptions {
     stop_nodes?: string[];
     value_nodes?: string[];
@@ -949,5 +1174,18 @@ function compareSets(set1: Set<string>, set2: Set<string>): boolean {
     }
 
     return true;
+}
+
+// Helper function to sort objects by keys
+function sortObjectKeys(obj: any): any {
+    if (Array.isArray(obj)) {
+        return obj.map(sortObjectKeys);
+    } else if (typeof obj === 'object' && obj !== null) {
+        return Object.keys(obj).sort().reduce((acc, key) => {
+            acc[key] = sortObjectKeys(obj[key]);
+            return acc;
+        }, {} as any);
+    }
+    return obj;
 }
 

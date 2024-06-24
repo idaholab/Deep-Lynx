@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-for-in-array */
 import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
-import TypeMapping from '../../../../domain_objects/data_warehouse/etl/type_mapping';
+import TypeMapping, { ShapeHashArray } from '../../../../domain_objects/data_warehouse/etl/type_mapping';
 import TypeMappingMapper from '../../../mappers/data_warehouse/etl/type_mapping_mapper';
 import Result from '../../../../common_classes/result';
 import {PoolClient} from 'pg';
@@ -67,12 +67,44 @@ export default class TypeMappingRepository extends Repository implements Reposit
         return this.#mapper.AddShapeHash(typeMappingID, shapeHash);
     }
 
-    async removeShapeHash(typeMappingID: string, shapeHash: string): Promise<Result<boolean>> {
-        if (!typeMappingID || !shapeHash) {
-            return Promise.resolve(Result.Failure('Type Mapping ID must have an associated shape hash value'));
+    async groupHashes(typeMappingIDs: string [], user: User, containerIdValue: string, dataSourceIdValue: string): Promise<Result<boolean>> {
+        if (!typeMappingIDs) {
+            return Promise.resolve(Result.Failure('Type Mapping IDs must exist to group'));
         }
 
-        return this.#mapper.RemoveShapeHash(typeMappingID, shapeHash);
+        const mappings = await this.#mapper.ListByIDs(typeMappingIDs);
+        if (mappings.isError) {
+            return Promise.resolve(Result.Failure(`error retrieving type mappings with IDs ${typeMappingIDs}: ${mappings.error.error}`));
+        }
+        const samplePayloads = mappings.value.map((m) => m.sample_payload);
+
+        // pass sample payloads into common shape function
+        let greatestCommonPayload = TypeMapping.objectToGreatestCommonShape(samplePayloads);
+
+        // pass common shape into insert mappings statement (with NULL shape hash)
+        const commonMapping: TypeMapping = new TypeMapping({
+            container_id: containerIdValue,
+            data_source_id: dataSourceIdValue,
+            shape_hash: null, // Explicitly setting shape_hash as null
+            sample_payload: greatestCommonPayload,
+        });
+
+        const result = await this.#mapper.CreateOrUpdate(user.id!, commonMapping);
+        //do we need some sort of check to make sure the above statement does not blow up?
+        if (result.isError) {
+            return Promise.resolve(Result.Failure('error inserting new payload into type_mappings'));
+        }
+
+        // get array of shape hashes
+        const arrayShapeHashes = mappings.value.map((m) => m.shape_hash);
+
+        // pass type mapping id from line 92 and array of shape hashes from line 94 into group hashing table insert function
+        for (const hash of arrayShapeHashes){
+            await this.#mapper.AddShapeHash(result.value.id!, hash!);
+        }
+        
+
+        return Promise.resolve(Result.Success(true));
     }
 
     // shape hashes are unique only to data sources, so it will need both to find one
@@ -796,6 +828,11 @@ export default class TypeMappingRepository extends Repository implements Reposit
 
     resultingMetatypeRelationshipName(operator: string, value: any) {
         super.query('metatype_relationships.name', operator, value);
+        return this;
+    }
+
+    typeMappingID(operator: string, value: any) {
+        super.query('container_id', operator, value);
         return this;
     }
 

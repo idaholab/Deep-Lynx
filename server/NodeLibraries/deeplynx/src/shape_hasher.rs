@@ -75,7 +75,6 @@ impl Options {
   }
 }
 
-
 //This method prepares the JSON file data to be parsed and hashed. It takes in the data from a JSON file, and checks for any stop nodes
 //in the option struct to be ignored/removed from the data. It then calls the recurseData function to being breaking down data structure 
 //and types
@@ -97,7 +96,6 @@ pub fn hash(a: String, options: Options) -> Result<String, napi::Error> {
         .map_err(|err| napi::Error::new(napi::Status::GenericFailure, format!("Error processing data: {}", err)))?;
     Ok(outcome)
 }
-
 
 //This function is where the real hashing happens (using the built in rust hasher)
 //We first sort the keys and see if they match each other in each shape
@@ -156,14 +154,12 @@ fn json_object_to_hash(data: &str, options: &Options, path: &[String]) -> Result
     }
 }
 
-
 // A helper function to hash a string
 fn compute_hash_for_string(s: &str) -> String {
   let mut hasher = DefaultHasher::new();
   s.hash(&mut hasher);
   format!("{}", hasher.finish())
 }
-
 
 //The inital called method to parse the JSON file into its appropriate datatypes. Recursive call with varying method arguments
 //depending on arry or object parsing. If it is of other data types, consider it completely parsed. This method is simply used
@@ -249,6 +245,7 @@ fn recurseArray(v2: Vec<Value>, s5: &mut String, s2: &Vec<String>, options: &Opt
       };
       path.pop(); // Remove the current index from the path
     }
+
     let mut sorted_hashes: Vec<_> = unique_hashes.into_iter().collect();
     sorted_hashes.sort();
     let combined_hash_data = sorted_hashes.join(",");

@@ -42,7 +42,7 @@ export default class TypeMapping extends BaseDomainClass {
         sample_payload: any;
         data_source_id: string;
         active?: boolean;
-        shape_hash?: string;
+        shape_hash?: string | null;
         transformations?: TypeTransformation[];
     }) {
         super();
@@ -122,6 +122,84 @@ export default class TypeMapping extends BaseDomainClass {
 
     }
 
+    
+        // Define the function to update the keyTypeMap for the given payloads with keys and actual values
+        private static updateKeyTypeMap(data: {[key: string]: any}[], map: Map<string, any>) {
+            const extractPropsAndValues = (obj: any, map: Map<string, any>) => {
+                for (const key of Object.keys(obj)) {
+                    if (Array.isArray(obj[key])) {
+                        if (!map.has(key)) {
+                            map.set(key, []);
+                        }
+                        const existingArray = map.get(key) as any[];
+                        obj[key].forEach((item: any) => {
+                            if (!existingArray.some(existingItem => JSON.stringify(existingItem) === JSON.stringify(item))) {
+                                existingArray.push(item);
+                            }
+                        });
+                    } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+                        if (!map.has(key)) {
+                            map.set(key, {});
+                        }
+                        extractPropsAndValues(obj[key], map.get(key) as Map<string, any>);
+                    } else {
+                        map.set(key, obj[key]);
+                    }
+                }
+            };
+    
+            data.forEach(payload => {
+                const flattened = flatten(payload, { safe: true });
+                extractPropsAndValues(flattened, map);
+            });
+        }
+    
+        // Updated function to return the greatest common shape from an array of payloads
+        static objectToGreatestCommonShape(data: {[key: string]: any}[]) {
+            const keyTypeMap = new Map<string, any>();
+    
+            // Update the keyTypeMap for the given payloads with keys and actual values
+            TypeMapping.updateKeyTypeMap(data, keyTypeMap);
+
+            // Convert the keyTypeMap to nested JSON
+            return JSON.stringify([TypeMapping.mapToNestedJson(keyTypeMap)]);
+        }
+    
+        // Function to convert the map to nested JSON
+        private static mapToNestedJson(map: Map<string, any>): any {
+            const result: any = {};
+    
+            map.forEach((value, key) => {
+                const keys = key.split('.');
+                keys.reduce((acc, curr, index) => {
+                    if (index === keys.length - 1) {
+                        acc[curr] = value;
+                    } else {
+                        if (!acc[curr]) {
+                            acc[curr] = {};
+                        }
+                        return acc[curr];
+                    }
+                }, result);
+            });
+    
+            return TypeMapping.sortObjectKeys(result);
+        }
+
+        // Helper function to sort object keys
+        private static sortObjectKeys(obj: any): any {
+            if (Array.isArray(obj)) {
+                return obj.map(TypeMapping.sortObjectKeys);
+            } else if (typeof obj === 'object' && obj !== null) {
+                return Object.keys(obj).sort().reduce((acc, key) => {
+                    acc[key] = TypeMapping.sortObjectKeys(obj[key]);
+                    return acc;
+                }, {} as any);
+            }
+            return obj;
+        }
+
+
     // creates a base64 encoded hash of an object's shape. An object shape is a combination
     // of its keys and the type of data those keys are in - this method is static so users
     // can access it to create type mapping shape hash without having to actually build
@@ -135,7 +213,7 @@ export default class TypeMapping extends BaseDomainClass {
 
         // dataupdated is simply the full array being read in
         const dataupdated: string = JSON.stringify(data);
-
+        
         // // rawHash is the string hash of numberso
         const rawHash = hash(dataupdated, rustOptions);
 
@@ -143,9 +221,6 @@ export default class TypeMapping extends BaseDomainClass {
         // return crypto.createHash('sha256').update(rawHash).digest('base64');
         return rawHash;
     }
-
-
-
 
 
     get removedTransformations() {

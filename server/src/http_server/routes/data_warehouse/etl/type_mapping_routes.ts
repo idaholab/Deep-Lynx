@@ -7,7 +7,7 @@ import TypeMappingRepository from '../../../../data_access_layer/repositories/da
 import {plainToClass, serialize} from 'class-transformer';
 import TypeTransformation from '../../../../domain_objects/data_warehouse/etl/type_transformation';
 import TypeTransformationRepository from '../../../../data_access_layer/repositories/data_warehouse/etl/type_transformation_repository';
-import TypeMapping, {TypeMappingExportPayload, TypeMappingUpgradePayload} from '../../../../domain_objects/data_warehouse/etl/type_mapping';
+import TypeMapping, {TypeMappingComparison, TypeMappingExportPayload, TypeMappingUpgradePayload} from '../../../../domain_objects/data_warehouse/etl/type_mapping';
 import {FileInfo} from 'busboy';
 import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
 import {none} from 'fp-ts/lib/Option';
@@ -96,12 +96,6 @@ export default class TypeMappingRoutes {
             authInContainer('write', 'data'),
             this.addShapeHashToMapping,
         );
-        app.delete(
-            '/containers/:containerID/import/datasources/:sourceID/mappings/:mappingID/shapehash',
-            ...middleware,
-            authInContainer('write', 'data'),
-            this.removeShapeHashFromMapping,
-        );
 
         app.get('/containers/:containerID/transformations/:transformationID', ...middleware, authInContainer('read', 'data'), this.retrieveTypeTransformation);
         app.post(
@@ -115,6 +109,19 @@ export default class TypeMappingRoutes {
             ...middleware,
             authInContainer('write', 'data'),
             this.setMappingInactive,
+        );
+
+        app.put(
+            '/containers/:containerID/import/datasources/:sourceID/mappings/group',
+            ...middleware,
+            authInContainer('write', 'data'),
+            this.groupHashes,
+        );
+        app.delete(
+            '/containers/:containerID/import/datasources/:sourceID/mappings/group',
+            ...middleware,
+            authInContainer('write', 'data'),
+            this.deleteTypeMapping,  
         );
     }
 
@@ -624,23 +631,6 @@ export default class TypeMappingRoutes {
         }
     }
 
-    private static removeShapeHashFromMapping(req: Request, res: Response, next: NextFunction) {
-        if (req.typeMapping) {
-            mappingRepo
-                .removeShapeHash(req.typeMapping.id!, req.body.shape_hash)
-                .then((result) => {
-                    result.asResponse(res);
-                })
-                .catch((err) => {
-                    Result.Error(err).asResponse(res);
-                })
-                .finally(() => next());
-        } else {
-            Result.Failure(`Type Mapping not found`, 404).asResponse(res);
-            next();
-        }
-    }
-
     private static setMappingActive(req: Request, res: Response, next: NextFunction) {
         if (req.typeMapping) {
             TypeMappingMapper.Instance
@@ -672,6 +662,32 @@ export default class TypeMappingRoutes {
         } else {
             Result.Failure(`unable to find type mapping`, 404).asResponse(res);
             next();
+        }
+    }
+
+    private static groupHashes(req: Request, res: Response, next: NextFunction) {
+        const user = req.currentUser!;  //take current user from request
+        const mappingRepo = new TypeMappingRepository();  // initialize a repo for handling type mappings
+
+        if (req.dataSource) {  // checking if dataSouce present
+            let payload: TypeMappingExportPayload | undefined;
+
+            if (req.body) payload = plainToClass(TypeMappingExportPayload, req.body as object); // if there is a request body, convert it to an instance of TypeMappingExportPayload class
+
+            if (payload && payload.mapping_ids && payload.mapping_ids.length > 0) {  // we may want this since it is ensuring payload exists, checks if the mapping_ids exist, and that the list is greater than zero
+                mappingRepo
+                .groupHashes(payload?.mapping_ids!, req.currentUser!, req.container?.id!, req.dataSource.DataSourceRecord?.id!) 
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
+            } else {
+                Result.Failure(`Type Mapping not found`, 404).asResponse(res);
+                next();
+            }
         }
     }
 }
