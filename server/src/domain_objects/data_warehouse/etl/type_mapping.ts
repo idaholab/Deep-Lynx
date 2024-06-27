@@ -162,7 +162,7 @@ export default class TypeMapping extends BaseDomainClass {
             TypeMapping.updateKeyTypeMap(data, keyTypeMap);
 
             // Convert the keyTypeMap to nested JSON
-            return JSON.stringify([TypeMapping.mapToNestedJson(keyTypeMap)]);
+            return TypeMapping.mapToNestedJson(keyTypeMap);
         }
     
         // Function to convert the map to nested JSON

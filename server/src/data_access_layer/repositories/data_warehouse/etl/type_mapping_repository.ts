@@ -59,12 +59,12 @@ export default class TypeMappingRepository extends Repository implements Reposit
         return Promise.resolve(retrieved);
     }
 
-    async addShapeHash(typeMappingID: string, shapeHash: string): Promise<Result<boolean>> {
+    async groupShapeHashAndDelete(typeMappingID: string, shapeHash: string): Promise<Result<boolean>> {
         if (!typeMappingID || !shapeHash) {
             return Promise.resolve(Result.Failure('Type Mapping ID must have an associated shape hash value'));
         }
 
-        return this.#mapper.AddShapeHash(typeMappingID, shapeHash);
+        return this.#mapper.GroupShapeHashAndDelete(typeMappingID, shapeHash);
     }
 
     async groupHashes(typeMappingIDs: string [], user: User, containerIdValue: string, dataSourceIdValue: string): Promise<Result<boolean>> {
@@ -100,7 +100,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
 
         // pass type mapping id from line 92 and array of shape hashes from line 94 into group hashing table insert function
         for (const hash of arrayShapeHashes){
-            await this.#mapper.AddShapeHash(result.value.id!, hash!);
+            await this.#mapper.GroupShapeHashAndDelete(result.value.id!, hash!);
         }
         
 

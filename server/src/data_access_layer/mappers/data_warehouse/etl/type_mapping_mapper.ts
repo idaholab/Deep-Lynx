@@ -135,12 +135,12 @@ export default class TypeMappingMapper extends Mapper {
         return super.runAsTransaction(this.copyTransformations(userID, sourceMappingID, targetMappingID));
     }
 
-    public AddShapeHash(typeMappingID: string, shapeHash: string): Promise<Result<boolean>> {
-        return super.runStatement(this.addShapeHashStatement(typeMappingID, shapeHash));
-    }
-
     public async GetShapeHash(typeMappingID: string): Promise<Result<ShapeHashArray>> {
         return super.retrieve(this.getShapeHashStatement(typeMappingID), {resultClass: ShapeHashArray});
+    }
+
+    public GroupShapeHashAndDelete(typeMappingID: string, shapeHash: string):  Promise<Result<boolean>> {
+        return super.runAsTransaction(...this.groupShapeHashAndRemoveStatement(typeMappingID, shapeHash));
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -402,13 +402,6 @@ export default class TypeMappingMapper extends Mapper {
         };
     }
 
-    private addShapeHashStatement(typeMappingID: string, shapeHash: string): QueryConfig {
-        return {
-            text: `INSERT INTO hash_groupings(type_mapping_id, shape_hash) VALUES ($1, $2)`,
-            values: [typeMappingID, shapeHash],
-        };
-    }
-
     private getShapeHashStatement(typeMappingID: string): QueryConfig {
         return {
             text: `SELECT array_agg(shape_hash) AS shape_hash_array
@@ -424,5 +417,18 @@ export default class TypeMappingMapper extends Mapper {
         const values = typeMappingIDs;
 
         return format(text, values);
+    }
+
+    private groupShapeHashAndRemoveStatement(typeMappingID: string, shapeHash: string): QueryConfig[] {
+        return [
+            {
+                text: `INSERT INTO hash_groupings(type_mapping_id, shape_hash) VALUES ($1, $2)`,
+                values: [typeMappingID, shapeHash],
+            }, 
+            {
+                text: `UPDATE type_mappings SET shape_hash = NULL WHERE id = $1`,
+                values: [typeMappingID],
+            }
+        ];
     }
 }

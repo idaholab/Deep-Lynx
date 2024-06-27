@@ -386,43 +386,6 @@ describe('A Data Type Mapping', async () => {
         expect(areSetsEqual).eq(true);
     });
 
-    it('can get the hashes attached to a type mapping', async () => {
-        const mappingStorage = TypeMappingMapper.Instance;
-        const shapeHashSet = new Set<string>();
-        test_payload_value_nodes.forEach(object=>{
-            shapeHashSet.add(TypeMapping.objectToRustShapeHash(object, {value_nodes: ['car.id']}))
-            shapeHashSet.add(TypeMapping.objectToRustShapeHash(object))
-        });
-
-        expect(shapeHashSet.size).eq(3);
-        const hashes = Array.from(shapeHashSet);
-
-        const mapping = await mappingStorage.CreateOrUpdate(
-            'test suite',
-            new TypeMapping({
-                container_id: containerID,
-                data_source_id: dataSourceID,
-                sample_payload: test_raw_payload,
-            }),
-        );
-
-        expect(mapping.isError).false;
-        const mappingID = mapping.value.id!;
-
-        let added = await mappingStorage.AddShapeHash(mappingID, hashes[0]);
-        expect(added.isError).false;
-        added = await mappingStorage.AddShapeHash(mappingID, hashes[1]);
-        expect(added.isError).false;
-     
-        const results = await mappingStorage.GetShapeHash(mappingID);
-        expect(results.isError).false;
-        const array = results.value.shape_hash_array!;
-        expect(array.length).eq(2);
-        expect(array).eql(hashes.slice(0,2));
-    
-        return Promise.resolve();
-    });
-
     it('can formulate greatest common payload from array of payloads simple case', async () => {
 
         const result = TypeMapping.objectToGreatestCommonShape([test_payload_greatest_common_payload_input_one, test_payload_greatest_common_payload_input_two, test_payload_greatest_common_payload_input_three]);

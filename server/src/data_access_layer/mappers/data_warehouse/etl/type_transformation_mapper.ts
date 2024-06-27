@@ -105,6 +105,10 @@ export default class TypeTransformationMapper extends Mapper {
         return super.runAsTransaction(...this.deleteWithDataStatement(id));
     }
 
+    public GroupShapeHashAndDelete(typeMappingID: string, shapeHash: string):  Promise<Result<boolean>> {
+        return super.runAsTransaction(...this.groupShapeHashAndDeleteStatement(typeMappingID, shapeHash));
+    }
+
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
@@ -303,6 +307,19 @@ export default class TypeTransformationMapper extends Mapper {
                   WHERE type_mapping_transformations.id = $1`,
             values: [transformationID],
         };
+    }
+
+    private groupShapeHashAndDeleteStatement(typeMappingID: string, shapeHash: string): QueryConfig[] {
+        return [
+            {
+                text: `INSERT INTO hash_groupings(type_mapping_id, shape_hash) VALUES ($1, $2)`,
+                values: [typeMappingID, shapeHash],
+            }, 
+            {
+                text: `UPDATE type_mappings SET shape_hash = NULL WHERE id = $1`,
+                values: [typeMappingID],
+            }
+        ];
     }
 
     private deleteStatement(exportID: string): QueryConfig {

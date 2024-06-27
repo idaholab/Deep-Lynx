@@ -47,6 +47,20 @@ export default class TypeMappingRoutes {
             authInContainer('write', 'data'),
             this.copyTransformationsFromMapping,
         );
+
+        app.put(
+            '/containers/:containerID/import/datasources/:sourceID/mappings/group',
+            ...middleware,
+            authInContainer('write', 'data'),
+            this.groupHashes,
+        );
+        app.delete(
+            '/containers/:containerID/import/datasources/:sourceID/mappings/group',
+            ...middleware,
+            authInContainer('write', 'data'),
+            this.deleteTypeMapping,  
+        );
+
         app.get(
             '/containers/:containerID/import/datasources/:sourceID/mappings/:mappingID',
             ...middleware,
@@ -90,13 +104,6 @@ export default class TypeMappingRoutes {
             this.deleteTypeTransformation,
         );
 
-        app.post(
-            '/containers/:containerID/import/datasources/:sourceID/mappings/:mappingID/shapehash',
-            ...middleware,
-            authInContainer('write', 'data'),
-            this.addShapeHashToMapping,
-        );
-
         app.get('/containers/:containerID/transformations/:transformationID', ...middleware, authInContainer('read', 'data'), this.retrieveTypeTransformation);
         app.post(
             '/containers/:containerID/import/datasources/:sourceID/mappings/:mappingID/active',
@@ -109,19 +116,6 @@ export default class TypeMappingRoutes {
             ...middleware,
             authInContainer('write', 'data'),
             this.setMappingInactive,
-        );
-
-        app.put(
-            '/containers/:containerID/import/datasources/:sourceID/mappings/group',
-            ...middleware,
-            authInContainer('write', 'data'),
-            this.groupHashes,
-        );
-        app.delete(
-            '/containers/:containerID/import/datasources/:sourceID/mappings/group',
-            ...middleware,
-            authInContainer('write', 'data'),
-            this.deleteTypeMapping,  
         );
     }
 
@@ -610,23 +604,6 @@ export default class TypeMappingRoutes {
                 .finally(() => next());
         } else {
             Result.Failure(`target type transformation not found`).asResponse(res);
-            next();
-        }
-    }
-
-    private static addShapeHashToMapping(req: Request, res: Response, next: NextFunction) {
-        if (req.typeMapping) {
-            mappingRepo
-                .addShapeHash(req.typeMapping.id!, req.body.shape_hash)
-                .then((result) => {
-                    result.asResponse(res);
-                })
-                .catch((err) => {
-                    Result.Error(err).asResponse(res);
-                })
-                .finally(() => next());
-        } else {
-            Result.Failure(`Type Mapping not found`, 404).asResponse(res);
             next();
         }
     }
