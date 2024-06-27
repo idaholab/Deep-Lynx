@@ -1,6 +1,6 @@
 {
   "name": "deep-lynx-admin-gui",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "private": true,
   "scripts": {
     "serve": "cross-env NODE_ENV=development vue-cli-service serve",
@@ -18,9 +18,9 @@
     "@vue/cli-plugin-router": "~5.0.8",
     "@vue/cli-plugin-typescript": "~5.0.8",
     "@vue/cli-plugin-vuex": "~5.0.8",
-    "@vue/cli-service": "~5.0.8",
+    "@vue/cli-service": "^5.0.8",
     "@vue/eslint-config-typescript": "^11.0.0",
-    "axios": "^0.21.1",
+    "axios": "^1.7.2",
     "build-url": "^6.0.1",
     "calculate-correlation": "^1.2.3",
     "codemirror": "^5.65.12",

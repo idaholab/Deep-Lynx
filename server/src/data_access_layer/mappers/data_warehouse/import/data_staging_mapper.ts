@@ -296,7 +296,7 @@ export default class DataStagingMapper extends Mapper {
 
     private addErrorsStatement(id: string, error: string): QueryConfig {
         return {
-            text: `UPDATE data_staging SET errors = array_append(errors, $1) WHERE id = $2`,
+            text: `UPDATE data_staging SET errors = array_append(errors, $1::text) WHERE id = $2`,
             values: [error, id],
         };
     }
