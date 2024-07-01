@@ -165,7 +165,7 @@ export class Client {
             })
             .catch((e: any) => {
                 const error = JSON.parse(e);
-                const resp: AxiosResponse = {data: {}, status: 500, statusText: 'internal server error', headers: '', config: error.config};
+                const resp: AxiosResponse = {data: {}, status: 500, statusText: 'internal server error', headers: {}, config: error.config};
                 if (error.response) {
                     // The request was made and the server responded with a status code
                     // that falls out of the range of 2xx
