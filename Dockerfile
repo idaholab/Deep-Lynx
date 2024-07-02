@@ -1,4 +1,4 @@
-FROM rust:alpine3.20 as build
+FROM rust:alpine3.20.1 as build
 
 ENV RUSTFLAGS="-C target-feature=-crt-static"
 ENV RUN_MODE="build"
@@ -20,7 +20,7 @@ ENV RUN_JOBS=false
 ENV CORE_DB_CONNECTION_STRING=postgresql://postgres:root@postgres:5432/deep_lynx_dev
 
 RUN apk update
-RUN apk add build-base musl-dev openssl-dev
+RUN apk add build-base musl-dev openssl=3.3.1-r1 openssl-dev=3.3.1-r1
 RUN apk update add --update nodejs=21.7.3
 RUN apk add --update npm
 RUN npm config set strict-ssl false
@@ -44,10 +44,10 @@ WORKDIR /srv/deeplynx/server
 RUN yarn install;
 RUN yarn run build;
 
-FROM node:alpine3.20 as production
+FROM node:alpine3.20.1 as production
 ENV DEVELOPMENT_MODE=false
 
-RUN apk update && apk add supervisor
+RUN apk update && apk add supervisor openssl=3.3.1-r1
 RUN mkdir -p /srv/deeplynx/server
 
 # need pm2 to run legacy server
