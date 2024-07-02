@@ -44,7 +44,7 @@ WORKDIR /srv/deeplynx/server
 RUN yarn install;
 RUN yarn run build;
 
-FROM node:alpine3.20.1 as production
+FROM node:alpine3.20 as production
 ENV DEVELOPMENT_MODE=false
 
 RUN apk update && apk add supervisor openssl=3.3.1-r1
