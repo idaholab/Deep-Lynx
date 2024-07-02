@@ -1,4 +1,4 @@
-FROM node:alpine3.20.1
+FROM node:alpine3.20
 
 # Add nginx, nodejs and create folders 
 RUN apk add --update nginx nodejs ; mkdir -p /tmp/nginx/vue-single-page-app ; mkdir -p /var/log/nginx ; mkdir -p /var/www/html
