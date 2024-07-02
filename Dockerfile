@@ -1,4 +1,4 @@
-FROM rust:alpine3.20.1 as build
+FROM rust:alpine3.20 as build
 
 ENV RUSTFLAGS="-C target-feature=-crt-static"
 ENV RUN_MODE="build"
