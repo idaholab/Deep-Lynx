@@ -140,6 +140,10 @@ export class FilePathMetadata extends NakedDomainClass {
     @IsString()
     @IsIn(['filesystem', 'azure_blob', 'mock', 'largeobject'])
     adapter?: string;
+
+    @IsString()
+    @IsOptional()
+    data_source_id?: string;
 }
 
 export class FileDescriptionColumn extends NakedDomainClass {

@@ -2,8 +2,9 @@
 import Result from '../../../../../common_classes/result';
 
 // Domain Objects
-import Import, {DataStaging} from '../../../../../domain_objects/data_warehouse/import/import';
+import Import from '../../../../../domain_objects/data_warehouse/import/import';
 import File, { FileUploadOptions } from '../../../../../domain_objects/data_warehouse/data/file';
+import { TS2InitialRequest } from '../../../../../domain_objects/data_warehouse/data/report_query';
 
 // Express
 import {NextFunction, Request, Response} from 'express';
@@ -24,6 +25,7 @@ import {Readable} from 'stream';
 import {FileInfo} from 'busboy';
 import Logger from '../../../../../services/logger';
 import Config from '../../../../../services/config';
+import ReportQueryRepository from '../../../../../data_access_layer/repositories/data_warehouse/data/report_query_repository';
 const Busboy = require('busboy');
 const csv = require('csvtojson');
 const xmlToJson = require('xml-2-json-streaming');
@@ -371,7 +373,24 @@ export default class FileFunctions {
                     }
 
                     if (options && options.describe) {
-                        // TODO: kick off a file describe
+                        // kick off a file describe if specified
+                        const request = new TS2InitialRequest({
+                            query: `DESCRIBE table;`,
+                            file_ids: results.map(r => r.value.id!)
+                        });
+
+                        const queryRepo = new ReportQueryRepository();
+                        void queryRepo.initiateQuery(req.params.containerID, request, req.currentUser!)
+                            .then((result) => {
+                                if (result.isError) {
+                                    Logger.error(`error describing files ${result.error?.error}`);
+                                } else {
+                                    Logger.debug(`file description request successfully initiated`);
+                                }
+                            })
+                            .catch((e) => {
+                                Logger.error(`error describing files ${e}`);
+                            })
                     }
 
                     if (metadataFieldCount === 0) {

@@ -690,8 +690,8 @@ export class Client {
         });
     }
 
-    deleteFile(containerID: string, dataSourceID: string, fileID: string): Promise<boolean> {
-        return this.delete(`/containers/${containerID}/import/datasources/${dataSourceID}/files/${fileID}`);
+    deleteFile(containerID: string, fileID: string): Promise<boolean> {
+        return this.delete(`/containers/${containerID}/files/${fileID}`);
     }
 
     attachFileToNode(containerID: string, nodeID: string, fileID: string): Promise<boolean> {

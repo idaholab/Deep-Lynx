@@ -68,14 +68,6 @@ export default class ReportMapper extends Mapper {
         });
     }
 
-    public AddFile(id: string, fileID: string): Promise<Result<boolean>> {
-        return super.runStatement(this.addFile(id, fileID));
-    }
-
-    public RemoveFile(id: string, fileID: string): Promise<Result<boolean>> {
-        return super.runStatement(this.removeFile(id, fileID));
-    }
-
     public async Delete(id: string, transaction?: PoolClient): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id), {transaction});
     }
@@ -89,9 +81,8 @@ export default class ReportMapper extends Mapper {
                         container_id,
                         status,
                         status_message,
-                        notify_users,
                         created_by) VALUES %L RETURNING *`;
-        const values = reports.map((r) => [r.container_id, r.status, r.status_message, r.notify_users, userID]);
+        const values = reports.map((r) => [r.container_id, r.status, r.status_message, userID]);
 
         return format(text, values);
     }
@@ -108,15 +99,13 @@ export default class ReportMapper extends Mapper {
                     container_id = u.container_id::bigint,
                     status = u.status,
                     status_message = u.status_message,
-                    notify_users = u.notify_users::boolean
                     FROM(VALUES %L) AS u(
                     id,
                     container_id,
                     status,
-                    status_message,
-                    notify_users)
+                    status_message)
                     WHERE u.id::bigint = r.id RETURNING r.*`;
-        const values = reports.map((r) => [r.id, r.container_id, r.status, r.status_message, r.notify_users]);
+        const values = reports.map((r) => [r.id, r.container_id, r.status, r.status_message]);
 
         return format(text, values);
     }
@@ -132,24 +121,6 @@ export default class ReportMapper extends Mapper {
         return {
             text: `DELETE FROM reports WHERE id = $1`,
             values: [id],
-        };
-    }
-
-    private addFile(reportID: string, fileID: string): QueryConfig {
-        return {
-            text: `INSERT INTO report_query_files
-                    (report_id, query_id, file_id)
-                    VALUES ($1, NULL, $2)`,
-            values: [reportID, fileID],
-        };
-    }
-
-    private removeFile(reportID: string, fileID: string): QueryConfig {
-        return {
-            text: `DELETE FROM report_query_files
-                    WHERE report_id = $1
-                    AND file_id = $2`,
-            values: [reportID, fileID],
         };
     }
 }

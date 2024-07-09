@@ -14,7 +14,7 @@ import {User} from '../../../../domain_objects/access_management/user';
 import UserMapper from '../../../../data_access_layer/mappers/access_management/user_mapper';
 import Authorization from '../../../../domain_objects/access_management/authorization/authorization';
 
-describe('A Report Reposiory', async () => {
+describe('A Report Repository', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let dataSourceID = '';
     let fileID = '';
@@ -103,8 +103,7 @@ describe('A Report Reposiory', async () => {
         const repository = new ReportRepository();
         const report = new Report({
             container_id: containerID,
-            status_message: faker.random.alphaNumeric(),
-            notify_users: false
+            status_message: faker.random.alphaNumeric()
         });
 
         let results = await repository.save(report, user);
@@ -127,8 +126,7 @@ describe('A Report Reposiory', async () => {
         const repository = new ReportRepository();
         const report = new Report({
             container_id: containerID,
-            status_message: faker.random.alphaNumeric(),
-            notify_users: false
+            status_message: faker.random.alphaNumeric()
         });
 
         const results = await repository.save(report, user);
@@ -144,13 +142,11 @@ describe('A Report Reposiory', async () => {
         const repository = new ReportRepository();
         const report1 = new Report({
             container_id: containerID,
-            status_message: faker.random.alphaNumeric(),
-            notify_users: false
+            status_message: faker.random.alphaNumeric()
         });
         const report2 = new Report({
             container_id: containerID,
-            status_message: faker.random.alphaNumeric(),
-            notify_users: false
+            status_message: faker.random.alphaNumeric()
         });
 
         const save1 = await repository.save(report1, user);
@@ -169,11 +165,6 @@ describe('A Report Reposiory', async () => {
         expect(results.isError).false;
         expect(results).not.empty;
         expect(results.value[0].status_message).eq(report1.status_message);
-
-        results = await repository.where().notifyUsers('eq', report2.notify_users).findAll();
-        expect(results.isError).false;
-        expect(results).not.empty;
-        expect(results.value[0].notify_users).eq(report2.notify_users);
 
         results = await repository.where().containerID('eq', containerID).findAll();
         expect(results.isError).false;
@@ -197,8 +188,7 @@ describe('A Report Reposiory', async () => {
         const repository = new ReportRepository();
         const report = new Report({
             container_id: containerID,
-            status_message: faker.random.alphaNumeric(),
-            notify_users: false
+            status_message: faker.random.alphaNumeric()
         });
 
         const results = await repository.save(report, user);
@@ -216,8 +206,7 @@ describe('A Report Reposiory', async () => {
         const repository = new ReportRepository();
         const report = new Report({
             container_id: containerID,
-            status_message: faker.random.alphaNumeric(),
-            notify_users: false
+            status_message: faker.random.alphaNumeric()
         });
 
         const results = await repository.save(report, user);
@@ -239,78 +228,11 @@ describe('A Report Reposiory', async () => {
         return repository.delete(report);
     });
 
-    it('can add/remove a file to/from a Report', async () => {
-        const repository = new ReportRepository();
-        const report = new Report({
-            container_id: containerID,
-            status_message: faker.random.alphaNumeric(),
-            notify_users: false
-        });
-
-        const results = await repository.save(report, user);
-        expect(results.isError).false;
-        expect(report.id).not.undefined;
-
-        const fileAdded = await repository.addFile(report, fileID);
-        expect(fileAdded.isError).false;
-        expect(fileAdded.value).true;
-
-        const fileRemoved = await repository.removeFile(report, fileID);
-        expect(fileRemoved.isError).false;
-
-        return repository.delete(report);
-    });
-
-    it('can list all files on a Report', async () => {
-        const file2 = await FileMapper.Instance.Create(
-            'test suite',
-            new File({
-                file_name: faker.name.findName(),
-                file_size: 200,
-                md5hash: '',
-                adapter_file_path: faker.name.findName(),
-                adapter: 'filesystem',
-                data_source_id: dataSourceID,
-                container_id: containerID,
-            }),
-        );
-
-        expect(file2.isError).false;
-        expect(file2.value).not.empty;
-        const file2ID = file2.value.id!;
-
-        const repository = new ReportRepository();
-        const report = new Report({
-            container_id: containerID,
-            status_message: faker.random.alphaNumeric(),
-            notify_users: false
-        });
-
-        const results = await repository.save(report, user);
-        expect(results.isError).false;
-        expect(report.id).not.undefined;
-
-        const file1Added = await repository.addFile(report, fileID);
-        expect(file1Added.isError).false;
-        const file2Added = await repository.addFile(report, file2ID);
-        expect(file2Added.isError).false;
-
-        const fileList = await repository.listFiles(report);
-        expect(fileList.isError).false;
-        expect(fileList.value.length).eq(2);
-
-        const file1Removed = await repository.removeFile(report, fileID);
-        expect(file1Removed.isError).false;
-        const file2Removed = await repository.removeFile(report, file2ID);
-        expect(file2Removed.isError).false;
-    });
-
     it('can add/remove a user to/from a Report', async () => {
         const repository = new ReportRepository();
         const report = new Report({
             container_id: containerID,
-            status_message: faker.random.alphaNumeric(),
-            notify_users: false
+            status_message: faker.random.alphaNumeric()
         });
 
         const userResult = await UserMapper.Instance.Create(

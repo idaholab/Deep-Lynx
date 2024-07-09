@@ -1,7 +1,7 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
-import File, {DataStagingFile, FileDescription, FileDescriptionColumn, FilePathMetadata, TimeseriesInfo} from '../../../../domain_objects/data_warehouse/data/file';
+import File, {FileDescription, FileDescriptionColumn, FilePathMetadata, TimeseriesInfo} from '../../../../domain_objects/data_warehouse/data/file';
 
 const format = require('pg-format');
 
@@ -39,23 +39,17 @@ export default class FileMapper extends Mapper {
     }
 
     public async BulkCreate(userID: string, f: File[], transaction?: PoolClient): Promise<Result<File[]>> {
-        const r = await super.run(this.createStatement(userID, ...f), {
+        return super.run(this.createStatement(userID, ...f), {
             transaction,
             resultClass: this.resultClass,
         });
-        if (r.isError) return Promise.resolve(Result.Pass(r));
-
-        return Promise.resolve(Result.Success(r.value));
     }
 
-    public async BulkUpdate(userID: string, f: File[], transaction?: PoolClient): Promise<Result<File>> {
-        const r = await super.run(this.updateStatement(userID, ...f), {
+    public async BulkUpdate(userID: string, f: File[], transaction?: PoolClient): Promise<Result<File[]>> {
+        return super.run(this.updateStatement(userID, ...f), {
             transaction,
             resultClass: this.resultClass,
         });
-        if (r.isError) return Promise.resolve(Result.Pass(r));
-
-        return Promise.resolve(Result.Success(r.value[0]));
     }
 
     public async Update(userID: string, f: File, transaction?: PoolClient): Promise<Result<File>> {
@@ -84,12 +78,6 @@ export default class FileMapper extends Mapper {
 
     public async DomainRetrieve(id: string, containerID: string): Promise<Result<File>> {
         return super.retrieve<File>(this.domainRetrieveStatement(id, containerID), {resultClass: this.resultClass});
-    }
-
-    public async ListFromIDs(ids: string[]): Promise<Result<File[]>> {
-        return super.rows<File>(this.listFromIDsStatement(ids), {
-            resultClass: this.resultClass,
-        });
     }
 
     public async ListForNode(nodeID: string, revisionOnly?: boolean): Promise<Result<File[]>> {
@@ -125,14 +113,6 @@ export default class FileMapper extends Mapper {
     public async ListForDataStaging(...stagingID: string[]): Promise<Result<File[]>> {
         return super.rows<File>(this.filesForDataStagingStatement(stagingID), {
             resultClass: this.resultClass,
-        });
-    }
-
-    public async ListForDataStagingRaw(...stagingID: (string | undefined)[]): Promise<Result<DataStagingFile[]>> {
-        if (stagingID.length === 0) return Promise.resolve(Result.Success([]));
-
-        return super.rows<DataStagingFile>(this.filesForDataStagingStatementRaw(stagingID), {
-            resultClass: DataStagingFile,
         });
     }
 
@@ -289,16 +269,6 @@ export default class FileMapper extends Mapper {
         };
     }
 
-    private listFromIDsStatement(ids: string[]): QueryConfig {
-        // have to add the quotations in order for postgres to treat the uuid correctly
-        ids.map((id) => `'${id}'`);
-
-        return {
-            text: `SELECT * FROM files WHERE id IN($1)`,
-            values: ids,
-        };
-    }
-
     private filesForNodeStatement(nodeID: string, revisionOnly?: boolean): QueryConfig {
         if (revisionOnly) {
             return {
@@ -373,15 +343,6 @@ export default class FileMapper extends Mapper {
         return format(text, values);
     }
 
-    private filesForDataStagingStatementRaw(dataStagingID: (string | undefined)[]): QueryConfig {
-        const text = `SELECT * 
-                        FROM data_staging_files 
-                        WHERE data_staging_id IN (%L)`;
-        const values = dataStagingID;
-
-        return format(text, values);
-    }
-
     private listDescriptionColumnsStatement(id: string): QueryConfig {
         return {
             text: `SELECT description
@@ -394,7 +355,7 @@ export default class FileMapper extends Mapper {
     }
 
     private filePathMetadataStatement(fileIDs: string[]): QueryConfig {
-        const text = `SELECT id, adapter_file_path, adapter
+        const text = `SELECT id, adapter_file_path, adapter, data_source_id
                         FROM files
                         WHERE id IN (%L)`;
         const values = fileIDs;
