@@ -22,6 +22,8 @@ import {Exporter} from '../../interfaces_and_impl/data_warehouse/export/exporter
 import {DataSource} from '../../interfaces_and_impl/data_warehouse/import/data_source';
 import {DataTarget} from '../../interfaces_and_impl/data_warehouse/export/data_target';
 import OntologyVersion from '../../domain_objects/data_warehouse/ontology/versioning/ontology_version';
+import ReportQuery from '../../domain_objects/data_warehouse/data/report_query';
+import Report from '../../domain_objects/data_warehouse/data/report';
 
 declare global {
     namespace Express {
@@ -52,6 +54,8 @@ declare global {
             dataSource?: DataSource;
             dataTarget?: DataTarget;
             file?: File;
+            report?: Report;
+            reportQuery?: ReportQuery;
             tag?: Tag;
             task?: TaskRecord;
             ontologyVersion?: OntologyVersion;

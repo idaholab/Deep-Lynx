@@ -8,7 +8,7 @@ import {PassThrough, Readable, Transform} from 'stream';
 import BlobStorageProvider from '../../services/blob_storage/blob_storage';
 import File from '../../domain_objects/data_warehouse/data/file';
 import FileMapper from '../mappers/data_warehouse/data/file_mapper';
-import csvStringify from 'csv-stringify';
+import {stringify} from 'csv-stringify';
 import Logger from '../../services/logger';
 import fs from 'fs';
 
@@ -995,8 +995,7 @@ export class Repository {
                 }
 
                 case 'csv': {
-                    // @ts-ignore
-                    stream.pipe(csvStringify({header: true})).pipe(pass);
+                    stream.pipe(stringify({header: true})).pipe(pass);
                     contentType = 'text/csv';
                     break;
                 }

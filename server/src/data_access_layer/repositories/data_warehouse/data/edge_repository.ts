@@ -295,9 +295,10 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         return Promise.resolve(Result.Failure(': the edge created date must be after the created date of both connected nodes.'));
     }
 
-    // populateFromParameters takes an edge record contains parameters and generates edges to be inserted based on those
-    // filters
-    async populateFromParameters(e: Edge, snapshot?: SnapshotGenerator): Promise<Result<Edge[]>> {
+    // populateFromParameters takes an edge record contains parameters and generates edges to be inserted based on those filters
+    // NOTE: edges are returned with object properties (properties, metadata_properties) as strings
+    // this is necessary for the COPY functionality that will occur later in the import process
+    async populateFromParameters(e: Edge, snapshot: SnapshotGenerator): Promise<Result<Edge[]>> {
         const edges: Edge[] = [];
 
         // if we already have id's or original id's set, then return a new instance of the edge
@@ -386,8 +387,8 @@ export default class EdgeRepository extends Repository implements RepositoryInte
             // use the snapshot to build the edges to insert - a backfill statement will take care off building
             // the rest of the values later
             try {
-                const origin_ids: string[] = await snapshot!.findNodes(JSON.stringify(e.origin_parameters));
-                const destination_ids: string[] = await snapshot!.findNodes(JSON.stringify(e.destination_parameters));
+                const origin_ids: string[] = await snapshot.findNodes(JSON.stringify(e.origin_parameters));
+                const destination_ids: string[] = await snapshot.findNodes(JSON.stringify(e.destination_parameters));
 
                 // if we have property filters, we need to basically do what we do above and filter by ids - this is
                 // because currently the rust method doesn't do more than a value match on the whole json string

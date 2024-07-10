@@ -57,6 +57,10 @@ tags:
     description: These endpoints allow for interacting with timeseries data.
   - name: Misc
     description: ''
+  - name: Report
+    description: These endpoints allow for interacting with Reports
+  - name: File
+    description: These endpoints allow for interacting with Files
 security:
   - BearerAuth: []
 paths:
@@ -431,7 +435,7 @@ paths:
                   error:
                     type: string
                     description: Detailed error message including specific validation failures.
-                    example: "{\"errorCode\":500,\"error\":\"some data source templates do not pass validation An instance of DataSourceTemplate has failed the validation:\\n - property id has failed the following constraints: isUuid \\n\"}"
+                    example: '{"errorCode":500,"error":"some data source templates do not pass validation An instance of DataSourceTemplate has failed the validation:\n - property id has failed the following constraints: isUuid \n"}'
   '/containers/{container_id}/data_source_templates/{template_id}':
     delete:
       tags:
@@ -3182,6 +3186,10 @@ paths:
                 metadata:
                   type: string
                   format: binary
+          application/json:
+            schema:
+              type: object
+              properties: {}
         description: |-
           This should be a collection of files and normal fields. If you include a file field and call that "metadata" - you can include a normal metadata upload as either a json, csv, or xml file. This data will be processed like a normal import and the files attached to the processed data. Once DeepLynx generates nodes and edges from that data, any files attached will automatically be attached to the resulting nodes/edges as well.
           NOTE: The metadata file you upload, if json, must be wrapped in an array. If you do not pass in an array of objects, even if it's a single object, then DeepLynx will attempt to split up your metadata into its parts instead of treating it like a whole object.
@@ -3242,6 +3250,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/GetFileInfoResponse'
       deprecated: false
+    delete:
+      summary: Delete File
+      operationId: delete-containers-container_id-files-file_id
+      responses:
+        '200':
+          description: OK
+      description: Delete a file
   '/containers/{container_id}/data/export':
     post:
       tags:
@@ -5237,7 +5252,7 @@ paths:
         '200':
           description: OK
       description: Publishes an ontology version
-  '/containers/{container_id}/import/datasources/{sourceID}/mappings/{mappingID}/copy/{originalMappingID}':
+  '/containers/{container_id}/import/datasources/{data_source_id}/mappings/{mapping_id}/copy/{original_mapping_id}':
     parameters:
       - schema:
           type: string
@@ -5246,17 +5261,17 @@ paths:
         required: true
       - schema:
           type: string
-        name: sourceID
+        name: data_source_id
         in: path
         required: true
       - schema:
           type: string
-        name: mappingID
+        name: mapping_id
         in: path
         required: true
       - schema:
           type: string
-        name: originalMappingID
+        name: original_mapping_id
         in: path
         required: true
     post:
@@ -5267,8 +5282,8 @@ paths:
       responses:
         '200':
           description: OK
-      description: 'This endpoint copies transformations from the {originalMappingID} type mapping (final parameter) to the {mappingID} type mapping. This POST has NO body.'
-  '/containers/:container_id/import/datasources/:data_source_id/files/:file_id':
+      description: 'This endpoint copies transformations from the {original_mapping_id} type mapping (final parameter) to the {mapping_id} type mapping. This POST has NO body.'
+  '/containers/{container_id}/import/datasources/{data_source_id}/files/{file_id}':
     parameters: []
     put:
       tags:
@@ -5356,10 +5371,10 @@ paths:
                 metadata:
                   type: object
               example:
-                tag_name: "example tag"
+                tag_name: example tag
                 metadata:
-                  key1: "value1"
-                  key2: "value2"
+                  key1: value1
+                  key2: value2
     get:
       tags:
         - Tags
@@ -5814,13 +5829,13 @@ paths:
                           description: The unique identifier for the service user key.
                         secret_raw:
                           type: string
-                          description: The secret part of the service user key, in raw form.
+                          description: 'The secret part of the service user key, in raw form.'
                         user_id:
                           type: string
                           description: The identifier of the user associated with this key.
                         note:
                           type: string
-                          description: A note associated with the key, possibly indicating its purpose or the application it authorizes.
+                          description: 'A note associated with the key, possibly indicating its purpose or the application it authorizes.'
                   isError:
                     type: boolean
                     description: Indicates if the operation resulted in an error.
@@ -5875,6 +5890,186 @@ paths:
                     - '3'
                     - '4'
                     - '5'
+  '/containers/{container_id}/import/datasources/{data_source_id}/files/timeseries':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: data_source_id
+        in: path
+        required: true
+    post:
+      summary: Upload Timeseries File
+      tags:
+        - File
+        - TimeSeries
+      responses: {}
+      operationId: post-containers-container_id-import-datasources-data_source_id-files-timeseries
+      description: Uploads a file and it's metadata to DeepLynx. Marks the file as "timeseries" so it can be processed by the TS2 rust module.
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+        description: This should be a collection of files.
+  '/containers/{container_id}/files/timeseries/describe':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+    post:
+      summary: Add File Description
+      operationId: post-containers-container_id-reports-report_id-files-file_id-description
+      responses:
+        '200':
+          description: OK
+      description: Upload file description (schema)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file_id:
+                  type: string
+                column_info:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      column_name:
+                        type: string
+                      data_type:
+                        type: string
+              x-examples:
+                Example 1:
+                  file_id: '6'
+                  column_info:
+                    - column_name: greg
+                      data_type: string
+                    - column_name: fred
+                      data_type: boolean
+  '/containers/{container_id}/files/timeseries/{file_id}/description':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: file_id
+        in: path
+        required: true
+    get:
+      summary: Get File Description
+      tags:
+        - File
+        - TimeSeries
+        - Report
+      responses: {}
+      operationId: get-containers-container_id-reports-report_id-files-file_id-description
+      description: Retrieve the file description (schema) for a given report file
+  '/containers/{container_id}/reports/query':
+    post:
+      summary: Query Timeseries
+      tags:
+        - Report
+      responses: {}
+      operationId: post-containers-container_id-reports-query
+      description: Send a either a describe or a user-provided query to the TS2 rust module for processing.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+                file_ids:
+                  type: array
+                  items:
+                    type: string
+              x-examples:
+                Example 1:
+                  query: <string>
+                  file_ids:
+                    - <string>
+                    - <string>
+  '/containers/{container_id}/reports/{report_id}/status':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: report_id
+        in: path
+        required: true
+    get:
+      summary: Report Status
+      tags:
+        - Report
+      responses: {}
+      operationId: get-containers-container_id-reports-report_id-status
+      description: Check the status for a given report
+  '/containers/{container_id}/reports/{report_id}/query/{report_query_id}':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: report_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: report_query_id
+        in: path
+        required: true
+    post:
+      summary: Upload Timeseries Results
+      tags: []
+      responses: {}
+      operationId: post-containers-container_id-reports-report_id-query-report_query_id
+      description: |-
+        Endpoint for the TS2 rust module to upload file results. TS2 will already have uploaded the data to the
+        appropriate storage provider, so we just need to attach the file metadata to the report.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file_name:
+                  type: string
+                file_size:
+                  type: number
+                adapter_file_path:
+                  type: string
+                adapter:
+                  type: string
+              x-examples:
+                Example 1:
+                  file_name: greg.json
+                  file_size: 0.141
+                  adapter_file_path: /trees/greg
+                  adapter: filesystem
 components:
   securitySchemes:
     BearerAuth:
@@ -9281,7 +9476,6 @@ components:
         value:
           type: array
           items:
-            # $ref: '#/components/schemas/ServiceUser' # Invalid value for `reset_required`, must not be `None`
             type: object
         isError:
           type: boolean
@@ -9299,7 +9493,6 @@ components:
       properties:
         value:
           type: object
-          # $ref: '#/components/schemas/ServiceUser'
         isError:
           type: boolean
     ImportDataTypeMappingsRequest:

@@ -1,10 +1,10 @@
 import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_domain_class';
-import {IsArray, IsBoolean, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, IsUUID, ValidateIf, ValidateNested} from 'class-validator';
+import {IsArray, IsObject, IsOptional, IsString, ValidateIf, ValidateNested} from 'class-validator';
 import {Expose, plainToClass, Transform, Type} from 'class-transformer';
 import Container from '../ontology/container';
 import MetatypeRelationshipPair, {MetatypeRelationshipPairID} from '../ontology/metatype_relationship_pair';
 import Node from './node';
-import {Conversion, EdgeConnectionParameter, MappingTag} from '../etl/type_transformation';
+import {Conversion, EdgeConnectionParameter} from '../etl/type_transformation';
 
 export class EdgeMetadata {
     @IsOptional()
@@ -219,59 +219,6 @@ export function IsEdges(set: Node[] | Edge[]): set is Edge[] {
     if (Array.isArray(set) && set.length === 0) return true;
 
     return set[0] instanceof Edge;
-}
-
-// EdgeQueueItem represents an edge item on the queue, used primarily in the edge insertion queue process as an
-// intermediary storage object
-export class EdgeQueueItem extends NakedDomainClass {
-    @IsString()
-    @IsOptional()
-    id?: string;
-
-    @Type(() => Edge)
-    edge?: object;
-
-    @IsString()
-    import_id?: string;
-
-    @IsNumber()
-    attempts = 0;
-
-    @Type(() => Date)
-    next_attempt_at: Date = new Date();
-
-    @IsString()
-    @IsOptional()
-    error?: string;
-
-    @IsOptional()
-    file_attached?: boolean = false;
-
-    @ValidateNested()
-    @Type(() => MappingTag)
-    tags: MappingTag[] = [];
-
-    constructor(input: {
-        edge: object;
-        import_id: string;
-        attempts?: number;
-        next_attempt_at?: Date;
-        error?: string;
-        file_attached?: boolean;
-        tags?: MappingTag[];
-    }) {
-        super();
-
-        if (input) {
-            this.edge = input.edge;
-            this.import_id = input.import_id;
-            if (input.attempts) this.attempts = input.attempts;
-            if (input.next_attempt_at) this.next_attempt_at = input.next_attempt_at;
-            if (input.error) this.error = input.error;
-            if (input.file_attached) this.file_attached = input.file_attached;
-            if (input.tags) this.tags = input.tags;
-        }
-    }
 }
 
 export class EdgeIDPayload extends NakedDomainClass {

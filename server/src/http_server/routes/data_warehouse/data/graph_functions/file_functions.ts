@@ -2,8 +2,9 @@
 import Result from '../../../../../common_classes/result';
 
 // Domain Objects
-import Import, {DataStaging} from '../../../../../domain_objects/data_warehouse/import/import';
-import File from '../../../../../domain_objects/data_warehouse/data/file';
+import Import from '../../../../../domain_objects/data_warehouse/import/import';
+import File, { FileUploadOptions } from '../../../../../domain_objects/data_warehouse/data/file';
+import { TS2InitialRequest } from '../../../../../domain_objects/data_warehouse/data/report_query';
 
 // Express
 import {NextFunction, Request, Response} from 'express';
@@ -24,6 +25,7 @@ import {Readable} from 'stream';
 import {FileInfo} from 'busboy';
 import Logger from '../../../../../services/logger';
 import Config from '../../../../../services/config';
+import ReportQueryRepository from '../../../../../data_access_layer/repositories/data_warehouse/data/report_query_repository';
 const Busboy = require('busboy');
 const csv = require('csvtojson');
 const xmlToJson = require('xml-2-json-streaming');
@@ -240,9 +242,23 @@ export default class FileFunctions {
             .catch(() => Result.Failure(`unable to find file`).asResponse(res));
     }
 
+    // the actual file upload logic is now stored in a private method with an override. this
+    // allows us to upload both regular and timeseries files without having to copy large chunks
+    // of code. Overloading the handler directly was causing issues so we do this instead
     public static uploadFile(req: Request, res: Response, next: NextFunction) {
+        FileFunctions.fileUpload(req, res, next);
+    }
+
+    public static uploadTimeseries(req: Request, res: Response, next: NextFunction) {
+        // check for describe flag
+        const describe = (req.query && String(req.query.describe).toLowerCase() === 'true');
+        FileFunctions.fileUpload(req, res, next, {timeseries: true, describe: describe});
+    }
+
+    private static fileUpload(req: Request, res: Response, next: NextFunction, options?: FileUploadOptions) {
         const fileNames: string[] = [];
         const files: Promise<Result<File>>[] = [];
+        const fileRepo = new FileRepository();
         const importRecords: Promise<Result<Import | boolean>>[] = [];
         const busboy = Busboy({headers: req.headers});
         const metadata: {[key: string]: any} = {};
@@ -293,7 +309,14 @@ export default class FileFunctions {
                     );
                 }
             } else {
-                files.push(new FileRepository().uploadFile(req.params.containerID, req.currentUser!, filename, file as Readable, req.params.sourceID));
+                files.push(fileRepo.uploadFile(
+                    req.params.containerID, 
+                    req.currentUser!, 
+                    filename, 
+                    file as Readable, 
+                    req.params.sourceID,
+                    options
+                ));
                 fileNames.push(filename);
             }
         });
@@ -349,6 +372,27 @@ export default class FileFunctions {
                             });
                     }
 
+                    if (options && options.describe) {
+                        // kick off a file describe if specified
+                        const request = new TS2InitialRequest({
+                            query: `DESCRIBE table;`,
+                            file_ids: results.map(r => r.value.id!)
+                        });
+
+                        const queryRepo = new ReportQueryRepository();
+                        void queryRepo.initiateQuery(req.params.containerID, request, req.currentUser!)
+                            .then((result) => {
+                                if (result.isError) {
+                                    Logger.error(`error describing files ${result.error?.error}`);
+                                } else {
+                                    Logger.debug(`file description request successfully initiated`);
+                                }
+                            })
+                            .catch((e) => {
+                                Logger.error(`error describing files ${e}`);
+                            })
+                    }
+
                     if (metadataFieldCount === 0) {
                         Result.Success(results).asResponse(res);
                         next();
@@ -362,7 +406,7 @@ export default class FileFunctions {
                             }
 
                             results[i].value.metadata = metadata;
-                            updatePromises.push(new FileRepository().save(results[i].value, req.currentUser!));
+                            updatePromises.push(fileRepo.save(results[i].value, req.currentUser!));
                         }
 
                         void Promise.all(updatePromises)

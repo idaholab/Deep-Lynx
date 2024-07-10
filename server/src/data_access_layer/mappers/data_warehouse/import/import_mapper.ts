@@ -2,20 +2,13 @@ import Mapper from '../../mapper';
 import Result from '../../../../common_classes/result';
 import {PoolClient, QueryConfig} from 'pg';
 import Event from '../../../../domain_objects/event_system/event';
-import Import, {DataStaging} from '../../../../domain_objects/data_warehouse/import/import';
+import Import from '../../../../domain_objects/data_warehouse/import/import';
 import EventRepository from '../../../repositories/event_system/event_repository';
-import PostgresAdapter from '../../db_adapters/postgres/postgres';
-import QueryStream from 'pg-query-stream';
-import {QueueFactory} from '../../../../services/queue/queue';
-import Config from '../../../../services/config';
-import {plainToClass} from 'class-transformer';
-import Logger from '../../../../services/logger';
 import DataStagingMapper from './data_staging_mapper';
 import DataSourceRepository from '../../../repositories/data_warehouse/import/data_source_repository';
 import {Worker} from 'worker_threads';
 
 const format = require('pg-format');
-const devnull = require('dev-null');
 
 /*
     ImportMapper extends the Postgres database Mapper class and allows
@@ -148,17 +141,19 @@ export default class ImportMapper extends Mapper {
 
     // Reprocess an import will take an importID and attempt to first clear all data processed
     // from it by setting the deleted_at tag of any nodes or edges that have been created. Then
-    // it will attempt to re-queue all data staging records for that import
-    public async ReprocessImport(importID: string): Promise<Result<boolean>> {
+    // it will start a new process worker with the provided import
+    public async ReprocessImport(containerID: string, importID: string): Promise<Result<boolean>> {
         await this.SetStatus(importID, 'processing', 'reprocessing initiated');
         await super.runAsTransaction(...this.deleteDataStatement(importID));
         await super.runStatement(this.setProcessedNull(importID));
 
         // now we start the import process job in the background
-
         const worker = new Worker(__dirname + '../../../../../jobs/process_worker.js', {
             workerData: {
-                input: [importID],
+                input: {
+                    importIDs: [importID],
+                    containerID
+                },
             },
         });
 

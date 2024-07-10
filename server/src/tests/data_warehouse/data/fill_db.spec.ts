@@ -27,8 +27,7 @@ import {v4 as uuidv4} from 'uuid';
 import {Readable} from 'stream';
 import {DataSource} from '../../../interfaces_and_impl/data_warehouse/import/data_source';
 import DataStagingRepository from '../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
-import {ProcessData} from '../../../data_processing/process';
-import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
+import {ProcessWorkerStart} from "../../../jobs/process_worker";
 
 // This test will generate a basic ontology and test data, process it, and persist to the database. You must delete
 // this data manually - which is why it's disabled by default. This is generally used in a development environment when
@@ -594,25 +593,23 @@ describe('We can generate test data', async () => {
         const records = await dataStagingRepo.where().dataSourceID('eq', dataSource!.DataSourceRecord!.id).list();
         expect(records.isError).false;
         expect(records.value.length).gt(0);
+        const importIDs = records.value.map(value => value.import_id!);
 
-        for (const record of records.value) {
-            const result = await ProcessData(record);
-            expect(result.isError, result.error?.error).false;
-        }
+        ProcessWorkerStart(importIDs, containerID).finally(async () => {
+            const nodeRepo = new NodeRepository();
+            const nodes = await nodeRepo.where().containerID('eq', containerID).list();
 
-        const nodeRepo = new NodeRepository();
-        const nodes = await nodeRepo.where().containerID('eq', containerID).list();
+            expect(nodes.isError).false;
+            expect(nodes.value.length).gt(amountToGenerate - 1);
 
-        expect(nodes.isError).false;
-        expect(nodes.value.length).gt(amountToGenerate - 1);
+            const edgeRepo = new EdgeRepository();
+            const edges = await edgeRepo.where().containerID('eq', containerID).list();
 
-        const edgeRepo = new EdgeRepository();
-        const edges = await edgeRepo.where().containerID('eq', containerID).list();
+            expect(edges.isError).false;
+            expect(edges.value.length).gt(1);
 
-        expect(edges.isError).false;
-        expect(edges.value.length).gt(1);
-
-        return Promise.resolve();
+            return Promise.resolve();
+        })
         // @ts-ignore
     }).timeout(120000);
 });

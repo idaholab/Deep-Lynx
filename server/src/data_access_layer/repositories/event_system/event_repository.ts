@@ -16,7 +16,7 @@ import {Emailer} from '../../../services/email/email';
 import {BasicEmailTemplate} from '../../../services/email/templates/basic';
 
 /*
-    EventRepository is a simple class for emitting events to the events queue
+    EventRepository is a simple class for emitting events
     and contains some logic for acting on events
  */
 export default class EventRepository extends Repository {

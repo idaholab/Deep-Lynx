@@ -95,8 +95,8 @@ export default class ImportRepository extends Repository implements RepositoryIn
             LEFT JOIN data_staging ON data_staging.import_id = ${this._tableAlias}.id`;
     }
 
-    reprocess(importID: string): Promise<Result<boolean>> {
-        return this.#mapper.ReprocessImport(importID);
+    reprocess(containerID: string, importID: string): Promise<Result<boolean>> {
+        return this.#mapper.ReprocessImport(containerID, importID);
     }
 
     dataSourceID(operator: string, value: any) {

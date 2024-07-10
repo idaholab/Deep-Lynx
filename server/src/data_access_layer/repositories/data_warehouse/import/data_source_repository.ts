@@ -255,12 +255,12 @@ export default class DataSourceRepository extends Repository implements Reposito
         } else return Promise.resolve(Result.Failure(`data source's record must be instantiated and have an id`));
     }
 
-    async reprocess(dataSourceID: string): Promise<Result<boolean>> {
+    async reprocess(containerID: string, dataSourceID: string): Promise<Result<boolean>> {
         // reprocess each import associated with this data source from oldest to newest
         const imports = await this.#importRepo.where().dataSourceID('eq', dataSourceID).list({sortBy: 'created_at'});
         if (!imports.isError) {
             imports.value.forEach((i) => {
-                void this.#importRepo.reprocess(i.id!);
+                void this.#importRepo.reprocess(containerID, i.id!);
             });
         }
 

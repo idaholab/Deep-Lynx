@@ -429,6 +429,23 @@ export default class TypeMappingRepository extends Repository implements Reposit
                     // will do nothing
                     await this.#transformationRepo.populateKeys(typeMapping.transformations[i]);
 
+                    // populate the origin and destination metatype names so that the import function can look them up without ids
+                    if (typeMapping.transformations[i].origin_metatype_id || typeMapping.transformations[i].destination_metatype_id) {
+                        await this.#transformationRepo.populateMetatypeNames(typeMapping.transformations[i]);
+                    } else if (typeMapping.transformations[i].selected_relationship_pair_name &&
+                        !typeMapping.transformations[i].origin_metatype_name &&
+                        !typeMapping.transformations[i].destination_metatype_name) {
+                        // note that this regex uses the expected relationship name format of "originClass - relationshipName - destinationClass"
+                        // and that DeepLynx does not prevent users currently from using spaces and dashes in Class names,
+                        // making this a fallible expression
+                        const relationshipRegex = new RegExp('\\w+\\b', 'g')
+                        const relationshipNames = typeMapping.transformations[i].selected_relationship_pair_name!.match(relationshipRegex)
+                        if (relationshipNames?.length === 3) {
+                            typeMapping.transformations[i].origin_metatype_name = relationshipNames[0];
+                            typeMapping.transformations[i].destination_metatype_name = relationshipNames[2];
+                        }
+                    }
+
                     for (const j in typeMapping.transformations[i].keys) {
                         typeMapping.transformations[i].keys[j].metatype_relationship_key_id = undefined;
                         typeMapping.transformations[i].keys[j].metatype_key_id = undefined;

@@ -1,7 +1,7 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
-import File, {DataStagingFile} from '../../../../domain_objects/data_warehouse/data/file';
+import File, {FileDescription, FileDescriptionColumn, FilePathMetadata, TimeseriesInfo} from '../../../../domain_objects/data_warehouse/data/file';
 
 const format = require('pg-format');
 
@@ -39,23 +39,17 @@ export default class FileMapper extends Mapper {
     }
 
     public async BulkCreate(userID: string, f: File[], transaction?: PoolClient): Promise<Result<File[]>> {
-        const r = await super.run(this.createStatement(userID, ...f), {
+        return super.run(this.createStatement(userID, ...f), {
             transaction,
             resultClass: this.resultClass,
         });
-        if (r.isError) return Promise.resolve(Result.Pass(r));
-
-        return Promise.resolve(Result.Success(r.value));
     }
 
-    public async BulkUpdate(userID: string, f: File[], transaction?: PoolClient): Promise<Result<File>> {
-        const r = await super.run(this.updateStatement(userID, ...f), {
+    public async BulkUpdate(userID: string, f: File[], transaction?: PoolClient): Promise<Result<File[]>> {
+        return super.run(this.updateStatement(userID, ...f), {
             transaction,
             resultClass: this.resultClass,
         });
-        if (r.isError) return Promise.resolve(Result.Pass(r));
-
-        return Promise.resolve(Result.Success(r.value[0]));
     }
 
     public async Update(userID: string, f: File, transaction?: PoolClient): Promise<Result<File>> {
@@ -84,12 +78,6 @@ export default class FileMapper extends Mapper {
 
     public async DomainRetrieve(id: string, containerID: string): Promise<Result<File>> {
         return super.retrieve<File>(this.domainRetrieveStatement(id, containerID), {resultClass: this.resultClass});
-    }
-
-    public async ListFromIDs(ids: string[]): Promise<Result<File[]>> {
-        return super.rows<File>(this.listFromIDsStatement(ids), {
-            resultClass: this.resultClass,
-        });
     }
 
     public async ListForNode(nodeID: string, revisionOnly?: boolean): Promise<Result<File[]>> {
@@ -128,20 +116,43 @@ export default class FileMapper extends Mapper {
         });
     }
 
-    public async ListForDataStagingRaw(...stagingID: (string | undefined)[]): Promise<Result<DataStagingFile[]>> {
-        if (stagingID.length === 0) return Promise.resolve(Result.Success([]));
-
-        return super.rows<DataStagingFile>(this.filesForDataStagingStatementRaw(stagingID), {
-            resultClass: DataStagingFile,
-        });
-    }
-
     public async Delete(fileID: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(fileID));
     }
 
     public async DetachFileFromNodes(fileID: string): Promise<Result<boolean>> {
         return super.runStatement(this.detachFileFromNodesStatement(fileID));
+    }
+
+    public async SetDescriptions(desc: FileDescription[]): Promise<Result<boolean>> {
+        return super.runStatement(this.setDescriptionsStatement(...desc));
+    }
+
+    public async CheckTimeseries(fileIDs: string[]): Promise<Result<TimeseriesInfo[]>> {
+        return super.rows(this.checkTimeseriesStatement(fileIDs));
+    }
+
+    public async ListDescriptionColumns(id: string): Promise<Result<FileDescriptionColumn[]>> {
+        const r = await super.retrieve<FileDescriptionColumn>(this.listDescriptionColumnsStatement(id));
+        if (r.isError) return Promise.resolve(Result.Pass(r));
+
+        // we have to convert the returned object into a proper array of FileDescriptionColumns;
+        // unfortunately the class conversion in the root mapper doesn't work since the SQL
+        // returns the results as a single field
+        let result: FileDescriptionColumn[] = [];
+        try {
+            result = (r.value as object)['description' as keyof object];
+        } catch {
+            return Promise.resolve(Result.Failure(`file description for file ${id} not found`, 404));
+        }
+
+        return Promise.resolve(Result.Success(result));
+    }
+
+    public async ListPathMetadata(...fileID: string[]): Promise<Result<FilePathMetadata[]>> {
+        return super.rows<FilePathMetadata>(this.filePathMetadataStatement(fileID), {
+            resultClass: FilePathMetadata,
+        });
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -159,6 +170,7 @@ export default class FileMapper extends Mapper {
                   data_source_id,
                   md5hash,
                   short_uuid,
+                  timeseries,
                   created_by,
                   modified_by)
                   VALUES %L RETURNING *`;
@@ -172,6 +184,7 @@ export default class FileMapper extends Mapper {
             file.data_source_id,
             file.md5hash,
             file.short_uuid,
+            file.timeseries,
             userID,
             userID,
         ]);
@@ -191,6 +204,7 @@ export default class FileMapper extends Mapper {
             data_source_id,
             md5hash,
             short_uuid,
+            timeseries,
             created_by,
             modified_by) VALUES %L 
             ON CONFLICT(id, md5hash) DO UPDATE SET
@@ -212,6 +226,7 @@ export default class FileMapper extends Mapper {
             file.data_source_id,
             file.md5hash,
             file.short_uuid,
+            file.timeseries,
             userID,
             userID,
         ]);
@@ -254,16 +269,6 @@ export default class FileMapper extends Mapper {
         };
     }
 
-    private listFromIDsStatement(ids: string[]): QueryConfig {
-        // have to add the quotations in order for postgres to treat the uuid correctly
-        ids.map((id) => `'${id}'`);
-
-        return {
-            text: `SELECT * FROM files WHERE id IN($1)`,
-            values: ids,
-        };
-    }
-
     private filesForNodeStatement(nodeID: string, revisionOnly?: boolean): QueryConfig {
         if (revisionOnly) {
             return {
@@ -282,8 +287,6 @@ export default class FileMapper extends Mapper {
             };
         }
     }
-   
-
 
     private filesForContainerStatement(containerID: string): QueryConfig {
         return {
@@ -340,12 +343,50 @@ export default class FileMapper extends Mapper {
         return format(text, values);
     }
 
-    private filesForDataStagingStatementRaw(dataStagingID: (string | undefined)[]): QueryConfig {
-        const text = `SELECT * 
-                        FROM data_staging_files 
-                        WHERE data_staging_id IN (%L)`;
-        const values = dataStagingID;
+    private listDescriptionColumnsStatement(id: string): QueryConfig {
+        return {
+            text: `SELECT description
+                FROM file_descriptions
+                WHERE file_id = $1
+                ORDER BY file_created_at DESC, described_at DESC
+                LIMIT 1;`,
+            values: [id]
+        };
+    }
 
+    private filePathMetadataStatement(fileIDs: string[]): QueryConfig {
+        const text = `SELECT id, adapter_file_path, adapter, data_source_id
+                        FROM files
+                        WHERE id IN (%L)`;
+        const values = fileIDs;
+
+        return format(text, values);
+    }
+
+    private setDescriptionsStatement(...descriptions: FileDescription[]): QueryConfig {
+        const text = `INSERT INTO file_descriptions (file_id, description, file_created_at)
+                    SELECT file_id::bigint, description::jsonb,
+                        -- subquery to get created_at for the foreign key
+                        (SELECT MAX(f.created_at) 
+                        FROM files f
+                        WHERE f.id = fd.file_id::bigint
+                        GROUP BY f.id) AS created_at
+                    FROM (VALUES %L) AS fd(file_id, description)
+                    ON CONFLICT (file_id, file_created_at)
+                    DO UPDATE SET described_at = EXCLUDED.described_at`;
+        const values = descriptions.map((desc) => [
+            desc.file_id,
+            JSON.stringify(desc.column_info)
+        ]);
+
+        return format(text, values);
+    }
+
+    private checkTimeseriesStatement(fileIDs: string[]): QueryConfig {
+        const text = `SELECT id, timeseries
+                    FROM files
+                    WHERE id IN (%L)`;
+        const values = fileIDs;
         return format(text, values);
     }
 }

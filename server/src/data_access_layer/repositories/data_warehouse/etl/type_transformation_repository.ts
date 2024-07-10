@@ -184,6 +184,24 @@ export default class TypeTransformationRepository extends Repository implements 
         return Promise.resolve();
     }
 
+    // this method will iterate through all origin and destination metatypes on this transformation and populate their names
+    // generally this method is only used when we need to export mapping/transformations into a separate
+    // container - where the names will be used to match keys instead of the id. No hard failures here
+    async populateMetatypeNames(transformation: TypeTransformation): Promise<void> {
+        const metatypeRepo = new MetatypeRepository();
+
+        if (transformation.origin_metatype_id) {
+            const originMetatype = await metatypeRepo.findByID(transformation.origin_metatype_id);
+            if (!originMetatype.isError) transformation.origin_metatype_name = originMetatype.value.name;
+        }
+
+        if (transformation.destination_metatype_id) {
+            const destinationMetatype = await metatypeRepo.findByID(transformation.destination_metatype_id);
+            if (!destinationMetatype.isError) transformation.destination_metatype_name = destinationMetatype.value.name;
+        }
+        return Promise.resolve();
+    }
+
     // backfillIDs will attempt to take a transformation and populate the metatype/relationship pair id as well as the
     // keys based on name only. This function is generally only used as part of the type mapping export pipeline and
     // should be used very carefully. This function does not error out of it cannot find the ids specified, the caller
@@ -215,8 +233,11 @@ export default class TypeTransformationRepository extends Repository implements 
 
         for (const transformation of transformations) {
             if (transformation.metatype_name && !transformation.metatype_id) metatypeNames.push(transformation.metatype_name);
-            if (transformation.metatype_relationship_pair_name && !transformation.metatype_relationship_pair_id)
-                relationshipPairNames.push(transformation.metatype_relationship_pair_name.replace(/:/g, '-'));
+            if (transformation.selected_relationship_pair_name && !transformation.metatype_relationship_pair_id)
+                relationshipPairNames.push(transformation.selected_relationship_pair_name.replace(/:/g, '-'));
+            if (transformation.origin_metatype_name && !transformation.origin_metatype_id) metatypeNames.push(transformation.origin_metatype_name);
+            if (transformation.destination_metatype_name && !transformation.destination_metatype_id)
+                metatypeNames.push(transformation.destination_metatype_name);
         }
 
         // fetch all metatypes and relationship pairs by name specified, this allows us to minimize DB calls, though it
@@ -277,15 +298,15 @@ export default class TypeTransformationRepository extends Repository implements 
             }
 
             // set pair id and any attached relationship keys correctly
-            if (!transformations[i].metatype_relationship_pair_id && transformations[i].metatype_relationship_pair_name) {
-                const foundPair = relationshipPairs.find((p) => p.name === transformations[i].metatype_relationship_pair_name?.replace(/:/g, '-'));
+            if (!transformations[i].metatype_relationship_pair_id && transformations[i].selected_relationship_pair_name) {
+                const foundPair = relationshipPairs.find((p) => p.name === transformations[i].selected_relationship_pair_name?.replace(/:/g, '-'));
 
                 if (foundPair) {
                     transformations[i].metatype_relationship_pair_id = foundPair.id;
-                    transformations[i].origin_metatype_id = foundPair.origin_metatype_id
-                    transformations[i].destination_metatype_id = foundPair.destination_metatype_id
-                    transformations[i].origin_data_source_id = undefined
-                    transformations[i].destination_data_source_id = undefined
+                    if (foundPair.originMetatype) transformations[i].origin_metatype_id = foundPair.originMetatype.id;
+                    if (foundPair.destinationMetatype) transformations[i].destination_metatype_id = foundPair.destinationMetatype.id;
+                    transformations[i].origin_data_source_id = undefined;
+                    transformations[i].destination_data_source_id = undefined;
 
                     // now set the id's of all the keys
                     for (const j in transformations[i].keys) {
@@ -307,6 +328,23 @@ export default class TypeTransformationRepository extends Repository implements 
                     if (transformations[i].destination_parameters && transformations[i].destination_parameters!.length > 0) {
                         transformations[i].destination_parameters![0].value = foundPair.destination_metatype_id
                     }
+                }
+            }
+
+            // set original_metatype_id and destination_metatype_id correctly if it has not already been set by the found relationship
+            if (!transformations[i].origin_metatype_id && transformations[i].origin_metatype_name) {
+                const foundMetatype = metatypes.find((m) => m.name === transformations[i].origin_metatype_name);
+
+                if (foundMetatype) {
+                    transformations[i].origin_metatype_id = foundMetatype.id;
+                }
+            }
+
+            if (!transformations[i].destination_metatype_id && transformations[i].destination_metatype_name) {
+                const foundMetatype = metatypes.find((m) => m.name === transformations[i].destination_metatype_name);
+
+                if (foundMetatype) {
+                    transformations[i].destination_metatype_id = foundMetatype.id;
                 }
             }
         }
@@ -350,13 +388,13 @@ export default class TypeTransformationRepository extends Repository implements 
         //
         // override the fields to select
         this._query.SELECT = [`${this._tableAlias}.*`,
-                         `metatypes.name as metatype_name`,
-                         `metatype_relationship_pairs.name as metatype_relationship_pair_name`,
-                         `metatypes.ontology_version as metatype_ontology_version`,
-                         `metatype_relationship_pairs.ontology_version as metatype_relationship_pair_ontology_version`,
-                         `mapping.container_id AS container_id`,
-                         `mapping.shape_hash as shape_hash`,
-                         `mapping.data_source_id as data_source_id`,
+            `metatypes.name as metatype_name`,
+            `metatype_relationship_pairs.name as metatype_relationship_pair_name`,
+            `metatypes.ontology_version as metatype_ontology_version`,
+            `metatype_relationship_pairs.ontology_version as metatype_relationship_pair_ontology_version`,
+            `mapping.container_id AS container_id`,
+            `mapping.shape_hash as shape_hash`,
+            `mapping.data_source_id as data_source_id`,
         ];
         // override the tables to select from
         this._query.FROM = [
@@ -384,13 +422,13 @@ export default class TypeTransformationRepository extends Repository implements 
         })
 
         this._query.SELECT = [`${this._tableAlias}.*`,
-                         `metatypes.name as metatype_name`,
-                         `metatype_relationship_pairs.name as metatype_relationship_pair_name`,
-                         `metatypes.ontology_version as metatype_ontology_version`,
-                         `metatype_relationship_pairs.ontology_version as metatype_relationship_pair_ontology_version`,
-                         `mapping.container_id AS container_id`,
-                         `mapping.shape_hash as shape_hash`,
-                         `mapping.data_source_id as data_source_id`
+            `metatypes.name as metatype_name`,
+            `metatype_relationship_pairs.name as metatype_relationship_pair_name`,
+            `metatypes.ontology_version as metatype_ontology_version`,
+            `metatype_relationship_pairs.ontology_version as metatype_relationship_pair_ontology_version`,
+            `mapping.container_id AS container_id`,
+            `mapping.shape_hash as shape_hash`,
+            `mapping.data_source_id as data_source_id`
         ];
         this._query.FROM = [
             `FROM ${TypeTransformationMapper.tableName}`,

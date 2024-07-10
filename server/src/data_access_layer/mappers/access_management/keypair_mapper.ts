@@ -128,7 +128,7 @@ export default class KeyPairMapper extends Mapper {
 
     private keysForUserStatement(userID: string): QueryConfig {
         return {
-            text: `SELECT key, user_id, note FROM keypairs WHERE user_id = $1`,
+            text: `SELECT key, user_id FROM keypairs WHERE user_id = $1`,
             values: [userID],
         };
     }
@@ -142,7 +142,7 @@ export default class KeyPairMapper extends Mapper {
 
     private serviceKeysForContainerStatement(containerID: string): QueryConfig {
         return {
-            text: `SELECT k.key, k.user_id, k.note
+            text: `SELECT k.key, k.user_id
             FROM keypairs k
             RIGHT JOIN container_service_users cu
             ON k.user_id = cu.user_id

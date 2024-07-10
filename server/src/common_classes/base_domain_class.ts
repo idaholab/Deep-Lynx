@@ -12,7 +12,7 @@ import Result from './result';
 export class NakedDomainClass {
     async validationErrors(): Promise<string[] | null> {
         const errors = await validate(this);
-        if (errors.length > 0) return Promise.resolve(errors.map((e) => e.toString(false)));
+        if (errors.length > 0) return Promise.resolve(errors.map((e) => JSON.stringify(e)));
 
         return Promise.resolve(null);
     }
