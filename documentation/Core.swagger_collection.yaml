@@ -3182,6 +3182,10 @@ paths:
                 metadata:
                   type: string
                   format: binary
+          application/json:
+            schema:
+              type: object
+              properties: {}
         description: |-
           This should be a collection of files and normal fields. If you include a file field and call that "metadata" - you can include a normal metadata upload as either a json, csv, or xml file. This data will be processed like a normal import and the files attached to the processed data. Once DeepLynx generates nodes and edges from that data, any files attached will automatically be attached to the resulting nodes/edges as well.
           NOTE: The metadata file you upload, if json, must be wrapped in an array. If you do not pass in an array of objects, even if it's a single object, then DeepLynx will attempt to split up your metadata into its parts instead of treating it like a whole object.
