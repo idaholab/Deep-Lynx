@@ -995,7 +995,7 @@ export default {
                 explainer:
                     "Behind the scenes, a DeepLynx module extracts metadata from the geometry in your model, and transforms the geometry into a .glb.",
                 fileExtensions:
-                    "Supported file extensions are: .ipt, .rvt, .stp, .step, .stpz, .stepz, .stpx, .stpxz",
+                    "Supported file extensions are: .iam, .ipt, .rvt, .stp, .step, .stpz, .stepz, .stpx, .stpxz",
                 upload: "Upload a file to DeepLynx, and transform it into an interactive model.",
                 select: "Select a file attached to a node in DeepLynx, and transform it into an interactive model.",
             },

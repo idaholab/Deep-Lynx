@@ -119,8 +119,7 @@ export default class ImportMapper extends Mapper {
     // list all imports which have data with an inserted status - while we used to check status of the import,
     // checking for inserted records is a far better method when attempting to gauge if an import still needs processed
     // note: this will always list in the order the imports were received - and grouped by container_id
-    // we also use an advisory lock here on the container_id to avoid duplicate processing when in a cluster
-    public async ListWithUninsertedDataLock(transaction?: PoolClient, excludeContainers?: string[]): Promise<Result<Import[]>> {
+    public async ListWithUninsertedData(transaction?: PoolClient, excludeContainers?: string[]): Promise<Result<Import[]>> {
         return super.rows(this.listWithUninsertedDataStatement(excludeContainers), {resultClass: this.resultClass, transaction});
     }
 
@@ -318,7 +317,6 @@ export default class ImportMapper extends Mapper {
         // process threads for the same container
         if (excludeContainers && excludeContainers.length > 0) {
             const text = `SELECT imports.*, data_sources.container_id,
-                          pg_advisory_lock(data_sources.container_id),
                           SUM(CASE WHEN (data_staging.inserted_at IS NOT NULL 
                             OR data_staging.nodes_processed_at IS NOT NULL
                             OR data_staging.edges_processed_at IS NOT NULL)
@@ -343,7 +341,6 @@ export default class ImportMapper extends Mapper {
             return format(text, values);
         } else {
             const text = `SELECT imports.*, data_sources.container_id,
-                          pg_advisory_lock(data_sources.container_id),
                           SUM(CASE WHEN (data_staging.inserted_at IS NOT NULL 
                             OR data_staging.nodes_processed_at IS NOT NULL
                             OR data_staging.edges_processed_at IS NOT NULL)

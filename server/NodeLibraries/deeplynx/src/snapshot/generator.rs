@@ -78,7 +78,7 @@ impl SnapshotGenerator {
 
     // first get the count of rows - we do this in order to do Vec::with_capacity to avoid memory
     // issues or slowdowns attempting to grow a Vec with each append
-    let count: (i64,) = sqlx::query_as(format!("SELECT COUNT(*) FROM ({})", query).as_str())
+    let count: (i64,) = sqlx::query_as(format!("SELECT COUNT(*) FROM ({}) q", query).as_str())
       .fetch_one(&self.db)
       .await?;
 

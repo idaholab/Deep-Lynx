@@ -1,8 +1,6 @@
 "use client";
 
 // Hooks
-import useSWR from "swr";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useContainer } from "@/lib/context/ContainerProvider";
 
@@ -20,59 +18,12 @@ import {
     Divider,
     Container,
     Input,
-    InputLabel,
-    FormControl,
-    MenuItem,
-    Select,
     Tab,
     Tabs,
 } from "@mui/material";
 
-// Axios
-import axios from "axios";
-
 // Translations
 import translations from "@/lib/translations";
-
-// Development only
-const files = [
-    {
-        title: "Rubber duck",
-        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Duck/glTF-Binary/Duck.glb",
-        extension: ".glb",
-    },
-    {
-        title: "Flowers",
-        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/GlassVaseFlowers/glTF-Binary/GlassVaseFlowers.glb",
-        extension: ".glb",
-    },
-    {
-        title: "Chair",
-        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/SheenChair/glTF-Binary/SheenChair.glb",
-        extension: ".glb",
-    },
-    {
-        title: "Lantern",
-        url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Lantern/glTF-Binary/Lantern.glb",
-        extension: ".glb",
-    },
-];
-
-const fetcher = (params: [url: string, containerId: string]) => {
-    const [url, containerId] = params;
-
-    const res = axios
-        .get(url, { params: { containerId: containerId } })
-        .then((res) => {
-            return res.data.value;
-        });
-
-    return res;
-};
-
-// These are file types that Pythagoras presently knows how to transform into .glb
-const supportedFileTypes =
-    ".ipt, .rvt, .stp, .step, .stpz, .stepz, .stpx, .stpxz";
 
 const ModelViewer = () => {
     // Store
@@ -139,7 +90,8 @@ const ModelViewer = () => {
                             <Input
                                 type="file"
                                 inputProps={{
-                                    accept: supportedFileTypes,
+                                    accept: translations.en.modelExplorer
+                                        .instructions.fileExtensions,
                                 }}
                             ></Input>
                         </>

@@ -305,17 +305,14 @@ export class ContainerPermissionSet extends NakedDomainClass {
         await e.removePolicy(userID, containerID, 'users', 'read');
         await e.removePolicy(userID, containerID, 'users', 'write');
 
-        try {
-            await e.savePolicy();
-        } catch (e) {
-            Logger.debug(`error saving policy ${e}`);
-        }
+        Logger.info(`removed all casbin policies for user ID ${userID}`);
 
         if (this.containers && this.containers.length > 0) {
             this.containers.forEach((permission) => {
                 e.addPolicy(userID, containerID, 'containers', permission).catch((e) =>
                     Logger.error(`error while setting container permissions for user ${userID}: ${e}`),
                 );
+                Logger.info(`added casbin policy container ${permission} for user ID ${userID}`);
             });
         }
 
@@ -324,6 +321,7 @@ export class ContainerPermissionSet extends NakedDomainClass {
                 e.addPolicy(userID, containerID, 'ontology', permission).catch((e) =>
                     Logger.error(`error while setting container permissions for user ${userID}: ${e}`),
                 );
+                Logger.info(`added casbin policy ontology ${permission} for user ID ${userID}`);
             });
         }
 
@@ -332,6 +330,7 @@ export class ContainerPermissionSet extends NakedDomainClass {
                 e.addPolicy(userID, containerID, 'data', permission).catch((e) =>
                     Logger.error(`error while setting container permissions for user ${userID}: ${e}`),
                 );
+                Logger.info(`added casbin policy data ${permission} for user ID ${userID}`);
             });
         }
 
@@ -340,6 +339,7 @@ export class ContainerPermissionSet extends NakedDomainClass {
                 e.addPolicy(userID, containerID, 'users', permission).catch((e) =>
                     Logger.error(`error while setting container permissions for user ${userID}: ${e}`),
                 );
+                Logger.info(`added casbin policy users ${permission} for user ID ${userID}`);
             });
         }
 

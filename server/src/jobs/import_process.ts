@@ -32,7 +32,7 @@ async function Start(): Promise<void> {
     await postgresAdapter.init();
 
     // we _should_ be able to load all the imports into memory because this job is running often enough
-    const importsResult = await ImportMapper.Instance.ListWithUninsertedDataLock();
+    const importsResult = await ImportMapper.Instance.ListWithUninsertedData();
 
     if (importsResult.isError) {
         Logger.error(`unexpected error in import processing thread ${JSON.stringify(importsResult.error)}`);
@@ -85,7 +85,7 @@ async function Start(): Promise<void> {
                 // we don't care about the ids, just if it's empty
                 incompleteContainerIDs.pop();
 
-                ImportMapper.Instance.ListWithUninsertedDataLock(undefined, containerIDs)
+                ImportMapper.Instance.ListWithUninsertedData(undefined, containerIDs)
                     .then((result) => {
                         if (result.isError) {
                             Logger.error(`unable to list more imports in import process ${JSON.stringify(result.error)}`);
