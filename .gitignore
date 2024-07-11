@@ -73,3 +73,7 @@ devenv.local.nix
 /NodeLibraries/deeplynx/Cargo.lock
 /NodeLibraries/deeplynx/target
 /NodeLibraries/deeplynx/*.node
+
+# directory for filesystem storage
+storage/*
+!storage/.gitkeep

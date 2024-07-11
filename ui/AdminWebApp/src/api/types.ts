@@ -151,7 +151,7 @@ export type FileT = {
     file_size: number;
     md5hash: string;
     adapter_file_path: string;
-    adapter: 'filesystem' | 'azure_blob' | 'mock';
+    adapter: 'filesystem' | 'azure_blob' | 'minio';
     metadata: object;
     created_at: string;
     modified_at: string;

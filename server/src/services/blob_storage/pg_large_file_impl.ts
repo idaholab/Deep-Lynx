@@ -1,3 +1,5 @@
+/* DEPRECATED */
+
 import {BlobStorage, BlobUploadOptions, BlobUploadResponse} from './blob_storage';
 import Result from '../../common_classes/result';
 import {Readable, Writable} from 'stream';
@@ -8,9 +10,8 @@ const LargeObjectManager = require('pg-large-object').LargeObjectManager;
 const digestStream = require('digest-stream');
 
 /*
-    Filesystem is a very simple implementation of BlobStorage and allows DeepLynx
-    to store and retrieve files on the host system. Note: using this in a sharded
-    environment could have unintended consequences
+    Largeobject should no longer be used and is only maintained in the codebase to
+    retrieve existing file records in the DB
  */
 export default class LargeObjectImpl implements BlobStorage {
     async deleteFile(f: File): Promise<Result<boolean>> {

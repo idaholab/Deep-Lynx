@@ -30,8 +30,9 @@ export default class File extends BaseDomainClass {
     @IsString()
     adapter_file_path?: string;
 
+    // largeobject is deprecated and should not be used
     @IsString()
-    @IsIn(['filesystem', 'azure_blob', 'mock', 'largeobject'])
+    @IsIn(['filesystem', 'azure_blob', 'minio', 'largeobject'])
     adapter?: string;
 
     @IsObject()
@@ -138,7 +139,7 @@ export class FilePathMetadata extends NakedDomainClass {
     adapter_file_path?: string;
 
     @IsString()
-    @IsIn(['filesystem', 'azure_blob', 'mock', 'largeobject'])
+    @IsIn(['filesystem', 'azure_blob', 'minio'])
     adapter?: string;
 
     @IsString()
