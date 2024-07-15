@@ -136,15 +136,22 @@ export class FilePathMetadata extends NakedDomainClass {
     id?: string;
 
     @IsString()
-    adapter_file_path?: string;
-
-    @IsString()
     @IsIn(['filesystem', 'azure_blob', 'minio'])
     adapter?: string;
 
     @IsString()
     @IsOptional()
     data_source_id?: string;
+
+    // this is the fully qualified file path complete with file name and short uuid
+    @IsString()
+    adapter_file_path?: string;
+}
+
+export type AzureMetadata = {
+    azure_url: string;
+    azure_container: string;
+    sas_token: string;
 }
 
 export class FileDescriptionColumn extends NakedDomainClass {

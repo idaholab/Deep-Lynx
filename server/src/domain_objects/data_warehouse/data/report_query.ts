@@ -1,7 +1,7 @@
 import { BaseDomainClass, NakedDomainClass } from "../../../common_classes/base_domain_class";
-import {IsArray, IsBoolean, IsOptional, IsString} from 'class-validator';
+import {IsArray, IsBoolean, IsObject, IsOptional, IsString} from 'class-validator';
 import Report from './report';
-import { FilePathMetadata } from "./file";
+import { AzureMetadata, FilePathMetadata } from "./file";
 
 /*
     ReportQuery represents a query and its execution status.
@@ -87,6 +87,11 @@ export class TS2Request extends NakedDomainClass {
     @IsString()
     data_source_id?: string;
 
+    // optional azure-specific params
+    @IsOptional()
+    @IsObject()
+    azure_metadata?: AzureMetadata;
+
     constructor(input: {
         report_id: Report | string;
         query_id: string;
@@ -95,6 +100,7 @@ export class TS2Request extends NakedDomainClass {
         files: FilePathMetadata[];
         token: string;
         data_source_id: string;
+        azure_metadata?: AzureMetadata;
     }) {
         super();
 
@@ -108,6 +114,7 @@ export class TS2Request extends NakedDomainClass {
             this.files = input.files;
             this.token = input.token;
             this.data_source_id = input.data_source_id;
+            if (input.azure_metadata) this.azure_metadata = input.azure_metadata;
         }
     }
 }

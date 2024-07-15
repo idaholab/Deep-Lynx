@@ -4,13 +4,16 @@ import Result from '../../../../common_classes/result';
 import ReportQueryMapper from '../../../mappers/data_warehouse/data/report_query_mapper';
 import {PoolClient} from 'pg';
 import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
-import File from '../../../../domain_objects/data_warehouse/data/file';
+import File, { AzureMetadata } from '../../../../domain_objects/data_warehouse/data/file';
 import { User } from '../../../../domain_objects/access_management/user';
 import Report from '../../../../domain_objects/data_warehouse/data/report';
 import ReportMapper from '../../../mappers/data_warehouse/data/report_mapper';
 import FileRepository from './file_repository';
 import { newTempToken } from '../../../../services/utilities';
 import ReportRepository from './report_repository';
+import Config from '../../../../services/config';
+import BlobStorageProvider from '../../../../services/blob_storage/blob_storage';
+import AzureBlobImpl from '../../../../services/blob_storage/azure_blob_impl';
 
 /*
     ReportQueryRepository contains methods for persisting and retrieving report
@@ -113,6 +116,21 @@ export default class ReportQueryRepository extends Repository implements Reposit
         const fileInfo = await this.#fileRepo.listPathMetadata(...request.file_ids!);
         if (fileInfo.isError) {return Promise.resolve(Result.Failure('unable to find file information'))}
         const files = fileInfo.value;
+        
+        // if any files are azure_blob, this requires some extra metadata
+        let azureMetadata: AzureMetadata | undefined;
+        if (files.some(f => f.adapter === 'azure_blob')) {
+            const getSAS = await (BlobStorageProvider('azure_blob') as AzureBlobImpl).generateSASToken();
+            if (getSAS.isError) {
+                return Promise.resolve(Result.Failure(`unable to generate SAS token ${getSAS.error?.error}`));
+            }
+
+            azureMetadata = {
+                azure_url: Config.azure_blob_connection_string.split(';').find(e => e.startsWith('BlobEndpoint='))?.split('=')[1]!,
+                azure_container: Config.azure_blob_container_name,
+                sas_token: getSAS.value
+            }
+        }
 
         // formulate query request (this gets sent to NAPI)
         const queryRequest = new TS2Request({
@@ -122,7 +140,8 @@ export default class ReportQueryRepository extends Repository implements Reposit
             response_url: `/containers/${containerID}/reports/${reportID}/queries/${queryID}`,
             files: files,
             token: token,
-            data_source_id: files[0].data_source_id!
+            data_source_id: files[0].data_source_id!,
+            azure_metadata: azureMetadata
         });
 
         // TODO: send to napi
