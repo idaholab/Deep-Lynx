@@ -393,11 +393,8 @@ describe('A Data Type Mapping', async () => {
         // Sort the expected output for comparison (result is already sorted in type mapping)
         const sortedExpected = sortObjectKeys(test_payload_greatest_common_payload_output);
 
-        // Convert sorted expected out to JSON strings for comparison (result is already converted in type mapping)
-        const expectedJson = JSON.stringify(sortedExpected);
-
         // Assert deep equality
-        expect(result).to.equal(expectedJson);
+        expect(result).to.deep.equal(sortedExpected);
     });
 
     it('can formulate greatest common payload from array of payloads advanced case', async () => {
@@ -407,11 +404,8 @@ describe('A Data Type Mapping', async () => {
         // Sort the expected output for comparison (result is already sorted in type mapping)
         const sortedExpected = sortObjectKeys(test_payload_greatest_car_ouput);
 
-        // Convert sorted expected out to JSON strings for comparison (result is already converted in type mapping)
-        const expectedJson = JSON.stringify(sortedExpected);
-
         // Assert deep equality
-        expect(result).to.equal(expectedJson);
+        expect(result).to.deep.equal(sortedExpected);
     });
 
 });
@@ -933,17 +927,16 @@ const test_payload_greatest_common_payload_input_three =
         creationDate: "2022-May-31 00:00:00"
     };
 
-const test_payload_greatest_common_payload_output = [
+const test_payload_greatest_common_payload_output = 
     {
         creationDate: "2022-May-31 00:00:00",
         days: 4,
         name: "EWR-9154-Beartooth_AR_2022_3DView_1:3",
         nickname: "kobe",
         objectId: 3
-    }
-];
+    };
 
-const test_payload_greatest_car_ouput = [
+const test_payload_greatest_car_ouput =
     {
         "car":
             {
@@ -1003,8 +996,7 @@ const test_payload_greatest_car_ouput = [
                 "name":"test cars maintenance",
                 "start_date":"1/1/2020 12:00:00"
             }
-        }
-    ];
+        };
 
 const test_payload_value_nodes_one = 
     {

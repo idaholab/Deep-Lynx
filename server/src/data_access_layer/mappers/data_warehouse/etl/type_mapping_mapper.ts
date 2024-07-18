@@ -211,14 +211,28 @@ export default class TypeMappingMapper extends Mapper {
 
     private retrieveStatement(exportID: string): QueryConfig {
         return {
-            text: `SELECT * FROM type_mappings WHERE id = $1`,
+            text: `SELECT * FROM grouped_type_mappings WHERE id = $1`,
             values: [exportID],
         };
     }
 
     private retrieveByShapeHashStatement(dataSourceID: string, shapeHash: string): QueryConfig {
         return {
-            text: `SELECT * FROM type_mappings WHERE data_source_id = $1 AND shape_hash = $2`,
+            text: `SELECT * 
+            FROM grouped_type_mappings 
+            WHERE data_source_id = $1 
+            AND (
+                shape_hash = $2 
+                OR (
+                    shape_hash IS NULL 
+                    AND id IN (
+                        SELECT type_mapping_id 
+                        FROM public.hash_groupings 
+                        WHERE shape_hash = $2
+                    )
+                )
+            )
+        `,
             values: [dataSourceID, shapeHash],
         };
     }
@@ -233,17 +247,17 @@ export default class TypeMappingMapper extends Mapper {
     private listStatement(containerID: string, dataSourceID: string, offset: number, limit: number, sortBy?: string, sortDesc?: boolean): QueryConfig {
         if (sortDesc && sortBy) {
             return {
-                text: `SELECT * FROM type_mappings WHERE container_id = $1 AND data_source_id = $4 ORDER BY "${sortBy}" DESC OFFSET $2 LIMIT $3`,
+                text: `SELECT * FROM grouped_type_mappings WHERE container_id = $1 AND data_source_id = $4 ORDER BY "${sortBy}" DESC OFFSET $2 LIMIT $3`,
                 values: [containerID, offset, limit, dataSourceID],
             };
         } else if (sortBy) {
             return {
-                text: `SELECT * FROM type_mappings WHERE container_id = $1 AND data_source_id = $4 ORDER BY "${sortBy}" ASC OFFSET $2 LIMIT $3`,
+                text: `SELECT * FROM grouped_type_mappings WHERE container_id = $1 AND data_source_id = $4 ORDER BY "${sortBy}" ASC OFFSET $2 LIMIT $3`,
                 values: [containerID, offset, limit, dataSourceID],
             };
         } else {
             return {
-                text: `SELECT * FROM type_mappings WHERE container_id = $1 AND data_source_id = $4 OFFSET $2 LIMIT $3`,
+                text: `SELECT * FROM grouped_type_mappings WHERE container_id = $1 AND data_source_id = $4 OFFSET $2 LIMIT $3`,
                 values: [containerID, offset, limit, dataSourceID],
             };
         }
@@ -259,29 +273,29 @@ export default class TypeMappingMapper extends Mapper {
     ): QueryConfig {
         if (sortDesc && sortBy) {
             return {
-                text: `SELECT * FROM type_mappings
-                       WHERE container_id = $1 AND data_source_id = $4
-                       AND NOT EXISTS (SELECT 1 FROM type_mapping_transformations 
-                       WHERE type_mapping_transformations.type_mapping_id = type_mappings.id)
-                       ORDER BY "${sortBy}" DESC OFFSET $2 LIMIT $3`,
+                text: `SELECT * FROM grouped_type_mappings
+                WHERE container_id = $1 AND data_source_id = $4
+                AND NOT EXISTS (SELECT 1 FROM type_mapping_transformations 
+                WHERE type_mapping_transformations.type_mapping_id = grouped_type_mappings.id)
+                ORDER BY "${sortBy}" DESC OFFSET $2 LIMIT $3`,
                 values: [containerID, offset, limit, dataSourceID],
             };
         } else if (sortBy) {
             return {
-                text: `SELECT * FROM type_mappings
-                       WHERE container_id = $1 AND data_source_id = $4
-                       AND NOT EXISTS (SELECT 1 FROM type_mapping_transformations 
-                       WHERE type_mapping_transformations.type_mapping_id = type_mappings.id)
-                       ORDER BY "${sortBy}" ASC OFFSET $2 LIMIT $3`,
+                text: `SELECT * FROM grouped_type_mappings
+                WHERE container_id = $1 AND data_source_id = $4
+                AND NOT EXISTS (SELECT 1 FROM type_mapping_transformations 
+                WHERE type_mapping_transformations.type_mapping_id = grouped_type_mappings.id)
+                ORDER BY "${sortBy}" ASC OFFSET $2 LIMIT $3`,
                 values: [containerID, offset, limit, dataSourceID],
             };
         } else {
             return {
-                text: `SELECT * FROM type_mappings
-                       WHERE container_id = $1 AND data_source_id = $4
-                         AND NOT EXISTS (SELECT 1 FROM type_mapping_transformations 
-                         WHERE type_mapping_transformations.type_mapping_id = type_mappings.id)
-                       OFFSET $2 LIMIT $3`,
+                text: `SELECT * FROM grouped_type_mappings
+                WHERE container_id = $1 AND data_source_id = $4
+                AND NOT EXISTS (SELECT 1 FROM type_mapping_transformations 
+                WHERE type_mapping_transformations.type_mapping_id = grouped_type_mappings.id)
+                OFFSET $2 LIMIT $3`,
                 values: [containerID, offset, limit, dataSourceID],
             };
         }
@@ -289,24 +303,24 @@ export default class TypeMappingMapper extends Mapper {
 
     private listAllStatement(containerID: string, dataSourceID: string): QueryConfig {
         return {
-            text: `SELECT * FROM type_mappings WHERE container_id = $1 AND data_source_id = $2`,
+            text: `SELECT * FROM grouped_type_mappings WHERE container_id = $1 AND data_source_id = $2`,
             values: [containerID, dataSourceID],
         };
     }
 
     private listAllNoTransformationsStatement(containerID: string, dataSourceID: string): QueryConfig {
         return {
-            text: `SELECT * FROM type_mappings
-                   WHERE container_id = $1 AND data_source_id = $2
-                     AND NOT EXISTS (SELECT 1 FROM type_mapping_transformations 
-                     WHERE type_mapping_transformations.type_mapping_id = type_mappings.id)`,
+            text: `SELECT * FROM grouped_type_mappings
+            WHERE container_id = $1 AND data_source_id = $2
+              AND NOT EXISTS (SELECT 1 FROM type_mapping_transformations 
+              WHERE type_mapping_transformations.type_mapping_id = grouped_type_mappings.id)`,
             values: [containerID, dataSourceID],
         };
     }
 
     private listByDataSourceStatement(dataSourceID: string, offset: number, limit: number): QueryConfig {
         return {
-            text: `SELECT * FROM type_mappings WHERE data_source_id = $1 OFFSET $2 LIMIT $3`,
+            text: `SELECT * FROM grouped_type_mappings WHERE data_source_id = $1 OFFSET $2 LIMIT $3`,
             values: [dataSourceID, offset, limit],
         };
     }
@@ -334,17 +348,17 @@ export default class TypeMappingMapper extends Mapper {
 
     private countStatement(dataSourceID: string): QueryConfig {
         return {
-            text: `SELECT COUNT(*) FROM type_mappings WHERE data_source_id = $1`,
+            text: `SELECT COUNT(*) FROM grouped_type_mappings WHERE data_source_id = $1`,
             values: [dataSourceID],
         };
     }
 
     private countNoTransformationStatement(dataSourceID: string): QueryConfig {
         return {
-            text: `SELECT COUNT(*) FROM type_mappings
-                   WHERE data_source_id = $1
-                     AND NOT EXISTS (SELECT 1 FROM type_mapping_transformations 
-                     WHERE type_mapping_transformations.type_mapping_id = type_mappings.id )`,
+            text: `SELECT COUNT(*) FROM grouped_type_mappings
+            WHERE data_source_id = $1
+              AND NOT EXISTS (SELECT 1 FROM type_mapping_transformations 
+              WHERE type_mapping_transformations.type_mapping_id = grouped_type_mappings.id)`,
             values: [dataSourceID],
         };
     }
@@ -413,7 +427,7 @@ export default class TypeMappingMapper extends Mapper {
     }
 
     private listByIdsStatement(typeMappingIDs: string []): QueryConfig {
-        const text = `SELECT * FROM type_mappings WHERE id IN (%L)`;
+        const text = `SELECT * FROM grouped_type_mappings WHERE id IN (%L)`;
         const values = typeMappingIDs;
 
         return format(text, values);
