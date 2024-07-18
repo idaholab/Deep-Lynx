@@ -126,8 +126,9 @@ export default class ReportQueryRepository extends Repository implements Reposit
             }
 
             azureMetadata = {
-                azure_url: Config.azure_blob_connection_string.split(';').find(e => e.startsWith('BlobEndpoint='))?.split('=')[1]!,
-                azure_container: Config.azure_blob_container_name,
+                account_name: Config.azure_blob_connection_string.split(';').find(e => e.startsWith('AccountName='))?.split('=')[1]!,
+                blob_endpoint: Config.azure_blob_connection_string.split(';').find(e => e.startsWith('BlobEndpoint='))?.split('=')[1]!,
+                container_name: Config.azure_blob_container_name,
                 sas_token: getSAS.value
             }
         }

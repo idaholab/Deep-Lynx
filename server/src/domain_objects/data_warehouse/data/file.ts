@@ -149,8 +149,9 @@ export class FilePathMetadata extends NakedDomainClass {
 }
 
 export type AzureMetadata = {
-    azure_url: string;
-    azure_container: string;
+    account_name: string;
+    blob_endpoint: string;
+    container_name: string;
     sas_token: string;
 }
 
