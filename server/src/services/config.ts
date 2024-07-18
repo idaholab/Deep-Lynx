@@ -159,8 +159,10 @@ export class Config {
         this._encryption_key_path = process.env.ENCRYPTION_KEY_PATH;
         this._encryption_public_key_path = process.env.ENCRYPTION_PUBLIC_KEY_PATH;
 
-        this._file_storage_method = process.env.FILE_STORAGE_METHOD || 'largeobject';
-        this._filesystem_storage_directory = process.env.FILESYSTEM_STORAGE_DIRECTORY || '';
+        // if largeobject is specified as the storage option, set to filesystem instead
+        // as largeobject is maintained in the codebase only for backwards compatibility
+        this._file_storage_method = (process.env.FILE_STORAGE_METHOD === 'largeobject' || !process.env.FILE_STORAGE_METHOD) ? 'filesystem' : process.env.FILE_STORAGE_METHOD;
+        this._filesystem_storage_directory = process.env.FILESYSTEM_STORAGE_DIRECTORY || './../storage/';
         this._azure_blob_connection_string = process.env.AZURE_BLOB_CONNECTION_STRING || '';
         this._azure_blob_container_name = process.env.AZURE_BLOB_CONTAINER_NAME || 'deep-lynx';
 

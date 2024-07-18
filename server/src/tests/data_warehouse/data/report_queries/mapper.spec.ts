@@ -75,8 +75,7 @@ describe('A Report Query Mapper', async () => {
             'test suite',
             new Report({
                 container_id: containerID,
-                status_message: faker.random.alphaNumeric(),
-                notify_users: true
+                status_message: faker.random.alphaNumeric()
             }),
         );
 
@@ -100,6 +99,7 @@ describe('A Report Query Mapper', async () => {
         const mapper = ReportQueryMapper.Instance;
 
         const rQuery = await mapper.Create(
+            'test suite',
             new ReportQuery({
                 report_id: reportID,
                 query: `{metatypes{Requirement{id name}}}`,
@@ -118,6 +118,7 @@ describe('A Report Query Mapper', async () => {
         const mapper = ReportQueryMapper.Instance;
 
         const rQuery = await mapper.Create(
+            'test suite',
             new ReportQuery({
                 query: `{metatypes{Requirement{id name}}}`,
                 status_message: faker.random.alphaNumeric(),
@@ -135,6 +136,7 @@ describe('A Report Query Mapper', async () => {
         const mapper = ReportQueryMapper.Instance;
 
         const rQuery = await mapper.Create(
+            'test suite',
             new ReportQuery({
                 report_id: reportID,
                 query: `{metatypes{Requirement{id name}}}`,
@@ -156,6 +158,7 @@ describe('A Report Query Mapper', async () => {
         const mapper = ReportQueryMapper.Instance;
 
         const rQuery = await mapper.Create(
+            'test suite',
             new ReportQuery({
                 report_id: reportID,
                 query: `{metatypes{Requirement{id name}}}`,
@@ -185,6 +188,7 @@ describe('A Report Query Mapper', async () => {
         const mapper = ReportQueryMapper.Instance;
 
         const rQuery = await mapper.Create(
+            'test suite',
             new ReportQuery({
                 report_id: reportID,
                 query: `{metatypes{Requirement{id name}}}`,
@@ -214,6 +218,7 @@ describe('A Report Query Mapper', async () => {
         const mapper = ReportQueryMapper.Instance;
 
         const rQuery = await mapper.Create(
+            'test suite',
             new ReportQuery({
                 report_id: reportID,
                 query: `{metatypes{Requirement{id name}}}`,
@@ -234,6 +239,7 @@ describe('A Report Query Mapper', async () => {
         const mapper = ReportQueryMapper.Instance;
 
         const rQuery = await mapper.Create(
+            'test suite',
             new ReportQuery({
                 report_id: reportID,
                 query: `{metatypes{Requirement{id name}}}`,
@@ -244,7 +250,7 @@ describe('A Report Query Mapper', async () => {
         expect(rQuery.isError).false;
         expect(rQuery.value).not.empty;
 
-        const fileAdded = await mapper.AddFile(reportID, rQuery.value.id!, fileID);
+        const fileAdded = await mapper.AddFile(rQuery.value.id!, fileID);
         expect(fileAdded.isError).false;
         expect(fileAdded.value).true;
 

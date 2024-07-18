@@ -165,7 +165,7 @@ export class Client {
             })
             .catch((e: any) => {
                 const error = JSON.parse(e);
-                const resp: AxiosResponse = {data: {}, status: 500, statusText: 'internal server error', headers: '', config: error.config};
+                const resp: AxiosResponse = {data: {}, status: 500, statusText: 'internal server error', headers: {}, config: error.config};
                 if (error.response) {
                     // The request was made and the server responded with a status code
                     // that falls out of the range of 2xx
@@ -690,8 +690,8 @@ export class Client {
         });
     }
 
-    deleteFile(containerID: string, dataSourceID: string, fileID: string): Promise<boolean> {
-        return this.delete(`/containers/${containerID}/import/datasources/${dataSourceID}/files/${fileID}`);
+    deleteFile(containerID: string, fileID: string): Promise<boolean> {
+        return this.delete(`/containers/${containerID}/files/${fileID}`);
     }
 
     attachFileToNode(containerID: string, nodeID: string, fileID: string): Promise<boolean> {

@@ -1,6 +1,6 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
-import {PoolClient, QueryConfig} from 'pg';
+import { PoolClient, QueryConfig } from 'pg';
 import ReportQuery from '../../../../domain_objects/data_warehouse/data/report_query';
 
 const format = require('pg-format');
@@ -28,8 +28,8 @@ export default class ReportQueryMapper extends Mapper {
         return ReportQueryMapper.instance;
     }
 
-    public async Create(query: ReportQuery, transaction?: PoolClient): Promise<Result<ReportQuery>> {
-        const r = await super.run(this.createStatement(query), {
+    public async Create(userID: string, query: ReportQuery, transaction?: PoolClient): Promise<Result<ReportQuery>> {
+        const r = await super.run(this.createStatement(userID, query), {
             transaction,
             resultClass: this.resultClass,
         });
@@ -46,7 +46,11 @@ export default class ReportQueryMapper extends Mapper {
         message?: string,
         transaction?: PoolClient,
     ): Promise<Result<boolean>> {
-        return super.runStatement(this.setStatusStatement(queryID, status, message), {transaction});
+        return super.runStatement(this.setStatusStatement(queryID, status, message), { transaction });
+    }
+
+    public async SetResultFile(queryID: string, fileID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.setResultFileStatement(queryID, fileID));
     }
 
     public async Update(query: ReportQuery, transaction?: PoolClient): Promise<Result<ReportQuery>> {
@@ -68,29 +72,36 @@ export default class ReportQueryMapper extends Mapper {
         });
     }
 
-    public AddFile(reportID: string, id: string, fileID: string): Promise<Result<boolean>> {
-        return super.runStatement(this.addFile(reportID, id, fileID));
+    public AddFile(id: string, fileID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.addFileStatement(id, fileID));
+    }
+
+    public BulkAddFiles(id: string, fileIDs: string[]): Promise<Result<boolean>> {
+        return super.runStatement(this.bulkAddFilesStatement(id, fileIDs));
     }
 
     public RemoveFile(id: string, fileID: string): Promise<Result<boolean>> {
-        return super.runStatement(this.removeFile(id, fileID));
+        return super.runStatement(this.removeFileStatement(id, fileID));
     }
 
     public async Delete(id: string, transaction?: PoolClient): Promise<Result<boolean>> {
-        return super.runStatement(this.deleteStatement(id), {transaction});
+        return super.runStatement(this.deleteStatement(id), { transaction });
     }
 
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres driver can understand.
     // The hope is that this method will allow us to be more flexible and create
     // more complicated queries more easily.
-    private createStatement(...queries: ReportQuery[]): string {
+
+    // Not inserting result file reference yet, as there aren't results right when a query is created
+    private createStatement(userID: string, ...queries: ReportQuery[]): string {
         const text = `INSERT INTO report_queries(
                         report_id,
                         query,
                         status,
-                        status_message) VALUES %L RETURNING *`;
-        const values = queries.map((q) => [q.report_id, q.query, q.status, q.status_message]);
+                        status_message,
+                        created_by) VALUES %L RETURNING *`;
+        const values = queries.map((q) => [q.report_id, q.query, q.status, q.status_message, userID]);
 
         return format(text, values);
     }
@@ -100,6 +111,20 @@ export default class ReportQueryMapper extends Mapper {
             text: `UPDATE report_queries SET status = $2, status_message = $3 WHERE id = $1`,
             values: [id, status, message],
         };
+    }
+
+    private setResultFileStatement(id: string, fileID: string): QueryConfig {
+        return {
+            text: `WITH recent_files AS (
+                        SELECT id AS file_id, MAX(created_at) AS created_at
+                        FROM files GROUP BY id
+                    ) UPDATE report_queries rq
+                    SET result_file_id = rf.file_id,
+                        result_file_created_at = rf.created_at
+                    FROM recent_files rf
+                    WHERE rq.id = $1 AND rf.file_id = $2`,
+            values: [id, fileID],
+        }
     }
 
     private updateStatement(...queries: ReportQuery[]): string {
@@ -134,19 +159,30 @@ export default class ReportQueryMapper extends Mapper {
         };
     }
 
-    private addFile(reportID: string, queryID: string, fileID: string): QueryConfig {
+    private addFileStatement(queryID: string, fileID: string): QueryConfig {
         return {
             text: `INSERT INTO report_query_files
-                    (report_id, query_id, file_id)
-                    VALUES ($1, $2, $3)`,
-            values: [reportID, queryID, fileID],
+                    (query_id, file_id)
+                    VALUES ($1, $2)`,
+            values: [queryID, fileID],
         };
     }
 
-    private removeFile(queryID: string, fileID: string): QueryConfig {
+    private bulkAddFilesStatement(queryID: string, fileIDs: string[]): QueryConfig {
+        const values = fileIDs.map((fileID) => [queryID, fileID]);
+        return {
+            text: `INSERT INTO report_query_files
+                    (query_id, file_id)
+                    VALUES (%L)
+                    ON CONFLICT DO NOTHING`,
+            values
+        }
+    }
+
+    private removeFileStatement(queryID: string, fileID: string): QueryConfig {
         return {
             text: `DELETE FROM report_query_files
-                    WHERE report_id = $1
+                    WHERE file_id = $1
                     AND query_id = $2`,
             values: [queryID, fileID],
         };

@@ -1,10 +1,19 @@
 import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
-import ReportQuery from '../../../../domain_objects/data_warehouse/data/report_query';
+import ReportQuery, { TS2InitialRequest, TS2Request } from '../../../../domain_objects/data_warehouse/data/report_query';
 import Result from '../../../../common_classes/result';
 import ReportQueryMapper from '../../../mappers/data_warehouse/data/report_query_mapper';
 import {PoolClient} from 'pg';
 import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
-import File from '../../../../domain_objects/data_warehouse/data/file';
+import File, { AzureMetadata } from '../../../../domain_objects/data_warehouse/data/file';
+import { User } from '../../../../domain_objects/access_management/user';
+import Report from '../../../../domain_objects/data_warehouse/data/report';
+import ReportMapper from '../../../mappers/data_warehouse/data/report_mapper';
+import FileRepository from './file_repository';
+import { newTempToken } from '../../../../services/utilities';
+import ReportRepository from './report_repository';
+import Config from '../../../../services/config';
+import BlobStorageProvider from '../../../../services/blob_storage/blob_storage';
+import AzureBlobImpl from '../../../../services/blob_storage/azure_blob_impl';
 
 /*
     ReportQueryRepository contains methods for persisting and retrieving report
@@ -16,6 +25,9 @@ import File from '../../../../domain_objects/data_warehouse/data/file';
 export default class ReportQueryRepository extends Repository implements RepositoryInterface<ReportQuery> {
     #mapper: ReportQueryMapper = ReportQueryMapper.Instance;
     #fileMapper: FileMapper = FileMapper.Instance;
+    #reportMapper: ReportMapper = ReportMapper.Instance;
+    #fileRepo: FileRepository = new FileRepository();
+    #reportRepo: ReportRepository = new ReportRepository();
 
     constructor() {
         super(ReportQueryMapper.tableName);
@@ -36,7 +48,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
         return this.#mapper.SetStatus(queryID, status, message, transaction);
     }
 
-    async save(rq: ReportQuery): Promise<Result<boolean>> {
+    async save(rq: ReportQuery, user: User): Promise<Result<boolean>> {
         const errors = await rq.validationErrors();
         if (errors) {return Promise.resolve(Result.Failure(`query does not pass validation ${errors.join(',')}`));}
 
@@ -52,7 +64,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
 
             Object.assign(rq, updated.value);
         } else {
-            const created = await this.#mapper.Create(rq);
+            const created = await this.#mapper.Create(user.id!, rq);
             if (created.isError) {return Promise.resolve(Result.Pass(created));}
 
             Object.assign(rq, created.value);
@@ -61,12 +73,117 @@ export default class ReportQueryRepository extends Repository implements Reposit
         return Promise.resolve(Result.Success(true));
     }
 
+    async checkTimeseries(file_ids: string[]): Promise<Result<boolean>> {
+        const isTimeseries = await this.#fileRepo.checkTimeseries(file_ids);
+        if (isTimeseries.isError) {
+            return Result.Pass(isTimeseries);
+        } else if (isTimeseries.value === false) {
+            return Result.Failure(`one or more files is not timeseries compatible`);
+        } else {
+            return Result.Success(true);
+        }
+    }
+
+    async initiateQuery(containerID: string, request: TS2InitialRequest, user: User, reportID?: string): Promise<Result<string>> {
+        const userID = user.id!;
+
+        // check that all files are timeseries and return an error if not
+        const isTimeseries = await this.#fileRepo.checkTimeseries(request.file_ids!);
+        if (isTimeseries.isError) {return Promise.resolve(Result.Pass(isTimeseries))}
+
+        // create a report if report ID was not specified
+        if (!reportID) {
+            const report = new Report({container_id: containerID});
+            const reportSaved = await this.#reportMapper.Create(user.id!, report);
+            if (reportSaved.isError) {return Promise.resolve(Result.Pass(reportSaved))}
+            Object.assign(report, reportSaved.value);
+            reportID = report.id!
+        }
+
+        // create a report query based on the TS2 rust module query request
+        const reportQuery = new ReportQuery({query: request.query!, report_id: reportID});
+        const querySaved = await this.#mapper.Create(user.id!, reportQuery);
+        if (querySaved.isError) { return Promise.resolve(Result.Pass(querySaved))}
+        Object.assign(reportQuery, querySaved.value);
+        const queryID = reportQuery.id!
+
+        // generate a temporary token for the TS2 rust module to return file metadata to DeepLynx
+        const tokenCreated = await newTempToken(containerID, userID);
+        if (tokenCreated.isError) {return Promise.resolve(Result.Failure(`unable to generate access token ${tokenCreated.error?.error}`))}
+        const token = tokenCreated.value;
+
+        // generate file metadata
+        const fileInfo = await this.#fileRepo.listPathMetadata(...request.file_ids!);
+        if (fileInfo.isError) {return Promise.resolve(Result.Failure('unable to find file information'))}
+        const files = fileInfo.value;
+        
+        // if any files are azure_blob, this requires some extra metadata
+        let azureMetadata: AzureMetadata | undefined;
+        if (files.some(f => f.adapter === 'azure_blob')) {
+            const getSAS = await (BlobStorageProvider('azure_blob') as AzureBlobImpl).generateSASToken();
+            if (getSAS.isError) {
+                return Promise.resolve(Result.Failure(`unable to generate SAS token ${getSAS.error?.error}`));
+            }
+
+            azureMetadata = {
+                azure_url: Config.azure_blob_connection_string.split(';').find(e => e.startsWith('BlobEndpoint='))?.split('=')[1]!,
+                azure_container: Config.azure_blob_container_name,
+                sas_token: getSAS.value
+            }
+        }
+
+        // formulate query request (this gets sent to NAPI)
+        const queryRequest = new TS2Request({
+            report_id: reportID,
+            query_id: queryID,
+            query: request.query!,
+            response_url: `/containers/${containerID}/reports/${reportID}/queries/${queryID}`,
+            files: files,
+            token: token,
+            data_source_id: files[0].data_source_id!,
+            azure_metadata: azureMetadata
+        });
+
+        // TODO: send to napi
+        
+        // set report and query statuses to "processing"
+        const statusMsg = `executing query ${queryID}: "${reportQuery.query}" as part of report ${reportID}`;
+        let statusSet = await this.#reportRepo.setStatus(reportID, 'processing', statusMsg);
+        if (statusSet.isError) {return Promise.resolve(Result.Failure(`unable to set report status`))}
+        statusSet = await this.setStatus(queryID, 'processing', statusMsg);
+        if (statusSet.isError) {return Promise.resolve(Result.Failure(`unable to set query status`))}
+
+        // return report ID to the user so they can poll for results
+        return Promise.resolve(Result.Success(reportID));
+    }
+
+    async setResultFile(reportID: string, queryID: string, fileID: string): Promise<Result<boolean>> {
+        const set = await this.#mapper.SetResultFile(queryID, fileID);
+        if (set.isError) {return Promise.resolve(Result.Failure(`unable to attach result file to report query ${queryID}`))}
+
+        const statusMsg = `query ${queryID} is complete. The results were uploaded as file ID ${fileID}`;
+        let statusUpdated = await this.#reportRepo.setStatus(reportID, 'completed', statusMsg);
+        if (statusUpdated.isError) {return Promise.resolve(Result.Failure(`unable to update status for report query ${queryID}`))}
+        statusUpdated = await this.setStatus(queryID, 'completed', statusMsg);
+        if (statusUpdated.isError) {return Promise.resolve(Result.Failure(`unable to update status for report query ${queryID}`))}
+
+        return set;
+    }
+
     addFile(query: ReportQuery, fileID: string): Promise<Result<boolean>> {
         if (!query.id) {
             return Promise.resolve(Result.Failure('report query must have id'));
         }
 
-        return this.#mapper.AddFile(query.report_id!, query.id, fileID);
+        return this.#mapper.AddFile(query.id, fileID);
+    }
+
+    bulkAddFiles(query: ReportQuery, fileIDs: string[]): Promise<Result<boolean>> {
+        if (!query.id) {
+            return Promise.resolve(Result.Failure('report query must have id'));
+        }
+
+        return this.#mapper.BulkAddFiles(query.id, fileIDs);
     }
 
     removeFile(query: ReportQuery, fileID: string): Promise<Result<boolean>> {

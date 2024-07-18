@@ -15,6 +15,7 @@ import { serialize } from 'v8';
 import Cache from '../../../../services/cache/cache';
 import Config from '../../../../services/config';
 import { plainToClass } from 'class-transformer';
+const short = require('short-uuid');
 
 /*
     FileRepository contains methods for persisting and retrieving file records
@@ -106,6 +107,65 @@ export default class FileRepository extends Repository implements RepositoryInte
         return Promise.resolve(Result.Success(true));
     }
 
+    // return the file instead of a boolean
+    async bulkSave(user: User, f: File[]): Promise<Result<File[]>> {
+        // separate which files need to be created and and which need to be updated
+        const toCreate: File[] = [];
+        const toUpdate: File[] = [];
+        const toReturn: File[] = [];
+
+        for (const file of f) {
+            const errors = await file.validationErrors();
+            if (errors) {
+                return Promise.resolve(Result.Failure(`some files do not pass validation: ${errors.join(',')}`));
+            }
+
+            if (file.id) {
+                toUpdate.push(file);
+                void this.deleteCachedDesc(file.id);
+            } else {
+                toCreate.push(file);
+            }
+        }
+
+        // run the bulk save in a transaction so we don't end up with partial updates
+        const transaction = await this.#mapper.startTransaction();
+        if (transaction.isError) return Promise.resolve(Result.Failure(`unable to initiate db transaction`));
+
+        if (toUpdate.length > 0) {
+            const results = await this.#mapper.BulkUpdate(user.id!, toUpdate, transaction.value);
+            if (results.isError) {
+                await this.#mapper.rollbackTransaction(transaction.value);
+                return Promise.resolve(Result.Pass(results));
+            }
+
+            toReturn.push(...results.value);
+        }
+
+        if (toCreate.length > 0) {
+            const results = await this.#mapper.BulkCreate(user.id!, toCreate, transaction.value);
+            if (results.isError) {
+                await this.#mapper.rollbackTransaction(transaction.value);
+                return Promise.resolve(Result.Pass(results));
+            }
+
+            toReturn.push(...results.value);
+        }
+
+        const committed = await this.#mapper.completeTransaction(transaction.value);
+        if (committed.isError) {
+            void this.#mapper.rollbackTransaction(transaction.value);
+            return Promise.resolve(Result.Failure(`unable to commit changes to database ${committed.error}`));
+        }
+
+        // assign the db object back to the initial domain object to capture IDs
+        toReturn.forEach((result, i) => {
+            Object.assign(f[i], result);
+        });
+
+        return Promise.resolve(Result.Success(toReturn));
+    }
+
     // creates a readable stream for downloading a file
     downloadFile(f: File): Promise<Readable | undefined> {
         const blobStorage = BlobStorageProvider(f.adapter);
@@ -151,6 +211,11 @@ export default class FileRepository extends Repository implements RepositoryInte
     async checkTimeseries(fileIDs: string[]): Promise<Result<boolean>> {
         const tsResults = await this.#mapper.CheckTimeseries(fileIDs);
         if (tsResults.isError) {return Promise.resolve(Result.Pass(tsResults))}
+
+        // if there are no results, none of the files exist- return an error
+        if(tsResults.value.length === 0) {
+            return Promise.resolve(Result.Failure(`no valid file IDs supplied: ${fileIDs}`));
+        }
 
         // check each result and if any are not ts, return with a failure
         const nonTS = tsResults.value.filter(r => !r.timeseries).map(f => f.id!);
