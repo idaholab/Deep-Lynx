@@ -81,18 +81,15 @@ export default class TypeMappingRepository extends Repository implements Reposit
             sample_payload: greatestCommonPayload,
         });
 
-        console.log('creating')
         const result = await this.#mapper.CreateOrUpdate(user.id!, commonMapping);
         //do we need some sort of check to make sure the above statement does not blow up?
         if (result.isError) {
             return Promise.resolve(Result.Failure('error inserting new payload into type_mappings'));
         }
-        console.log('created')
 
         // get array of shape hashes
         const arrayShapeHashes = mappings.value.map((m) => m.shape_hash!);
 
-        console.log('grouping')
         // pass type mapping id from line 92 and array of shape hashes from line 94 into group hashing table insert function
         return this.#mapper.GroupShapeHashes(result.value.id!, arrayShapeHashes);
     }

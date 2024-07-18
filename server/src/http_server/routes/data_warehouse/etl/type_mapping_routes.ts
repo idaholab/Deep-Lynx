@@ -658,7 +658,11 @@ export default class TypeMappingRoutes {
                         results.asResponse(res);
                     })
                     .catch((e) => Result.Error(e).asResponse(res))
-                    .finally(() => next());
+                    .finally(() => {
+                        if (!res.headersSent) {
+                            next();
+                        }
+                    });
             } else {
                 Result.Failure(`mapping ids are required`, 500).asResponse(res);
                 next();
