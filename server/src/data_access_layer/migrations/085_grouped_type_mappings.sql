@@ -1,3 +1,4 @@
+DROP VIEW IF EXISTS grouped_type_mappings;
 CREATE VIEW grouped_type_mappings AS
 -- Select rows from type_mappings where shape_hash is not in hash_groupings and shape_hash is not null
 SELECT 

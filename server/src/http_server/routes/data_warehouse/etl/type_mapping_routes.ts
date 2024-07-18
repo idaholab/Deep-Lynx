@@ -52,7 +52,7 @@ export default class TypeMappingRoutes {
             '/containers/:containerID/import/datasources/:sourceID/mappings/group',
             ...middleware,
             authInContainer('write', 'data'),
-            this.groupHashes,
+            this.groupMappings,
         );
         app.delete(
             '/containers/:containerID/import/datasources/:sourceID/mappings/group',
@@ -642,7 +642,7 @@ export default class TypeMappingRoutes {
         }
     }
 
-    private static groupHashes(req: Request, res: Response, next: NextFunction) {
+    private static groupMappings(req: Request, res: Response, next: NextFunction) {
         const user = req.currentUser!;  //take current user from request
         const mappingRepo = new TypeMappingRepository();  // initialize a repo for handling type mappings
 
@@ -653,18 +653,19 @@ export default class TypeMappingRoutes {
 
             if (payload && payload.mapping_ids && payload.mapping_ids.length > 0) {  // we may want this since it is ensuring payload exists, checks if the mapping_ids exist, and that the list is greater than zero
                 mappingRepo
-                .groupHashes(payload?.mapping_ids!, req.currentUser!, req.container?.id!, req.dataSource.DataSourceRecord?.id!) 
-                .then((result) => {
-                    result.asResponse(res);
-                })
-                .catch((err) => {
-                    Result.Error(err).asResponse(res);
-                })
-                .finally(() => next());
+                    .groupMappings(payload?.mapping_ids!, req.currentUser!, req.container?.id!, req.dataSource.DataSourceRecord?.id!) 
+                    .then((results) => {
+                        results.asResponse(res);
+                    })
+                    .catch((e) => Result.Error(e).asResponse(res))
+                    .finally(() => next());
             } else {
-                Result.Failure(`Type Mapping not found`, 404).asResponse(res);
+                Result.Failure(`mapping ids are required`, 500).asResponse(res);
                 next();
             }
+        } else {
+            Result.Failure(`data source not found`, 404).asResponse(res);
+            next();
         }
     }
 }

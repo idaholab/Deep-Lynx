@@ -4027,6 +4027,47 @@ paths:
               schema:
                 $ref: '#/components/schemas/ListDataTypeMappingResponse'
       deprecated: false
+  '/containers/{container_id}/import/datasources/{data_source_id}/mappings/group':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: data_source_id
+        in: path
+        required: true
+    put:
+      summary: Group Type Mappings
+      operationId: put-containers-container_id-import-datasources-data_source_id-mappings-group
+      responses:
+        '200':
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mapping_ids:
+                  type: array
+                  items:
+                    type: integer
+              x-examples:
+                Example 1:
+                  mapping_ids:
+                    - 999
+                    - 1000
+      description: Group type mappings together.
+    delete:
+      summary: Ungroup Type Mappings
+      operationId: delete-containers-container_id-import-datasources-data_source_id-mappings-group
+      responses:
+        '200':
+          description: OK
+      description: Ungroup type mappings.
   '/containers/{container_id}/import/datasources/{data_source_id}/mappings/{mapping_id}':
     get:
       tags:

@@ -139,8 +139,8 @@ export default class TypeMappingMapper extends Mapper {
         return super.retrieve(this.getShapeHashStatement(typeMappingID), {resultClass: ShapeHashArray});
     }
 
-    public GroupShapeHashAndDelete(typeMappingID: string, shapeHash: string):  Promise<Result<boolean>> {
-        return super.runAsTransaction(...this.groupShapeHashAndRemoveStatement(typeMappingID, shapeHash));
+    public GroupShapeHashes(typeMappingID: string, shapeHashes: string[]):  Promise<Result<boolean>> {
+        return super.runAsTransaction(...this.groupShapeHashesStatement(typeMappingID, ...shapeHashes));
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -433,16 +433,17 @@ export default class TypeMappingMapper extends Mapper {
         return format(text, values);
     }
 
-    private groupShapeHashAndRemoveStatement(typeMappingID: string, shapeHash: string): QueryConfig[] {
-        return [
-            {
-                text: `INSERT INTO hash_groupings(type_mapping_id, shape_hash) VALUES ($1, $2)`,
-                values: [typeMappingID, shapeHash],
-            }, 
-            {
-                text: `UPDATE type_mappings SET shape_hash = NULL WHERE id = $1`,
-                values: [typeMappingID],
-            }
-        ];
+    private groupShapeHashesStatement(typeMappingID: string, ...shapeHashes: string[]): QueryConfig[] {
+        const updateStatemnt = { // setting newly created mapping shape hash to NULL
+            text: `UPDATE type_mappings SET shape_hash = NULL WHERE id = $1`,
+            values: [typeMappingID],
+        };
+
+        const insertStatements = shapeHashes.map((hash) => ({
+            text: `INSERT INTO hash_groupings(type_mapping_id, shape_hash) VALUES ($1, $2)`,
+            values: [typeMappingID, hash]
+        }));
+        
+        return [updateStatemnt, ...insertStatements];
     }
 }

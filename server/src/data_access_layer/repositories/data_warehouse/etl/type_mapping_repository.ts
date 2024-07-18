@@ -59,15 +59,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
         return Promise.resolve(retrieved);
     }
 
-    async groupShapeHashAndDelete(typeMappingID: string, shapeHash: string): Promise<Result<boolean>> {
-        if (!typeMappingID || !shapeHash) {
-            return Promise.resolve(Result.Failure('Type Mapping ID must have an associated shape hash value'));
-        }
-
-        return this.#mapper.GroupShapeHashAndDelete(typeMappingID, shapeHash);
-    }
-
-    async groupHashes(typeMappingIDs: string [], user: User, containerIdValue: string, dataSourceIdValue: string): Promise<Result<boolean>> {
+    async groupMappings(typeMappingIDs: string [], user: User, containerIdValue: string, dataSourceIdValue: string): Promise<Result<boolean>> {
         if (!typeMappingIDs) {
             return Promise.resolve(Result.Failure('Type Mapping IDs must exist to group'));
         }
@@ -89,22 +81,20 @@ export default class TypeMappingRepository extends Repository implements Reposit
             sample_payload: greatestCommonPayload,
         });
 
+        console.log('creating')
         const result = await this.#mapper.CreateOrUpdate(user.id!, commonMapping);
         //do we need some sort of check to make sure the above statement does not blow up?
         if (result.isError) {
             return Promise.resolve(Result.Failure('error inserting new payload into type_mappings'));
         }
+        console.log('created')
 
         // get array of shape hashes
-        const arrayShapeHashes = mappings.value.map((m) => m.shape_hash);
+        const arrayShapeHashes = mappings.value.map((m) => m.shape_hash!);
 
+        console.log('grouping')
         // pass type mapping id from line 92 and array of shape hashes from line 94 into group hashing table insert function
-        for (const hash of arrayShapeHashes){
-            await this.#mapper.GroupShapeHashAndDelete(result.value.id!, hash!);
-        }
-        
-
-        return Promise.resolve(Result.Success(true));
+        return this.#mapper.GroupShapeHashes(result.value.id!, arrayShapeHashes);
     }
 
     // shape hashes are unique only to data sources, so it will need both to find one
