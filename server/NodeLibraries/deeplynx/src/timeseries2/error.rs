@@ -17,8 +17,6 @@ use tokio::task::JoinError;
 
 pub type Result<T> = std::result::Result<T, TSError>;
 
-// TODO:rhetorical: write test to test every possible error!
-// todo: corallary, find where all the errors are called and unit test 'emß
 #[derive(Error, Debug)]
 pub enum TSError {
     #[error("Invalid Table building parameters")]

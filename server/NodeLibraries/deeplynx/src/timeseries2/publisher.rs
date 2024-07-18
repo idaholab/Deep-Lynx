@@ -22,13 +22,13 @@ use amiquip::{
 pub fn publish(request: Request) -> Result<()> {
     let cli = Cli::custom_parse();
 
-    let mut connection = Connection::insecure_open(cli.url_rabbitmq.as_str())?;
+    let mut connection = Connection::insecure_open(cli.url_rabbitmq.as_str())?; // TODO: remove, we don't use queues
 
     // Open a channel - None says let the library choose the channel ID.
-    let channel = connection.open_channel(None)?;
+    let channel = connection.open_channel(None)?;  // TODO: remove, we don't use queues
 
     // Declare the queue options (note: must match DL options)
-    let options = QueueDeclareOptions {
+    let options = QueueDeclareOptions {  // TODO: remove, we don't use queues
         durable: true,
         exclusive: false,
         auto_delete: false,
@@ -36,18 +36,18 @@ pub fn publish(request: Request) -> Result<()> {
     };
 
     // Get a handle to the direct exchange on our channel.
-    let exchange = Exchange::direct(&channel);
+    let exchange = Exchange::direct(&channel);  // TODO: remove, we don't use queues
 
     // Publish a message to the queue. Just pass the json string as-is and let the
     // consumer verify and return error codes.
-    exchange.publish(Publish::new(
+    exchange.publish(Publish::new(  // TODO: remove, we don't use queues
         cli.json_string
             .ok_or(TSError::Str("no json to publish"))?
             .as_bytes(),
         cli.emitter_queue,
     ))?;
 
-    // // now listen for response
+    // TODO: remove, we don't use queues 
     let response_queue = channel.queue_declare(cli.response_queue.to_owned(), options.clone())?;
     let consumer = response_queue.consume(ConsumerOptions::default())?;
 

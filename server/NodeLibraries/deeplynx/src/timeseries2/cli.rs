@@ -20,15 +20,15 @@ styles=get_styles(),
 pub struct Cli {
     /// queue for requests (DL to TS)
     // #[arg(env, long, default_value = "timeseries_emitter_queue")]
-    #[arg(env, long, default_value = "datafusion_emitter")]
+    #[arg(env, long, default_value = "datafusion_emitter")] // TODO: remove, we no longer use queues
     pub emitter_queue: String,
 
     /// queue for responses (TS to DL)
-    #[arg(env, long, default_value = "datafusion_listener")]
+    #[arg(env, long, default_value = "datafusion_listener")] // TODO: remove, we no longer use queues
     pub response_queue: String,
 
     /// URL for RabbitMQ queue
-    #[arg(env, long, default_value = "amqp://deeplynx:root@localhost:5672")]
+    #[arg(env, long, default_value = "amqp://deeplynx:root@localhost:5672")] // TODO: remove, we no longer use queues
     pub url_rabbitmq: String,
 
     /// URL for DeepLynx

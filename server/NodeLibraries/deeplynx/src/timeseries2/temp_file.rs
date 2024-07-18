@@ -23,6 +23,8 @@ const TMP_DIRECTORY: &str = ".temp_files";
 pub struct TempFile {
     file_name: String,
 }
+// TODO: unsure if we really still need to do this; ideally we will be querying from object storage without
+// downloading and from what I understand, TempFile was used to download files from DeepLynx
 impl TempFile {
     pub(crate) async fn new(file_type: FileType, df: &DataFrame) -> Self {
         if !Path::new(TMP_DIRECTORY).exists() {

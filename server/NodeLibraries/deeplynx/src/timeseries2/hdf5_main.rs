@@ -1,3 +1,4 @@
+// NOTE: this file should be lower priority
 #![allow(dead_code, unused_variables, unused_assignments, unused_imports)]
 mod api;
 mod error;

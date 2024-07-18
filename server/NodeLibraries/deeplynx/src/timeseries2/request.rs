@@ -70,7 +70,7 @@ impl FilePathMetadata {
     /// but only if it is "largeobject" aka DeepLynx storage
     async fn retrieve_file(&self) -> Result<String> {
         match self.adapter {
-            StoreType::largeobject => {
+            StoreType::largeobject => { // TODO: remove- we don't use large object anymore
                 // download the file from DeepLynx blob storage and return the file path
                 Ok(download_largeobject(self.adapter_file_path.as_str()).await?)
             }
@@ -100,7 +100,7 @@ impl FilePathMetadata {
     #[allow(dead_code)]
     async fn store_file(&self) -> Result<String> {
         match self.adapter {
-            StoreType::largeobject => {
+            StoreType::largeobject => { // TODO: remove- we don't use large object anymore
                 // download the file from DeepLynx blob storage and return the file path
                 Ok(download_largeobject(self.adapter_file_path.as_str()).await?)
             }
@@ -179,8 +179,9 @@ impl Request {
 
         let df = session.query(sql.as_str()).await?;
 
-        // todo is this the only way to respond ... with upload_largeobject?
-        // todo yes... currently
+        // TODO: replace this with 
+        // 1.) uploading result file directly to the datasource
+        // 2.) uploading file metadata results to DeepLynx (file name, file size, file path)
         let tf = TempFile::new(FileType::Csv, &df).await;
         let import_file = tf.file_path().clone();
         let route = self.response_url.as_str();
@@ -206,6 +207,7 @@ impl Request {
     }
 }
 
+// TODO: remove- we only want to uplaod the metadata, not the file through DL
 pub async fn upload_largeobject(import_file: String, route: &str) -> Result<Response> {
     const RE_STR: &str =
         r"containers/(?P<container_id>\d+)/reports/(?P<report_id>\d+)\?token=(?P<token>.*)";
@@ -273,6 +275,7 @@ pub async fn upload_largeobject(import_file: String, route: &str) -> Result<Resp
     result_to_response(result_value)
 }
 
+// TODO: remove- we want to access the file directly through large object storage
 pub async fn download_largeobject(route: &str) -> Result<String> {
     const RE_STR: &str = r"containers/(?P<container_id>\d+)/files/(?P<file_id>\d+)(/download)?";
     const RE_HINT: &str = r"containers/<container_id>/files/<file_id>";

@@ -30,15 +30,17 @@ use tokio_util::codec::{BytesCodec, FramedRead};
 
 type Result<T> = std::result::Result<T, APIError>;
 
+// TODO: we will need to replace this- we have a temp token to grant us DL API access now
+// the temp token comes from the Request object
 pub fn get_api_no_token() -> Result<Api> {
     let key = env::var("DL_API_KEY")?;
-    let secret = env::var("DL_API_SECRET")?;
-    let server = env::var("DL_SERVER")?;
+    let secret = env::var("DL_API_SECRET")?; // remove
+    let server = env::var("DL_SERVER")?; // remove
 
     assert!(server.to_lowercase().starts_with("http"));
 
-    log::trace!("KEY:{key}");
-    log::trace!("SECRET:{secret}");
+    log::trace!("KEY:{key}"); // remove
+    log::trace!("SECRET:{secret}"); // remove
     log::trace!("SERVER:{server}");
 
     let api = Api::new(server, key, secret).unwrap();
@@ -46,22 +48,12 @@ pub fn get_api_no_token() -> Result<Api> {
     Ok(api)
 }
 
-// #[allow(dead_code)]
-// pub fn api() -> &'static Api {
-//     lazy_static! {
-//         static ref API: Api = get_api_no_token().unwrap();
-//     };
-//     &API
-// }
-
 #[allow(dead_code)] // authentication
 pub struct Api {
     pub(crate) client: reqwest::Client,
     pub(crate) server: String,
-    // this is only pub so we can display it if needed
-    // as with the --show-token option
-    key: String,
-    secret: String,
+    key: String, // remove
+    secret: String, // remove
     pub bearer_token: String,
     headers: HeaderMap<HeaderValue>,
 }
@@ -76,12 +68,12 @@ impl Api {
 
     /// this is deliberately non-async so we can create a global reference
     /// the async function get token is used to get the bearer token if needed for auth
-    pub fn new(server: String, key: String, secret: String) -> Result<Api> {
+    pub fn new(server: String, key: String, secret: String) -> Result<Api> { // pass in Request obj
         // let client = reqwest::Client::new();
         let mut headers = HeaderMap::new();
-        headers.insert("x-api-key", key.parse()?);
-        headers.insert("x-api-secret", secret.parse()?);
-        let bearer_token = String::from("<to be initialized>");
+        headers.insert("x-api-key", key.parse()?); // remove
+        headers.insert("x-api-secret", secret.parse()?); // remove
+        let bearer_token = String::from("<to be initialized>"); // replace with token from Request obj
         let client = reqwest::Client::new();
         Ok(Api {
             client,
@@ -93,8 +85,7 @@ impl Api {
         })
     }
 
-    pub async fn get_json_value<T:Serialize+for<'a>Deserialize<'a>>(&self, route: &str) -> Result<T>
-    {
+    pub async fn get_json_value<T:Serialize+for<'a>Deserialize<'a>>(&self, route: &str) -> Result<T> {
         let mut headers = HeaderMap::new();
         headers.insert(
             "Authorization",
@@ -166,6 +157,7 @@ impl Api {
         Ok(value)
     }
 
+    // TODO- remove, only used for testing
     pub async fn create_container(&self, name: &str) -> Result<u64> {
         #[derive(Serialize, Deserialize)]
         struct Config {
@@ -208,6 +200,7 @@ impl Api {
         Ok(id)
     }
 
+    // TODO- remove, only used for testing
     pub async fn create_data_source(
         &self,
         container_id: u64,
@@ -257,6 +250,7 @@ impl Api {
         Ok(id)
     }
 
+    // TODO- remove, only used for testing
     pub async fn upload_file(
         &self,
         container_id: u64,
@@ -264,7 +258,7 @@ impl Api {
         import_file: &Path,
     ) -> Result<u64> {
         let route = format!(
-            "containers/{}/import/datasources/{}/files",
+            "containers/{}/import/datasources/{}/files/timeseries",
             container_id, data_source_id
         );
         let mut headers = HeaderMap::new();
@@ -317,12 +311,14 @@ impl Api {
         Ok(id)
     }
 
+    // TODO- remove, only used for testing
     pub async fn health_check(&self) -> Result<bool> {
         // not health route does not return json, just the version as text
         let value = self.get_json_text("health").await?;
         Ok(!value.is_empty())
     }
 
+    // TODO- update to match DL endpoint- also should be the same as query endpoint
     pub async fn describe(&self, container_id: u64, file_id: u64) -> Result<u64> {
         // not health route does not return json, just the version as text
         let route = format!(
@@ -346,6 +342,7 @@ impl Api {
         Ok(id)
     }
 
+    // TODO- remove, only used for testing (simulates user action)
     pub async fn poll_report(&self, container_id: u64, report_id: &u64) -> Result<String> {
         // not health route does not return json, just the version as text
         let route = format!(
@@ -399,13 +396,3 @@ pub fn date_time_string() -> String {
     let datetime: DateTime<Utc> = system_time.into();
     format!("{}", datetime.format("%Y-%m-%d %H:%M:%S"))
 }
-
-// #[cfg(test)]
-// mod tests {
-//     use crate::api::api;
-//
-//     #[test]
-//     fn api_works() {
-//         let _api = api();
-//     }
-// }

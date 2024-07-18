@@ -61,10 +61,10 @@ pub enum StoreType {
     minio,
     azure_blob,
     filesystem,
-    largeobject, // naming conforms with DeepLynx
+    largeobject, // TODO: remove large object, we no longer use it
 }
 
-impl Distribution<StoreType> for Standard {
+impl Distribution<StoreType> for Standard { // TODO: remove, used for testing only
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> StoreType {
         // match rng.gen_range(0, 3) { // rand 0.5, 0.6, 0.7
         match rng.gen_range(0..3) {
@@ -77,7 +77,7 @@ impl Distribution<StoreType> for Standard {
         }
     }
 }
-impl Default for StoreType {
+impl Default for StoreType { // TODO: remove, used for testing only
     fn default() -> Self {
         let store_type: StoreType = rand::random();
         store_type
@@ -91,24 +91,24 @@ impl StoreType {
             StoreType::filesystem => {
                 // using local files does not need a registered store
             }
-            StoreType::largeobject => {
+            StoreType::largeobject => { // TODO: remove, we no longer use large object
                 // downloading from DeepLynx does not need a registered
                 // store because the file is download to a local file
             }
             /// possible sample code is included here but note this function
             /// returns Unimplemented
-            StoreType::azure_blob => {
+            StoreType::azure_blob => { // TODO: update
                 let table_path = ListingTableUrl::parse(
-                    "https://gvadedeeplynxdevsa.blob.core.usgovcloudapi.net/",
+                    "https://gvadedeeplynxdevsa.blob.core.usgovcloudapi.net/", // TODO: get from request obj
                 )?;
                 // let scheme = table_path.scheme();
                 let url: &Url = table_path.as_ref();
                 let microsoft_azure = MicrosoftAzureBuilder::new()
                     .with_account("gvadedeeplynxdevsa")
-                    .with_access_key("")
+                    .with_access_key("") // TODO: instead of access key, use the SAS token from the Request object
                     .with_container_name("deeplynx")
                     .with_endpoint(
-                        "https://gvadedeeplynxdevsa.blob.core.usgovcloudapi.net".to_string(),
+                        "https://gvadedeeplynxdevsa.blob.core.usgovcloudapi.net".to_string(), // TODO: get from request obj
                     )
                     .build()?;
 
@@ -135,7 +135,7 @@ impl StoreType {
             }
 
             // parse a specific DeepLynx route via regex
-            StoreType::largeobject => {
+            StoreType::largeobject => { // TODO: remove
                 // /containers/${containerID}/reports/${reportID}?token=${token}
                 const RE_STR: &str =
                     r"containers/(?P<container_id>\d+)/reports/(?P<report_id>\d+)?token=.*";
@@ -154,12 +154,12 @@ impl StoreType {
                 Ok(format!("table_{:?}", report_id))
             }
 
-            // todo get regex for this type and parse out the tablename
+            // ignore for now
             StoreType::minio => {
                 unimplemented!()
             }
 
-            // todo get regex for this type and parse out the tablename
+            // TODO: path will always be in format containers/#/datasources/#/blobname
             StoreType::azure_blob => {
                 unimplemented!()
             }

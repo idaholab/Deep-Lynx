@@ -1,3 +1,4 @@
+// NOTE: this file should be lower priority
 #![allow(dead_code, unused_variables, unused_assignments, unused_imports)]
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file

@@ -1,5 +1,3 @@
-// code copied from subscriber.rs in timeseries_2 repo
-// which acts as the main file more or less
 use amiquip::{
     Channel,
     Connection,
@@ -28,16 +26,17 @@ use ts2::types::info_pretty;
 async fn main() {
     let cli = Cli::custom_parse();
 
-    let mut connection = open_rabbitmq_or_hunt(cli.url_rabbitmq.as_str());
+    let mut connection = open_rabbitmq_or_hunt(cli.url_rabbitmq.as_str()); // TODO: remove, we don't use queues
 
-    let channel = open_channel_or_exit(&mut connection);
+    let channel = open_channel_or_exit(&mut connection); // TODO: remove, we don't use queues
 
-    let request_queue = declare_queue_or_exit(&channel, cli.emitter_queue.to_owned());
+    let request_queue = declare_queue_or_exit(&channel, cli.emitter_queue.to_owned()); // TODO: remove, we don't use queues
 
-    let consumer = create_consumer_or_exit(&request_queue);
+    let consumer = create_consumer_or_exit(&request_queue); // TODO: remove, we don't use queues
 
     // let exchange = Exchange::direct(&channel);
 
+    // TODO: remove, we don't use queues
     info!(
         "Waiting for messages on queue: {} ... ",
         cli.emitter_queue.to_owned()
@@ -50,7 +49,7 @@ async fn main() {
                 _ = consumer.ack(delivery.clone()); // ignore any errors
 
                 // create a Request object from the message body // catching errors
-                let request = Request::from_msg_body(body.as_ref());
+                let request = Request::from_msg_body(body.as_ref()); // TODO: this is what we care about- parsing Request from payload
 
                 match request {
                     Ok(request) => {
@@ -104,7 +103,7 @@ async fn main() {
     _ = connection.close();
 }
 
-fn open_rabbitmq_or_hunt(url: &str) -> Connection {
+fn open_rabbitmq_or_hunt(url: &str) -> Connection { // TODO: remove, we don't use queues
     loop {
         match Connection::insecure_open(url) {
             Ok(connection) => {
@@ -118,7 +117,7 @@ fn open_rabbitmq_or_hunt(url: &str) -> Connection {
     }
 }
 
-fn open_channel_or_exit(connection: &mut Connection) -> Channel {
+fn open_channel_or_exit(connection: &mut Connection) -> Channel { // TODO: remove, we don't use queues
     match connection.open_channel(None) {
         Ok(channel) => channel,
         Err(_) => {
@@ -128,7 +127,7 @@ fn open_channel_or_exit(connection: &mut Connection) -> Channel {
     }
 }
 
-fn declare_queue_or_exit(channel: &Channel, queue_name: String) -> Queue {
+fn declare_queue_or_exit(channel: &Channel, queue_name: String) -> Queue { // TODO: remove, we don't use queues
     // Declare the queue options (note: must match DL options)
     let options = QueueDeclareOptions {
         durable: true,
@@ -149,7 +148,7 @@ fn declare_queue_or_exit(channel: &Channel, queue_name: String) -> Queue {
     request_queue
 }
 
-fn create_consumer_or_exit<'a>(request_queue: &'a Queue<'a>) -> Consumer<'a> {
+fn create_consumer_or_exit<'a>(request_queue: &'a Queue<'a>) -> Consumer<'a> { // TODO: remove, we don't use queues
     let options = ConsumerOptions {
         no_local: false,
         no_ack: false,
@@ -166,7 +165,7 @@ fn create_consumer_or_exit<'a>(request_queue: &'a Queue<'a>) -> Consumer<'a> {
     consumer
 }
 
-fn publish_response_and_continue(exchange: Exchange, queue: &str, response: Response) {
+fn publish_response_and_continue(exchange: Exchange, queue: &str, response: Response) { // TODO: remove, we don't use queues
     let response_string = match serde_json::to_string(&response) {
         Ok(s) => s,
         Err(e) => {
@@ -182,7 +181,7 @@ fn publish_response_and_continue(exchange: Exchange, queue: &str, response: Resp
     };
 }
 
-async fn process_request_or_continue(request: Request) -> Response {
+async fn process_request_or_continue(request: Request) -> Response { // this is really the only thing we still care to do
     match request.process().await {
         Ok(response) => response,
         Err(e) => e.to_response(request, format!("{}", e)),
