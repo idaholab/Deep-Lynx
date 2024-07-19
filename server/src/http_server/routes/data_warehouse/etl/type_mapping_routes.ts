@@ -648,10 +648,10 @@ export default class TypeMappingRoutes {
 
         if (req.dataSource) {  // checking if dataSouce present
             let payload: TypeMappingExportPayload | undefined;
-
-            if (req.body) payload = plainToClass(TypeMappingExportPayload, req.body as object); // if there is a request body, convert it to an instance of TypeMappingExportPayload class
-
-            if (payload && payload.mapping_ids && payload.mapping_ids.length > 0) {  // we may want this since it is ensuring payload exists, checks if the mapping_ids exist, and that the list is greater than zero
+    
+            if (req.body) payload = plainToClass(TypeMappingExportPayload, req.body as object); // If there is a request body, convert it to an instance of TypeMappingExportPayload class
+    
+            if (payload && payload.mapping_ids && payload.mapping_ids.length > 0) {  // Ensure payload exists, checks if the mapping_ids exist, and that the list is greater than zero
                 mappingRepo
                     .groupMappings(payload?.mapping_ids!, req.currentUser!, req.container?.id!, req.dataSource.DataSourceRecord?.id!) 
                     .then((results) => {
@@ -672,4 +672,6 @@ export default class TypeMappingRoutes {
             next();
         }
     }
+    
+    
 }
