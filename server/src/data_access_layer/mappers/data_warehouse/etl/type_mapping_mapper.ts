@@ -78,14 +78,6 @@ export default class TypeMappingMapper extends Mapper {
         return super.rows<TypeMapping>(this.listByIdsStatement(ids), {resultClass: this.resultClass});
     }
 
-    public List(containerID: string, dataSourceID: string, offset: number, limit: number, sortBy?: string, sortDesc?: boolean): Promise<Result<TypeMapping[]>> {
-        if (limit === -1) {
-            return super.rows<TypeMapping>(this.listAllStatement(containerID, dataSourceID), {resultClass: this.resultClass});
-        }
-
-        return super.rows<TypeMapping>(this.listStatement(containerID, dataSourceID, offset, limit, sortBy, sortDesc), {resultClass: this.resultClass});
-    }
-
     public ListNoTransformations(
         containerID: string,
         dataSourceID: string,
@@ -244,25 +236,6 @@ export default class TypeMappingMapper extends Mapper {
         };
     }
 
-    private listStatement(containerID: string, dataSourceID: string, offset: number, limit: number, sortBy?: string, sortDesc?: boolean): QueryConfig {
-        if (sortDesc && sortBy) {
-            return {
-                text: `SELECT * FROM grouped_type_mappings WHERE container_id = $1 AND data_source_id = $4 ORDER BY "${sortBy}" DESC OFFSET $2 LIMIT $3`,
-                values: [containerID, offset, limit, dataSourceID],
-            };
-        } else if (sortBy) {
-            return {
-                text: `SELECT * FROM grouped_type_mappings WHERE container_id = $1 AND data_source_id = $4 ORDER BY "${sortBy}" ASC OFFSET $2 LIMIT $3`,
-                values: [containerID, offset, limit, dataSourceID],
-            };
-        } else {
-            return {
-                text: `SELECT * FROM grouped_type_mappings WHERE container_id = $1 AND data_source_id = $4 OFFSET $2 LIMIT $3`,
-                values: [containerID, offset, limit, dataSourceID],
-            };
-        }
-    }
-
     private listNoTransformationsStatement(
         containerID: string,
         dataSourceID: string,
@@ -299,13 +272,6 @@ export default class TypeMappingMapper extends Mapper {
                 values: [containerID, offset, limit, dataSourceID],
             };
         }
-    }
-
-    private listAllStatement(containerID: string, dataSourceID: string): QueryConfig {
-        return {
-            text: `SELECT * FROM grouped_type_mappings WHERE container_id = $1 AND data_source_id = $2`,
-            values: [containerID, dataSourceID],
-        };
     }
 
     private listAllNoTransformationsStatement(containerID: string, dataSourceID: string): QueryConfig {

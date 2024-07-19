@@ -213,10 +213,6 @@ describe('A Data Type Mapping', async () => {
 
         expect(mapping.isError).false;
 
-        const fetched = await mappingStorage.List(containerID, dataSourceID, 0, 100);
-        expect(fetched.isError).false;
-        expect(fetched.value).not.empty;
-
         const fetched2 = await mappingStorage.ListByDataSource(dataSourceID, 0, 100);
         expect(fetched2.isError).false;
         expect(fetched2.value).not.empty;

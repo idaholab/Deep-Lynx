@@ -113,14 +113,17 @@ export class Repository {
 
     // Used to completely override the default select * statement. If you are looking
     // to add fields, instead use the addFields function.
-    select(fields: string | string[] | {[field: string]: string}, tableName?: string) {
+    select(fields: string | string[] | {[field: string]: string}, tableName?: string, qualify?: boolean) {
         // assign default table if none specified
         let table = '';
-        if (tableName) {
-            table = this._aliasMap.has(tableName) ? this._aliasMap.get(tableName)! : tableName;
-        } else {
-            table = this._tableAlias;
+        if (qualify) {
+            if (tableName) {
+                table = this._aliasMap.has(tableName) ? this._aliasMap.get(tableName)! : tableName;
+            } else {
+                table = this._tableAlias;
+            } 
         }
+        
 
         // clear out the old select statement
         this._query.SELECT = [];
@@ -374,6 +377,16 @@ export class Repository {
         return this;
     }
 
+    // check whether a condition exists. always used with subquery condition.
+    exists(subquery: string) {
+        this._query.WHERE?.push(format(' EXISTS %s ', subquery));
+        return this;
+    }
+    not_exists(subquery: string) {
+        this._query.WHERE?.push(format(' NOT EXISTS %s ', subquery));
+        return this;
+    }
+
     // create a subquery. Note that when joining to a subquery, you must use the `destination_alias` join option.
     subquery(repo: Repository, options?: QueryOptions) {
         // ensure options are applied
@@ -568,39 +581,75 @@ export class Repository {
 
         switch (operator) {
             case 'eq': {
-                this._query.WHERE?.push(format(`%s = %L`, fieldName, value));
+                if (conditions && conditions.valueAsColumn) {
+                    this._query.WHERE?.push(format(`%s = %s`, fieldName, value));
+                } else {
+                    this._query.WHERE?.push(format(`%s = %L`, fieldName, value));
+                }
                 break;
             }
             case 'neq': {
-                this._query.WHERE?.push(format(`%s <> %L`, fieldName, value));
+                if (conditions && conditions.valueAsColumn) {
+                    this._query.WHERE?.push(format(`%s <> %s`, fieldName, value));
+                } else {
+                    this._query.WHERE?.push(format(`%s <> %L`, fieldName, value));
+                }
                 break;
             }
             case '==': {
-                this._query.WHERE?.push(format(`%s = %L`, fieldName, value));
+                if (conditions && conditions.valueAsColumn) {
+                    this._query.WHERE?.push(format(`%s = %s`, fieldName, value));
+                } else {
+                    this._query.WHERE?.push(format(`%s = %L`, fieldName, value));
+                }
                 break;
             }
             case '!=': {
-                this._query.WHERE?.push(format(`%s <> %L`, fieldName, value));
+                if (conditions && conditions.valueAsColumn) {
+                    this._query.WHERE?.push(format(`%s <> %s`, fieldName, value));
+                } else {
+                    this._query.WHERE?.push(format(`%s <> %L`, fieldName, value));
+                }
                 break;
             }
             case 'like': {
-                this._query.WHERE?.push(format(`%s ILIKE %L`, fieldName, value));
+                if (conditions && conditions.valueAsColumn) {
+                    this._query.WHERE?.push(format(`%s ILIKE %s`, fieldName, value));
+                } else {
+                    this._query.WHERE?.push(format(`%s ILIKE %L`, fieldName, value));
+                }
                 break;
             }
             case '<': {
-                this._query.WHERE?.push(format(`%s::${typeCast} < %L::${typeCast}`, fieldName, value));
+                if (conditions && conditions.valueAsColumn) {
+                    this._query.WHERE?.push(format(`%s::${typeCast} < %s::${typeCast}`, fieldName, value));
+                } else {
+                    this._query.WHERE?.push(format(`%s::${typeCast} < %L::${typeCast}`, fieldName, value));
+                }
                 break;
             }
             case '>': {
-                this._query.WHERE?.push(format(`%s::${typeCast} > %L::${typeCast}`, fieldName, value));
+                if (conditions && conditions.valueAsColumn) {
+                    this._query.WHERE?.push(format(`%s::${typeCast} > %s::${typeCast}`, fieldName, value));
+                } else {
+                    this._query.WHERE?.push(format(`%s::${typeCast} > %L::${typeCast}`, fieldName, value));
+                }
                 break;
             }
             case '<=': {
-                this._query.WHERE?.push(format(`%s::${typeCast} <= %L::${typeCast}`, fieldName, value));
+                if (conditions && conditions.valueAsColumn) {
+                    this._query.WHERE?.push(format(`%s::${typeCast} <= %s::${typeCast}`, fieldName, value));
+                } else {
+                    this._query.WHERE?.push(format(`%s::${typeCast} <= %L::${typeCast}`, fieldName, value));
+                }
                 break;
             }
             case '>=': {
-                this._query.WHERE?.push(format(`%s::${typeCast} >= %L::${typeCast}`, fieldName, value));
+                if (conditions && conditions.valueAsColumn) {
+                    this._query.WHERE?.push(format(`%s::${typeCast} >= %s::${typeCast}`, fieldName, value));
+                } else {
+                    this._query.WHERE?.push(format(`%s::${typeCast} >= %L::${typeCast}`, fieldName, value));
+                }
                 break;
             }
             case '%': {
@@ -816,7 +865,7 @@ export class Repository {
             this._selectRoot = 'SELECT DISTINCT';
         }
 
-        if (queryOptions && queryOptions.includeHistory === true) {
+        if (queryOptions && queryOptions.resetSelect === true) {
             this._selectRoot = 'SELECT';
         }
 
@@ -873,6 +922,10 @@ export class Repository {
         ].join(' ');
 
         const query = {text, values: this._query.VALUES};
+
+        if (queryOptions && queryOptions.print) {
+            console.log(format(text, this._query.VALUES));
+        }
 
         // reset the filter
         this._selectRoot = 'SELECT';
@@ -1099,7 +1152,8 @@ export type QueryOptions = {
     tableName?: string | null | undefined;
     // load from a materialized view if one is present
     loadFromView?: boolean;
-    includeHistory?: boolean;
+    resetSelect?: boolean;
+    print?: boolean;
 };
 
 export type JoinOptions = {
@@ -1118,6 +1172,8 @@ export type QueryConditions = {
     dataType?: string | undefined;
     tableName?: string | undefined;
     tableAlias?: string | undefined;
+    // specify that the value should be interpreted literally
+    valueAsColumn?: boolean | undefined;
 };
 
 export type FileOptions = {

@@ -11,6 +11,7 @@ import TypeMapping, {TypeMappingComparison, TypeMappingExportPayload, TypeMappin
 import {FileInfo} from 'busboy';
 import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
 import {none} from 'fp-ts/lib/Option';
+import { Repository } from '../../../../data_access_layer/repositories/repository';
 
 const JSONStream = require('JSONStream');
 const Busboy = require('busboy');
@@ -401,18 +402,23 @@ export default class TypeMappingRoutes {
                 .catch((err) => Result.Failure(err, 404).asResponse(res))
                 .finally(() => next());
         } else if (req.query.needsTransformations) {
-            // @ts-ignore
-            TypeMappingMapper.Instance.ListNoTransformations(
-                req.params.containerID,
-                req.params.sourceID,
-                // @ts-ignore
-                +req.query.offset,
-                // @ts-ignore
-                +req.query.limit,
-                // @ts-ignore
-                req.query.sortBy,
-                String(req.query.sortDesc).toLowerCase() === 'true',
-            )
+            new TypeMappingRepository()
+                .select('*', 'tm')
+                .from('type_mappings', 'tm')
+                .where().containerID('eq', req.params.containerID)
+                .and().dataSourceID('eq', req.params.sourceID)
+                .and().not_exists(new TypeMappingRepository().subquery(
+                    new Repository('type_mapping_transformations').select('1', '', false)
+                        .where().query('type_mapping_id', 'eq', 'tm.id', {valueAsColumn: true})
+                ))
+                .findAll({
+                    offset: +req.query.offset!,
+                    limit: +req.query.limit!,
+                    sortBy: req.query.sortBy as string | undefined,
+                    sortDesc: String(req.query.sortDesc).toLowerCase() === 'true',
+                    resetSelect: true,
+                    print:true
+                })
                 .then((result) => {
                     if (result.isError && result.error) {
                         result.asResponse(res);

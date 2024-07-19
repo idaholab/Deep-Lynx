@@ -58,7 +58,7 @@ export default class NodeFunctions {
                 repo.list(String(req.query.loadMetatypes).toLowerCase() === 'true', {
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,
-                    includeHistory: String(req.query.history).toLowerCase() === 'true',
+                    resetSelect: String(req.query.history).toLowerCase() === 'true',
                 })
                     .then((result) => {
                         if (result.isError && result.error) {
