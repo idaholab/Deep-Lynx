@@ -116,6 +116,21 @@ export default class ReportQueryRepository extends Repository implements Reposit
         const fileInfo = await this.#fileRepo.listPathMetadata(...request.file_ids!);
         if (fileInfo.isError) {return Promise.resolve(Result.Failure('unable to find file information'))}
         const files = fileInfo.value;
+
+        // if not a describe, ensure the query contains the table names (aka file names)
+        if (request.query && !request.query.startsWith('DESCRIBE')) {
+            const errorFiles: string[] = [];
+            files.forEach((file) => {
+                // find the file name with no extension- this will be the table name
+                const lastDotIndex = file.file_name?.lastIndexOf('.');
+                const fileNameNoExt = (lastDotIndex === -1) ? file.file_name! : file.file_name?.substring(0, lastDotIndex)!;
+                // confirm that query contains the file name, if not return in error msg
+                if (!request.query!.includes(fileNameNoExt)) {errorFiles.push(fileNameNoExt)}
+            });
+            if (errorFiles.length > 0) {
+                return Promise.resolve(Result.Failure(`query must include the table name(s): "${errorFiles.join('", "')}"`));
+            }
+        }
         
         // if any files are azure_blob, this requires some extra metadata
         let azureMetadata: AzureMetadata | undefined;
@@ -133,12 +148,20 @@ export default class ReportQueryRepository extends Repository implements Reposit
             }
         }
 
+        let responseUrl: string;
+        // set response url depending on describe query or not
+        if (request.query && request.query.startsWith('DESCRIBE')) {
+            responseUrl = `${Config.root_address}/containers/${containerID}/files/timeseries/describe`
+        } else {
+            responseUrl = `${Config.root_address}/containers/${containerID}/reports/${reportID}/queries/${queryID}`
+        }
+
         // formulate query request (this gets sent to NAPI)
         const queryRequest = new TS2Request({
             report_id: reportID,
             query_id: queryID,
             query: request.query!,
-            response_url: `/containers/${containerID}/reports/${reportID}/queries/${queryID}`,
+            response_url: responseUrl,
             files: files,
             token: token,
             data_source_id: files[0].data_source_id!,

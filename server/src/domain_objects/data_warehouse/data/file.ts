@@ -143,6 +143,10 @@ export class FilePathMetadata extends NakedDomainClass {
     @IsOptional()
     data_source_id?: string;
 
+    // file name (sans extension) will be used as table name in the query
+    @IsString()
+    file_name?: string;
+
     // this is the fully qualified file path complete with file name and short uuid
     @IsString()
     adapter_file_path?: string;

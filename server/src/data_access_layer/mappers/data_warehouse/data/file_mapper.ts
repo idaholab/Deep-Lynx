@@ -356,7 +356,7 @@ export default class FileMapper extends Mapper {
 
     // fetch the fully qualified file path complete with file name and short uuid
     private filePathMetadataStatement(fileIDs: string[]): QueryConfig {
-        const text = `SELECT id, adapter, data_source_id,
+        const text = `SELECT id, adapter, data_source_id, file_name,
                         adapter_file_path || file_name || short_uuid AS adapter_file_path
                         FROM files
                         WHERE id IN (%L)`;
