@@ -770,7 +770,7 @@
         'boolean',
       ],
       rawRetentionEnabled: false,
-      dataRetentionDays: 30,
+      dataRetentionDays: -1,
       stopNodes: [],
       valueNodes: [],
       newDataSource: {
