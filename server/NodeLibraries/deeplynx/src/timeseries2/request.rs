@@ -1,9 +1,8 @@
 use crate::timeseries2::api::Api;
 use crate::timeseries2::error::TSError::Str;
 use crate::timeseries2::error::{Result, TSError};
-use crate::timeseries2::response::Response;
 use crate::timeseries2::session::Session;
-use crate::timeseries2::types::FilePathMetadata;
+use crate::timeseries2::types::{FilePathMetadata, Response};
 
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -19,18 +18,15 @@ pub struct Request {
   pub response_url: String,
   pub files: Vec<FilePathMetadata>,
   pub token: String,
+  pub data_source_id: String,
+  pub azure_metadata: String,
 }
 
 /// public interface impl
 impl Request {
   pub fn new() -> Self {
     Self {
-      report_id: String::default(),
-      query_id: String::default(),
-      query: String::default(),
-      response_url: String::default(),
-      files: Vec::default(),
-      token: String::default(),
+      ..Default::default()
     }
   }
 
@@ -51,8 +47,7 @@ impl Request {
                 .expect("upload static regex doesn't compile");
     }
 
-    // TODO: need to get this to work with just a token
-    let api = Api::new(self.token)?;
+    let api = Api::new(self)?;
 
     let route = self.response_url.as_str();
     // get the captures just to check that the route is copacetic

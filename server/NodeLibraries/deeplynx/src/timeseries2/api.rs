@@ -1,9 +1,10 @@
 use crate::timeseries2::error::APIError;
+use crate::timeseries2::request::Request;
 use lazy_static::lazy_static;
-
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::env;
 use warp::hyper::body::Bytes;
 
 type Result<T> = std::result::Result<T, APIError>;
@@ -24,17 +25,19 @@ impl Api {
   }
 
   /// this is deliberately non-async so we can create a global reference
-  /// the async function get token is used to get the bearer token if needed for auth
-  pub fn new(server: String, key: String, secret: String) -> Result<Api> {
-    // pass in Request obj
-    // let client = reqwest::Client::new();
-    let headers = HeaderMap::new();
-    let bearer_token = key;
+  /// the async function get_token is used to get the bearer_token if needed for auth
+  pub fn new(request_obj: &Request) -> Result<Api> {
     let client = reqwest::Client::new();
+    let server = env::var("DL_SERVER").expect("DL_SERVER must be set.");
+    let mut headers = HeaderMap::new();
+    headers.insert(
+      "Authorization",
+      format!("Bearer {}", request_obj.token).parse()?,
+    );
     Ok(Api {
       client,
       server,
-      bearer_token,
+      bearer_token: request_obj.token.clone(),
       headers,
     })
   }

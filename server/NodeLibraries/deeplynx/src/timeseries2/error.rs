@@ -1,5 +1,5 @@
 use crate::timeseries2::request::Request;
-use crate::timeseries2::response::Response;
+use crate::timeseries2::types::Response;
 use datafusion::error::DataFusionError;
 use log::error;
 use reqwest::header::InvalidHeaderValue;
