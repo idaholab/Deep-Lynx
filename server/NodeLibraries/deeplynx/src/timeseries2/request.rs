@@ -36,8 +36,7 @@ impl Request {
       return Err(Str("Request has empty file list"));
     };
 
-    const RE_STR: &str =
-      r"containers/(?P<container_id>\d+)/reports/(?P<report_id>\d+)\?token=(?P<token>.*)";
+    const RE_STR: &str = r"containers/(?P<container_id>\d+)/reports/(?P<report_id>\d+)";
     const RE_HINT: &str = "containers/<container_id>/reports/<report_id>";
     lazy_static! {
         // note: we don't really need this regex, or to parse the route,
@@ -58,15 +57,11 @@ impl Request {
     )))?;
     let container_id = caps["container_id"].parse::<u64>()?;
     let report_id = caps["report_id"].parse::<u64>()?;
-    let token = caps["token"].parse::<String>()?;
 
     // rebuild the route from the successfully parsed input route to make
     // sure that it is correct vis-a-vis leading and trailing slashes
     // it will be appended onto the server and port in the get function
-    let route = format!(
-      "containers/{}/reports/{}?token={}",
-      container_id, report_id, token
-    ); //todo
+    let route = format!("containers/{}/reports/{}", container_id, report_id);
 
     let mut headers = HeaderMap::new();
     headers.insert(
@@ -129,7 +124,7 @@ impl Request {
       .json::<Value>()
       .await?;
 
-    let mut response = json_result_to_response(result_value)?;
+    let mut response = Response::json_result_to_response(result_value)?;
     response.report_id.clone_from(&self.report_id);
     Ok(response)
   }
@@ -139,54 +134,6 @@ impl Default for Request {
   fn default() -> Self {
     Request::new()
   }
-}
-
-// TODO: Should this be moved to types.rs? My rationale is that this is trying to convert from one type to another
-//
-// try whatever we can to parse a myriad of possible result jsons
-pub fn json_result_to_response(outer_value: Value) -> Result<Response> {
-  // first of all, can we parse this directly into a Response object using serde
-  // then return the outer_value as a Response object (it is one)
-  if let Ok(response) = serde_json::from_value::<Response>(outer_value.clone()) {
-    return Ok(response);
-  };
-
-  // see if it is a typical error response and allow for alternate spelling of is_error
-  #[derive(Serialize, Deserialize, Debug)]
-  struct IsErrorValue {
-    #[serde(alias = "isError")]
-    is_error: bool,
-    value: Value,
-  }
-  if let Ok(is_error) = serde_json::from_value::<IsErrorValue>(outer_value.clone()) {
-    return Ok(Response {
-      report_id: "unknown".to_string(),
-      is_error: is_error.is_error,
-      value: is_error.value,
-    });
-  };
-
-  // same as above but the value field is a string rather than a json value
-  #[derive(Serialize, Deserialize, Debug)]
-  struct IsErrorString {
-    #[serde(alias = "isError")]
-    is_error: bool,
-    value: String,
-  }
-  if let Ok(is_error) = serde_json::from_value::<IsErrorString>(outer_value.clone()) {
-    return Ok(Response {
-      report_id: "unknown".to_string(),
-      is_error: is_error.is_error,
-      value: serde_json::from_str::<Value>(is_error.value.as_str())?,
-    });
-  };
-
-  // finally just return an Response error with value of outer_value
-  Ok(Response {
-    report_id: "unknown".to_string(),
-    is_error: true,
-    value: outer_value.clone(),
-  })
 }
 
 // #[cfg(test)]
@@ -199,26 +146,6 @@ pub fn json_result_to_response(outer_value: Value) -> Result<Response> {
 //     // need a valid-looking non-empty file list
 //     // need a valid-looking response_url
 //     // need to mock a session and query
-//     todo!()
-//   }
-
-//   #[test]
-//   fn result_to_response_fn_works() {
-//     todo!()
-//   }
-
-//   #[test]
-//   fn result_to_response_fn_is_error_json_val() {
-//     todo!()
-//   }
-
-//   #[test]
-//   fn result_to_response_fn_is_error_string_val() {
-//     todo!()
-//   }
-
-//   #[test]
-//   fn result_to_response_fn_is_response_error() {
 //     todo!()
 //   }
 // }

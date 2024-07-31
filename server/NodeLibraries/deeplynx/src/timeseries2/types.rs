@@ -50,6 +50,52 @@ impl Response {
   fn as_string(&self) -> serde_json::Result<String> {
     serde_json::to_string(self)
   }
+
+  // try whatever we can to parse a myriad of possible result jsons
+  pub fn json_result_to_response(outer_value: Value) -> Result<Response> {
+    // first of all, can we parse this directly into a Response object using serde
+    // then return the outer_value as a Response object (it is one)
+    if let Ok(response) = serde_json::from_value::<Response>(outer_value.clone()) {
+      return Ok(response);
+    };
+
+    // see if it is a typical error response and allow for alternate spelling of is_error
+    #[derive(Serialize, Deserialize, Debug)]
+    struct IsErrorValue {
+      #[serde(alias = "isError")]
+      is_error: bool,
+      value: Value,
+    }
+    if let Ok(is_error) = serde_json::from_value::<IsErrorValue>(outer_value.clone()) {
+      return Ok(Response {
+        report_id: "unknown".to_string(),
+        is_error: is_error.is_error,
+        value: is_error.value,
+      });
+    };
+
+    // same as above but the value field is a string rather than a json value
+    #[derive(Serialize, Deserialize, Debug)]
+    struct IsErrorString {
+      #[serde(alias = "isError")]
+      is_error: bool,
+      value: String,
+    }
+    if let Ok(is_error) = serde_json::from_value::<IsErrorString>(outer_value.clone()) {
+      return Ok(Response {
+        report_id: "unknown".to_string(),
+        is_error: is_error.is_error,
+        value: serde_json::from_str::<Value>(is_error.value.as_str())?,
+      });
+    };
+
+    // finally just return an Response error with value of outer_value
+    Ok(Response {
+      report_id: "unknown".to_string(),
+      is_error: true,
+      value: outer_value.clone(),
+    })
+  }
 }
 
 // #[cfg(test)]
@@ -62,6 +108,25 @@ impl Response {
 
 //   #[test]
 //   fn as_string_fn_works() {
+//     todo!()
+//   }
+//   #[test]
+//   fn result_to_response_fn_works() {
+//     todo!()
+//   }
+
+//   #[test]
+//   fn result_to_response_fn_is_error_json_val() {
+//     todo!()
+//   }
+
+//   #[test]
+//   fn result_to_response_fn_is_error_string_val() {
+//     todo!()
+//   }
+
+//   #[test]
+//   fn result_to_response_fn_is_response_error() {
 //     todo!()
 //   }
 // }
