@@ -2,6 +2,7 @@ import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
 import TypeMapping, { ShapeHashArray } from '../../../../domain_objects/data_warehouse/etl/type_mapping';
+import TypeTransformation from '../../../../domain_objects/data_warehouse/etl/type_transformation';
 
 const format = require('pg-format');
 
@@ -95,10 +96,6 @@ export default class TypeMappingMapper extends Mapper {
         });
     }
 
-    public ListByDataSource(dataSourceID: string, offset: number, limit: number): Promise<Result<TypeMapping[]>> {
-        return super.rows<TypeMapping>(this.listByDataSourceStatement(dataSourceID, offset, limit), {resultClass: this.resultClass});
-    }
-
     public async SetActive(id: string): Promise<Result<boolean>> {
         return super.runAsTransaction(this.setActiveStatement(id));
     }
@@ -127,12 +124,20 @@ export default class TypeMappingMapper extends Mapper {
         return super.runAsTransaction(this.copyTransformations(userID, sourceMappingID, targetMappingID));
     }
 
-    public async GetShapeHash(typeMappingID: string): Promise<Result<ShapeHashArray>> {
-        return super.retrieve(this.getShapeHashStatement(typeMappingID), {resultClass: ShapeHashArray});
+    public GroupShapeHashes(oldTypeMappingIDs: string [], groupedTypeMappingID: string, shapeHashes: string[]):  Promise<Result<boolean>> {
+        return super.runAsTransaction(...this.groupShapeHashesStatement(oldTypeMappingIDs, groupedTypeMappingID, ...shapeHashes));
     }
 
-    public GroupShapeHashes(typeMappingID: string, shapeHashes: string[]):  Promise<Result<boolean>> {
-        return super.runAsTransaction(...this.groupShapeHashesStatement(typeMappingID, ...shapeHashes));
+    public async CheckGroupHashID(oldTypeMappingIDs: string []): Promise<Result<boolean>> {  // Go back and change this to boolean instead of TypeMapping LOL
+        return super.retrieve<boolean>(this.checkHashGroupingsIdExistsStatement(oldTypeMappingIDs));
+    }
+
+    public async GetGroupHashID(groupedTypeMappingID: string): Promise<Result<TypeMapping[]>> {
+        return super.rows<TypeMapping>(this.getHashGroupingsIDStatement(groupedTypeMappingID));
+    }
+
+    public async GetTransformations(groupedSubsetTypeMappingID: string[]): Promise<Result<TypeTransformation[]>> {
+        return super.rows<TypeTransformation>(this.listTransformationsByIdsStatement(groupedSubsetTypeMappingID));
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -203,7 +208,8 @@ export default class TypeMappingMapper extends Mapper {
 
     private retrieveStatement(exportID: string): QueryConfig {
         return {
-            text: `SELECT * FROM grouped_type_mappings WHERE id = $1`,
+            text: `SELECT * FROM grouped_type_mappings WHERE id = $1
+            OR id = (SELECT type_mapping_id FROM public.hash_groupings WHERE hash_grouping_id = $1)`,
             values: [exportID],
         };
     }
@@ -212,12 +218,11 @@ export default class TypeMappingMapper extends Mapper {
         return {
             text: `SELECT * 
             FROM grouped_type_mappings 
-            WHERE data_source_id = $1 
+            WHERE data_source_id = $1
             AND (
-                shape_hash = $2 
+                shape_hash = $2
                 OR (
-                    shape_hash IS NULL 
-                    AND id IN (
+                    id IN (
                         SELECT type_mapping_id 
                         FROM public.hash_groupings 
                         WHERE shape_hash = $2
@@ -281,13 +286,6 @@ export default class TypeMappingMapper extends Mapper {
               AND NOT EXISTS (SELECT 1 FROM type_mapping_transformations 
               WHERE type_mapping_transformations.type_mapping_id = grouped_type_mappings.id)`,
             values: [containerID, dataSourceID],
-        };
-    }
-
-    private listByDataSourceStatement(dataSourceID: string, offset: number, limit: number): QueryConfig {
-        return {
-            text: `SELECT * FROM grouped_type_mappings WHERE data_source_id = $1 OFFSET $2 LIMIT $3`,
-            values: [dataSourceID, offset, limit],
         };
     }
 
@@ -382,34 +380,63 @@ export default class TypeMappingMapper extends Mapper {
         };
     }
 
-    private getShapeHashStatement(typeMappingID: string): QueryConfig {
-        return {
-            text: `SELECT array_agg(shape_hash) AS shape_hash_array
-                    FROM hash_groupings
-                    WHERE type_mapping_id = $1
-                    GROUP BY type_mapping_id`,
-            values: [typeMappingID],
-        };
-    }
-
     private listByIdsStatement(typeMappingIDs: string []): QueryConfig {
-        const text = `SELECT * FROM grouped_type_mappings WHERE id IN (%L)`;
+        const text = `SELECT * FROM type_mappings WHERE id IN (%L)`;
         const values = typeMappingIDs;
 
         return format(text, values);
     }
 
-    private groupShapeHashesStatement(typeMappingID: string, ...shapeHashes: string[]): QueryConfig[] {
+    private groupShapeHashesStatement(typeMappingIDs: string [], groupedTypeMappingID: string, ...shapeHashes: string[]): QueryConfig[] {
         const updateStatemnt = { // setting newly created mapping shape hash to NULL
             text: `UPDATE type_mappings SET shape_hash = NULL WHERE id = $1`,
-            values: [typeMappingID],
+            values: [groupedTypeMappingID],
         };
 
-        const insertStatements = shapeHashes.map((hash) => ({
-            text: `INSERT INTO hash_groupings(type_mapping_id, shape_hash) VALUES ($1, $2)`,
-            values: [typeMappingID, hash]
+        // const insertStatements = shapeHashes.map((hash) => ({
+        //     text: `INSERT INTO hash_groupings(hash_grouping_id, type_mapping_id, shape_hash) VALUES ($1, $1, $2)`,
+        //     values: [typeMappingID, hash]
+        // }));
+
+        // Convert each typeMappingID to BIGINT and create insert statements
+    // Create insert statements with one-to-one mapping
+        const insertStatements = typeMappingIDs.map((oldTypeMappingID, index) => ({
+            text: `INSERT INTO hash_groupings(hash_grouping_id, type_mapping_id, shape_hash) VALUES (CAST($1 AS BIGINT), CAST($2 AS BIGINT), $3)`,
+            values: [oldTypeMappingID, groupedTypeMappingID, shapeHashes[index]],
         }));
         
         return [updateStatemnt, ...insertStatements];
     }
+
+    private checkHashGroupingsIdExistsStatement(typeMappingIDs: string []): QueryConfig {
+        const text = `SELECT EXISTS (
+            SELECT 1 FROM hash_groupings WHERE hash_grouping_id IN (%L)
+        )`;
+        const values = typeMappingIDs;
+
+        return format(text, values);
+    }
+
+    private getHashGroupingsIDStatement(typeMappingID: string): QueryConfig {
+        return{
+            text: `
+            SELECT * 
+            FROM type_mappings 
+            WHERE id IN (
+                SELECT hash_grouping_id 
+                FROM hash_groupings 
+                WHERE type_mapping_id = $1
+            )
+        `,
+            values: [typeMappingID],
+        };
+    }
+
+    private listTransformationsByIdsStatement(typeMappingIDs: string []): QueryConfig {
+        const text = `SELECT * FROM type_mapping_transformations WHERE type_mapping_id IN (%L)`;
+        const values = typeMappingIDs;
+
+        return format(text, values);
+    }
+
 }

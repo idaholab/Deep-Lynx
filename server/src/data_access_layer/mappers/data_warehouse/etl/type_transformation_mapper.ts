@@ -354,6 +354,7 @@ export default class TypeTransformationMapper extends Mapper {
     }
 
     private listByMapping(typeMappingID: string): QueryConfig {
+        console.log(typeMappingID);
         return {
             text: `SELECT type_mapping_transformations.*,
                           metatypes.name as metatype_name,

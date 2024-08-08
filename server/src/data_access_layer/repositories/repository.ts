@@ -923,10 +923,6 @@ export class Repository {
 
         const query = {text, values: this._query.VALUES};
 
-        if (queryOptions && queryOptions.print) {
-            console.log(format(text, this._query.VALUES));
-        }
-
         // reset the filter
         this._selectRoot = 'SELECT';
         this._query = {

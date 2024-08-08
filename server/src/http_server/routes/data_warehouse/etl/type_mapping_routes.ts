@@ -133,8 +133,9 @@ export default class TypeMappingRoutes {
 
     private static deleteTypeMapping(req: Request, res: Response, next: NextFunction) {
         if (req.typeMapping) {
-            mappingRepo
-                .delete(req.typeMapping)
+            if (req.typeMapping.shape_hash === null){
+                mappingRepo
+                .ungroupTransformations(req.typeMapping, req.currentUser!)
                 .then((result) => {
                     result.asResponse(res);
                 })
@@ -142,6 +143,17 @@ export default class TypeMappingRoutes {
                     Result.Error(err).asResponse(res);
                 })
                 .finally(() => next());
+            } else {
+                mappingRepo
+                    .delete(req.typeMapping)
+                    .then((result) => {
+                        result.asResponse(res);
+                    })
+                    .catch((err) => {
+                        Result.Error(err).asResponse(res);
+                    })
+                    .finally(() => next());
+            }
         } else {
             Result.Failure(`type mapping not found`).asResponse(res);
             next();

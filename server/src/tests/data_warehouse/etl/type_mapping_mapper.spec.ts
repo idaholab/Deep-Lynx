@@ -77,7 +77,6 @@ describe('A Data Type Mapping', async () => {
     });
 
     after(async () => {
-        console.log('m',metatypeID, 'd',dataSourceID, 'c',containerID);
         await MetatypeMapper.Instance.Delete(metatypeID);
         await DataSourceMapper.Instance.Delete(dataSourceID);
         await ContainerMapper.Instance.Delete(containerID);
@@ -188,34 +187,6 @@ describe('A Data Type Mapping', async () => {
         const fetched = await mappingStorage.Retrieve(mapping.value.id!);
         expect(fetched.isError).false;
         expect(fetched.value.active).true;
-
-        return Promise.resolve();
-    });
-
-    it('can be listed from storage by container and data source', async () => {
-        const keyStorage = MetatypeKeyMapper.Instance;
-        const mappingStorage = TypeMappingMapper.Instance;
-
-        const testKeys = [...test_keys];
-        testKeys.forEach((key) => (key.metatype_id = metatypeID));
-
-        const keys = await keyStorage.BulkCreate('test suite', testKeys);
-        expect(keys.isError).false;
-
-        const mapping = await mappingStorage.CreateOrUpdate(
-            'test suite',
-            new TypeMapping({
-                container_id: containerID,
-                data_source_id: dataSourceID,
-                sample_payload: test_raw_payload,
-            }),
-        );
-
-        expect(mapping.isError).false;
-
-        const fetched2 = await mappingStorage.ListByDataSource(dataSourceID, 0, 100);
-        expect(fetched2.isError).false;
-        expect(fetched2.value).not.empty;
 
         return Promise.resolve();
     });
