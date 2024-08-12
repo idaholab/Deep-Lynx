@@ -180,8 +180,10 @@ export default class ReportRoutes {
                 return;
             }
 
+            const toJSON = String(req.query.toJSON).toLowerCase() === 'true';
+
             queryRepo
-                .initiateQuery(req.container.id!, payload, req.currentUser!)
+                .initiateQuery(req.container.id!, payload, req.currentUser!, toJSON)
                 .then((result) => {
                     result.asResponse(res);
                 })

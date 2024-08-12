@@ -84,21 +84,19 @@ export default class ReportQueryRepository extends Repository implements Reposit
         }
     }
 
-    async initiateQuery(containerID: string, request: TS2InitialRequest, user: User, reportID?: string): Promise<Result<string>> {
+    async initiateQuery(containerID: string, request: TS2InitialRequest, user: User, toJSON?: boolean): Promise<Result<string>> {
         const userID = user.id!;
 
         // check that all files are timeseries and return an error if not
         const isTimeseries = await this.#fileRepo.checkTimeseries(request.file_ids!);
         if (isTimeseries.isError) {return Promise.resolve(Result.Pass(isTimeseries))}
 
-        // create a report if report ID was not specified
-        if (!reportID) {
-            const report = new Report({container_id: containerID});
-            const reportSaved = await this.#reportMapper.Create(user.id!, report);
-            if (reportSaved.isError) {return Promise.resolve(Result.Pass(reportSaved))}
-            Object.assign(report, reportSaved.value);
-            reportID = report.id!
-        }
+        // create a new report object
+        const report = new Report({container_id: containerID});
+        const reportSaved = await this.#reportMapper.Create(user.id!, report);
+        if (reportSaved.isError) {return Promise.resolve(Result.Pass(reportSaved))}
+        Object.assign(report, reportSaved.value);
+        const reportID = report.id!
 
         // create a report query based on the TS2 rust module query request
         const reportQuery = new ReportQuery({query: request.query!, report_id: reportID});
