@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "deeplynx.fullname" . }}
+  labels:
+    {{- include "deeplynx.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "deeplynx.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "deeplynx.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "deeplynx.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: "CORE_DB_CONNECTION_STRING"
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.deeplynx.env.CORE_DB_CONNECTION_STRING.secretName }}
+                  key: {{ .Values.deeplynx.env.CORE_DB_CONNECTION_STRING.secretKey }}
+            - name: "TIMESCALEDB_ENABLED"
+              value: {{ quote .Values.deeplynx.env.TIMESCALEDB_ENABLED }}
+            - name: "RUN_JOBS"
+              value: {{ quote .Values.deeplynx.env.RUN_JOBS }}
+            - name: "INITIAL_SUPERUSER"
+              value: {{ quote .Values.deeplynx.env.INITIAL_SUPERUSER }}
+            - name: "SUPERUSER_EMAIL"
+              value: {{ .Values.deeplynx.env.SUPERUSER_EMAIL }}
+            - name: "SUPERUSER_PASSWORD"
+              value: {{ .Values.deeplynx.env.SUPERUSER_PASSWORD }}
+            - name: "LOG_LEVEL"
+              value: {{ .Values.deeplynx.env.LOG_LEVEL }}
+            - name: "LOG_JOBS"
+              value: {{ quote .Values.deeplynx.env.LOG_JOBS }}
+            - name: "CACHE_REDIS_CONNECTION_STRING"
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.deeplynx.env.CACHE_REDIS_CONNECTION_STRING.secretName }}
+                  key: {{ .Values.deeplynx.env.CACHE_REDIS_CONNECTION_STRING.secretKey }}
+            - name: "CACHE_PROVIDER"
+              value: {{ .Values.deeplynx.env.CACHE_PROVIDER }}
+            - name: "VUE_APP_BUNDLED_BUILD"
+              value: {{ quote .Values.deeplynx.env.VUE_APP_BUNDLED_BUILD }}
+            - name: "VUE_APP_DEEP_LYNX_API_URL"
+              value: {{ .Values.deeplynx.env.VUE_APP_DEEP_LYNX_API_URL }}
+            - name: "VUE_APP_DEEP_LYNX_API_AUTH_METHOD"
+              value: {{ .Values.deeplynx.env.VUE_APP_DEEP_LYNX_API_AUTH_METHOD }}
+            - name: "VUE_APP_TIME_SERIES_ENABLED"
+              value: {{ quote .Values.deeplynx.env.VUE_APP_TIME_SERIES_ENABLED }}
+            - name: "VUE_APP_APP_URL"
+              value: {{ .Values.deeplynx.env.VUE_APP_APP_URL }}
+            - name: "VUE_APP_DEEP_LYNX_APP_ID"
+              value: {{ .Values.deeplynx.env.VUE_APP_DEEP_LYNX_APP_ID }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
