@@ -74,7 +74,10 @@ export class TS2Request extends NakedDomainClass {
 
     // where to upload the query results
     @IsString()
-    response_url?: string;
+    deeplynx_response_url?: string;
+
+    @IsString()
+    results_upload_url?: string;
 
     // metadata of files to query
     @IsArray()
@@ -92,15 +95,22 @@ export class TS2Request extends NakedDomainClass {
     @IsObject()
     azure_metadata?: AzureMetadata;
 
+    // boolean indicating whether to have results in json or csv (default csv)
+    @IsOptional()
+    @IsBoolean()
+    to_json?: boolean;
+
     constructor(input: {
         report_id: Report | string;
         query_id: string;
         query: string;
-        response_url: string;
+        deeplynx_response_url: string;
+        results_upload_url: string;
         files: FilePathMetadata[];
         token: string;
         data_source_id: string;
         azure_metadata?: AzureMetadata;
+        to_json?: boolean;
     }) {
         super();
 
@@ -110,11 +120,13 @@ export class TS2Request extends NakedDomainClass {
                 : input.report_id;
             this.query_id = input.query_id;
             this.query = input.query;
-            this.response_url = input.response_url;
+            this.deeplynx_response_url = input.deeplynx_response_url;
+            this.results_upload_url = input.results_upload_url;
             this.files = input.files;
             this.token = input.token;
             this.data_source_id = input.data_source_id;
             if (input.azure_metadata) this.azure_metadata = input.azure_metadata;
+            this.to_json = input.to_json ? input.to_json : false;
         }
     }
 }

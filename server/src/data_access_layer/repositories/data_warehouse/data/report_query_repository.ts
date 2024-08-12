@@ -148,8 +148,8 @@ export default class ReportQueryRepository extends Repository implements Reposit
             }
         }
 
-        let responseUrl: string;
         // set response url depending on describe query or not
+        let responseUrl: string;
         if (request.query && request.query.startsWith('DESCRIBE')) {
             responseUrl = `${Config.root_address}/containers/${containerID}/files/timeseries/describe`
         } else {
@@ -161,11 +161,13 @@ export default class ReportQueryRepository extends Repository implements Reposit
             report_id: reportID,
             query_id: queryID,
             query: request.query!,
-            response_url: responseUrl,
+            deeplynx_response_url: responseUrl,
+            results_upload_url: `containers/${containerID}/datasources/${files[0].data_source_id}`,
             files: files,
             token: token,
             data_source_id: files[0].data_source_id!,
-            azure_metadata: azureMetadata
+            azure_metadata: azureMetadata,
+            to_json: false
         });
 
         // TODO: send to napi
