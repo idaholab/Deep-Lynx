@@ -151,7 +151,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
         if (request.query && request.query.startsWith('DESCRIBE')) {
             responseUrl = `${Config.root_address}/containers/${containerID}/files/timeseries/describe`
         } else {
-            responseUrl = `${Config.root_address}/containers/${containerID}/reports/${reportID}/queries/${queryID}`
+            responseUrl = `${Config.root_address}/containers/${containerID}/reports/${reportID}/query/${queryID}`
         }
 
         // formulate query request (this gets sent to NAPI)
@@ -160,7 +160,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
             query_id: queryID,
             query: request.query!,
             deeplynx_response_url: responseUrl,
-            results_upload_url: `containers/${containerID}/datasources/${files[0].data_source_id}`,
+            upload_path: `containers/${containerID}/datasources/${files[0].data_source_id}`,
             files: files,
             token: token,
             data_source_id: files[0].data_source_id!,

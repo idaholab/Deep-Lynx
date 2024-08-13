@@ -77,7 +77,7 @@ export class TS2Request extends NakedDomainClass {
     deeplynx_response_url?: string;
 
     @IsString()
-    results_upload_url?: string;
+    upload_path?: string;
 
     // metadata of files to query
     @IsArray()
@@ -105,7 +105,7 @@ export class TS2Request extends NakedDomainClass {
         query_id: string;
         query: string;
         deeplynx_response_url: string;
-        results_upload_url: string;
+        upload_path: string;
         files: FilePathMetadata[];
         token: string;
         data_source_id: string;
@@ -121,7 +121,7 @@ export class TS2Request extends NakedDomainClass {
             this.query_id = input.query_id;
             this.query = input.query;
             this.deeplynx_response_url = input.deeplynx_response_url;
-            this.results_upload_url = input.results_upload_url;
+            this.upload_path = input.upload_path;
             this.files = input.files;
             this.token = input.token;
             this.data_source_id = input.data_source_id;
