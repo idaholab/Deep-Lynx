@@ -75,7 +75,7 @@ export class BaseDataSourceConfig extends NakedDomainClass {
 
     @IsOptional()
     @Validate(DataRetentionDays)
-    data_retention_days = 30;
+    data_retention_days = -1;
 
     @IsBoolean()
     raw_retention_enabled = false;

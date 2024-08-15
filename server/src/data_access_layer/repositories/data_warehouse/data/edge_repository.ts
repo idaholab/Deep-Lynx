@@ -358,8 +358,12 @@ export default class EdgeRepository extends Repository implements RepositoryInte
             return Promise.resolve(Result.Success(edges));
         }
 
-        // if any of the parameters have the "like" filter, we have to use the old method vs. the rust snapshot
-        if (e.origin_parameters.filter((p) => p.operator === 'like').length > 0 || e.destination_parameters.filter((p) => p.operator === 'like').length > 0) {
+        // if any of the parameters have the "like" or "in" filters, we have to use the old method vs. the rust snapshot
+        if (e.origin_parameters.filter((p) => p.operator === 'like').length > 0 
+            || e.destination_parameters.filter((p) => p.operator === 'like').length > 0
+            || e.origin_parameters.filter((p) => p.operator === 'in').length > 0
+            || e.destination_parameters.filter((p) => p.operator === 'in').length > 0
+        ) {
             const originNodes = await this.parametersRepoBuilder(e.container_id!, e.origin_parameters).list(false);
             if (originNodes.isError) return Promise.resolve(Result.Pass(originNodes));
 
