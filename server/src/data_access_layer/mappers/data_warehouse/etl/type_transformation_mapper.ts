@@ -109,6 +109,10 @@ export default class TypeTransformationMapper extends Mapper {
         return super.runAsTransaction(...this.groupShapeHashAndDeleteStatement(typeMappingID, shapeHash));
     }
 
+    public UpdateID(oldID: string, newID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.updateIdStatement(oldID, newID));
+    }
+
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
@@ -300,7 +304,7 @@ export default class TypeTransformationMapper extends Mapper {
                          mapping.shape_hash as shape_hash,
                          mapping.data_source_id as data_source_id
                   FROM type_mapping_transformations
-                           LEFT JOIN type_mappings as mapping ON type_mapping_transformations.type_mapping_id = mapping.id
+                           LEFT JOIN grouped_type_mappings as mapping ON type_mapping_transformations.type_mapping_id = mapping.id
                            LEFT JOIN metatypes ON type_mapping_transformations.metatype_id = metatypes.id
                            LEFT JOIN metatype_relationship_pairs 
                                ON type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id
@@ -354,7 +358,6 @@ export default class TypeTransformationMapper extends Mapper {
     }
 
     private listByMapping(typeMappingID: string): QueryConfig {
-        console.log(typeMappingID);
         return {
             text: `SELECT type_mapping_transformations.*,
                           metatypes.name as metatype_name,
@@ -369,7 +372,7 @@ export default class TypeTransformationMapper extends Mapper {
                             LEFT JOIN metatypes ON type_mapping_transformations.metatype_id = metatypes.id
                             LEFT JOIN metatype_relationship_pairs 
                                 ON type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id
-                   WHERE type_mapping_id = $1`,
+                    WHERE type_mapping_id = $1`,
             values: [typeMappingID],
         };
     }
@@ -400,5 +403,14 @@ export default class TypeTransformationMapper extends Mapper {
         const values = ids;
 
         return format(text, values);
+    }
+
+    private updateIdStatement(oldID: string, newID: string): QueryConfig {
+        return {
+            text: `UPDATE type_mapping_transformations 
+                        SET type_mapping_id = $2
+                        WHERE type_mapping_id = $1`,
+            values: [oldID, newID]
+        }
     }
 }

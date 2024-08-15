@@ -1149,7 +1149,6 @@ export type QueryOptions = {
     // load from a materialized view if one is present
     loadFromView?: boolean;
     resetSelect?: boolean;
-    print?: boolean;
 };
 
 export type JoinOptions = {

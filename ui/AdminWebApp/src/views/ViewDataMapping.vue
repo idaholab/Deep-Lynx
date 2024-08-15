@@ -630,7 +630,6 @@
                         transformations.map(transformation => {
                           results = results.map(mapping => {
                             if(!mapping.transformations) mapping.transformations = []
-
                             if(mapping.id === transformation.type_mapping_id) {
                               mapping.transformations.push(transformation)
                             }

@@ -17,7 +17,7 @@ const format = require('pg-format');
 */
 export default class TypeMappingMapper extends Mapper {
     private resultClass = TypeMapping;
-    public static tableName = 'type_mappings';
+    public static tableName = 'grouped_type_mappings';
 
     private static instance: TypeMappingMapper;
 
@@ -388,18 +388,13 @@ export default class TypeMappingMapper extends Mapper {
     }
 
     private groupShapeHashesStatement(typeMappingIDs: string [], groupedTypeMappingID: string, ...shapeHashes: string[]): QueryConfig[] {
-        const updateStatemnt = { // setting newly created mapping shape hash to NULL
+        // setting newly created mapping shape hash to NULL
+        const updateStatemnt = { 
             text: `UPDATE type_mappings SET shape_hash = NULL WHERE id = $1`,
             values: [groupedTypeMappingID],
         };
 
-        // const insertStatements = shapeHashes.map((hash) => ({
-        //     text: `INSERT INTO hash_groupings(hash_grouping_id, type_mapping_id, shape_hash) VALUES ($1, $1, $2)`,
-        //     values: [typeMappingID, hash]
-        // }));
-
-        // Convert each typeMappingID to BIGINT and create insert statements
-    // Create insert statements with one-to-one mapping
+        // inserting mappings used in grouping into hash_groupings table
         const insertStatements = typeMappingIDs.map((oldTypeMappingID, index) => ({
             text: `INSERT INTO hash_groupings(hash_grouping_id, type_mapping_id, shape_hash) VALUES (CAST($1 AS BIGINT), CAST($2 AS BIGINT), $3)`,
             values: [oldTypeMappingID, groupedTypeMappingID, shapeHashes[index]],
@@ -408,6 +403,7 @@ export default class TypeMappingMapper extends Mapper {
         return [updateStatemnt, ...insertStatements];
     }
 
+    // checking if a mapping exists as part of a Grouped Mapping (via ID)
     private checkHashGroupingsIdExistsStatement(typeMappingIDs: string []): QueryConfig {
         const text = `SELECT EXISTS (
             SELECT 1 FROM hash_groupings WHERE hash_grouping_id IN (%L)
@@ -417,6 +413,7 @@ export default class TypeMappingMapper extends Mapper {
         return format(text, values);
     }
 
+    // Grabs the IDs of the mappings used as part of a Grouped Mapping
     private getHashGroupingsIDStatement(typeMappingID: string): QueryConfig {
         return{
             text: `
@@ -432,6 +429,7 @@ export default class TypeMappingMapper extends Mapper {
         };
     }
 
+    // Grabs type mapping transformations based on type mapping IDs
     private listTransformationsByIdsStatement(typeMappingIDs: string []): QueryConfig {
         const text = `SELECT * FROM type_mapping_transformations WHERE type_mapping_id IN (%L)`;
         const values = typeMappingIDs;

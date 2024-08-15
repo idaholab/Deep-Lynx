@@ -55,12 +55,6 @@ export default class TypeMappingRoutes {
             authInContainer('write', 'data'),
             this.groupMappings,
         );
-        app.delete(
-            '/containers/:containerID/import/datasources/:sourceID/mappings/group',
-            ...middleware,
-            authInContainer('write', 'data'),
-            this.deleteTypeMapping,  
-        );
 
         app.get(
             '/containers/:containerID/import/datasources/:sourceID/mappings/:mappingID',
@@ -416,7 +410,7 @@ export default class TypeMappingRoutes {
         } else if (req.query.needsTransformations) {
             new TypeMappingRepository()
                 .select('*', 'tm')
-                .from('type_mappings', 'tm')
+                .from('grouped_type_mappings', 'tm')
                 .where().containerID('eq', req.params.containerID)
                 .and().dataSourceID('eq', req.params.sourceID)
                 .and().not_exists(new TypeMappingRepository().subquery(
@@ -428,8 +422,7 @@ export default class TypeMappingRoutes {
                     limit: +req.query.limit!,
                     sortBy: req.query.sortBy as string | undefined,
                     sortDesc: String(req.query.sortDesc).toLowerCase() === 'true',
-                    resetSelect: true,
-                    print:true
+                    resetSelect: true
                 })
                 .then((result) => {
                     if (result.isError && result.error) {

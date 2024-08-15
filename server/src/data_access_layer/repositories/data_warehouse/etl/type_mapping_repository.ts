@@ -49,6 +49,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
 
     async ungroupTransformations(t: TypeMapping, user: User): Promise<Result<boolean>> {
         if (t.id) {
+            // checking if the mapping is a grouped mapping
             if (t.shape_hash === null) {
                 const oldGroupedIDs = await this.#mapper.GetGroupHashID(t.id);
                 for (const oldMapping of oldGroupedIDs.value) {
@@ -69,17 +70,14 @@ export default class TypeMappingRepository extends Repository implements Reposit
         if (!retrieved.isError && loadTransformations) {
             // we do not want to cache this object unless we have the entire object
             const transformations = await this.#transformationMapper.ListForTypeMapping(retrieved.value.id!);
-            console.log(transformations.value);
             if (!transformations.isError) retrieved.value.addTransformation(...transformations.value);
         }
-
-        console.log('HERE ARE THE TXs');
-        console.log(retrieved.value.transformations);
 
         return Promise.resolve(retrieved);
     }
 
     async groupMappings(typeMappingIDs: string [], user: User, containerIdValue: string, dataSourceIdValue: string): Promise<Result<boolean>> {
+        // Checking if the type mapping exists
         if (!typeMappingIDs) {
             return Promise.resolve(Result.Failure('Type Mapping IDs must exist to group'));
         }
@@ -88,6 +86,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
         if (mappings.isError) {
             return Promise.resolve(Result.Failure(`error retrieving type mappings with IDs ${typeMappingIDs}: ${mappings.error.error}`));
         }
+        // checking if at least the two mappings exist before grouping
         if (mappings.value.length < 2) {
             return Promise.resolve(Result.Failure('Grouping requires at least two existing mappings'));
         }
@@ -96,6 +95,8 @@ export default class TypeMappingRepository extends Repository implements Reposit
         if (hashesExist.isError) {
             return Promise.resolve(Result.Failure(`Error checking hash groupings: ${hashesExist.error}`));
         }
+
+        // a mapping can't be part of more than one grouping
         if ((hashesExist.value as any).exists) {
             return Promise.resolve(Result.Failure('error: attempting to group the same ID more than once!'));
         }
@@ -115,9 +116,19 @@ export default class TypeMappingRepository extends Repository implements Reposit
 
         // Collecting all transformations
         const ids = mappings.value.map((m) => m.id!);
-        const allTransformation = await this.#mapper.GetTransformations(ids)
 
-        // Collect all transformations
+        const result = await this.#mapper.CreateOrUpdate(user.id!, commonMapping);
+        if (result.isError) {
+            return Promise.resolve(Result.Failure('error inserting new payload into type_mappings'));
+        }
+
+        // reset mapping ids for all transformations
+        ids.forEach(async (id) => {
+            await this.#transformationMapper.UpdateID(id, result.value.id!);
+        });
+
+        const allTransformation = await this.#mapper.GetTransformations(ids);
+
         for (const oneTransformation of allTransformation.value) {
             // Check if transformations is defined
             if (oneTransformation) {
@@ -126,21 +137,9 @@ export default class TypeMappingRepository extends Repository implements Reposit
             }
         }
 
-        const result = await this.#mapper.CreateOrUpdate(user.id!, commonMapping);
-        //do we need some sort of check to make sure the above statement does not blow up?
-        if (result.isError) {
-            return Promise.resolve(Result.Failure('error inserting new payload into type_mappings'));
-        }
-
         // get array of shape hashes
         const arrayShapeHashes = mappings.value.map((m) => m.shape_hash!);
 
-        // // Ensure the arrays are of the same length
-        // if (typeMappingIDs.length !== arrayShapeHashes.length) {
-        //     return Promise.resolve(Result.Failure('error retrieving Mapping IDs and corresponding hashes from IDs provided'));
-        // }
-
-        // pass type mapping id from line 92 and array of shape hashes from line 94 into group hashing table insert function
         return this.#mapper.GroupShapeHashes(typeMappingIDs, result.value.id!, arrayShapeHashes);
     }
 
@@ -826,7 +825,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
 
         // select from this group of tables
         this._query.FROM = [
-            `FROM type_mappings ${this._tableAlias}`,
+            `FROM grouped_type_mappings ${this._tableAlias}`,
             `LEFT JOIN type_mapping_transformations ON ${this._tableAlias}.id = type_mapping_transformations.type_mapping_id`,
             'LEFT JOIN metatypes ON type_mapping_transformations.metatype_id = metatypes.id',
             'LEFT JOIN metatype_relationship_pairs on type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id',
