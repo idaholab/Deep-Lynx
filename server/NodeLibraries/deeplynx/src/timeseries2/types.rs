@@ -1,8 +1,11 @@
-use crate::timeseries2::error::{Result, TSError};
+use crate::timeseries2::error::TSError;
+use datafusion::datasource::listing::ListingTableInsertMode;
 use datafusion::datasource::listing::ListingTableUrl;
-use datafusion::prelude::{SessionConfig, SessionContext};
+use datafusion::prelude::{
+  CsvReadOptions, DataFrame, ParquetReadOptions, SessionConfig, SessionContext,
+};
 use lazy_static::lazy_static;
-use log::{info, log_enabled};
+use log::{info, trace};
 use object_store::azure::MicrosoftAzureBuilder;
 use rand::{
   distributions::{Distribution, Standard},
@@ -10,159 +13,147 @@ use rand::{
 };
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
-use std::path::Path;
 use std::sync::Arc;
+use std::time::Instant;
 use url::Url;
 
-pub fn info_pretty<T>(msg_str: &str, msg_struct: T)
-where
-  T: Serialize,
-{
-  if log_enabled!(log::Level::Info) {
-    info!("{}", msg_str);
-    let color = "\x1b[92m"; //green
-    if let Ok(pretty_string) = serde_json::to_string_pretty(&msg_struct) {
-      for line in pretty_string.lines() {
-        info!("{}{}\x1b[0m", color, line);
-      }
-    };
-  }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
-pub struct Response {
+#[napi(object)]
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Request {
   pub report_id: String,
-  pub is_error: bool,
-  pub value: Value,
+  pub query_id: String,
+  pub query: String,
+  pub deeplynx_response_url: String,
+  pub upload_path: String,
+  pub files: Vec<FilePathMetadata>,
+  pub token: String,
+  pub data_source_id: String,
+  pub azure_metadata: Option<AzureMetadata>,
+  pub to_json: Option<bool>, // change to mimetype or format or something?
 }
 
-/// Public interface
-impl Response {
-  pub fn from_id_msg(id: &str, msg: &str) -> Self {
-    Response {
-      report_id: id.to_string(),
-      is_error: true, // is this always supposed to be an error?
-      value: Value::from(msg),
+impl Request {
+  pub fn new() -> Self {
+    Self {
+      ..Default::default()
     }
   }
+}
 
-  fn as_string(&self) -> serde_json::Result<String> {
-    serde_json::to_string(self)
+impl Default for Request {
+  fn default() -> Self {
+    Request::new()
   }
+}
 
-  // try whatever we can to parse a myriad of possible result jsons
-  pub fn json_result_to_response(outer_value: Value) -> Result<Response> {
-    // first of all, can we parse this directly into a Response object using serde
-    // then return the outer_value as a Response object (it is one)
-    if let Ok(response) = serde_json::from_value::<Response>(outer_value.clone()) {
-      return Ok(response);
-    };
+pub struct Session {
+  pub(crate) session_context: SessionContext,
+  // the idea is to store the table_names to verify SZL etc.
+  // but I'm not sure if it is needed
+  pub(crate) table_names: Vec<String>,
+}
 
-    // see if it is a typical error response and allow for alternate spelling of is_error
-    #[derive(Serialize, Deserialize, Debug)]
-    struct IsErrorValue {
-      #[serde(alias = "isError")]
-      is_error: bool,
-      value: Value,
-    }
-    if let Ok(is_error) = serde_json::from_value::<IsErrorValue>(outer_value.clone()) {
-      return Ok(Response {
-        report_id: "unknown".to_string(),
-        is_error: is_error.is_error,
-        value: is_error.value,
-      });
-    };
+impl Session {
+  pub fn new(store_type: StoreType) -> Result<Session, TSError> {
+    let session_context = store_type.get_session_context()?;
 
-    // same as above but the value field is a string rather than a json value
-    #[derive(Serialize, Deserialize, Debug)]
-    struct IsErrorString {
-      #[serde(alias = "isError")]
-      is_error: bool,
-      value: String,
-    }
-    if let Ok(is_error) = serde_json::from_value::<IsErrorString>(outer_value.clone()) {
-      return Ok(Response {
-        report_id: "unknown".to_string(),
-        is_error: is_error.is_error,
-        value: serde_json::from_str::<Value>(is_error.value.as_str())?,
-      });
-    };
-
-    // finally just return an Response error with value of outer_value
-    Ok(Response {
-      report_id: "unknown".to_string(),
-      is_error: true,
-      value: outer_value.clone(),
+    println!("{:?}", session_context.catalog_names());
+    let table_names = Vec::new();
+    Ok(Session {
+      session_context,
+      table_names,
     })
   }
+
+  pub async fn register_table(
+    &mut self,
+    table_name: &str,
+    file_path: &str,
+  ) -> Result<&Self, TSError> {
+    let file_type = FileType::from_string(file_path);
+    trace!("registering file: {}", file_path);
+    match file_type {
+      FileType::Csv => {
+        self
+          .session_context
+          .register_csv(table_name, file_path, CsvReadOptions::new())
+          .await?;
+      }
+      FileType::Parquet => {
+        let parquet_read_options = ParquetReadOptions {
+          file_extension: ".parquet",
+          table_partition_cols: vec![],
+          parquet_pruning: None,
+          skip_metadata: None,
+          schema: None,
+          file_sort_order: vec![],
+          insert_mode: ListingTableInsertMode::AppendToFile,
+        };
+        self
+          .session_context
+          .register_parquet(table_name, file_path, parquet_read_options)
+          .await?;
+      }
+      FileType::Json => {
+        // todo register json file
+        self
+          .session_context
+          .register_json(table_name, file_path, Default::default())
+          .await?;
+        info!("Registered : ({})", table_name);
+      }
+
+      FileType::Hdf5 => {
+        unimplemented!()
+      }
+      FileType::Tdms => {
+        unimplemented!()
+      }
+    }
+    self.table_names.push(table_name.to_owned());
+    Ok(self)
+  }
+
+  pub async fn query(&self, sql: &str) -> datafusion::common::Result<DataFrame> {
+    let start = Instant::now();
+    let ret = self.session_context.sql(sql).await;
+    let duration = start.elapsed();
+    info!("Time of query is: {:?}", duration);
+    ret
+  }
 }
 
-// #[cfg(test)]
-// mod response_tests {
-
-//   #[test]
-//   fn from_id_msg_fn_works() {
-//     todo!()
-//   }
-
-//   #[test]
-//   fn as_string_fn_works() {
-//     todo!()
-//   }
-//   #[test]
-//   fn result_to_response_fn_works() {
-//     todo!()
-//   }
-
-//   #[test]
-//   fn result_to_response_fn_is_error_json_val() {
-//     todo!()
-//   }
-
-//   #[test]
-//   fn result_to_response_fn_is_error_string_val() {
-//     todo!()
-//   }
-
-//   #[test]
-//   fn result_to_response_fn_is_response_error() {
-//     todo!()
-//   }
-// }
-
-#[derive(Serialize, Deserialize, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
-// #[allow(non_camel_case_types, non_snake_case)] // TODO: are these styles required to not be in proper rust style?
-#[derive(Default)]
+#[napi]
+#[derive(Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Debug, Default)]
 pub enum StoreType {
-  minio,
-  azure_blob,
-  filesystem,
+  Minio,
+  AzureBlob,
+  FileSystem,
   #[default]
-  default_type,
+  Void,
 }
 
 impl Distribution<StoreType> for Standard {
   fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> StoreType {
     match rng.gen_range(0..3) {
-      0 => StoreType::minio,
-      1 => StoreType::azure_blob,
-      2 => StoreType::filesystem,
-      _ => StoreType::default_type,
+      0 => StoreType::Minio,
+      1 => StoreType::AzureBlob,
+      2 => StoreType::FileSystem,
+      _ => StoreType::Void,
     }
   }
 }
 impl StoreType {
-  pub fn get_session_context(&self) -> Result<SessionContext> {
+  pub fn get_session_context(&self) -> Result<SessionContext, TSError> {
     let session_config = SessionConfig::new().with_information_schema(true);
     let ctx = SessionContext::new_with_config(session_config);
     match self {
-      StoreType::filesystem => {
+      StoreType::FileSystem => {
         // using local files does not need a registered store
       }
       // possible sample code is included here but note this function
       // returns Unimplemented
-      StoreType::azure_blob => {
+      StoreType::AzureBlob => {
         let table_path =
           ListingTableUrl::parse("https://gvadedeeplynxdevsa.blob.core.usgovcloudapi.net/")?;
         // let scheme = table_path.scheme();
@@ -178,10 +169,10 @@ impl StoreType {
         ctx.runtime_env().register_object_store(url, store.clone());
         return Err(TSError::Unimplemented("Azure File Storage".to_string()));
       }
-      StoreType::minio => {
+      StoreType::Minio => {
         return Err(TSError::Unimplemented("AWS S3 File Storage".to_string()));
       }
-      StoreType::default_type => {
+      StoreType::Void => {
         return Err(TSError::Unimplemented(
           "Default (Empty) Storage".to_string(),
         ));
@@ -189,43 +180,7 @@ impl StoreType {
     }
     Ok(ctx)
   }
-
-  /// parse the adapter_file_path and return a table_name therefrom
-  /// this also serves to validate the adapter_file_path
-  pub(crate) fn parse_table_name(&self, uri: String) -> Result<String> {
-    match self {
-      // Use Path::new() to do the parse and return the file name or error
-      StoreType::filesystem => {
-        let path = Path::new(&uri);
-        let file_name = path.file_name().ok_or(TSError::Str("Invalid path"))?;
-        Ok(format!("{:?}", file_name))
-      }
-
-      // todo get regex for this type and parse out the tablename
-      StoreType::minio => {
-        unimplemented!()
-      }
-
-      // todo get regex for this type and parse out the tablename
-      StoreType::azure_blob => {
-        unimplemented!()
-      }
-
-      StoreType::default_type => {
-        unimplemented!()
-      }
-    }
-  }
 }
-
-// #[cfg(test)]
-// mod storetype_tests {
-
-//   #[test]
-//   fn storetype_works() {
-//     todo!()
-//   }
-// }
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, Default)]
 pub enum FileType {
@@ -254,10 +209,11 @@ impl FileType {
   }
 }
 
+#[napi(object)]
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct FilePathMetadata {
-  id: String,
-  adapter_file_path: String,
+  pub id: String,
+  pub adapter_file_path: String,
   pub adapter: StoreType,
 }
 
@@ -274,7 +230,7 @@ impl FilePathMetadata {
 
   /// Use the id to create a table name suitable
   /// for most common SQL syntax-es
-  pub fn get_table_name(&self) -> Result<String> {
+  pub fn get_table_name(&self) -> Result<String, TSError> {
     let name = format!("table_{}", self.id);
     if Self::is_valid_table_name(name.as_str()) {
       Ok(name)
@@ -288,59 +244,40 @@ impl FilePathMetadata {
 
   /// retrieve the file from the file store for local processing
   /// but only if it is "largeobject" aka DeepLynx storage
-  pub async fn retrieve_file(&self) -> Result<String> {
+  pub async fn retrieve_file(&self) -> Result<String, TSError> {
     match self.adapter {
-      StoreType::filesystem => {
+      StoreType::FileSystem => {
         // for local file system just return the file path
         Ok(self.adapter_file_path.clone())
       }
-      StoreType::minio => {
+      StoreType::Minio => {
         // todo
         Err(TSError::Unimplemented(format!(
           "minio retrieve file {:?}",
           self.adapter_file_path
         )))
       }
-      StoreType::azure_blob => {
+      StoreType::AzureBlob => {
         // todo
         Err(TSError::Unimplemented(format!(
           "azure_blob retrieve file {:?}",
           self.adapter_file_path
         )))
       }
-      StoreType::default_type => Err(TSError::Unimplemented(
+      StoreType::Void => Err(TSError::Unimplemented(
         "Uninitialized default store type".to_string(),
       )),
     }
   }
+}
 
-  /// retrieve the file from the file store for local processing
-  /// but only if it is "largeobject" aka DeepLynx storage
-  async fn store_file(&self) -> Result<String> {
-    match self.adapter {
-      StoreType::filesystem => {
-        // for local file system just return the file path
-        Ok(self.adapter_file_path.clone())
-      }
-      StoreType::minio => {
-        // todo
-        Err(TSError::Unimplemented(format!(
-          "minio retrieve file {:?}",
-          self.adapter_file_path
-        )))
-      }
-      StoreType::azure_blob => {
-        // todo
-        Err(TSError::Unimplemented(format!(
-          "azure_blob retrieve file {:?}",
-          self.adapter_file_path
-        )))
-      }
-      StoreType::default_type => Err(TSError::Unimplemented(
-        "Uninitialized default store type".to_string(),
-      )),
-    }
-  }
+#[napi(object)]
+#[derive(Serialize, Deserialize, Debug, Default)]
+pub struct AzureMetadata {
+  pub account_name: String,
+  pub blob_endpoint: String,
+  pub container_name: String,
+  pub sas_token: String,
 }
 
 // #[cfg(test)]

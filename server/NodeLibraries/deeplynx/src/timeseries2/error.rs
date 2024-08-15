@@ -1,25 +1,18 @@
-use crate::timeseries2::request::Request;
-use crate::timeseries2::types::Response;
 use datafusion::error::DataFusionError;
 use log::error;
+use napi::Error;
 use reqwest::header::InvalidHeaderValue;
-use serde_json::Value;
 use std::convert::Infallible;
-use std::env::VarError;
-use std::io;
 use std::num::ParseIntError;
 use std::time::SystemTimeError;
 use thiserror::Error;
-use tokio::task::JoinError;
-
-pub type Result<T> = std::result::Result<T, TSError>;
 
 #[derive(Error, Debug)]
 pub enum TSError {
   #[error("Invalid Table building parameters")]
   InvalidTableParameters,
 
-  #[error("{0}")]
+  #[error("DataFusionError {0}")]
   DataFusionError(#[from] DataFusionError),
 
   #[error("serde_json:: {0}")]
@@ -42,9 +35,6 @@ pub enum TSError {
 
   #[error("InvalidHeaderValue:: {0}")]
   InvalidHeaderValueError(#[from] InvalidHeaderValue),
-
-  #[error("DeepLynxApi::{0}")]
-  DeepLynxApiError(#[from] APIError),
 
   #[error("IO Error:: {0}")]
   IOError(#[from] std::io::Error),
@@ -81,66 +71,13 @@ pub enum TSError {
 
   #[error("Infallible Error")]
   Infallible(#[from] Infallible),
+
+  #[error("Napi Error")]
+  NapiError(#[from] napi::Error),
 }
 
-impl TSError {
-  pub fn to_response(&self, request: Request) -> Response {
-    let error_string = format!("{:?}", &self);
-    Response {
-      report_id: request.report_id,
-      is_error: true,
-      value: Value::from(error_string),
-    }
+impl From<TSError> for napi::Error {
+  fn from(ts_err: TSError) -> Self {
+    Error::from_reason(ts_err.to_string())
   }
-}
-
-// todo:rhetorical: Is there anyway to handle ANY other error without knowing it in advance?
-// todo: see Error(String)
-
-#[derive(Error, Debug)]
-pub enum APIError {
-  #[error("reqwest: {0}")]
-  Reqwest(#[from] reqwest::Error),
-
-  #[error("io error")]
-  IO(#[from] io::Error),
-
-  #[error("join error")]
-  Join(#[from] JoinError),
-
-  #[error("JSON Parsing Error")]
-  Json(#[from] serde_json::Error),
-
-  #[error("Env Variable Error")]
-  Var(#[from] VarError),
-
-  #[error("WebGL loading error")]
-  WebGL,
-
-  #[error("Invalid Header Value")]
-  InvalidHeaderValue(#[from] InvalidHeaderValue),
-
-  #[error("create: resource already exists")]
-  ResourceAlreadyExists,
-
-  #[error("create: resource does not exist")]
-  ResourceDoesNotExist,
-
-  #[error("Unauthorized Access")]
-  Unauthorized,
-
-  #[error("Deep Lynx Error")]
-  DeepLynxError,
-
-  #[error("Invalid Path Error")]
-  InvalidPath,
-
-  #[error("Could not find integer in parse")]
-  ParseIntError(#[from] ParseIntError), // std::convert::From<ParseIntError>
-
-  #[error("error: {0}")]
-  Error(String),
-
-  #[error("error: {0}")]
-  Str(&'static str),
 }

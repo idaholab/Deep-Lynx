@@ -19,8 +19,6 @@ pub enum DeepLynxError {
   RedisLoader(#[from] RedisLoaderError),
   #[error("timeseries 2 error {0}")]
   TimeSeries2(#[from] timeseries2::error::TSError),
-  #[error("timeseries 2 api error {0}")]
-  TimeSeries2API(#[from] timeseries2::error::APIError),
 }
 
 impl From<DeepLynxError> for napi::Error {
