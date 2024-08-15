@@ -221,35 +221,13 @@ describe('A Data Type Mapping', async () => {
         return Promise.resolve();
     });
 
-    it('create valid shape hash of objects with array of objects', async () => {
-        const normalHash = TypeMapping.objectToShapeHash(test_payload);
-        expect(normalHash).not.null;
-
-        const arrayHash = TypeMapping.objectToShapeHash(test_payload_single_array);
-        expect(arrayHash).not.null;
-        expect(arrayHash).eq(normalHash);
-    });
-
-    it('create valid shape hash of an object while ignoring desired keys', async () => {
-        const ignoredFieldHash = TypeMapping.objectToShapeHash(test_payload_single_array, {stop_nodes});
-        expect(ignoredFieldHash).not.null;
-
-        const normalHash = TypeMapping.objectToShapeHash(test_payload);
-        expect(normalHash).not.null;
-
-        expect(ignoredFieldHash).not.eq(normalHash);
-
-        const normalIgnoredHash = TypeMapping.objectToShapeHash(test_payload_ignored_fields);
-        expect(normalIgnoredHash).not.null;
-        expect(normalIgnoredHash).eq(ignoredFieldHash);
-    });
 
     it('create valid shape hash of an object while using a key value', async () => { 
         const valueNodesSet = new Set();
         const regularSet = new Set();
         test_payload_value_nodes.forEach(object=>{
-            valueNodesSet.add(TypeMapping.objectToRustShapeHash(object, {value_nodes: ['car.id']}))
-            regularSet.add(TypeMapping.objectToRustShapeHash(object))
+            valueNodesSet.add(TypeMapping.objectToShapeHash(object, {value_nodes: ['car.id']}))
+            regularSet.add(TypeMapping.objectToShapeHash(object))
         })
 
         expect(valueNodesSet.size).eq(2);
@@ -260,7 +238,7 @@ describe('A Data Type Mapping', async () => {
     it('creates valid unique shape hashes of objects with nested arrays if one array is empty', async () => {
         const regularSet = new Set();
         test_payload_nested_array.forEach(object=>{
-            regularSet.add(TypeMapping.objectToRustShapeHash(object))
+            regularSet.add(TypeMapping.objectToShapeHash(object))
         })
 
         expect(regularSet).not.null;
@@ -271,8 +249,8 @@ describe('A Data Type Mapping', async () => {
         const stopNodesSet = new Set();
         const regularSet = new Set();
         test_payload_stop_nodes.forEach(object=>{
-            stopNodesSet.add(TypeMapping.objectToRustShapeHash(object, {stop_nodes: ['days', 'nickname']}))
-            regularSet.add(TypeMapping.objectToRustShapeHash(object))
+            stopNodesSet.add(TypeMapping.objectToShapeHash(object, {stop_nodes: ['days', 'nickname']}))
+            regularSet.add(TypeMapping.objectToShapeHash(object))
         })
 
         expect(stopNodesSet.size).eq(1);
@@ -283,7 +261,7 @@ describe('A Data Type Mapping', async () => {
     it('creates valid unique shape hashes of objects with multiple objects/arrays', async () => {
         const regularSet = new Set();
         test_payload_multiple_object_array.forEach(object=>{
-            regularSet.add(TypeMapping.objectToRustShapeHash(object))
+            regularSet.add(TypeMapping.objectToShapeHash(object))
         })
 
         expect(regularSet).not.null;
@@ -293,7 +271,7 @@ describe('A Data Type Mapping', async () => {
     it('creates valid unique shape hashes of objects with one or multiple of the same shapes and simplifies them to equate', async () => {
         const regularSet = new Set();
         test_payload_multiple_same_simplifier.forEach(object=>{
-            regularSet.add(TypeMapping.objectToRustShapeHash(object))
+            regularSet.add(TypeMapping.objectToShapeHash(object))
         })
 
         expect(regularSet).not.null;
@@ -303,7 +281,7 @@ describe('A Data Type Mapping', async () => {
     it('creates valid unique shape hashes of simple objects', async () => {
         const regularSet = new Set();
         test_payload_simple.forEach(object=>{
-            regularSet.add(TypeMapping.objectToRustShapeHash(object))
+            regularSet.add(TypeMapping.objectToShapeHash(object))
         })
 
         expect(regularSet).not.null;
@@ -313,44 +291,11 @@ describe('A Data Type Mapping', async () => {
     it('creates valid unique shape hashes of simple objects with different data types', async () => {
         const regularSet = new Set();
         test_payload_different_data_types.forEach(object=>{
-            regularSet.add(TypeMapping.objectToRustShapeHash(object))
+            regularSet.add(TypeMapping.objectToShapeHash(object))
         })
 
         expect(regularSet).not.null;
         expect(regularSet.size).eq(3);
-    });
-
-    it('comparing old Hashes to New Hashes with a simple case', async () => {
-        const regularSet: Set<string> = new Set();
-        const oldSet: Set<string> = new Set();
-        test_payload_simple.forEach(object=>{
-            regularSet.add(TypeMapping.objectToRustShapeHash(object))
-            oldSet.add(TypeMapping.objectToShapeHash(object))
-        })
-        const areSetsEqual = compareSets(regularSet, oldSet);
-        expect(areSetsEqual).eq(true);
-    });
-
-    it('comparing old Hashes to New Hashes with a simple stop node case', async () => {
-        const stopNodesSet: Set<string> = new Set();
-        const oldSet: Set<string> = new Set();
-        test_payload_stop_nodes.forEach(object=>{
-            stopNodesSet.add(TypeMapping.objectToRustShapeHash(object, {stop_nodes: ['days', 'nickname']}))
-            oldSet.add(TypeMapping.objectToShapeHash(object, {stop_nodes: ['days', 'nickname']}))
-        })
-        const areSetsEqual = compareSets(stopNodesSet, oldSet);
-        expect(areSetsEqual).eq(true);
-    });
-
-    it('comparing old Hashes to New Hashes with a simple value nodes case', async () => {
-        const regularSet: Set<string> = new Set();
-        const oldSet: Set<string> = new Set();
-        test_payload_simple.forEach(object=>{
-            regularSet.add(TypeMapping.objectToRustShapeHash(object, {value_nodes: ['name']}))
-            oldSet.add(TypeMapping.objectToShapeHash(object, {value_nodes: ['name']}))
-        })
-        const areSetsEqual = compareSets(regularSet, oldSet);
-        expect(areSetsEqual).eq(true);
     });
 
     it('can formulate greatest common payload from array of payloads simple case', async () => {

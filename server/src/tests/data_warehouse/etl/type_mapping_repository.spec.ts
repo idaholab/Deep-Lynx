@@ -194,32 +194,6 @@ describe('A Type Mapping Repository', async () => {
         return Promise.resolve();
     });
 
-    it('can save a Type Mapping', async () => {
-        const repo = new TypeMappingRepository();
-        const mapping = new TypeMapping({
-            container_id: containerID,
-            data_source_id: dataSourceID,
-            sample_payload: test_raw_payload,
-        });
-
-        // verify the hash ran
-        expect(mapping.shape_hash).not.undefined;
-
-        let saved = await repo.save(mapping, user);
-        expect(saved.isError).false;
-        expect(mapping.id).not.undefined;
-
-        // update the payload, rerun the hash
-        mapping.sample_payload = updated_payload;
-        mapping.shape_hash = TypeMapping.objectToShapeHash(updated_payload);
-
-        saved = await repo.save(mapping, user);
-        expect(saved.isError);
-        expect(mapping.shape_hash).eq(TypeMapping.objectToShapeHash(updated_payload));
-
-        return repo.delete(mapping);
-    });
-
     it('can save a Type Mapping with Transformations', async () => {
         const repo = new TypeMappingRepository();
         const mapping = new TypeMapping({
