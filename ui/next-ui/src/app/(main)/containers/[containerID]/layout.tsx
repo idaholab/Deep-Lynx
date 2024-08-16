@@ -5,20 +5,23 @@ import Wireframe from "@/app/_components/wireframe";
 
 // Providers
 import ContainerProvider from "@/lib/context/ContainerProvider";
+import DataSourceProvider from "@/lib/context/DataSourceProvider";
 
 export default function RootLayout({
-    children,
+  children,
 }: Readonly<{
-    children: React.ReactNode;
+  children: React.ReactNode;
 }>) {
-    /**
-     * This layout is presented after the user has selected a container,
-     * and as such, wraps the UX in the container context,
-     * and the wireframe (sidebar and navbar)
-     */
-    return (
-        <ContainerProvider>
-            <Wireframe>{children}</Wireframe>
-        </ContainerProvider>
-    );
+  /**
+   * This layout is presented after the user has selected a container,
+   * and as such, wraps the UX in the application's contexts,
+   * and the wireframe (sidebar and navbar)
+   */
+  return (
+    <ContainerProvider>
+      <DataSourceProvider>
+        <Wireframe>{children}</Wireframe>
+      </DataSourceProvider>
+    </ContainerProvider>
+  );
 }

@@ -27,16 +27,14 @@ const ContainerSelect = () => {
   const storeDispatch = useAppDispatch();
 
   // Hooks
-  const [containers, setContainers] = useState<ContainerT[]>(
-    [] as ContainerT[]
-  );
+  const [containers, setContainers] = useState<Array<ContainerT>>([]);
   const [selectedContainer, setSelectedContainer] = useState<string>("");
 
   const router = useRouter();
 
   useEffect(() => {
     async function fetchContainers() {
-      let containers = await fetch("/api/containers/").then((response) => {
+      let containers = await fetch("/api/containers").then((response) => {
         return response.json();
       });
 
@@ -48,7 +46,7 @@ const ContainerSelect = () => {
 
   useEffect(() => {
     // When the user selects a container, dispatch that container's metadata to the Redux store, and navigate to the dashboard
-    if (containers && selectedContainer) {
+    if (selectedContainer) {
       const selection: ContainerT = containers.find(
         (item: ContainerT) => item.name === selectedContainer
       )!;

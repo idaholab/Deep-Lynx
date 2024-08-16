@@ -39,7 +39,7 @@ const ModelViewer = () => {
   const container: ContainerT = useContainer();
 
   // Hooks
-  const [tab, setTab] = useState<string>("");
+  const [tab, setTab] = useState<string>("create");
   const [expand, setExpand] = useState<boolean>(false);
 
   // Handlers
