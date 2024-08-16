@@ -54,6 +54,13 @@ export default class NodeFunctions {
                         .join('files', {origin_col: 'file_id', destination_col: 'id'}, {origin: 'node_files'})
                         .and().query('file_name', 'like', `%.${req.query.fileExtension}`, {tableName: 'files'});
                 }
+            } else if (typeof req.query.fileExtension !== 'undefined' && (req.query.fileExtension as string) !== '') {
+                // add the linking table join even if fileAttached is not added as a param
+                repo = repo
+                    .join('node_files', {origin_col: 'id', destination_col: 'node_id'})
+                    .and().query('file_id', 'is not null', undefined, {tableName: 'node_files'})
+                    .join('files', {origin_col: 'file_id', destination_col: 'id'}, {origin: 'node_files'})
+                    .and().query('file_name', 'like', `%.${req.query.fileExtension}`, {tableName: 'files'});
             }
 
             if (req.query.count !== undefined && String(req.query.count).toLowerCase() === 'true') {
