@@ -22,16 +22,16 @@ export interface LegacyTimeseriesColumn {
 }
 export declare function inferLegacySchema(csv: Buffer): Array<LegacyTimeseriesColumn>
 export interface Request {
-  reportId: string
-  queryId: string
+  report_id: string
+  query_id: string
   query: string
-  deeplynxResponseUrl: string
-  uploadPath: string
+  deeplynx_response_url: string
+  upload_path: string
   files: Array<FilePathMetadata>
   token: string
-  dataSourceId: string
-  azureMetadata?: AzureMetadata
-  toJson?: boolean
+  data_source_id: string
+  azure_metadata?: AzureMetadata
+  to_json?: boolean
 }
 export const enum StoreType {
   Minio = 0,

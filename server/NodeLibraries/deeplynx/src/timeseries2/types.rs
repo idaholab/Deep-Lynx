@@ -20,15 +20,22 @@ use url::Url;
 #[napi(object)]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Request {
+  #[napi(js_name = "report_id")]
   pub report_id: String,
+  #[napi(js_name = "query_id")]
   pub query_id: String,
   pub query: String,
+  #[napi(js_name = "deeplynx_response_url")]
   pub deeplynx_response_url: String,
+  #[napi(js_name = "upload_path")]
   pub upload_path: String,
   pub files: Vec<FilePathMetadata>,
   pub token: String,
+  #[napi(js_name = "data_source_id")]
   pub data_source_id: String,
+  #[napi(js_name = "azure_metadata")]
   pub azure_metadata: Option<AzureMetadata>,
+  #[napi(js_name = "to_json")]
   pub to_json: Option<bool>, // change to mimetype or format or something?
 }
 
