@@ -51,13 +51,14 @@ export default class TypeMappingRepository extends Repository implements Reposit
         if (t.id) {
             // checking if the mapping is a grouped mapping
             if (t.shape_hash === null) {
+                // collect old mappings ids used for group
                 const oldGroupedIDs = await this.#mapper.GetGroupHashID(t.id);
+                // iterates over each old id used in the grouping, copys the transformations from the grouped mapping to the old mappings before deleting the grouped mapping
                 for (const oldMapping of oldGroupedIDs.value) {
                     if (oldMapping.id){
                         await this.#mapper.CopyTransformations(user.id!, t.id, oldMapping.id)
                     }
                 }
-                return this.#mapper.Delete(t.id);
             }
             return this.#mapper.Delete(t.id);
         }
@@ -110,7 +111,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
         const commonMapping: TypeMapping = new TypeMapping({
             container_id: containerIdValue,
             data_source_id: dataSourceIdValue,
-            shape_hash: null, // Explicitly setting shape_hash as null
+            shape_hash: null, // Explicitly setting shape_hash as null, since grouped mappings account for various hashes
             sample_payload: greatestCommonPayload,
         });
 
