@@ -42,6 +42,20 @@ export default class NodeFunctions {
                     .addFields({data: 'raw_data_properties'}, repo._aliasMap.get('data_staging'));
             }
 
+            if (String(req.query.fileAttached).toLowerCase() === 'true') {
+                // join to node files and return only nodes with files attached
+                repo = repo
+                    .join('node_files', {origin_col: 'id', destination_col: 'node_id'})
+                    .and().query('file_id', 'is not null', undefined, {tableName: 'node_files'});
+
+                // search for a specific file extension
+                if (typeof req.query.fileExtension !== 'undefined' && (req.query.fileExtension as string) !== '') {
+                    repo = repo
+                        .join('files', {origin_col: 'file_id', destination_col: 'id'}, {origin: 'node_files'})
+                        .and().query('file_name', 'like', `%.${req.query.fileExtension}`, {tableName: 'files'});
+                }
+            }
+
             if (req.query.count !== undefined && String(req.query.count).toLowerCase() === 'true') {
                 repo.count(undefined, {
                     limit: req.query.limit ? +req.query.limit : undefined,
