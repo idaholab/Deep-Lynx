@@ -4061,6 +4061,7 @@ paths:
                     - 999
                     - 1000
       description: Group type mappings together.
+  '/containers/{container_id}/import/datasources/{data_source_id}/mappings/{mapping_id}':
     get:
       tags:
         - Data Type Mappings
