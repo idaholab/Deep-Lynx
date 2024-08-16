@@ -4061,13 +4061,6 @@ paths:
                     - 999
                     - 1000
       description: Group type mappings together.
-      summary: Ungroup Type Mappings
-      operationId: delete-containers-container_id-import-datasources-data_source_id-mappings-group
-      responses:
-        '200':
-          description: OK
-      description: Ungroup type mappings.
-  '/containers/{container_id}/import/datasources/{data_source_id}/mappings/{mapping_id}':
     get:
       tags:
         - Data Type Mappings
