@@ -1,7 +1,7 @@
 "use client";
 
 // Components
-import Wireframe from "@/app/_components/wireframe";
+import Wireframe from "@/app/_wireframe/wireframe";
 
 // Providers
 import ContainerProvider from "@/lib/context/ContainerProvider";

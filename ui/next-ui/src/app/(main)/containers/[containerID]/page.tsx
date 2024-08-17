@@ -8,11 +8,11 @@ import { Typography } from "@mui/material";
 
 const ContainerDashboard = () => {
   // This hook initiates API calls that bring in container data from DeepLynx
-  useContainer();
+  const container = useContainer();
 
   return (
     <>
-      <Typography variant="h2">Welcome to the container dashboard!</Typography>
+      <Typography variant="h2">{container.name} Dashboard</Typography>
     </>
   );
 };

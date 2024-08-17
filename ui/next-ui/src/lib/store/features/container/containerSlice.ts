@@ -11,12 +11,14 @@ import { ContainerT, DataSourceT } from "@/lib/types";
 interface ContainerStateI {
   container: ContainerT | null;
   dataSources: Array<DataSourceT> | null;
+  dataSource: DataSourceT | null;
 }
 
 // Define the initial state using that type
 const initialState: ContainerStateI = {
   container: null,
   dataSources: null,
+  dataSource: null,
 };
 
 export const containerSlice = createSlice({
@@ -29,6 +31,9 @@ export const containerSlice = createSlice({
     },
     setDataSources: (state, action: PayloadAction<Array<DataSourceT>>) => {
       state.dataSources = action.payload;
+    },
+    setDataSource: (state, action: PayloadAction<DataSourceT>) => {
+      state.dataSource = action.payload;
     },
   },
 });
