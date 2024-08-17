@@ -29,11 +29,18 @@ import translations from "@/lib/translations";
 // Axios
 import axios from "axios";
 
+// Components
+import CreateNode from "@/app/(main)/containers/[containerID]/dashboard/components/data-viewer/createNode";
+
 const Nodes = () => {
   // Hooks
   const container = useContainer();
 
-  return <></>;
+  return (
+    <>
+      <CreateNode />
+    </>
+  );
 };
 
 export default Nodes;
