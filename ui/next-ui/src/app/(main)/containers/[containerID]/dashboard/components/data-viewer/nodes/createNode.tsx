@@ -38,6 +38,11 @@ const CreateNode = () => {
     }
   }, [metatypes]);
 
+  // Handlers
+  const handleClass = (event: any, value: string) => {
+    console.log(value);
+  };
+
   return (
     <>
       <Grid>
@@ -56,6 +61,7 @@ const CreateNode = () => {
             options={options.sort()} // Sort the options alphabetically
             groupBy={(option) => option[0]} // Group the options by their first character
             renderInput={(params) => <TextField {...params} label="Class" />}
+            onChange={(event, value) => handleClass(event, value!)}
           />
         ) : null}
       </Grid>
