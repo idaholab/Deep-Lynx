@@ -12,7 +12,9 @@ const ContainerDashboard = () => {
 
   return (
     <>
-      <Typography variant="h2">{container.name} Dashboard</Typography>
+      {container ? (
+        <Typography variant="h2">{container.name} Dashboard</Typography>
+      ) : null}
     </>
   );
 };
