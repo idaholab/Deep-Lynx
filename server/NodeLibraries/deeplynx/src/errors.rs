@@ -1,4 +1,4 @@
-use crate::{redis_graph::redis_errors::RedisLoaderError, timeseries2};
+use crate::redis_graph::redis_errors::RedisLoaderError;
 use napi::Error;
 use std::io;
 use thiserror::Error;
@@ -17,8 +17,6 @@ pub enum DeepLynxError {
   Yaml(#[from] serde_yaml::Error),
   #[error("redis loader error {0}")]
   RedisLoader(#[from] RedisLoaderError),
-  #[error("timeseries 2 error {0}")]
-  TimeSeries2(#[from] timeseries2::error::TSError),
 }
 
 impl From<DeepLynxError> for napi::Error {

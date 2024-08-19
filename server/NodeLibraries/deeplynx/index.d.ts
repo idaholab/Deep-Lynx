@@ -21,28 +21,17 @@ export interface LegacyTimeseriesColumn {
   date_conversion_format_string?: string
 }
 export declare function inferLegacySchema(csv: Buffer): Array<LegacyTimeseriesColumn>
-export interface Request {
-  report_id: string
-  query_id: string
-  query: string
-  deeplynx_response_url: string
-  upload_path: string
-  files: Array<FilePathMetadata>
-  token: string
-  data_source_id: string
-  azure_metadata?: AzureMetadata
-  to_json?: boolean
-}
-export const enum StoreType {
-  Minio = 0,
-  AzureBlob = 1,
-  FileSystem = 2,
-  Void = 3
-}
+export declare function processQuery(req: TS2Request): Promise<string>
 export interface FilePathMetadata {
   id: string
+  adapter: Adapter
+  dataSourceId?: string
+  fileName: string
   adapterFilePath: string
-  adapter: StoreType
+}
+export const enum Adapter {
+  AzureBlob = 0,
+  FileSystem = 1
 }
 export interface AzureMetadata {
   accountName: string
@@ -50,7 +39,6 @@ export interface AzureMetadata {
   containerName: string
   sasToken: string
 }
-export declare function processQuery(req: Request): Promise<string>
 export type JsRedisGraphLoader = RedisGraphLoader
 export declare class RedisGraphLoader {
   constructor()
@@ -111,4 +99,18 @@ export declare class BucketRepository {
    * ingestion and can also be used to check for errors during the operation
    */
   completeIngestion(): Promise<void>
+}
+export type TS2Request = Ts2Request
+export declare class Ts2Request {
+  report_id: string
+  query_id: string
+  query: string
+  deeplynx_response_url: string
+  upload_path: string
+  files: Array<FilePathMetadata>
+  token: string
+  data_source_id: string
+  azure_metadata?: AzureMetadata
+  to_json?: boolean
+  constructor(report_id: string, query_id: string, query: string, deeplynx_response_url: string, upload_path: string, files: Array<FilePathMetadata>, token: string, data_source_id: string, azure_metadata?: AzureMetadata, to_json?: boolean)
 }
