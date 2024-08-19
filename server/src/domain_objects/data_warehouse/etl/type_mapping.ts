@@ -30,7 +30,8 @@ export default class TypeMapping extends BaseDomainClass {
     active = false;
 
     @IsString()
-    shape_hash?: string;
+    @IsOptional()
+    shape_hash?: string | null;
 
     @Type(() => TypeTransformation)
     transformations: TypeTransformation[] | undefined;

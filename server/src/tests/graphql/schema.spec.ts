@@ -465,7 +465,7 @@ describe('The GraphQL Schema Generator', async function () {
                 data_source_id: dataSourceID,
                 import_id: newImport.value.id!,
                 data: test_payload[0],
-                shape_hash: typeMapping.shape_hash,
+                shape_hash: typeMapping.shape_hash!,
             }),
         );
         expect(inserted.isError).false;

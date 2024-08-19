@@ -124,8 +124,8 @@ export default class TypeMappingMapper extends Mapper {
         return super.runAsTransaction(this.copyTransformations(userID, sourceMappingID, targetMappingID));
     }
 
-    public GroupShapeHashes(oldTypeMappingIDs: string [], groupedTypeMappingID: string, shapeHashes: string[]):  Promise<Result<boolean>> {
-        return super.runAsTransaction(...this.groupShapeHashesStatement(oldTypeMappingIDs, groupedTypeMappingID, ...shapeHashes));
+    public GroupShapeHashes(oldTypeMappingIDs: string, groupedTypeMappingID: string, shapeHashes: string):  Promise<Result<boolean>> {
+        return super.runAsTransaction(...this.groupShapeHashesStatement(oldTypeMappingIDs, groupedTypeMappingID, shapeHashes));
     }
 
     public async CheckGroupHashID(oldTypeMappingIDs: string []): Promise<Result<boolean>> {  // Go back and change this to boolean instead of TypeMapping LOL
@@ -138,6 +138,10 @@ export default class TypeMappingMapper extends Mapper {
 
     public async GetTransformations(groupedSubsetTypeMappingID: string[]): Promise<Result<TypeTransformation[]>> {
         return super.rows<TypeTransformation>(this.listTransformationsByIdsStatement(groupedSubsetTypeMappingID));
+    }
+
+    public UpdateGroupedShapeHashes(oldTypeMappingIDs: string, groupedTypeMappingID: string):  Promise<Result<boolean>> {
+        return super.runAsTransaction(...this.updateGroupedShapeHashesStatement(oldTypeMappingIDs, groupedTypeMappingID));
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -387,7 +391,9 @@ export default class TypeMappingMapper extends Mapper {
         return format(text, values);
     }
 
-    private groupShapeHashesStatement(typeMappingIDs: string [], groupedTypeMappingID: string, ...shapeHashes: string[]): QueryConfig[] {
+    // Creates the newly grouped mapping and inserts the old mappings used into the hash groupings table
+    // This is used when a brand new grouped mapping is created from mappings that have not yet been grouped (ungrouped mappings)
+    private groupShapeHashesStatement(oldTypeMappingID: string, groupedTypeMappingID: string, shapeHashes: string): QueryConfig[] {
         // setting newly created mapping shape hash to NULL
         const updateStatemnt = { 
             text: `UPDATE type_mappings SET shape_hash = NULL WHERE id = $1`,
@@ -395,12 +401,12 @@ export default class TypeMappingMapper extends Mapper {
         };
 
         // inserting mappings used in grouping into hash_groupings table
-        const insertStatements = typeMappingIDs.map((oldTypeMappingID, index) => ({
+        const insertStatements = {
             text: `INSERT INTO hash_groupings(hash_grouping_id, type_mapping_id, shape_hash) VALUES (CAST($1 AS BIGINT), CAST($2 AS BIGINT), $3)`,
-            values: [oldTypeMappingID, groupedTypeMappingID, shapeHashes[index]],
-        }));
+            values: [oldTypeMappingID, groupedTypeMappingID, shapeHashes],
+        };
         
-        return [updateStatemnt, ...insertStatements];
+        return [updateStatemnt, insertStatements];
     }
 
     // checking if a mapping exists as part of a Grouped Mapping (via ID)
@@ -435,6 +441,24 @@ export default class TypeMappingMapper extends Mapper {
         const values = typeMappingIDs;
 
         return format(text, values);
+    }
+
+    // Creates the newly grouped mapping and updates the mapping references in the hash grouping table
+    // This is used when you are adding a single mapping to a grouped mapping
+    private updateGroupedShapeHashesStatement(oldTypeMappingID: string, groupedTypeMappingID: string): QueryConfig[] {
+        // setting newly created mapping shape hash to NULL
+        const updateStatemnt = { 
+            text: `UPDATE type_mappings SET shape_hash = NULL WHERE id = $1`,
+            values: [groupedTypeMappingID],
+        };
+
+        // updating mappings used in old grouping in hash_groupings table
+        const insertStatements = {
+            text: `UPDATE hash_groupings SET type_mapping_id = $1 WHERE type_mapping_id = $2`, //map
+            values: [groupedTypeMappingID, oldTypeMappingID],  
+        };
+        
+        return [updateStatemnt, insertStatements];
     }
 
 }

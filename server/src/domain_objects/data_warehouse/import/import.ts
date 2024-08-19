@@ -128,14 +128,14 @@ export class DataStaging extends NakedDomainClass {
     data_source_config?: StandardDataSourceConfig | HttpDataSourceConfig | AvevaDataSourceConfig | P6DataSourceConfig | CustomDataSourceConfig =
         new StandardDataSourceConfig();
 
-    constructor(input: {data_source_id: string; import_id: string; data: any; shape_hash?: string; container_id?: string; file_attached?: boolean}) {
+    constructor(input: {data_source_id: string; import_id: string; data: any; shape_hash?: string | null; container_id?: string; file_attached?: boolean}) {
         super();
 
         if (input) {
             this.data_source_id = input.data_source_id;
             this.import_id = input.import_id;
             this.data = input.data;
-            if (input.shape_hash) this.shape_hash = input.shape_hash;
+            if (input.shape_hash) this.shape_hash = input.shape_hash!;
             if (input.container_id) this.container_id = input.container_id;
             if (input.file_attached) this.file_attached = input.file_attached;
         }

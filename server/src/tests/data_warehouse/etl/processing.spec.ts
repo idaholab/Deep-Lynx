@@ -390,7 +390,7 @@ describe('A Data Processor', async () => {
                 data_source_id: exp.value.id!,
                 import_id: newImport.value.id!,
                 data: test_payload[0],
-                shape_hash: mapping.shape_hash,
+                shape_hash: mapping.shape_hash!,
             }),
         );
         expect(insertedResult.isError).false;

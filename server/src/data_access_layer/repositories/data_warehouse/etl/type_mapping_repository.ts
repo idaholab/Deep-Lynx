@@ -141,7 +141,18 @@ export default class TypeMappingRepository extends Repository implements Reposit
         // get array of shape hashes
         const arrayShapeHashes = mappings.value.map((m) => m.shape_hash!);
 
-        return this.#mapper.GroupShapeHashes(typeMappingIDs, result.value.id!, arrayShapeHashes);
+        // iterates over the ids passed by the user, checks if it is already a grouped mapping or an ungrouped mapping and groups them accordingly
+        typeMappingIDs.map((oldTypeMappingID, index) => {
+            if (arrayShapeHashes[index] === null) {
+                this.#mapper.UpdateGroupedShapeHashes(oldTypeMappingID, result.value.id!);
+                this.#mapper.Delete(oldTypeMappingID);
+            }
+            else {
+                this.#mapper.GroupShapeHashes(oldTypeMappingID, result.value.id!, arrayShapeHashes[index]);
+            }
+        });
+
+        return Promise.resolve(Result.Success(true));
     }
 
     // shape hashes are unique only to data sources, so it will need both to find one
