@@ -13,7 +13,7 @@ import { useContainer } from "@/lib/context/ContainerProvider";
 // Types
 import { DataSourceT } from "../types";
 
-let DataSourcesContext = createContext<Array<DataSourceT>>([]);
+let DataSourcesContext = createContext<DataSourceT>({} as DataSourceT);
 
 export default function DataSourceProvider({
   children,
@@ -24,6 +24,9 @@ export default function DataSourceProvider({
 
   // Store
   const storeDispatch = useAppDispatch();
+  const selectedDataSource: DataSourceT = useAppSelector(
+    (state) => state.container.dataSource!
+  );
   const dataSources: Array<DataSourceT> = useAppSelector(
     (state) => state.container.dataSources!
   );
@@ -49,14 +52,14 @@ export default function DataSourceProvider({
   }, [container.id, storeDispatch, dataSources]);
 
   // Context
-  DataSourcesContext = createContext(dataSources);
+  DataSourcesContext = createContext(selectedDataSource);
 
   return (
-    <DataSourcesContext.Provider value={dataSources}>
+    <DataSourcesContext.Provider value={selectedDataSource}>
       {children}
     </DataSourcesContext.Provider>
   );
 }
 
 // Custom hook to use the DataSourceContext
-export const useDatasources = () => useContext(DataSourcesContext);
+export const useDatasource = () => useContext(DataSourcesContext);

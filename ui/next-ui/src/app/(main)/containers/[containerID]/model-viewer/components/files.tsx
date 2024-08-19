@@ -5,7 +5,7 @@ import { SyntheticEvent, useEffect, useState } from "react";
 import { useContainer } from "@/lib/context/ContainerProvider";
 
 // Types
-import { NodeT, FileT, PropertyT } from "@/lib/types";
+import { NodeT, FileT } from "@/lib/types";
 import { SelectChangeEvent } from "@mui/material";
 
 // MUI
@@ -14,7 +14,6 @@ import {
   Button,
   InputLabel,
   FormControl,
-  Grid,
   Input,
   MenuItem,
   Select,

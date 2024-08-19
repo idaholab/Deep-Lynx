@@ -30,7 +30,7 @@ import translations from "@/lib/translations";
 import axios from "axios";
 
 // Components
-import CreateNode from "@/app/(main)/containers/[containerID]/dashboard/components/data-viewer/createNode";
+import CreateNode from "@/app/(main)/containers/[containerID]/dashboard/components/data-viewer/nodes/createNode";
 
 const Nodes = () => {
   // Hooks

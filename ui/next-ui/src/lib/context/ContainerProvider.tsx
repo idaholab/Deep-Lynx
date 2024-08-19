@@ -47,7 +47,9 @@ export default function ContainerProvider({
 
   return (
     <ContainerContext.Provider value={container}>
-      {children}
+      <MetatypeContext.Provider value={metatypes}>
+        {children}
+      </MetatypeContext.Provider>
     </ContainerContext.Provider>
   );
 }

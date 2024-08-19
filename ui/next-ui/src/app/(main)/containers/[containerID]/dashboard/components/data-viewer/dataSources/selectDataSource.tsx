@@ -1,10 +1,5 @@
 "use client";
 
-// Hooks
-import { useState } from "react";
-import { useContainer } from "@/lib/context/ContainerProvider";
-import { useDatasources } from "@/lib/context/DataSourceProvider";
-
 // MUI
 import {
   Box,
@@ -51,12 +46,13 @@ const DataSourceSelector = () => {
     <>
       <FormControl sx={{ width: "15%" }}>
         <Select
-          labelId="DataSource Select"
+          labelId="Data Source Select"
           id="_wireframe/components/datasources.tsx"
           value={dataSource ? dataSource.id : ""}
           onChange={handleDataSource}
           size="small"
           sx={{
+            color: "black",
             backgroundColor: "white",
           }}
         >
