@@ -40,9 +40,9 @@ const DataSourceSelector = () => {
 
   // Handlers
   const handleDataSource = (event: SelectChangeEvent) => {
-    const selectedDataSource = dataSources.find((datasource) => {
-      datasource.id === event.target.value;
-    })!;
+    const selectedDataSource = dataSources.find(
+      (ds) => ds.id == event.target.value
+    )!;
 
     storeDispatch(containerActions.setDataSource(selectedDataSource));
   };
@@ -53,27 +53,24 @@ const DataSourceSelector = () => {
         <Select
           labelId="DataSource Select"
           id="_wireframe/components/datasources.tsx"
-          value={dataSource?.id}
+          value={dataSource ? dataSource.id : ""}
           onChange={handleDataSource}
           size="small"
+          sx={{
+            backgroundColor: "white",
+          }}
         >
-          {dataSources.map((ds: DataSourceT) => {
-            return (
-              <MenuItem
-                key={ds.id}
-                value={ds.id}
-                sx={{ display: "flex", flexDirection: "row" }}
-              >
-                <Typography variant="caption" sx={{ color: "grey" }}>
-                  ID: {ds.id}
-                </Typography>
-                <Box flexGrow={1} />
-                <Typography variant="caption" sx={{ color: "grey" }}>
-                  {ds.name}
-                </Typography>
-              </MenuItem>
-            );
-          })}
+          {dataSources
+            ? dataSources.map((ds: DataSourceT) => {
+                return (
+                  <MenuItem key={ds.id} value={ds.id}>
+                    <Typography variant="caption" sx={{ color: "grey" }}>
+                      {ds.id} {ds.name}
+                    </Typography>
+                  </MenuItem>
+                );
+              })
+            : null}
         </Select>
       </FormControl>
     </>

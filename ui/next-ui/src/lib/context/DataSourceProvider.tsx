@@ -46,7 +46,7 @@ export default function DataSourceProvider({
     if (!dataSources) {
       fetchDataSources();
     }
-  }, []);
+  }, [container.id, storeDispatch, dataSources]);
 
   // Context
   DataSourcesContext = createContext(dataSources);

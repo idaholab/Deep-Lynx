@@ -19,9 +19,9 @@ export default function RootLayout({
    */
   return (
     <ContainerProvider>
-      <DataSourceProvider>
-        <Wireframe>{children}</Wireframe>
-      </DataSourceProvider>
+      <Wireframe>
+        <DataSourceProvider>{children}</DataSourceProvider>
+      </Wireframe>
     </ContainerProvider>
   );
 }
