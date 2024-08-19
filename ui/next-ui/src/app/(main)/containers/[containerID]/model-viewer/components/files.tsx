@@ -5,7 +5,7 @@ import { SyntheticEvent, useEffect, useState } from "react";
 import { useContainer } from "@/lib/context/ContainerProvider";
 
 // Types
-import { NodeT, FileT } from "@/lib/types";
+import { NodeT, FileT, PropertyT } from "@/lib/types";
 import { SelectChangeEvent } from "@mui/material";
 
 // MUI
@@ -124,7 +124,7 @@ const Files = () => {
                   </Typography>
                   <Box flexGrow={1} />
                   <Typography variant="subtitle1">
-                    {JSON.stringify(node.properties.name)}
+                    {JSON.stringify(node.properties)}
                   </Typography>
                 </MenuItem>
               );

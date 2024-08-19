@@ -43,7 +43,7 @@ export default function ContainerProvider({
     if (container && !metatypes) {
       fetchMetatypes();
     }
-  }, [container]);
+  }, [container, metatypes, storeDispatch]);
 
   return (
     <ContainerContext.Provider value={container}>

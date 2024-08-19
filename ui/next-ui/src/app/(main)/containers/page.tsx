@@ -53,7 +53,7 @@ const ContainerSelect = () => {
       storeDispatch(containerActions.setContainer(selection));
       router.push(`/containers/${selection.id}`);
     }
-  }, [selectedContainer]);
+  }, [containers, selectedContainer, router, storeDispatch]);
 
   // Handlers
   const handleContainer = (event: SelectChangeEvent) => {
