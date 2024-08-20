@@ -39,9 +39,7 @@ const CreateNode = () => {
   }, [metatypes]);
 
   // Handlers
-  const handleClass = (event: any, value: string) => {
-    console.log(value);
-  };
+  const handleClass = (event: any, value: string) => {};
 
   return (
     <>
