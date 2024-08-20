@@ -1,5 +1,5 @@
 import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
-import ReportQuery, { TS2InitialRequest, TS2Request } from '../../../../domain_objects/data_warehouse/data/report_query';
+import ReportQuery, { TS2InitialRequest } from '../../../../domain_objects/data_warehouse/data/report_query';
 import Result from '../../../../common_classes/result';
 import ReportQueryMapper from '../../../mappers/data_warehouse/data/report_query_mapper';
 import {PoolClient} from 'pg';
@@ -14,6 +14,7 @@ import ReportRepository from './report_repository';
 import Config from '../../../../services/config';
 import BlobStorageProvider from '../../../../services/blob_storage/blob_storage';
 import AzureBlobImpl from '../../../../services/blob_storage/azure_blob_impl';
+import { processQuery, TS2Request } from 'deeplynx';
 
 /*
     ReportQueryRepository contains methods for persisting and retrieving report
@@ -129,7 +130,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
                 return Promise.resolve(Result.Failure(`query must include the table name(s): "${errorFiles.join('", "')}"`));
             }
         }
-        
+
         // if any files are azure_blob, this requires some extra metadata
         let azureMetadata: AzureMetadata | undefined;
         if (files.some(f => f.adapter === 'azure_blob')) {
@@ -168,8 +169,9 @@ export default class ReportQueryRepository extends Repository implements Reposit
             to_json: false
         });
 
-        // TODO: send to napi
-        
+        const queryResult = await processQuery(queryRequest);
+        console.log(queryRequest);
+
         // set report and query statuses to "processing"
         const statusMsg = `executing query ${queryID}: "${reportQuery.query}" as part of report ${reportID}`;
         let statusSet = await this.#reportRepo.setStatus(reportID, 'processing', statusMsg);

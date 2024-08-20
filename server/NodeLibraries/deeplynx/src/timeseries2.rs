@@ -7,7 +7,7 @@ use object_store::azure::MicrosoftAzureBuilder;
 use regex::Regex;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::Body;
-use serde_json::{json, Value};
+use serde_json::{json, Map, Value};
 use std::env;
 use std::path::Path;
 use std::sync::Arc;
@@ -197,33 +197,15 @@ pub async fn process_query(req: &TS2Request) -> napi::Result<String> {
       );
     }
 
-    let file_name = match res_body["value"].as_array() {
-      Some(v) => match v[0]["value"].as_object() {
-        Some(v2) => v2["file_name"].to_owned(),
-        None => json!("error"),
-      },
-      None => json!("error"),
-    };
+    let file_name = json_or_error_value(res_body, "file_name");
+    let adapter_file_path = json_or_error_value(res_body, "adapter_file_path");
+    let adapter = json_or_error_value(res_body, "adapter");
     let file_size = match res_body["value"].as_array() {
       Some(v) => match v[0]["value"].as_object() {
         Some(v2) => v2["file_size"].to_owned(),
         None => json!(-1),
       },
       None => json!(-1),
-    };
-    let adapter_file_path = match res_body["value"].as_array() {
-      Some(v) => match v[0]["value"].as_object() {
-        Some(v2) => v2["adapter_file_path"].to_owned(),
-        None => json!("error"),
-      },
-      None => json!("error"),
-    };
-    let adapter = match res_body["value"].as_array() {
-      Some(v) => match v[0]["value"].as_object() {
-        Some(v2) => v2["adapter"].to_owned(),
-        None => json!("error"),
-      },
-      None => json!("error"),
     };
 
     // ensure none of the above are errors
@@ -325,8 +307,15 @@ fn file_to_body(file: File) -> Body {
   Body::wrap_stream(stream)
 }
 
-fn json_or_error_value() {
-  todo!()
+/// returns an error if reading any json fails along the way
+fn json_or_error_value(body: &Map<String, Value>, field: &str) -> Value {
+  match body["value"].as_array() {
+    Some(v) => match v[0]["value"].as_object() {
+      Some(v2) => v2[field].to_owned(),
+      None => json!("error"),
+    },
+    None => json!("error"),
+  }
 }
 
 #[napi(constructor)]
@@ -348,7 +337,7 @@ pub struct TS2Request {
   #[napi(js_name = "azure_metadata")]
   pub azure_metadata: Option<AzureMetadata>,
   #[napi(js_name = "to_json")]
-  pub to_json: Option<bool>, // change to mimetype or format or something?
+  pub to_json: Option<bool>,
 }
 
 impl TS2Request {
