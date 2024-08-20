@@ -3,6 +3,7 @@
 // Hooks
 import { SyntheticEvent, useEffect, useState } from "react";
 import { useContainer } from "@/lib/context/ContainerProvider";
+import { useRouter } from "next/navigation";
 
 // Types
 import { NodeT, FileT } from "@/lib/types";
@@ -32,6 +33,10 @@ import StartIcon from "@mui/icons-material/Start";
 // Translations
 import translations from "@/lib/translations";
 
+// Store
+import { useAppDispatch } from "@/lib/store/hooks";
+import { modelViewerActions } from "@/lib/store/features/model-viewer/modelViewerSlice";
+
 // Filetypes
 import { supportedFiletypes } from "../supportedFileTypes";
 
@@ -47,6 +52,8 @@ const Files = () => {
   const [selectedFile, setSelectedFile] = useState<FileT>({ id: "" } as FileT);
   const fileToggle = useState<boolean>(false);
   const container = useContainer();
+  const router = useRouter();
+  const storeDispatch = useAppDispatch();
 
   useEffect(() => {
     async function fetchNodes() {
@@ -87,6 +94,10 @@ const Files = () => {
   };
   const handleFile = (event: SelectChangeEvent) => {
     setSelectedFile(files.find((file) => file.id === event.target.value)!);
+  };
+  const handleVisualize = () => {
+    storeDispatch(modelViewerActions.setFile(selectedFile));
+    router.push(`/containers/${container.id}/model-viewer/${selectedFile.id}`);
   };
   const handleTab = (event: React.SyntheticEvent, tab: string) => {
     setSelectedFile({ id: "" } as FileT);
@@ -203,7 +214,7 @@ const Files = () => {
                     onClick={() => handlePixyz}
                     startIcon={<CloudSyncIcon />}
                   >
-                    Processing Model
+                    Process Model
                   </Button>
                 </Box>
               ) : null}
@@ -247,7 +258,12 @@ const Files = () => {
               <br />
               {selectedFile.id ? (
                 <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-                  <Button startIcon={<ViewInArIcon />}>Visualize Model</Button>
+                  <Button
+                    startIcon={<ViewInArIcon />}
+                    onClick={handleVisualize}
+                  >
+                    Visualize Model
+                  </Button>
                 </Box>
               ) : null}
             </>

@@ -5,6 +5,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import { containerReducer } from "./features/container/containerSlice";
 import { themeReducer } from "./features/themeSlice";
 import { ontologyReducer } from "./features/ontology/ontologySlice";
+import { modelViewerReducer } from "./features/model-viewer/modelViewerSlice";
 
 export const makeStore = () => {
   return configureStore({
@@ -12,6 +13,7 @@ export const makeStore = () => {
       container: containerReducer,
       theme: themeReducer,
       ontology: ontologyReducer,
+      modelViewer: modelViewerReducer,
     },
   });
 };
