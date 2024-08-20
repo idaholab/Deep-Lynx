@@ -27,11 +27,12 @@ export const GET = async (req: NextRequest, res: NextResponse) => {
         FILE_ID: fileId,
         API_KEY: process.env.API_KEY,
         API_SECRET: process.env.API_SECRET,
-        // Add ssh_conn_id
+        ssh_conn_id: "pixyz_ssh",
+        create_graph: true,
       },
     })
     .then((response) => {
-      return response.data.value;
+      return response.data;
     })
     .catch((error) => {
       return error;

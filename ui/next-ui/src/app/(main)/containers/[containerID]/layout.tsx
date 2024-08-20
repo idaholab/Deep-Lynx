@@ -5,7 +5,6 @@ import Wireframe from "@/app/_wireframe/wireframe";
 
 // Providers
 import ContainerProvider from "@/lib/context/ContainerProvider";
-import DataSourceProvider from "@/lib/context/DataSourceProvider";
 
 export default function RootLayout({
   children,
@@ -19,9 +18,7 @@ export default function RootLayout({
    */
   return (
     <ContainerProvider>
-      <Wireframe>
-        <DataSourceProvider>{children}</DataSourceProvider>
-      </Wireframe>
+      <Wireframe>{children}</Wireframe>
     </ContainerProvider>
   );
 }

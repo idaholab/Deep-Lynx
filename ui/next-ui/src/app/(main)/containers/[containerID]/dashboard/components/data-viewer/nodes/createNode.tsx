@@ -2,8 +2,6 @@
 
 // Hooks
 import { SyntheticEvent, useEffect, useState } from "react";
-import { useContainer, useMetatypes } from "@/lib/context/ContainerProvider";
-import { useDatasource } from "@/lib/context/DataSourceProvider";
 
 // Types
 import { NodeT, FileT, MetatypeKeyT, MetatypeT } from "@/lib/types";
@@ -24,9 +22,8 @@ import DataSourceSelector from "../dataSources/selectDataSource";
 const CreateNode = () => {
   // Hooks
   let [options, setOptions] = useState<Array<string> | null>();
-  const container = useContainer();
-  const dataSource = useDatasource();
-  const metatypes = useMetatypes();
+  const dataSource = useAppSelector((state) => state.container.dataSource);
+  const metatypes = useAppSelector((state) => state.ontology.metatypes);
 
   useEffect(() => {
     if (metatypes) {
@@ -44,13 +41,8 @@ const CreateNode = () => {
   return (
     <>
       <Grid>
-        {!dataSource ? (
-          <DataSourceSelector />
-        ) : (
-          <Typography variant="subtitle1">
-            DataSource: {dataSource.name}
-          </Typography>
-        )}
+        <DataSourceSelector />
+        <br />
         <br />
         {dataSource && options ? (
           <Autocomplete

@@ -35,9 +35,6 @@ import { supportedFiletypes } from "./supportedFileTypes";
 import Nodes from "./components/nodes";
 
 const ModelViewer = () => {
-  // Store
-  const container: ContainerT = useContainer();
-
   // Hooks
   const [tab, setTab] = useState<string>("create");
   const [expand, setExpand] = useState<boolean>(false);

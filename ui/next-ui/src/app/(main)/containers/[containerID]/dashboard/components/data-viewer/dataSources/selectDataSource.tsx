@@ -44,13 +44,12 @@ const DataSourceSelector = () => {
 
   return (
     <>
-      <FormControl sx={{ width: "15%" }}>
+      <FormControl sx={{ width: "100%" }}>
         <Select
           labelId="Data Source Select"
           id="_wireframe/components/datasources.tsx"
           value={dataSource ? dataSource.id : ""}
           onChange={handleDataSource}
-          size="small"
           sx={{
             color: "black",
             backgroundColor: "white",
@@ -61,8 +60,10 @@ const DataSourceSelector = () => {
                 return (
                   <MenuItem key={ds.id} value={ds.id}>
                     <Typography variant="caption" sx={{ color: "grey" }}>
-                      {ds.id} {ds.name}
+                      ID: {ds.id}
                     </Typography>
+                    <Box flexGrow={1} />
+                    <Typography variant="subtitle1">{ds.name}</Typography>
                   </MenuItem>
                 );
               })

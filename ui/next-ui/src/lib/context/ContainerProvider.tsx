@@ -6,9 +6,10 @@ import { createContext, useContext, useEffect } from "react";
 // Store
 import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
 import { ontologyActions } from "@/lib/store/features/ontology/ontologySlice";
+import { containerActions } from "../store/features/container/containerSlice";
 
 // Types
-import { ContainerT, MetatypeT } from "../types";
+import { ContainerT, DataSourceT, MetatypeT } from "../types";
 
 let ContainerContext = createContext<ContainerT>({} as ContainerT);
 let MetatypeContext = createContext<Array<MetatypeT>>([]);
@@ -21,6 +22,9 @@ export default function ContainerProvider({
   // Store
   const container: ContainerT = useAppSelector(
     (state) => state.container.container!
+  );
+  const dataSources: Array<DataSourceT> = useAppSelector(
+    (state) => state.container.dataSources!
   );
   const metatypes: Array<MetatypeT> = useAppSelector(
     (state) => state.ontology.metatypes!
@@ -45,15 +49,31 @@ export default function ContainerProvider({
     }
   }, [container, metatypes, storeDispatch]);
 
+  useEffect(() => {
+    async function fetchDataSources() {
+      let dataSources = await fetch(
+        `/api/containers/${container.id}/import/datasources`,
+        {
+          method: "GET",
+        }
+      ).then((response) => {
+        return response.json();
+      });
+
+      storeDispatch(containerActions.setDataSources(dataSources));
+    }
+
+    if (!dataSources) {
+      fetchDataSources();
+    }
+  }, [container.id, storeDispatch, dataSources]);
+
   return (
     <ContainerContext.Provider value={container}>
-      <MetatypeContext.Provider value={metatypes}>
-        {children}
-      </MetatypeContext.Provider>
+      {children}
     </ContainerContext.Provider>
   );
 }
 
 // Custom hook to use the context
 export const useContainer = () => useContext(ContainerContext);
-export const useMetatypes = () => useContext(MetatypeContext);

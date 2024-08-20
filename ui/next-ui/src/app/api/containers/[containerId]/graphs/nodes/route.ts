@@ -7,24 +7,32 @@ const base = process.env.DEEPLYNX_URL!;
 const token = process.env.TOKEN!;
 
 export const GET = async (
-    req: NextRequest,
-    { params }: { params: { containerId: string } }
+  req: NextRequest,
+  { params }: { params: { containerId: string } }
 ) => {
-    const { containerId } = params;
-    const url = new URL(`containers/${containerId}/graphs/nodes`, base);
+  const { searchParams } = new URL(req.url);
 
-    let response = await axios
-        .get(`${url}`, {
-            headers: {
-                Authorization: `bearer ${token}`,
-            },
-        })
-        .then((response) => {
-            return response.data.value;
-        })
-        .catch((error) => {
-            return error;
-        });
+  const { containerId } = params;
+  const dataSourceId = searchParams.get("dataSourceId");
 
-    return NextResponse.json(response);
+  const url = new URL(`containers/${containerId}/graphs/nodes`, base);
+
+  let response = await axios
+    .get(`${url}`, {
+      params: {
+        dataSourceID: dataSourceId,
+        fileAttached: true,
+      },
+      headers: {
+        Authorization: `bearer ${token}`,
+      },
+    })
+    .then((response) => {
+      return response.data.value;
+    })
+    .catch((error) => {
+      return error;
+    });
+
+  return NextResponse.json(response);
 };

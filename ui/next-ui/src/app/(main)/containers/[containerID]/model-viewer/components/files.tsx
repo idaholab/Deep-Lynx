@@ -6,7 +6,7 @@ import { useContainer } from "@/lib/context/ContainerProvider";
 import { useRouter } from "next/navigation";
 
 // Types
-import { NodeT, FileT } from "@/lib/types";
+import { NodeT, FileT, DataSourceT } from "@/lib/types";
 import { SelectChangeEvent } from "@mui/material";
 
 // MUI
@@ -34,7 +34,7 @@ import StartIcon from "@mui/icons-material/Start";
 import translations from "@/lib/translations";
 
 // Store
-import { useAppDispatch } from "@/lib/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
 import { modelViewerActions } from "@/lib/store/features/model-viewer/modelViewerSlice";
 
 // Filetypes
@@ -42,6 +42,7 @@ import { supportedFiletypes } from "../supportedFileTypes";
 
 // Axios
 import axios from "axios";
+import DataSourceSelector from "../../dashboard/components/data-viewer/dataSources/selectDataSource";
 
 const Files = () => {
   // Hooks
@@ -53,23 +54,29 @@ const Files = () => {
   const fileToggle = useState<boolean>(false);
   const container = useContainer();
   const router = useRouter();
+
+  const dataSource = useAppSelector((state) => state.container.dataSource!);
   const storeDispatch = useAppDispatch();
 
   useEffect(() => {
     async function fetchNodes() {
-      let nodes = await fetch(
-        `/api/containers/${container.id}/graphs/nodes`
-      ).then((response) => {
-        return response.json();
-      });
+      let nodes = await axios
+        .get(`/api/containers/${container.id}/graphs/nodes`, {
+          params: {
+            dataSourceId: dataSource.id!,
+          },
+        })
+        .then((response) => {
+          return response.data;
+        });
 
       setNodes(nodes);
     }
 
-    if (container?.id) {
+    if (container?.id && dataSource) {
       fetchNodes();
     }
-  }, [container.id]);
+  }, [container.id, dataSource]);
 
   useEffect(() => {
     async function fetchFiles() {
@@ -116,6 +123,9 @@ const Files = () => {
 
   return (
     <>
+      <DataSourceSelector />
+      <br />
+      <br />
       {nodes ? (
         <FormControl fullWidth>
           <InputLabel id="Node Select">Nodes</InputLabel>
@@ -210,10 +220,7 @@ const Files = () => {
               <br />
               {selectedFile.id ? (
                 <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-                  <Button
-                    onClick={() => handlePixyz}
-                    startIcon={<CloudSyncIcon />}
-                  >
+                  <Button onClick={handlePixyz} startIcon={<CloudSyncIcon />}>
                     Process Model
                   </Button>
                 </Box>

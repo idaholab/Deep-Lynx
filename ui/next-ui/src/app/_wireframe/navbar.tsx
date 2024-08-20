@@ -31,7 +31,6 @@ export default function Navbar(props: PropsT) {
             <MenuIcon />
           </Button>
           <Box flexGrow={1} />
-          <DataSourceSelector />
           <DarkModeToggle />
         </Toolbar>
       </AppBar>
