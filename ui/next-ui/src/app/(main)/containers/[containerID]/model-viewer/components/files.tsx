@@ -4,9 +4,10 @@
 import { SyntheticEvent, useEffect, useState } from "react";
 import { useContainer } from "@/lib/context/ContainerProvider";
 import { useRouter } from "next/navigation";
+import useSWRSubscription from "swr/subscription";
 
 // Types
-import { NodeT, FileT, DataSourceT } from "@/lib/types";
+import { NodeT, FileT, DataSourceT, DagT } from "@/lib/types";
 import { SelectChangeEvent } from "@mui/material";
 
 // MUI
@@ -111,14 +112,21 @@ const Files = () => {
     setTab(tab);
   };
   const handlePixyz = async (event: SyntheticEvent) => {
-    await axios.get("/api/pythagoras", {
-      params: {
-        containerId: container.id,
-        dataSourceId: selectedNode!.data_source_id,
-        nodeId: selectedNode!.id,
-        fileId: selectedFile!.id,
-      },
-    });
+    await axios
+      .get("/api/pythagoras", {
+        params: {
+          containerId: container.id,
+          dataSourceId: dataSource.id,
+          dataSourceName: dataSource.name,
+          nodeId: selectedNode.id,
+          fileId: selectedFile.id,
+          fileName: selectedFile.file_name,
+        },
+      })
+      .then((response) => {
+        let dag: DagT = response.data;
+        storeDispatch(modelViewerActions.setDag(dag));
+      });
   };
 
   return (

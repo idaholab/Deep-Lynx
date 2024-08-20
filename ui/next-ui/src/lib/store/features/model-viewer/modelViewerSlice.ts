@@ -5,16 +5,18 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "@/lib/store/store";
 
 // Types
-import { FileT } from "@/lib/types";
+import { DagT, FileT } from "@/lib/types";
 
 // Define a type for the slice state
 interface ModelViewerStateI {
   file: FileT | null;
+  dag: DagT | null;
 }
 
 // Define the initial state using that type
 const initialState: ModelViewerStateI = {
   file: null,
+  dag: null,
 };
 
 export const modelViewerSlice = createSlice({
@@ -24,6 +26,9 @@ export const modelViewerSlice = createSlice({
     // Use the PayloadAction type to declare the contents of `action.payload`
     setFile: (state, action: PayloadAction<FileT>) => {
       state.file = action.payload;
+    },
+    setDag: (state, action: PayloadAction<DagT>) => {
+      state.dag = action.payload;
     },
   },
 });
