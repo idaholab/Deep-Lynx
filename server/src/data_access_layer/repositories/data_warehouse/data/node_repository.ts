@@ -535,12 +535,12 @@ export default class NodeRepository extends Repository implements RepositoryInte
     reset() {
         super.reset(this.useView ? NodeMapper.viewName : NodeMapper.tableName);
         if (!this.useView) {
-            this.distinctOn('id')
+            this.distinctOn(['original_data_id', 'data_source_id', 'metatype_id'])
                 .addFields({name: 'metatype_name', uuid: 'metatype_uuid'}, 'm')
                 .join('metatypes', {origin_col: 'metatype_id', destination_col: 'id'}, {destination_alias: 'm'})
                 .where()
                 .query('deleted_at', 'is null')
-                .sortBy('id')
+                .sortBy(['original_data_id', 'data_source_id', 'metatype_id'])
                 .sortBy('created_at', undefined, true);
 
             // combine all select-fields into one string in case of COUNT(*) replacement

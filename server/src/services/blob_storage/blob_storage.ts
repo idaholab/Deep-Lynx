@@ -49,6 +49,9 @@ export default function BlobStorageProvider(adapterName?: string): BlobStorage |
             return new Filesystem(Config.filesystem_storage_directory, Config.is_windows);
         }
 
+        // NOTE: largeobject is kept here only for backwards compatibility 
+        // with existing files that may be stored using largeobject. Going 
+        // forward it should be considered deprecated and should not be used.
         case 'largeobject': {
             return new LargeObjectImpl();
         }

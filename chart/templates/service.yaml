@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: deeplynx-ingress
+  labels:
+    {{- include "deeplynx.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: 80
+      targetPort: {{ .Values.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    # must match a label associated with the pod
+    # labels can be found with "kubectl get pods --show-labels"
+    app.kubernetes.io/name: deeplynx
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: deeplynx-redis
+spec:
+  ports:
+    - name: "6379"
+      port: 6379
+      targetPort: 6379
+    - name: "8001"
+      port: 80
+      targetPort: 8001
+  selector:
+    app.kubernetes.io/name: redis
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: deeplynx-postgres
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app.kubernetes.io/name: postgresql
