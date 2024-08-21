@@ -15,6 +15,13 @@ use tokio::fs::{remove_file, File};
 use tokio_util::codec::{BytesCodec, FramedRead};
 use url::Url;
 
+pub mod azure_metadata;
+pub mod file_path_metadata;
+pub mod time_series_query;
+use azure_metadata::AzureMetadata;
+use file_path_metadata::FilePathMetadata;
+use time_series_query::TimeSeriesQuery;
+
 // If regular (non-describe) query:
 //   - Upload query results as csv to large object storage
 //     - `results_upload_path` shows path in blob storage to upload to
@@ -24,19 +31,49 @@ use url::Url;
 // If describe query:
 //   - POST describe results (JSON format) to deeplynx_response_url endpoint. These can just be in a json body, no need to put them in a file unless that's easier
 #[napi]
-pub async fn process_query(req: &TS2Request) -> napi::Result<String> {
-  if req.files.is_empty() {
+pub async fn process_query(req: &TimeSeriesQuery) -> napi::Result<String> {
+  let report_id = req
+    .report_id
+    .as_ref()
+    .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null report_id")))?;
+  let query = req
+    .query
+    .as_ref()
+    .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null query")))?;
+  let deeplynx_response_url = req.deeplynx_response_url.as_ref().ok_or_else(|| {
+    napi::Error::from_reason(String::from("Request has a null deeplynx_response_url"))
+  })?;
+  let upload_path = req
+    .upload_path
+    .as_ref()
+    .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null upload_path")))?;
+  let files = req
+    .files
+    .as_ref()
+    .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null file list")))?;
+  let token = req
+    .token
+    .as_ref()
+    .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null token")))?;
+  let data_source_id = req
+    .data_source_id
+    .as_ref()
+    .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null data_source_id")))?;
+  let azure_metadata = req
+    .azure_metadata
+    .as_ref()
+    .ok_or_else(|| napi::Error::from_reason(String::from("Request has null azure_metadata")))?;
+
+  if files.is_empty() {
     return Err(napi::Error::from_reason("Request has empty file list"));
   };
-
-  // todo: validate response_url with url crate: https://docs.rs/url/
 
   let client = reqwest::Client::new();
   let server = env::var("DL_SERVER").expect("DL_SERVER must be set.");
   let mut headers = HeaderMap::new();
   headers.insert(
     "Authorization",
-    format!("Bearer {}", req.token)
+    format!("Bearer {}", token)
       .parse::<HeaderValue>()
       .map_err(|e| napi::Error::from_reason(e.to_string()))?,
   );
@@ -44,8 +81,11 @@ pub async fn process_query(req: &TS2Request) -> napi::Result<String> {
   let session_config = SessionConfig::new().with_information_schema(true);
   let ctx = SessionContext::new_with_config(session_config);
 
-  match req.files[0].adapter {
-    Adapter::AzureBlob => {
+  let adapter = files[0].adapter.as_ref().ok_or_else(|| {
+    napi::Error::from_reason(String::from("Request's first file has a null adapter"))
+  })?;
+  match adapter.as_str() {
+    "azure_blob" => {
       let table_path =
         ListingTableUrl::parse("https://gvadedeeplynxdevsa.blob.core.usgovcloudapi.net/")
           .map_err(|e| napi::Error::from_reason(e.to_string()))?;
@@ -60,10 +100,16 @@ pub async fn process_query(req: &TS2Request) -> napi::Result<String> {
       let store = Arc::new(microsoft_azure);
       ctx.runtime_env().register_object_store(url, store.clone());
     }
-    Adapter::FileSystem => (), // does datafusion need to have local filesystem set?
+    "filesystem" => (), // does datafusion need to have local filesystem set?
+    _ => {
+      return Err(napi::Error::from_reason(format!(
+        "Unimplemented adapter type: {}",
+        adapter
+      )))?;
+    }
   }
 
-  let table_info = extract_table_info(&req.files).unwrap();
+  let table_info = extract_table_info(files).unwrap();
   let first_table = table_info[0].name.clone();
   for table in table_info {
     match table.file_type {
@@ -90,7 +136,7 @@ pub async fn process_query(req: &TS2Request) -> napi::Result<String> {
     }
   }
 
-  let mut sql_query = req.query.clone();
+  let mut sql_query = query.clone();
   let is_describe = sql_query.trim().to_uppercase().starts_with("DESCRIBE");
 
   // send both to req.deeplynx_response_url
@@ -117,7 +163,7 @@ pub async fn process_query(req: &TS2Request) -> napi::Result<String> {
     let json_payload =
       serde_json::to_value(json_rows).map_err(|e| napi::Error::from_reason(e.to_string()))?;
     if client
-      .post(req.deeplynx_response_url.clone())
+      .post(deeplynx_response_url.clone())
       .json(&json_payload)
       .send()
       .await
@@ -145,7 +191,7 @@ pub async fn process_query(req: &TS2Request) -> napi::Result<String> {
     let filepath = format!(
       "{}/{}_{}.csv",
       local_storage,
-      req.report_id,
+      report_id,
       now.timestamp_millis()
     );
     query_results
@@ -155,7 +201,9 @@ pub async fn process_query(req: &TS2Request) -> napi::Result<String> {
 
     let res_file = File::open(&filepath).await?;
 
-    let upload_url = format!("{}/{}", server, req.upload_path);
+    let upload_url = format!("{}/{}", server, upload_path);
+
+    // todo: need to put the azure metadata in here somewhere
     let response = client
       .post(upload_url)
       .headers(headers)
@@ -190,7 +238,7 @@ pub async fn process_query(req: &TS2Request) -> napi::Result<String> {
     {
       return Ok(
         json!({
-          "report_id": req.report_id,
+          "report_id": report_id,
           "isError": true,
         })
         .to_string(),
@@ -221,7 +269,7 @@ pub async fn process_query(req: &TS2Request) -> napi::Result<String> {
     };
     Ok(
       json!({
-        "report_id": req.report_id,
+        "report_id": report_id,
         "isError": is_error,
         "file_name": file_name,
         "file_size": file_size,
@@ -237,30 +285,42 @@ pub async fn process_query(req: &TS2Request) -> napi::Result<String> {
 fn extract_table_info(files: &Vec<FilePathMetadata>) -> Result<Vec<TableMetadata>, String> {
   let mut table_info = Vec::new();
   for file in files {
+    let file_id = file
+      .id
+      .as_ref()
+      .ok_or("file_id can technically be null but should never be null.")?;
+    let file_name = file
+      .file_name
+      .as_ref()
+      .ok_or("file_id can technically be null but should never be null.")?;
+    let adapter_file_path = file
+      .adapter_file_path
+      .as_ref()
+      .ok_or("file_id can technically be null but should never be null.")?;
     lazy_static! {
       static ref RE_VALID_TABLE_NAME: Regex = regex::Regex::new(r"[a-zA-Z_][a-zA-Z_0-9]*")
         .expect("RE_VALID_TABLE_NAME static regex is incorrect");
     }
-    if !RE_VALID_TABLE_NAME.is_match(file.file_name.as_str()) {
+    if !RE_VALID_TABLE_NAME.is_match(file_name.as_str()) {
       return Err(format!(
         "File Path Metadata contained an invalid table name from id: {}",
-        file.id
+        file_id
       ));
     }
 
-    let ext_plus_uuid = Path::new(file.adapter_file_path.as_str())
+    let ext_plus_uuid = Path::new(adapter_file_path.as_str())
       .extension()
       .ok_or_else(|| {
         format!(
           "File Path Metadata has no valid file extension from id: {}",
-          file.id
+          file_id
         )
       })?;
     let ext = match ext_plus_uuid.to_str() {
       None => {
         return Err(format!(
           "File Path Metadata has no valid file extension from id: {}",
-          file.id
+          file_id
         ))?
       }
       Some(ex) => match ex {
@@ -269,33 +329,33 @@ fn extract_table_info(files: &Vec<FilePathMetadata>) -> Result<Vec<TableMetadata
         s if s.starts_with("parquet") => {
           return Err(format!(
             "Parquet file (id: {}). Parquet is currently unsupported for Timeseries2",
-            file.id
+            file_id
           ))
         }
         s if s.starts_with("hdf5") => {
           return Err(format!(
             "HDF5 file (id: {}). HDF5 is currently unsupported for Timeseries2",
-            file.id
+            file_id
           ))
         }
         s if s.starts_with("tdms") => {
           return Err(format!(
             "TDMS file (id: {}). TDMS is currently unsupported for Timeseries2",
-            file.id
+            file_id
           ))
         }
         _ => {
           return Err(format!(
             "File Path Metadata file extension was corrupted by the uuid from id: {}",
-            file.id
+            file_id
           ))
         }
       },
     };
 
     table_info.push(TableMetadata {
-      name: file.file_name.clone(),
-      adapter_file_path: file.adapter_file_path.clone(),
+      name: file_name.clone(),
+      adapter_file_path: adapter_file_path.clone(),
       file_type: ext,
     });
   }
@@ -316,63 +376,6 @@ fn json_or_error_value(body: &Map<String, Value>, field: &str) -> Value {
     },
     None => json!("error"),
   }
-}
-
-#[napi(constructor)]
-#[derive(Debug, Default, Clone)]
-pub struct TS2Request {
-  #[napi(js_name = "report_id")]
-  pub report_id: String,
-  #[napi(js_name = "query_id")]
-  pub query_id: String,
-  pub query: String,
-  #[napi(js_name = "deeplynx_response_url")]
-  pub deeplynx_response_url: String,
-  #[napi(js_name = "upload_path")]
-  pub upload_path: String,
-  pub files: Vec<FilePathMetadata>,
-  pub token: String,
-  #[napi(js_name = "data_source_id")]
-  pub data_source_id: String,
-  #[napi(js_name = "azure_metadata")]
-  pub azure_metadata: Option<AzureMetadata>,
-  #[napi(js_name = "to_json")]
-  pub to_json: Option<bool>,
-}
-
-impl TS2Request {
-  pub fn new() -> Self {
-    Self {
-      ..Default::default()
-    }
-  }
-}
-
-#[napi(object)]
-#[derive(Debug, Default, Clone)]
-pub struct FilePathMetadata {
-  pub id: String,
-  pub adapter: Adapter,
-  pub data_source_id: Option<String>,
-  pub file_name: String,
-  pub adapter_file_path: String,
-}
-
-#[napi]
-#[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Default)]
-pub enum Adapter {
-  AzureBlob,
-  #[default]
-  FileSystem,
-}
-
-#[napi(object)]
-#[derive(Debug, Default, Clone)]
-pub struct AzureMetadata {
-  pub account_name: String,
-  pub blob_endpoint: String,
-  pub container_name: String,
-  pub sas_token: String,
 }
 
 pub struct TableMetadata {

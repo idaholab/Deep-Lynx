@@ -14,7 +14,7 @@ import ReportRepository from './report_repository';
 import Config from '../../../../services/config';
 import BlobStorageProvider from '../../../../services/blob_storage/blob_storage';
 import AzureBlobImpl from '../../../../services/blob_storage/azure_blob_impl';
-import { processQuery, TS2Request } from 'deeplynx';
+import { processQuery, Ts2Request } from 'deeplynx';
 
 /*
     ReportQueryRepository contains methods for persisting and retrieving report
@@ -156,18 +156,18 @@ export default class ReportQueryRepository extends Repository implements Reposit
         }
 
         // formulate query request (this gets sent to NAPI)
-        const queryRequest = new TS2Request({
-            report_id: reportID,
-            query_id: queryID,
-            query: request.query!,
-            deeplynx_response_url: responseUrl,
-            upload_path: `containers/${containerID}/datasources/${files[0].data_source_id}`,
-            files: files,
-            token: token,
-            data_source_id: files[0].data_source_id!,
-            azure_metadata: azureMetadata,
-            to_json: false
-        });
+        const queryRequest = new Ts2Request(
+            reportID,
+            queryID,
+            request.query!,
+            responseUrl,
+            `containers/${containerID}/datasources/${files[0].data_source_id}`,
+            files,
+            token,
+            files[0].data_source_id!,
+            azureMetadata,
+            false
+        );
 
         const queryResult = await processQuery(queryRequest);
         console.log(queryRequest);

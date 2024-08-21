@@ -21,24 +21,20 @@ export interface LegacyTimeseriesColumn {
   date_conversion_format_string?: string
 }
 export declare function inferLegacySchema(csv: Buffer): Array<LegacyTimeseriesColumn>
-export declare function processQuery(req: TS2Request): Promise<string>
-export interface FilePathMetadata {
-  id: string
-  adapter: Adapter
-  dataSourceId?: string
-  fileName: string
-  adapterFilePath: string
-}
-export const enum Adapter {
-  AzureBlob = 0,
-  FileSystem = 1
-}
 export interface AzureMetadata {
-  accountName: string
-  blobEndpoint: string
-  containerName: string
-  sasToken: string
+  account_name?: string
+  blob_endpoint?: string
+  container_name?: string
+  sas_token?: string
 }
+export interface FilePathMetadata {
+  id?: string
+  adapter?: string
+  data_source_id?: string
+  file_name?: string
+  adapter_file_path?: string
+}
+export declare function processQuery(req: TimeSeriesQuery): Promise<string>
 export type JsRedisGraphLoader = RedisGraphLoader
 export declare class RedisGraphLoader {
   constructor()
@@ -100,17 +96,16 @@ export declare class BucketRepository {
    */
   completeIngestion(): Promise<void>
 }
-export type TS2Request = Ts2Request
-export declare class Ts2Request {
-  report_id: string
-  query_id: string
-  query: string
-  deeplynx_response_url: string
-  upload_path: string
-  files: Array<FilePathMetadata>
-  token: string
-  data_source_id: string
+export declare class TimeSeriesQuery {
+  report_id?: string
+  query_id?: string
+  query?: string
+  deeplynx_response_url?: string
+  upload_path?: string
+  files?: Array<FilePathMetadata>
+  token?: string
+  data_source_id?: string
   azure_metadata?: AzureMetadata
   to_json?: boolean
-  constructor(report_id: string, query_id: string, query: string, deeplynx_response_url: string, upload_path: string, files: Array<FilePathMetadata>, token: string, data_source_id: string, azure_metadata?: AzureMetadata, to_json?: boolean)
+  constructor(report_id?: string, query_id?: string, query?: string, deeplynx_response_url?: string, upload_path?: string, files?: Array<FilePathMetadata>, token?: string, data_source_id?: string, azure_metadata?: AzureMetadata, to_json?: boolean)
 }
