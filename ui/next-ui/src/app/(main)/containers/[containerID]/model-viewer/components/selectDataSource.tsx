@@ -4,7 +4,6 @@
 import {
   Box,
   FormControl,
-  InputLabel,
   MenuItem,
   Select,
   SelectChangeEvent,
@@ -17,10 +16,6 @@ import { containerActions } from "@/lib/store/features/container/containerSlice"
 
 // Types
 import { DataSourceT } from "@/lib/types";
-
-type DataSourceOptionT = DataSourceT & {
-  firstLetter: string;
-};
 
 const DataSourceSelector = () => {
   // Hooks

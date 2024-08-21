@@ -20,8 +20,7 @@ export const GET = async (
   let response = await axios
     .get(`${url}`, {
       params: {
-        dataSourceID: dataSourceId,
-        fileAttached: true,
+        dataSourceID: dataSourceId ? dataSourceId : null,
       },
       headers: {
         Authorization: `bearer ${token}`,

@@ -9,14 +9,14 @@ import { DagT, FileT } from "@/lib/types";
 
 // Define a type for the slice state
 interface ModelViewerStateI {
-  file: FileT | null;
-  dag: DagT | null;
+  file: FileT | undefined;
+  dag: DagT | undefined;
 }
 
 // Define the initial state using that type
 const initialState: ModelViewerStateI = {
-  file: null,
-  dag: null,
+  file: undefined,
+  dag: undefined,
 };
 
 export const modelViewerSlice = createSlice({

@@ -1,48 +1,26 @@
 "use client";
 
 // Hooks
-import { useEffect, useState } from "react";
-import { useContainer } from "@/lib/context/ContainerProvider";
+import { useState } from "react";
 
 // Components
-import Files from "./components/files";
+import ProcessFiles from "./workflows/ProcessFiles";
 
 // Types
-import { ContainerT, FileT, NodeT } from "@/lib/types";
-import { SelectChangeEvent, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
 
 // MUI
-import {
-  Box,
-  Button,
-  Divider,
-  Container,
-  Grid,
-  Input,
-  Tab,
-  Tabs,
-} from "@mui/material";
+import { Box, Button, Divider, Grid } from "@mui/material";
 
 // Icons
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 
-// Translations
-import translations from "@/lib/translations";
-
 // Filetypes
 import { supportedFiletypes } from "./supportedFileTypes";
-import Nodes from "./components/nodes";
 
 const ModelViewer = () => {
-  // Hooks
-  const [tab, setTab] = useState<string>("create");
   const [expand, setExpand] = useState<boolean>(false);
-
-  // Handlers
-  const handleTab = (event: React.SyntheticEvent, tab: string) => {
-    setTab(tab);
-  };
 
   const handleExpand = () => {
     setExpand(!expand);
@@ -103,15 +81,10 @@ const ModelViewer = () => {
               <br />
               <br />
             </Typography>
-            <Tabs value={tab} onChange={handleTab}>
-              <Tab label="Create Node" value={"create"}></Tab>
-              <Tab label="Select Node" value={"select"}></Tab>
-            </Tabs>
             <br />
             <Divider />
             <br />
-            {tab == "create" ? <Nodes /> : null}
-            {tab == "select" ? <Files /> : null}
+            <ProcessFiles />
           </Box>
         </Grid>
       </Grid>

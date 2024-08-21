@@ -7,7 +7,6 @@ import { AppBar, Box, Button, Toolbar } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 
 // Components
-import DataSourceSelector from "../(main)/containers/[containerID]/dashboard/components/data-viewer/dataSources/selectDataSource";
 import DarkModeToggle from "./dark-mode-toggle";
 
 // Styles

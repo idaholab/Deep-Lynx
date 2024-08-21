@@ -1,23 +1,19 @@
 "use client";
 
 // Hooks
-import { SyntheticEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 // Types
-import { NodeT, FileT, MetatypeKeyT, MetatypeT } from "@/lib/types";
-import { SelectChangeEvent, Typography } from "@mui/material";
+import { MetatypeT } from "@/lib/types";
 
 // MUI
 import { Autocomplete, Grid, TextField } from "@mui/material";
 
 // Store
-import { useAppSelector, useAppDispatch } from "@/lib/store/hooks";
-
-// Types
-import { DataSourceT } from "@/lib/types";
+import { useAppSelector } from "@/lib/store/hooks";
 
 // Components
-import DataSourceSelector from "../dataSources/selectDataSource";
+import DataSourceSelector from "./selectDataSource";
 
 const CreateNode = () => {
   // Hooks
@@ -36,7 +32,7 @@ const CreateNode = () => {
   }, [metatypes]);
 
   // Handlers
-  const handleClass = (event: any, value: string) => {};
+  const handleMetatype = (event: any, value: string) => {};
 
   return (
     <>
@@ -51,7 +47,7 @@ const CreateNode = () => {
             options={options.sort()} // Sort the options alphabetically
             groupBy={(option) => option[0]} // Group the options by their first character
             renderInput={(params) => <TextField {...params} label="Class" />}
-            onChange={(event, value) => handleClass(event, value!)}
+            onChange={(event, value) => handleMetatype(event, value!)}
           />
         ) : null}
       </Grid>
