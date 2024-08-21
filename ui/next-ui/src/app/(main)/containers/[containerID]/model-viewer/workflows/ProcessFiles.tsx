@@ -45,7 +45,7 @@ import DataSourceSelector from "../components/selectDataSource";
 const ProcessFiles = () => {
   // Component Hooks
   const [file, setFile] = useState<FileT | undefined>();
-  const [root, setRoot] = useState<NodeT | undefined>();
+  const [node, setNode] = useState<NodeT | undefined>();
   const [tab, setTab] = useState<string>("upload");
 
   // Redux Hooks
@@ -55,17 +55,17 @@ const ProcessFiles = () => {
   // DeepLynx Hooks
   const container = useContainer();
   const nodes = useNodes(dataSource);
-  const files = useFiles(root);
+  const files = useFiles(node);
 
   // Next Hooks
   const router = useRouter();
 
   // Handlers
   const handleNode = (event: SelectChangeEvent) => {
-    let root: NodeT = nodes!.find(
+    let node: NodeT = nodes!.find(
       (node: NodeT) => node.id === event.target.value
     )!;
-    setRoot(root);
+    setNode(node);
   };
   const handleFile = (event: SelectChangeEvent) => {
     setFile(files!.find((file: FileT) => file.id === event.target.value)!);
@@ -85,7 +85,7 @@ const ProcessFiles = () => {
           containerId: container.id,
           dataSourceId: dataSource.id,
           dataSourceName: dataSource.name,
-          nodeId: root!.id,
+          nodeId: node!.id,
           fileId: file!.id,
           fileName: file!.file_name,
         },
@@ -108,7 +108,7 @@ const ProcessFiles = () => {
             labelId="Node Select"
             id="/model-viewer/components/SelectFile/node"
             label="Nodes"
-            value={root ? root.id : ""}
+            value={node ? node.id : ""}
             onChange={handleNode}
           >
             {nodes.map((node: NodeT) => {
@@ -129,7 +129,7 @@ const ProcessFiles = () => {
       ) : null}
       <br />
       <br />
-      {root ? (
+      {node ? (
         <>
           <Typography variant="body2">
             Select a file action for files attached to this node
