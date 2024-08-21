@@ -9,7 +9,7 @@ defmodule DatumWeb.UserLoginLive do
         <:subtitle>
           Don't have an account?
           <.link navigate={~p"/users/register"} class="font-semibold text-brand hover:underline">
-            Sign up
+            <.translate text="Sign Up" />
           </.link>
           for an account now.
         </:subtitle>
