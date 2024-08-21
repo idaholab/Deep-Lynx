@@ -72,7 +72,7 @@ defmodule Datum.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
-      setup: ["deps.get", "ecto.setup", "assets.setup", "assets.build"],
+      setup: ["deps.get", "ecto.setup", "assets.setup", "assets.build", "sqlite.fetch"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
@@ -82,6 +82,10 @@ defmodule Datum.MixProject do
         "tailwind datum --minify",
         "esbuild datum --minify",
         "phx.digest"
+      ],
+      "sqlite.fetch": [
+        "cmd cd priv/sqlite_extensions && curl -L https://github.com/asg017/sqlite-vec/releases/download/v0.1.1/install.sh | sh",
+        "cmd cd priv/sqlite_extensions && sh install.sh"
       ]
     ]
   end
