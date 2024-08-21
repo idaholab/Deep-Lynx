@@ -31,11 +31,6 @@ msgstr ""
 msgid "Hang in there while we get back on track"
 msgstr ""
 
-#: lib/datum_web/live/user_login_live.ex:12
-#, elixir-autogen, elixir-format
-msgid "Sign up"
-msgstr ""
-
 #: lib/datum_web/components/core_components.ex:167
 #, elixir-autogen, elixir-format
 msgid "Something went wrong!"
@@ -55,4 +50,9 @@ msgstr ""
 #: lib/datum_web/components/core_components.ex:130
 #, elixir-autogen, elixir-format
 msgid "close"
+msgstr ""
+
+#: lib/datum_web/live/user_login_live.ex:12
+#, elixir-autogen, elixir-format
+msgid "Sign up"
 msgstr ""

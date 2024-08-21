@@ -546,12 +546,6 @@ defmodule DatumWeb.CoreComponents do
     """
   end
 
-  def translate(assigns) do
-    ~H"""
-    <%= Gettext.gettext(DatumWeb.Gettext, @text) %>
-    """
-  end
-
   @doc """
   Renders a back navigation link.
 
