@@ -2,11 +2,9 @@ defmodule Datum.Repo.Migrations.CreateUsersAuthTables do
   use Ecto.Migration
 
   def change do
-    execute "CREATE EXTENSION IF NOT EXISTS citext", ""
-
     create table(:users, primary_key: false) do
       add :id, :binary_id, primary_key: true
-      add :email, :citext, null: false
+      add :email, :citext, null: false, collate: :nocase
       add :hashed_password, :string, null: false
       add :confirmed_at, :utc_datetime
 

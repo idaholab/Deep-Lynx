@@ -2,13 +2,22 @@ import Config
 
 # Configure your database
 config :datum, Datum.Repo,
-  username: "postgres",
-  password: "postgres",
-  hostname: "localhost",
-  database: "datum_dev",
-  stacktrace: true,
-  show_sensitive_data_on_connection_error: true,
-  pool_size: 10
+  database: "./databases/operations",
+  journal_mode: :wal,
+  auto_vacuum: :incremental,
+  datetime_type: :iso8601,
+  load_extensions: [
+    "./priv/sqlite_extensions/crypto",
+    "./priv/sqlite_extensions/fileio",
+    "./priv/sqlite_extensions/fuzzy",
+    "./priv/sqlite_extensions/math",
+    "./priv/sqlite_extensions/stats",
+    "./priv/sqlite_extensions/text",
+    "./priv/sqlite_extensions/unicode",
+    "./priv/sqlite_extensions/uuid",
+    "./priv/sqlite_extensions/vec0",
+    "./priv/sqlite_extensions/vsv"
+  ]
 
 # For development, we disable any cache and enable
 # debugging and code reloading.
