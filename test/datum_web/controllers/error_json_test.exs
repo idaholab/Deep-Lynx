@@ -1,5 +1,5 @@
 defmodule DatumWeb.ErrorJSONTest do
-  use DatumWeb.ConnCase, async: true
+  use DatumWeb.ConnCase, async: false
 
   test "renders 404" do
     assert DatumWeb.ErrorJSON.render("404.json", %{}) == %{errors: %{detail: "Not Found"}}

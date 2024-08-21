@@ -1,5 +1,5 @@
 defmodule DatumWeb.UserSessionControllerTest do
-  use DatumWeb.ConnCase, async: true
+  use DatumWeb.ConnCase, async: false
 
   import Datum.AccountsFixtures
 

@@ -9,12 +9,23 @@ config :argon2_elixir, t_cost: 1, m_cost: 8
 # to provide built-in test partitioning in CI environment.
 # Run `mix help test` for more information.
 config :datum, Datum.Repo,
-  username: "postgres",
-  password: "postgres",
-  hostname: "localhost",
-  database: "datum_test#{System.get_env("MIX_TEST_PARTITION")}",
+  database: "./databases/operations_test",
+  journal_mode: :wal,
+  auto_vacuum: :incremental,
+  datetime_type: :iso8601,
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: System.schedulers_online() * 2
+  load_extensions: [
+    "./priv/sqlite_extensions/crypto",
+    "./priv/sqlite_extensions/fileio",
+    "./priv/sqlite_extensions/fuzzy",
+    "./priv/sqlite_extensions/math",
+    "./priv/sqlite_extensions/stats",
+    "./priv/sqlite_extensions/text",
+    "./priv/sqlite_extensions/unicode",
+    "./priv/sqlite_extensions/uuid",
+    "./priv/sqlite_extensions/vec0",
+    "./priv/sqlite_extensions/vsv"
+  ]
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.

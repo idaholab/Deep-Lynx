@@ -1,5 +1,5 @@
 defmodule Datum.AccountsTest do
-  use Datum.DataCase
+  use Datum.DataCase, async: false
 
   alias Datum.Accounts
 

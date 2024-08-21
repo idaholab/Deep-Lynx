@@ -1,5 +1,5 @@
 defmodule DatumWeb.ErrorHTMLTest do
-  use DatumWeb.ConnCase, async: true
+  use DatumWeb.ConnCase, async: false
 
   # Bring render_to_string/4 for testing custom views
   import Phoenix.Template

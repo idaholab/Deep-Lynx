@@ -1,5 +1,5 @@
 defmodule DatumWeb.UserAuthTest do
-  use DatumWeb.ConnCase, async: true
+  use DatumWeb.ConnCase, async: false 
 
   alias Phoenix.LiveView
   alias Datum.Accounts

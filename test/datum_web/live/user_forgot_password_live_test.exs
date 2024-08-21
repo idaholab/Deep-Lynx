@@ -1,5 +1,5 @@
 defmodule DatumWeb.UserForgotPasswordLiveTest do
-  use DatumWeb.ConnCase, async: true
+  use DatumWeb.ConnCase, async: false
 
   import Phoenix.LiveViewTest
   import Datum.AccountsFixtures
