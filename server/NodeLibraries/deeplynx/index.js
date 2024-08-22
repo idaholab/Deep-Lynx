@@ -310,10 +310,12 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { RedisGraphLoader, hash, SnapshotGenerator, BucketRepository, inferLegacySchema } = nativeBinding
+const { RedisGraphLoader, hash, SnapshotGenerator, BucketRepository, inferLegacySchema, TimeSeriesQuery, processQuery } = nativeBinding
 
 module.exports.RedisGraphLoader = RedisGraphLoader
 module.exports.hash = hash
 module.exports.SnapshotGenerator = SnapshotGenerator
 module.exports.BucketRepository = BucketRepository
 module.exports.inferLegacySchema = inferLegacySchema
+module.exports.TimeSeriesQuery = TimeSeriesQuery
+module.exports.processQuery = processQuery

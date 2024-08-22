@@ -14,7 +14,7 @@ import ReportRepository from './report_repository';
 import Config from '../../../../services/config';
 import BlobStorageProvider from '../../../../services/blob_storage/blob_storage';
 import AzureBlobImpl from '../../../../services/blob_storage/azure_blob_impl';
-import { processQuery, Ts2Request } from 'deeplynx';
+import { processQuery, TimeSeriesQuery } from 'deeplynx';
 
 /*
     ReportQueryRepository contains methods for persisting and retrieving report
@@ -156,7 +156,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
         }
 
         // formulate query request (this gets sent to NAPI)
-        const queryRequest = new Ts2Request(
+        const queryRequest = new TimeSeriesQuery(
             reportID,
             queryID,
             request.query!,
