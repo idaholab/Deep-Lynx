@@ -40,3 +40,6 @@ npm-debug.log
 
 # Ignore databases
 /databases/
+
+# Ignore Burrito artifacts
+/burrito_out/
