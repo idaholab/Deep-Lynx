@@ -18,7 +18,9 @@ defmodule Datum.DataOriginRepoTest do
       OriginRepo.with_dynamic_repo(
         origin.id,
         fn ->
-          OriginRepo.insert!(Data.changeset(%Data{}, %{terminal_path: "/test/path.txt"}))
+          OriginRepo.insert!(
+            Data.changeset(%Data{}, %{terminal_path: "/test/path.txt", metadata: %{test: "Test"}})
+          )
         end,
         mode: :readwrite,
         run_migrations: true

@@ -6,7 +6,8 @@ defmodule Datum.DataOrigin.OriginRepo.Migrations.Init do
       add :id, :binary_id, primary_key: true
       add :path, {:array, :string}
       add :terminal_path, :string
-      add :metadata, :map
+      # JSONB column
+      add :metadata, :binary
       add :owned_by, :binary_id
 
       timestamps(type: :utc_datetime)
