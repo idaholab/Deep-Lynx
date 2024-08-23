@@ -78,6 +78,8 @@ defmodule Datum.MixProject do
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.5"},
       {:burrito, "~> 1.1"},
+      {:shortuuid, "~> 3.0"},
+      {:elixir_uuid, "~> 1.2"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end
