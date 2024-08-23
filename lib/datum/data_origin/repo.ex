@@ -32,6 +32,7 @@ defmodule Datum.DataOrigin.OriginRepo do
       database: "./databases/origins/#{short_uuid}",
       journal_mode: :wal,
       mode: mode,
+      binary_id_type: :binary,
       auto_vacuum: :incremental,
       datetime_type: :iso8601,
       load_extensions: [

@@ -9,6 +9,7 @@ defmodule Datum.DataOrigin.Data do
   schema "data" do
     field :path, {:array, :string}
     field :terminal_path, :string
+    field :full_path, :string
     field :metadata, Datum.JSONB
     field :owned_by, :binary_id
 
