@@ -1,0 +1,14 @@
+[package]
+name = "csv_extractor"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[dependencies]
+arrow-csv = { version = "52.2.0" }
+arrow-schema = { version = "52.2.0", features = ["serde"] }
+serde = { version = "1.0.208", features = ["derive", "alloc"], default-features = false}
+serde_json = { version = "1.0.125", features = ["alloc"], default-features = false }
+

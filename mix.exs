@@ -69,7 +69,7 @@ defmodule Datum.MixProject do
        app: false,
        compile: false,
        depth: 1},
-      {:swoosh, "== 1.15.0"},
+      {:swoosh, "~> 1.15.0"},
       {:finch, "~> 0.13"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
@@ -80,6 +80,7 @@ defmodule Datum.MixProject do
       {:burrito, "~> 1.1"},
       {:shortuuid, "~> 3.0"},
       {:elixir_uuid, "~> 1.2"},
+      {:wasmex, "~> 0.9.1"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end

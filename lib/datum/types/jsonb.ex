@@ -13,6 +13,10 @@ defmodule Datum.JSONB do
     {:ok, resource_type}
   end
 
+  def cast(resource_type) when is_bitstring(resource_type) do
+    {:ok, resource_type}
+  end
+
   defmacro binary(size) do
     quote do: binary - size(unquote(size))
   end
@@ -22,10 +26,14 @@ defmodule Datum.JSONB do
   end
 
   # dumping to DB we need to convert to BLOB
-  def dump(value) do
+  def dump(value) when is_map(value) do
     data = Jason.encode_to_iodata!(value)
 
     {:ok, [<<IO.iodata_length(data) + 1::int32(), 1>> | data]}
+  end
+
+  def dump(value) when is_bitstring(value) do
+    {:ok, [<<IO.iodata_length(value) + 1::int32(), 1>> | value]}
   end
 
   def load(bin) when is_binary(bin) do

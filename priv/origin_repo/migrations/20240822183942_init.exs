@@ -7,7 +7,6 @@ defmodule Datum.DataOrigin.OriginRepo.Migrations.Init do
       add :path, {:array, :string}
       add :terminal_path, :string
       add :full_path, :string
-      # JSONB column
       add :metadata, :jsonb
       add :owned_by, :binary
 
