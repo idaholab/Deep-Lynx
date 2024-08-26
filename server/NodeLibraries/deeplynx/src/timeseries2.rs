@@ -2,6 +2,7 @@ use chrono::Utc;
 use datafusion::dataframe::DataFrameWriteOptions;
 use datafusion::datasource::listing::ListingTableUrl;
 use datafusion::prelude::{CsvReadOptions, SessionConfig, SessionContext};
+use futures::TryFutureExt;
 use lazy_static::lazy_static;
 use object_store::azure::MicrosoftAzureBuilder;
 use regex::Regex;
@@ -17,91 +18,48 @@ use url::Url;
 
 pub mod azure_metadata;
 pub mod file_path_metadata;
-pub mod time_series_query;
-use azure_metadata::AzureMetadata;
+pub mod timeseries_query;
 use file_path_metadata::FilePathMetadata;
-use time_series_query::TimeSeriesQuery;
+use timeseries_query::{StorageType, TimeseriesQuery};
 
-// If regular (non-describe) query:
-//   - Upload query results as csv to large object storage
-//     - `results_upload_path` shows path in blob storage to upload to
-//   - Capture the following metadata:
-//     - `file_name`, `file_size` (bytes), `file_path`, `adapter` (should be "azure_blob", "filesystem", etc)
-//   - POST metadata to deeplynx_response_url endpoint
-// If describe query:
-//   - POST describe results (JSON format) to deeplynx_response_url endpoint. These can just be in a json body, no need to put them in a file unless that's easier
 #[napi]
-pub async fn process_query(req: &TimeSeriesQuery) -> napi::Result<String> {
-  let report_id = req
-    .report_id
-    .as_ref()
-    .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null report_id")))?;
-  let query = req
-    .query
-    .as_ref()
-    .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null query")))?;
-  let deeplynx_response_url = req.deeplynx_response_url.as_ref().ok_or_else(|| {
-    napi::Error::from_reason(String::from("Request has a null deeplynx_response_url"))
-  })?;
-  let upload_path = req
-    .upload_path
-    .as_ref()
-    .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null upload_path")))?;
+pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
   let files = req
     .files
     .as_ref()
     .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null file list")))?;
-  let token = req
-    .token
-    .as_ref()
-    .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null token")))?;
-  let data_source_id = req
-    .data_source_id
-    .as_ref()
-    .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null data_source_id")))?;
-  let azure_metadata = req
-    .azure_metadata
-    .as_ref()
-    .ok_or_else(|| napi::Error::from_reason(String::from("Request has null azure_metadata")))?;
-
   if files.is_empty() {
     return Err(napi::Error::from_reason("Request has empty file list"));
   };
 
   let client = reqwest::Client::new();
-  let server = env::var("DL_SERVER").expect("DL_SERVER must be set.");
-  let mut headers = HeaderMap::new();
-
-  // can be done more idiomatically via https://docs.rs/reqwest/latest/reqwest/struct.RequestBuilder.html#method.bearer_auth
-  headers.insert(
-    "Authorization",
-    format!("Bearer {}", token)
-      .parse::<HeaderValue>()
-      .map_err(|e| napi::Error::from_reason(e.to_string()))?,
-  );
-
+  let dl_server = env::var("DL_SERVER").expect("DL_SERVER must be set.");
   let session_config = SessionConfig::new().with_information_schema(true);
   let ctx = SessionContext::new_with_config(session_config);
 
-  let adapter = files[0].adapter.as_ref().ok_or_else(|| {
-    napi::Error::from_reason(String::from("Request's first file has a null adapter"))
-  })?;
-
-  // todo: this block is along the right vibes, but this is programming. Computers don't run on vibes.
-  match adapter.as_str() {
-    "azure_blob" => {
-      let blob_endpoint = azure_metadata.blob_endpoint.as_ref().ok_or_else(|| {
+  let sas_metadata = req
+    .sas_metadata
+    .as_ref()
+    .ok_or_else(|| napi::Error::from_reason(String::from("Request has null sas_metadata")))?;
+  let store_type = req
+    .storage_type
+    .as_ref()
+    .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null storage_type")))?;
+  let mut object_store_url = None;
+  match store_type {
+    StorageType::azure => {
+      let blob_endpoint = sas_metadata.blob_endpoint.as_ref().ok_or_else(|| {
         napi::Error::from_reason(String::from("Azure blob endpoint cannot be None/Null."))
       })?;
       let table_path = ListingTableUrl::parse(blob_endpoint)
         .map_err(|e| napi::Error::from_reason(e.to_string()))?;
-      let url: &Url = table_path.as_ref();
-      let microsoft_azure = MicrosoftAzureBuilder::new()
-        .with_account(azure_metadata.account_name.as_ref().ok_or_else(|| {
+      let table_url: &Url = table_path.as_ref();
+      let ms_azure = MicrosoftAzureBuilder::new()
+        .with_account(sas_metadata.account_name.as_ref().ok_or_else(|| {
           napi::Error::from_reason(String::from("Azure account name cannot be None/Null."))
         })?)
-        .with_access_key("") // change to azure_metadata stuff (parse sas token? which part?)
-        .with_container_name(azure_metadata.container_name.as_ref().ok_or_else(|| {
+        // .with_sas_authorization(query_pairs) // todo: convert sas_token to query pairs
+        .with_container_name(sas_metadata.container_name.as_ref().ok_or_else(|| {
           napi::Error::from_reason(String::from("Azure container name cannot be None/Null."))
         })?)
         .with_endpoint(blob_endpoint.to_owned())
@@ -109,58 +67,37 @@ pub async fn process_query(req: &TimeSeriesQuery) -> napi::Result<String> {
         .map_err(|e| napi::Error::from_reason(e.to_string()))?;
       ctx
         .runtime_env()
-        .register_object_store(url, Arc::new(microsoft_azure));
+        .register_object_store(table_url, Arc::new(ms_azure));
+      object_store_url = Some(table_url);
     }
-    "filesystem" => (), // does datafusion need to have local filesystem set?
-    _ => {
-      return Err(napi::Error::from_reason(format!(
-        "Unimplemented adapter type: {}",
-        adapter
-      )))?;
+    StorageType::filesystem => {
+      todo!("register filesystem for ctx.runtime_env")
     }
   }
 
-  let table_info = extract_table_info(files).unwrap();
-  let first_table = table_info[0].name.clone();
-  for table in table_info {
-    match table.file_type {
-      FileType::Csv => {
-        ctx
-          .register_csv(
-            table.name.as_str(),
-            table.adapter_file_path.as_str(),
-            CsvReadOptions::new(),
-          )
-          .await
-          .map_err(|e| napi::Error::from_reason(e.to_string()))?;
-      }
-      FileType::Json => {
-        ctx
-          .register_csv(
-            table.name.as_str(),
-            table.adapter_file_path.as_str(),
-            Default::default(),
-          )
-          .await
-          .map_err(|e| napi::Error::from_reason(e.to_string()))?;
-      } // todo: add more filetypes
-    }
-  }
+  let report_id = req
+    .report_id
+    .as_ref()
+    .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null report_id")))?;
+  let dl_token = req
+    .dl_token
+    .as_ref()
+    .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null token")))?;
 
-  let mut sql_query = query.clone();
-  let is_describe = sql_query.trim().to_uppercase().starts_with("DESCRIBE");
+  let table_info =
+    extract_table_info(files).map_err(|e| napi::Error::from_reason(e.to_string()))?;
 
-  // send both to req.deeplynx_response_url
-  if is_describe {
-    // describe query
-    // POST the schema results of a describe query in JSON format.
-    // It will accept either multipart form file upload or json body data.
-    sql_query = format!("DESCRIBE {}", first_table);
+  let query = req
+    .query
+    .as_ref()
+    .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null query")))?;
+  if query.trim().to_uppercase().starts_with("DESCRIBE") {
+    let first_table = table_info[0].name.clone();
+    let sql_q = format!("DESCRIBE {}", first_table);
     let query_results = ctx
-      .sql(sql_query.as_str())
+      .sql(sql_q.as_str())
       .await
       .map_err(|e| napi::Error::from_reason(e.to_string()))?;
-
     let record_batches = query_results
       .collect()
       .await
@@ -169,132 +106,104 @@ pub async fn process_query(req: &TimeSeriesQuery) -> napi::Result<String> {
     let json_rows = datafusion::arrow::json::writer::record_batches_to_json_rows(&rb_slice)
       .map_err(|e| napi::Error::from_reason(e.to_string()))?;
 
-    // Probably should stream the json? How-to details here:
+    // Probably should stream the json in case of long column lists? How-to details here:
     // https://datafusion.apache.org/library-user-guide/using-the-dataframe-api.html#collect-streaming-exec
     let json_payload =
       serde_json::to_value(json_rows).map_err(|e| napi::Error::from_reason(e.to_string()))?;
-    if client
-      .post(deeplynx_response_url.clone())
+    if let Ok(res) = client
+      .post(req.deeplynx_destination.as_ref().ok_or_else(|| {
+        napi::Error::from_reason(String::from("Request deeplynx destination is null"))
+      })?)
       .json(&json_payload)
       .send()
       .await
-      .is_ok()
     {
-      Ok(json_payload.to_string())
+      let dl_response = res
+        .text()
+        .await
+        .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+
+      Ok(format!(
+        "report_id: {} response: {}",
+        report_id, dl_response
+      ))
     } else {
       Err(napi::Error::from_reason(
-        "Failed to send DESCRIBE data to client",
+        "Failed to send DESCRIBE data to DeepLynx client",
       ))
     }
   } else {
+    for table in table_info {
+      match table.file_type {
+        FileType::Csv => {
+          ctx
+            .register_csv(
+              table.name.as_str(),
+              table.adapter_file_path.as_str(),
+              CsvReadOptions::new(),
+            )
+            .await
+            .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+        }
+        FileType::Json => {
+          ctx
+            .register_csv(
+              table.name.as_str(),
+              table.adapter_file_path.as_str(),
+              Default::default(),
+            )
+            .await
+            .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+        }
+      }
+    }
+
     let query_results = ctx
-      .sql(sql_query.as_str())
+      .sql(query.as_str())
       .await
       .map_err(|e| napi::Error::from_reason(e.to_string()))?;
 
-    // send query_resutls (df) to upload_path
-    // the results of that should contain the metadata we want
-    // `file_name`, `file_size` (bytes), `file_path`, `adapter`
-    // adapter should be "azure_blob" or "filesystem" (more to be added later)
+    let results_destination = req.results_destination.as_ref().ok_or_else(|| {
+      napi::Error::from_reason(String::from("Request has a null results_destination"))
+    })?;
+
     let local_storage =
       env::var("FILESYSTEM_STORAGE_DIRECTORY").expect("FILESYSTEM_STORAGE_DIRECTORY must be set.");
     let now = Utc::now();
-    let filepath = format!(
-      "{}/{}_{}.csv",
-      local_storage,
-      report_id,
-      now.timestamp_millis()
-    );
+    let file_name = format!("{}_{}.csv", report_id, now.timestamp_millis());
+    let file_path = format!("{}/{}", local_storage, file_name);
     query_results
-      .write_csv(filepath.as_str(), DataFrameWriteOptions::new(), None)
+      .write_csv(file_path.as_str(), DataFrameWriteOptions::new(), None)
       .await
       .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+    let res_file = File::open(&file_path).await?;
+    let file_metadata = res_file
+      .metadata()
+      .await
+      .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+    let result_metadata = json!({
+      "report_id": report_id,
+      "isError": false,
+      "file_name": file_name,
+      "file_size": file_metadata.len(),
+      "file_path": results_destination,
+      "adapter": store_type.to_string(),
+    });
 
-    let res_file = File::open(&filepath).await?;
-
-    let sas_token = azure_metadata.sas_token.clone().ok_or_else(|| {
-      napi::Error::from_reason(String::from("SAS Token required, shouldn't be None/Null."))
-    })?;
-    let blob_endpoint = azure_metadata.blob_endpoint.clone().ok_or_else(|| {
-      napi::Error::from_reason(String::from(
-        "Blob Endpoint required, shouldn't be None/Null.",
-      ))
-    })?;
-    let blob_service_url = format!("{}?{}", blob_endpoint, sas_token);
-    let response = client
-      .post(blob_service_url)
-      .headers(headers) // headers might be wrong for sending to blob, would work for sending to dl
-      .body(file_to_body(res_file))
+    client
+      .post(req.deeplynx_destination.as_ref().ok_or_else(|| {
+        napi::Error::from_reason(String::from("Request deeplynx destination is null"))
+      })?)
+      .json(&result_metadata)
       .send()
       .await
       .map_err(|e| napi::Error::from_reason(e.to_string()))?;
 
-    remove_file(&filepath).await?;
-
-    let body = response
-      .text()
-      .await
-      .map_err(|e| napi::Error::from_reason(e.to_string()))?;
-
-    let json_body: Value =
-      serde_json::from_str(body.as_str()).map_err(|e| napi::Error::from_reason(e.to_string()))?;
-    let res_body = match json_body.as_object() {
-      None => {
-        return Err(napi::Error::from_reason(
-          "Deeplynx Storage returned an empty body from timeseries report data upload",
-        ));
-      }
-      Some(b) => b,
-    };
-
-    // pseudo: if !res.isError && !res.value[0].value.isError
-    if res_body["isError"].as_bool().is_some_and(|e| e)
-      || res_body["value"].as_array().unwrap()[0]["isError"]
-        .as_bool()
-        .is_some_and(|e| e)
-    {
-      return Ok(
-        json!({
-          "report_id": report_id,
-          "isError": true,
-        })
-        .to_string(),
-      );
-    }
-
-    let file_name = json_or_error_value(res_body, "file_name");
-    let adapter_file_path = json_or_error_value(res_body, "adapter_file_path");
-    let adapter = json_or_error_value(res_body, "adapter");
-    let file_size = match res_body["value"].as_array() {
-      Some(v) => match v[0]["value"].as_object() {
-        Some(v2) => v2["file_size"].to_owned(),
-        None => json!(-1),
-      },
-      None => json!(-1),
-    };
-
-    // ensure none of the above are errors
-    let is_error = if res_body["isError"] == json!(true)
-      || file_name == json!("error")
-      || file_size == json!(-1)
-      || adapter_file_path == json!("error")
-      || adapter == json!("error")
-    {
-      json!(true)
-    } else {
-      json!(false)
-    };
-    Ok(
-      json!({
-        "report_id": report_id,
-        "isError": is_error,
-        "file_name": file_name,
-        "file_size": file_size,
-        "adapter_file_path": adapter_file_path,
-        "adapter": adapter
-      })
-      .to_string(),
-    )
+    todo!("send to res_dest");
+    // use `object_store_url` to find the object_store at:
+    //  ctx.runtime_env().object_store(object_store_url)
+    // also do this before returning:
+    // remove_file(&file_path).await?;
   }
 }
 
@@ -379,20 +288,9 @@ fn extract_table_info(files: &Vec<FilePathMetadata>) -> Result<Vec<TableMetadata
   Ok(table_info)
 }
 
-fn file_to_body(file: File) -> Body {
+fn file_to_body_stream(file: File) -> Body {
   let stream = FramedRead::new(file, BytesCodec::new());
   Body::wrap_stream(stream)
-}
-
-/// returns an error if reading any json fails along the way
-fn json_or_error_value(body: &Map<String, Value>, field: &str) -> Value {
-  match body["value"].as_array() {
-    Some(v) => match v[0]["value"].as_object() {
-      Some(v2) => v2[field].to_owned(),
-      None => json!("error"),
-    },
-    None => json!("error"),
-  }
 }
 
 pub struct TableMetadata {
