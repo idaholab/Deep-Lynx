@@ -12,7 +12,7 @@ export interface Options {
   stopNodes?: Array<string>
   valueNodes?: Array<string>
 }
-export function hash(a: string, options: Options): string
+export declare function hash(a: string, options: Options): string
 export interface LegacyTimeseriesColumn {
   column_name: string
   property_name: string
@@ -20,7 +20,7 @@ export interface LegacyTimeseriesColumn {
   type: string
   date_conversion_format_string?: string
 }
-export function inferLegacySchema(csv: Buffer): Array<LegacyTimeseriesColumn>
+export declare function inferLegacySchema(csv: Buffer): Array<LegacyTimeseriesColumn>
 export interface AzureMetadata {
   account_name?: string
   blob_endpoint?: string
@@ -34,7 +34,11 @@ export interface FilePathMetadata {
   file_name?: string
   adapter_file_path?: string
 }
-export function processQuery(req: TimeSeriesQuery): Promise<string>
+export const enum StorageType {
+  azure = 'azure',
+  filesystem = 'filesystem'
+}
+export declare function processQuery(req: TimeSeriesQuery): Promise<string>
 export type JsRedisGraphLoader = RedisGraphLoader
 export declare class RedisGraphLoader {
   constructor()

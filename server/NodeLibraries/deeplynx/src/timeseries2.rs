@@ -71,6 +71,8 @@ pub async fn process_query(req: &TimeSeriesQuery) -> napi::Result<String> {
   let client = reqwest::Client::new();
   let server = env::var("DL_SERVER").expect("DL_SERVER must be set.");
   let mut headers = HeaderMap::new();
+
+  // can be done more idiomatically via https://docs.rs/reqwest/latest/reqwest/struct.RequestBuilder.html#method.bearer_auth
   headers.insert(
     "Authorization",
     format!("Bearer {}", token)
@@ -84,21 +86,30 @@ pub async fn process_query(req: &TimeSeriesQuery) -> napi::Result<String> {
   let adapter = files[0].adapter.as_ref().ok_or_else(|| {
     napi::Error::from_reason(String::from("Request's first file has a null adapter"))
   })?;
+
+  // todo: this block is along the right vibes, but this is programming. Computers don't run on vibes.
   match adapter.as_str() {
     "azure_blob" => {
-      let table_path =
-        ListingTableUrl::parse("https://gvadedeeplynxdevsa.blob.core.usgovcloudapi.net/")
-          .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+      let blob_endpoint = azure_metadata.blob_endpoint.as_ref().ok_or_else(|| {
+        napi::Error::from_reason(String::from("Azure blob endpoint cannot be None/Null."))
+      })?;
+      let table_path = ListingTableUrl::parse(blob_endpoint)
+        .map_err(|e| napi::Error::from_reason(e.to_string()))?;
       let url: &Url = table_path.as_ref();
       let microsoft_azure = MicrosoftAzureBuilder::new()
-        .with_account("gvadedeeplynxdevsa")
-        .with_access_key("")
-        .with_container_name("deeplynx")
-        .with_endpoint("https://gvadedeeplynxdevsa.blob.core.usgovcloudapi.net".to_string())
+        .with_account(azure_metadata.account_name.as_ref().ok_or_else(|| {
+          napi::Error::from_reason(String::from("Azure account name cannot be None/Null."))
+        })?)
+        .with_access_key("") // change to azure_metadata stuff (parse sas token? which part?)
+        .with_container_name(azure_metadata.container_name.as_ref().ok_or_else(|| {
+          napi::Error::from_reason(String::from("Azure container name cannot be None/Null."))
+        })?)
+        .with_endpoint(blob_endpoint.to_owned())
         .build()
         .map_err(|e| napi::Error::from_reason(e.to_string()))?;
-      let store = Arc::new(microsoft_azure);
-      ctx.runtime_env().register_object_store(url, store.clone());
+      ctx
+        .runtime_env()
+        .register_object_store(url, Arc::new(microsoft_azure));
     }
     "filesystem" => (), // does datafusion need to have local filesystem set?
     _ => {
@@ -201,12 +212,18 @@ pub async fn process_query(req: &TimeSeriesQuery) -> napi::Result<String> {
 
     let res_file = File::open(&filepath).await?;
 
-    let upload_url = format!("{}/{}", server, upload_path);
-
-    // todo: need to put the azure metadata in here somewhere
+    let sas_token = azure_metadata.sas_token.clone().ok_or_else(|| {
+      napi::Error::from_reason(String::from("SAS Token required, shouldn't be None/Null."))
+    })?;
+    let blob_endpoint = azure_metadata.blob_endpoint.clone().ok_or_else(|| {
+      napi::Error::from_reason(String::from(
+        "Blob Endpoint required, shouldn't be None/Null.",
+      ))
+    })?;
+    let blob_service_url = format!("{}?{}", blob_endpoint, sas_token);
     let response = client
-      .post(upload_url)
-      .headers(headers)
+      .post(blob_service_url)
+      .headers(headers) // headers might be wrong for sending to blob, would work for sending to dl
       .body(file_to_body(res_file))
       .send()
       .await

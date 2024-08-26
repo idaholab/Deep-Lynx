@@ -29,3 +29,13 @@ impl TimeSeriesQuery {
     }
   }
 }
+
+#[napi(string_enum)]
+#[derive(Debug, Default)]
+pub enum StorageType {
+  #[allow(non_camel_case_types)]
+  azure,
+  #[allow(non_camel_case_types)]
+  #[default]
+  filesystem,
+}
