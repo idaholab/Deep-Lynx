@@ -2,13 +2,11 @@ use chrono::Utc;
 use datafusion::dataframe::DataFrameWriteOptions;
 use datafusion::datasource::listing::ListingTableUrl;
 use datafusion::prelude::{CsvReadOptions, SessionConfig, SessionContext};
-use futures::TryFutureExt;
 use lazy_static::lazy_static;
 use object_store::azure::MicrosoftAzureBuilder;
 use regex::Regex;
-use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::Body;
-use serde_json::{json, Map, Value};
+use serde_json::json;
 use short_uuid::short;
 use std::env;
 use std::path::Path;
@@ -34,7 +32,6 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
   };
 
   let client = reqwest::Client::new();
-  let dl_server = env::var("DL_SERVER").expect("DL_SERVER must be set.");
   let session_config = SessionConfig::new().with_information_schema(true);
   let ctx = SessionContext::new_with_config(session_config);
 
@@ -52,6 +49,8 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
     .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null sas_token")))?;
   match store_type {
     StorageType::azure => {
+      // todo: move this block to a fn in azure_metadata.rs
+
       let sas_token_query_pairs = token_to_query_pairs(sas_token.clone())
         .map_err(|e| napi::Error::from_reason(e.to_string()))?;
 
@@ -65,7 +64,7 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
         .with_account(sas_metadata.account_name.as_ref().ok_or_else(|| {
           napi::Error::from_reason(String::from("Azure account name cannot be None/Null."))
         })?)
-        // .with_sas_authorization(sas_token_query_pairs)
+        .with_sas_authorization(sas_token_query_pairs)
         .with_container_name(sas_metadata.container_name.as_ref().ok_or_else(|| {
           napi::Error::from_reason(String::from("Azure container name cannot be None/Null."))
         })?)
@@ -138,15 +137,13 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
     let rb_slice = record_batches.iter().collect::<Vec<&_>>();
     let json_rows = datafusion::arrow::json::writer::record_batches_to_json_rows(&rb_slice)
       .map_err(|e| napi::Error::from_reason(e.to_string()))?;
-
-    // todo: Probably should stream the json in case of long column lists? How-to details here:
-    // https://datafusion.apache.org/library-user-guide/using-the-dataframe-api.html#collect-streaming-exec
     let json_payload =
       serde_json::to_value(json_rows).map_err(|e| napi::Error::from_reason(e.to_string()))?;
     if let Ok(res) = client
       .post(req.deeplynx_destination.as_ref().ok_or_else(|| {
         napi::Error::from_reason(String::from("Request deeplynx destination is null"))
       })?)
+      .bearer_auth(dl_token)
       .json(&json_payload)
       .send()
       .await
@@ -157,7 +154,7 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
         .map_err(|e| napi::Error::from_reason(e.to_string()))?;
 
       Ok(format!(
-        "report_id: {} response: {}",
+        "report_id: {} dl_response: {}",
         report_id, dl_response
       ))
     } else {
@@ -204,10 +201,11 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
       "adapter": store_type.to_string(),
     });
 
-    client
+    let dl_res = client
       .post(req.deeplynx_destination.as_ref().ok_or_else(|| {
         napi::Error::from_reason(String::from("Request deeplynx destination is null"))
       })?)
+      .bearer_auth(dl_token)
       .json(&result_metadata)
       .send()
       .await
@@ -229,15 +227,33 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
         format!("{}/{}", results_destination, file_name)
       }
     };
-    // remember that you don't need the azure builder, just the url, the data, and reqwest
 
-    todo!("send to res_dest");
+    // may need to add required headers if the sas token in the url isn't enough
+    // may need to change to post for filesystem? idk
+    let ms_res = client
+      .put(res_url)
+      .body(file_to_body(res_file))
+      .send()
+      .await
+      .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+    remove_file(&file_path).await?;
 
-    // also do this before returning:
-    // remove_file(&file_path).await?;
+    let dl_res_str = dl_res
+      .text()
+      .await
+      .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+    let ms_res_str = ms_res
+      .text()
+      .await
+      .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+    Ok(format!(
+      "report_id: {} dl_response: {} ms_response: {}",
+      report_id, dl_res_str, ms_res_str
+    ))
   }
 }
 
+// todo: move to file_path_metadata.rs
 /// Extracts the table_name and file extension and returns it with the path
 fn extract_table_info(files: &Vec<FilePathMetadata>) -> Result<Vec<TableMetadata>, String> {
   let mut table_info = Vec::new();
@@ -319,6 +335,7 @@ fn extract_table_info(files: &Vec<FilePathMetadata>) -> Result<Vec<TableMetadata
   Ok(table_info)
 }
 
+// todo: move to azure_metadata.rs
 fn token_to_query_pairs(token: String) -> Result<Vec<(String, String)>, String> {
   let tmp_query_base_url = "https://www.not-actually-used.com";
   let tmp_query_full_url = format!("{}?{}", tmp_query_base_url, token);
@@ -332,7 +349,7 @@ fn token_to_query_pairs(token: String) -> Result<Vec<(String, String)>, String> 
   Ok(converted_query_pairs)
 }
 
-fn file_to_body_stream(file: File) -> Body {
+fn file_to_body(file: File) -> Body {
   let stream = FramedRead::new(file, BytesCodec::new());
   Body::wrap_stream(stream)
 }
