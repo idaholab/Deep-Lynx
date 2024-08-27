@@ -2,14 +2,11 @@ use chrono::Utc;
 use datafusion::dataframe::DataFrameWriteOptions;
 use datafusion::datasource::listing::ListingTableUrl;
 use datafusion::prelude::{CsvReadOptions, SessionConfig, SessionContext};
-use lazy_static::lazy_static;
 use object_store::azure::MicrosoftAzureBuilder;
-use regex::Regex;
 use reqwest::Body;
 use serde_json::json;
 use short_uuid::short;
 use std::env;
-use std::path::Path;
 use std::sync::Arc;
 use tokio::fs::{remove_file, File};
 use tokio_util::codec::{BytesCodec, FramedRead};
@@ -18,7 +15,7 @@ use url::Url;
 pub mod azure_metadata;
 pub mod file_path_metadata;
 pub mod timeseries_query;
-use file_path_metadata::FilePathMetadata;
+use file_path_metadata::FileType;
 use timeseries_query::{StorageType, TimeseriesQuery};
 
 #[napi]
@@ -49,9 +46,7 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
     .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null sas_token")))?;
   match store_type {
     StorageType::azure => {
-      // todo: move this block to a fn in azure_metadata.rs
-
-      let sas_token_query_pairs = token_to_query_pairs(sas_token.clone())
+      let sas_token_query_pairs = azure_metadata::token_to_query_pairs(sas_token.clone())
         .map_err(|e| napi::Error::from_reason(e.to_string()))?;
 
       let blob_endpoint = sas_metadata.blob_endpoint.as_ref().ok_or_else(|| {
@@ -93,8 +88,8 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
     .as_ref()
     .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null token")))?;
 
-  let table_info =
-    extract_table_info(files).map_err(|e| napi::Error::from_reason(e.to_string()))?;
+  let table_info = file_path_metadata::extract_table_info(files)
+    .map_err(|e| napi::Error::from_reason(e.to_string()))?;
 
   for table in table_info {
     match table.file_type {
@@ -253,114 +248,7 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
   }
 }
 
-// todo: move to file_path_metadata.rs
-/// Extracts the table_name and file extension and returns it with the path
-fn extract_table_info(files: &Vec<FilePathMetadata>) -> Result<Vec<TableMetadata>, String> {
-  let mut table_info = Vec::new();
-  for file in files {
-    let file_id = file
-      .id
-      .as_ref()
-      .ok_or("file_id can technically be null but should never be null.")?;
-    let file_name = file
-      .file_name
-      .as_ref()
-      .ok_or("file_id can technically be null but should never be null.")?;
-    let adapter_file_path = file
-      .adapter_file_path
-      .as_ref()
-      .ok_or("file_id can technically be null but should never be null.")?;
-    lazy_static! {
-      static ref RE_VALID_TABLE_NAME: Regex = regex::Regex::new(r"[a-zA-Z_][a-zA-Z_0-9]*")
-        .expect("RE_VALID_TABLE_NAME static regex is incorrect");
-    }
-    if !RE_VALID_TABLE_NAME.is_match(file_name.as_str()) {
-      return Err(format!(
-        "File Path Metadata contained an invalid table name from id: {}",
-        file_id
-      ));
-    }
-
-    let ext_plus_uuid = Path::new(adapter_file_path.as_str())
-      .extension()
-      .ok_or_else(|| {
-        format!(
-          "File Path Metadata has no valid file extension from id: {}",
-          file_id
-        )
-      })?;
-    let ext = match ext_plus_uuid.to_str() {
-      None => {
-        return Err(format!(
-          "File Path Metadata has no valid file extension from id: {}",
-          file_id
-        ))?
-      }
-      Some(ex) => match ex {
-        s if s.starts_with("csv") => FileType::Csv,
-        s if s.starts_with("json") => FileType::Json,
-        s if s.starts_with("parquet") => {
-          return Err(format!(
-            "Parquet file (id: {}). Parquet is currently unsupported for Timeseries2",
-            file_id
-          ))
-        }
-        s if s.starts_with("hdf5") => {
-          return Err(format!(
-            "HDF5 file (id: {}). HDF5 is currently unsupported for Timeseries2",
-            file_id
-          ))
-        }
-        s if s.starts_with("tdms") => {
-          return Err(format!(
-            "TDMS file (id: {}). TDMS is currently unsupported for Timeseries2",
-            file_id
-          ))
-        }
-        _ => {
-          return Err(format!(
-            "File Path Metadata file extension was corrupted by the uuid from id: {}",
-            file_id
-          ))
-        }
-      },
-    };
-
-    table_info.push(TableMetadata {
-      name: file_name.clone(),
-      adapter_file_path: adapter_file_path.clone(),
-      file_type: ext,
-    });
-  }
-  Ok(table_info)
-}
-
-// todo: move to azure_metadata.rs
-fn token_to_query_pairs(token: String) -> Result<Vec<(String, String)>, String> {
-  let tmp_query_base_url = "https://www.not-actually-used.com";
-  let tmp_query_full_url = format!("{}?{}", tmp_query_base_url, token);
-  let tmp_parsed_query_url = Url::parse(&tmp_query_full_url).map_err(|e| e.to_string())?;
-  let sas_token_query_pairs = tmp_parsed_query_url.query_pairs().into_owned();
-
-  let mut converted_query_pairs = Vec::new();
-  for pair in sas_token_query_pairs {
-    converted_query_pairs.push(pair)
-  }
-  Ok(converted_query_pairs)
-}
-
 fn file_to_body(file: File) -> Body {
   let stream = FramedRead::new(file, BytesCodec::new());
   Body::wrap_stream(stream)
-}
-
-pub struct TableMetadata {
-  pub name: String,
-  pub adapter_file_path: String,
-  pub file_type: FileType,
-}
-
-pub enum FileType {
-  Csv,
-  Json,
 }
