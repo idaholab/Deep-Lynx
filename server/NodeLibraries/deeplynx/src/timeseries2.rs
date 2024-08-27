@@ -9,6 +9,7 @@ use regex::Regex;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::Body;
 use serde_json::{json, Map, Value};
+use short_uuid::short;
 use std::env;
 use std::path::Path;
 use std::sync::Arc;
@@ -45,20 +46,26 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
     .storage_type
     .as_ref()
     .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null storage_type")))?;
-  let mut object_store_url = None;
+  let sas_token = sas_metadata
+    .sas_token
+    .as_ref()
+    .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null sas_token")))?;
   match store_type {
     StorageType::azure => {
+      let sas_token_query_pairs = token_to_query_pairs(sas_token.clone())
+        .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+
       let blob_endpoint = sas_metadata.blob_endpoint.as_ref().ok_or_else(|| {
         napi::Error::from_reason(String::from("Azure blob endpoint cannot be None/Null."))
       })?;
       let table_path = ListingTableUrl::parse(blob_endpoint)
         .map_err(|e| napi::Error::from_reason(e.to_string()))?;
-      let table_url: &Url = table_path.as_ref();
+      let url: &Url = table_path.as_ref();
       let ms_azure = MicrosoftAzureBuilder::new()
         .with_account(sas_metadata.account_name.as_ref().ok_or_else(|| {
           napi::Error::from_reason(String::from("Azure account name cannot be None/Null."))
         })?)
-        // .with_sas_authorization(query_pairs) // todo: convert sas_token to query pairs
+        // .with_sas_authorization(sas_token_query_pairs)
         .with_container_name(sas_metadata.container_name.as_ref().ok_or_else(|| {
           napi::Error::from_reason(String::from("Azure container name cannot be None/Null."))
         })?)
@@ -67,11 +74,14 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
         .map_err(|e| napi::Error::from_reason(e.to_string()))?;
       ctx
         .runtime_env()
-        .register_object_store(table_url, Arc::new(ms_azure));
-      object_store_url = Some(table_url);
+        .register_object_store(url, Arc::new(ms_azure));
     }
     StorageType::filesystem => {
-      todo!("register filesystem for ctx.runtime_env")
+      let url = Url::try_from("file://").unwrap();
+      let object_store = object_store::local::LocalFileSystem::new();
+      ctx
+        .runtime_env()
+        .register_object_store(&url, Arc::new(object_store));
     }
   }
 
@@ -87,15 +97,38 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
   let table_info =
     extract_table_info(files).map_err(|e| napi::Error::from_reason(e.to_string()))?;
 
+  for table in table_info {
+    match table.file_type {
+      FileType::Csv => {
+        ctx
+          .register_csv(
+            table.name.as_str(),
+            table.adapter_file_path.as_str(),
+            CsvReadOptions::new(),
+          )
+          .await
+          .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+      }
+      FileType::Json => {
+        ctx
+          .register_csv(
+            table.name.as_str(),
+            table.adapter_file_path.as_str(),
+            Default::default(),
+          )
+          .await
+          .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+      }
+    }
+  }
+
   let query = req
     .query
     .as_ref()
     .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null query")))?;
   if query.trim().to_uppercase().starts_with("DESCRIBE") {
-    let first_table = table_info[0].name.clone();
-    let sql_q = format!("DESCRIBE {}", first_table);
     let query_results = ctx
-      .sql(sql_q.as_str())
+      .sql(query.as_str())
       .await
       .map_err(|e| napi::Error::from_reason(e.to_string()))?;
     let record_batches = query_results
@@ -106,7 +139,7 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
     let json_rows = datafusion::arrow::json::writer::record_batches_to_json_rows(&rb_slice)
       .map_err(|e| napi::Error::from_reason(e.to_string()))?;
 
-    // Probably should stream the json in case of long column lists? How-to details here:
+    // todo: Probably should stream the json in case of long column lists? How-to details here:
     // https://datafusion.apache.org/library-user-guide/using-the-dataframe-api.html#collect-streaming-exec
     let json_payload =
       serde_json::to_value(json_rows).map_err(|e| napi::Error::from_reason(e.to_string()))?;
@@ -133,31 +166,6 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
       ))
     }
   } else {
-    for table in table_info {
-      match table.file_type {
-        FileType::Csv => {
-          ctx
-            .register_csv(
-              table.name.as_str(),
-              table.adapter_file_path.as_str(),
-              CsvReadOptions::new(),
-            )
-            .await
-            .map_err(|e| napi::Error::from_reason(e.to_string()))?;
-        }
-        FileType::Json => {
-          ctx
-            .register_csv(
-              table.name.as_str(),
-              table.adapter_file_path.as_str(),
-              Default::default(),
-            )
-            .await
-            .map_err(|e| napi::Error::from_reason(e.to_string()))?;
-        }
-      }
-    }
-
     let query_results = ctx
       .sql(query.as_str())
       .await
@@ -170,7 +178,13 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
     let local_storage =
       env::var("FILESYSTEM_STORAGE_DIRECTORY").expect("FILESYSTEM_STORAGE_DIRECTORY must be set.");
     let now = Utc::now();
-    let file_name = format!("{}_{}.csv", report_id, now.timestamp_millis());
+    let ext_extender = short!();
+    let file_name = format!(
+      "{}_{}.csv{}",
+      report_id,
+      now.timestamp_millis(),
+      ext_extender
+    );
     let file_path = format!("{}/{}", local_storage, file_name);
     query_results
       .write_csv(file_path.as_str(), DataFrameWriteOptions::new(), None)
@@ -199,9 +213,26 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
       .await
       .map_err(|e| napi::Error::from_reason(e.to_string()))?;
 
+    let res_url = match store_type {
+      StorageType::azure => {
+        format!(
+          "{}/{}?{}",
+          results_destination,
+          file_name,
+          sas_metadata
+            .sas_token
+            .as_ref()
+            .ok_or_else(|| napi::Error::from_reason(String::from("Request has null sas_token")))?
+        )
+      }
+      StorageType::filesystem => {
+        format!("{}/{}", results_destination, file_name)
+      }
+    };
+    // remember that you don't need the azure builder, just the url, the data, and reqwest
+
     todo!("send to res_dest");
-    // use `object_store_url` to find the object_store at:
-    //  ctx.runtime_env().object_store(object_store_url)
+
     // also do this before returning:
     // remove_file(&file_path).await?;
   }
@@ -286,6 +317,19 @@ fn extract_table_info(files: &Vec<FilePathMetadata>) -> Result<Vec<TableMetadata
     });
   }
   Ok(table_info)
+}
+
+fn token_to_query_pairs(token: String) -> Result<Vec<(String, String)>, String> {
+  let tmp_query_base_url = "https://www.not-actually-used.com";
+  let tmp_query_full_url = format!("{}?{}", tmp_query_base_url, token);
+  let tmp_parsed_query_url = Url::parse(&tmp_query_full_url).map_err(|e| e.to_string())?;
+  let sas_token_query_pairs = tmp_parsed_query_url.query_pairs().into_owned();
+
+  let mut converted_query_pairs = Vec::new();
+  for pair in sas_token_query_pairs {
+    converted_query_pairs.push(pair)
+  }
+  Ok(converted_query_pairs)
 }
 
 fn file_to_body_stream(file: File) -> Body {

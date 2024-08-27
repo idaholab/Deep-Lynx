@@ -92,6 +92,7 @@ async-trait = "*"
 arrow-cast = "47.0.0"
 parquet = "47.0.0"
 anstyle = "1.0.6"
+short-uuid = "0.1.2"
 
 [build-dependencies]
 napi-build = "2.1.3"
