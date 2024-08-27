@@ -7,8 +7,6 @@ defmodule Datum.DataOrigin.Data do
 
   @primary_key {:id, :binary_id, autogenerate: false}
   schema "data" do
-    field :path, {:array, :string}
-    field :terminal_path, :string
     field :full_path, :string
     field :metadata, Datum.JSONB
     field :owned_by, :binary_id
@@ -20,9 +18,9 @@ defmodule Datum.DataOrigin.Data do
   def changeset(origin, attrs) do
     changeset =
       origin
-      |> cast(attrs, [:path, :terminal_path, :metadata, :id])
-      |> validate_required([:terminal_path])
+      |> cast(attrs, [:full_path, :metadata, :id])
+      |> validate_required([:full_path])
 
-    put_change(changeset, :id, UUID.uuid3(nil, fetch_field!(changeset, :terminal_path)))
+    put_change(changeset, :id, UUID.uuid3(nil, fetch_field!(changeset, :full_path)))
   end
 end

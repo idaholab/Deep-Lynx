@@ -4,8 +4,6 @@ defmodule Datum.DataOrigin.OriginRepo.Migrations.Init do
   def up do
     create table(:data, primary_key: false) do
       add :id, :binary, primary_key: true
-      add :path, {:array, :string}
-      add :terminal_path, :string
       add :full_path, :string
       add :metadata, :jsonb
       add :owned_by, :binary
@@ -13,6 +11,6 @@ defmodule Datum.DataOrigin.OriginRepo.Migrations.Init do
       timestamps(type: :utc_datetime)
     end
 
-    create index(:data, [:terminal_path])
+    create index(:data, [:full_path])
   end
 end

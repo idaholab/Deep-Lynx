@@ -8,7 +8,7 @@ defmodule Datum.Plugins.Extractor do
 
   alias Datum.Plugins.Plugin
 
-  def extract(%Plugin{} = plugin, path, opts \\ []) do
+  def extract(%Plugin{} = plugin, path, _opts \\ []) do
     {:ok, stderr} = Wasmex.Pipe.new()
     {:ok, stdout} = Wasmex.Pipe.new()
 
@@ -32,7 +32,7 @@ defmodule Datum.Plugins.Extractor do
 
       Jason.decode(Wasmex.Pipe.read(stdout))
     else
-      err ->
+      _ ->
         Wasmex.Pipe.seek(stderr, 0)
         {:error, Wasmex.Pipe.read(stderr)}
     end

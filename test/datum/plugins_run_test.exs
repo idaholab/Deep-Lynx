@@ -1,4 +1,4 @@
-defmodule Datum.PluginsTest do
+defmodule Datum.PluginsRunTest do
   use Datum.DataCase
 
   alias Datum.Plugins

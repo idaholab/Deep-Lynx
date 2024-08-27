@@ -19,7 +19,7 @@ defmodule Datum.DataOriginRepoTest do
         origin.id,
         fn ->
           OriginRepo.insert!(
-            Data.changeset(%Data{}, %{terminal_path: "/test/path.txt", metadata: %{test: "Test"}})
+            Data.changeset(%Data{}, %{full_path: "/test/path.txt", metadata: %{test: "Test"}})
           )
         end,
         mode: :readwrite,
