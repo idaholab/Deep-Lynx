@@ -11,6 +11,9 @@ import { Unity } from "react-unity-webgl";
 // Store
 import { useAppSelector } from "@/lib/store/hooks";
 
+// MUI
+import { Grid } from "@mui/material";
+
 // Types
 import { ContainerT, FileT } from "@/lib/types";
 
@@ -21,14 +24,14 @@ function WebGL() {
 
   const payload = {
     ConfigType: "Remote",
-    FileName: "another_drawing_name.glb",
+    FileName: "MRV-1000.glb",
     GraphType: "cad",
-    GraphRootDlId: "5119985",
+    GraphRootDlId: "5123079",
     AssetMetatypeName: "MeshGameObject",
     DefaultInteractions: ["Highlight", "Draggable"],
     MetatypeMappings: {
       CADMetadata: "Metadata",
-      Requirement: "JsonObjectsToReact",
+      Quality: "JsonObjectsToReact",
     },
     BaseUrl: "https://deeplynx.azuredev.inl.gov",
     Token:
@@ -46,18 +49,24 @@ function WebGL() {
   });
 
   useEffect(() => {
-    // if (isLoaded) sendMessage("ReactMessenger", "SetModelConfig", glb);
-  }, [isLoaded]);
+    if (file && isLoaded)
+      sendMessage("ReactMessenger", "SetModelConfig", JSON.stringify(payload));
+  }, [file, isLoaded, payload]);
 
   return (
     <>
-      <Unity
-        unityProvider={unityProvider}
-        style={{
-          width: "100%",
-          height: "100%",
-        }}
-      />
+      <Grid container>
+        <Grid item xs={4}></Grid>
+        <Grid item xs={8} sx={{ height: "100%" }}>
+          <Unity
+            unityProvider={unityProvider}
+            style={{
+              width: "100%",
+              height: "50%",
+            }}
+          />
+        </Grid>
+      </Grid>
     </>
   );
 }

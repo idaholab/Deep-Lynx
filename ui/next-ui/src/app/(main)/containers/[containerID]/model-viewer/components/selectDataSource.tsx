@@ -39,6 +39,7 @@ const DataSourceSelector = () => {
 
   return (
     <>
+      <Typography variant="subtitle2">Select a DataSource</Typography>
       <FormControl sx={{ width: "100%" }}>
         <Select
           labelId="Data Source Select"
