@@ -85,3 +85,13 @@ defmodule Datum.DataOrigin.OriginRepo do
     end
   end
 end
+
+defmodule Datum.DataOrigin.CT do
+  @moduledoc """
+  Needed for the closure_table library
+  """
+  use CTE,
+    repo: Datum.DataOrigin.OriginRepo,
+    nodes: Datum.DataOrigin.Data,
+    paths: Datum.DataOrigin.DataTreePath
+end
