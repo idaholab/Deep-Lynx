@@ -1,13 +1,11 @@
 defmodule Datum.PluginsRunTest do
-  use Datum.DataCase
+  use Datum.DataCase, async: false
 
   alias Datum.Plugins
 
   describe "plugins" do
     alias Datum.Plugins.Plugin
     alias Datum.Plugins.Extractor
-
-    import Datum.PluginsFixtures
 
     test "can run the default csv plugin" do
       valid_attrs = %{

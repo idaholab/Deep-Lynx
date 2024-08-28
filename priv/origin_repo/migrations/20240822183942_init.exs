@@ -5,6 +5,7 @@ defmodule Datum.DataOrigin.OriginRepo.Migrations.Init do
     create table(:data, primary_key: false) do
       add :id, :binary, primary_key: true
       add :path, :string
+      add :type, :string
       add :metadata, :jsonb
       add :owned_by, :binary
 

@@ -8,7 +8,6 @@ defmodule Datum.DataOriginRepoTest do
     alias Datum.DataOrigin.Origin
     alias Datum.DataOrigin.Data
 
-    @invalid_attrs %{name: nil}
     test "DataOriginRepo can create a database and run initial migrations" do
       valid_attrs = %{name: "some name"}
 
@@ -19,7 +18,11 @@ defmodule Datum.DataOriginRepoTest do
         origin.id,
         fn ->
           OriginRepo.insert!(
-            Data.changeset(%Data{}, %{path: "/test/path.txt", metadata: %{test: "Test"}})
+            Data.changeset(%Data{}, %{
+              type: :file,
+              path: "/test/path.txt",
+              metadata: %{test: "Test"}
+            })
           )
         end,
         mode: :readwrite,

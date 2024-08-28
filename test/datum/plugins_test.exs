@@ -1,5 +1,5 @@
 defmodule Datum.PluginsTest do
-  use Datum.DataCase
+  use Datum.DataCase, async: false
 
   alias Datum.Plugins
 
@@ -21,7 +21,12 @@ defmodule Datum.PluginsTest do
     end
 
     test "create_plugin/1 with valid data creates a plugin" do
-      valid_attrs = %{module: "some module", name: "some name", path: "some path", filetypes: ["option1", "option2"]}
+      valid_attrs = %{
+        module: "some module",
+        name: "some name",
+        path: "some path",
+        filetypes: ["option1", "option2"]
+      }
 
       assert {:ok, %Plugin{} = plugin} = Plugins.create_plugin(valid_attrs)
       assert plugin.module == "some module"
@@ -36,7 +41,13 @@ defmodule Datum.PluginsTest do
 
     test "update_plugin/2 with valid data updates the plugin" do
       plugin = plugin_fixture()
-      update_attrs = %{module: "some updated module", name: "some updated name", path: "some updated path", filetypes: ["option1"]}
+
+      update_attrs = %{
+        module: "some updated module",
+        name: "some updated name",
+        path: "some updated path",
+        filetypes: ["option1"]
+      }
 
       assert {:ok, %Plugin{} = plugin} = Plugins.update_plugin(plugin, update_attrs)
       assert plugin.module == "some updated module"
