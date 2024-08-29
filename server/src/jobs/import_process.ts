@@ -74,7 +74,7 @@ async function Start(): Promise<void> {
     for (let i = 0; i < workers.length; i++) {
         if (Object.keys(containerImportMap).length > 0) {
             const containerID = Object.keys(containerImportMap)[0];
-            const importIDs = Object.values(containerImportMap)[0];
+            const importIDs = Object.values(containerImportMap)[0].map((i) => i.id);
 
             workers[i] = new Worker(__dirname + '/process_worker.js', {
                 workerData: {
@@ -99,7 +99,7 @@ async function Start(): Promise<void> {
                         .finally(() => {
                             if (Object.keys(containerImportMap).length > 0) {
                                 const nextContainerID = Object.keys(containerImportMap)[0];
-                                const nextImportIDs = Object.values(containerImportMap)[0];
+                                const nextImportIDs = Object.values(containerImportMap)[0].map((i) => i.id);
 
                                 workers[i] = new Worker(__dirname + '/process_worker.js', {
                                     workerData: {
