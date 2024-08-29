@@ -123,7 +123,7 @@ async function Start(): Promise<void> {
                 };
             };
 
-            workers[i].on('exit', exitFunc);
+            workers[i].on('exit', exitFunc(containerID));
         }
     }
 }
