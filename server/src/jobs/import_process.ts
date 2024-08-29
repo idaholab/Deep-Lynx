@@ -112,7 +112,12 @@ async function Start(): Promise<void> {
 
                                 workers[i].on('exit', exitFunc(nextContainerID));
                             } else {
-                                process.exit(0);
+                                if (parentPort) {
+                                    parentPort.postMessage('done');
+                                    return;
+                                } else {
+                                    process.exit(0);
+                                }
                             }
                         });
                 };
