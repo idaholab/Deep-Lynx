@@ -14,7 +14,7 @@ import ReportRepository from './report_repository';
 import Config from '../../../../services/config';
 import BlobStorageProvider from '../../../../services/blob_storage/blob_storage';
 import AzureBlobImpl from '../../../../services/blob_storage/azure_blob_impl';
-import { processQuery, TimeseriesQuery } from 'deeplynx';
+import { processQuery, StorageType, TimeseriesQuery } from 'deeplynx';
 
 /*
     ReportQueryRepository contains methods for persisting and retrieving report
@@ -155,22 +155,17 @@ export default class ReportQueryRepository extends Repository implements Reposit
             responseUrl = `${Config.root_address}/containers/${containerID}/reports/${reportID}/query/${queryID}`
         }
 
-        // formulate query request (this gets sent to NAPI)
-        const queryRequest = new TimeseriesQuery(
-            reportID,
-            queryID,
-            request.query!,
-            responseUrl,
-            `containers/${containerID}/datasources/${files[0].data_source_id}`,
+        const queryResult = await processQuery({
+            report_id: reportID,
+            query: request.query,
+            dl_token: token,
+            storage_type: StorageType.azure,
+            sas_metadata: azureMetadata,
             files,
-            token,
-            files[0].data_source_id!,
-            azureMetadata,
-            false
-        );
-
-        const queryResult = await processQuery(queryRequest);
-        console.log(queryRequest);
+            results_destination: responseUrl,
+            deeplynx_destination: responseUrl
+        });
+        console.log(queryResult);
 
         // set report and query statuses to "processing"
         const statusMsg = `executing query ${queryID}: "${reportQuery.query}" as part of report ${reportID}`;

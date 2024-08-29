@@ -102,10 +102,10 @@ export declare class BucketRepository {
 }
 export declare class TimeseriesQuery {
   report_id: string
-  query: string
+  query?: string
   dl_token: string
   storage_type: StorageType
-  sas_metadata: AzureMetadata
+  sas_metadata?: AzureMetadata
   files: Array<FilePathMetadata>
   results_destination: string
   deeplynx_destination: string

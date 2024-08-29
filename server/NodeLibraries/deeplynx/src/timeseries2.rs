@@ -30,8 +30,11 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
   let session_config = SessionConfig::new().with_information_schema(true);
   let ctx = SessionContext::new_with_config(session_config);
 
-  let sas_token = req
+  let sas_metadata = req
     .sas_metadata
+    .as_ref()
+    .ok_or_else(|| napi::Error::from_reason(String::from("Request has null sas_metadata")))?;
+  let sas_token = sas_metadata
     .sas_token
     .as_ref()
     .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null sas_token")))?;
@@ -40,18 +43,18 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
       let sas_token_query_pairs = azure_metadata::token_to_query_pairs(sas_token.clone())
         .map_err(|e| napi::Error::from_reason(e.to_string()))?;
 
-      let blob_endpoint = req.sas_metadata.blob_endpoint.as_ref().ok_or_else(|| {
+      let blob_endpoint = sas_metadata.blob_endpoint.as_ref().ok_or_else(|| {
         napi::Error::from_reason(String::from("Azure blob endpoint cannot be None/Null."))
       })?;
       let table_path = ListingTableUrl::parse(blob_endpoint)
         .map_err(|e| napi::Error::from_reason(e.to_string()))?;
       let url: &Url = table_path.as_ref();
       let ms_azure = MicrosoftAzureBuilder::new()
-        .with_account(req.sas_metadata.account_name.as_ref().ok_or_else(|| {
+        .with_account(sas_metadata.account_name.as_ref().ok_or_else(|| {
           napi::Error::from_reason(String::from("Azure account name cannot be None/Null."))
         })?)
         .with_sas_authorization(sas_token_query_pairs)
-        .with_container_name(req.sas_metadata.container_name.as_ref().ok_or_else(|| {
+        .with_container_name(sas_metadata.container_name.as_ref().ok_or_else(|| {
           napi::Error::from_reason(String::from("Azure container name cannot be None/Null."))
         })?)
         .with_endpoint(blob_endpoint.to_owned())
@@ -98,9 +101,13 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
     }
   }
 
-  if req.query.trim().to_uppercase().starts_with("DESCRIBE") {
+  let query = req
+    .query
+    .as_ref()
+    .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null query")))?;
+  if query.trim().to_uppercase().starts_with("DESCRIBE") {
     let query_results = ctx
-      .sql(req.query.as_str())
+      .sql(query.as_str())
       .await
       .map_err(|e| napi::Error::from_reason(e.to_string()))?;
     let record_batches = query_results
@@ -135,7 +142,7 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
     }
   } else {
     let query_results = ctx
-      .sql(req.query.as_str())
+      .sql(query.as_str())
       .await
       .map_err(|e| napi::Error::from_reason(e.to_string()))?;
 

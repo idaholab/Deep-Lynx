@@ -7,13 +7,13 @@ use super::{azure_metadata::AzureMetadata, file_path_metadata::FilePathMetadata}
 pub struct TimeseriesQuery {
   #[napi(js_name = "report_id")]
   pub report_id: String,
-  pub query: String,
+  pub query: Option<String>,
   #[napi(js_name = "dl_token")]
   pub dl_token: String,
   #[napi(js_name = "storage_type")]
   pub storage_type: StorageType,
   #[napi(js_name = "sas_metadata")]
-  pub sas_metadata: AzureMetadata,
+  pub sas_metadata: Option<AzureMetadata>,
   pub files: Vec<FilePathMetadata>,
   #[napi(js_name = "results_destination")]
   pub results_destination: String,
