@@ -7,6 +7,7 @@ import EventRepository from '../../../repositories/event_system/event_repository
 import DataStagingMapper from './data_staging_mapper';
 import DataSourceRepository from '../../../repositories/data_warehouse/import/data_source_repository';
 import {Worker} from 'worker_threads';
+import Config from '../../../../services/config';
 
 const format = require('pg-format');
 
@@ -113,7 +114,7 @@ export default class ImportMapper extends Mapper {
     // checking for inserted records is a far better method when attempting to gauge if an import still needs processed
     // note: this will always list in the order the imports were received - and grouped by container_id
     public async ListWithUninsertedData(transaction?: PoolClient, excludeContainers?: string[]): Promise<Result<Import[]>> {
-        return super.rows(this.listWithUninsertedDataStatement(excludeContainers), {resultClass: this.resultClass, transaction});
+        return super.rows(this.listWithUninsertedDataStatement(Config.max_import_retries, excludeContainers), {resultClass: this.resultClass, transaction});
     }
 
     public async ReleaseLock(containerID: string, transaction?: PoolClient): Promise<Result<boolean>> {
@@ -152,7 +153,7 @@ export default class ImportMapper extends Mapper {
             workerData: {
                 input: {
                     importIDs: [importID],
-                    containerID
+                    containerID,
                 },
             },
         });
@@ -176,9 +177,17 @@ export default class ImportMapper extends Mapper {
         return super.runStatement(this.setProcessEndStatement(importIDs));
     }
 
+    public async IncrementAttempts(...importIDs: string[]): Promise<Result<boolean>> {
+        return super.runStatement(this.incrementAttempts(importIDs));
+    }
+
     private setProcessedNull(importID: string): QueryConfig {
         return {
-            text: `UPDATE ${DataStagingMapper.tableName} SET inserted_at = NULL, nodes_processed_at = NULL, edges_processed_at = NULL WHERE import_id = $1`,
+            text: `UPDATE ${DataStagingMapper.tableName}
+                   SET inserted_at        = NULL,
+                       nodes_processed_at = NULL,
+                       edges_processed_at = NULL
+                   WHERE import_id = $1`,
             values: [importID],
         };
     }
@@ -186,7 +195,9 @@ export default class ImportMapper extends Mapper {
     // can only allow deletes on unprocessed imports
     private deleteStatement(importID: string): QueryConfig {
         return {
-            text: `DELETE FROM imports WHERE id = $1`,
+            text: `DELETE
+                   FROM imports
+                   WHERE id = $1`,
             values: [importID],
         };
     }
@@ -195,15 +206,21 @@ export default class ImportMapper extends Mapper {
         // reminder that we don't actually delete nodes or edges, we just set the deleted_at fields accordingly
         return [
             {
-                text: `DELETE FROM nodes WHERE import_data_id = $1`,
+                text: `DELETE
+                       FROM nodes
+                       WHERE import_data_id = $1`,
                 values: [importID],
             },
             {
-                text: `DELETE FROM edges WHERE import_data_id = $1`,
+                text: `DELETE
+                       FROM edges
+                       WHERE import_data_id = $1`,
                 values: [importID],
             },
             {
-                text: `DELETE FROM imports WHERE id = $1`,
+                text: `DELETE
+                       FROM imports
+                       WHERE id = $1`,
                 values: [importID],
             },
         ];
@@ -215,22 +232,28 @@ export default class ImportMapper extends Mapper {
         // accidentally delete any records in process (in case this is from reprocessing an import)
         return [
             {
-                text: `DELETE FROM nodes WHERE import_data_id = $1 AND created_at < NOW() `,
+                text: `DELETE
+                       FROM nodes
+                       WHERE import_data_id = $1
+                         AND created_at < NOW() `,
                 values: [importID],
             },
             {
-                text: `DELETE FROM edges WHERE import_data_id = $1 AND created_at < NOW()`,
+                text: `DELETE
+                       FROM edges
+                       WHERE import_data_id = $1
+                         AND created_at < NOW()`,
                 values: [importID],
             },
         ];
     }
 
     private createStatement(userID: string, ...imports: Import[]): string {
-        const text = `INSERT INTO imports(
-            data_source_id,
-            reference,
-            created_by,
-            modified_by) VALUES %L RETURNING *`;
+        const text = `INSERT INTO imports(data_source_id,
+                                          reference,
+                                          created_by,
+                                          modified_by)
+                      VALUES %L RETURNING *`;
         const values = imports.map((i) => [i.data_source_id, i.reference, userID, userID]);
 
         return format(text, values);
@@ -240,11 +263,12 @@ export default class ImportMapper extends Mapper {
     // don't want to read the data in needlessly
     private listStagingForImportStreaming(importID: string): string {
         return format(
-            `SELECT data_staging.*, data_sources.container_id, data_sources.config as data_source_config 
-                   FROM data_staging
-                            LEFT JOIN type_mappings ON type_mappings.shape_hash = data_staging.shape_hash
-                                                         AND type_mappings.data_source_id = data_staging.data_source_id
-                            LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id WHERE import_id = %L`,
+            `SELECT data_staging.*, data_sources.container_id, data_sources.config as data_source_config
+             FROM data_staging
+                      LEFT JOIN type_mappings ON type_mappings.shape_hash = data_staging.shape_hash
+                 AND type_mappings.data_source_id = data_staging.data_source_id
+                      LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id
+             WHERE import_id = %L`,
             importID,
         );
     }
@@ -252,15 +276,18 @@ export default class ImportMapper extends Mapper {
     private retrieveStatement(logID: string): QueryConfig {
         return {
             text: `SELECT imports.*,
-                SUM(CASE WHEN (data_staging.inserted_at IS NOT NULL 
-                    OR data_staging.nodes_processed_at IS NOT NULL
-                    OR data_staging.edges_processed_at IS NOT NULL)
-                    AND data_staging.import_id = imports.id 
-                    THEN 1 ELSE 0 END) AS records_inserted,
-                SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records
-            FROM imports
-                LEFT JOIN data_staging ON data_staging.import_id = imports.id 
-            WHERE imports.id = $1 GROUP BY imports.id`,
+                          SUM(CASE
+                                  WHEN (data_staging.inserted_at IS NOT NULL
+                                      OR data_staging.nodes_processed_at IS NOT NULL
+                                      OR data_staging.edges_processed_at IS NOT NULL)
+                                      AND data_staging.import_id = imports.id
+                                      THEN 1
+                                  ELSE 0 END)                                                  AS records_inserted,
+                          SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records
+                   FROM imports
+                            LEFT JOIN data_staging ON data_staging.import_id = imports.id
+                   WHERE imports.id = $1
+                   GROUP BY imports.id`,
             values: [logID],
         };
     }
@@ -268,34 +295,49 @@ export default class ImportMapper extends Mapper {
     private retrieveLockStatement(logID: string, wait?: boolean): QueryConfig {
         if (wait) {
             return {
-                text: `SELECT * FROM imports WHERE id = $1 FOR UPDATE`,
+                text: `SELECT *
+                       FROM imports
+                       WHERE id = $1 FOR UPDATE`,
                 values: [logID],
             };
         }
 
         return {
-            text: `SELECT * FROM imports WHERE id = $1 FOR UPDATE NOWAIT`,
+            text: `SELECT *
+                   FROM imports
+                   WHERE id = $1 FOR UPDATE NOWAIT`,
             values: [logID],
         };
     }
 
     private retrieveLastStatement(logID: string): QueryConfig {
         return {
-            text: `SELECT * FROM imports WHERE data_source_id = $1 ORDER BY modified_at DESC NULLS LAST LIMIT 1`,
+            text: `SELECT *
+                   FROM imports
+                   WHERE data_source_id = $1
+                   ORDER BY modified_at DESC NULLS LAST LIMIT 1`,
             values: [logID],
         };
     }
 
     private retrieveLastAndLockStatement(logID: string): QueryConfig {
         return {
-            text: `SELECT * FROM imports WHERE data_source_id = $1 ORDER BY modified_at DESC NULLS LAST LIMIT 1 FOR NO KEY UPDATE NOWAIT `,
+            text: `SELECT *
+                   FROM imports
+                   WHERE data_source_id = $1
+                   ORDER BY modified_at DESC NULLS LAST LIMIT 1 FOR NO KEY
+            UPDATE NOWAIT `,
             values: [logID],
         };
     }
 
     private setStatusStatement(id: string, status: 'ready' | 'processing' | 'error' | 'stopped' | 'completed', message?: string): QueryConfig {
         return {
-            text: `UPDATE imports SET status = $2, status_message = $3, modified_at = NOW() WHERE id = $1`,
+            text: `UPDATE imports
+                   SET status         = $2,
+                       status_message = $3,
+                       modified_at    = NOW()
+                   WHERE id = $1`,
             values: [id, status, message],
         };
     }
@@ -307,60 +349,75 @@ export default class ImportMapper extends Mapper {
         };
     }
 
-    public listWithUninsertedDataStatement(excludeContainers?: string[]): QueryConfig {
+    public listWithUninsertedDataStatement(maxAttempts: number, excludeContainers?: string[]): QueryConfig {
         // we have to use the advisory lock at the session level so that clustered deeplynx doesn't start multiple
         // process threads for the same container
         if (excludeContainers && excludeContainers.length > 0) {
-            const text = `SELECT imports.*, data_sources.container_id,
-                          SUM(CASE WHEN (data_staging.inserted_at IS NOT NULL 
-                            OR data_staging.nodes_processed_at IS NOT NULL
-                            OR data_staging.edges_processed_at IS NOT NULL)
-                            AND data_staging.import_id = imports.id 
-                            THEN 1 ELSE 0 END) AS records_inserted,
-                          SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records
-                   FROM imports
-                   LEFT JOIN data_staging ON data_staging.import_id = imports.id
-                   LEFT JOIN data_sources ON data_sources.id = imports.data_source_id
-                     WHERE EXISTS (SELECT * FROM data_staging WHERE data_staging.import_id = imports.id 
-                                    AND data_staging.inserted_at IS NULL
-                                    AND data_staging.nodes_processed_at IS NULL
-                                    AND data_staging.edges_processed_at IS NULL)
-                     AND EXISTS(SELECT * FROM data_staging WHERE data_staging.import_id = imports.id)
-                     AND data_sources.container_id NOT IN(%L)
-                   GROUP BY imports.id, container_id
-                   ORDER BY imports.created_at ASC
-                   `;
+            const text = `SELECT imports.*,
+                                 data_sources.container_id,
+                                 SUM(CASE
+                                         WHEN (data_staging.inserted_at IS NOT NULL
+                                             OR data_staging.nodes_processed_at IS NOT NULL
+                                             OR data_staging.edges_processed_at IS NOT NULL)
+                                             AND data_staging.import_id = imports.id
+                                             THEN 1
+                                         ELSE 0 END)                                                  AS records_inserted,
+                                 SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records
+                          FROM imports
+                                   LEFT JOIN data_staging ON data_staging.import_id = imports.id
+                                   LEFT JOIN data_sources ON data_sources.id = imports.data_source_id
+                          WHERE EXISTS (SELECT *
+                                        FROM data_staging
+                                        WHERE data_staging.import_id = imports.id
+                                          AND data_staging.inserted_at IS NULL
+                                          AND data_staging.nodes_processed_at IS NULL
+                                          AND data_staging.edges_processed_at IS NULL)
+                            AND EXISTS(SELECT * FROM data_staging WHERE data_staging.import_id = imports.id)
+                            AND data_sources.container_id NOT IN (%L)
+                            AND imports.attempts < %L
+                          GROUP BY imports.id, container_id
+                          ORDER BY imports.created_at ASC
+            `;
 
-            const values = excludeContainers;
+            const values = [maxAttempts, excludeContainers];
 
             return format(text, values);
         } else {
-            const text = `SELECT imports.*, data_sources.container_id,
-                          SUM(CASE WHEN (data_staging.inserted_at IS NOT NULL 
-                            OR data_staging.nodes_processed_at IS NOT NULL
-                            OR data_staging.edges_processed_at IS NOT NULL)
-                            AND data_staging.import_id = imports.id 
-                            THEN 1 ELSE 0 END) AS records_inserted,
-                          SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records
-                   FROM imports
-                   LEFT JOIN data_staging ON data_staging.import_id = imports.id
-                   LEFT JOIN data_sources ON data_sources.id = imports.data_source_id
-                     WHERE EXISTS (SELECT * FROM data_staging WHERE data_staging.import_id = imports.id 
-                                    AND data_staging.inserted_at IS NULL
-                                    AND data_staging.nodes_processed_at IS NULL
-                                    AND data_staging.edges_processed_at IS NULL)
-                     AND EXISTS(SELECT * FROM data_staging WHERE data_staging.import_id = imports.id)
-                   GROUP BY imports.id, container_id
-                   ORDER BY imports.created_at ASC
-                   `;
+            const text = `SELECT imports.*,
+                                 data_sources.container_id,
+                                 SUM(CASE
+                                         WHEN (data_staging.inserted_at IS NOT NULL
+                                             OR data_staging.nodes_processed_at IS NOT NULL
+                                             OR data_staging.edges_processed_at IS NOT NULL)
+                                             AND data_staging.import_id = imports.id
+                                             THEN 1
+                                         ELSE 0 END)                                                  AS records_inserted,
+                                 SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records
+                          FROM imports
+                                   LEFT JOIN data_staging ON data_staging.import_id = imports.id
+                                   LEFT JOIN data_sources ON data_sources.id = imports.data_source_id
+                          WHERE EXISTS (SELECT *
+                                        FROM data_staging
+                                        WHERE data_staging.import_id = imports.id
+                                          AND data_staging.inserted_at IS NULL
+                                          AND data_staging.nodes_processed_at IS NULL
+                                          AND data_staging.edges_processed_at IS NULL)
+                            AND EXISTS(SELECT * FROM data_staging WHERE data_staging.import_id = imports.id)
+                            AND imports.attempts < %L
+                          GROUP BY imports.id, container_id
+                          ORDER BY imports.created_at ASC
+            `;
 
-            return format(text);
+            const values = [maxAttempts];
+
+            return format(text, values);
         }
     }
 
     private countStatement(): QueryConfig {
         return {
-            text: `SELECT COUNT(*) FROM imports`,
+            text: `SELECT COUNT(*)
+                   FROM imports`,
         };
     }
 
@@ -369,22 +426,36 @@ export default class ImportMapper extends Mapper {
     // exist for it
     private existForDataSourceStatement(datasourceID: string): QueryConfig {
         return {
-            text: `SELECT COUNT(*) FROM imports WHERE data_source_id = $1 LIMIT 1`,
+            text: `SELECT COUNT(*)
+                   FROM imports
+                   WHERE data_source_id = $1 LIMIT 1`,
             values: [datasourceID],
         };
     }
 
     private setProcessStartStatement(importIDs: string[]): string {
-        const text = `UPDATE imports SET process_start = NOW() WHERE id IN(%L)`;
+        const text = `UPDATE imports
+                      SET process_start = NOW()
+                      WHERE id IN (%L)`;
         const values = [...importIDs];
 
         return format(text, values);
     }
 
     private setProcessEndStatement(importIDs: string[]): string {
-        const text = `UPDATE imports SET process_end= NOW() WHERE id IN(%L)`;
+        const text = `UPDATE imports
+                      SET process_end= NOW()
+                      WHERE id IN (%L)`;
         const values = [...importIDs];
 
+        return format(text, values);
+    }
+
+    private incrementAttempts(importIDs: string[]): string {
+        const text = `UPDATE imports
+                      SET attempts = attempts + 1
+                      WHERE id IN (%L)`;
+        const values = [...importIDs];
         return format(text, values);
     }
 }
