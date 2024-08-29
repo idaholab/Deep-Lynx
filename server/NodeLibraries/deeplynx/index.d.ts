@@ -38,6 +38,7 @@ export const enum StorageType {
   azure = 'azure',
   filesystem = 'filesystem'
 }
+export declare function processQuery(req: TimeseriesQuery): Promise<string>
 export type JsRedisGraphLoader = RedisGraphLoader
 export declare class RedisGraphLoader {
   constructor()
@@ -99,7 +100,13 @@ export declare class BucketRepository {
    */
   completeIngestion(): Promise<void>
 }
-export type JsTimeseriesQuery = TimeseriesQuery
 export declare class TimeseriesQuery {
-  constructor()
+  report_id: string
+  query: string
+  dl_token: string
+  storage_type: StorageType
+  sas_metadata: AzureMetadata
+  files: Array<FilePathMetadata>
+  results_destination: string
+  deeplynx_destination: string
 }

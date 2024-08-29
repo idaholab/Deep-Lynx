@@ -18,6 +18,8 @@ pub mod timeseries_query;
 use file_path_metadata::FileType;
 use timeseries_query::{StorageType, TimeseriesQuery};
 
+// see url below for details
+// https://lucid.app/lucidspark/b8c390a8-4b87-43a5-9d35-aae51350751f/edit?viewport_loc=-972%2C-151%2C4140%2C1831%2C0_0&invitationId=inv_b2784543-d5cc-4155-b5b3-ec9749ac1958
 #[napi]
 pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
   if req.files.is_empty() {
