@@ -20,11 +20,7 @@ use timeseries_query::{StorageType, TimeseriesQuery};
 
 #[napi]
 pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
-  let files = req
-    .files
-    .as_ref()
-    .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null file list")))?;
-  if files.is_empty() {
+  if req.files.is_empty() {
     return Err(napi::Error::from_reason("Request has empty file list"));
   };
 
@@ -32,35 +28,28 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
   let session_config = SessionConfig::new().with_information_schema(true);
   let ctx = SessionContext::new_with_config(session_config);
 
-  let sas_metadata = req
+  let sas_token = req
     .sas_metadata
-    .as_ref()
-    .ok_or_else(|| napi::Error::from_reason(String::from("Request has null sas_metadata")))?;
-  let store_type = req
-    .storage_type
-    .as_ref()
-    .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null storage_type")))?;
-  let sas_token = sas_metadata
     .sas_token
     .as_ref()
     .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null sas_token")))?;
-  match store_type {
+  match req.storage_type {
     StorageType::azure => {
       let sas_token_query_pairs = azure_metadata::token_to_query_pairs(sas_token.clone())
         .map_err(|e| napi::Error::from_reason(e.to_string()))?;
 
-      let blob_endpoint = sas_metadata.blob_endpoint.as_ref().ok_or_else(|| {
+      let blob_endpoint = req.sas_metadata.blob_endpoint.as_ref().ok_or_else(|| {
         napi::Error::from_reason(String::from("Azure blob endpoint cannot be None/Null."))
       })?;
       let table_path = ListingTableUrl::parse(blob_endpoint)
         .map_err(|e| napi::Error::from_reason(e.to_string()))?;
       let url: &Url = table_path.as_ref();
       let ms_azure = MicrosoftAzureBuilder::new()
-        .with_account(sas_metadata.account_name.as_ref().ok_or_else(|| {
+        .with_account(req.sas_metadata.account_name.as_ref().ok_or_else(|| {
           napi::Error::from_reason(String::from("Azure account name cannot be None/Null."))
         })?)
         .with_sas_authorization(sas_token_query_pairs)
-        .with_container_name(sas_metadata.container_name.as_ref().ok_or_else(|| {
+        .with_container_name(req.sas_metadata.container_name.as_ref().ok_or_else(|| {
           napi::Error::from_reason(String::from("Azure container name cannot be None/Null."))
         })?)
         .with_endpoint(blob_endpoint.to_owned())
@@ -79,16 +68,7 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
     }
   }
 
-  let report_id = req
-    .report_id
-    .as_ref()
-    .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null report_id")))?;
-  let dl_token = req
-    .dl_token
-    .as_ref()
-    .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null token")))?;
-
-  let table_info = file_path_metadata::extract_table_info(files)
+  let table_info = file_path_metadata::extract_table_info(&req.files)
     .map_err(|e| napi::Error::from_reason(e.to_string()))?;
 
   for table in table_info {
@@ -116,13 +96,9 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
     }
   }
 
-  let query = req
-    .query
-    .as_ref()
-    .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null query")))?;
-  if query.trim().to_uppercase().starts_with("DESCRIBE") {
+  if req.query.trim().to_uppercase().starts_with("DESCRIBE") {
     let query_results = ctx
-      .sql(query.as_str())
+      .sql(req.query.as_str())
       .await
       .map_err(|e| napi::Error::from_reason(e.to_string()))?;
     let record_batches = query_results
@@ -135,10 +111,8 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
     let json_payload =
       serde_json::to_value(json_rows).map_err(|e| napi::Error::from_reason(e.to_string()))?;
     if let Ok(res) = client
-      .post(req.deeplynx_destination.as_ref().ok_or_else(|| {
-        napi::Error::from_reason(String::from("Request deeplynx destination is null"))
-      })?)
-      .bearer_auth(dl_token)
+      .post(&req.deeplynx_destination)
+      .bearer_auth(&req.dl_token)
       .json(&json_payload)
       .send()
       .await
@@ -150,7 +124,7 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
 
       Ok(format!(
         "report_id: {} dl_response: {}",
-        report_id, dl_response
+        req.report_id, dl_response
       ))
     } else {
       Err(napi::Error::from_reason(
@@ -159,13 +133,9 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
     }
   } else {
     let query_results = ctx
-      .sql(query.as_str())
+      .sql(req.query.as_str())
       .await
       .map_err(|e| napi::Error::from_reason(e.to_string()))?;
-
-    let results_destination = req.results_destination.as_ref().ok_or_else(|| {
-      napi::Error::from_reason(String::from("Request has a null results_destination"))
-    })?;
 
     let local_storage =
       env::var("FILESYSTEM_STORAGE_DIRECTORY").expect("FILESYSTEM_STORAGE_DIRECTORY must be set.");
@@ -173,7 +143,7 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
     let ext_extender = short!();
     let file_name = format!(
       "{}_{}.csv{}",
-      report_id,
+      req.report_id,
       now.timestamp_millis(),
       ext_extender
     );
@@ -188,38 +158,28 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
       .await
       .map_err(|e| napi::Error::from_reason(e.to_string()))?;
     let result_metadata = json!({
-      "report_id": report_id,
+      "report_id": req.report_id,
       "isError": false,
       "file_name": file_name,
       "file_size": file_metadata.len(),
-      "file_path": results_destination,
-      "adapter": store_type.to_string(),
+      "file_path": req.results_destination,
+      "adapter": req.storage_type.to_string(),
     });
 
     let dl_res = client
-      .post(req.deeplynx_destination.as_ref().ok_or_else(|| {
-        napi::Error::from_reason(String::from("Request deeplynx destination is null"))
-      })?)
-      .bearer_auth(dl_token)
+      .post(&req.deeplynx_destination)
+      .bearer_auth(&req.dl_token)
       .json(&result_metadata)
       .send()
       .await
       .map_err(|e| napi::Error::from_reason(e.to_string()))?;
 
-    let res_url = match store_type {
+    let res_url = match req.storage_type {
       StorageType::azure => {
-        format!(
-          "{}/{}?{}",
-          results_destination,
-          file_name,
-          sas_metadata
-            .sas_token
-            .as_ref()
-            .ok_or_else(|| napi::Error::from_reason(String::from("Request has null sas_token")))?
-        )
+        format!("{}/{}?{}", req.results_destination, file_name, sas_token)
       }
       StorageType::filesystem => {
-        format!("{}/{}", results_destination, file_name)
+        format!("{}/{}", req.results_destination, file_name)
       }
     };
 
@@ -243,7 +203,7 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
       .map_err(|e| napi::Error::from_reason(e.to_string()))?;
     Ok(format!(
       "report_id: {} dl_response: {} ms_response: {}",
-      report_id, dl_res_str, ms_res_str
+      req.report_id, dl_res_str, ms_res_str
     ))
   }
 }

@@ -2,23 +2,35 @@ use std::fmt;
 
 use super::{azure_metadata::AzureMetadata, file_path_metadata::FilePathMetadata};
 
-#[napi(constructor)]
+#[napi(js_name = "TimeseriesQuery")]
+#[derive(Debug, Default, Clone)]
+pub struct JsTimeseriesQuery {
+  inner: Option<TimeseriesQuery>,
+}
+
+#[napi]
+impl JsTimeseriesQuery {
+  #[napi(constructor)]
+  pub fn new() -> Self {
+    JsTimeseriesQuery {
+      inner: Some(TimeseriesQuery::new()),
+    }
+  }
+}
+
+// todo: I want this to work without having each item be wrapped in an option.
+// I want to be able to pass an object in. Maybe I can make a factory method under JsTimeseriesQuery?
+// According to the errors, I need to implement FromNapiRef. Is this true or is there another way around it?
 #[derive(Debug, Default, Clone)]
 pub struct TimeseriesQuery {
-  #[napi(js_name = "report_id")]
-  pub report_id: Option<String>,
-  pub query: Option<String>,
-  #[napi(js_name = "dl_token")]
-  pub dl_token: Option<String>,
-  #[napi(js_name = "storage_type")]
-  pub storage_type: Option<StorageType>,
-  #[napi(js_name = "sas_metadata")]
-  pub sas_metadata: Option<AzureMetadata>,
-  pub files: Option<Vec<FilePathMetadata>>,
-  #[napi(js_name = "results_destination")]
-  pub results_destination: Option<String>,
-  #[napi(js_name = "deeplynx_destination")]
-  pub deeplynx_destination: Option<String>,
+  pub report_id: String,
+  pub query: String,
+  pub dl_token: String,
+  pub storage_type: StorageType,
+  pub sas_metadata: AzureMetadata,
+  pub files: Vec<FilePathMetadata>,
+  pub results_destination: String,
+  pub deeplynx_destination: String,
 }
 
 impl TimeseriesQuery {
