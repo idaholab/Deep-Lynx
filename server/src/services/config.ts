@@ -74,6 +74,8 @@ export class Config {
 
     private readonly _auth_config_file: string;
 
+    private readonly _max_import_retries: number;
+
     private readonly _export_data_interval: string;
     private readonly _export_data_concurrency: number;
 
@@ -140,6 +142,8 @@ export class Config {
         // default to 6 hours for the initial import cache, subsequent should be 30 seconds
         this._initial_import_cache_ttl = process.env.INITIAL_IMPORT_CACHE_TTL ? parseInt(process.env.INITIAL_IMPORT_CACHE_TTL, 10) : 21600;
 
+        this._max_import_retries = process.env.MAX_IMPORT_RETRIES ? parseInt(process.env.MAX_IMPORT_RETRIES, 10) : 10;
+
         this._core_db_connection_string = process.env.CORE_DB_CONNECTION_STRING || '';
         this._timescaledb_enabled = process.env.TIMESCALEDB_ENABLED === 'true';
 
@@ -155,7 +159,8 @@ export class Config {
 
         // if largeobject is specified as the storage option, set to filesystem instead
         // as largeobject is maintained in the codebase only for backwards compatibility
-        this._file_storage_method = (process.env.FILE_STORAGE_METHOD === 'largeobject' || !process.env.FILE_STORAGE_METHOD) ? 'filesystem' : process.env.FILE_STORAGE_METHOD;
+        this._file_storage_method =
+            process.env.FILE_STORAGE_METHOD === 'largeobject' || !process.env.FILE_STORAGE_METHOD ? 'filesystem' : process.env.FILE_STORAGE_METHOD;
         this._filesystem_storage_directory = process.env.FILESYSTEM_STORAGE_DIRECTORY || './../storage/';
         this._azure_blob_connection_string = process.env.AZURE_BLOB_CONNECTION_STRING || '';
         this._azure_blob_container_name = process.env.AZURE_BLOB_CONTAINER_NAME || 'deep-lynx';
@@ -578,6 +583,10 @@ export class Config {
 
     get minio_bucket_name(): string {
         return this._minio_bucket_name;
+    }
+
+    get max_import_retries(): number {
+        return this._max_import_retries;
     }
 
     // Audience may be set to 'false' to ensure no audience validation happens,

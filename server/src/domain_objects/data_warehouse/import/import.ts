@@ -31,6 +31,9 @@ export default class Import extends BaseDomainClass {
     @IsOptional()
     reference?: string;
 
+    @IsOptional()
+    attempts?: number = 0;
+
     // composite properties pulled in by JOIN statements when the db fetches this record
     @IsOptional()
     @IsNumber()
@@ -48,10 +51,10 @@ export default class Import extends BaseDomainClass {
     container_id?: string;
 
     @IsOptional()
-        process_start?: Date;
+    process_start?: Date;
 
     @IsOptional()
-        process_end?: Date;
+    process_end?: Date;
 
     constructor(input: {data_source_id: string; status_message?: string; reference?: string}) {
         super();

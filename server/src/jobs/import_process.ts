@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-object-injection */
 /*
   Standalone loop for processing imports
  */
@@ -8,6 +9,7 @@ import Config from '../services/config';
 import {parentPort, Worker} from 'worker_threads';
 import ImportMapper from '../data_access_layer/mappers/data_warehouse/import/import_mapper';
 import Import from '../domain_objects/data_warehouse/import/import';
+
 const os = require('node:os');
 process.setMaxListeners(0);
 
@@ -28,9 +30,8 @@ if (Config.cache_provider === 'memory') {
     });
 }
 
-async function Start(): Promise<void> {
-    await postgresAdapter.init();
-
+async function loadContainers(containerImportMap: {[key: string]: Import[]}): Promise<void> {
+    // we know the Postgres adapter has been initiated by the time this is called
     // we _should_ be able to load all the imports into memory because this job is running often enough
     const importsResult = await ImportMapper.Instance.ListWithUninsertedData();
 
@@ -43,20 +44,26 @@ async function Start(): Promise<void> {
         return;
     }
 
-    const containerImportMap: {[key: string]: Import[]} = {};
-
+    // remember that objects are pass by reference, so we don't need to return anything as we're modifying the original object
     importsResult.value.forEach((i) =>
         containerImportMap[i.container_id!] ? containerImportMap[i.container_id!].push(i) : (containerImportMap[i.container_id!] = [i]),
     );
+}
+
+async function Start(): Promise<void> {
+    await postgresAdapter.init();
+
+    const containerImportMap: {[key: string]: Import[]} = {};
+
+    // initial call out to the loadContainers function
+    await loadContainers(containerImportMap);
 
     // a simple worker pattern to keep our worker pool from not swamping the cpu
     const MAX_WORKERS = os.availableParallelism();
     const workers: Worker[] = new Array(MAX_WORKERS);
-    const containerIDs = Object.keys(containerImportMap);
-    const incompleteContainerIDs: any[] = [];
 
     // if no containers exit
-    if (containerIDs.length === 0)
+    if (Object.keys(containerImportMap).length === 0)
         if (parentPort) {
             parentPort.postMessage('done');
             return;
@@ -65,67 +72,50 @@ async function Start(): Promise<void> {
         }
 
     for (let i = 0; i < workers.length; i++) {
-        if (containerIDs.length > 0) {
-            const containerID = containerIDs.pop();
-            incompleteContainerIDs.push(containerID);
+        if (Object.keys(containerImportMap).length > 0) {
+            const containerID = Object.keys(containerImportMap)[0];
+            const importIDs = Object.values(containerImportMap)[0];
 
             workers[i] = new Worker(__dirname + '/process_worker.js', {
                 workerData: {
                     input: {
-                        importIDs: containerImportMap[containerID!].map((i) => i.id),
-                        containerID: containerID!,
+                        importIDs,
+                        containerID,
                     },
                 },
             });
 
             // this exit function allows us to keep the workers going as long as there is data to process for containers
             // while not stepping on the toes of any other container being processed elsewhere - it's recursive OoooooOO
-            const exitFunc = () => {
-                delete containerImportMap[containerID!];
-                // we don't care about the ids, just if it's empty
-                incompleteContainerIDs.pop();
+            const exitFunc = (containerID: string): (() => void) => {
+                return () => {
+                    // eslint-disable-next-line security/detect-object-injection
+                    delete containerImportMap[containerID];
 
-                ImportMapper.Instance.ListWithUninsertedData(undefined, containerIDs)
-                    .then((result) => {
-                        if (result.isError) {
-                            Logger.error(`unable to list more imports in import process ${JSON.stringify(result.error)}`);
-                            return;
-                        }
-
-                        if (result.value.length > 0) {
-                            for (const j of result.value) {
-                                containerImportMap[j.container_id!] ? containerImportMap[j.container_id!].push(j) : (containerImportMap[j.container_id!] = [j]);
-                            }
-
-                            containerIDs.push(...Object.keys(containerImportMap));
-                        }
-                    })
-                    .catch((e) => {
-                        Logger.error(`unable to list more imports in import process ${JSON.stringify(e)}`);
-                    })
-                    .finally(() => {
-                        if (containerIDs.length > 0) {
-                            const nextContainerID = containerIDs.pop();
-                            if (nextContainerID && containerImportMap[nextContainerID]) {
-                                incompleteContainerIDs.push(nextContainerID);
+                    loadContainers(containerImportMap)
+                        .catch((e) => {
+                            Logger.error(`unable to list more imports in import process ${JSON.stringify(e)}`);
+                        })
+                        .finally(() => {
+                            if (Object.keys(containerImportMap).length > 0) {
+                                const nextContainerID = Object.keys(containerImportMap)[0];
+                                const nextImportIDs = Object.values(containerImportMap)[0];
 
                                 workers[i] = new Worker(__dirname + '/process_worker.js', {
                                     workerData: {
                                         input: {
-                                            importIDs: containerImportMap[nextContainerID].map((i) => i.id),
+                                            importIDs: nextImportIDs,
                                             containerID: nextContainerID,
                                         },
                                     },
                                 });
 
-                                workers[i].on('exit', exitFunc);
+                                workers[i].on('exit', exitFunc(nextContainerID));
+                            } else {
+                                process.exit(0);
                             }
-                        }
-
-                        if (incompleteContainerIDs.length === 0) {
-                            process.exit(0);
-                        }
-                    });
+                        });
+                };
             };
 
             workers[i].on('exit', exitFunc);

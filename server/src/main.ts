@@ -3,8 +3,10 @@ import {Server} from './http_server/server';
 import BackedLogger from './services/logger';
 import Config from './services/config';
 import {Cache} from './services/cache/cache';
+
 const path = require('path');
 import Bree from 'bree';
+
 const Graceful = require('@ladjs/graceful');
 import 'reflect-metadata';
 import UserRepository from './data_access_layer/repositories/access_management/user_repository';
@@ -12,6 +14,7 @@ import PostgresAdapter from './data_access_layer/mappers/db_adapters/postgres/po
 import OAuthRepository from './data_access_layer/repositories/access_management/oauth_repository';
 import {Migrator} from './data_access_layer/migrate';
 import {ReturnSuperUser} from './domain_objects/access_management/user';
+import ms from 'ms';
 
 process.on('unhandledRejection', (reason, promise) => {
     BackedLogger.error(`Unhandled rejection at ${JSON.stringify(promise)} reason: ${reason}`);
@@ -51,6 +54,8 @@ async function Start(): Promise<any> {
             name: 'import_process',
             interval: '1m',
             timeout: 0,
+            // we'll kill the worker after an hour, should handle the rest of stuck container cases
+            closeWorkerAfterMs: ms('1h'),
         },
         {
             name: 'export', // will run export.ts
