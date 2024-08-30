@@ -165,7 +165,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
             storage_type: Config.file_storage_method === 'azure_blob' ? StorageType.azure : StorageType.filesystem,
             sas_metadata: azureMetadata,
             files,
-            results_destination: `${baseBlobUrl}/containers/${containerID}/datasources/${files[0].data_source_id}`,
+            results_destination: `${baseBlobUrl}containers/${containerID}/datasources/${files[0].data_source_id}`,
             deeplynx_destination: responseUrl
         }
         console.log(query)
