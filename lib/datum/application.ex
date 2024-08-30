@@ -21,7 +21,7 @@ defmodule Datum.Application do
         opts = [strategy: :one_for_one, name: Datum.Supervisor]
         Supervisor.start_link(children, opts)
 
-      ["server" | _options] ->
+      _ ->
         children = [
           DatumWeb.Telemetry,
           Datum.Repo,
@@ -40,10 +40,6 @@ defmodule Datum.Application do
         # for other strategies and supported options
         opts = [strategy: :one_for_one, name: Datum.Supervisor]
         Supervisor.start_link(children, opts)
-
-      _ ->
-        IO.puts("must include an option")
-        System.halt(1)
     end
   end
 
