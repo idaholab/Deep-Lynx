@@ -148,21 +148,23 @@ export default class ReportQueryRepository extends Repository implements Reposit
         }
 
         // set response url depending on describe query or not
-        let responseUrl: string;
-        if (request.query && request.query.startsWith('DESCRIBE')) {
-            responseUrl = `${Config.root_address}/containers/${containerID}/files/timeseries/describe`
-        } else {
-            responseUrl = `${Config.root_address}/containers/${containerID}/reports/${reportID}/query/${queryID}`
-        }
+        const responseUrl = (request.query && request.query.startsWith('DESCRIBE'))
+            ? `${Config.root_address}/containers/${containerID}/files/timeseries/describe`
+            : `${Config.root_address}/containers/${containerID}/reports/${reportID}/query/${queryID}`;
+
+        // build baseBlobUrl for azure storage or filesystem
+        const baseBlobUrl = Config.file_storage_method === 'azure_blob'
+            ? `${azureMetadata?.blob_endpoint}/${azureMetadata?.container_name}/`
+            : Config.filesystem_storage_directory;
 
         const queryResult = await processQuery({
             report_id: reportID,
             query: request.query,
             dl_token: token,
-            storage_type: StorageType.azure,
+            storage_type: Config.file_storage_method === 'azure_blob' ? StorageType.azure : StorageType.filesystem,
             sas_metadata: azureMetadata,
             files,
-            results_destination: responseUrl,
+            results_destination: `${baseBlobUrl}/containers/${containerID}/datasources/${files[0].data_source_id}`,
             deeplynx_destination: responseUrl
         });
         console.log(queryResult);
