@@ -157,7 +157,8 @@ export default class ReportQueryRepository extends Repository implements Reposit
             ? `${azureMetadata?.blob_endpoint}/${azureMetadata?.container_name}/`
             : Config.filesystem_storage_directory;
 
-        const queryResult = await processQuery({
+        console.log('printing query');
+        const query = {
             report_id: reportID,
             query: request.query,
             dl_token: token,
@@ -166,7 +167,10 @@ export default class ReportQueryRepository extends Repository implements Reposit
             files,
             results_destination: `${baseBlobUrl}/containers/${containerID}/datasources/${files[0].data_source_id}`,
             deeplynx_destination: responseUrl
-        });
+        }
+        console.log(query)
+
+        const queryResult = await processQuery(query);
         console.log(queryResult);
 
         // set report and query statuses to "processing"
