@@ -21,7 +21,7 @@ defmodule Datum.DataOriginRepoTest do
             Data.changeset(%Data{}, %{
               type: :file,
               path: "/test/path.txt",
-              metadata: %{test: "Test"}
+              metadata: %{plugin_generated_metadata: [%{test: "Test"}]}
             })
           )
         end,

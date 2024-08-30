@@ -22,7 +22,7 @@ defmodule Datum.Scanners.Filesystem do
   end
 
   def scan_directory(%Origin{} = origin, root_path, user_id \\ nil) do
-    parent =
+    {:ok, parent} =
       DataOrigin.add_data(origin, %{
         path: root_path,
         type: :directory,

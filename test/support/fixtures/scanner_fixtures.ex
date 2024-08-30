@@ -3,17 +3,31 @@ defmodule Datum.ScannerFixtures do
   This module defines test helpers for working with scanners.
   """
 
+  def setup() do
+    test_path = Path.join(__DIR__, "filesystem_scanner")
+    delete_directory(test_path)
+
+    File.mkdir!(test_path)
+    generate_files(test_path, 2)
+    test_path
+  end
+
+  def teardown do
+    test_path = Path.join(__DIR__, "filesystem_scanner")
+    delete_directory(test_path)
+  end
+
   @doc """
   Generate files and directories for random scanning testing
   """
-  def generate_files(path, depth) do
+  defp generate_files(path, depth) do
     if depth > 0 do
       # Generate a random number of files between 5 and 10
       num_files = Enum.random(5..10)
 
       for i <- 1..num_files do
         # Write a file with random data
-        File.write!(Path.join([path, "file#{i}"]), :binary, <<Enum.random(0..255)>>)
+        File.write!(Path.join([path, "file#{i}"]), <<Enum.random(0..255)>>)
       end
 
       # Generate a random number of directories between 3 and 7
