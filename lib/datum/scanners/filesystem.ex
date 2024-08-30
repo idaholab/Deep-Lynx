@@ -1,0 +1,73 @@
+defmodule Datum.Scanners.Filesystem do
+  @moduledoc """
+  Filesystem scanner is the primary scanning tool used by the CLI when on a local
+  system. Feed it the root path and it will recursively run through the contained
+  folders/files and run all enabled plugins on them.
+  """
+  require Logger
+  alias Datum.DataOrigin
+  alias Datum.Plugins
+  alias Datum.DataOrigin.Origin
+  alias Datum.DataOrigin.Data
+  alias Datum.Plugins.Extractor
+
+  def scan_directory(%Origin{} = origin, root_path, user_id \\ nil) do
+    parent =
+      DataOrigin.add_data(origin, %{
+        path: root_path,
+        type: :directory,
+        owned_by: user_id
+      })
+
+    File.ls!(root_path)
+    |> Enum.each(fn entry ->
+      full_path = Path.join(root_path, entry)
+
+      if File.dir?(full_path),
+        do: scan_directory(origin, full_path, user_id),
+        else: act_on_file(origin, parent, full_path, user_id)
+    end)
+  end
+
+  defp act_on_file(%Origin{} = origin, %Data{} = parent, path, user_id) do
+    mimetype = MIME.from_path(path)
+
+    # TODO: if this becomes an issue, stop loading plugins from the DB for every file call and instead keep a passed list or cache it
+    plugins = Plugins.list_plugins_by_extensions([mimetype])
+
+    statuses =
+      Task.Supervisor.async_stream_nolink(
+        Datum.TaskSupervisor,
+        plugins,
+        fn plugin ->
+          case plugin.type do
+            :extractor -> Extractor.extract(plugin, path)
+            :sampler -> {:error, "sampler plugins not yet supported"}
+          end
+        end,
+        on_timeout: :kill_task,
+        ordered: false,
+        max_concurrency: 8
+      )
+      |> Stream.map(fn
+        {:ok, metadata} -> {:ok, metadata}
+        {:exit, reason} -> {:error, "plugin run task exited: #{Exception.format_exit(reason)}"}
+      end)
+
+    statuses
+    |> Enum.filter(&match?({:error, _}, &1))
+    |> Enum.each(fn {:error, message} -> Logger.error(message) end)
+
+    {_s, metadatas} = statuses |> Enum.filter(&match?({:ok, _}, &1)) |> Enum.unzip()
+
+    {:ok, child} =
+      DataOrigin.add_data(origin, %{
+        path: path,
+        type: :file,
+        metadata: %{plugin_generated_metadata: metadatas},
+        owned_by: user_id
+      })
+
+    DataOrigin.connect_data(origin, parent, child)
+  end
+end

@@ -15,7 +15,7 @@ defmodule Datum.DataOriginRepoTest do
       assert origin.name == "some name"
 
       OriginRepo.with_dynamic_repo(
-        origin.id,
+        origin,
         fn ->
           OriginRepo.insert!(
             Data.changeset(%Data{}, %{
@@ -28,6 +28,43 @@ defmodule Datum.DataOriginRepoTest do
         mode: :readwrite,
         run_migrations: true
       )
+    end
+
+    test "DataOriginRepo can add data to an origin" do
+      valid_attrs = %{name: "some name"}
+
+      assert {:ok, %Origin{} = origin} = DataOrigin.create_origin(valid_attrs)
+      assert origin.name == "some name"
+
+      assert {:ok, _d} =
+               origin
+               |> DataOrigin.add_data(%{
+                 path: "/some/nonexistent/path",
+                 type: :file
+               })
+    end
+
+    test "DataOriginRepo can connect two pieces of data" do
+      valid_attrs = %{name: "some name"}
+
+      assert {:ok, %Origin{} = origin} = DataOrigin.create_origin(valid_attrs)
+      assert origin.name == "some name"
+
+      assert {:ok, parent} =
+               origin
+               |> DataOrigin.add_data(%{
+                 path: "/some/nonexistent/path",
+                 type: :directory
+               })
+
+      assert {:ok, child} =
+               origin
+               |> DataOrigin.add_data(%{
+                 path: "/some/nonexistent/path/child",
+                 type: :file
+               })
+
+      assert {:ok, _} = DataOrigin.connect_data(origin, parent, child)
     end
   end
 end

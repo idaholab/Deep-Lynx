@@ -1,5 +1,6 @@
 defmodule Datum.DataOrigin.OriginRepo do
   require Logger
+  alias Datum.DataOrigin.Origin
 
   @moduledoc """
     This is the repo for interacting with DataOrigin's Sqlite3 databases.
@@ -11,11 +12,11 @@ defmodule Datum.DataOrigin.OriginRepo do
   # pass in the data origin's uuid - the PID for the write repo should
   # be a shortened form of it. If it's a read only transaction we simply open
   # up a new connection because why not?
-  def with_dynamic_repo(uuid, callback, opts \\ []) do
+  def with_dynamic_repo(%Origin{} = origin, callback, opts \\ []) do
     # default to readwrite mode because you never know
     mode = Keyword.get(opts, :mode, :readwrite)
     run_migrations = Keyword.get(opts, :run_migrations, true)
-    short_uuid = ShortUUID.encode!(uuid)
+    short_uuid = ShortUUID.encode!(origin.id)
 
     name =
       case mode do
@@ -78,7 +79,6 @@ defmodule Datum.DataOrigin.OriginRepo do
         end
 
         callback.()
-        {:ok, nil}
       catch
         value -> {:error, value}
       end
@@ -93,5 +93,12 @@ defmodule Datum.DataOrigin.CT do
   use CTE,
     repo: Datum.DataOrigin.OriginRepo,
     nodes: Datum.DataOrigin.Data,
-    paths: Datum.DataOrigin.DataTreePath
+    paths: Datum.DataOrigin.DataTreePath,
+    options: %{
+      node: %{primary_key: :id, type: :binary_id},
+      paths: %{
+        ancestor: [type: :binary_id],
+        descendant: [type: :binary_id]
+      }
+    }
 end

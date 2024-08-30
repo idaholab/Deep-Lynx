@@ -21,8 +21,8 @@ defmodule Datum.MixProject do
         burrito: [
           targets: [
             macos: [os: :darwin, cpu: :aarch64],
-            linux: [os: :linux, cpu: :x86_64],
-            windows: [os: :windows, cpu: :x86_64]
+            linux: [os: :linux, cpu: :x86_64]
+            # windows: [os: :windows, cpu: :x86_64] uncomment once we figure out how to build for windows on macos
           ]
         ]
       ]
@@ -69,6 +69,7 @@ defmodule Datum.MixProject do
        compile: false,
        depth: 1},
       {:swoosh, "~> 1.15.0"},
+      {:mime, "~> 2.0"},
       {:finch, "~> 0.13"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},

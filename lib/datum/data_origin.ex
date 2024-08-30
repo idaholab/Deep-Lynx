@@ -5,8 +5,10 @@ defmodule Datum.DataOrigin do
 
   import Ecto.Query, warn: false
   alias Datum.Repo
+  alias Datum.DataOrigin.OriginRepo
 
   alias Datum.DataOrigin.Origin
+  alias Datum.DataOrigin.Data
 
   @doc """
   Returns the list of data_origins.
@@ -100,5 +102,27 @@ defmodule Datum.DataOrigin do
   """
   def change_origin(%Origin{} = origin, attrs \\ %{}) do
     Origin.changeset(origin, attrs)
+  end
+
+  def add_data(%Origin{} = origin, attrs \\ %{}) do
+    OriginRepo.with_dynamic_repo(origin, fn ->
+      %Data{}
+      |> Data.changeset(attrs)
+      |> OriginRepo.insert()
+    end)
+  end
+
+  def add_data!(%Origin{} = origin, attrs \\ %{}) do
+    OriginRepo.with_dynamic_repo(origin, fn ->
+      %Data{}
+      |> Data.changeset(attrs)
+      |> OriginRepo.insert!()
+    end)
+  end
+
+  def connect_data(%Origin{} = origin, %Data{} = parent, %Data{} = child) do
+    OriginRepo.with_dynamic_repo(origin, fn ->
+      Datum.DataOrigin.CT.insert(parent.id, child.id)
+    end)
   end
 end

@@ -15,6 +15,11 @@ defmodule Datum.PluginsTest do
       assert Plugins.list_plugins() == [plugin]
     end
 
+    test "list_plugins_by_extension/1 returns all plugins with matching extensions" do
+      plugin = plugin_fixture()
+      assert Plugins.list_plugins_by_extensions(plugin.filetypes) == [plugin]
+    end
+
     test "get_plugin!/1 returns the plugin with given id" do
       plugin = plugin_fixture()
       assert Plugins.get_plugin!(plugin.id) == plugin

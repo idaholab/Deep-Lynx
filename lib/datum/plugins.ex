@@ -21,6 +21,16 @@ defmodule Datum.Plugins do
     Repo.all(Plugin)
   end
 
+  def list_plugins_by_extensions(extensions) when is_list(extensions) do
+    query =
+      from(p in Plugin)
+
+    Enum.reduce(extensions, query, fn name, query ->
+      where(query, [p], ^name in p.filetypes)
+    end)
+    |> Repo.all()
+  end
+
   @doc """
   Gets a single plugin.
 

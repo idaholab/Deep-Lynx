@@ -17,7 +17,8 @@ defmodule Datum.Application do
       # Start a worker by calling: Datum.Worker.start_link(arg)
       # {Datum.Worker, arg},
       # Start to serve requests, typically the last entry
-      DatumWeb.Endpoint
+      DatumWeb.Endpoint,
+      {Task.Supervisor, name: Datum.TaskSupervisor}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
