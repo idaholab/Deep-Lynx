@@ -4,7 +4,7 @@ defmodule Datum.MixProject do
   def project do
     [
       app: :datum,
-      version: "0.1.0",
+      version: "0.0.1",
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -82,6 +82,9 @@ defmodule Datum.MixProject do
       {:elixir_uuid, "~> 1.2"},
       {:wasmex, "~> 0.9.1"},
       {:closure_table, "~> 2.0"},
+      {:yaml_elixir, "~> 2.11"},
+      {:gen_smtp, "~> 1.1"},
+      {:prompt, "~> 0.10.0"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end

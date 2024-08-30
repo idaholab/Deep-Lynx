@@ -4,12 +4,22 @@ defmodule Datum.Scanners.Filesystem do
   system. Feed it the root path and it will recursively run through the contained
   folders/files and run all enabled plugins on them.
   """
+  use Task
   require Logger
   alias Datum.DataOrigin
   alias Datum.Plugins
   alias Datum.DataOrigin.Origin
   alias Datum.DataOrigin.Data
   alias Datum.Plugins.Extractor
+
+  def start_link(arg) do
+    Task.start_link(__MODULE__, :run, [arg])
+  end
+
+  def run(args) do
+    Prompt.display("BOB")
+    Prompt.text("TEST")
+  end
 
   def scan_directory(%Origin{} = origin, root_path, user_id \\ nil) do
     parent =
