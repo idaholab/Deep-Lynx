@@ -28,4 +28,18 @@ defmodule Datum.AccountsFixtures do
     [_, token | _] = String.split(captured_email.text_body, "[TOKEN]")
     token
   end
+
+  @doc """
+  Generate a group.
+  """
+  def group_fixture(attrs \\ %{}) do
+    {:ok, group} =
+      attrs
+      |> Enum.into(%{
+        name: "some name"
+      })
+      |> Datum.Accounts.create_group()
+
+    group
+  end
 end
