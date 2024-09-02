@@ -52,6 +52,7 @@ defmodule DatumWeb.Router do
 
     live_session :redirect_if_user_is_authenticated,
       on_mount: [{DatumWeb.UserAuth, :redirect_if_user_is_authenticated}] do
+      live "/home", HomeLive, :index
       live "/users/register", UserRegistrationLive, :new
       live "/users/log_in", UserLoginLive, :new
       live "/users/reset_password", UserForgotPasswordLive, :new
