@@ -28,3 +28,15 @@ export const useFiles = (node: NodeT | undefined = undefined) => {
 
   return files;
 };
+
+export const useTest = async (node: NodeT | undefined = undefined) => {
+  const container = useContainer();
+
+  if (!node) return;
+
+  let files = await fetch(
+    `/api/containers/${container!.id}/graphs/nodes/${node!.id}/files`
+  );
+
+  return files;
+};

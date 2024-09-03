@@ -4,7 +4,7 @@
 import { useState } from "react";
 
 // Components
-import ProcessFiles from "./workflows/ProcessFiles";
+import Workflows from "./components/workflows";
 
 // Types
 import { Typography } from "@mui/material";
@@ -32,20 +32,11 @@ const ModelViewer = () => {
         <Grid item xs={2}>
           <Button onClick={handleExpand}>
             {expand ? (
-              <>
-                <KeyboardArrowDownIcon sx={{ paddingBottom: ".15rem" }} />{" "}
-                <Typography variant="caption">
-                  Supported file extensions
-                </Typography>
-              </>
+              <KeyboardArrowDownIcon sx={{ paddingBottom: ".15rem" }} />
             ) : (
-              <>
-                <KeyboardArrowRightIcon sx={{ paddingBottom: ".15rem" }} />{" "}
-                <Typography variant="caption">
-                  Supported file extensions
-                </Typography>
-              </>
+              <KeyboardArrowRightIcon sx={{ paddingBottom: ".15rem" }} />
             )}
+            <Typography variant="caption">Supported file extensions</Typography>
           </Button>
           <Box
             sx={{
@@ -84,7 +75,7 @@ const ModelViewer = () => {
             <br />
             <Divider />
             <br />
-            <ProcessFiles />
+            <Workflows />
           </Box>
         </Grid>
       </Grid>
