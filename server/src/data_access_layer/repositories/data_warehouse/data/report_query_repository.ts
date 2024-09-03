@@ -131,7 +131,6 @@ export default class ReportQueryRepository extends Repository implements Reposit
             }
         }
 
-        console.log("setting azure metadata");
         // if any files are azure_blob, this requires some extra metadata
         let azureMetadata: AzureMetadata | undefined;
         if (files.some(f => f.adapter === 'azure_blob')) {
@@ -148,13 +147,11 @@ export default class ReportQueryRepository extends Repository implements Reposit
             }
         }
 
-        console.log("setting response url");
         // set response url depending on describe query or not
         const responseUrl = (request.query && request.query.startsWith('DESCRIBE'))
             ? `${Config.root_address}/containers/${containerID}/files/timeseries/describe`
             : `${Config.root_address}/containers/${containerID}/reports/${reportID}/query/${queryID}`;
 
-        console.log("setting base blob url");
         // build baseBlobUrl for azure storage or filesystem
         const baseBlobUrl = Config.file_storage_method === 'azure_blob'
             ? `${azureMetadata?.blob_endpoint}/${azureMetadata?.container_name}/`
