@@ -3,7 +3,8 @@ import { configureStore } from "@reduxjs/toolkit";
 
 // Reducers
 import { containerReducer } from "./features/container/containerSlice";
-import { themeReducer } from "./features/themeSlice";
+import { themeReducer } from "./features/ux/themeSlice";
+import { uxReducer } from "./features/ux/uxSlice";
 import { ontologyReducer } from "./features/ontology/ontologySlice";
 import { modelViewerReducer } from "./features/model-viewer/modelViewerSlice";
 
@@ -12,6 +13,7 @@ export const makeStore = () => {
     reducer: {
       container: containerReducer,
       theme: themeReducer,
+      ux: uxReducer,
       ontology: ontologyReducer,
       modelViewer: modelViewerReducer,
     },
