@@ -1,7 +1,7 @@
 {
   "name": "webgl-viewer",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.6.4",
   "type": "module",
   "proxy": "http://0.0.0.0:8091",
   "scripts": {
