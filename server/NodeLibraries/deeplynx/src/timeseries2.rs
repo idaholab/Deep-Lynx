@@ -29,7 +29,7 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
   let client = reqwest::Client::new();
   let session_config = SessionConfig::new().with_information_schema(true);
   let ctx = SessionContext::new_with_config(session_config);
-
+  println!("registered ctx");
   let sas_metadata = req
     .sas_metadata
     .as_ref()
@@ -38,17 +38,21 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
     .sas_token
     .as_ref()
     .ok_or_else(|| napi::Error::from_reason(String::from("Request has a null sas_token")))?;
+  println!("registering object store to ctx...");
   match req.storage_type {
     StorageType::azure => {
       let sas_token_query_pairs = azure_metadata::token_to_query_pairs(sas_token.clone())
         .map_err(|e| napi::Error::from_reason(e.to_string()))?;
-
+      println!("sas_token got");
       let blob_endpoint = sas_metadata.blob_endpoint.as_ref().ok_or_else(|| {
         napi::Error::from_reason(String::from("Azure blob endpoint cannot be None/Null."))
       })?;
+      println!("blob_endpoint got");
       let table_path = ListingTableUrl::parse(blob_endpoint)
         .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+      println!("table_path got");
       let url: &Url = table_path.as_ref();
+      println!("got paths for azure builder");
       let ms_azure = MicrosoftAzureBuilder::new()
         .with_account(sas_metadata.account_name.as_ref().ok_or_else(|| {
           napi::Error::from_reason(String::from("Azure account name cannot be None/Null."))
@@ -60,11 +64,13 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
         .with_endpoint(blob_endpoint.to_owned())
         .build()
         .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+      println!("azure builder built");
       ctx
         .runtime_env()
         .register_object_store(url, Arc::new(ms_azure));
     }
     StorageType::filesystem => {
+      // todo: make this not an unwrap
       let url = Url::try_from("file://").unwrap();
       let object_store = object_store::local::LocalFileSystem::new();
       ctx
@@ -72,13 +78,23 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
         .register_object_store(&url, Arc::new(object_store));
     }
   }
-
+  println!("registering tables to ctx...");
   let table_info = file_path_metadata::extract_table_info(&req.files)
     .map_err(|e| napi::Error::from_reason(e.to_string()))?;
 
   for table in table_info {
+    println!("beginning for table in table_info...");
+    // todo: if storage_type is azure, we need to download the file
+    println!("file path: {:?}", table.adapter_file_path);
     match table.file_type {
       FileType::Csv => {
+        println!("heckin' crashing, brb");
+
+        // error starts here, looking chained together
+        // Object Store error: Generic MicrosoftAzure error:
+        // response error "request error", after 10 retries:
+        // error sending request for url
+        // error trying to connect: record overflow
         ctx
           .register_csv(
             table.name.as_str(),
@@ -87,6 +103,7 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
           )
           .await
           .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+        println!("register csv worked!");
       }
       FileType::Json => {
         ctx
@@ -100,7 +117,7 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
       }
     }
   }
-
+  println!("preparing query...");
   let query = req
     .query
     .as_ref()
@@ -220,4 +237,51 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
 fn file_to_body(file: File) -> Body {
   let stream = FramedRead::new(file, BytesCodec::new());
   Body::wrap_stream(stream)
+}
+
+#[cfg(test)]
+mod tests {
+  use azure_metadata::AzureMetadata;
+  use file_path_metadata::FilePathMetadata;
+
+  use super::*;
+
+  #[tokio::test]
+  async fn describe() {
+    let req = TimeseriesQuery {
+      report_id: String::from("69"),
+      query: Some(String::from("DESCRIBE table")),
+      dl_token: String::from("..."),
+      storage_type: StorageType::azure,
+      sas_metadata: Some(AzureMetadata {
+        account_name: Some(String::from("devstoreaccount1")),
+        blob_endpoint: Some(String::from("https://127.0.0.1:10000/devstoreaccount1")),
+        container_name: Some(String::from("deep-lynx")),
+        sas_token: Some(String::from("...")),
+      }),
+      files: vec![FilePathMetadata {
+        id: Some(String::from("5")),
+        adapter: Some(String::from("azure_blob")),
+        data_source_id: Some(String::from("7")),
+        file_name: Some(String::from("1million.csv")),
+        adapter_file_path: Some(String::from(
+          "https://127.0.0.1:10000/containers/1/datasources/7/1million.csv4ygyh1LzWtQkc9k28saFFC",
+        )),
+      }],
+      results_destination: String::from(
+        "http://127.0.0.1:10000/devstoreaccount1/deep-lynx/containers/1/datasources/7",
+      ),
+      deeplynx_destination: String::from(
+        "http://localhost:8090/containers/1/files/timeseries/describe",
+      ),
+    };
+    match process_query(&req).await {
+      Ok(res) => {
+        dbg!(res);
+      }
+      Err(e) => {
+        panic!("{}", e.reason);
+      }
+    };
+  }
 }
