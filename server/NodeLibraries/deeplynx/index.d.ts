@@ -22,7 +22,7 @@ export interface Configuration {
   maxColumns?: number
 }
 export type JsBucketRepository = BucketRepository
-export class BucketRepository {
+export declare class BucketRepository {
   constructor()
   /**
    * # Safety
@@ -53,7 +53,7 @@ export class BucketRepository {
   completeIngestion(): Promise<void>
 }
 export type JsRedisGraphLoader = RedisGraphLoader
-export class RedisGraphLoader {
+export declare class RedisGraphLoader {
   constructor()
   /**
    * # Safety
@@ -64,7 +64,7 @@ export class RedisGraphLoader {
   generateRedisGraph(containerId: string, timestamp?: string | undefined | null, ttl?: number | undefined | null): Promise<string>
 }
 export type JsSnapshotGenerator = SnapshotGenerator
-export class SnapshotGenerator {
+export declare class SnapshotGenerator {
   constructor()
   /**
    * # Safety
