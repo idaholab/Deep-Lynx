@@ -125,4 +125,100 @@ defmodule Datum.DataOrigin do
       Datum.DataOrigin.CT.insert(parent.id, child.id)
     end)
   end
+
+  alias Datum.DataOrigin.ExtractedMetadata
+
+  @doc """
+  Returns the list of extracted_metadatas.
+
+  ## Examples
+
+      iex> list_extracted_metadatas()
+      [%ExtractedMetadata{}, ...]
+
+  """
+  def list_extracted_metadatas do
+    Repo.all(ExtractedMetadata)
+  end
+
+  @doc """
+  Gets a single extracted_metadata.
+
+  Raises `Ecto.NoResultsError` if the Extracted metadata does not exist.
+
+  ## Examples
+
+      iex> get_extracted_metadata!(123)
+      %ExtractedMetadata{}
+
+      iex> get_extracted_metadata!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_extracted_metadata!(id), do: Repo.get!(ExtractedMetadata, id)
+
+  @doc """
+  Creates a extracted_metadata.
+
+  ## Examples
+
+      iex> create_extracted_metadata(%{field: value})
+      {:ok, %ExtractedMetadata{}}
+
+      iex> create_extracted_metadata(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_extracted_metadata(attrs \\ %{}) do
+    %ExtractedMetadata{}
+    |> ExtractedMetadata.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a extracted_metadata.
+
+  ## Examples
+
+      iex> update_extracted_metadata(extracted_metadata, %{field: new_value})
+      {:ok, %ExtractedMetadata{}}
+
+      iex> update_extracted_metadata(extracted_metadata, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_extracted_metadata(%ExtractedMetadata{} = extracted_metadata, attrs) do
+    extracted_metadata
+    |> ExtractedMetadata.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a extracted_metadata.
+
+  ## Examples
+
+      iex> delete_extracted_metadata(extracted_metadata)
+      {:ok, %ExtractedMetadata{}}
+
+      iex> delete_extracted_metadata(extracted_metadata)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_extracted_metadata(%ExtractedMetadata{} = extracted_metadata) do
+    Repo.delete(extracted_metadata)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking extracted_metadata changes.
+
+  ## Examples
+
+      iex> change_extracted_metadata(extracted_metadata)
+      %Ecto.Changeset{data: %ExtractedMetadata{}}
+
+  """
+  def change_extracted_metadata(%ExtractedMetadata{} = extracted_metadata, attrs \\ %{}) do
+    ExtractedMetadata.changeset(extracted_metadata, attrs)
+  end
 end

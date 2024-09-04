@@ -14,7 +14,7 @@ defmodule Datum.Accounts.Group do
   @foreign_key_type :binary_id
   schema "groups" do
     field :name, :string
-    belongs_to :owner, User, type: :binary_id
+    belongs_to :owner, User, type: :binary_id, foreign_key: :owner_id
     many_to_many :users, User, join_through: Datum.Accounts.UserGroup
 
     timestamps(type: :utc_datetime)

@@ -17,4 +17,18 @@ defmodule Datum.DataOriginFixtures do
 
     origin
   end
+
+  @doc """
+  Generate a extracted_metadata.
+  """
+  def extracted_metadata_fixture(attrs \\ %{}) do
+    {:ok, extracted_metadata} =
+      attrs
+      |> Enum.into(%{
+
+      })
+      |> Datum.DataOrigin.create_extracted_metadata()
+
+    extracted_metadata
+  end
 end

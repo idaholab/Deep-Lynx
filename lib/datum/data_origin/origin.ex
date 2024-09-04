@@ -8,6 +8,10 @@ defmodule Datum.DataOrigin.Origin do
     field :name, :string
     field :owned_by, :binary_id
 
+    field :classifications, {:array, :string}
+    field :tags, {:array, :string}
+    field :domains, {:array, :string}
+
     timestamps(type: :utc_datetime)
   end
 

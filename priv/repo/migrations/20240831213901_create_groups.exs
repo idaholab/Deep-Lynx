@@ -5,7 +5,7 @@ defmodule Datum.Repo.Migrations.CreateGroups do
     create table(:groups, primary_key: false) do
       add :id, :binary_id, primary_key: true
       add :name, :string
-      add :owner, references(:users, on_delete: :delete_all, type: :binary_id)
+      add :owner_id, references(:users, on_delete: :delete_all, type: :binary_id)
 
       timestamps(type: :utc_datetime)
     end
@@ -17,6 +17,6 @@ defmodule Datum.Repo.Migrations.CreateGroups do
       timestamps()
     end
 
-    create index(:groups, [:owner])
+    create index(:groups, [:owner_id])
   end
 end
