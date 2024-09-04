@@ -9,6 +9,23 @@ defmodule Datum.DataOrigin.OriginRepo.Migrations.Init do
       add :type, :string
       add :file_type, :string
       add :properties, :jsonb
+      add :description, :string
+      add :owned_by, :binary
+
+      add :tags, {:array, :string}
+      add :domains, {:array, :string}
+
+      timestamps(type: :utc_datetime)
+    end
+
+    create table(:documentation, primary_key: false) do
+      add :id, :binary, primary_key: true
+      add :path, :string
+      add :original_path, :string
+      add :type, :string
+      add :file_type, :string
+      add :properties, :jsonb
+      add :description, :string
       add :owned_by, :binary
 
       add :tags, {:array, :string}

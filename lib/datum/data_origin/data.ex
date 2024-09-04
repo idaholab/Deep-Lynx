@@ -11,8 +11,10 @@ defmodule Datum.DataOrigin.Data do
     field :original_path, :string
     field :type, Ecto.Enum, values: [:directory, :file]
     field :file_type, :string, default: nil
+    field :description, :string
     field :properties, Datum.JSONB
 
+    # owned_by can't be foreign key since it's referring to the ops db
     field :owned_by, :binary_id
 
     field :tags, {:array, :string}
