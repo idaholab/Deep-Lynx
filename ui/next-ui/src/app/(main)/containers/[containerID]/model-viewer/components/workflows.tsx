@@ -26,7 +26,7 @@ import { useAppSelector } from "@/lib/store/hooks";
 // Components
 import DataSourceSelector from "./selectDataSource";
 import UploadModel from "./workflows/uploadModel";
-import ProcessModel from "./workflows/ProcessFiles";
+import ProcessModel from "./workflows/processFiles";
 import VisualizeModel from "./workflows/visualizeModel";
 
 const Workflows = () => {

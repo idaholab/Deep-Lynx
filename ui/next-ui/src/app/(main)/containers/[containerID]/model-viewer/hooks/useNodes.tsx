@@ -27,7 +27,6 @@ export const useNodes = (datasource: DataSourceT | null = null) => {
       setNodes(nodes);
     }
 
-    if (!datasource) return;
     fetchNodes();
   }, [container, datasource]);
 

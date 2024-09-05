@@ -31,7 +31,7 @@ type Props = {
   };
 };
 
-function WebGL(props: Props) {
+const WebGL = (props: Props) => {
   const { unityProvider, addEventListener, removeEventListener, sendMessage } =
     useUnityContext({
       loaderUrl: "/webgl/webgl.loader.js",
@@ -50,8 +50,6 @@ function WebGL(props: Props) {
   );
   const handleMeshData = useCallback(
     (data: any) => {
-      console.log("Mesh Data:");
-      console.log(JSON.parse(data));
       props.setMesh(JSON.parse(data).data.graph);
     },
     [props]
@@ -91,6 +89,6 @@ function WebGL(props: Props) {
       />
     </Container>
   );
-}
+};
 
 export default WebGL;

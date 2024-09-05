@@ -77,3 +77,4 @@ export default function ContainerProvider({
 
 // Custom hook to use the context
 export const useContainer = () => useContext(ContainerContext);
+export const useMetatypes = () => useContext(MetatypeContext);

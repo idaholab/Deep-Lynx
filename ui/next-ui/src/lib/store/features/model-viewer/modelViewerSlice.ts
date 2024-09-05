@@ -11,12 +11,14 @@ import { DagT, FileT } from "@/lib/types";
 interface ModelViewerStateI {
   file: FileT | undefined;
   dag: DagT | undefined;
+  mappings: Array<string>;
 }
 
 // Define the initial state using that type
 const initialState: ModelViewerStateI = {
   file: undefined,
   dag: undefined,
+  mappings: [],
 };
 
 export const modelViewerSlice = createSlice({
@@ -29,6 +31,9 @@ export const modelViewerSlice = createSlice({
     },
     setDag: (state, action: PayloadAction<DagT>) => {
       state.dag = action.payload;
+    },
+    setMappings: (state, action: PayloadAction<Array<string>>) => {
+      state.mappings = action.payload;
     },
   },
 });
