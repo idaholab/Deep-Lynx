@@ -7,6 +7,7 @@ defmodule Datum.Repo.Migrations.CreateUsersAuthTables do
       add :email, :citext, null: false, collate: :nocase
       add :hashed_password, :string, null: false
       add :confirmed_at, :utc_datetime
+      add :open_explorer_tabs, {:array, {:array, :integer}}
 
       timestamps(type: :utc_datetime)
     end

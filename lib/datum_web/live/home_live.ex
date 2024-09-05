@@ -1,6 +1,8 @@
 defmodule DatumWeb.HomeLive do
   use DatumWeb, :live_view
 
+  alias Datum.Common
+
   def render(assigns) do
     ~H"""
     <div>
@@ -31,6 +33,11 @@ defmodule DatumWeb.HomeLive do
   end
 
   def mount(_params, _session, socket) do
+    open_tabs = socket.assigns.current_user.open_explorer_tabs
+
+    tabs = Common.list_open_tabs(socket.assigns.current_user, List.flatten(open_tabs))
+    dbg(tabs)
+
     {:ok, socket}
   end
 end

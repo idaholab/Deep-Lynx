@@ -1,4 +1,4 @@
-defmodule DatumWeb.ComponentsLive.Explorer do
+defmodule DatumWeb.ComponentsLive.DirectoryView do
   use DatumWeb, :live_component
 
   def render(assigns) do

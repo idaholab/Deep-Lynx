@@ -9,6 +9,7 @@ defmodule Datum.Accounts.User do
     field :hashed_password, :string, redact: true
     field :current_password, :string, virtual: true, redact: true
     field :confirmed_at, :utc_datetime
+    field :open_explorer_tabs, {:array, {:array, :integer}}
 
     timestamps(type: :utc_datetime)
   end
@@ -100,6 +101,11 @@ defmodule Datum.Accounts.User do
       %{changes: %{email: _}} = changeset -> changeset
       %{} = changeset -> add_error(changeset, :email, "did not change")
     end
+  end
+
+  def tabs_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:open_explorer_tabs])
   end
 
   @doc """

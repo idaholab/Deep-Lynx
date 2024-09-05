@@ -108,6 +108,12 @@ defmodule Datum.Accounts do
     User.email_changeset(user, attrs, validate_email: false)
   end
 
+  def update_user_open_tabs(user, tabs \\ []) do
+    user
+    |> User.tabs_changeset(%{open_explorer_tabs: tabs})
+    |> Repo.update()
+  end
+
   @doc """
   Emulates that the email will change without actually changing
   it in the database.
