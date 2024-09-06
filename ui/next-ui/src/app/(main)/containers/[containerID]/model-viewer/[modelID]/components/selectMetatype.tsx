@@ -41,33 +41,31 @@ function SelectMetatype() {
 
   return (
     <>
-      <Container>
-        <Typography variant="subtitle1">Select a Class</Typography>
-        <Typography variant="body2">
-          Choose classes to view nodes in the DeepLynx graph related to your
-          engineering model
-        </Typography>
-        <br />
-        <FormControl sx={{ width: "100%" }}>
-          <InputLabel>Class</InputLabel>
-          <Select
-            label={"Class"}
-            multiple
-            onChange={handleMetatypes}
-            value={mappings}
-          >
-            {nodeMetatypes
-              ? nodeMetatypes.map((metatype: MetatypeT) => {
-                  return (
-                    <MenuItem key={metatype.id} value={metatype.name}>
-                      {metatype.name}
-                    </MenuItem>
-                  );
-                })
-              : null}
-          </Select>
-        </FormControl>
-      </Container>
+      <Typography variant="subtitle1">Select a Class</Typography>
+      <Typography variant="body2">
+        Choose classes to view nodes in the DeepLynx graph related to your
+        engineering model
+      </Typography>
+      <br />
+      <FormControl sx={{ width: "100%" }}>
+        <InputLabel>Class</InputLabel>
+        <Select
+          label={"Class"}
+          multiple
+          onChange={handleMetatypes}
+          value={mappings}
+        >
+          {nodeMetatypes
+            ? nodeMetatypes.map((metatype: MetatypeT) => {
+                return (
+                  <MenuItem key={metatype.id} value={metatype.name}>
+                    {metatype.name}
+                  </MenuItem>
+                );
+              })
+            : null}
+        </Select>
+      </FormControl>
     </>
   );
 }

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useContainer } from "@/lib/context/ContainerProvider";
 
 // MUI
-import { Button, Grid } from "@mui/material";
+import { Button, Container, Grid } from "@mui/material";
 
 // Components
 import Panel from "./panel";
@@ -21,7 +21,7 @@ type RelatedNodeT = {
   OwnerId: string;
   [key: string]: string;
 };
-type PayloadT = {
+export type PayloadT = {
   ConfigType: string;
   FileName: string;
   GraphType: string;
@@ -40,6 +40,7 @@ type MetatypeMappingsT = Record<string, string> & {
 
 export default function Home({ params }: { params: { modelID: string } }) {
   // Hooks
+  const [render, setRender] = useState<boolean>(false);
   const [payload, setPayload] = useState<PayloadT>({} as PayloadT);
   const [data, setData] = useState<Array<RelatedNodeT> | undefined>(undefined);
   const mappings = useAppSelector((state) => state.modelViewer.mappings);
@@ -79,9 +80,9 @@ export default function Home({ params }: { params: { modelID: string } }) {
 
     setPayload({
       ConfigType: "Remote",
-      FileName: "MRV-1000.glb",
+      FileName: file.file_name,
       GraphType: "cad",
-      GraphRootDlId: "5123079",
+      GraphRootDlId: "5119985", // Must come from Pixyz
       AssetMetatypeName: "MeshGameObject",
       DefaultInteractions: ["Highlight", "Draggable"],
       MetatypeMappings: MetatypeMappings,
@@ -93,8 +94,8 @@ export default function Home({ params }: { params: { modelID: string } }) {
     });
   }, [mappings]);
 
-  const handleClick = () => {
-    console.log(payload);
+  const handleRender = () => {
+    setRender(true);
   };
 
   return (
@@ -102,10 +103,15 @@ export default function Home({ params }: { params: { modelID: string } }) {
       <Grid container>
         <Grid item xs={4}>
           <Panel data={data} />
+          <br />
+          {!render && mappings.length ? (
+            <Container>
+              <Button onClick={handleRender}>Start Viewer</Button>
+            </Container>
+          ) : null}
         </Grid>
         <Grid item xs={8}>
-          <Button onClick={handleClick}>Click</Button>
-          {/* <WebGL payload={payload} setMesh={setMesh} setData={setData} /> */}
+          {render ? <WebGL payload={payload} setData={setData} /> : null}
         </Grid>
       </Grid>
     </>

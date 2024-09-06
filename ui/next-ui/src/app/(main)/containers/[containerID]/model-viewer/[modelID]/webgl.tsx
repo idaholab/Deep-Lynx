@@ -10,63 +10,59 @@ import { Unity } from "react-unity-webgl";
 // MUI
 import { Container } from "@mui/material";
 
-type Props = {
-  setMesh: Function;
+// Types
+import { PayloadT } from "./page";
+type PropsT = {
+  payload: PayloadT;
   setData: Function;
-  payload: {
-    ConfigType: string;
-    FileName: string;
-    GraphType: string;
-    GraphRootDlId: string;
-    AssetMetatypeName: string;
-    DefaultInteractions: Array<string>;
-    MetatypeMappings: {
-      CADMetadata: string;
-      Quality: string;
-    };
-    BaseUrl: string;
-    Token: string;
-    ContainerId: string;
-    FileId: string;
-  };
 };
 
-const WebGL = (props: Props) => {
-  const { unityProvider, addEventListener, removeEventListener, sendMessage } =
-    useUnityContext({
-      loaderUrl: "/webgl/webgl.loader.js",
-      dataUrl: "/webgl/webgl.data",
-      frameworkUrl: "/webgl/webgl.framework.js",
-      codeUrl: "/webgl/webgl.wasm",
-      streamingAssetsUrl: "/webgl/StreamingAssets",
-    });
+const WebGL = (props: PropsT) => {
+  const {
+    unityProvider,
+    addEventListener,
+    removeEventListener,
+    sendMessage,
+    isLoaded,
+  } = useUnityContext({
+    loaderUrl: "/webgl/webgl.loader.js",
+    dataUrl: "/webgl/webgl.data",
+    frameworkUrl: "/webgl/webgl.framework.js",
+    codeUrl: "/webgl/webgl.wasm",
+    streamingAssetsUrl: "/webgl/StreamingAssets",
+  });
 
   // Handlers
   const handleJsonObjects = useCallback(
     (data: any) => {
+      console.log(data);
       props.setData(JSON.parse(data));
     },
     [props]
   );
-  const handleMeshData = useCallback(
-    (data: any) => {
-      props.setMesh(JSON.parse(data).data.graph);
-    },
-    [props]
-  );
+  // const handleMeshData = useCallback(
+  //   (data: any) => {
+  //     props.setMesh(JSON.parse(data).data.graph);
+  //   },
+  //   [props]
+  // );
 
   // Hooks
   useEffect(() => {
-    addEventListener("SendMeshData", handleMeshData);
+    console.log("Scene status: " + isLoaded);
+  }, [isLoaded]);
+
+  useEffect(() => {
+    // addEventListener("SendMeshData", handleMeshData);
     addEventListener("SendJsonObjectsToReact", handleJsonObjects);
     return () => {
-      removeEventListener("SendMeshData", handleMeshData);
+      // removeEventListener("SendMeshData", handleMeshData);
       removeEventListener("SendJsonObjectsToReact", handleJsonObjects);
     };
   }, [
     addEventListener,
     removeEventListener,
-    handleMeshData,
+    // handleMeshData,
     handleJsonObjects,
   ]);
 

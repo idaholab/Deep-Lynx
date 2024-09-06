@@ -55,33 +55,44 @@ function Panel(props: Props) {
     <>
       <Container>
         <SelectMetatype />
-        {props.data
-          ? props.data.map((node: RelatedNode, index: number) => {
+        <br />
+        <br />
+        {props.data ? (
+          <>
+            <Typography variant="subtitle1">Related Nodes</Typography>
+            {props.data.map((node: RelatedNode, index: number) => {
               return (
                 <List key={index}>
                   <ListItemButton onClick={() => handleExpand(index)}>
-                    <ListItemIcon>
-                      <ScatterPlot />
-                    </ListItemIcon>
                     <ListItemText primary={node.MetatypeName} />
-                    {expand ? <ExpandLess /> : <ExpandMore />}
+                    {index === expand ? <ExpandLess /> : <ExpandMore />}
                   </ListItemButton>
                   <Collapse in={index === expand} timeout="auto" unmountOnExit>
                     <List component="div" disablePadding>
-                      <ListItemText
-                        primary={"Class"}
-                        secondary={node.MetatypeName}
-                      />
-                      <ListItemText
-                        primary={"Owner"}
-                        secondary={node.OwnerId}
-                      />
+                      {Object.entries(node).map((entry) => {
+                        let [key, value] = entry;
+                        return (
+                          <ListItemText
+                            inset
+                            key={key}
+                            primaryTypographyProps={{
+                              variant: "subtitle2",
+                            }}
+                            primary={key.toUpperCase()}
+                            secondary={value}
+                            secondaryTypographyProps={{
+                              variant: "body1",
+                            }}
+                          />
+                        );
+                      })}
                     </List>
                   </Collapse>
                 </List>
               );
-            })
-          : null}
+            })}
+          </>
+        ) : null}
       </Container>
     </>
   );
