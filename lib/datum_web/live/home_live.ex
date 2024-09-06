@@ -20,7 +20,17 @@ defmodule DatumWeb.HomeLive do
               <.icon name="hero-plus-circle" class="size-xs" />
             </a>
           </div>
-          <%= live_render(@socket, DatumWeb.DirectoryViewLive, id: "thermostat") %>
+
+          <%= if List.first(Enum.filter(tab_group, fn tab -> Enum.member?(@selected_tabs, tab.id) end))do %>
+            <%= live_render(
+              @socket,
+              List.first(Enum.filter(tab_group, fn tab -> Enum.member?(@selected_tabs, tab.id) end)).module,
+              id:
+                "explorer_tab_#{List.first(Enum.filter(tab_group, fn tab -> Enum.member?(@selected_tabs, tab.id) end)).id}"
+            ) %>
+          <% else %>
+            OPEN NEW TAB
+          <% end %>
         </div>
       </div>
     </div>
