@@ -22,21 +22,21 @@ alias Datum.Common
 
 {:ok, tab_one} =
   Common.create_explorer_tabs_for_user(admin, %{
-    module: DatumWeb.ComponentsLive.DirectoryView,
+    module: DatumWeb.DirectoryViewLive,
     state: %{},
     user: admin
   })
 
 {:ok, tab_two} =
   Common.create_explorer_tabs_for_user(admin, %{
-    module: DatumWeb.ComponentsLive.DirectoryView,
+    module: DatumWeb.DirectoryViewLive,
     state: %{},
     user: admin
   })
 
 {:ok, tab_three} =
   Common.create_explorer_tabs_for_user(admin, %{
-    module: DatumWeb.ComponentsLive.DirectoryView,
+    module: DatumWeb.DirectoryViewLive,
     state: %{},
     user: admin
   })

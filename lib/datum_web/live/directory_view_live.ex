@@ -1,5 +1,7 @@
-defmodule DatumWeb.ComponentsLive.DirectoryView do
-  use DatumWeb, :live_component
+defmodule DatumWeb.DirectoryViewLive do
+  use DatumWeb, :live_view
+
+  def display_name, do: "Directory View"
 
   def render(assigns) do
     ~H"""
@@ -43,7 +45,7 @@ defmodule DatumWeb.ComponentsLive.DirectoryView do
     """
   end
 
-  def update(_assigns, socket) do
+  def mount(_params, _session, socket) do
     {:ok, socket}
   end
 end
