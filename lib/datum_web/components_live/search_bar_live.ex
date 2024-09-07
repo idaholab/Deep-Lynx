@@ -1,4 +1,8 @@
 defmodule DatumWeb.ComponentsLive.Search do
+  @moduledoc """
+  Currently not being used, but a good start for building our
+  omni-search
+  """
   use DatumWeb, :live_component
 
   def render(assigns) do

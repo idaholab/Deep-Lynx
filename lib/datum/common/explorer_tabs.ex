@@ -1,7 +1,14 @@
 defmodule Datum.Common.ExplorerTabs do
+  @moduledoc """
+  ExplorerTabs are the representation of an open viewing tab in the data explorer home.
+  This system allows us to easily save and restore a user's workspaces without having to use
+  javascript or local storage garbage. Sqlite is more than fast enough, especially with LiveView
+  to handle restore/close options.
+  """
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Phoenix.LiveView
   alias Datum.Accounts.User
 
   schema "explorer_tabs" do

@@ -3,6 +3,11 @@ defmodule Datum.Scanners.Filesystem do
   Filesystem scanner is the primary scanning tool used by the CLI when on a local
   system. Feed it the root path and it will recursively run through the contained
   folders/files and run all enabled plugins on them.
+
+  Note: we will need extensive work on this in order to more intelligently load
+  plugins based on the directory. As we can only limit the WASM plugin to the directory
+  not a single file, we can at least not recompile the plugin each time it needs to be
+  used.
   """
   use Task
   require Logger
@@ -12,10 +17,13 @@ defmodule Datum.Scanners.Filesystem do
   alias Datum.DataOrigin.Data
   alias Datum.Plugins.Extractor
 
+  # we are treating this module as a SupervisedTask to be run, allowing us to run concurrently
+  # and not have a crash here crash the parent process
   def start_link(arg) do
     Task.start_link(__MODULE__, :run, [arg])
   end
 
+  # TODO: finish hooking this up
   def run(args) do
     Prompt.display("BOB")
     Prompt.text("TEST")

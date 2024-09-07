@@ -1,6 +1,6 @@
 defmodule Datum.DataOrigin.Data do
   @moduledoc """
-  Data is the actual stored data for an origin.
+  Data is the actual stored data for an origin, typically represents a file or directory.
   """
   use Ecto.Schema
   import Ecto.Changeset

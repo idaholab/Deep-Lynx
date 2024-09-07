@@ -88,7 +88,9 @@ end
 
 defmodule Datum.DataOrigin.CT do
   @moduledoc """
-  Needed for the closure_table library
+  Needed for the closure_table library. NOTE: You MUST call this only after you've done put_dynamic_repo, either
+  yourself or through the function above. If not, you're potentially writing a previous connection's database. I know,
+  it's potentially dangerous - but so is breathing.
   """
   use CTE,
     repo: Datum.DataOrigin.OriginRepo,

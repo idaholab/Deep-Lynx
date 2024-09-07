@@ -1,6 +1,7 @@
 defmodule Datum.ModuleName do
   @moduledoc """
-  This is the custom type that lets us handle JSONB in Sqlite
+    This is how we store and restore Elixir module names in our
+    application. Typically used for our explorer window panes.
   """
   use Ecto.Type
   def type, do: :string
@@ -23,6 +24,7 @@ defmodule Datum.ModuleName do
   end
 
   def load(bin) when is_binary(bin) do
+    # always use to_existing_atom when possible to avoid atom overflow attacks
     {:ok, String.to_existing_atom(bin)}
   end
 end

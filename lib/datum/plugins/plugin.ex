@@ -7,6 +7,7 @@ defmodule Datum.Plugins.Plugin do
   import Ecto.Changeset
 
   schema "plugins" do
+    # either store the raw plugin in BLOB or its path, not both - defaults to path first
     field :module, :binary
     field :name, :string
     field :path, :string

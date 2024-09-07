@@ -1,6 +1,10 @@
 defmodule Datum.JSONB do
   @moduledoc """
-  This is the custom type that lets us handle JSONB in Sqlite
+  This is the custom type that lets us handle JSONB in Sqlite, using the now
+  native JSONB type (keep in mind this is just extended BLOB, but storing it as
+  JSONB lets us use json sqlite functions)
+
+  This is pulled nearly directly from the Postgres ecto driver
   """
   use Ecto.Type
   def type, do: :binary

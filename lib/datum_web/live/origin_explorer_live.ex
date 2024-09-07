@@ -1,4 +1,14 @@
 defmodule DatumWeb.OriginExplorerLive do
+  @moduledoc """
+  This is our primary way of exploring a Data Origin. It is very similar
+  to a file explorer, as it needs to represent directories and the files
+  in those directories.
+
+  This should not embed any additional live views - only components. If you
+  need to build a live view, let's say a FileViewLive or something, then you
+  should message the parent to spawn the relevant tab - not spawn and save it
+  here.
+  """
   use DatumWeb, :live_view
 
   def display_name, do: "Origin Explorer"
