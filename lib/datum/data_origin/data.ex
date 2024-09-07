@@ -27,7 +27,18 @@ defmodule Datum.DataOrigin.Data do
   def changeset(origin, attrs) do
     changeset =
       origin
-      |> cast(attrs, [:path, :properties, :id, :type])
+      |> cast(attrs, [
+        :path,
+        :tags,
+        :domains,
+        :id,
+        :type,
+        :file_type,
+        :properties,
+        :original_path,
+        :owned_by,
+        :description
+      ])
       |> validate_required([:path])
 
     put_change(changeset, :id, UUID.uuid3(nil, fetch_field!(changeset, :path)))

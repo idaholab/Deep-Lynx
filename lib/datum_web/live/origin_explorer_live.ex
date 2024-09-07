@@ -1,7 +1,8 @@
-defmodule DatumWeb.DirectoryViewLive do
+defmodule DatumWeb.OriginExplorerLive do
   use DatumWeb, :live_view
 
-  def display_name, do: "Directory View"
+  def display_name, do: "Origin Explorer"
+  alias Datum.Common
 
   def render(assigns) do
     ~H"""
@@ -29,7 +30,9 @@ defmodule DatumWeb.DirectoryViewLive do
               <td>Cy Ganderton</td>
               <td>Quality Control Specialist</td>
               <td>12/16/2020</td>
-              <td><.icon class="hover:bg-gray-900" name="hero-ellipsis-vertical" /></td>
+              <td phx-click="close_tab">
+                <.icon class="hover:bg-gray-900" name="hero-ellipsis-vertical" />
+              </td>
             </tr>
             <tr class="hover:bg-gray-500 hover:cursor-pointer">
               <th><.icon name="hero-document-text" /></th>
@@ -45,7 +48,19 @@ defmodule DatumWeb.DirectoryViewLive do
     """
   end
 
-  def mount(_params, _session, socket) do
-    {:ok, socket}
+  def mount(_params, %{"tab_id" => tab_id, "user_token" => user_token} = _session, socket) do
+    user = Datum.Accounts.get_user_by_session_token(user_token)
+    tab = Common.get_user_tab(user, tab_id)
+
+    if is_nil(user) || is_nil(tab) do
+      {:error, socket}
+    else
+      {:ok, socket |> assign(:current_user, user) |> assign(:tab, tab)}
+    end
+  end
+
+  def handle_event("close_tab", _unsigned_params, socket) do
+    send(socket.parent_pid, {:close_tab, socket.assigns.tab.id})
+    {:noreply, socket}
   end
 end

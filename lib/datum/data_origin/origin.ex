@@ -20,7 +20,7 @@ defmodule Datum.DataOrigin.Origin do
   @doc false
   def changeset(origin, attrs) do
     origin
-    |> cast(attrs, [:name])
+    |> cast(attrs, [:name, :owned_by, :classifications, :tags, :domains])
     |> validate_required([:name])
   end
 end
