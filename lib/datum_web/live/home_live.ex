@@ -20,7 +20,7 @@ defmodule DatumWeb.HomeLive do
               phx-click="open_tab"
               phx-value-tab={tab.id}
               phx-value-group-index={group_index}
-              class={"tab #{if Enum.member?(@selected_tabs, tab.id) do "tab-active" else "hover:bg-neutral" end}"}
+              class={"tab #{if Enum.member?(@selected_tabs, tab) do "tab-active" else "hover:bg-neutral" end}"}
             >
               <%= Map.get(tab.state, :name, tab.module.display_name) %>
             </a>
