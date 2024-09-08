@@ -11,21 +11,64 @@ defmodule DatumWeb.HomeLive do
   def render(assigns) do
     ~H"""
     <div>
-      <div class={"grid grid-flow-col grid-cols-#{Enum.count(@tabs)} gap-4"}>
-        <div :for={{tab_group, group_index} <- Enum.with_index(@tabs)}>
-          <div role="tablist" class="tabs tabs tabs-lifted mb-5">
+      <div class="navbar bg-base-100">
+        <div class="navbar-start"></div>
+        <div class="navbar-end">
+          <div class="tooltip tooltip-top" data-tip="New Pane" phx-click="new_pane">
+            <.icon name="hero-squares-plus" class="size-xs hover:bg-gray-500 cursor-pointer" />
+          </div>
+        </div>
+      </div>
+      <div class={"grid grid-flow-col-dense grid-cols-#{Enum.count(@tabs)} auto-cols-fr gap-4"}>
+        <div
+          :for={{tab_group, group_index} <- Enum.with_index(@tabs)}
+          id={"tab_group_#{group_index}"}
+          class={
+            if group_index <= 0 do
+              "mt-1"
+            end
+          }
+          data-group={group_index}
+          phx-hook="DraggableDropZone"
+        >
+          <div
+            class="tooltip tooltip-top"
+            data-tip="Close Pane"
+            phx-click="close_pane"
+            phx-value-group-index={group_index}
+          >
+            <.icon
+              :if={group_index > 0}
+              name="hero-x-mark"
+              class="size-xs hover:bg-gray-500 cursor-pointer"
+            />
+          </div>
+          <div role="tablist" class="tabs tabs-boxed mb-5">
             <a
               :for={tab <- tab_group}
+              id={"tab_#{tab.id}"}
               role="tab"
               phx-click="open_tab"
               phx-value-tab={tab.id}
+              draggable="true"
+              phx-hook="DraggableTab"
+              data-tab={tab.id}
+              data-group={group_index}
               phx-value-group-index={group_index}
               class={"tab #{if Enum.member?(@selected_tabs, tab) do "tab-active" else "hover:bg-neutral" end}"}
             >
               <%= Map.get(tab.state, :name, tab.module.display_name) %>
+              <span
+                phx-click="close_tab"
+                phx-value-tab-id={tab.id}
+                class="tooltip tooltip-top"
+                data-tip="Close Tab"
+              >
+                <.icon name="hero-x-mark" class="ml-5" />
+              </span>
             </a>
-            <a role="tab" class="tab hover:bg-gray-500">
-              <.icon name="hero-plus-circle" class="size-xs" />
+            <a role="tab" class="tab tooltip tooltip-top hover:bg-gray-500" data-tip="New Tab">
+              <.icon name="hero-plus-circle" class="size-xs  " />
             </a>
           </div>
 
@@ -40,8 +83,6 @@ defmodule DatumWeb.HomeLive do
                   List.first(Enum.filter(tab_group, fn tab -> Enum.member?(@selected_tabs, tab) end)).id
               }
             ) %>
-          <% else %>
-            OPEN NEW TAB
           <% end %>
         </div>
       </div>
@@ -121,17 +162,90 @@ defmodule DatumWeb.HomeLive do
      )}
   end
 
+  def handle_event(
+        "tab_dropped",
+        %{
+          "tab" => tab_id,
+          "target_group_index" => target_group_index
+        },
+        socket
+      ) do
+    {tab_id, _r} = Integer.parse(tab_id)
+    {target_group_index, _r} = Integer.parse(target_group_index)
+
+    tab = socket.assigns.tabs |> List.flatten() |> Enum.find(fn t -> t.id == tab_id end)
+
+    tabs =
+      socket.assigns.tabs
+      |> Enum.map(fn tabs ->
+        Enum.filter(tabs, fn tab -> tab.id != tab_id end)
+      end)
+      |> Enum.with_index()
+      |> Enum.map(fn {tabs, index} ->
+        if index == target_group_index do
+          [tab | tabs]
+        else
+          tabs
+        end
+      end)
+
+    save_tabs(tabs, socket)
+
+    if socket.assigns.selected_tabs && socket.assigns.selected_tabs != [] do
+      selected_tabs = List.replace_at(socket.assigns.selected_tabs, target_group_index, tab)
+
+      {:noreply,
+       socket
+       |> assign(:tabs, tabs)
+       |> assign(
+         :selected_tabs,
+         Enum.filter(socket.assigns.selected_tabs, fn t -> t.id != tab_id end)
+       )
+       |> push_patch(to: ~p"/home")}
+    else
+      {:noreply, socket |> assign(:tabs, tabs) |> push_patch(to: ~p"/home")}
+    end
+  end
+
+  def handle_event("new_pane", _unsigned_params, socket) do
+    tabs = socket.assigns.tabs ++ [[]]
+    save_tabs(tabs, socket)
+    {:noreply, socket |> assign(:tabs, tabs)}
+  end
+
+  def handle_event("close_pane", %{"group-index" => group_index}, socket) do
+    {group_index, _r} = Integer.parse(group_index)
+    {closed, tabs} = List.pop_at(socket.assigns.tabs, group_index)
+
+    save_tabs(tabs, socket)
+
+    if closed != [] && tabs != [] do
+      tabs = tabs |> List.replace_at(0, List.first(tabs) ++ closed)
+
+      save_tabs(tabs, socket)
+      {:noreply, socket |> assign(:tabs, tabs)}
+    else
+      {:noreply, socket |> assign(:tabs, tabs)}
+    end
+  end
+
+  def handle_event("close_tab", %{"tab-id" => tab_id}, socket) do
+    {tab_id, _r} = Integer.parse(tab_id)
+    close_tab(tab_id, socket)
+  end
+
   # handles a call from one of the tabs to close it - we will take it out of the tabs list
   # and update that on the user to avoid re-opening
   def handle_info({:close_tab, tab_id}, socket) do
+    close_tab(tab_id, socket)
+  end
+
+  defp close_tab(tab_id, socket) do
     tabs =
       socket.assigns.tabs
       |> Enum.map(fn group -> Enum.filter(group, fn t -> t.id != tab_id end) end)
 
-    Datum.Accounts.update_user_open_tabs(
-      socket.assigns.current_user,
-      tabs |> Enum.map(fn group -> group |> Enum.map(fn tab -> tab.id end) end)
-    )
+    save_tabs(tabs, socket)
 
     if socket.assigns.selected_tabs && socket.assigns.selected_tabs != [] do
       {:noreply,
@@ -145,5 +259,12 @@ defmodule DatumWeb.HomeLive do
     else
       {:noreply, socket |> assign(:tabs, tabs)}
     end
+  end
+
+  defp save_tabs(tabs, socket) do
+    Datum.Accounts.update_user_open_tabs(
+      socket.assigns.current_user,
+      tabs |> Enum.map(fn group -> group |> Enum.map(fn tab -> tab.id end) end)
+    )
   end
 end

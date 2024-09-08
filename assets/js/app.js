@@ -22,12 +22,42 @@ import { Socket } from "phoenix";
 import { LiveSocket } from "phoenix_live_view";
 import topbar from "../vendor/topbar";
 
+let Hooks = {};
+
+Hooks.DraggableTab = {
+  mounted() {
+    let tab_id = this.el.dataset.tab;
+    let group_index = this.el.dataset.group;
+    this.el.addEventListener("dragstart", (e) => {
+      console.log(tab_id);
+      e.dataTransfer.setData("tab", tab_id);
+      e.dataTransfer.setData("group", group_index);
+    });
+  },
+};
+
+Hooks.DraggableDropZone = {
+  mounted() {
+    let target_group_index = this.el.dataset.group;
+    this.el.addEventListener("drop", (e) => {
+      let tab_id = e.dataTransfer.getData("tab");
+      let group_index = e.dataTransfer.getData("group");
+
+      this.pushEvent("tab_dropped", {
+        tab: tab_id,
+        target_group_index: target_group_index,
+      });
+    });
+  },
+};
+
 let csrfToken = document
   .querySelector("meta[name='csrf-token']")
   .getAttribute("content");
 let liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: { _csrf_token: csrfToken },
+  hooks: Hooks,
   metadata: {
     keydown: (event, element) => {
       return {
