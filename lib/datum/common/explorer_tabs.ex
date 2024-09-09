@@ -8,7 +8,6 @@ defmodule Datum.Common.ExplorerTabs do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Phoenix.LiveView
   alias Datum.Accounts.User
 
   schema "explorer_tabs" do

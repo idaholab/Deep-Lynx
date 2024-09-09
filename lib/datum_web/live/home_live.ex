@@ -55,7 +55,8 @@ defmodule DatumWeb.HomeLive do
               data-tab={tab.id}
               data-group={group_index}
               phx-value-group-index={group_index}
-              class={"tab #{if Enum.member?(@selected_tabs, tab) do "tab-active" else "hover:bg-neutral" end}"}
+              class={"tab tooltip tooltip-bottom #{if Enum.member?(@selected_tabs, tab) do "tab-active" else "hover:bg-neutral" end}"}
+              data-tip="Click to open or Drag to move"
             >
               <%= Map.get(tab.state, :name, tab.module.display_name) %>
               <span
@@ -64,11 +65,17 @@ defmodule DatumWeb.HomeLive do
                 class="tooltip tooltip-top"
                 data-tip="Close Tab"
               >
-                <.icon name="hero-x-mark" class="ml-5" />
+                <.icon name="hero-x-mark" class="ml-2" />
               </span>
             </a>
-            <a role="tab" class="tab tooltip tooltip-top hover:bg-gray-500" data-tip="New Tab">
-              <.icon name="hero-plus-circle" class="size-xs  " />
+            <a
+              role="tab"
+              class={"tab tooltip tooltip-bottom #{if closed_tabs(group_index, @selected_tabs, @tabs) do "tab-active" else "hover:bg-neutral" end}"}
+              data-tip="New Tab"
+              phx-click="add_tab"
+              phx-value-group={group_index}
+            >
+              <.icon name="hero-plus-circle" class="size-xs" />
             </a>
           </div>
 
@@ -84,6 +91,156 @@ defmodule DatumWeb.HomeLive do
               }
             ) %>
           <% end %>
+          <div :if={closed_tabs(group_index, @selected_tabs, @tabs)}>
+            <div class="divide-y divide-accent overflow-hidden rounded-lg bg-base-300 shadow sm:grid sm:grid-cols-2 sm:gap-px sm:divide-y-0">
+              <div
+                phx-click="open_tab"
+                phx-value-group={group_index}
+                phx-value-tab="Elixir.DatumWeb.OriginExplorerLive"
+                class="hover:bg-base-300 group relative rounded-tl-lg rounded-tr-lg bg-base-200 p-6 sm:rounded-tr-none cursor-pointer"
+              >
+                <div>
+                  <span class="inline-flex rounded-lg p-3 text-white ring-4 ring-base-400 bg-base-300">
+                    <.icon name="hero-circle-stack" />
+                  </span>
+                </div>
+                <div class="mt-8">
+                  <h3 class="text-base font-semibold leading-6 text-primary-content">
+                    <a class="focus:outline-none">
+                      <span class="absolute inset-0" aria-hidden="true"></span> Explore Data Origins
+                    </a>
+                  </h3>
+                  <p class="mt-2 text-sm text-primary-content">
+                    Navigate this catalog's data by using a file explorer like interface.
+                  </p>
+                </div>
+
+                <span
+                  class="pointer-events-none absolute right-6 top-6 text-gray-300 group-hover:text-gray-400"
+                  aria-hidden="true"
+                >
+                  <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20 4h1a1 1 0 00-1-1v1zm-1 12a1 1 0 102 0h-2zM8 3a1 1 0 000 2V3zM3.293 19.293a1 1 0 101.414 1.414l-1.414-1.414zM19 4v12h2V4h-2zm1-1H8v2h12V3zm-.707.293l-16 16 1.414 1.414 16-16-1.414-1.414z" />
+                  </svg>
+                </span>
+              </div>
+              <div class="hover:bg-base-300 group relative bg-base-200 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-accent sm:rounded-tr-lg">
+                <div>
+                  <span class="inline-flex rounded-lg bg-base-300 p-3 text-white ring-4 ring-base-400">
+                    <svg
+                      class="h-6 w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="1.5"
+                      stroke="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div class="mt-8">
+                  <h3 class="text-base font-semibold leading-6 text-primary-content">
+                    <a href="#" class="focus:outline-none">
+                      <span class="absolute inset-0" aria-hidden="true"></span> Benefits
+                    </a>
+                  </h3>
+                  <p class="mt-2 text-sm text-primary-content">
+                    Doloribus dolores nostrum quia qui natus officia quod et dolorem. Sit repellendus qui ut at blanditiis et quo et molestiae.
+                  </p>
+                </div>
+
+                <span
+                  class="pointer-events-none absolute right-6 top-6 text-gray-300 group-hover:text-gray-400"
+                  aria-hidden="true"
+                >
+                  <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20 4h1a1 1 0 00-1-1v1zm-1 12a1 1 0 102 0h-2zM8 3a1 1 0 000 2V3zM3.293 19.293a1 1 0 101.414 1.414l-1.414-1.414zM19 4v12h2V4h-2zm1-1H8v2h12V3zm-.707.293l-16 16 1.414 1.414 16-16-1.414-1.414z" />
+                  </svg>
+                </span>
+              </div>
+              <div class="hover:bg-base-300 group relative bg-base-200 p-6 focus-within:ring-2">
+                <div>
+                  <span class="inline-flex rounded-lg bg-base-300 p-3 text-white ring-4 ring-base-400">
+                    <svg
+                      class="h-6 w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="1.5"
+                      stroke="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div class="mt-8">
+                  <h3 class="text-base font-semibold leading-6 text-primary-content">
+                    <a href="#" class="focus:outline-none">
+                      <span class="absolute inset-0" aria-hidden="true"></span> Schedule a one-on-one
+                    </a>
+                  </h3>
+                  <p class="mt-2 text-sm text-primary-content">
+                    Doloribus dolores nostrum quia qui natus officia quod et dolorem. Sit repellendus qui ut at blanditiis et quo et molestiae.
+                  </p>
+                </div>
+                <span
+                  class="pointer-events-none absolute right-6 top-6 text-gray-300 group-hover:text-gray-400"
+                  aria-hidden="true"
+                >
+                  <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20 4h1a1 1 0 00-1-1v1zm-1 12a1 1 0 102 0h-2zM8 3a1 1 0 000 2V3zM3.293 19.293a1 1 0 101.414 1.414l-1.414-1.414zM19 4v12h2V4h-2zm1-1H8v2h12V3zm-.707.293l-16 16 1.414 1.414 16-16-1.414-1.414z" />
+                  </svg>
+                </span>
+              </div>
+              <div class="hover:bg-base-300 group relative bg-base-200 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500">
+                <div>
+                  <span class="inline-flex rounded-lg bg-base-300 p-3 text-white ring-4 ring-base-400">
+                    <svg
+                      class="h-6 w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="1.5"
+                      stroke="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div class="mt-8">
+                  <h3 class="text-base font-semibold leading-6 text-primary-content">
+                    <a href="#" class="focus:outline-none">
+                      <span class="absolute inset-0" aria-hidden="true"></span> Payroll
+                    </a>
+                  </h3>
+                  <p class="mt-2 text-sm text-primary-content">
+                    Doloribus dolores nostrum quia qui natus officia quod et dolorem. Sit repellendus qui ut at blanditiis et quo et molestiae.
+                  </p>
+                </div>
+                <span
+                  class="pointer-events-none absolute right-6 top-6 text-gray-300 group-hover:text-gray-400"
+                  aria-hidden="true"
+                >
+                  <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20 4h1a1 1 0 00-1-1v1zm-1 12a1 1 0 102 0h-2zM8 3a1 1 0 000 2V3zM3.293 19.293a1 1 0 101.414 1.414l-1.414-1.414zM19 4v12h2V4h-2zm1-1H8v2h12V3zm-.707.293l-16 16 1.414 1.414 16-16-1.414-1.414z" />
+                  </svg>
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -100,7 +257,10 @@ defmodule DatumWeb.HomeLive do
       open_tabs
       |> Enum.map(fn ots -> tabs |> Enum.filter(fn tab -> Enum.member?(ots, tab.id) end) end)
 
-    {:ok, socket |> assign(:tabs, tabs) |> assign(:selected_tabs, [])}
+    {:ok,
+     socket
+     |> assign(:tabs, tabs)
+     |> assign(:selected_tabs, List.duplicate(nil, Enum.count(tabs)))}
   end
 
   def handle_params(%{"selected_tabs" => selected_tabs}, _uri, socket) do
@@ -118,7 +278,7 @@ defmodule DatumWeb.HomeLive do
        |> assign(
          :selected_tabs,
          Enum.filter(List.flatten(socket.assigns.tabs), fn tab ->
-           Enum.member?(selected_tabs, tab.id)
+           Enum.member?(selected_tabs, tab.id) || is_nil(tab)
          end)
        )}
     end
@@ -192,14 +352,18 @@ defmodule DatumWeb.HomeLive do
     save_tabs(tabs, socket)
 
     if socket.assigns.selected_tabs && socket.assigns.selected_tabs != [] do
-      selected_tabs = List.replace_at(socket.assigns.selected_tabs, target_group_index, tab)
-
       {:noreply,
        socket
        |> assign(:tabs, tabs)
        |> assign(
          :selected_tabs,
-         Enum.filter(socket.assigns.selected_tabs, fn t -> t.id != tab_id end)
+         Enum.filter(socket.assigns.selected_tabs, fn t ->
+           if t do
+             t.id != tab_id
+           else
+             nil
+           end
+         end)
        )
        |> push_patch(to: ~p"/home")}
     else
@@ -229,9 +393,60 @@ defmodule DatumWeb.HomeLive do
     end
   end
 
+  def handle_event("add_tab", %{"group" => group_index}, socket) do
+    {group_index, _r} = Integer.parse(group_index)
+
+    selected_tabs =
+      socket.assigns.selected_tabs
+      |> Enum.filter(fn selected_tab ->
+        !Enum.member?(Enum.fetch!(socket.assigns.tabs, group_index), selected_tab)
+      end)
+
+    {:noreply,
+     socket
+     |> assign(:selected_tabs, selected_tabs)
+     |> push_patch(to: ~p"/home")}
+  end
+
   def handle_event("close_tab", %{"tab-id" => tab_id}, socket) do
     {tab_id, _r} = Integer.parse(tab_id)
     close_tab(tab_id, socket)
+  end
+
+  def handle_event("open_tab", %{"group" => group_index, "tab" => tab_module}, socket) do
+    {group_index, _r} = Integer.parse(group_index)
+    tab_module = String.to_existing_atom(tab_module)
+
+    {:ok, new_tab} =
+      Common.create_explorer_tabs_for_user(socket.assigns.current_user, %{
+        module: tab_module,
+        state: %{}
+      })
+
+    # for some reason the module doesn't get set correctly
+    new_tab = Common.get_explorer_tabs!(new_tab.id)
+
+    tabs =
+      socket.assigns.tabs
+      |> Enum.with_index()
+      |> Enum.map(fn {group, index} ->
+        if index == group_index do
+          [new_tab | group]
+        else
+          group
+        end
+      end)
+
+    save_tabs(tabs, socket)
+
+    {:noreply,
+     socket
+     |> assign(:tabs, tabs)
+     |> assign(
+       :selected_tabs,
+       List.replace_at(socket.assigns.selected_tabs, group_index, new_tab)
+     )
+     |> push_patch(to: ~p"/home")}
   end
 
   # handles a call from one of the tabs to close it - we will take it out of the tabs list
@@ -253,7 +468,13 @@ defmodule DatumWeb.HomeLive do
        |> assign(:tabs, tabs)
        |> assign(
          :selected_tabs,
-         Enum.filter(socket.assigns.selected_tabs, fn t -> t.id != tab_id end)
+         Enum.map(socket.assigns.selected_tabs, fn t ->
+           if t && t.id != tab_id do
+             t
+           else
+             nil
+           end
+         end)
        )
        |> push_patch(to: ~p"/home")}
     else
@@ -266,5 +487,12 @@ defmodule DatumWeb.HomeLive do
       socket.assigns.current_user,
       tabs |> Enum.map(fn group -> group |> Enum.map(fn tab -> tab.id end) end)
     )
+  end
+
+  defp closed_tabs(group_index, selected_tabs, tabs) do
+    selected_tabs
+    |> Enum.filter(fn selected_tab ->
+      Enum.member?(Enum.fetch!(tabs, group_index), selected_tab)
+    end) == []
   end
 end
