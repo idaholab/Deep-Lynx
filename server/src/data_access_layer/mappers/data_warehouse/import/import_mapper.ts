@@ -143,8 +143,9 @@ export default class ImportMapper extends Mapper {
     // Reprocess an import will take an importID and attempt to first clear all data processed
     // from it by setting the deleted_at tag of any nodes or edges that have been created. Then
     // it will start a new process worker with the provided import
-    public async ReprocessImport(containerID: string, importID: string): Promise<Result<boolean>> {
-        await this.SetStatus(importID, 'processing', 'reprocessing initiated');
+    public async ReprocessImport(containerID: string, importID: string, first_process?: boolean): Promise<Result<boolean>> {
+        const processType = first_process ? 'processing' : 'reprocessing'
+        await this.SetStatus(importID, 'processing', `${processType} intiated`);
         await super.runAsTransaction(...this.deleteDataStatement(importID));
         await super.runStatement(this.setProcessedNull(importID));
 
@@ -159,11 +160,11 @@ export default class ImportMapper extends Mapper {
         });
 
         worker.on('error', (e) => {
-            this.setStatusStatement(importID, 'error', `error in reprocessing ${JSON.stringify(e)}`);
+            this.setStatusStatement(importID, 'error', `error in ${processType} ${JSON.stringify(e)}`);
         });
 
         worker.on('exit', () => {
-            void this.SetStatus(importID, 'completed', 'reprocessing completed');
+            void this.SetStatus(importID, 'completed', `${processType} completed`);
         });
 
         return Promise.resolve(Result.Success(true));
