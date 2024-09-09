@@ -379,7 +379,7 @@ export default class ImportMapper extends Mapper {
                           ORDER BY imports.created_at ASC
             `;
 
-            const values = [maxAttempts, excludeContainers];
+            const values = [excludeContainers, maxAttempts];
 
             return format(text, values);
         } else {
