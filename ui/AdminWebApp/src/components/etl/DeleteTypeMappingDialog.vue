@@ -36,10 +36,9 @@
       <v-card-actions v-if="!transformationsLoading">
         <v-spacer></v-spacer>
         <v-btn color="primary" text @click="reset()">{{$t("general.cancel")}}</v-btn>
-        <v-btn v-if="transformationCount <= 0" color="error" text :disabled="countDown > 0" @click="deleteMapping()">
+        <v-btn v-if="transformationCount <= 0" color="error" text @click="deleteMapping()">
           <v-progress-circular v-if="deleteLoading" indeterminate></v-progress-circular>
           <span>{{$t("general.delete")}}</span>
-          <span v-if="countDown > 0">{{$t('operators.in')}} {{countDown}}</span>
         </v-btn>
         <v-btn v-else color="error" text disabled>
           <span>{{$t("general.delete")}}</span>
@@ -58,8 +57,6 @@ interface DeleteTypeMappingDialogModel {
   transformationsLoading: boolean;
   transformationCount: number;
   deleteLoading: boolean;
-  timerRunning: boolean;
-  countDown: number;
 }
 
 export default Vue.extend ({
@@ -78,8 +75,6 @@ export default Vue.extend ({
     transformationsLoading: true,
     transformationCount: 0,
     deleteLoading: false,
-    timerRunning: false,
-    countDown: 1,
   }),
 
   methods: {
@@ -89,26 +84,8 @@ export default Vue.extend ({
             this.transformationsLoading = false
             this.transformationCount = transformations.length
 
-            // we only allow delete on no transformations
-            if(this.transformationCount <= 0) this.startCountdown()
           })
           .catch(e => this.errorMessage = e)
-    },
-    startCountdown() {
-      this.countDown = 1
-
-      if(!this.timerRunning) this.countdown()
-    },
-    countdown() {
-      if(this.countDown > 0) {
-        setTimeout(() => {
-          this.countDown -= 1
-          this.timerRunning = true
-          this.countdown()
-        }, 1000)
-      } else {
-        this.timerRunning = false
-      }
     },
     deleteMapping() {
       this.deleteLoading = true
@@ -122,7 +99,6 @@ export default Vue.extend ({
     reset() {
       this.dialog = false
       this.deleteLoading = false
-      this.timerRunning = false
       this.transformationsLoading = true
       this.transformationCount = 0
     }

@@ -55,11 +55,10 @@
           <v-progress-circular v-if="archiveLoading" indeterminate></v-progress-circular>
           {{$t("general.archive")}}
         </v-btn>
-        <v-btn color="error" text :disabled="countDown > 0" @click="deleteSource()">
+        <v-btn color="error" text @click="deleteSource()">
           <v-progress-circular v-if="deleteLoading" indeterminate></v-progress-circular>
           <span v-if="!inUse">{{$t("general.delete")}}</span>
           <span v-else>{{$t("general.forceDelete")}}</span>
-          <span v-if="countDown > 0">{{$t('operators.in')}} {{countDown}}</span>
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -101,9 +100,7 @@ interface DeleteTypeTransformationDialogModel {
   inUse: boolean;
   deleteLoading: boolean;
   archiveLoading: boolean;
-  timerRunning: boolean;
   withData: boolean;
-  countDown: number;
 }
 
 export default Vue.extend({
@@ -132,9 +129,7 @@ export default Vue.extend({
     inUse: false,
     deleteLoading: false,
     archiveLoading: false,
-    timerRunning: false,
     withData: true,
-    countDown: 1,
   }),
 
   methods: {
@@ -150,24 +145,8 @@ export default Vue.extend({
         .then((result) => {
           this.inUse = result
           this.inUseLoading = false
-          this.startCountdown()
         })
         .catch(e => this.errorMessage = e)
-    },
-    startCountdown() {
-      this.countDown = 1
-      if(!this.timerRunning) this.countdown()
-    },
-    countdown() {
-      if(this.countDown > 0) {
-        setTimeout(() => {
-          this.countDown -= 1
-          this.timerRunning = true
-          this.countdown()
-        }, 1000)
-      } else {
-        this.timerRunning = false
-      }
     },
     deleteSource() {
       this.deleteLoading = true;
@@ -206,7 +185,6 @@ export default Vue.extend({
       this.deleteLoading = false
       this.archiveLoading = false
       this.inUseLoading = true
-      this.timerRunning = false
       this.withData = true
     }
   }
