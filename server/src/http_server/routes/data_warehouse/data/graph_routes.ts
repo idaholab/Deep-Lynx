@@ -117,6 +117,12 @@ export default class GraphRoutes {
             authInContainer('write', 'data'),
             FileFunctions.detachFileFromEdge,
         );
+        app.delete(
+            '/containers/:containerID/files/:fileID',
+            ...middleware,
+            authInContainer('write', 'data'),
+            FileFunctions.deleteFile,
+        );
 
         // Edge Routes
         app.post('/containers/:containerID/graphs/edges/', ...middleware, authInContainer('write', 'data'), EdgeFunctions.createOrUpdateEdges);

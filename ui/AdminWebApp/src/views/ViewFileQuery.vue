@@ -233,7 +233,7 @@ export default Vue.extend({
     },
     removeFile(file: FileT) {
       this.$client
-        .deleteFile(this.container.id, file.data_source_id, file.id)
+        .deleteFile(this.container.id, file.id)
         .then(() => this.loadFiles())
         .catch((e) => (this.errorMessage = e));
     },

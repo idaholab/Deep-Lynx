@@ -1123,6 +1123,7 @@ export type QueryConditions = {
 export type FileOptions = {
     containerID: string;
     file_type: 'json' | 'csv' | 'parquet' | string;
+    // largeobject is deprecated and should not be used
     blob_provider?: 'azure_blob' | 'filesystem' | 'largeobject';
     file_name?: string;
     userID?: string;

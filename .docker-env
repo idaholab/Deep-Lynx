@@ -20,6 +20,12 @@ ENCRYPTION_KEY_PATH=
 # plaintext secret used to generate secure session markers
 SESSION_SECRET=CHANGEME
 
+# controls which file storage method to use, possible values are azure_blob, minio, and filesystem
+# note that minio can also be used to communicate with AWS S3 services
+FILE_STORAGE_METHOD=filesystem
+# must end with a directory character (e.g. "/")
+FILESYSTEM_STORAGE_DIRECTORY=./../storage/
+
 # controls whether or not DeepLynx should emit data events
 EMIT_EVENTS=true
 

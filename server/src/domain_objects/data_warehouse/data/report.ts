@@ -1,5 +1,5 @@
 import { BaseDomainClass } from "../../../common_classes/base_domain_class";
-import {IsBoolean, IsOptional, IsString} from 'class-validator';
+import {IsOptional, IsString} from 'class-validator';
 import Container from '../ontology/container';
 
 /*
@@ -20,19 +20,14 @@ export default class Report extends BaseDomainClass{
     @IsString()
     status_message?: string;
 
-    @IsBoolean()
-    notify_users = false;
-
     constructor(input: {
-        container_id?: Container | string;
-        status_message: string;
-        notify_users: boolean;
+        container_id: Container | string;
+        status_message?: string;
     }) {
         super();
         if (input) {
             input.container_id instanceof Container ? (this.container_id = input.container_id.id) : (this.container_id = input.container_id);
             if (input.status_message) {this.status_message = input.status_message};
-            if (input.notify_users) {this.notify_users = input.notify_users};
         }
     }
 }

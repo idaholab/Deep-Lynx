@@ -7,6 +7,10 @@ import {User} from '../../../../domain_objects/access_management/user';
 import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
 import File from '../../../../domain_objects/data_warehouse/data/file';
 import Authorization from '../../../../domain_objects/access_management/authorization/authorization';
+import Cache from '../../../../services/cache/cache';
+import Config from '../../../../services/config';
+import Logger from '../../../../services/logger';
+import { plainToClass, serialize } from 'class-transformer';
 
 /*
     ReportRepository contains methods for persisting and retrieving reports
@@ -24,17 +28,38 @@ export default class ReportRepository extends Repository implements RepositoryIn
     }
 
     async findByID(id: string, transaction?: PoolClient): Promise<Result<Report>> {
+        // check for cached version of the given report
+        const cached = await this.getCached(id);
+        if (cached) return Promise.resolve(Result.Success(cached));
+
+        // if no cached version found, get the report from the db
         const report = await this.#mapper.Retrieve(id, transaction);
+
+        // cache the report for future requests
+        if (!report.isError) {
+            await this.setCache(report.value);
+        }
+
         return Promise.resolve(report);
     }
 
-    setStatus(
+    async setStatus(
         reportID: string,
         status: 'ready' | 'processing' | 'error' | 'completed',
         message?: string,
         transaction?: PoolClient,
     ): Promise<Result<boolean>> {
-        return this.#mapper.SetStatus(reportID, status, message, transaction);
+        const set = await this.#mapper.SetStatus(reportID, status, message, transaction);
+        if (!set.isError) {
+            // delete the currently cached report
+            const deleted = await this.deleteCached(reportID);
+            if (deleted) Logger.error(`unable to clear cache for report ${reportID}`);
+
+            // run findByID to cache the updated report
+            const cached = await this.findByID(reportID);
+            if (cached.isError) Logger.error(`unable to cache report ${reportID}`);
+        }
+        return set;
     }
 
     async save(r: Report, user: User): Promise<Result<boolean>> {
@@ -76,22 +101,6 @@ export default class ReportRepository extends Repository implements RepositoryIn
         return Promise.resolve(Result.Success(true));
     }
 
-    addFile(report: Report, fileID: string): Promise<Result<boolean>> {
-        if (!report.id) {
-            return Promise.resolve(Result.Failure('report must have id'));
-        }
-
-        return this.#mapper.AddFile(report.id, fileID);
-    }
-
-    removeFile(report: Report, fileID: string): Promise<Result<boolean>> {
-        if (!report.id) {
-            return Promise.resolve(Result.Failure('report must have id'));
-        }
-
-        return this.#mapper.RemoveFile(report.id, fileID);
-    }
-
     listFiles(report: Report): Promise<Result<File[]>> {
         if (!report.id) {
             return Promise.resolve(Result.Failure('report must have id'));
@@ -128,11 +137,6 @@ export default class ReportRepository extends Repository implements RepositoryIn
         return this;
     }
 
-    notifyUsers(operator: string, value: any) {
-        super.query('notify_users', operator, value);
-        return this;
-    }
-
     async count(transaction?: PoolClient, queryOptions?: QueryOptions): Promise<Result<number>> {
         const results = await super.count(transaction, queryOptions);
 
@@ -149,5 +153,34 @@ export default class ReportRepository extends Repository implements RepositoryIn
         if (results.isError) { return Promise.resolve(Result.Pass(results)); }
 
         return Promise.resolve(Result.Success(results.value));
+    }
+
+    // caching for reports
+    private async setCache(r: Report): Promise<boolean> {
+        const set = await Cache.set(
+            `${ReportMapper.tableName}:reportID:${r.id}`,
+            serialize(r),
+            Config.cache_default_ttl,
+        );
+        if (!set) Logger.error(`unable to set cache for report ${r.id}`);
+
+        return Promise.resolve(set);
+    }
+
+    private async getCached(id: string): Promise<Report | undefined> {
+        const cached = await Cache.get<object>(`${ReportMapper.tableName}:reportID:${id}`);
+        if (cached) {
+            const report = plainToClass(Report, cached);
+            return Promise.resolve(report);
+        }
+
+        return Promise.resolve(undefined);
+    }
+
+    private async deleteCached(id: string): Promise<boolean> {
+        const deleted = await Cache.del(`${ReportMapper.tableName}:reportID:${id}`);
+        if (!deleted) Logger.error(`unable to remove report ${id} from cache`);
+
+        return Promise.resolve(deleted);
     }
 }

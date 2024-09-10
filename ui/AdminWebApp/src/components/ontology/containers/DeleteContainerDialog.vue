@@ -29,9 +29,8 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="primary" text @click="reset()">{{$t("general.cancel")}}</v-btn>
-        <v-btn color="error" text :disabled="countDown > 0" @click="deleteContainer()">
+        <v-btn color="error" text @click="deleteContainer()">
           <span>{{$t("containers.delete")}}</span>
-          <span v-if="countDown > 0">{{$t('operators.in')}} {{countDown}}</span>
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -47,8 +46,6 @@
     transformationsLoading: boolean
     transformationCount: number
     deleteLoading: boolean
-    timerRunning: boolean
-    countDown: number
   }
 
   export default Vue.extend({
@@ -64,28 +61,10 @@
       dialog: false,
       transformationsLoading: true,
       transformationCount: 0,
-      deleteLoading: false,
-      timerRunning: false,
-      countDown: 5
+      deleteLoading: false
     }),
 
     methods: {
-      startCountdown() {
-        this.countDown = 5
-
-        if(!this.timerRunning) this.countdown()
-      },
-      countdown() {
-        if(this.countDown > 0) {
-          setTimeout(() => {
-            this.countDown -= 1
-            this.timerRunning = true
-            this.countdown()
-          }, 1000)
-        } else {
-          this.timerRunning = false
-        }
-      },
       deleteContainer() {
         this.deleteLoading = true
         this.$client.deleteContainer(this.containerID)
@@ -96,7 +75,6 @@
       },
       reset() {
         this.dialog = false
-        this.timerRunning = false
       }
     }
   })

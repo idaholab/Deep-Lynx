@@ -151,7 +151,7 @@ export type FileT = {
     file_size: number;
     md5hash: string;
     adapter_file_path: string;
-    adapter: 'filesystem' | 'azure_blob' | 'mock';
+    adapter: 'filesystem' | 'azure_blob' | 'minio';
     metadata: object;
     created_at: string;
     modified_at: string;
@@ -711,7 +711,7 @@ export type TimeseriesRowCount = {
 export function DefaultAvevaDataSourceConfig(): AvevaDataSourceConfig {
     return {
         kind: 'aveva',
-        data_retention_days: 30,
+        data_retention_days: -1,
         raw_retention_enabled: false,
         ignore_dbs: [
             'SYSTEM',
@@ -818,7 +818,7 @@ export function DefaultHttpDataSourceConfig(): HttpDataSourceConfig {
         auth_method: 'none',
         poll_interval: 10,
         timeout: 15000,
-        data_retention_days: 30,
+        data_retention_days: -1,
         raw_retention_enabled: false,
     };
 }
@@ -827,7 +827,7 @@ export function DefaultStandardDataSourceConfig(): StandardDataSourceConfig {
     return {
         kind: 'standard',
         data_type: 'json',
-        data_retention_days: 30,
+        data_retention_days: -1,
         raw_retention_enabled: false,
     };
 }

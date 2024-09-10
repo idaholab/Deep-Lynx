@@ -78,8 +78,7 @@ describe('A Report Query Repository', async () => {
             'test suite',
             new Report({
                 container_id: containerID,
-                status_message: faker.random.alphaNumeric(),
-                notify_users: true
+                status_message: faker.random.alphaNumeric()
             }),
         );
 
@@ -124,7 +123,7 @@ describe('A Report Query Repository', async () => {
             status_message: faker.random.alphaNumeric(),
         });
 
-        let results = await repository.save(rQuery);
+        let results = await repository.save(rQuery, user);
         expect(results.isError).false;
         expect(rQuery.id).not.undefined;
 
@@ -132,7 +131,7 @@ describe('A Report Query Repository', async () => {
         const updatedMessage = faker.random.alphaNumeric();
         rQuery.status_message = updatedMessage;
 
-        results = await repository.save(rQuery);
+        results = await repository.save(rQuery, user);
         expect(results.isError).false;
         expect(rQuery.id).not.undefined;
         expect(rQuery.status_message).eq(updatedMessage);
@@ -147,7 +146,7 @@ describe('A Report Query Repository', async () => {
             status_message: faker.random.alphaNumeric(),
         });
 
-        let results = await repository.save(rQuery);
+        let results = await repository.save(rQuery, user);
         expect(results.isError).false;
         expect(rQuery.id).not.undefined;
 
@@ -155,7 +154,7 @@ describe('A Report Query Repository', async () => {
         const updatedMessage = faker.random.alphaNumeric();
         rQuery.status_message = updatedMessage;
 
-        results = await repository.save(rQuery);
+        results = await repository.save(rQuery, user);
         expect(results.isError).false;
         expect(rQuery.id).not.undefined;
         expect(rQuery.status_message).eq(updatedMessage);
@@ -171,7 +170,7 @@ describe('A Report Query Repository', async () => {
             status_message: faker.random.alphaNumeric(),
         });
 
-        const results = await repository.save(rQuery);
+        const results = await repository.save(rQuery, user);
         expect(results.isError).false;
 
         const deleted = await repository.delete(rQuery);
@@ -193,8 +192,8 @@ describe('A Report Query Repository', async () => {
             status_message: faker.random.alphaNumeric(),
         });
 
-        const save1 = await repository.save(rQuery1);
-        const save2 = await repository.save(rQuery2);
+        const save1 = await repository.save(rQuery1, user);
+        const save2 = await repository.save(rQuery2, user);
         expect(save1.isError).false;
         expect(save2.isError).false;
 
@@ -231,7 +230,7 @@ describe('A Report Query Repository', async () => {
             status_message: faker.random.alphaNumeric(),
         });
 
-        const results = await repository.save(rQuery);
+        const results = await repository.save(rQuery, user);
         expect(results.isError).false;
         expect(rQuery.id).not.undefined;
 
@@ -250,7 +249,7 @@ describe('A Report Query Repository', async () => {
             status_message: faker.random.alphaNumeric(),
         });
 
-        const results = await repository.save(rQuery);
+        const results = await repository.save(rQuery, user);
         expect(results.isError).false;
         expect(rQuery.id).not.undefined;
 
@@ -277,7 +276,7 @@ describe('A Report Query Repository', async () => {
             status_message: faker.random.alphaNumeric(),
         });
 
-        const results = await repository.save(rQuery);
+        const results = await repository.save(rQuery, user);
         expect(results.isError).false;
         expect(rQuery.id).not.undefined;
 
@@ -316,7 +315,7 @@ describe('A Report Query Repository', async () => {
             status_message: faker.random.alphaNumeric(),
         });
 
-        const results = await repository.save(rQuery);
+        const results = await repository.save(rQuery, user);
         expect(results.isError).false;
         expect(rQuery.id).not.undefined;
 

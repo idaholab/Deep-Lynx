@@ -51,7 +51,7 @@ export async function newTempToken(containerID: string, userID: string, expiry?:
     const serviceUser = user.value;
 
     const token = jwt.sign(classToPlain(serviceUser), Config.encryption_key_secret, {
-        expiresIn: '',
+        expiresIn: expiry ? expiry : '60m',
         algorithm: 'RS256',
         allowInsecureKeySizes: true
     });
