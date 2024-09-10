@@ -324,22 +324,41 @@ export default class DataStagingMapper extends Mapper {
     }
 
     public listImportActiveMappingStatementNodes(importIDs: string[]): string {
-        const text = `SELECT data_staging.*, data_sources.container_id, data_sources.config as data_source_config,
-                (SELECT COUNT(*) FROM data_staging_files WHERE data_staging.id = data_staging_files.data_staging_id) as files_count
-                FROM data_staging
-                         LEFT JOIN type_mappings ON type_mappings.shape_hash = data_staging.shape_hash
-                    AND type_mappings.data_source_id = data_staging.data_source_id
-                         LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id
-                WHERE (data_staging.import_id IN(%L)
-                    AND data_staging.nodes_processed_at IS NULL 
-                    AND data_staging.inserted_at IS NULL
-                    AND (type_mappings.active IS TRUE
-                        AND EXISTS
-                             (SELECT * from type_mapping_transformations
-                              WHERE type_mapping_transformations.type_mapping_id = type_mappings.id))) 
-                              OR type_mappings.id IS NULL 
-                              AND data_sources.container_id IS NOT NULL
-                    ORDER BY data_staging.created_at ASC;`;
+        const text = `SELECT 
+                ds.data_source_id, 
+                ds.import_id,
+                ds.errors,
+                ds.data,
+                ds.inserted_at, 
+                ds.created_at,
+                tm.shape_hash,
+                ds.id,
+                ds.file_attached,
+                ds.nodes_processed_at,
+                ds.edges_processed_at,
+                dsrc.container_id, 
+                dsrc.config AS data_source_config, 
+                (SELECT COUNT(*) FROM data_staging_files WHERE ds.id = data_staging_files.data_staging_id) AS files_count
+            FROM
+                (SELECT COALESCE (hg.type_mapping_id, type_mappings.id) AS id, 
+                    type_mappings.shape_hash, type_mappings.active
+                    FROM type_mappings
+                    LEFT JOIN hash_groupings hg 
+                        ON type_mappings.id = hg.hash_grouping_id) tm
+            JOIN data_staging ds ON tm.shape_hash = ds.shape_hash
+            JOIN data_sources dsrc ON ds.data_source_id = dsrc.id 
+            WHERE tm.shape_hash IS NOT NULL
+            AND ds.import_id IN (%L)
+            AND ds.nodes_processed_at IS NULL
+            AND ds.inserted_at IS NULL
+            AND (tm.active IS TRUE
+                AND EXISTS (
+                    SELECT * 
+                    FROM type_mapping_transformations tmt
+                    WHERE tmt.type_mapping_id = tm.id
+                )
+            )
+            ORDER BY ds.created_at ASC;`;
 
         const values = [...importIDs];
 
@@ -347,22 +366,41 @@ export default class DataStagingMapper extends Mapper {
     }
 
     public listImportActiveMappingStatementEdges(importIDs: string[]): string {
-        const text = `SELECT data_staging.*, data_sources.container_id, data_sources.config as data_source_config,
-                (SELECT COUNT(*) FROM data_staging_files WHERE data_staging.id = data_staging_files.data_staging_id) as files_count
-                FROM data_staging
-                         LEFT JOIN type_mappings ON type_mappings.shape_hash = data_staging.shape_hash
-                    AND type_mappings.data_source_id = data_staging.data_source_id
-                         LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id
-                WHERE (data_staging.import_id IN(%L)
-                    AND data_staging.edges_processed_at IS NULL
-                    AND data_staging.inserted_at IS NULL
-                    AND (type_mappings.active IS TRUE
-                        AND EXISTS
-                             (SELECT * from type_mapping_transformations
-                              WHERE type_mapping_transformations.type_mapping_id = type_mappings.id))) 
-                              OR type_mappings.id IS NULL 
-                              AND data_sources.container_id IS NOT NULL
-                    ORDER BY data_staging.created_at ASC;`;
+        const text = `SELECT 
+                ds.data_source_id, 
+                ds.import_id,
+                ds.errors,
+                ds.data,
+                ds.inserted_at, 
+                ds.created_at,
+                tm.shape_hash,
+                ds.id,
+                ds.file_attached,
+                ds.nodes_processed_at,
+                ds.edges_processed_at,
+                dsrc.container_id, 
+                dsrc.config AS data_source_config, 
+                (SELECT COUNT(*) FROM data_staging_files WHERE ds.id = data_staging_files.data_staging_id) AS files_count
+            FROM
+                (SELECT COALESCE (hg.type_mapping_id, type_mappings.id) AS id, 
+                    type_mappings.shape_hash, type_mappings.active
+                    FROM type_mappings
+                    LEFT JOIN hash_groupings hg 
+                        ON type_mappings.id = hg.hash_grouping_id) tm
+            JOIN data_staging ds ON tm.shape_hash = ds.shape_hash
+            JOIN data_sources dsrc ON ds.data_source_id = dsrc.id 
+            WHERE tm.shape_hash IS NOT NULL
+            AND ds.import_id IN (%L)
+            AND ds.edges_processed_at IS NULL
+            AND ds.inserted_at IS NULL
+            AND (tm.active IS TRUE
+                AND EXISTS (
+                    SELECT * 
+                    FROM type_mapping_transformations tmt
+                    WHERE tmt.type_mapping_id = tm.id
+                )
+            )
+            ORDER BY ds.created_at ASC;`;
 
         const values = [...importIDs];
 
