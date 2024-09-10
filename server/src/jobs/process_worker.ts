@@ -16,11 +16,15 @@ import ImportRepository from '../data_access_layer/repositories/data_warehouse/i
 import {SnapshotGenerator} from 'deeplynx';
 import Config from '../services/config';
 import ContainerMapper from '../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
+import ImportMapper from '../data_access_layer/mappers/data_warehouse/import/import_mapper';
 
 export async function ProcessWorkerStart(importIDs: string[], containerID: string): Promise<void> {
     await PostgresAdapter.Instance.init();
     const client = await PostgresAdapter.Instance.Pool.connect();
     const insertClient = await PostgresAdapter.Instance.Pool.connect();
+
+    // increment the attempt on the importIDs outside the transaction so that if this crashes it doesn't take down the whole thread
+    await ImportMapper.Instance.IncrementAttempts(...importIDs);
 
     // we need to run a lock on the container first so that we can maintain we're the only process running on it
     const transactionResult = await ContainerMapper.Instance.startTransaction();

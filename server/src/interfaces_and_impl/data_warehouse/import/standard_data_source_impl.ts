@@ -146,6 +146,19 @@ export default class StandardDataSourceImpl implements DataSource {
 
         transform.on('end', () => {
             saveOperations.push(this.#stagingRepo.bulkSave(recordBuffer, options?.transaction));
+
+            const mapper = new ImportMapper();
+            mapper.ReprocessImport(dataSourceRecord.container_id!, importID, true)
+                .then((result) => {
+                    if (result.isError) {
+                        Logger.error(`error, unable to spin up worker: ${result.error?.error}`);
+                        return Promise.resolve(Result.Failure(`unable to spin up worker ${result.error?.error}`));
+                    }
+                })
+                .catch((e) => {
+                    Logger.error(`error, unable to spin up worker:s ${e}`);
+                    return Promise.resolve(Result.Failure(`unable to spin up worker ${e.error?.error}`));
+                })
         })
 
         // the JSONStream pipe is simple, parsing a single array of json objects into parts
