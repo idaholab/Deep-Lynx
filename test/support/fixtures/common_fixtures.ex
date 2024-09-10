@@ -11,7 +11,7 @@ defmodule Datum.CommonFixtures do
     {:ok, explorer_tabs} =
       attrs
       |> Enum.into(%{
-        module: "some module",
+        module: DatumWeb.OriginExplorerLive,
         state: %{}
       })
       |> Datum.Common.create_explorer_tabs()

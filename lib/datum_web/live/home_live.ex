@@ -36,14 +36,15 @@ defmodule DatumWeb.HomeLive do
             data-tip="Close Pane"
             phx-click="close_pane"
             phx-value-group-index={group_index}
+            class=""
           >
             <.icon
               :if={group_index > 0}
-              name="hero-x-mark"
-              class="size-xs hover:bg-gray-500 cursor-pointer"
+              name="hero-x-circle"
+              class="size-xs cursor-pointer hover:bg-base-300"
             />
           </div>
-          <div role="tablist" class="tabs tabs-boxed mb-5">
+          <div role="tablist" class="tabs tabs-boxed mb-3">
             <a
               :for={tab <- tab_group}
               id={"tab_#{tab.id}"}
@@ -59,14 +60,6 @@ defmodule DatumWeb.HomeLive do
               data-tip="Click to open or Drag to move"
             >
               <%= Map.get(tab.state, :name, tab.module.display_name) %>
-              <span
-                phx-click="close_tab"
-                phx-value-tab-id={tab.id}
-                class="tooltip tooltip-top"
-                data-tip="Close Tab"
-              >
-                <.icon name="hero-x-mark" class="ml-2" />
-              </span>
             </a>
             <a
               role="tab"
@@ -80,6 +73,17 @@ defmodule DatumWeb.HomeLive do
           </div>
 
           <%= if List.first(Enum.filter(tab_group, fn tab -> Enum.member?(@selected_tabs, tab) end))do %>
+            <span
+              phx-click="close_tab"
+              phx-value-tab-id={
+                List.first(Enum.filter(tab_group, fn tab -> Enum.member?(@selected_tabs, tab) end)).id
+              }
+              class="tooltip tooltip-top "
+              data-tip="Close Tab"
+            >
+              <.icon name="hero-x-circle" class="ml-2 h-5 w-5 cursor-pointer hover:bg-base-300" />
+            </span>
+            <div class="divider p-0 m-0"></div>
             <%= live_render(
               @socket,
               List.first(Enum.filter(tab_group, fn tab -> Enum.member?(@selected_tabs, tab) end)).module,

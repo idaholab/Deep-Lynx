@@ -40,7 +40,7 @@ defmodule DatumWeb.OriginExplorerLive do
               <td>Cy Ganderton</td>
               <td>Quality Control Specialist</td>
               <td>12/16/2020</td>
-              <td phx-click="close_tab">
+              <td>
                 <.icon class="hover:bg-gray-900" name="hero-ellipsis-vertical" />
               </td>
             </tr>
@@ -62,15 +62,10 @@ defmodule DatumWeb.OriginExplorerLive do
     user = Datum.Accounts.get_user_by_session_token(user_token)
     tab = Common.get_user_tab(user, tab_id)
 
-    if is_nil(user) || is_nil(tab) do
+    if !user || !tab do
       {:error, socket}
     else
       {:ok, socket |> assign(:current_user, user) |> assign(:tab, tab)}
     end
-  end
-
-  def handle_event("close_tab", _unsigned_params, socket) do
-    send(socket.parent_pid, {:close_tab, socket.assigns.tab.id})
-    {:noreply, socket}
   end
 end
