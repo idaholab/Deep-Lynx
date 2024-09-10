@@ -139,9 +139,10 @@ export default class ReportQueryRepository extends Repository implements Reposit
                 return Promise.resolve(Result.Failure(`unable to generate SAS token ${getSAS.error?.error}`));
             }
 
+            const accountName = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('AccountName='))?.split('=')[1]!;
             azureMetadata = {
-                account_name: Config.azure_blob_connection_string.split(';').find(e => e.startsWith('AccountName='))?.split('=')[1]!,
-                blob_endpoint: Config.azure_blob_connection_string.split(';').find(e => e.startsWith('BlobEndpoint='))?.split('=')[1]!,
+                account_name: accountName,
+                blob_endpoint: Config.azure_blob_connection_string.split(';').find(e => e.startsWith('BlobEndpoint='))?.split('=')[1].split(`/${accountName}`)[0]!,
                 container_name: Config.azure_blob_container_name,
                 sas_token: getSAS.value
             }
@@ -171,6 +172,8 @@ export default class ReportQueryRepository extends Repository implements Reposit
             results_destination: `${baseBlobUrl}containers/${containerID}/datasources/${files[0].data_source_id}`,
             deeplynx_destination: responseUrl
         }
+
+        console.log(query);
 
         const queryResult = await processQuery(query);
 
