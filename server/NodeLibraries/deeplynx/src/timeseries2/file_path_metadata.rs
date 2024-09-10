@@ -1,5 +1,3 @@
-use lazy_static::lazy_static;
-use regex::Regex;
 use std::path::Path;
 
 #[napi(object)]
@@ -23,25 +21,11 @@ pub fn extract_table_info(files: &Vec<FilePathMetadata>) -> Result<Vec<TableMeta
       .id
       .as_ref()
       .ok_or("file_id can technically be null but should never be null.")?;
-    let file_name = file
-      .file_name
-      .as_ref()
-      .ok_or("file_id can technically be null but should never be null.")?;
+
     let adapter_file_path = file
       .adapter_file_path
       .as_ref()
       .ok_or("file_id can technically be null but should never be null.")?;
-    lazy_static! {
-      static ref RE_VALID_TABLE_NAME: Regex = regex::Regex::new(r"[a-zA-Z_][a-zA-Z_0-9]*")
-        .expect("RE_VALID_TABLE_NAME static regex is incorrect");
-    }
-    if !RE_VALID_TABLE_NAME.is_match(file_name.as_str()) {
-      return Err(format!(
-        "File Path Metadata contained an invalid table name from id: {}",
-        file_id
-      ));
-    }
-
     let ext_plus_uuid = Path::new(adapter_file_path.as_str())
       .extension()
       .ok_or_else(|| {
@@ -88,7 +72,7 @@ pub fn extract_table_info(files: &Vec<FilePathMetadata>) -> Result<Vec<TableMeta
     };
 
     table_info.push(TableMetadata {
-      name: file_name.clone(),
+      name: format!("table_{}", file_id),
       adapter_file_path: adapter_file_path.clone(),
       file_type: ext,
     });

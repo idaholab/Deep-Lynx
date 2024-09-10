@@ -24,7 +24,11 @@ export default class AzureBlobImpl implements BlobStorage {
     async deleteFile(f: File): Promise<Result<boolean>> {
         let blobClient;
         if (f.short_uuid) {
-            blobClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.file_name}${f.short_uuid}`);
+            if (f.timeseries === true) {
+                blobClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.short_uuid}${f.file_name}`);
+            } else {
+                blobClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.file_name}${f.short_uuid}`);
+            }
         } else {
             blobClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.file_name}`);
         }
@@ -51,7 +55,12 @@ export default class AzureBlobImpl implements BlobStorage {
         // if they're uploading a file they want to append to, we'll need to create it as an append blob as block blobs
         // are immutable
         if (stream && options?.canAppend) {
-            const appendBlobClient = this._ContainerClient.getAppendBlobClient(`${filepath}${filename}${shortUUID}`);
+            let appendBlobClient;
+            if (options?.timeseries === true) {
+                appendBlobClient = this._ContainerClient.getAppendBlobClient(`${filepath}${shortUUID}${filename}`);
+            } else {
+                appendBlobClient = this._ContainerClient.getAppendBlobClient(`${filepath}${filename}${shortUUID}`);
+            }
             const result = await appendBlobClient.createIfNotExists();
 
             if (result._response.status > 299 || result._response.status < 200) {
@@ -86,7 +95,12 @@ export default class AzureBlobImpl implements BlobStorage {
             }
         }
 
-        const blobClient = this._ContainerClient.getBlockBlobClient(`${filepath}${filename}${shortUUID}`);
+        let blobClient;
+        if (options?.timeseries === true) {
+            blobClient = this._ContainerClient.getBlockBlobClient(`${filepath}${shortUUID}${filename}`);
+        } else {
+            blobClient = this._ContainerClient.getBlockBlobClient(`${filepath}${filename}${shortUUID}`);
+        }
 
         if (stream) {
             let md5hash = '';
@@ -136,7 +150,12 @@ export default class AzureBlobImpl implements BlobStorage {
     }
 
     async appendPipe(file: File, stream: Readable | null): Promise<Result<boolean>> {
-        const appendBlobClient = this._ContainerClient.getAppendBlobClient(`${file.adapter_file_path}${file.file_name}${file.short_uuid}`);
+        let appendBlobClient;
+        if (file.timeseries === true) {
+            appendBlobClient = this._ContainerClient.getAppendBlobClient(`${file.adapter_file_path}${file.short_uuid}${file.file_name}`);
+        } else {
+            appendBlobClient = this._ContainerClient.getAppendBlobClient(`${file.adapter_file_path}${file.file_name}${file.short_uuid}`);
+        }
         const result = await appendBlobClient.createIfNotExists();
 
         if (result._response.status > 299 || result._response.status < 200) {
@@ -174,6 +193,7 @@ export default class AzureBlobImpl implements BlobStorage {
                 // ignore conflict rest errors as those indicate the container
                 // was created previously. We don't need to note that
                 if (e.statusCode !== 409) {
+                    console.log(e);
                     Logger.error(`unable to create new azure container - ${e}`);
                 }
             });
@@ -182,7 +202,11 @@ export default class AzureBlobImpl implements BlobStorage {
     async downloadStream(f: File): Promise<Readable | undefined> {
         let blobClient;
         if (f.short_uuid) {
-            blobClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.file_name}${f.short_uuid}`);
+            if (f.timeseries === true) {
+                blobClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.short_uuid}${f.file_name}`);
+            } else {
+                blobClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.file_name}${f.short_uuid}`);
+            }
         } else {
             blobClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.file_name}`);
         }

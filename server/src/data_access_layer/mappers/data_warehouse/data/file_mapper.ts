@@ -206,7 +206,7 @@ export default class FileMapper extends Mapper {
             short_uuid,
             timeseries,
             created_by,
-            modified_by) VALUES %L 
+            modified_by) VALUES %L
             ON CONFLICT(id, md5hash) DO UPDATE SET
                 file_name = EXCLUDED.file_name,
                 file_size = EXCLUDED.file_size,
@@ -294,7 +294,7 @@ export default class FileMapper extends Mapper {
             values: [containerID],
         };
     }
-    
+
     private filesForEdgeStatement(edgeID: string, revisionOnly?: boolean): QueryConfig {
         if (revisionOnly) {
             return {
@@ -334,9 +334,9 @@ export default class FileMapper extends Mapper {
     }
 
     private filesForDataStagingStatement(dataStagingID: string[]): QueryConfig {
-        const text = `SELECT files.* 
-                        FROM data_staging_files 
-                        LEFT JOIN files ON files.id = data_staging_files.file_id 
+        const text = `SELECT files.*
+                        FROM data_staging_files
+                        LEFT JOIN files ON files.id = data_staging_files.file_id
                         WHERE data_staging_id IN (%L)`;
         const values = dataStagingID;
 
@@ -357,7 +357,7 @@ export default class FileMapper extends Mapper {
     // fetch the fully qualified file path complete with file name and short uuid
     private filePathMetadataStatement(fileIDs: string[]): QueryConfig {
         const text = `SELECT id, adapter, data_source_id, file_name,
-                        adapter_file_path || file_name || short_uuid AS adapter_file_path
+                        adapter_file_path || short_uuid || file_name AS adapter_file_path
                         FROM files
                         WHERE id IN (%L)`;
         const values = fileIDs;
@@ -369,7 +369,7 @@ export default class FileMapper extends Mapper {
         const text = `INSERT INTO file_descriptions (file_id, description, file_created_at)
                     SELECT file_id::bigint, description::jsonb,
                         -- subquery to get created_at for the foreign key
-                        (SELECT MAX(f.created_at) 
+                        (SELECT MAX(f.created_at)
                         FROM files f
                         WHERE f.id = fd.file_id::bigint
                         GROUP BY f.id) AS created_at

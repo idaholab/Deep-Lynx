@@ -214,7 +214,7 @@ export default class ReportRoutes {
         }
     }
 
-    // endpoint for the TS2 rust module to upload file results. TS2 will already have uploaded the data 
+    // endpoint for the TS2 rust module to upload file results. TS2 will already have uploaded the data
     // to the appropriate storage provider, so we just need to attach the file metadata to the report
     private static uploadResults(req: Request, res: Response, next: NextFunction) {
         if (req.reportQuery && req.report) {

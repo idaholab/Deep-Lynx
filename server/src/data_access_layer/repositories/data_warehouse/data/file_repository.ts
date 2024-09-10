@@ -238,7 +238,7 @@ export default class FileRepository extends Repository implements RepositoryInte
         if (!provider) return Promise.resolve(Result.Failure('no storage provider set'));
 
         // run the actual file upload the storage provider
-        const result = await provider.uploadPipe(`containers/${containerID}/datasources/${dataSourceID ? dataSourceID : '0'}/`, filename, stream);
+        const result = await provider.uploadPipe(`containers/${containerID}/datasources/${dataSourceID ? dataSourceID : '0'}/`, filename, stream, undefined, undefined, {timeseries: options?.timeseries});
         if (result.isError) return Promise.resolve(Result.Pass(result));
 
         const file = new File({
@@ -340,7 +340,7 @@ export default class FileRepository extends Repository implements RepositoryInte
             serialize(desc),
             Config.cache_default_ttl
         )
-        
+
         return Promise.resolve(set);
     }
 

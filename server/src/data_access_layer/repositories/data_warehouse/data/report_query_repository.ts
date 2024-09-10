@@ -14,7 +14,7 @@ import ReportRepository from './report_repository';
 import Config from '../../../../services/config';
 import BlobStorageProvider from '../../../../services/blob_storage/blob_storage';
 import AzureBlobImpl from '../../../../services/blob_storage/azure_blob_impl';
-import { processQuery, StorageType, TimeseriesQuery } from 'deeplynx';
+import { processQuery, StorageType } from 'deeplynx';
 
 /*
     ReportQueryRepository contains methods for persisting and retrieving report
@@ -157,7 +157,10 @@ export default class ReportQueryRepository extends Repository implements Reposit
             ? `${azureMetadata?.blob_endpoint}/${azureMetadata?.container_name}/`
             : Config.filesystem_storage_directory;
 
-        console.log('printing query');
+        // todo: remove before PR
+        console.log(azureMetadata?.sas_token);
+        console.log(files[0].adapter_file_path);
+
         const query = {
             report_id: reportID,
             query: request.query,
@@ -168,10 +171,8 @@ export default class ReportQueryRepository extends Repository implements Reposit
             results_destination: `${baseBlobUrl}containers/${containerID}/datasources/${files[0].data_source_id}`,
             deeplynx_destination: responseUrl
         }
-        console.log(query)
 
         const queryResult = await processQuery(query);
-        console.log(queryResult);
 
         // set report and query statuses to "processing"
         const statusMsg = `executing query ${queryID}: "${reportQuery.query}" as part of report ${reportID}`;
