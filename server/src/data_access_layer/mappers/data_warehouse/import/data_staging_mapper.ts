@@ -163,6 +163,10 @@ export default class DataStagingMapper extends Mapper {
         return super.runStatement(this.vacuum());
     }
 
+    public async GetDataStagingDataOnUniqueHashes(): Promise<Result<DataStaging[]>> {
+        return super.rows<DataStaging>(this.getDataStagingDataOnUniqueHashes(), {resultClass: this.resultClass});
+    }
+
     private createStatement(...data: DataStaging[]): string {
         const text = `WITH results AS (INSERT INTO data_staging(
                          data_source_id,
@@ -440,4 +444,15 @@ export default class DataStagingMapper extends Mapper {
     public vacuum(): string {
         return `VACUUM ${DataStagingMapper.tableName}`;
     }
+
+    // call to retrieve data from data staging table to insert into type_mappings table
+    // part of process to move inserting into type_mappings prior to actually nodes and edges
+    // ingestion. Logically makes more sense since nodes and edges are not actually relevant 
+    // until enabled. Also prevents race issue in process worker where data is ingested into
+    // multiple locations at once.
+    private getDataStagingDataOnUniqueHashes(): string {
+        return `SELECT DISTINCT ON (ds.shape_hash) shape_hash, ds.data_source_id, ds.data
+                FROM data_staging ds;`;
+    }
+
 }

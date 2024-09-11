@@ -1,27 +1,51 @@
-import {workerData, isMainThread} from 'worker_threads';
+import { workerData, isMainThread } from 'worker_threads';
 import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/postgres';
 import QueryStream from 'pg-query-stream';
 import DataStagingMapper from '../data_access_layer/mappers/data_warehouse/import/data_staging_mapper';
-import {Transform, TransformCallback} from 'stream';
-import {from as copyFrom} from 'pg-copy-streams';
-import {instanceToPlain, plainToInstance} from 'class-transformer';
-import {GenerateEdges, GenerateNodes} from '../data_processing/process';
-import {DataStaging} from '../domain_objects/data_warehouse/import/import';
+import { Transform, TransformCallback } from 'stream';
+import { from as copyFrom } from 'pg-copy-streams';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
+import { GenerateEdges, GenerateNodes } from '../data_processing/process';
+import { DataStaging } from '../domain_objects/data_warehouse/import/import';
 import Papa from 'papaparse';
 import Logger from '../services/logger';
 import NodeMapper from '../data_access_layer/mappers/data_warehouse/data/node_mapper';
 import EdgeMapper from '../data_access_layer/mappers/data_warehouse/data/edge_mapper';
-import {pipeline} from 'node:stream/promises';
+import { pipeline } from 'node:stream/promises';
 import ImportRepository from '../data_access_layer/repositories/data_warehouse/import/import_repository';
-import {SnapshotGenerator} from 'deeplynx';
+import { SnapshotGenerator } from 'deeplynx';
 import Config from '../services/config';
 import ContainerMapper from '../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import ImportMapper from '../data_access_layer/mappers/data_warehouse/import/import_mapper';
+import TypeMapping from '../domain_objects/data_warehouse/etl/type_mapping';
+import TypeMappingMapper from '../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper';
+import DataStagingRepository from '../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
+import {ReturnSuperUser} from '../domain_objects/access_management/user';
+
 
 export async function ProcessWorkerStart(importIDs: string[], containerID: string): Promise<void> {
     await PostgresAdapter.Instance.init();
     const client = await PostgresAdapter.Instance.Pool.connect();
     const insertClient = await PostgresAdapter.Instance.Pool.connect();
+    const stagingRepo = new DataStagingRepository();
+    const output = new TypeMappingMapper;
+    const dataRecordStaging = await stagingRepo.listDataStagingRecordsOnDistinctShapeHash();
+
+    const samplePayloads = dataRecordStaging.value.map((m) => m);
+
+    for (let i of samplePayloads) {
+        const commonMapping: TypeMapping = new TypeMapping({
+            container_id: containerID,
+            data_source_id: i.data_source_id!,
+            shape_hash: i.shape_hash,
+            sample_payload: i.data,
+        });
+        //const idUser = await ReturnSuperUser();
+        const hi = await output.CreateOrUpdate("beans", commonMapping);
+
+    }
+
+
 
     // increment the attempt on the importIDs outside the transaction so that if this crashes it doesn't take down the whole thread
     await ImportMapper.Instance.IncrementAttempts(...importIDs);
@@ -96,7 +120,7 @@ export async function ProcessWorkerStart(importIDs: string[], containerID: strin
                     GenerateNodes(stagingRecord)
                         .then((nodes) => {
                             if (nodes.length > 0) {
-                                // ensure all the nodes match the same structure
+                                // ensure all the nodes match the same structure`
                                 const parsedNodes = nodes.map((n) => {
                                     // eslint-disable-next-line security/detect-object-injection
                                     return Object.fromEntries(cols.map((col: string) => [col, instanceToPlain(n)[col]]));
@@ -207,7 +231,7 @@ export async function ProcessWorkerStart(importIDs: string[], containerID: strin
     ];
 
     const snapshot = new SnapshotGenerator();
-    await snapshot.init({dbConnectionString: Config.core_db_connection_string}, containerID);
+    await snapshot.init({ dbConnectionString: Config.core_db_connection_string }, containerID);
 
     // build a transform stream that outputs edges as csv data
     class EdgeTransform extends Transform {
