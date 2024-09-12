@@ -263,8 +263,8 @@ export default class DataStagingRepository extends Repository implements Reposit
         return Promise.resolve(Result.Pass(results));
     }
 
-    async listDataStagingRecordsOnDistinctShapeHash(): Promise<Result<DataStaging[]>> {
-        return this.#mapper.GetDataStagingDataOnUniqueHashes();
+    async listDataStagingRecordsOnDistinctShapeHash(import_id: any): Promise<Result<DataStaging[]>> {
+        return this.#mapper.GetDataStagingDataOnUniqueHashes(import_id);
     }
 
 

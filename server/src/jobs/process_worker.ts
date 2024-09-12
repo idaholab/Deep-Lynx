@@ -20,7 +20,7 @@ import ImportMapper from '../data_access_layer/mappers/data_warehouse/import/imp
 import TypeMapping from '../domain_objects/data_warehouse/etl/type_mapping';
 import TypeMappingMapper from '../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper';
 import DataStagingRepository from '../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
-import {ReturnSuperUser} from '../domain_objects/access_management/user';
+
 
 
 export async function ProcessWorkerStart(importIDs: string[], containerID: string): Promise<void> {
@@ -29,9 +29,9 @@ export async function ProcessWorkerStart(importIDs: string[], containerID: strin
     const insertClient = await PostgresAdapter.Instance.Pool.connect();
     const stagingRepo = new DataStagingRepository();
     const output = new TypeMappingMapper;
-    const dataRecordStaging = await stagingRepo.listDataStagingRecordsOnDistinctShapeHash();
-
+    const dataRecordStaging = await stagingRepo.listDataStagingRecordsOnDistinctShapeHash(importIDs[0]);
     const samplePayloads = dataRecordStaging.value.map((m) => m);
+
 
     for (let i of samplePayloads) {
         const commonMapping: TypeMapping = new TypeMapping({
@@ -40,12 +40,8 @@ export async function ProcessWorkerStart(importIDs: string[], containerID: strin
             shape_hash: i.shape_hash,
             sample_payload: i.data,
         });
-        //const idUser = await ReturnSuperUser();
-        const hi = await output.CreateOrUpdate("beans", commonMapping);
-
+        await output.CreateOrUpdate("beans", commonMapping);
     }
-
-
 
     // increment the attempt on the importIDs outside the transaction so that if this crashes it doesn't take down the whole thread
     await ImportMapper.Instance.IncrementAttempts(...importIDs);

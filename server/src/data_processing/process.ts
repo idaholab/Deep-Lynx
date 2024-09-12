@@ -12,7 +12,6 @@ import {SnapshotGenerator} from 'deeplynx';
 export async function GenerateNodes(...staging: DataStaging[]): Promise<Node[]> {
     const stagingRepo = new DataStagingRepository();
     const mappingRepo = new TypeMappingRepository();
-
     const updated: DataStaging[] = [];
     let nodeHashUpdate = false;
     const records = staging.map((s) => {
@@ -26,10 +25,9 @@ export async function GenerateNodes(...staging: DataStaging[]): Promise<Node[]> 
             updated.push(s);
             nodeHashUpdate = true;
         }
-
         return s;
     });
-    // update the staging records with the shape-hash if needed
+   
     if (nodeHashUpdate) await stagingRepo.bulkSave(updated);
 
     // NOTE: this db call might return records which don't match the shapehash/data_source combo because we're passing
@@ -46,7 +44,7 @@ export async function GenerateNodes(...staging: DataStaging[]): Promise<Node[]> 
             'in',
             records.map((s) => s.data_source_id),
         )
-        .list(true, undefined);
+        .list(true);
 
     const nodesToInsert: Node[] = []; // holds all nodes to insert
 
@@ -57,23 +55,8 @@ export async function GenerateNodes(...staging: DataStaging[]): Promise<Node[]> 
             continue;
         }
         // pull the mappings out
-        let mappings = all_mappings.value.filter((m) => m.data_source_id === record.data_source_id && m.shape_hash === record.shape_hash);
-        if (mappings.length === 0) {
-            const inserted = await mappingRepo.save(
-                new TypeMapping({
-                    container_id: record.container_id!,
-                    data_source_id: record.data_source_id!,
-                    sample_payload: record.data,
-                    shape_hash: record.shape_hash,
-                }),
-                await ReturnSuperUser(),
-            );
-            await stagingRepo.setErrors(record.id!, ['no active transformations for type mapping']);
-            if (inserted.isError) {
-                Logger.error('unable to insert mapping into database', inserted.error);
-            }
-            continue;
-        }
+        let mappings = all_mappings.value.filter((m) => m.data_source_id === record.data_source_id && (m.shape_hash === record.shape_hash));
+       
 
         mappings = mappings.filter((m) => m.active);
         if (mappings.length === 0) {
@@ -98,6 +81,7 @@ export async function GenerateNodes(...staging: DataStaging[]): Promise<Node[]> 
                     // keep in mind that any conversion errors that didn't cause the complete failure of the transformation
                     // will be contained in the metadata object on the transformed object
                     const results = await transformation.applyTransformation(record);
+        
                     if (results.isError) {
                         await stagingRepo.setErrors(record.id!, [`unable to apply transformation ${transformation.id} to data: ${results.error?.error}`]);
                         continue;

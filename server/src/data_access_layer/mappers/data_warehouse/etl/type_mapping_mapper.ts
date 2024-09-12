@@ -17,7 +17,7 @@ const format = require('pg-format');
 */
 export default class TypeMappingMapper extends Mapper {
     private resultClass = TypeMapping;
-    public static tableName = 'grouped_type_mappings';
+    public static tableName = 'type_mappings';
 
     private static instance: TypeMappingMapper;
 

@@ -837,7 +837,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
 
         // select from this group of tables
         this._query.FROM = [
-            `FROM grouped_type_mappings ${this._tableAlias}`,
+            `FROM type_mappings ${this._tableAlias}`,
             `LEFT JOIN type_mapping_transformations ON ${this._tableAlias}.id = type_mapping_transformations.type_mapping_id`,
             'LEFT JOIN metatypes ON type_mapping_transformations.metatype_id = metatypes.id',
             'LEFT JOIN metatype_relationship_pairs on type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id',
