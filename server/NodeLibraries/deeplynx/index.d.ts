@@ -12,7 +12,7 @@ export interface Options {
   stopNodes?: Array<string>
   valueNodes?: Array<string>
 }
-export function hash(a: string, options: Options): string
+export declare function hash(a: string, options: Options): string
 export interface LegacyTimeseriesColumn {
   column_name: string
   property_name: string
@@ -20,7 +20,7 @@ export interface LegacyTimeseriesColumn {
   type: string
   date_conversion_format_string?: string
 }
-export function inferLegacySchema(csv: Buffer): Array<LegacyTimeseriesColumn>
+export declare function inferLegacySchema(csv: Buffer): Array<LegacyTimeseriesColumn>
 export interface AzureMetadata {
   account_name?: string
   blob_endpoint?: string
@@ -38,7 +38,17 @@ export const enum StorageType {
   azure = 'azure',
   filesystem = 'filesystem'
 }
-export function processQuery(req: TimeseriesQuery): Promise<string>
+/**
+ * For processing file uploads, returns the the results of a SQL `DESCRIBE` query against the uploaded file(s).
+ * Results are returned as stringified JSON.
+ */
+export declare function processUpload(req: TimeseriesQuery): Promise<string>
+/**
+ * For processing queries against a set of files.
+ * Uploads results to a location specified in the request object.
+ * Returns the metadata of the query results as stringified JSON.
+ */
+export declare function processQuery(req: TimeseriesQuery): Promise<string>
 export type JsRedisGraphLoader = RedisGraphLoader
 export declare class RedisGraphLoader {
   constructor()
@@ -103,10 +113,7 @@ export declare class BucketRepository {
 export declare class TimeseriesQuery {
   report_id: string
   query?: string
-  dl_token: string
   storage_type: StorageType
   sas_metadata?: AzureMetadata
   files: Array<FilePathMetadata>
-  results_destination: string
-  deeplynx_destination: string
 }

@@ -175,6 +175,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
 
         console.log(query);
 
+        // send queryResult directly through memory instead of sending over the network
         const queryResult = await processQuery(query);
 
         // set report and query statuses to "processing"
