@@ -37,6 +37,9 @@ defmodule Datum.Scanners.Filesystem do
         owned_by: user_id
       })
 
+    ## we have to make the original leaf node
+    DataOrigin.connect_data(origin, parent, parent)
+
     File.ls!(root_path)
     |> Enum.each(fn entry ->
       full_path = Path.join(root_path, entry)

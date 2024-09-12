@@ -5,7 +5,7 @@ defmodule Datum.DataOrigin.Data do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @primary_key {:id, :binary_id, autogenerate: false}
+  @primary_key {:id, :binary_id, autogenerate: true}
   schema "data" do
     field :path, :string
     field :original_path, :string
@@ -40,7 +40,5 @@ defmodule Datum.DataOrigin.Data do
         :description
       ])
       |> validate_required([:path])
-
-    put_change(changeset, :id, UUID.uuid3(nil, fetch_field!(changeset, :path)))
   end
 end

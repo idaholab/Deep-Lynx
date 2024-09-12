@@ -13,6 +13,7 @@ defmodule Datum.DataOrigin do
   alias Datum.DataOrigin.Data
   alias Datum.Accounts.User
   alias Datum.Accounts.UserGroup
+  alias Datum.DataOrigin.DataTreePath
 
   @doc """
   Returns the list of data_origins.
@@ -45,6 +46,22 @@ defmodule Datum.DataOrigin do
         select: o
 
     Repo.all(query)
+  end
+
+  def get_data_orgins_user(%User{} = user, origin_id) do
+    query =
+      from o in Origin,
+        distinct: true,
+        left_join: p in Datum.Permissions.DataOrigin,
+        on: o.id == p.data_origin_id,
+        where:
+          (p.user_id == ^user.id or
+             p.group_id in subquery(
+               from g in UserGroup, where: g.user_id == ^user.id, select: g.group_id
+             )) and p.permission_type in [:read, :readwrite] and o.id == ^origin_id,
+        select: o
+
+    Repo.one(query)
   end
 
   @doc """
@@ -144,9 +161,23 @@ defmodule Datum.DataOrigin do
     end)
   end
 
-  def connect_data(%Origin{} = origin, %Data{} = parent, %Data{} = child) do
+  def connect_data(%Origin{} = origin, %Data{} = ancestor, %Data{} = leaf) do
     OriginRepo.with_dynamic_repo(origin, fn ->
-      Datum.DataOrigin.CT.insert(parent.id, child.id)
+      Datum.DataOrigin.CT.insert(leaf.id, ancestor.id)
+    end)
+  end
+
+  def list_roots(%Origin{} = origin) do
+    OriginRepo.with_dynamic_repo(origin, fn ->
+      query =
+        from tp in DataTreePath,
+          distinct: true,
+          left_join: d in Data,
+          ## this marks a root file system in CTE
+          where: tp.ancestor == tp.descendant,
+          select: d
+
+      OriginRepo.all(query)
     end)
   end
 

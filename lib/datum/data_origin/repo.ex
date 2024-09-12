@@ -97,10 +97,10 @@ defmodule Datum.DataOrigin.CT do
     nodes: Datum.DataOrigin.Data,
     paths: Datum.DataOrigin.DataTreePath,
     options: %{
-      node: %{primary_key: :id, type: :binary_id},
+      node: %{primary_key: :id, type: :binary},
       paths: %{
-        ancestor: [type: :binary_id],
-        descendant: [type: :binary_id]
+        ancestor: [type: :binary],
+        descendant: [type: :binary]
       }
     }
 end

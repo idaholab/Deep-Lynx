@@ -13,13 +13,14 @@ defmodule DatumWeb.OriginExplorerLive do
 
   def display_name, do: "Origin Explorer"
   alias Datum.Common
+  alias Datum.DataOrigin
 
   def render(assigns) do
     ~H"""
     <div>
       <div class="breadcrumbs text-sm">
         <ul>
-          <li><a>Data Origins</a></li>
+          <li><a><% gettext("Data Origins") %></a></li>
         </ul>
       </div>
       <div>
@@ -28,7 +29,7 @@ defmodule DatumWeb.OriginExplorerLive do
           <.file_table
             id={"origins_#{@tab.id}"}
             rows={origins}
-            row_click={fn _ -> JS.push("test") end}
+            row_click={fn r -> JS.push("select_origin", value: %{"origin_id" => r.id}) end}
           >
             <:col><.icon name="hero-server-stack" /></:col>
             <:col :let={origin} label={gettext("Name")}><%= origin.name %></:col>
@@ -85,10 +86,13 @@ defmodule DatumWeb.OriginExplorerLive do
     end
   end
 
-  def handle_event("test", unsigned_params, socket) do
-    update_state(socket, %{name: "test"})
+  # select the origin, set it, and load the initial root files
+  def handle_event("select_origin", %{"origin_id" => origin_id}, socket) do
+    origin = DataOrigin.get_data_orgins_user(socket.assigns.current_user, origin_id)
+    root_items = DataOrigin.list_roots(origin)
+    dbg(root_items)
 
-    {:noreply, socket}
+    {:noreply, socket |> update_state(%{name: origin.name}) |> assign(:items, root_items)}
   end
 
   def update_state(socket, state) do
@@ -97,6 +101,7 @@ defmodule DatumWeb.OriginExplorerLive do
 
     {:ok, _} = Common.update_explorer_tabs(tab, %{state: state})
     notify_parent({:tab_updated, tab.id}, socket.assigns.parent)
+    socket
   end
 
   defp notify_parent(msg, process), do: send(process, msg)

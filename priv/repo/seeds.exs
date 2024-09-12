@@ -28,13 +28,6 @@ alias Datum.DataOrigin
     owned_by: admin.id
   })
 
-{:ok, _p} =
-  Datum.Permissions.create_data_origin(%{
-    data_origin_id: origin.id,
-    user_id: admin.id,
-    permission_type: :readwrite
-  })
-
 # build a simple nested directory
 dir_one =
   DataOrigin.add_data!(origin, %{
@@ -52,7 +45,8 @@ file_one =
     owned_by: admin.id
   })
 
-DataOrigin.connect_data(origin, dir_one, file_one)
+{:ok, _} = DataOrigin.connect_data(origin, dir_one, dir_one)
+{:ok, _} = DataOrigin.connect_data(origin, dir_one, file_one)
 
 dir_two =
   DataOrigin.add_data!(origin, %{
@@ -62,7 +56,7 @@ dir_two =
     owned_by: admin.id
   })
 
-DataOrigin.connect_data(origin, dir_one, dir_two)
+{:ok, _} = DataOrigin.connect_data(origin, dir_one, dir_two)
 
 file_two =
   DataOrigin.add_data!(origin, %{
@@ -72,7 +66,7 @@ file_two =
     owned_by: admin.id
   })
 
-DataOrigin.connect_data(origin, dir_two, file_two)
+{:ok, _} = DataOrigin.connect_data(origin, dir_two, file_two)
 
 # Tabs for the home page view, eventually won't need them as we'll want to maintain state a different way
 {:ok, tab_one} =
