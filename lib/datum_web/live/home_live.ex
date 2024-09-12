@@ -36,11 +36,10 @@ defmodule DatumWeb.HomeLive do
             data-tip="Close Pane"
             phx-click="close_pane"
             phx-value-group-index={group_index}
-            class=""
           >
             <.icon
               :if={group_index > 0}
-              name="hero-x-circle"
+              name="hero-x-mark"
               class="size-xs cursor-pointer hover:bg-base-300"
             />
           </div>
@@ -59,7 +58,7 @@ defmodule DatumWeb.HomeLive do
               class={"tab tooltip tooltip-bottom #{if Enum.member?(@selected_tabs, tab) do "tab-active" else "hover:bg-neutral" end}"}
               data-tip="Click to open or Drag to move"
             >
-              <%= Map.get(tab.state, :name, tab.module.display_name) %>
+              <%= Map.get(tab.state, "name", tab.module.display_name) %>
             </a>
             <a
               role="tab"
@@ -81,17 +80,17 @@ defmodule DatumWeb.HomeLive do
               class="tooltip tooltip-top "
               data-tip="Close Tab"
             >
-              <.icon name="hero-x-circle" class="ml-2 h-5 w-5 cursor-pointer hover:bg-base-300" />
+              <.icon name="hero-x-mark" class="ml-2 h-5 w-5 cursor-pointer hover:bg-base-300" />
             </span>
             <div class="divider p-0 m-0"></div>
             <%= live_render(
               @socket,
-              List.first(Enum.filter(tab_group, fn tab -> Enum.member?(@selected_tabs, tab) end)).module,
+              Enum.find(tab_group, fn tab -> Enum.member?(@selected_tabs, tab) end).module,
               id:
                 "explorer_tab_#{List.first(Enum.filter(tab_group, fn tab -> Enum.member?(@selected_tabs, tab) end)).id}",
               session: %{
-                "tab_id" =>
-                  List.first(Enum.filter(tab_group, fn tab -> Enum.member?(@selected_tabs, tab) end)).id
+                "parent" => self(),
+                "tab_id" => Enum.find(tab_group, fn tab -> Enum.member?(@selected_tabs, tab) end).id
               }
             ) %>
           <% end %>
@@ -315,15 +314,7 @@ defmodule DatumWeb.HomeLive do
 
     {:noreply,
      socket
-     |> assign(:selected_tabs, selected_tabs)
-     |> push_patch(
-       to:
-         ~p"/home?selected_tabs=#{selected_tabs |> Enum.map(fn t -> if t do
-             t.id
-           else
-             0
-           end end) |> Enum.join(",")}"
-     )}
+     |> assign(:selected_tabs, selected_tabs)}
   end
 
   def handle_event(
@@ -457,6 +448,36 @@ defmodule DatumWeb.HomeLive do
   # and update that on the user to avoid re-opening
   def handle_info({:close_tab, tab_id}, socket) do
     close_tab(tab_id, socket)
+  end
+
+  def handle_info({:tab_updated, tab_id}, socket) do
+    {:noreply, socket |> replace_tab(Common.get_user_tab!(socket.assigns.current_user, tab_id))}
+  end
+
+  defp replace_tab(socket, tab) do
+    tabs =
+      socket.assigns.tabs
+      |> Enum.map(fn g ->
+        Enum.map(g, fn t ->
+          if t.id == tab.id do
+            tab
+          else
+            t
+          end
+        end)
+      end)
+
+    selected_tabs =
+      socket.assigns.selected_tabs
+      |> Enum.map(fn t ->
+        if t && t.id == tab.id do
+          tab
+        else
+          t
+        end
+      end)
+
+    socket |> assign(:tabs, tabs) |> assign(:selected_tabs, selected_tabs)
   end
 
   defp close_tab(tab_id, socket) do

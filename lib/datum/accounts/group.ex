@@ -43,8 +43,8 @@ defmodule Datum.Accounts.UserGroup do
 
   @primary_key false
   schema "user_groups" do
-    belongs_to :user, User
-    belongs_to :group, Group
+    belongs_to :user, User, type: :binary_id
+    belongs_to :group, Group, type: :binary_id
 
     timestamps()
   end

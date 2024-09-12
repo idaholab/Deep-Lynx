@@ -28,6 +28,13 @@ alias Datum.DataOrigin
     owned_by: admin.id
   })
 
+{:ok, _p} =
+  Datum.Permissions.create_data_origin(%{
+    data_origin_id: origin.id,
+    user_id: admin.id,
+    permission_type: :readwrite
+  })
+
 # build a simple nested directory
 dir_one =
   DataOrigin.add_data!(origin, %{

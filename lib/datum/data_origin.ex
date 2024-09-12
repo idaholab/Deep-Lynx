@@ -4,11 +4,15 @@ defmodule Datum.DataOrigin do
   """
 
   import Ecto.Query, warn: false
+  alias Datum.Accounts.Group
+  alias Datum.DataOrigin
   alias Datum.Repo
   alias Datum.DataOrigin.OriginRepo
 
   alias Datum.DataOrigin.Origin
   alias Datum.DataOrigin.Data
+  alias Datum.Accounts.User
+  alias Datum.Accounts.UserGroup
 
   @doc """
   Returns the list of data_origins.
@@ -21,6 +25,26 @@ defmodule Datum.DataOrigin do
   """
   def list_data_origins do
     Repo.all(Origin)
+  end
+
+  @doc """
+  Returns a list of data_origins for a user - taking into account
+  their groups and permissions for said origins.
+  """
+  def list_data_orgins_user(%User{} = user) do
+    query =
+      from o in Origin,
+        distinct: true,
+        left_join: p in Datum.Permissions.DataOrigin,
+        on: o.id == p.data_origin_id,
+        where:
+          (p.user_id == ^user.id or
+             p.group_id in subquery(
+               from g in UserGroup, where: g.user_id == ^user.id, select: g.group_id
+             )) and p.permission_type in [:read, :readwrite],
+        select: o
+
+    Repo.all(query)
   end
 
   @doc """

@@ -519,6 +519,82 @@ defmodule DatumWeb.CoreComponents do
     """
   end
 
+  @doc ~S"""
+  Renders a file-explorer like table
+
+  ## Examples
+
+      <.table id="users" rows={@users}>
+        <:col :let={user} label="id"><%= user.id %></:col>
+        <:col :let={user} label="username"><%= user.username %></:col>
+      </.table>
+  """
+  attr :id, :string, required: true
+  attr :rows, :list, required: true
+  attr :row_id, :any, default: nil, doc: "the function for generating the row id"
+  attr :row_click, :any, default: nil, doc: "the function for handling phx-click on each row"
+
+  attr :row_item, :any,
+    default: &Function.identity/1,
+    doc: "the function for mapping each row before calling the :col and :action slots"
+
+  slot :col, required: true do
+    attr :label, :string
+  end
+
+  slot :row_icon do
+    attr :name, :string
+  end
+
+  slot :action, doc: "the slot for showing user actions in the last table column"
+
+  def file_table(assigns) do
+    assigns =
+      with %{rows: %Phoenix.LiveView.LiveStream{}} <- assigns do
+        assign(assigns, row_id: assigns.row_id || fn {id, _item} -> id end)
+      end
+
+    ~H"""
+    <div>
+      <table class="table table-xs">
+        <thead>
+          <tr>
+            <th :for={col <- @col}><%= col[:label] %></th>
+            <th :if={@action != []}>
+              <span class="sr-only"><%= gettext("Actions") %></span>
+            </th>
+          </tr>
+        </thead>
+        <tbody id={@id} phx-update={match?(%Phoenix.LiveView.LiveStream{}, @rows) && "stream"}>
+          <tr
+            :for={row <- @rows}
+            id={@row_id && @row_id.(row)}
+            class="hover:bg-base-200 hover:cursor-pointer"
+          >
+            <td
+              :for={{col, i} <- Enum.with_index(@col)}
+              phx-click={@row_click && @row_click.(row)}
+              class={[@row_click && "hover:cursor-pointer", i <= 0 && "w-2"]}
+            >
+              <%= render_slot(col, @row_item.(row)) %>
+            </td>
+            <td :if={@action != []}>
+              <div>
+                <span
+                  :for={action <- @action}
+                  class="relative ml-4 font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
+                >
+                  <%= render_slot(action, @row_item.(row)) %>
+                </span>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    """
+  end
+
   @doc """
   Renders a data list.
 

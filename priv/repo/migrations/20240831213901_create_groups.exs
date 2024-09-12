@@ -11,8 +11,8 @@ defmodule Datum.Repo.Migrations.CreateGroups do
     end
 
     create table(:user_groups) do
-      add :user_id, references(:users)
-      add :group_id, references(:groups)
+      add :user_id, references(:users, type: :binary_id)
+      add :group_id, references(:groups, type: :binary_id)
 
       timestamps()
     end

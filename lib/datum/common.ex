@@ -34,6 +34,10 @@ defmodule Datum.Common do
     Repo.one(from e in ExplorerTabs, where: e.user_id == ^user.id and e.id == ^tab_id)
   end
 
+  def get_user_tab!(%User{} = user, tab_id) do
+    Repo.one!(from e in ExplorerTabs, where: e.user_id == ^user.id and e.id == ^tab_id)
+  end
+
   @doc """
   Gets a single explorer_tabs.
 
