@@ -1,28 +1,39 @@
 use chrono::Utc;
+use connection_string::AdoNetString;
 use datafusion::{arrow::json::ArrayWriter, dataframe::DataFrameWriteOptions};
+use file_metadata::FileMetadata;
 use serde_json::json;
 use short_uuid::short;
 use tokio::fs::{remove_file, File};
 
-pub mod azure_metadata;
+pub mod azure_object_store;
 pub mod errors;
-pub mod file_path_metadata;
+pub mod file_metadata;
 pub mod timeseries_query;
-use timeseries_query::{get_local_storage_path, setup, TimeseriesQuery};
+use timeseries_query::populate_session;
 
-/// For processing file uploads, returns the the results of a SQL `DESCRIBE` query against the uploaded file(s).
-/// Results are returned as stringified JSON.
+/// For processing file uploads
+/// Returns the results of a SQL `DESCRIBE` of the file as stringified JSON.
 #[napi]
-pub async fn process_upload(req: &TimeseriesQuery) -> napi::Result<String> {
-  let ctx = setup(req).await.map_err(|e| {
+pub async fn process_upload(
+  report_id: String,
+  query: String,
+  storage_connection: String,
+  files: Vec<FileMetadata>,
+) -> napi::Result<String> {
+  let storage_connection: AdoNetString = storage_connection.parse().map_err(|e| {
     napi::Error::from_reason(format!(
-      "Failed to set up datafusion context with reason: {e}"
+      "Failed to parse storage_connection string with reason: {e}"
     ))
   })?;
-  let query = req
-    .query
-    .as_ref()
-    .ok_or_else(|| napi::Error::from_reason("Request has a null query".to_string()))?;
+
+  let ctx = populate_session(storage_connection, files)
+    .await
+    .map_err(|e| {
+      napi::Error::from_reason(format!(
+        "Failed to set up datafusion session context with reason: {e}"
+      ))
+    })?;
   let results = ctx
     .sql(query.as_str())
     .await
@@ -46,46 +57,52 @@ pub async fn process_upload(req: &TimeseriesQuery) -> napi::Result<String> {
       "Failed to finish writing record batches to json with reason: {e}"
     ))
   })?;
-  let json_data = writer.into_inner();
-  let json_string = String::from_utf8(json_data).map_err(|e| {
+  let description_json = writer.into_inner();
+  let description_string = String::from_utf8(description_json).map_err(|e| {
     napi::Error::from_reason(format!(
       "Failed to get json string from bytes with reason: {e}"
     ))
   })?;
-  Ok(json_string)
+  let describe_report = json!({
+    "reportID": report_id,
+    "description": description_string
+  });
+
+  Ok(describe_report.to_string())
 }
 
-/// For processing queries against a set of files.
+/// For processing a query against a set of files.
 /// Uploads results to a location specified in the request object.
 /// Returns the metadata of the query results as stringified JSON.
 #[napi]
-pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
+pub async fn process_query(
+  report_id: String,
+  query: String,
+  storage_connection: String,
+  files: Vec<FileMetadata>,
+) -> napi::Result<String> {
   let uuid = short!();
   let now = Utc::now();
-  let local_storage = get_local_storage_path().map_err(|e| {
+  let storage_connection: AdoNetString = storage_connection.parse().map_err(|e| {
     napi::Error::from_reason(format!(
-      "Failed to set up local storage path with reason: {e}"
+      "Failed to parse storage_connection string with reason: {e}"
     ))
   })?;
 
-  let ctx = setup(req).await.map_err(|e| {
-    napi::Error::from_reason(format!(
-      "Failed to set up datafusion context with reason: {e}"
-    ))
-  })?;
+  let ctx = populate_session(storage_connection, files)
+    .await
+    .map_err(|e| {
+      napi::Error::from_reason(format!(
+        "Failed to set up datafusion session context with reason: {e}"
+      ))
+    })?;
 
-  let query = req
-    .query
-    .as_ref()
-    .ok_or_else(|| napi::Error::from_reason("Request has a null query".to_string()))?;
   let query_results = ctx.sql(query.as_str()).await.map_err(|e| {
     napi::Error::from_reason(format!("Failed to run query {query} with reason: {e}"))
   })?;
 
-  let file_name = format!("{}_{}_{}.csv", uuid, req.report_id, now.timestamp_millis());
-
-  // todo: set this to include the adapter_file_path
-  let file_path = format!("{}/{}", local_storage, file_name);
+  let file_name = format!("{}_{}_{}.csv", uuid, report_id, now.timestamp_millis());
+  let file_path = format!("./{file_name}");
 
   query_results
     .write_csv(file_path.as_str(), DataFrameWriteOptions::new(), None)
@@ -100,12 +117,12 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
     ))
   })?;
   let result_metadata = json!({
-    "report_id": req.report_id,
+    "report_id": report_id,
     "isError": false,
     "file_name": file_name,
     "file_size": file_metadata.len(),
     "file_path": "todo",
-    "adapter": req.storage_type.to_string(),
+    "adapter": "todo",
   });
 
   // todo: upload to obj_store
@@ -124,36 +141,24 @@ pub async fn process_query(req: &TimeseriesQuery) -> napi::Result<String> {
 
 #[cfg(test)]
 mod tests {
-  use azure_metadata::AzureMetadata;
-  use file_path_metadata::FilePathMetadata;
-  use timeseries_query::StorageType;
+  use file_metadata::FileMetadata;
 
   use super::*;
 
   #[tokio::test]
   async fn describe_with_azure() {
-    let req = TimeseriesQuery {
-      report_id: "69".to_string(),
-      query: Some("DESCRIBE table_15".to_string()),
-      storage_type: StorageType::azure,
-      sas_metadata: Some(AzureMetadata {
-        blob_endpoint: Some("http://127.0.0.1:10000".to_string()),
-        account_name: Some("devstoreaccount1".to_string()),
-        container_name: Some("deep-lynx".to_string()),
-        sas_token: Some("sv=2024-05-04&se=2024-09-13T04%3A22%3A54Z&sr=c&sp=rac&sig=tkAjV6G9MusmudblmnDb%2B9jYdRPL5X06QmA3EXUMjWM%3D".to_string()),
-        //               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ this token expires frequently
-      }),
-      files: vec![
-        FilePathMetadata {
-          id: Some("15".to_string()),
-          adapter: Some("azure_blob".to_string()),
-          data_source_id: Some("1".to_string()),
-          file_name: Some("czpadKZbKNDamk3amXCBMften-entries.csv".to_string()),
-          adapter_file_path: Some("containers/1/datasources/1".to_string()),
+    match process_upload(
+      "69".to_string(),
+      "DESCRIBE table_15".to_string(),
+      "provider=az;uploadPath=containers/1/datasources/1;blobEndpoint=http://127.0.0.1:10000;accountName=devstoreaccount1;accountKey='Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==';containerName=deep-lynx;".to_string(),
+      vec![
+        FileMetadata {
+          id: 15,
+          file_name: "czpadKZbKNDamk3amXCBMften-entries.csv".to_string(),
+          file_path: "containers/1/datasources/1".to_string(),
         },
-      ],
-    };
-    match process_upload(&req).await {
+      ]
+    ).await {
       Ok(res) => {
         dbg!(res);
       }
@@ -165,20 +170,66 @@ mod tests {
 
   #[tokio::test]
   async fn describe_with_filesystem() {
-    let req = TimeseriesQuery {
-      report_id: "420".to_string(),
-      query: Some("DESCRIBE table_1".to_string()),
-      storage_type: StorageType::filesystem,
-      sas_metadata: None,
-      files: vec![FilePathMetadata {
-        id: Some("1".to_string()),
-        adapter: Some("filesystem".to_string()),
-        data_source_id: Some("1".to_string()),
-        file_name: Some("ten-entries.csv".to_string()),
-        adapter_file_path: Some("containers/1/datasources/1".to_string()),
+    match process_upload(
+      "420".to_string(),
+      "DESCRIBE table_1".to_string(),
+      "provider=fs;uploadPath=containers/1/datasources/1;rootFilePath=./../../../storage;"
+        .to_string(),
+      vec![FileMetadata {
+        id: 1,
+        file_name: "ten-entries.csv".to_string(),
+        file_path: "containers/1/datasources/1".to_string(),
       }],
+    )
+    .await
+    {
+      Ok(res) => {
+        dbg!(res);
+      }
+      Err(e) => {
+        panic!("{}", e.reason);
+      }
     };
-    match process_upload(&req).await {
+  }
+
+  #[tokio::test]
+  async fn query_with_azure() {
+    match process_query(
+      "69".to_string(),
+      "SELECT * FROM table_15".to_string(),
+      "provider=az;uploadPath=containers/1/datasources/1;blobEndpoint=http://127.0.0.1:10000;accountName=devstoreaccount1;accountKey='Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==';containerName=deep-lynx;".to_string(),
+      vec![
+        FileMetadata {
+          id: 15,
+          file_name: "czpadKZbKNDamk3amXCBMften-entries.csv".to_string(),
+          file_path: "containers/1/datasources/1".to_string(),
+        },
+      ]
+    ).await {
+      Ok(res) => {
+        dbg!(res);
+      }
+      Err(e) => {
+        panic!("{}", e.reason);
+      }
+    };
+  }
+
+  #[tokio::test]
+  async fn query_with_filesystem() {
+    match process_query(
+      "420".to_string(),
+      "SELECT * FROM table_1".to_string(),
+      "provider=fs;uploadPath=containers/1/datasources/1;rootFilePath=./../../../storage;"
+        .to_string(),
+      vec![FileMetadata {
+        id: 1,
+        file_name: "ten-entries.csv".to_string(),
+        file_path: "containers/1/datasources/1".to_string(),
+      }],
+    )
+    .await
+    {
       Ok(res) => {
         dbg!(res);
       }

@@ -1,82 +1,62 @@
+use connection_string::AdoNetString;
 use datafusion::prelude::{CsvReadOptions, SessionConfig, SessionContext};
-use std::env;
-use std::fmt;
 use std::sync::Arc;
 use url::Url;
 
-use super::azure_metadata;
-use super::azure_metadata::get_azure_store;
+use super::azure_object_store::register_azure_store;
 use super::errors::Timeseries2Error;
-use super::file_path_metadata;
-use super::file_path_metadata::extract_table_info;
-use super::file_path_metadata::FileType;
+use super::file_metadata::extract_table_info;
+use super::file_metadata::FileMetadata;
+use super::file_metadata::FileType;
 
-#[napi]
-#[derive(Debug, Default, Clone)]
-pub struct TimeseriesQuery {
-  #[napi(js_name = "report_id")]
-  pub report_id: String,
-  pub query: Option<String>,
-  #[napi(js_name = "storage_type")]
-  pub storage_type: StorageType,
-  #[napi(js_name = "sas_metadata")]
-  pub sas_metadata: Option<azure_metadata::AzureMetadata>,
-  pub files: Vec<file_path_metadata::FilePathMetadata>,
-}
-
-#[napi(string_enum)]
-#[derive(Debug, Default)]
-pub enum StorageType {
-  #[allow(non_camel_case_types)]
-  azure,
-  #[allow(non_camel_case_types)]
-  #[default]
-  filesystem,
-}
-
-impl fmt::Display for StorageType {
-  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    write!(f, "{:?}", self)
-  }
-}
-
-pub async fn setup(req: &TimeseriesQuery) -> Result<SessionContext, Timeseries2Error> {
+pub async fn populate_session(
+  storage_connection: AdoNetString,
+  files: Vec<FileMetadata>,
+) -> Result<SessionContext, Timeseries2Error> {
   let ctx = SessionContext::new_with_config(SessionConfig::new().with_information_schema(true));
 
-  let local_storage = get_local_storage_path()?;
-
-  let sas_metadata = req.sas_metadata.as_ref();
-  let sas_token = match sas_metadata {
-    Some(md) => md.sas_token.as_ref(),
-    None => None,
-  };
-
-  let files_location = match sas_metadata {
-    Some(md) => {
-      md.blob_endpoint
-        .as_ref()
-        .ok_or_else(|| Timeseries2Error::ReceivedNullDataInRequest {
-          msg: "Received Azure Metedata, but Azure Blob Endpoint is None".to_string(),
-        })?
+  let provider = storage_connection.get("provider").ok_or_else(|| {
+    Timeseries2Error::ReceivedNullDataInRequest {
+      msg: "Provider not specified in connection string".to_string(),
     }
-    None => &local_storage,
+  })?;
+  let root_endpoint = match provider.as_str() {
+    "az" => storage_connection.get("blobendpoint").ok_or_else(|| {
+      Timeseries2Error::ReceivedNullDataInRequest {
+        msg: "blobEndpoint not specified in connection string with provider: az (azure)"
+          .to_string(),
+      }
+    })?,
+    "fs" => storage_connection.get("rootfilepath").ok_or_else(|| {
+      Timeseries2Error::ReceivedNullDataInRequest {
+        msg: "rootFilePath not specified in connection string with provider: fs (filesystem)"
+          .to_string(),
+      }
+    })?,
+    _ => {
+      return Err(Timeseries2Error::BadData(format!(
+        "couldn't set base/root endpoint. {provider} is not supported as a storage provider"
+      )))
+    }
   };
 
-  match req.storage_type {
-    StorageType::azure => {
-      let object_store_url = Url::parse(files_location.as_str())?;
-      let azure_store = get_azure_store(sas_metadata)?;
+  match provider.as_str() {
+    "az" => {
+      let object_store_url = Url::parse(root_endpoint.as_str())?;
+      let azure_store = register_azure_store(&storage_connection)?;
       ctx.register_object_store(&object_store_url, Arc::new(azure_store));
     }
-    StorageType::filesystem => (),
+    "fs" => (),
+    _ => {
+      return Err(Timeseries2Error::BadData(format!(
+        "Failed to register object store. {provider} is not supported as a storage provider"
+      )))
+    }
   }
-  let table_info = extract_table_info(&req.files)?;
+  let table_info = extract_table_info(files)?;
 
   for table in &table_info {
-    let path = match sas_token {
-      Some(t) => format!("{}/{}?{}", files_location, table.adapter_file_path, t),
-      None => format!("{}/{}", files_location, table.adapter_file_path),
-    };
+    let path = format!("{}/{}", root_endpoint, table.file_path);
     match table.file_type {
       FileType::Csv => {
         ctx
@@ -99,18 +79,4 @@ pub async fn setup(req: &TimeseriesQuery) -> Result<SessionContext, Timeseries2E
   }
 
   Ok(ctx)
-}
-
-pub fn get_local_storage_path() -> Result<String, Timeseries2Error> {
-  // this code currently lives 2 levels deeper than the .env file
-  let default_filesystem_storage_directory = "./../../../storage/".to_string();
-  if dotenvy::dotenv().is_ok() {
-    if let Ok(fs_storage_dir) = env::var("FILESYSTEM_STORAGE_DIRECTORY") {
-      Ok(format!("./../.{fs_storage_dir}"))
-    } else {
-      Ok(default_filesystem_storage_directory)
-    }
-  } else {
-    Ok(default_filesystem_storage_directory)
-  }
 }
