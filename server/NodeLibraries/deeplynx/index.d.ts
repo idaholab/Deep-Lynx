@@ -10,19 +10,19 @@ export interface LegacyTimeseriesColumn {
   type: string
   date_conversion_format_string?: string
 }
-export function inferLegacySchema(csv: Buffer): Array<LegacyTimeseriesColumn>
+export declare function inferLegacySchema(csv: Buffer): Array<LegacyTimeseriesColumn>
 export interface Options {
   stopNodes?: Array<string>
   valueNodes?: Array<string>
 }
-export function hash(a: string, options: Options): string
+export declare function hash(a: string, options: Options): string
 export interface Configuration {
   dbConnectionString?: string
   redisConnectionString?: string
   maxColumns?: number
 }
 export type JsBucketRepository = BucketRepository
-export class BucketRepository {
+export declare class BucketRepository {
   constructor()
   /**
    * # Safety
@@ -53,7 +53,7 @@ export class BucketRepository {
   completeIngestion(): Promise<void>
 }
 export type JsRedisGraphLoader = RedisGraphLoader
-export class RedisGraphLoader {
+export declare class RedisGraphLoader {
   constructor()
   /**
    * # Safety
@@ -64,7 +64,7 @@ export class RedisGraphLoader {
   generateRedisGraph(containerId: string, timestamp?: string | undefined | null, ttl?: number | undefined | null): Promise<string>
 }
 export type JsSnapshotGenerator = SnapshotGenerator
-export class SnapshotGenerator {
+export declare class SnapshotGenerator {
   constructor()
   /**
    * # Safety
