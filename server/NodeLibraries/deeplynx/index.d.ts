@@ -21,34 +21,22 @@ export interface LegacyTimeseriesColumn {
   date_conversion_format_string?: string
 }
 export declare function inferLegacySchema(csv: Buffer): Array<LegacyTimeseriesColumn>
-export interface AzureMetadata {
-  account_name?: string
-  blob_endpoint?: string
-  container_name?: string
-  sas_token?: string
-}
-export interface FilePathMetadata {
-  id?: string
-  adapter?: string
-  data_source_id?: string
-  file_name?: string
-  adapter_file_path?: string
-}
-export const enum StorageType {
-  azure = 'azure',
-  filesystem = 'filesystem'
+export interface FileMetadata {
+  id: number
+  file_name: string
+  access_path: string
 }
 /**
- * For processing file uploads, returns the the results of a SQL `DESCRIBE` query against the uploaded file(s).
- * Results are returned as stringified JSON.
+ * For processing file uploads
+ * Returns the results of a SQL `DESCRIBE` of the file as stringified JSON.
  */
-export declare function processUpload(req: TimeseriesQuery): Promise<string>
+export declare function processUpload(reportId: string, query: string, storageConnection: string, files: Array<FileMetadata>): Promise<string>
 /**
- * For processing queries against a set of files.
+ * For processing a query against a set of files.
  * Uploads results to a location specified in the request object.
  * Returns the metadata of the query results as stringified JSON.
  */
-export declare function processQuery(req: TimeseriesQuery): Promise<string>
+export declare function processQuery(reportId: string, query: string, storageConnection: string, files: Array<FileMetadata>): Promise<string>
 export type JsRedisGraphLoader = RedisGraphLoader
 export declare class RedisGraphLoader {
   constructor()
@@ -109,11 +97,4 @@ export declare class BucketRepository {
    * ingestion and can also be used to check for errors during the operation
    */
   completeIngestion(): Promise<void>
-}
-export declare class TimeseriesQuery {
-  report_id: string
-  query?: string
-  storage_type: StorageType
-  sas_metadata?: AzureMetadata
-  files: Array<FilePathMetadata>
 }

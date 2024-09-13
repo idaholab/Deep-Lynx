@@ -8,6 +8,8 @@ pub enum Timeseries2Error {
   DataFusion(#[from] datafusion::error::DataFusionError),
   #[error("received null required parameter in request {msg}")]
   ReceivedNullDataInRequest { msg: String },
+  #[error("incorrect data provided in request {0}")]
+  BadData(String),
   #[error("azure builder error {0}")]
   AzureBuilder(#[from] object_store::Error),
   #[error("serde json error {0}")]
