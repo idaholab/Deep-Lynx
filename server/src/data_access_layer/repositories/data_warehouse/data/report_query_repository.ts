@@ -9,7 +9,6 @@ import { User } from '../../../../domain_objects/access_management/user';
 import Report from '../../../../domain_objects/data_warehouse/data/report';
 import ReportMapper from '../../../mappers/data_warehouse/data/report_mapper';
 import FileRepository from './file_repository';
-import { newTempToken } from '../../../../services/utilities';
 import ReportRepository from './report_repository';
 import Config from '../../../../services/config';
 import BlobStorageProvider from '../../../../services/blob_storage/blob_storage';
@@ -106,11 +105,6 @@ export default class ReportQueryRepository extends Repository implements Reposit
         Object.assign(reportQuery, querySaved.value);
         const queryID = reportQuery.id!
 
-        // generate a temporary token for the TS2 rust module to return file metadata to DeepLynx
-        const tokenCreated = await newTempToken(containerID, userID);
-        if (tokenCreated.isError) {return Promise.resolve(Result.Failure(`unable to generate access token ${tokenCreated.error?.error}`))}
-        const token = tokenCreated.value;
-
         // generate file metadata
         const fileInfo = await this.#fileRepo.listPathMetadata(...request.file_ids!);
         if (fileInfo.isError) {return Promise.resolve(Result.Failure('unable to find file information'))}
@@ -120,11 +114,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
         if (request.query && !request.query.startsWith('DESCRIBE')) {
             const errorFiles: string[] = [];
             files.forEach((file) => {
-                // find the file name with no extension- this will be the table name
-                const lastDotIndex = file.file_name?.lastIndexOf('.');
-                const fileNameNoExt = (lastDotIndex === -1) ? file.file_name! : file.file_name?.substring(0, lastDotIndex)!;
-                // confirm that query contains the file name, if not return in error msg
-                if (!request.query!.includes(fileNameNoExt)) {errorFiles.push(fileNameNoExt)}
+                // confirm that query contains the file name, if not return in error msg - TODO: replace with table_<fileid>
             });
             if (errorFiles.length > 0) {
                 return Promise.resolve(Result.Failure(`query must include the table name(s): "${errorFiles.join('", "')}"`));
@@ -148,11 +138,6 @@ export default class ReportQueryRepository extends Repository implements Reposit
             }
         }
 
-        // set response url depending on describe query or not
-        const responseUrl = (request.query && request.query.startsWith('DESCRIBE'))
-            ? `${Config.root_address}/containers/${containerID}/files/timeseries/describe`
-            : `${Config.root_address}/containers/${containerID}/reports/${reportID}/query/${queryID}`;
-
         // build baseBlobUrl for azure storage or filesystem
         const baseBlobUrl = Config.file_storage_method === 'azure_blob'
             ? `${azureMetadata?.blob_endpoint}/${azureMetadata?.container_name}/`
@@ -161,6 +146,24 @@ export default class ReportQueryRepository extends Repository implements Reposit
         // todo: remove before PR
         console.log(azureMetadata?.sas_token);
         console.log(files[0].adapter_file_path);
+
+        // report ID
+        // query
+        // storageConnection: this | that
+            // type: azure, uploadPath: containers/1/datasources/1, blobEndpoint, accountName, containerName, accountKey
+            // type: filesystem, uploadPath: containers/1/datasources/1, rootFilePath
+        // files = array:
+            // file id
+            // accessPath
+            // file name
+
+        // storage return : upload csv to file storage for query results
+        // dl returns:
+            // describe: return report ID, file ID, and description JSON // {id: 1, desc: some json}
+            // query: return metadata (includes reportID)
+            // error stuff (same struct for both desc/query? probs)
+        processDescribe(reportID, query, connectionJson, filesArray)
+        processQuery(reportID, query, connectionJson, filesArray)
 
         const query = {
             report_id: reportID,
