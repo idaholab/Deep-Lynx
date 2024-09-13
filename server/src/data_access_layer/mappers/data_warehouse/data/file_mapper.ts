@@ -149,8 +149,8 @@ export default class FileMapper extends Mapper {
         return Promise.resolve(Result.Success(result));
     }
 
-    public async ListPathMetadata(...fileID: string[]): Promise<Result<FilePathMetadata[]>> {
-        return super.rows<FilePathMetadata>(this.filePathMetadataStatement(fileID), {
+    public async ListPathMetadata(...fileIDs: string[]): Promise<Result<FilePathMetadata[]>> {
+        return super.rows<FilePathMetadata>(this.filePathMetadataStatement(fileIDs), {
             resultClass: FilePathMetadata,
         });
     }
@@ -356,8 +356,9 @@ export default class FileMapper extends Mapper {
 
     // fetch the fully qualified file path complete with file name and short uuid
     private filePathMetadataStatement(fileIDs: string[]): QueryConfig {
-        const text = `SELECT id, adapter, data_source_id, file_name,
-                        adapter_file_path || short_uuid || file_name AS adapter_file_path
+        const text = `SELECT id,
+                        short_uuid || file_name AS file_name,
+                        TRIM('/\\' FROM adapter_file_path) AS access_path
                         FROM files
                         WHERE id IN (%L)`;
         const values = fileIDs;

@@ -132,24 +132,15 @@ export class EdgeFile extends NakedDomainClass {
 
 export class FilePathMetadata extends NakedDomainClass {
     @IsString()
-    @IsOptional()
     id?: string;
-
-    @IsString()
-    @IsIn(['filesystem', 'azure_blob', 'minio'])
-    adapter?: string;
-
-    @IsString()
-    @IsOptional()
-    data_source_id?: string;
 
     // file name (sans extension) will be used as table name in the query
     @IsString()
     file_name?: string;
 
-    // this is the fully qualified file path complete with file name and short uuid
+    // this is the path at which the file can be accessed within object storage
     @IsString()
-    adapter_file_path?: string;
+    access_path?: string;
 }
 
 export type AzureMetadata = {

@@ -212,15 +212,15 @@ export default class FileRepository extends Repository implements RepositoryInte
         const tsResults = await this.#mapper.CheckTimeseries(fileIDs);
         if (tsResults.isError) {return Promise.resolve(Result.Pass(tsResults))}
 
-        // if there are no results, none of the files exist- return an error
-        if(tsResults.value.length === 0) {
-            return Promise.resolve(Result.Failure(`no valid file IDs supplied: ${fileIDs}`));
+        // verify that the resultant IDs match the supplied file IDs- otherwise some files do not exist
+        const missingIDs = fileIDs.filter(id => !tsResults.value.map(result => result.id).includes(id));
+        if(missingIDs.length > 0) {
+            return Promise.resolve(Result.Failure(`one or more files not found: [${missingIDs.join(', ')}]`));
         }
 
         // check each result and if any are not ts, return with a failure
         const nonTS = tsResults.value.filter(r => !r.timeseries).map(f => f.id!);
-
-        if (nonTS.length !== 0) {
+        if (nonTS.length > 0) {
             return Promise.resolve(Result.Failure(`one or more files are not timeseries: [${nonTS.join(', ')}]`));
         }
 

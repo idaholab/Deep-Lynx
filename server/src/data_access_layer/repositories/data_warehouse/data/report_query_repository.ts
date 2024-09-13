@@ -13,7 +13,7 @@ import ReportRepository from './report_repository';
 import Config from '../../../../services/config';
 import BlobStorageProvider from '../../../../services/blob_storage/blob_storage';
 import AzureBlobImpl from '../../../../services/blob_storage/azure_blob_impl';
-import { processQuery, StorageType } from 'deeplynx';
+import { processQuery, processUpload, FileMetadata } from 'deeplynx';
 
 /*
     ReportQueryRepository contains methods for persisting and retrieving report
@@ -73,19 +73,8 @@ export default class ReportQueryRepository extends Repository implements Reposit
         return Promise.resolve(Result.Success(true));
     }
 
-    async checkTimeseries(file_ids: string[]): Promise<Result<boolean>> {
-        const isTimeseries = await this.#fileRepo.checkTimeseries(file_ids);
-        if (isTimeseries.isError) {
-            return Result.Pass(isTimeseries);
-        } else if (isTimeseries.value === false) {
-            return Result.Failure(`one or more files is not timeseries compatible`);
-        } else {
-            return Result.Success(true);
-        }
-    }
-
     async initiateQuery(containerID: string, dataSourceID: string, request: TS2InitialRequest, user: User, describe: boolean): Promise<Result<string>> {
-        // check that all files are timeseries and return an error if not
+        // check that all files exist and are timeseries, return an error if not
         const isTimeseries = await this.#fileRepo.checkTimeseries(request.file_ids!);
         if (isTimeseries.isError) {return Promise.resolve(Result.Pass(isTimeseries))}
 
@@ -119,55 +108,30 @@ export default class ReportQueryRepository extends Repository implements Reposit
         Object.assign(reportQuery, querySaved.value);
         const queryID = reportQuery.id!
 
-        // generate file metadata
+        // fetch file metadata
         const fileInfo = await this.#fileRepo.listPathMetadata(...request.file_ids!);
         if (fileInfo.isError) {return Promise.resolve(Result.Failure('unable to find file information'))}
         const files = fileInfo.value;
 
-        // if not a describe, ensure the query contains the table names (aka file names)
-        if (request.query && !request.query.startsWith('DESCRIBE')) {
-            const errorFiles: string[] = [];
-            files.forEach((file) => {
-                // confirm that query contains the file name, if not return in error msg - TODO: replace with table_<fileid>
-            });
-            if (errorFiles.length > 0) {
-                return Promise.resolve(Result.Failure(`query must include the table name(s): "${errorFiles.join('", "')}"`));
-            }
+        // create a connection string based on the type of storage being used
+        const uploadPath = `containers/${containerID}/datasources/${dataSourceID}`;
+        let storageString: string;
+        console.log(Config.file_storage_method);
+        console.log(Config.filesystem_storage_directory);
+        if (Config.file_storage_method === 'filesystem') {
+            // if a relative path is used, go two directories deeper to account for Rust's location within DL
+            const rootFilePath = (Config.filesystem_storage_directory.startsWith('./')) ? `./../.${Config.filesystem_storage_directory}` : Config.filesystem_storage_directory;
+            storageString = `provider=fs;uploadPath=${uploadPath};rootFilePath=${rootFilePath};`;
+        } else if (Config.file_storage_method === 'azure_blob') {
+            const accountName = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('AccountName='))?.split('=')[1];
+            // we need to remove accountName from the end of the blobEndpoint
+            const blobEndpoint = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('BlobEndpoint='))?.split('=')[1].split(`/${accountName}`)[0]!;
+            const accountKey = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('AccountKey='))?.split('=')[1];
+            const containerName = Config.azure_blob_container_name;
+            storageString = `provider=az;uploadPath=${uploadPath};blobEndpoint=${blobEndpoint};accountName=${accountName};accountKey=${accountKey};containerName=${containerName};`;
+        } else {
+            return Promise.resolve(Result.Failure(`error: unsupported or unimplemented file storage method being used`));
         }
-
-        // if any files are azure_blob, this requires some extra metadata
-        let azureMetadata: AzureMetadata | undefined;
-        if (files.some(f => f.adapter === 'azure_blob')) {
-            const getSAS = await (BlobStorageProvider('azure_blob') as AzureBlobImpl).generateSASToken();
-            if (getSAS.isError) {
-                return Promise.resolve(Result.Failure(`unable to generate SAS token ${getSAS.error?.error}`));
-            }
-
-            const accountName = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('AccountName='))?.split('=')[1]!;
-            azureMetadata = {
-                account_name: accountName,
-                blob_endpoint: Config.azure_blob_connection_string.split(';').find(e => e.startsWith('BlobEndpoint='))?.split('=')[1].split(`/${accountName}`)[0]!,
-                container_name: Config.azure_blob_container_name,
-                sas_token: getSAS.value
-            }
-        }
-
-        // build baseBlobUrl for azure storage or filesystem
-        const baseBlobUrl = Config.file_storage_method === 'azure_blob'
-            ? `${azureMetadata?.blob_endpoint}/${azureMetadata?.container_name}/`
-            : Config.filesystem_storage_directory;
-
-        // todo: remove before PR
-        console.log(azureMetadata?.sas_token);
-        console.log(files[0].adapter_file_path);
-
-        // storageConnection: this | that
-            // type: azure, uploadPath: containers/1/datasources/1, blobEndpoint, accountName, containerName, accountKey
-            // type: filesystem, uploadPath: containers/1/datasources/1, rootFilePath
-        // files = array:
-            // file id
-            // accessPath
-            // file name
 
         // storage return : upload csv to file storage for query results
         // dl returns:
@@ -184,9 +148,8 @@ export default class ReportQueryRepository extends Repository implements Reposit
         const query = {
             report_id: reportID,
             query: request.query,
-            storage_type: Config.file_storage_method === 'azure_blob' ? StorageType.azure : StorageType.filesystem,
-            sas_metadata: azureMetadata,
-            files
+            files,
+            storageString: storageString
         }
 
         console.log(query);

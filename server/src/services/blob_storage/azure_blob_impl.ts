@@ -1,11 +1,10 @@
 import {BlobStorage, BlobUploadOptions, BlobUploadResponse} from './blob_storage';
 import Result from '../../common_classes/result';
 import {Readable} from 'stream';
-import {BlobSASPermissions, BlobServiceClient, ContainerClient, generateBlobSASQueryParameters, RestError, StorageSharedKeyCredential} from '@azure/storage-blob';
+import {BlobServiceClient, ContainerClient, RestError} from '@azure/storage-blob';
 import Logger from './../logger';
 import File from '../../domain_objects/data_warehouse/data/file';
 import {buffer} from 'stream/consumers';
-import Config from '../config';
 const short = require('short-uuid');
 const digestStream = require('digest-stream');
 
@@ -213,39 +212,5 @@ export default class AzureBlobImpl implements BlobStorage {
         const download = await blobClient.download(0);
 
         return Promise.resolve(download.readableStreamBody as Readable);
-    }
-
-    // generate a short access signature token in order to give applications
-    // such as the TS2 rust module limited access to blob storage in order to
-    // upload and download files.
-    async generateSASToken(): Promise<Result<string>> {
-        try {
-            const connectionString = Config.azure_blob_connection_string;
-            const accountName = connectionString.split(';').find(e => e.startsWith('AccountName='))?.split('=')[1];
-            const accountKey = connectionString.split(';').find(e => e.startsWith('AccountKey='))?.split('=')[1];
-
-            if (!accountName || !accountKey) {
-                return Promise.resolve(Result.Failure(`failure creating sas token: unable to extract acount details from connection string`));
-            }
-
-            const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey);
-
-            // set the expiration to 12 hours from now
-            const sasExpiryDate = new Date()
-            sasExpiryDate.setHours(sasExpiryDate.getHours() + 12);
-
-            // set permissions to read existing blobs and add new ones. No editing or deleting.
-            const sasPermissions = BlobSASPermissions.parse("rac");
-
-            const sasToken = generateBlobSASQueryParameters({
-                containerName: Config.azure_blob_container_name,
-                permissions: sasPermissions,
-                expiresOn: sasExpiryDate
-            }, sharedKeyCredential).toString();
-
-            return Promise.resolve(Result.Success(sasToken));
-        } catch (e: any) {
-            return Promise.resolve(Result.Failure(`failure creating sas token: ${e.toString()}`))
-        }
     }
 }
