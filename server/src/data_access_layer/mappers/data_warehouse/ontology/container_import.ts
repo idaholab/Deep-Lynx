@@ -300,24 +300,36 @@ export default class ContainerImport {
                 }
             }
 
-            // if we're not making the ontology, and it's set to null, let's make sure we check for existing ontology
-            // versions to ensure we're assigning these guys to the proper one - when we create a container an ontology
-            // version is automatically created, so this will pull that one.
-            if(!ontologyVersionID) {
-                const results = await ontologyRepo
-                    .where()
-                    .containerID('eq', container.id!)
-                    .and()
-                    .status('in', ['published', 'ready']).list({sortBy: 'id', sortDesc: true})
-                if(results.isError) {
-                    Logger.error(`unable to find published version of ontology ${results.error?.error}`)
-                } else if(results.value.length > 0){
-                    ontologyVersionID = results.value.find(version => version.status === 'published')?.id
-
-                    if(!ontologyVersionID) ontologyVersionID = results.value.find(version => version.status === 'ready')?.id
+            // New ontology version ID will be obtained from current ontology ID if versioning is disabled. ID can be obtained from previous/current ontology regardless of status message because it is overwritting the ontology and recycling only the ID. 
+            if (!ontologyVersionID) {
+                try {
+                    const results = await ontologyRepo
+                        .where()
+                        .containerID('eq', container.id!)
+                        .and()
+                        .status('in', ['published', 'ready', 'error'])
+                        .list({ sortBy: 'id', sortDesc: true });
+            
+                    if (results.isError) {
+                        Logger.error(`Unable to find published version of ontology: ${results.error?.error}`);
+                    }
+            
+                    const versions = results.value;
+                    if (versions.length === 0) {
+                        Logger.info('No ontology versions found.');
+                    }
+            
+                    ontologyVersionID = versions.find(version => version.status === 'published')?.id
+                        || versions.find(version => version.status === 'ready')?.id
+                        || versions.find(version => version.status === 'error')?.id;
+            
+                    if (!ontologyVersionID) {
+                        Logger.info('No suitable ontology version found.');
+                    } 
+                } catch (error) {
+                    Logger.error(`An unexpected error occurred: ${error}`);
                 }
             }
-
             if(ontologyVersionID) {
             // now we set the ontology version's status to generating
                 const set = await ontologyRepo.setStatus(ontologyVersionID, 'generating')
@@ -1459,8 +1471,8 @@ export default class ContainerImport {
                         resolve(Result.Pass(propResult))
                     }
                 }
+                if(!input.container.config!.ontology_versioning_enabled) {
 
-                if(!input.ontology_versioning_enabled) {
                     await ontologyRepo.setStatus(input.ontologyVersionID!, 'published')
                 } else {
                     await ontologyRepo.setStatus(input.ontologyVersionID!, 'ready')

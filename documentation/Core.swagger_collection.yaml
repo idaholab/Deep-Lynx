@@ -728,6 +728,16 @@ paths:
           in: query
           name: history
           description: Return historical data for all selected nodes
+        - schema:
+            type: boolean
+          in: query
+          name: fileAttached
+          description: Return only nodes with a file attached
+        - schema:
+            type: string
+          in: query
+          name: fileExtension
+          description: Return only nodes with files of a certain extension attached
       responses:
         '200':
           description: ''

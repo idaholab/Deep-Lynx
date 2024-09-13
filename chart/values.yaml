@@ -1,0 +1,190 @@
+# Default values for deeplynx.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: idaholab/deeplynx
+  pullPolicy: IfNotPresent
+  restart: on-failure
+  ports:
+    - containerPort: 8090
+  # Overrides the image tag whose default is the chart appVersion.
+  # tag: ""
+
+imagePullSecrets: []
+
+# Specifies DeepLynx arguments and env values
+# See the .env-sample files provided with DeepLynx for additional details
+deeplynx:
+  env:
+    # Defined within secret.yaml
+    CORE_DB_CONNECTION_STRING:
+      secretName: secret-postgresql-connection
+      secretKey: connectionString
+    # Must be false unless TimescaleDB is installed for the postgresql dependency
+    TIMESCALEDB_ENABLED: false
+    RUN_JOBS: false
+    INITIAL_SUPERUSER: true
+    SUPERUSER_EMAIL: "admin@admin.com"
+    SUPERUSER_PASSWORD: "admin"
+    LOG_LEVEL: "debug"
+    LOG_JOBS: false
+    # Defined within secret.yaml
+    CACHE_REDIS_CONNECTION_STRING:
+      secretName: secret-redis-connection
+      secretKey: connectionString
+    CACHE_PROVIDER: "redis"
+    # settings for the bundled web application
+    VUE_APP_BUNDLED_BUILD: true
+    VUE_APP_DEEP_LYNX_API_URL: "http://localhost:8090"
+    VUE_APP_DEEP_LYNX_API_AUTH_METHOD: "token"
+    VUE_APP_TIME_SERIES_ENABLED: false
+    VUE_APP_APP_URL: "http://localhost:8090/#"
+    VUE_APP_DEEP_LYNX_APP_ID: "root"
+
+
+# Specifies which dependencies to enable and any relevant parameters
+postgresql:
+  enabled: true
+  auth:
+    # required for connection from DeepLynx as the postgres user
+    enablePostgresUser: true
+    # sets the password for the postgres user, must match the value in the
+    # CORE_DB_CONNECTION_STRING
+    postgresPassword: "root"
+    # sets the database which should be used by DeepLynx. Must match the value
+    # in the CORE_DB_CONNECTION_STRING
+    database: "deep_lynx_dev"
+  audit:
+    # may be enabled for debugging
+    logConnections: false
+    logDisconnections: false
+  primary:
+    persistence:
+      # sets the size of the dedicated volume for postgres
+      size: "10Gi"
+
+redis:
+  enabled: true
+  auth:
+    # default true. should be enabled for production environments
+    enabled: true
+    # must match the password provided in CACHE_REDIS_CONNECTION_STRING
+    password: "root"
+  master:
+    # do not edit. this setting importantly allows for running the flushall and flushdb commands
+    disableCommands: []
+
+ingress-nginx:
+  enabled: false
+  controller:
+    metrics:
+      enabled: true
+
+prometheus:
+  enabled: true
+
+k8s-dashboard:
+  enabled: true
+  app:
+    ingress:
+      tls:
+        enabled: false
+
+airflow:
+  enabled: false
+
+datahub:
+  enabled: false
+
+mlflow:
+  enabled: false
+
+tags:
+  core: true
+  digitalTwin: false
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 8090
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# Additional volumes on the output Deployment definition.
+volumes: []
+# - name: foo
+#   secret:
+#     secretName: mysecret
+#     optional: false
+
+# Additional volumeMounts on the output Deployment definition.
+volumeMounts: []
+# - name: foo
+#   mountPath: "/etc/foo"
+#   readOnly: true
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

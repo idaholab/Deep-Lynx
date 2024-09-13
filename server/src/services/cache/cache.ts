@@ -169,6 +169,8 @@ export class RedisCacheImpl implements CacheInterface {
 
         if (flushed !== 1 && flushed !== 0 && flushed !== 'OK') {
             Logger.error(`error flushing all values from redis`);
+        } else {
+            Logger.info('successful flush of redis cache');
         }
 
         this._emitter.emit('flushed');
