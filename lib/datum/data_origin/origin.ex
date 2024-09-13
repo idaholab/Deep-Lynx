@@ -17,7 +17,6 @@ defmodule Datum.DataOrigin.Origin do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Exqlite.Sqlite3
   alias Datum.Accounts.User
 
   @primary_key {:id, :binary_id, autogenerate: true}

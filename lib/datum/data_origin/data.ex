@@ -9,7 +9,7 @@ defmodule Datum.DataOrigin.Data do
   schema "data" do
     field :path, :string
     field :original_path, :string
-    field :type, Ecto.Enum, values: [:directory, :file]
+    field :type, Ecto.Enum, values: [:directory, :file, :root_directory]
     field :file_type, :string, default: nil
     field :description, :string
     field :properties, Datum.JSONB
@@ -25,20 +25,19 @@ defmodule Datum.DataOrigin.Data do
 
   @doc false
   def changeset(origin, attrs) do
-    changeset =
-      origin
-      |> cast(attrs, [
-        :path,
-        :tags,
-        :domains,
-        :id,
-        :type,
-        :file_type,
-        :properties,
-        :original_path,
-        :owned_by,
-        :description
-      ])
-      |> validate_required([:path])
+    origin
+    |> cast(attrs, [
+      :path,
+      :tags,
+      :domains,
+      :id,
+      :type,
+      :file_type,
+      :properties,
+      :original_path,
+      :owned_by,
+      :description
+    ])
+    |> validate_required([:path])
   end
 end

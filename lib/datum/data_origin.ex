@@ -4,8 +4,8 @@ defmodule Datum.DataOrigin do
   """
 
   import Ecto.Query, warn: false
+  alias Datum.DataOrigin.DataTreePath
   alias Datum.Accounts.Group
-  alias Datum.DataOrigin
   alias Datum.Repo
   alias Datum.DataOrigin.OriginRepo
 
@@ -13,7 +13,6 @@ defmodule Datum.DataOrigin do
   alias Datum.DataOrigin.Data
   alias Datum.Accounts.User
   alias Datum.Accounts.UserGroup
-  alias Datum.DataOrigin.DataTreePath
 
   @doc """
   Returns the list of data_origins.
@@ -93,9 +92,20 @@ defmodule Datum.DataOrigin do
 
   """
   def create_origin(attrs \\ %{}) do
-    %Origin{}
-    |> Origin.changeset(attrs)
-    |> Repo.insert()
+    with {:ok, origin} <-
+           %Origin{}
+           |> Origin.changeset(attrs)
+           |> Repo.insert(),
+         {:ok, _perm} <-
+           Datum.Permissions.create_data_origin(%{
+             data_origin_id: origin.id,
+             user_id: origin.owned_by,
+             permission_type: :readwrite
+           }) do
+      {:ok, origin}
+    else
+      err -> err
+    end
   end
 
   @doc """
@@ -147,17 +157,43 @@ defmodule Datum.DataOrigin do
 
   def add_data(%Origin{} = origin, attrs \\ %{}) do
     OriginRepo.with_dynamic_repo(origin, fn ->
-      %Data{}
-      |> Data.changeset(attrs)
-      |> OriginRepo.insert()
+      with {:ok, data} <-
+             %Data{}
+             |> Data.changeset(attrs)
+             |> OriginRepo.insert(),
+           {:ok, _perm} <-
+             %Datum.Permissions.Data{}
+             |> Datum.Permissions.Data.changeset(%{
+               data_id: data.id,
+               user_id: data.owned_by,
+               permission_type: :readwrite
+             })
+             |> OriginRepo.insert() do
+        {:ok, data}
+      else
+        err -> {:error, err}
+      end
     end)
   end
 
   def add_data!(%Origin{} = origin, attrs \\ %{}) do
     OriginRepo.with_dynamic_repo(origin, fn ->
-      %Data{}
-      |> Data.changeset(attrs)
-      |> OriginRepo.insert!()
+      with data <-
+             %Data{}
+             |> Data.changeset(attrs)
+             |> OriginRepo.insert!(),
+           _perm <-
+             %Datum.Permissions.Data{}
+             |> Datum.Permissions.Data.changeset(%{
+               data_id: data.id,
+               user_id: data.owned_by,
+               permission_type: :readwrite
+             })
+             |> OriginRepo.insert!() do
+        data
+      else
+        err -> {:error, err}
+      end
     end)
   end
 
@@ -167,15 +203,70 @@ defmodule Datum.DataOrigin do
     end)
   end
 
+  def get_data_user(%Origin{} = origin, %User{} = user, data_id) do
+    groups =
+      Repo.all(
+        from g in UserGroup,
+          where: g.user_id == ^user.id,
+          select: g.group_id
+      )
+
+    OriginRepo.with_dynamic_repo(origin, fn ->
+      query =
+        from d in Data,
+          distinct: true,
+          left_join: p in Datum.Permissions.Data,
+          on: d.id == p.data_id,
+          where:
+            (p.user_id == ^user.id or
+               p.group_id in ^groups) and p.permission_type in [:read, :readwrite] and
+              d.id == ^data_id,
+          select: d
+
+      OriginRepo.one(query)
+    end)
+  end
+
+  def list_data_descendants_user(%Origin{} = origin, %User{} = user, data_id) do
+    groups =
+      Repo.all(
+        from g in UserGroup,
+          where: g.user_id == ^user.id,
+          select: g.group_id
+      )
+
+    OriginRepo.with_dynamic_repo(origin, fn ->
+      subquery =
+        from d in Data,
+          join: p in DataTreePath,
+          as: :tree,
+          on: d.id == p.descendant,
+          where: p.ancestor == ^data_id and p.descendant != p.ancestor,
+          order_by: [asc: p.depth],
+          select: d.id
+
+      query =
+        from d in Data,
+          distinct: true,
+          left_join: p in Datum.Permissions.Data,
+          on: d.id == p.data_id,
+          where:
+            (p.user_id == ^user.id or
+               p.group_id in ^groups) and p.permission_type in [:read, :readwrite] and
+              d.id in subquery(subquery),
+          select: d
+
+      OriginRepo.all(query)
+    end)
+  end
+
   def list_roots(%Origin{} = origin) do
     OriginRepo.with_dynamic_repo(origin, fn ->
       query =
-        from tp in DataTreePath,
+        from d in Data,
           distinct: true,
-          left_join: d in Data,
           ## this marks a root file system in CTE
-          where: tp.ancestor == tp.descendant,
-          select: d
+          where: d.type == :root_directory
 
       OriginRepo.all(query)
     end)

@@ -20,12 +20,14 @@ defmodule DatumWeb.OriginExplorerLive do
     <div>
       <div class="breadcrumbs text-sm">
         <ul>
-          <li><a><% gettext("Data Origins") %></a></li>
+          <li :if={@origin}>
+            <a><.icon name="hero-server-stack" class="pr-1 h-3 w-3" /><%= @origin.name %></a>
+          </li>
         </ul>
       </div>
       <div>
         <span :if={@origins.loading} class="loading loading-bars loading-lg mx-auto"></span>
-        <div :if={origins = @origins.ok? && @origins.result}>
+        <div :if={origins = @origins.ok? && !@origin && @origins.result}>
           <.file_table
             id={"origins_#{@tab.id}"}
             rows={origins}
@@ -35,6 +37,35 @@ defmodule DatumWeb.OriginExplorerLive do
             <:col :let={origin} label={gettext("Name")}><%= origin.name %></:col>
             <:col :let={origin} label={gettext("Date Created")}>
               <%= "#{origin.inserted_at.month}/#{origin.inserted_at.day}/#{origin.inserted_at.year}" %>
+            </:col>
+
+            <:action>
+              <details class="dropdown">
+                <summary class="hero-bars-3 text-primary-content ">open or close</summary>
+                <div
+                  tabindex="0"
+                  class="right-0 dropdown-content card card-compact bg-primary text-primary-content z-[1] w-64 shadow"
+                >
+                  <ul class="menu menu-xs bg-base-400 rounded-box ">
+                    <li><a>Permissions</a></li>
+                    <li><a>Delete</a></li>
+                  </ul>
+                </div>
+              </details>
+            </:action>
+          </.file_table>
+        </div>
+
+        <div :if={@items && @origin}>
+          <.file_table
+            id={"origins_#{@tab.id}"}
+            rows={@items}
+            row_click={fn r -> JS.push("select_item", value: %{"item_id" => r.id}) end}
+          >
+            <:col><.icon name="hero-server-stack" /></:col>
+            <:col :let={data} label={gettext("Name")}><%= data.path %></:col>
+            <:col :let={data} label={gettext("Date Created")}>
+              <%= "#{data.inserted_at.month}/#{data.inserted_at.day}/#{data.inserted_at.year}" %>
             </:col>
 
             <:action>
@@ -72,11 +103,25 @@ defmodule DatumWeb.OriginExplorerLive do
     if !user.id || !tab do
       {:error, socket}
     else
-      # set what we can here and common practice is ot set all your used variables in the socket as
+      origin =
+        if Map.get(tab.state, "origin_id") do
+          DataOrigin.get_data_orgins_user(
+            user,
+            Map.get(tab.state, "origin_id")
+          )
+        else
+          nil
+        end
+
+      # path_items = Map.get(tab.state, "path_items", []) |> Enum.map(fn id -> end)
+
+      # set what we can here and common practice is to set all your used variables in the socket as
       # nil or empty so we don't cause rendeing errors - actually load them in the params OR load them
       # here with async assigns
       {:ok,
        socket
+       |> assign(:items, nil)
+       |> assign(:origin, origin)
        |> assign(:parent, parent_pid)
        |> assign(:current_user, user)
        |> assign(:tab, tab)
@@ -90,17 +135,57 @@ defmodule DatumWeb.OriginExplorerLive do
   def handle_event("select_origin", %{"origin_id" => origin_id}, socket) do
     origin = DataOrigin.get_data_orgins_user(socket.assigns.current_user, origin_id)
     root_items = DataOrigin.list_roots(origin)
-    dbg(root_items)
 
-    {:noreply, socket |> update_state(%{name: origin.name}) |> assign(:items, root_items)}
+    {:noreply,
+     socket
+     # note that we don't want to shove the whole origin into here - only the ID
+     |> assign(:items, root_items)
+     |> assign(:origin, origin)
+     |> update_state()}
   end
 
-  def update_state(socket, state) do
-    # this helps us validate it's a tab that hasn't been closed
-    tab = Common.get_user_tab!(socket.assigns.current_user, socket.assigns.tab.id)
+  # select an item from the list, adding it to the breadcrumbs and updating
+  # state
+  def handle_event("select_origin", %{"origin_id" => origin_id}, socket) do
+    origin = DataOrigin.get_data_orgins_user(socket.assigns.current_user, origin_id)
+    root_items = DataOrigin.list_roots(origin)
 
-    {:ok, _} = Common.update_explorer_tabs(tab, %{state: state})
-    notify_parent({:tab_updated, tab.id}, socket.assigns.parent)
+    {:noreply,
+     socket
+     |> assign(:items, root_items)
+     |> assign(:origin, origin)
+     |> update_state()}
+  end
+
+  # pull the common assigns from socket and update the tab's state with them
+  # ALWAYS put at the END of the assigns list, or else it might not find what it needs
+  def update_state(socket) do
+    {:ok, _} =
+      Common.update_explorer_tabs(socket.assigns.tab, %{
+        state: %{
+          origin_id:
+            if socket.assigns.origin do
+              socket.assigns.origin.id
+            end,
+          # path items are condensed down down to just their data ids - they'll be hydrated by the mount function
+          path_items:
+            if socket.assigns.path_items do
+              Enum.map(socket.assigns.path_items, fn item -> item.id end)
+            end,
+          name:
+            if socket.assigns.path_items do
+              List.last(socket.assigns.path_items).path
+            else
+              if socket.assigns.origin do
+                socket.assigns.origin.name
+              else
+                "Origin Explorer"
+              end
+            end
+        }
+      })
+
+    notify_parent({:tab_updated, socket.assigns.tab.id}, socket.assigns.parent)
     socket
   end
 

@@ -24,7 +24,7 @@ defmodule Datum.Scanners.Filesystem do
   end
 
   # TODO: finish hooking this up
-  def run(args) do
+  def run(_args) do
     Prompt.display("BOB")
     Prompt.text("TEST")
   end

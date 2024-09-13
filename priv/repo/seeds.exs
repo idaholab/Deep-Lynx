@@ -31,15 +31,15 @@ alias Datum.DataOrigin
 # build a simple nested directory
 dir_one =
   DataOrigin.add_data!(origin, %{
-    path: "/root",
+    path: "root",
     original_path: "/Users/darrjw/home",
-    type: :directory,
+    type: :root_directory,
     owned_by: admin.id
   })
 
 file_one =
   DataOrigin.add_data!(origin, %{
-    path: "/root/test.txt",
+    path: "test.txt",
     original_path: "/Users/darrjw/home/test.txt",
     type: :file,
     owned_by: admin.id
@@ -50,7 +50,7 @@ file_one =
 
 dir_two =
   DataOrigin.add_data!(origin, %{
-    path: "/root/second",
+    path: "second",
     original_path: "/Users/darrjw/home/second",
     type: :directory,
     owned_by: admin.id
@@ -60,7 +60,7 @@ dir_two =
 
 file_two =
   DataOrigin.add_data!(origin, %{
-    path: "/root/second/picture.png",
+    path: "picture.png",
     original_path: "/Users/darrjw/home/second/picture.png",
     type: :file,
     owned_by: admin.id
