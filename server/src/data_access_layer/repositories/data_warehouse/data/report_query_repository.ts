@@ -84,7 +84,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
         }
     }
 
-    async initiateQuery(containerID: string, request: TS2InitialRequest, user: User, toJSON?: boolean): Promise<Result<string>> {
+    async initiateQuery(containerID: string, dataSourceID: string, request: TS2InitialRequest, user: User): Promise<Result<string>> {
         const userID = user.id!;
 
         // check that all files are timeseries and return an error if not
@@ -162,7 +162,11 @@ export default class ReportQueryRepository extends Repository implements Reposit
             // describe: return report ID, file ID, and description JSON // {id: 1, desc: some json}
             // query: return metadata (includes reportID)
             // error stuff (same struct for both desc/query? probs)
+
+        // fileMapper.Create; queryRepo.setResultsFile
         processDescribe(reportID, query, connectionJson, filesArray)
+
+        // pipe results into fileRepo.setDescriptions
         processQuery(reportID, query, connectionJson, filesArray)
 
         const query = {
