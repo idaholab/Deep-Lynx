@@ -96,6 +96,22 @@ export default class ReportQueryRepository extends Repository implements Reposit
         Object.assign(report, reportSaved.value);
         const reportID = report.id!
 
+        // formulate query if describe, check for presence of table name if regular query
+        if (describe) {
+            const describeQueries: string[] = [];
+            request.file_ids?.forEach((id => describeQueries.push(`DESCRIBE file_${id}; `)));
+            request.query = describeQueries.join("");
+            console.log(request.query);
+        } else {
+            const errorFiles: string[] = [];
+            request.file_ids?.forEach((id => {
+                if (!request.query!.includes(`file_${id}`)) {errorFiles.push(`file_${id}`)}
+            }));
+            if (errorFiles.length > 0) {
+                return Promise.resolve(Result.Failure(`query must include the table name(s): "${errorFiles.join('", "')}"`));
+            }
+        }
+
         // create a report query based on the TS2 rust module query request
         const reportQuery = new ReportQuery({query: request.query!, report_id: reportID});
         const querySaved = await this.#mapper.Create(user.id!, reportQuery);
@@ -145,8 +161,6 @@ export default class ReportQueryRepository extends Repository implements Reposit
         console.log(azureMetadata?.sas_token);
         console.log(files[0].adapter_file_path);
 
-        // report ID
-        // query
         // storageConnection: this | that
             // type: azure, uploadPath: containers/1/datasources/1, blobEndpoint, accountName, containerName, accountKey
             // type: filesystem, uploadPath: containers/1/datasources/1, rootFilePath
@@ -178,7 +192,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
         console.log(query);
 
         // send queryResult directly through memory instead of sending over the network
-        const queryResult = await processQuery(query);
+        // const queryResult = await processQuery(query);
 
         // set report and query statuses to "processing"
         const statusMsg = `executing query ${queryID}: "${reportQuery.query}" as part of report ${reportID}`;

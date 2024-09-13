@@ -32,7 +32,7 @@ export default class ReportRoutes {
             authInContainer('read', 'data'),
             this.getFileDescription);
         // kick off a request to the TS2 rust module (either describe OR query)
-        app.post('/containers/:containerID/import/datasources/:sourceID/reports',
+        app.post('/containers/:containerID/import/datasources/:sourceID/reports/query',
             ...middleware,
             authInContainer('write', 'data'),
             this.queryTimeseries);
@@ -73,7 +73,12 @@ export default class ReportRoutes {
                 return;
             }
 
-            // TODO describe
+            // ensure query is included if this isn't a describe
+            if ((!req.query.describe || String(req.query.describe).toLowerCase() === 'false') && !payload.query) {
+                Result.Failure(`report must contain a query`).asResponse(res);
+                next();
+                return;
+            }
 
             queryRepo
                 .initiateQuery(
