@@ -2,7 +2,7 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum Timeseries2Error {
-  #[error("napi error {0}")]
+  #[error(transparent)]
   Napi(#[from] napi::Error),
   #[error("datafusion error {0}")]
   DataFusion(#[from] datafusion::error::DataFusionError),
@@ -26,4 +26,16 @@ pub enum Timeseries2Error {
   InvalidFileMetadata(String),
   #[error("not unimplemented yet error {0}")]
   ToDo(String),
+}
+
+// allow this lint because thiserror gives us `From<..>`
+// Unsure why it doesn't also provide `Into<..>` like manually implementing does?
+// Napi may not be implementing std::Error fully? idk
+// https://rust-lang.github.io/rust-clippy/master/index.html#/from_over_into
+// > According the std docs implementing `From<..>` is preferred since it gives you `Into<..>` for free where the reverse isn’t true.
+#[allow(clippy::from_over_into)]
+impl Into<napi::Error> for Timeseries2Error {
+  fn into(self) -> napi::Error {
+    napi::Error::new(napi::Status::GenericFailure, self.to_string())
+  }
 }
