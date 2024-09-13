@@ -66,15 +66,6 @@ export default class ReportRoutes {
         if (req.container) {
             const payload = plainToClass(TS2InitialRequest, req.body as object);
 
-            // override the query with DESCRIBE if specified
-            if (req.query.describe && String(req.query.describe).toLowerCase() === 'true') {
-                payload.query = `DESCRIBE table`;
-            } else if (!payload.query) { // verify that payload contains a query
-                Result.Failure(`report must contain a query`).asResponse(res);
-                next();
-                return;
-            }
-
             // verify that payload contains at least 1 file
             if (!Array.isArray(payload.file_ids) || payload.file_ids.length === 0) {
                 Result.Failure(`report must query at least one file`).asResponse(res);
@@ -82,8 +73,16 @@ export default class ReportRoutes {
                 return;
             }
 
+            // TODO describe
+
             queryRepo
-                .initiateQuery(req.params.containerID, req.params.sourceID, payload, req.currentUser!)
+                .initiateQuery(
+                    req.params.containerID, 
+                    req.params.sourceID, 
+                    payload, 
+                    req.currentUser!, 
+                    String(req.query.describe).toLowerCase() === 'true'
+                 )
                 .then((result) => {
                     result.asResponse(res);
                 })

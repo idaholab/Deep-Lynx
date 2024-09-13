@@ -84,9 +84,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
         }
     }
 
-    async initiateQuery(containerID: string, dataSourceID: string, request: TS2InitialRequest, user: User): Promise<Result<string>> {
-        const userID = user.id!;
-
+    async initiateQuery(containerID: string, dataSourceID: string, request: TS2InitialRequest, user: User, describe: boolean): Promise<Result<string>> {
         // check that all files are timeseries and return an error if not
         const isTimeseries = await this.#fileRepo.checkTimeseries(request.file_ids!);
         if (isTimeseries.isError) {return Promise.resolve(Result.Pass(isTimeseries))}
@@ -164,20 +162,17 @@ export default class ReportQueryRepository extends Repository implements Reposit
             // error stuff (same struct for both desc/query? probs)
 
         // fileMapper.Create; queryRepo.setResultsFile
-        processDescribe(reportID, query, connectionJson, filesArray)
+        // processDescribe(reportID, query, connectionJson, filesArray)
 
-        // pipe results into fileRepo.setDescriptions
-        processQuery(reportID, query, connectionJson, filesArray)
+        // // pipe results into fileRepo.setDescriptions
+        // processQuery(reportID, query, connectionJson, filesArray)
 
         const query = {
             report_id: reportID,
             query: request.query,
-            dl_token: token,
             storage_type: Config.file_storage_method === 'azure_blob' ? StorageType.azure : StorageType.filesystem,
             sas_metadata: azureMetadata,
-            files,
-            results_destination: `${baseBlobUrl}containers/${containerID}/datasources/${files[0].data_source_id}`,
-            deeplynx_destination: responseUrl
+            files
         }
 
         console.log(query);
