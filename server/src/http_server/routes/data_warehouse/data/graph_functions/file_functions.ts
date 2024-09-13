@@ -380,7 +380,7 @@ export default class FileFunctions {
                         });
 
                         const queryRepo = new ReportQueryRepository();
-                        void queryRepo.initiateQuery(req.params.containerID, request, req.currentUser!)
+                        void queryRepo.initiateQuery(req.params.containerID, req.params.sourceID, request, req.currentUser!, true)
                             .then((result) => {
                                 if (result.isError) {
                                     Logger.error(`error describing files ${result.error?.error}`);

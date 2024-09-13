@@ -6,7 +6,7 @@
         small
         class="mr-2"
         v-on="on"
-        @click="isDelete = true; initiate()"
+        @click="isDelete = true"
       >mdi-delete</v-icon>
       <v-btn v-if="!displayIcon" color="primary" dark class="mb-1" v-on="on">{{$t("imports.deleteTitle")}}</v-btn>
     </template>
@@ -35,9 +35,8 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="primary" text @click="reset()">{{$t("general.cancel")}}</v-btn>
-        <v-btn color="error" text :disabled="countDown > 0" @click="deleteImport()">
+        <v-btn color="error" text @click="deleteImport()">
           <span>{{$t("general.delete")}}</span>
-          <span v-if="countDown > 0">{{$t('operators.in')}} {{countDown}}</span>
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -54,16 +53,11 @@
     transformationsLoading: true;
     transformationCount: number;
     deleteLoading: boolean;
-    timerRunning: boolean;
-    countDown: number;
     withData: boolean;
     isDelete: boolean;
   }
 
   interface Methods {
-    initiate(): void;
-    startCountdown(): void;
-    countdown(): void;
     deleteImport(): void;
     reset(): void;
   }
@@ -93,8 +87,6 @@
       transformationsLoading: true,
       transformationCount: 0,
       deleteLoading: false,
-      timerRunning: false,
-      countDown: 5,
       withData: false,
       isDelete: false
     }),
@@ -106,25 +98,6 @@
     },
 
     methods: {
-      initiate() {
-         this.startCountdown()
-      },
-      startCountdown() {
-        this.countDown = 5
-
-        if(!this.timerRunning) this.countdown()
-      },
-      countdown() {
-        if(this.countDown > 0) {
-          setTimeout(() => {
-            this.countDown -= 1
-            this.timerRunning = true
-            this.countdown()
-          }, 1000)
-        } else {
-          this.timerRunning = false
-        }
-      },
       deleteImport() {
         this.deleteLoading = true
         this.$client.deleteImport(this.containerID, this.dataImport.id, this.withData)
@@ -137,7 +110,6 @@
       reset() {
         this.dialog = false
         this.deleteLoading = false
-        this.timerRunning = false
       }
     }
   })

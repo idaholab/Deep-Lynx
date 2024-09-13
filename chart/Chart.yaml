@@ -1,0 +1,73 @@
+apiVersion: v2
+name: deeplynx
+description: A Helm chart for DeepLynx
+
+type: application
+
+# This is the chart version. This version number should be incremented each time you make changes
+# to the chart and its templates, including the app version.
+# Versions are expected to follow Semantic Versioning (https://semver.org/)
+version: 0.1.0
+
+# This is the version number of the application being deployed. This version number should be
+# incremented each time you make changes to the application. Versions are not expected to
+# follow Semantic Versioning. They should reflect the version the application is using.
+# It is recommended to use it with quotes.
+appVersion: "1.6.5"
+home: https://github.com/idaholab/Deep-Lynx
+icon: https://github.com/idaholab/Deep-Lynx/blob/master/lynx_blue.png
+keywords:
+  - deeplynx
+  - "data warehouse"
+  - "data lake"
+dependencies:
+  - name: postgresql
+    version: 15.5.16
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+    tags:
+      - core
+  - name: redis
+    version: 19.6.2
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
+    tags:
+      - core
+  - name: ingress-nginx
+    version: 4.11.1
+    repository: https://kubernetes.github.io/ingress-nginx
+    condition: ingress-nginx.enabled
+    tags:
+      - core
+  - name: prometheus
+    version: 25.24.1
+    repository: https://prometheus-community.github.io/helm-charts
+    condition: prometheus.enabled
+  - name: kubernetes-dashboard
+    version: 7.5.0
+    repository: https://kubernetes.github.io/dashboard
+    condition: k8s-dashboard.enabled
+  - name: airflow
+    version: 1.14.0
+    repository: https://airflow.apache.org/
+    condition: airflow.enabled
+    tags:
+      - digitalTwin
+  - name: datahub
+    version: 0.4.19
+    repository: https://helm.datahubproject.io
+    condition: datahub.enabled
+    tags:
+      - digitalTwin
+  - name: mlflow
+    version: 1.4.16
+    repository: https://charts.bitnami.com/bitnami
+    condition: mlflow.enabled
+    tags:
+      - digitalTwin
+
+maintainers:
+  - name: "Jeren Browning"
+    email: jeren.browning@inl.gov
+  - name: "John Darrington"
+    email: john.darrington@inl.gov

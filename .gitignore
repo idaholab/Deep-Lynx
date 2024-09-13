@@ -78,3 +78,6 @@ devenv.local.nix
 # directory for filesystem storage
 storage/*
 !storage/.gitkeep
+
+# helm
+*.tgz

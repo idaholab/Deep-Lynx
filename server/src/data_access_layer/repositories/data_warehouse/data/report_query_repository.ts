@@ -9,7 +9,6 @@ import { User } from '../../../../domain_objects/access_management/user';
 import Report from '../../../../domain_objects/data_warehouse/data/report';
 import ReportMapper from '../../../mappers/data_warehouse/data/report_mapper';
 import FileRepository from './file_repository';
-import { newTempToken } from '../../../../services/utilities';
 import ReportRepository from './report_repository';
 import Config from '../../../../services/config';
 import BlobStorageProvider from '../../../../services/blob_storage/blob_storage';
@@ -85,9 +84,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
         }
     }
 
-    async initiateQuery(containerID: string, request: TS2InitialRequest, user: User, toJSON?: boolean): Promise<Result<string>> {
-        const userID = user.id!;
-
+    async initiateQuery(containerID: string, dataSourceID: string, request: TS2InitialRequest, user: User, describe: boolean): Promise<Result<string>> {
         // check that all files are timeseries and return an error if not
         const isTimeseries = await this.#fileRepo.checkTimeseries(request.file_ids!);
         if (isTimeseries.isError) {return Promise.resolve(Result.Pass(isTimeseries))}
@@ -99,17 +96,28 @@ export default class ReportQueryRepository extends Repository implements Reposit
         Object.assign(report, reportSaved.value);
         const reportID = report.id!
 
+        // formulate query if describe, check for presence of table name if regular query
+        if (describe) {
+            const describeQueries: string[] = [];
+            request.file_ids?.forEach((id => describeQueries.push(`DESCRIBE file_${id}; `)));
+            request.query = describeQueries.join("");
+            console.log(request.query);
+        } else {
+            const errorFiles: string[] = [];
+            request.file_ids?.forEach((id => {
+                if (!request.query!.includes(`file_${id}`)) {errorFiles.push(`file_${id}`)}
+            }));
+            if (errorFiles.length > 0) {
+                return Promise.resolve(Result.Failure(`query must include the table name(s): "${errorFiles.join('", "')}"`));
+            }
+        }
+
         // create a report query based on the TS2 rust module query request
         const reportQuery = new ReportQuery({query: request.query!, report_id: reportID});
         const querySaved = await this.#mapper.Create(user.id!, reportQuery);
         if (querySaved.isError) { return Promise.resolve(Result.Pass(querySaved))}
         Object.assign(reportQuery, querySaved.value);
         const queryID = reportQuery.id!
-
-        // generate a temporary token for the TS2 rust module to return file metadata to DeepLynx
-        const tokenCreated = await newTempToken(containerID, userID);
-        if (tokenCreated.isError) {return Promise.resolve(Result.Failure(`unable to generate access token ${tokenCreated.error?.error}`))}
-        const token = tokenCreated.value;
 
         // generate file metadata
         const fileInfo = await this.#fileRepo.listPathMetadata(...request.file_ids!);
@@ -120,11 +128,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
         if (request.query && !request.query.startsWith('DESCRIBE')) {
             const errorFiles: string[] = [];
             files.forEach((file) => {
-                // find the file name with no extension- this will be the table name
-                const lastDotIndex = file.file_name?.lastIndexOf('.');
-                const fileNameNoExt = (lastDotIndex === -1) ? file.file_name! : file.file_name?.substring(0, lastDotIndex)!;
-                // confirm that query contains the file name, if not return in error msg
-                if (!request.query!.includes(fileNameNoExt)) {errorFiles.push(fileNameNoExt)}
+                // confirm that query contains the file name, if not return in error msg - TODO: replace with table_<fileid>
             });
             if (errorFiles.length > 0) {
                 return Promise.resolve(Result.Failure(`query must include the table name(s): "${errorFiles.join('", "')}"`));
@@ -148,11 +152,6 @@ export default class ReportQueryRepository extends Repository implements Reposit
             }
         }
 
-        // set response url depending on describe query or not
-        const responseUrl = (request.query && request.query.startsWith('DESCRIBE'))
-            ? `${Config.root_address}/containers/${containerID}/files/timeseries/describe`
-            : `${Config.root_address}/containers/${containerID}/reports/${reportID}/query/${queryID}`;
-
         // build baseBlobUrl for azure storage or filesystem
         const baseBlobUrl = Config.file_storage_method === 'azure_blob'
             ? `${azureMetadata?.blob_endpoint}/${azureMetadata?.container_name}/`
@@ -162,21 +161,38 @@ export default class ReportQueryRepository extends Repository implements Reposit
         console.log(azureMetadata?.sas_token);
         console.log(files[0].adapter_file_path);
 
+        // storageConnection: this | that
+            // type: azure, uploadPath: containers/1/datasources/1, blobEndpoint, accountName, containerName, accountKey
+            // type: filesystem, uploadPath: containers/1/datasources/1, rootFilePath
+        // files = array:
+            // file id
+            // accessPath
+            // file name
+
+        // storage return : upload csv to file storage for query results
+        // dl returns:
+            // describe: return report ID, file ID, and description JSON // {id: 1, desc: some json}
+            // query: return metadata (includes reportID)
+            // error stuff (same struct for both desc/query? probs)
+
+        // fileMapper.Create; queryRepo.setResultsFile
+        // processDescribe(reportID, query, connectionJson, filesArray)
+
+        // // pipe results into fileRepo.setDescriptions
+        // processQuery(reportID, query, connectionJson, filesArray)
+
         const query = {
             report_id: reportID,
             query: request.query,
-            dl_token: token,
             storage_type: Config.file_storage_method === 'azure_blob' ? StorageType.azure : StorageType.filesystem,
             sas_metadata: azureMetadata,
-            files,
-            results_destination: `${baseBlobUrl}containers/${containerID}/datasources/${files[0].data_source_id}`,
-            deeplynx_destination: responseUrl
+            files
         }
 
         console.log(query);
 
         // send queryResult directly through memory instead of sending over the network
-        const queryResult = await processQuery(query);
+        // const queryResult = await processQuery(query);
 
         // set report and query statuses to "processing"
         const statusMsg = `executing query ${queryID}: "${reportQuery.query}" as part of report ${reportID}`;

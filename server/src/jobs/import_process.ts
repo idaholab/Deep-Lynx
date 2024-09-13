@@ -8,6 +8,7 @@ import Config from '../services/config';
 import {parentPort, Worker} from 'worker_threads';
 import ImportMapper from '../data_access_layer/mappers/data_warehouse/import/import_mapper';
 import Import from '../domain_objects/data_warehouse/import/import';
+
 const os = require('node:os');
 process.setMaxListeners(0);
 

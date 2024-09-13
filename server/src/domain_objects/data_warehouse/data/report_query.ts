@@ -46,6 +46,7 @@ export class TS2InitialRequest {
     @IsString()
     report_id?: string;
 
+    @IsOptional()
     @IsString()
     query?: string;
 
@@ -55,7 +56,7 @@ export class TS2InitialRequest {
     constructor(input: {report_id?: string, query?: string, file_ids?: string[]}) {
         if (input) {
             if (input.report_id) {this.report_id = input.report_id}
-            this.query = input.query
+            if (input.query) {this.query = input.query}
             this.file_ids = input.file_ids
         }
     }

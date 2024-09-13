@@ -11,7 +11,7 @@ import * as crypto from 'crypto';
 export class Config {
     private static instance: Config;
 
-    private _root_address: string;
+    private readonly _root_address: string;
     private readonly _email_address: string;
     private readonly _email_enabled: boolean = true;
     private readonly _is_node: boolean = false;
@@ -32,7 +32,6 @@ export class Config {
     private readonly _cache_default_ttl: number;
     private readonly _cache_redis_connection_string: string;
     private readonly _initial_import_cache_ttl: number;
-    private readonly _log_db: boolean;
 
     private readonly _core_db_connection_string: string;
     private readonly _timescaledb_enabled: boolean = false;
@@ -75,12 +74,12 @@ export class Config {
 
     private readonly _auth_config_file: string;
 
+    private readonly _max_import_retries: number;
+
     private readonly _export_data_interval: string;
     private readonly _export_data_concurrency: number;
 
     private readonly _data_source_receive_buffer: number;
-    private readonly _data_source_processing_batch_size: number;
-
     private readonly _queue_system: string;
 
     private readonly _smtp_username: string;
@@ -102,9 +101,6 @@ export class Config {
     private readonly _serval_url: string;
 
     private readonly _emit_events: boolean;
-    private readonly _process_queue_name: string;
-    private readonly _edge_insertion_backoff_multiplier: number;
-    private readonly _edge_insertion_max_retry: number;
     private readonly _log_jobs: boolean = false;
 
     private readonly _rabbitmq_url: string;
@@ -146,6 +142,8 @@ export class Config {
         // default to 6 hours for the initial import cache, subsequent should be 30 seconds
         this._initial_import_cache_ttl = process.env.INITIAL_IMPORT_CACHE_TTL ? parseInt(process.env.INITIAL_IMPORT_CACHE_TTL, 10) : 21600;
 
+        this._max_import_retries = process.env.MAX_IMPORT_RETRIES ? parseInt(process.env.MAX_IMPORT_RETRIES, 10) : 10;
+
         this._core_db_connection_string = process.env.CORE_DB_CONNECTION_STRING || '';
         this._timescaledb_enabled = process.env.TIMESCALEDB_ENABLED === 'true';
 
@@ -161,7 +159,8 @@ export class Config {
 
         // if largeobject is specified as the storage option, set to filesystem instead
         // as largeobject is maintained in the codebase only for backwards compatibility
-        this._file_storage_method = (process.env.FILE_STORAGE_METHOD === 'largeobject' || !process.env.FILE_STORAGE_METHOD) ? 'filesystem' : process.env.FILE_STORAGE_METHOD;
+        this._file_storage_method =
+            process.env.FILE_STORAGE_METHOD === 'largeobject' || !process.env.FILE_STORAGE_METHOD ? 'filesystem' : process.env.FILE_STORAGE_METHOD;
         this._filesystem_storage_directory = process.env.FILESYSTEM_STORAGE_DIRECTORY || './../storage/';
         this._azure_blob_connection_string = process.env.AZURE_BLOB_CONNECTION_STRING || '';
         this._azure_blob_container_name = process.env.AZURE_BLOB_CONTAINER_NAME || 'deep-lynx';
@@ -197,9 +196,6 @@ export class Config {
             process.env.AUTH_CONFIG_FILE_PATH || path.resolve(__dirname, '../../src/domain_objects/access_management/authorization/auth_model.conf');
 
         this._data_source_receive_buffer = process.env.DATA_SOURCE_RECEIVE_BUFFER ? parseInt(process.env.DATA_SOURCE_RECEIVE_BUFFER, 10) : 1000;
-        this._data_source_processing_batch_size = process.env.DATA_SOURCE_PROCESSING_BATCH_SIZE
-            ? parseInt(process.env.DATA_SOURCE_PROCESSING_BATCH_SIZE, 10)
-            : 1000;
 
         this._export_data_interval = process.env.EXPORT_INTERVAL || '10m';
         this._export_data_concurrency = process.env.EXPORT_DATA_CONCURRENCY ? parseInt(process.env.EXPORT_DATA_CONCURRENCY, 10) : 4;
@@ -224,15 +220,7 @@ export class Config {
 
         this._serval_url = process.env.SERVAL_URL || '';
 
-        this._log_db = process.env.LOG_DB === 'true' || false;
-
         this._emit_events = process.env.EMIT_EVENTS === 'true' || false;
-        this._process_queue_name = process.env.PROCESS_QUEUE_NAME || 'process';
-
-        this._edge_insertion_backoff_multiplier = process.env.EDGE_INSERTION_BACKOFF_MULTIPLIER
-            ? parseInt(process.env.EDGE_INSERTION_BACKOFF_MULTIPLIER, 10)
-            : 300;
-        this._edge_insertion_max_retry = process.env.EDGE_INSERTION_MAX_RETRY ? parseInt(process.env.EDGE_INSERTION_MAX_RETRY, 10) : 5;
 
         this._rabbitmq_url = process.env.RABBITMQ_URL || 'amqp://localhost';
         this._azure_service_bus_connection_string = process.env.AZURE_SERVICE_BUS_CONNECTION_STRING || '';
@@ -373,10 +361,6 @@ export class Config {
 
     get data_source_receive_buffer(): number {
         return this._data_source_receive_buffer;
-    }
-
-    get data_source_batch_size(): number {
-        return this._data_source_processing_batch_size;
     }
 
     get admin_web_app_name(): string {
@@ -549,18 +533,6 @@ export class Config {
         return this._serval_url;
     }
 
-    get process_queue(): string {
-        return this._process_queue_name;
-    }
-
-    get edge_insertion_backoff_multiplier(): number {
-        return this._edge_insertion_backoff_multiplier;
-    }
-
-    get edge_insertion_max_retries(): number {
-        return this._edge_insertion_max_retry;
-    }
-
     get rabbitmq_url(): string {
         return this._rabbitmq_url;
     }
@@ -589,10 +561,6 @@ export class Config {
         return this._log_jobs;
     }
 
-    get log_db(): boolean {
-        return this._log_db;
-    }
-
     get minio_endpoint(): string {
         return this._minio_endpoint;
     }
@@ -615,6 +583,10 @@ export class Config {
 
     get minio_bucket_name(): string {
         return this._minio_bucket_name;
+    }
+
+    get max_import_retries(): number {
+        return this._max_import_retries;
     }
 
     // Audience may be set to 'false' to ensure no audience validation happens,
