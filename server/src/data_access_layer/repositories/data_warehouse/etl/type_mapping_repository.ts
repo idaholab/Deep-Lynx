@@ -17,7 +17,7 @@ import MetatypeRepository from '../ontology/metatype_repository';
 import MetatypeRelationshipPairRepository from '../ontology/metatype_relationship_pair_repository';
 import MetatypeRelationshipRepository from '../ontology/metatype_relationship_repository';
 import {ContainerAlert} from '../../../../domain_objects/data_warehouse/ontology/container';
-import ContainerRepository from '../ontology/container_respository';
+import ContainerRepository from '../ontology/container_repository';
 import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
 import MetatypeRelationship from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship';
 import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';

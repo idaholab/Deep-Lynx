@@ -1,7 +1,7 @@
 import {Application, NextFunction, Request, Response} from 'express';
 import {authInContainer, authRequest} from '../../../middleware';
 import ContainerImport, {ContainerImportT} from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_import';
-import ContainerRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
+import ContainerRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/container_repository';
 import {plainToClass, plainToInstance} from 'class-transformer';
 import Container, {
     ContainerExport,

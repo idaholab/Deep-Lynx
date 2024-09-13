@@ -7,7 +7,7 @@ import ws, {createWebSocketStream, WebSocket} from 'ws';
 import {SuperUser, User} from '../domain_objects/access_management/user';
 import KeyPairMapper from '../data_access_layer/mappers/access_management/keypair_mapper';
 import KeyPairRepository from '../data_access_layer/repositories/access_management/keypair_repository';
-import ContainerRepository from '../data_access_layer/repositories/data_warehouse/ontology/container_respository';
+import ContainerRepository from '../data_access_layer/repositories/data_warehouse/ontology/container_repository';
 import DataSourceRepository from '../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import {Duplex, Transform} from 'stream';
 
