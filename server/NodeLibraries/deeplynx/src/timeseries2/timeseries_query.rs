@@ -10,27 +10,25 @@ use super::file_metadata::FileMetadata;
 use super::file_metadata::FileType;
 
 pub async fn populate_session(
-  storage_connection: AdoNetString,
+  storage_connection: &AdoNetString,
   files: Vec<FileMetadata>,
 ) -> Result<SessionContext, Timeseries2Error> {
   let ctx = SessionContext::new_with_config(SessionConfig::new().with_information_schema(true));
 
   let provider = storage_connection.get("provider").ok_or_else(|| {
     Timeseries2Error::ReceivedNullDataInRequest {
-      msg: "Provider not specified in connection string".to_string(),
+      msg: "Provider not set in connection string".to_string(),
     }
   })?;
   let root_endpoint = match provider.as_str() {
-    "az" => storage_connection.get("blobendpoint").ok_or_else(|| {
+    "azure" => storage_connection.get("blobendpoint").ok_or_else(|| {
       Timeseries2Error::ReceivedNullDataInRequest {
-        msg: "blobEndpoint not specified in connection string with provider: az (azure)"
-          .to_string(),
+        msg: "blobEndpoint not set in connection string with provider: azure".to_string(),
       }
     })?,
-    "fs" => storage_connection.get("rootfilepath").ok_or_else(|| {
+    "filesystem" => storage_connection.get("rootfilepath").ok_or_else(|| {
       Timeseries2Error::ReceivedNullDataInRequest {
-        msg: "rootFilePath not specified in connection string with provider: fs (filesystem)"
-          .to_string(),
+        msg: "rootFilePath not set in connection string with provider: filesystem".to_string(),
       }
     })?,
     _ => {
@@ -41,12 +39,12 @@ pub async fn populate_session(
   };
 
   match provider.as_str() {
-    "az" => {
+    "azure" => {
       let object_store_url = Url::parse(root_endpoint.as_str())?;
-      let azure_store = register_azure_store(&storage_connection)?;
+      let azure_store = register_azure_store(storage_connection)?;
       ctx.register_object_store(&object_store_url, Arc::new(azure_store));
     }
-    "fs" => (),
+    "filesystem" => (),
     _ => {
       return Err(Timeseries2Error::BadData(format!(
         "Failed to register object store. {provider} is not supported as a storage provider"
