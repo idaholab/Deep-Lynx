@@ -5,7 +5,6 @@ defmodule Datum.DataOrigin do
 
   import Ecto.Query, warn: false
   alias Datum.DataOrigin.DataTreePath
-  alias Datum.Accounts.Group
   alias Datum.Repo
   alias Datum.DataOrigin.OriginRepo
 
@@ -178,11 +177,11 @@ defmodule Datum.DataOrigin do
 
   def add_data!(%Origin{} = origin, attrs \\ %{}) do
     OriginRepo.with_dynamic_repo(origin, fn ->
-      with data <-
+      with %Data{} = data <-
              %Data{}
              |> Data.changeset(attrs)
              |> OriginRepo.insert!(),
-           _perm <-
+           %Datum.Permissions.Data{} = _perm <-
              %Datum.Permissions.Data{}
              |> Datum.Permissions.Data.changeset(%{
                data_id: data.id,
@@ -227,6 +226,38 @@ defmodule Datum.DataOrigin do
     end)
   end
 
+  def list_data_user(%Origin{} = origin, %User{} = user, opts \\ []) do
+    only_ids = Keyword.get(opts, :only_ids)
+
+    groups =
+      Repo.all(
+        from g in UserGroup,
+          where: g.user_id == ^user.id,
+          select: g.group_id
+      )
+
+    OriginRepo.with_dynamic_repo(origin, fn ->
+      query =
+        from d in Data,
+          distinct: true,
+          left_join: p in Datum.Permissions.Data,
+          on: d.id == p.data_id,
+          where:
+            (p.user_id == ^user.id or
+               p.group_id in ^groups) and p.permission_type in [:read, :readwrite],
+          select: d
+
+      query =
+        if only_ids do
+          from d in query, where: d.id in ^only_ids
+        else
+          query
+        end
+
+      OriginRepo.all(query)
+    end)
+  end
+
   def list_data_descendants_user(%Origin{} = origin, %User{} = user, data_id) do
     groups =
       Repo.all(
@@ -254,6 +285,7 @@ defmodule Datum.DataOrigin do
             (p.user_id == ^user.id or
                p.group_id in ^groups) and p.permission_type in [:read, :readwrite] and
               d.id in subquery(subquery),
+          order_by: [asc: d.type],
           select: d
 
       OriginRepo.all(query)

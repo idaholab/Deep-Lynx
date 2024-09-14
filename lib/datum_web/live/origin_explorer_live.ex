@@ -20,9 +20,26 @@ defmodule DatumWeb.OriginExplorerLive do
     <div>
       <div class="breadcrumbs text-sm">
         <ul>
-          <li :if={@origin}>
-            <a><.icon name="hero-server-stack" class="pr-1 h-3 w-3" /><%= @origin.name %></a>
+          <li>
+            <a phx-click="home_navigate">
+              <.icon name="hero-home" class="mr-1 h-3 w-3" /><%= gettext("Home") %>
+            </a>
           </li>
+          <li :if={@origin}>
+            <a phx-click="select_origin" phx-value-origin_id={@origin.id}>
+              <.icon name="hero-server-stack" class="mr-1 h-3 w-3" /><%= @origin.name %>
+            </a>
+          </li>
+          <%= for item <- @path_items do %>
+            <li>
+              <a phx-click="path_item_navigate" phx-value-id={item.id}>
+                <span :if={item.type == :directory || item.type == :root_directory}>
+                  <.icon name="hero-folder" class="mr-1 h-3 w-3" />
+                </span>
+                <%= item.path %>
+              </a>
+            </li>
+          <% end %>
         </ul>
       </div>
       <div>
@@ -62,7 +79,14 @@ defmodule DatumWeb.OriginExplorerLive do
             rows={@items}
             row_click={fn r -> JS.push("select_item", value: %{"item_id" => r.id}) end}
           >
-            <:col><.icon name="hero-server-stack" /></:col>
+            <:col :let={data}>
+              <span :if={data.type in [:directory, :root_directory]}>
+                <.icon name="hero-folder" />
+              </span>
+              <span :if={data.type == :file}>
+                <.icon name="hero-document" />
+              </span>
+            </:col>
             <:col :let={data} label={gettext("Name")}><%= data.path %></:col>
             <:col :let={data} label={gettext("Date Created")}>
               <%= "#{data.inserted_at.month}/#{data.inserted_at.day}/#{data.inserted_at.year}" %>
@@ -113,14 +137,34 @@ defmodule DatumWeb.OriginExplorerLive do
           nil
         end
 
-      # path_items = Map.get(tab.state, "path_items", []) |> Enum.map(fn id -> end)
+      path_items = Map.get(tab.state, "path_items", [])
+
+      path_items =
+        if origin && path_items != [] do
+          data = DataOrigin.list_data_user(origin, user, only_ids: path_items)
+
+          path_items
+          |> Enum.map(fn p -> Enum.find(data, fn d -> d.id == p end) end)
+          |> Enum.filter(fn i -> i end)
+        else
+          []
+        end
+
+      # the descendants of the last item in the path items should be what fills the screen now
+      items =
+        if path_items != [] do
+          DataOrigin.list_data_descendants_user(origin, user, List.last(path_items).id)
+        else
+          []
+        end
 
       # set what we can here and common practice is to set all your used variables in the socket as
       # nil or empty so we don't cause rendeing errors - actually load them in the params OR load them
       # here with async assigns
       {:ok,
        socket
-       |> assign(:items, nil)
+       |> assign(:items, items)
+       |> assign(:path_items, path_items)
        |> assign(:origin, origin)
        |> assign(:parent, parent_pid)
        |> assign(:current_user, user)
@@ -129,6 +173,17 @@ defmodule DatumWeb.OriginExplorerLive do
          {:ok, %{origins: Datum.DataOrigin.list_data_orgins_user(user)}}
        end)}
     end
+  end
+
+  def handle_event("home_navigate", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:items, [])
+     |> assign(:path_items, [])
+     |> assign(:origin, nil)
+     |> assign_async(:origins, fn ->
+       {:ok, %{origins: Datum.DataOrigin.list_data_orgins_user(socket.assigns.current_user)}}
+     end)}
   end
 
   # select the origin, set it, and load the initial root files
@@ -146,15 +201,55 @@ defmodule DatumWeb.OriginExplorerLive do
 
   # select an item from the list, adding it to the breadcrumbs and updating
   # state
-  def handle_event("select_origin", %{"origin_id" => origin_id}, socket) do
-    origin = DataOrigin.get_data_orgins_user(socket.assigns.current_user, origin_id)
-    root_items = DataOrigin.list_roots(origin)
+  def handle_event("select_item", %{"item_id" => item_id}, socket) do
+    data = DataOrigin.get_data_user(socket.assigns.origin, socket.assigns.current_user, item_id)
+
+    items =
+      if data.type == :directory || data.type == :root_directory do
+        DataOrigin.list_data_descendants_user(
+          socket.assigns.origin,
+          socket.assigns.current_user,
+          data.id
+        )
+      else
+        []
+      end
+
+    path_items =
+      if socket.assigns.path_items == [] do
+        [data]
+      else
+        socket.assigns.path_items ++ [data]
+      end
 
     {:noreply,
      socket
-     |> assign(:items, root_items)
-     |> assign(:origin, origin)
+     # update the path_items with the selected piece of data
+     |> assign(:path_items, path_items)
+     |> assign(:items, items)
      |> update_state()}
+  end
+
+  def handle_event("path_item_navigate", %{"id" => id}, socket) do
+    path_items =
+      socket.assigns.path_items
+      |> Enum.take(Enum.find_index(socket.assigns.path_items, fn item -> item.id == id end) + 1)
+
+    data = DataOrigin.get_data_user(socket.assigns.origin, socket.assigns.current_user, id)
+
+    items =
+      if data.type == :directory || data.type == :root_directory do
+        DataOrigin.list_data_descendants_user(
+          socket.assigns.origin,
+          socket.assigns.current_user,
+          data.id
+        )
+      else
+        []
+      end
+
+    {:noreply,
+     socket |> assign(:path_items, path_items) |> assign(:items, items) |> update_state()}
   end
 
   # pull the common assigns from socket and update the tab's state with them
@@ -170,10 +265,11 @@ defmodule DatumWeb.OriginExplorerLive do
           # path items are condensed down down to just their data ids - they'll be hydrated by the mount function
           path_items:
             if socket.assigns.path_items do
+              dbg(socket.assigns.path_items)
               Enum.map(socket.assigns.path_items, fn item -> item.id end)
             end,
           name:
-            if socket.assigns.path_items do
+            if socket.assigns.path_items != [] do
               List.last(socket.assigns.path_items).path
             else
               if socket.assigns.origin do

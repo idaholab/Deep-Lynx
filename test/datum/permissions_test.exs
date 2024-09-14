@@ -112,5 +112,64 @@ defmodule Datum.PermissionsTest do
       assert Enum.count(Datum.DataOrigin.list_data_descendants_user(origin, admin, dir_one.id)) ==
                2
     end
+
+    test "can list data for user" do
+      admin = user_fixture()
+      not_admin = user_fixture()
+
+      {:ok, origin} =
+        DataOrigin.create_origin(%{
+          name: "Test Origin",
+          owned_by: admin.id
+        })
+
+      # build a simple nested directory
+      dir_one =
+        DataOrigin.add_data!(origin, %{
+          path: "root",
+          original_path: "/Users/darrjw/home",
+          type: :root_directory,
+          owned_by: admin.id
+        })
+
+      file_one =
+        DataOrigin.add_data!(origin, %{
+          path: "test.txt",
+          original_path: "/Users/darrjw/home/test.txt",
+          type: :file,
+          owned_by: admin.id
+        })
+
+      {:ok, _} = DataOrigin.connect_data(origin, dir_one, dir_one)
+      {:ok, _} = DataOrigin.connect_data(origin, dir_one, file_one)
+
+      dir_two =
+        DataOrigin.add_data!(origin, %{
+          path: "second",
+          original_path: "/Users/darrjw/home/second",
+          type: :directory,
+          owned_by: admin.id
+        })
+
+      {:ok, _} = DataOrigin.connect_data(origin, dir_one, dir_two)
+
+      file_two =
+        DataOrigin.add_data!(origin, %{
+          path: "picture.png",
+          original_path: "/Users/darrjw/home/second/picture.png",
+          type: :file,
+          owned_by: not_admin.id
+        })
+
+      {:ok, _} = DataOrigin.connect_data(origin, dir_two, file_two)
+
+      assert Enum.count(Datum.DataOrigin.list_data_descendants_user(origin, admin, dir_one.id)) ==
+               2
+
+      assert Enum.count(Datum.DataOrigin.list_data_user(origin, admin)) == 3
+
+      assert Datum.DataOrigin.list_data_user(origin, admin, only_ids: [dir_one.id]) ==
+               [dir_one]
+    end
   end
 end
