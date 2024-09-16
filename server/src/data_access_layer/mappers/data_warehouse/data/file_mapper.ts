@@ -124,8 +124,8 @@ export default class FileMapper extends Mapper {
         return super.runStatement(this.detachFileFromNodesStatement(fileID));
     }
 
-    public async SetDescriptions(desc: FileDescription[]): Promise<Result<boolean>> {
-        return super.runStatement(this.setDescriptionsStatement(...desc));
+    public async SetDescriptions(fileID: string, descriptionCols: FileDescriptionColumn[]): Promise<Result<boolean>> {
+        return super.runStatement(this.setDescriptionsStatement(fileID, descriptionCols));
     }
 
     public async CheckTimeseries(fileIDs: string[]): Promise<Result<TimeseriesInfo[]>> {
@@ -366,7 +366,7 @@ export default class FileMapper extends Mapper {
         return format(text, values);
     }
 
-    private setDescriptionsStatement(...descriptions: FileDescription[]): QueryConfig {
+    private setDescriptionsStatement(fileID: string, descriptionCols: FileDescriptionColumn[]): QueryConfig {
         const text = `INSERT INTO file_descriptions (file_id, description, file_created_at)
                     SELECT file_id::bigint, description::jsonb,
                         -- subquery to get created_at for the foreign key
@@ -374,13 +374,10 @@ export default class FileMapper extends Mapper {
                         FROM files f
                         WHERE f.id = fd.file_id::bigint
                         GROUP BY f.id) AS created_at
-                    FROM (VALUES %L) AS fd(file_id, description)
+                    FROM (VALUES (%L)) AS fd(file_id, description)
                     ON CONFLICT (file_id, file_created_at)
                     DO UPDATE SET described_at = EXCLUDED.described_at`;
-        const values = descriptions.map((desc) => [
-            desc.file_id,
-            JSON.stringify(desc.column_info)
-        ]);
+        const values = [fileID, JSON.stringify(descriptionCols)];
 
         return format(text, values);
     }

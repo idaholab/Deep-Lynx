@@ -132,7 +132,7 @@ export class EdgeFile extends NakedDomainClass {
 
 export class FilePathMetadata extends NakedDomainClass {
     @IsString()
-    id?: number;
+    id?: string;
 
     // file name (sans extension) will be used as table name in the query
     @IsString()
@@ -149,14 +149,20 @@ export class FileDescriptionColumn extends NakedDomainClass {
 
     @IsString()
     data_type?: string;
+
+    @IsBoolean()
+    is_nullable?: boolean;
 }
 
 export class FileDescription extends NakedDomainClass {
     @IsString()
     file_id?: string;
 
+    @IsString()
+    report_id?: string;
+
     @IsArray()
-    column_info?: FileDescriptionColumn[];
+    description?: FileDescriptionColumn[];
 }
 
 export class TimeseriesInfo extends NakedDomainClass {

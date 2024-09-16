@@ -194,18 +194,8 @@ export default class FileRepository extends Repository implements RepositoryInte
         return Promise.resolve(Result.Success(listed.value));
     }
 
-    async setDescriptions(d: FileDescription[]): Promise<Result<boolean>> {
-        for (const desc of d) {
-            const errors = await desc.validationErrors();
-            if (errors) {
-                return Promise.resolve(Result.Failure(`one or more file descriptions did not pass validation ${errors.join(',')}`));
-            }
-
-            // extract actual id and save back to object
-            desc.file_id = desc.file_id?.replace("file_", "");
-        }
-
-        return this.#mapper.SetDescriptions(d);
+    async setDescriptions(fileID: string, d: FileDescriptionColumn[]): Promise<Result<boolean>> {
+        return this.#mapper.SetDescriptions(fileID, d);
     }
 
     async checkTimeseries(fileIDs: string[]): Promise<Result<boolean>> {

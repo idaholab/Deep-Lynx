@@ -4,7 +4,7 @@ import Result from '../../../../common_classes/result';
 import ReportQueryMapper from '../../../mappers/data_warehouse/data/report_query_mapper';
 import {PoolClient} from 'pg';
 import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
-import File from '../../../../domain_objects/data_warehouse/data/file';
+import File, { FileDescription, FileDescriptionColumn } from '../../../../domain_objects/data_warehouse/data/file';
 import { User } from '../../../../domain_objects/access_management/user';
 import Report from '../../../../domain_objects/data_warehouse/data/report';
 import ReportMapper from '../../../mappers/data_warehouse/data/report_mapper';
@@ -87,12 +87,12 @@ export default class ReportQueryRepository extends Repository implements Reposit
         // formulate query if describe, check for presence of table name if regular query
         if (describe) {
             const describeQueries: string[] = [];
-            request.file_ids?.forEach((id => describeQueries.push(`DESCRIBE file_${id}; `)));
+            request.file_ids?.forEach((id => describeQueries.push(`DESCRIBE table_${id}; `)));
             request.query = describeQueries.join("");
         } else {
             const errorFiles: string[] = [];
             request.file_ids?.forEach((id => {
-                if (!request.query!.includes(`file_${id}`)) {errorFiles.push(`file_${id}`)}
+                if (!request.query!.includes(`table_${id}`)) {errorFiles.push(`table_${id}`)}
             }));
             if (errorFiles.length > 0) {
                 return Promise.resolve(Result.Failure(`query must include the table name(s): "${errorFiles.join('", "')}"`));
@@ -116,15 +116,15 @@ export default class ReportQueryRepository extends Repository implements Reposit
         let storageConnection: string;
         if (Config.file_storage_method === 'filesystem') {
             // if a relative path is used, go two directories deeper to account for Rust's location within DL
-            const rootFilePath = (Config.filesystem_storage_directory.startsWith('./')) ? `./../.${Config.filesystem_storage_directory}` : Config.filesystem_storage_directory;
-            storageConnection = `provider=fs;uploadPath=${uploadPath};rootFilePath=${rootFilePath};`;
+            const rootFilePath = (Config.filesystem_storage_directory.startsWith('./')) ? `${Config.filesystem_storage_directory}` : Config.filesystem_storage_directory;
+            storageConnection = `provider=filesystem;uploadPath=${uploadPath};rootFilePath=${rootFilePath};`;
         } else if (Config.file_storage_method === 'azure_blob') {
             const accountName = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('AccountName='))?.split('=')[1];
             // we need to remove accountName from the end of the blobEndpoint
             const blobEndpoint = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('BlobEndpoint='))?.split('=')[1].split(`/${accountName}`)[0]!;
             const accountKey = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('AccountKey='))?.split('=')[1];
             const containerName = Config.azure_blob_container_name;
-            storageConnection = `provider=az;uploadPath=${uploadPath};blobEndpoint=${blobEndpoint};accountName=${accountName};accountKey=${accountKey};containerName=${containerName};`;
+            storageConnection = `provider=azure;uploadPath=${uploadPath};blobEndpoint=${blobEndpoint};accountName=${accountName};accountKey=${accountKey};containerName=${containerName};`;
         } else {
             return Promise.resolve(Result.Failure(`error: unsupported or unimplemented file storage method being used`));
         }
@@ -164,6 +164,22 @@ export default class ReportQueryRepository extends Repository implements Reposit
         // processDescribe(reportID, query, connectionJson, filesArray)
         try {
             const results = await processUpload(reportID, query, storageConnection, files);
+            const parsedDesc = JSON.parse(results);
+            
+            // since we have a nested json we need to do some initial parsing before loading data into the DB
+            parsedDesc['description'] = JSON.parse(parsedDesc['description']) as FileDescriptionColumn[];
+            const described = await this.#fileRepo.setDescriptions(parsedDesc.file_id!, parsedDesc.description!);
+            
+            // if there is an error describing, set report status to "error"
+            if (described.isError) {
+                const errorMessage = `error describing files for report ${reportID}: ${described.error.error}`;
+                void this.#reportRepo.setStatus(reportID, 'error', errorMessage);
+                Logger.error(errorMessage);
+            }
+
+            // if everything was successful, set the report status to completed
+            const successMessage = `successfully uploaded description(s) for files ${files.map(f => f.id).join()}`;
+            void this.#reportRepo.setStatus(reportID, 'completed', successMessage);
         } catch (e) {
             // set report status to "error"
             const errorMessage = `error describing files for report ${reportID}: ${(e as Error).message}`;
