@@ -4,16 +4,15 @@ import Result from '../../../../common_classes/result';
 import ReportQueryMapper from '../../../mappers/data_warehouse/data/report_query_mapper';
 import {PoolClient} from 'pg';
 import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
-import File, { AzureMetadata } from '../../../../domain_objects/data_warehouse/data/file';
+import File from '../../../../domain_objects/data_warehouse/data/file';
 import { User } from '../../../../domain_objects/access_management/user';
 import Report from '../../../../domain_objects/data_warehouse/data/report';
 import ReportMapper from '../../../mappers/data_warehouse/data/report_mapper';
 import FileRepository from './file_repository';
 import ReportRepository from './report_repository';
 import Config from '../../../../services/config';
-import BlobStorageProvider from '../../../../services/blob_storage/blob_storage';
-import AzureBlobImpl from '../../../../services/blob_storage/azure_blob_impl';
 import { processQuery, processUpload, FileMetadata } from 'deeplynx';
+import Logger from '../../../../services/logger';
 
 /*
     ReportQueryRepository contains methods for persisting and retrieving report
@@ -115,57 +114,63 @@ export default class ReportQueryRepository extends Repository implements Reposit
 
         // create a connection string based on the type of storage being used
         const uploadPath = `containers/${containerID}/datasources/${dataSourceID}`;
-        let storageString: string;
-        console.log(Config.file_storage_method);
-        console.log(Config.filesystem_storage_directory);
+        let storageConnection: string;
         if (Config.file_storage_method === 'filesystem') {
             // if a relative path is used, go two directories deeper to account for Rust's location within DL
             const rootFilePath = (Config.filesystem_storage_directory.startsWith('./')) ? `./../.${Config.filesystem_storage_directory}` : Config.filesystem_storage_directory;
-            storageString = `provider=fs;uploadPath=${uploadPath};rootFilePath=${rootFilePath};`;
+            storageConnection = `provider=fs;uploadPath=${uploadPath};rootFilePath=${rootFilePath};`;
         } else if (Config.file_storage_method === 'azure_blob') {
             const accountName = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('AccountName='))?.split('=')[1];
             // we need to remove accountName from the end of the blobEndpoint
             const blobEndpoint = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('BlobEndpoint='))?.split('=')[1].split(`/${accountName}`)[0]!;
             const accountKey = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('AccountKey='))?.split('=')[1];
             const containerName = Config.azure_blob_container_name;
-            storageString = `provider=az;uploadPath=${uploadPath};blobEndpoint=${blobEndpoint};accountName=${accountName};accountKey=${accountKey};containerName=${containerName};`;
+            storageConnection = `provider=az;uploadPath=${uploadPath};blobEndpoint=${blobEndpoint};accountName=${accountName};accountKey=${accountKey};containerName=${containerName};`;
         } else {
             return Promise.resolve(Result.Failure(`error: unsupported or unimplemented file storage method being used`));
         }
 
-        // storage return : upload csv to file storage for query results
-        // dl returns:
-            // describe: return report ID, file ID, and description JSON // {id: 1, desc: some json}
-            // query: return metadata (includes reportID)
-            // error stuff (same struct for both desc/query? probs)
-
-        // fileMapper.Create; queryRepo.setResultsFile
-        // processDescribe(reportID, query, connectionJson, filesArray)
-
-        // // pipe results into fileRepo.setDescriptions
-        // processQuery(reportID, query, connectionJson, filesArray)
-
-        const query = {
-            report_id: reportID,
-            query: request.query,
-            files,
-            storageString: storageString
+        if (describe) {
+            this.processTSdescribe(reportID, request.query!, storageConnection, files as FileMetadata[]);
+        } else {
+            this.processTSquery(reportID, request.query!, storageConnection, files as FileMetadata[]);
         }
 
-        console.log(query);
-
-        // send queryResult directly through memory instead of sending over the network
-        // const queryResult = await processQuery(query);
-
-        // set report and query statuses to "processing"
-        const statusMsg = `executing query ${queryID}: "${reportQuery.query}" as part of report ${reportID}`;
-        let statusSet = await this.#reportRepo.setStatus(reportID, 'processing', statusMsg);
+        // set report status to "processing"
+        let statusSet = await this.#reportRepo.setStatus(
+            reportID, 'processing', 
+            `executing query ${queryID}: "${reportQuery.query}" as part of report ${reportID}`
+        );
         if (statusSet.isError) {return Promise.resolve(Result.Failure(`unable to set report status`))}
-        statusSet = await this.setStatus(queryID, 'processing', statusMsg);
-        if (statusSet.isError) {return Promise.resolve(Result.Failure(`unable to set query status`))}
 
         // return report ID to the user so they can poll for results
         return Promise.resolve(Result.Success(reportID));
+    }
+
+    async processTSquery(reportID: string, query: string, storageConnection: string, files: FileMetadata[]): Promise<void> {
+        // // pipe results into fileRepo.setDescriptions
+        // processQuery(reportID, query, connectionJson, filesArray)
+        try {
+            const results = await processQuery(reportID, query, storageConnection, []);
+        } catch (e) {
+            // set report status to "error"
+            const errorMessage = `error processing query for report ${reportID}: ${(e as Error).message}`;
+            void this.#reportRepo.setStatus(reportID, 'error', errorMessage);
+            Logger.error(errorMessage);
+        }
+    }
+
+    async processTSdescribe(reportID: string, query: string, storageConnection: string, files: FileMetadata[]): Promise<void> {
+        // fileMapper.Create; queryRepo.setResultsFile
+        // processDescribe(reportID, query, connectionJson, filesArray)
+        try {
+            const results = await processUpload(reportID, query, storageConnection, []);
+        } catch (e) {
+            // set report status to "error"
+            const errorMessage = `error describing files for report ${reportID}: ${(e as Error).message}`;
+            void this.#reportRepo.setStatus(reportID, 'error', errorMessage);
+            Logger.error(errorMessage);
+        }
     }
 
     async setResultFile(reportID: string, queryID: string, fileID: string): Promise<Result<boolean>> {

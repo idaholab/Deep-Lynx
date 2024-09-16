@@ -132,7 +132,7 @@ export class EdgeFile extends NakedDomainClass {
 
 export class FilePathMetadata extends NakedDomainClass {
     @IsString()
-    id?: string;
+    id?: number;
 
     // file name (sans extension) will be used as table name in the query
     @IsString()
@@ -141,13 +141,6 @@ export class FilePathMetadata extends NakedDomainClass {
     // this is the path at which the file can be accessed within object storage
     @IsString()
     access_path?: string;
-}
-
-export type AzureMetadata = {
-    account_name: string;
-    blob_endpoint: string;
-    container_name: string;
-    sas_token: string;
 }
 
 export class FileDescriptionColumn extends NakedDomainClass {
