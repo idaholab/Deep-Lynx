@@ -174,8 +174,9 @@ export default class ReportQueryRepository extends Repository implements Reposit
                 file_name: parsedResults.file_name,
                 file_size: parsedResults.file_size,
                 adapter: parsedResults.adapter,
-                adapter_file_path: `${parsedResults.file_path}`
+                adapter_file_path: parsedResults.file_path
             });
+            console.log(parsedResults.file_path);
             const fileCreated = await this.#fileMapper.Create(user.id!, file);
 
             // if there's an error with file record creation, set report status to "error"
