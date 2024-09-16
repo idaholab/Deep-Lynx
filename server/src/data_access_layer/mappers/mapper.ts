@@ -107,8 +107,6 @@ export default class Mapper {
                         resolve(Result.Success(results.rows as T[]));
                     })
                     .catch((e) => {
-                        console.log("query fail #1");
-                        console.log(e);
                         Logger.error(`query failed - ${(e as Error).message}`);
                         resolve(Result.Failure(e));
                     });
@@ -125,8 +123,6 @@ export default class Mapper {
                         resolve(Result.Success(results.rows as T[]));
                     })
                     .catch((e) => {
-                        console.log("query fail #2");
-                        console.log(e);
                         Logger.error(`query failed - ${(e as Error).message}`);
                         resolve(Result.Failure(e));
                     });
@@ -144,8 +140,6 @@ export default class Mapper {
                         resolve(Result.Success(true));
                     })
                     .catch((e) => {
-                        console.log("query fail #3");
-                        console.log(e);
                         Logger.error(`query failed - ${(e as Error).message}`);
                         resolve(Result.Failure(e));
                     });
@@ -157,9 +151,6 @@ export default class Mapper {
                         resolve(Result.Success(true));
                     })
                     .catch((e) => {
-                        console.log("query fail #4");
-                        console.log(`\n\nquery statement: ${statement}\n\n`);
-                        console.log(e);
                         Logger.error(`query failed - ${(e as Error).message}`);
                         resolve(Result.Failure(e));
                     });

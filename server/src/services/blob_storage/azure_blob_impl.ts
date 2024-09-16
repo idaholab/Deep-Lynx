@@ -192,7 +192,6 @@ export default class AzureBlobImpl implements BlobStorage {
                 // ignore conflict rest errors as those indicate the container
                 // was created previously. We don't need to note that
                 if (e.statusCode !== 409) {
-                    console.log(e);
                     Logger.error(`unable to create new azure container - ${e}`);
                 }
             });

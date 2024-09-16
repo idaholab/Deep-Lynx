@@ -89,7 +89,6 @@ export default class ReportQueryRepository extends Repository implements Reposit
             const describeQueries: string[] = [];
             request.file_ids?.forEach((id => describeQueries.push(`DESCRIBE file_${id}; `)));
             request.query = describeQueries.join("");
-            console.log(request.query);
         } else {
             const errorFiles: string[] = [];
             request.file_ids?.forEach((id => {
@@ -151,7 +150,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
         // // pipe results into fileRepo.setDescriptions
         // processQuery(reportID, query, connectionJson, filesArray)
         try {
-            const results = await processQuery(reportID, query, storageConnection, []);
+            const results = await processQuery(reportID, query, storageConnection, files);
         } catch (e) {
             // set report status to "error"
             const errorMessage = `error processing query for report ${reportID}: ${(e as Error).message}`;
@@ -164,7 +163,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
         // fileMapper.Create; queryRepo.setResultsFile
         // processDescribe(reportID, query, connectionJson, filesArray)
         try {
-            const results = await processUpload(reportID, query, storageConnection, []);
+            const results = await processUpload(reportID, query, storageConnection, files);
         } catch (e) {
             // set report status to "error"
             const errorMessage = `error describing files for report ${reportID}: ${(e as Error).message}`;
