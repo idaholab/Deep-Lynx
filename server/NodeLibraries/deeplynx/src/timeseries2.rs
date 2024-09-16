@@ -115,7 +115,7 @@ pub async fn process_query(
       let root_file_path = storage_connection.get("rootfilepath").ok_or_else(|| {
         napi::Error::from_reason("rootFilePath is not set in connection string".to_string())
       })?;
-      format!("{root_file_path}{upload_path}")
+      format!("{root_file_path}{upload_path}/")
     }
     "azure" => {
       let blob_endpoint = storage_connection.get("blobendpoint").ok_or_else(|| {
@@ -123,7 +123,7 @@ pub async fn process_query(
           "blobEndpoint not set in connection string with provider: azure".to_string(),
         )
       })?;
-      format!("{blob_endpoint}/{upload_path}")
+      format!("{blob_endpoint}/{upload_path}/")
     }
     _ => {
       return Err(napi::Error::from_reason(
@@ -131,7 +131,7 @@ pub async fn process_query(
       ))
     }
   };
-  let full_upload_path = format!("{root_upload_path}/{file_name}");
+  let full_upload_path = format!("{root_upload_path}{file_name}");
 
   query_results
     .write_csv(&full_upload_path, DataFrameWriteOptions::new(), None)
