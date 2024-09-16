@@ -110,12 +110,12 @@ pub async fn process_query(
   })?;
   let file_name = format!("{}_{}_{}.csv", uuid, report_id, now.timestamp_millis());
 
-  let full_upload_path = match provider.as_str() {
+  let root_upload_path = match provider.as_str() {
     "filesystem" => {
       let root_file_path = storage_connection.get("rootfilepath").ok_or_else(|| {
         napi::Error::from_reason("rootFilePath is not set in connection string".to_string())
       })?;
-      format!("{root_file_path}/{upload_path}/{file_name}")
+      format!("{root_file_path}{upload_path}")
     }
     "azure" => {
       let blob_endpoint = storage_connection.get("blobendpoint").ok_or_else(|| {
@@ -123,10 +123,15 @@ pub async fn process_query(
           "blobEndpoint not set in connection string with provider: azure".to_string(),
         )
       })?;
-      format!("{blob_endpoint}/{upload_path}/{file_name}")
+      format!("{blob_endpoint}/{upload_path}")
     }
-    _ => format!("./{file_name}"),
+    _ => {
+      return Err(napi::Error::from_reason(
+        "Cannot set file upload path: provider is not set in connection string".to_string(),
+      ))
+    }
   };
+  let full_upload_path = format!("{root_upload_path}/{file_name}");
 
   query_results
     .write_csv(&full_upload_path, DataFrameWriteOptions::new(), None)
@@ -135,25 +140,37 @@ pub async fn process_query(
       napi::Error::from_reason(format!("Failed to write results to CSV with reason: {e}"))
     })?;
 
-  // todo: get file metadata in other ways for azure n stuff
-  let res_file = File::open(&full_upload_path).await?;
-  let file_metadata = res_file.metadata().await.map_err(|e| {
-    napi::Error::from_reason(format!(
-      "Failed to read results file metadata with reason: {e}"
-    ))
-  })?;
-
-  let meta_filepath = match provider.as_str() {
-    "filesystem" => full_upload_path.clone(),
-    _ => format!("{upload_path}/{file_name}"),
+  let file_size = match provider.as_str() {
+    "filesystem" => {
+      let res_file = File::open(&full_upload_path).await?;
+      res_file
+        .metadata()
+        .await
+        .map_err(|e| {
+          napi::Error::from_reason(format!(
+            "Failed to read results file metadata with reason: {e}"
+          ))
+        })?
+        .len()
+    }
+    "azure" => azure_object_store::get_blob_size(&storage_connection, upload_path, &file_name)
+      .await
+      .map_err(|e| {
+        napi::Error::from_reason(format!(
+          "Failed to get results file size from Azure with reason: {e}"
+        ))
+      })?,
+    _ => {
+      return Err(napi::Error::from_reason(
+        "Cannot get file metadata: provider is not set in connection string".to_string(),
+      ))
+    }
   };
 
   let result_metadata = json!({
-    "report_id": report_id,
-    "isError": false,
     "file_name": file_name,
-    "file_size": file_metadata.len(),
-    "file_path": meta_filepath,
+    "file_size": file_size,
+    "file_path": root_upload_path,
     "adapter": provider,
   });
 
@@ -200,7 +217,7 @@ mod tests {
     match process_upload(
       "420".to_string(),
       "DESCRIBE table_1".to_string(),
-      "provider=filesystem;uploadPath=containers/1/datasources/1;rootFilePath=./../../../storage"
+      "provider=filesystem;uploadPath=containers/1/datasources/1;rootFilePath=./../../../storage/"
         .to_string(),
       vec![FileMetadata {
         id: "1".to_string(),
@@ -247,7 +264,7 @@ mod tests {
     match process_query(
       "420".to_string(),
       "SELECT * FROM table_1".to_string(),
-      "provider=filesystem;uploadPath=containers/1/datasources/1;rootFilePath=./../../../storage"
+      "provider=filesystem;uploadPath=containers/1/datasources/1;rootFilePath=./../../../storage/"
         .to_string(),
       vec![FileMetadata {
         id: "1".to_string(),

@@ -65,7 +65,6 @@ pub fn extract_table_info(
     };
 
     table_info.push(TableMetadata {
-      id: file.id.clone(),
       name: format!("table_{}", file.id),
       file_path: full_path_string.clone(),
       file_type: ext,
@@ -75,7 +74,6 @@ pub fn extract_table_info(
 }
 
 pub struct TableMetadata {
-  pub id: String,
   pub name: String,
   pub file_path: String,
   pub file_type: FileType,

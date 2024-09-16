@@ -12,6 +12,8 @@ pub enum Timeseries2Error {
   BadData(String),
   #[error("azure builder error {0}")]
   AzureBuilder(#[from] object_store::Error),
+  #[error("azure blob storage sdk error {0}")]
+  AzureSDK(#[from] azure_storage::Error),
   #[error("serde json error {0}")]
   Json(#[from] serde_json::Error),
   #[error("dotenvy error {0}")]
