@@ -1,18 +1,10 @@
 use chrono::Utc;
 use connection_string::AdoNetString;
-use datafusion::{
-  arrow::json::ArrayWriter,
-  dataframe::DataFrameWriteOptions,
-  datasource::{
-    file_format::{csv::CsvFormat, FileFormat},
-    listing::ListingOptions,
-  },
-};
+use datafusion::{arrow::json::ArrayWriter, dataframe::DataFrameWriteOptions};
 use file_metadata::FileMetadata;
 use serde_json::json;
 use short_uuid::short;
-use std::sync::Arc;
-use tokio::fs::{remove_file, File};
+use tokio::fs::File;
 
 pub mod azure_object_store;
 pub mod errors;
@@ -35,7 +27,7 @@ pub async fn process_upload(
     ))
   })?;
 
-  let ctx = populate_session(&storage_connection, files)
+  let ctx = populate_session(&storage_connection, files.clone())
     .await
     .map_err(|e| {
       napi::Error::from_reason(format!(
@@ -73,6 +65,7 @@ pub async fn process_upload(
   })?;
   let describe_report = json!({
     "reportID": report_id,
+    "file_id": files[0].id,
     "description": description_string
   });
 
