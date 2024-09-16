@@ -117,24 +117,33 @@ pub async fn process_query(
   })?;
   let file_name = format!("{}_{}_{}.csv", uuid, report_id, now.timestamp_millis());
 
-  let local_file_path = match provider.as_str() {
+  let full_upload_path = match provider.as_str() {
     "filesystem" => {
       let root_file_path = storage_connection.get("rootfilepath").ok_or_else(|| {
         napi::Error::from_reason("rootFilePath is not set in connection string".to_string())
       })?;
       format!("{root_file_path}/{upload_path}/{file_name}")
     }
-    // _ => format!("./{file_name}"),
-    _ => format!("./../../../storage/{upload_path}/temp/{file_name}"), // todo: change back before PR
+    "azure" => {
+      let blob_endpoint = storage_connection.get("blobendpoint").ok_or_else(|| {
+        napi::Error::from_reason(
+          "blobEndpoint not set in connection string with provider: azure".to_string(),
+        )
+      })?;
+      format!("{blob_endpoint}/{upload_path}/{file_name}")
+    }
+    _ => format!("./{file_name}"),
   };
 
   query_results
-    .write_csv(local_file_path.as_str(), DataFrameWriteOptions::new(), None)
+    .write_csv(&full_upload_path, DataFrameWriteOptions::new(), None)
     .await
     .map_err(|e| {
       napi::Error::from_reason(format!("Failed to write results to CSV with reason: {e}"))
     })?;
-  let res_file = File::open(&local_file_path).await?;
+
+  // todo: get file metadata in other ways for azure n stuff
+  let res_file = File::open(&full_upload_path).await?;
   let file_metadata = res_file.metadata().await.map_err(|e| {
     napi::Error::from_reason(format!(
       "Failed to read results file metadata with reason: {e}"
@@ -142,7 +151,7 @@ pub async fn process_query(
   })?;
 
   let meta_filepath = match provider.as_str() {
-    "filesystem" => local_file_path.clone(),
+    "filesystem" => full_upload_path.clone(),
     _ => format!("{upload_path}/{file_name}"),
   };
 
@@ -154,36 +163,6 @@ pub async fn process_query(
     "file_path": meta_filepath,
     "adapter": provider,
   });
-
-  if *provider == "azure" {
-    let blob_endpoint = storage_connection.get("blobendpoint").ok_or_else(|| {
-      napi::Error::from_reason(
-        "blobEndpoint not set in connection string with provider: azure".to_string(),
-      )
-    })?;
-    let container_name = storage_connection.get("containername").ok_or_else(|| {
-      napi::Error::from_reason("Azure Container Name is not set in connection string".to_string())
-    })?;
-
-    let file_format = CsvFormat::default();
-    let listing_options = ListingOptions::new(Arc::new(file_format))
-      .with_file_extension(CsvFormat::default().get_ext());
-
-    // todo: this path is broken...
-    let listing_path = format!("{blob_endpoint}/{container_name}/{upload_path}/{file_name}");
-
-    dbg!(&listing_path);
-    ctx
-      .register_listing_table(&file_name, listing_path, listing_options, None, None)
-      .await
-      .map_err(|e| {
-        napi::Error::from_reason(format!(
-          "failed to upload query results metadata with reason: {e}"
-        ))
-      })?;
-
-    remove_file(&local_file_path).await?;
-  }
 
   let metadata_res_json = serde_json::to_string(&result_metadata).map_err(|e| {
     napi::Error::from_reason(format!(
@@ -205,7 +184,7 @@ mod tests {
     match process_upload(
       "69".to_string(),
       "DESCRIBE table_15".to_string(),
-      "provider=azure;uploadPath=containers/1/datasources/1;blobEndpoint=http://127.0.0.1:10000;accountName=devstoreaccount1;accountKey='Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==';containerName=deep-lynx;".to_string(),
+      "provider=azure;uploadPath=containers/1/datasources/1;blobEndpoint=http://127.0.0.1:10000;accountName=devstoreaccount1;accountKey='Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==';containerName=deep-lynx".to_string(),
       vec![
         FileMetadata {
           id: "15".to_string(),
@@ -228,7 +207,7 @@ mod tests {
     match process_upload(
       "420".to_string(),
       "DESCRIBE table_1".to_string(),
-      "provider=filesystem;uploadPath=containers/1/datasources/1;rootFilePath=./../../../storage;"
+      "provider=filesystem;uploadPath=containers/1/datasources/1;rootFilePath=./../../../storage"
         .to_string(),
       vec![FileMetadata {
         id: "1".to_string(),
@@ -252,7 +231,7 @@ mod tests {
     match process_query(
       "69".to_string(),
       "SELECT * FROM table_15".to_string(),
-      "provider=azure;uploadPath=containers/1/datasources/1;blobEndpoint=http://127.0.0.1:10000;accountName=devstoreaccount1;accountKey='Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==';containerName=deep-lynx;".to_string(),
+      "provider=azure;uploadPath=containers/1/datasources/1;blobEndpoint=http://127.0.0.1:10000;accountName=devstoreaccount1;accountKey='Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==';containerName=deep-lynx".to_string(),
       vec![
         FileMetadata {
           id: "15".to_string(),
@@ -275,7 +254,7 @@ mod tests {
     match process_query(
       "420".to_string(),
       "SELECT * FROM table_1".to_string(),
-      "provider=filesystem;uploadPath=containers/1/datasources/1;rootFilePath=./../../../storage;"
+      "provider=filesystem;uploadPath=containers/1/datasources/1;rootFilePath=./../../../storage"
         .to_string(),
       vec![FileMetadata {
         id: "1".to_string(),
