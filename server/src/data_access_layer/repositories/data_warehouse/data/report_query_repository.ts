@@ -132,7 +132,14 @@ export default class ReportQueryRepository extends Repository implements Reposit
         if (describe) {
             this.processTSdescribe(reportID, request.query!, storageConnection, files as FileMetadata[]);
         } else {
-            this.processTSquery(reportID, request.query!, storageConnection, files as FileMetadata[]);
+            this.processTSquery(
+                reportID, 
+                request.query!, 
+                storageConnection, 
+                files as FileMetadata[],
+                queryID,
+                user
+            );
         }
 
         // set report status to "processing"
@@ -146,11 +153,51 @@ export default class ReportQueryRepository extends Repository implements Reposit
         return Promise.resolve(Result.Success(reportID));
     }
 
-    async processTSquery(reportID: string, query: string, storageConnection: string, files: FileMetadata[]): Promise<void> {
-        // // pipe results into fileRepo.setDescriptions
-        // processQuery(reportID, query, connectionJson, filesArray)
+    async processTSquery(
+        reportID: string, 
+        query: string, 
+        storageConnection: string, 
+        files: FileMetadata[],
+        queryID: string,
+        user: User
+    ): Promise<void> {
         try {
             const results = await processQuery(reportID, query, storageConnection, files);
+            const parsedResults = JSON.parse(results);
+
+            // extract containerID from file_path
+            const containerID = parsedResults.file_path.split('containers/')[1].split('/')[0];
+            
+            // create a file record in the DB
+            const file = new File({
+                container_id: containerID,
+                file_name: parsedResults.file_name,
+                file_size: parsedResults.file_size,
+                adapter: parsedResults.adapter,
+                adapter_file_path: parsedResults.file_path
+            });
+            console.log(parsedResults.file_path);
+            const fileCreated = await this.#fileMapper.Create(user.id!, file);
+
+            // if there's an error with file record creation, set report status to "error"
+            if (fileCreated.isError) {
+                const errorMessage = `error creating file record for report ${reportID}: ${fileCreated.error.error}`;
+                void this.#reportRepo.setStatus(reportID, 'error', errorMessage);
+                Logger.error(errorMessage);
+            }
+
+            // set the file record as the resultFile for the given query
+            const resultSet = await this.setResultFile(reportID, queryID, fileCreated.value.id!);
+            if (resultSet.isError) {
+                const errorMessage = `error attaching record to report ${reportID}: ${resultSet.error.error}`;
+                void this.#reportRepo.setStatus(reportID, 'error', errorMessage);
+                Logger.error(errorMessage);
+            }
+
+            // if everything was successful, set the report status to completed
+            const successMessage = `results now available. Download them at "/containers/${containerID}/files/${fileCreated.value.id}/download"`;
+            console.log(successMessage);
+            void this.#reportRepo.setStatus(reportID, 'completed', successMessage);
         } catch (e) {
             // set report status to "error"
             const errorMessage = `error processing query for report ${reportID}: ${(e as Error).message}`;
@@ -160,8 +207,6 @@ export default class ReportQueryRepository extends Repository implements Reposit
     }
 
     async processTSdescribe(reportID: string, query: string, storageConnection: string, files: FileMetadata[]): Promise<void> {
-        // fileMapper.Create; queryRepo.setResultsFile
-        // processDescribe(reportID, query, connectionJson, filesArray)
         try {
             const results = await processUpload(reportID, query, storageConnection, files);
             const parsedDesc = JSON.parse(results);
