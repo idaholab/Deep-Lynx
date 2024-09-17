@@ -40,12 +40,13 @@ const WebGL = (props: PropsT) => {
     },
     [props]
   );
-  // const handleMeshData = useCallback(
-  //   (data: any) => {
-  //     props.setMesh(JSON.parse(data).data.graph);
-  //   },
-  //   [props]
-  // );
+  const handleMeshData = useCallback(
+    (data: any) => {
+      console.log(data);
+      // props.setMesh(JSON.parse(data).data.graph);
+    },
+    [props]
+  );
 
   // Hooks
   useEffect(() => {
@@ -53,16 +54,16 @@ const WebGL = (props: PropsT) => {
   }, [isLoaded]);
 
   useEffect(() => {
-    // addEventListener("SendMeshData", handleMeshData);
+    addEventListener("SendCadNodeDataToReact", handleMeshData);
     addEventListener("SendJsonObjectsToReact", handleJsonObjects);
     return () => {
-      // removeEventListener("SendMeshData", handleMeshData);
+      removeEventListener("SendCadNodeDataToReact", handleMeshData);
       removeEventListener("SendJsonObjectsToReact", handleJsonObjects);
     };
   }, [
     addEventListener,
     removeEventListener,
-    // handleMeshData,
+    handleMeshData,
     handleJsonObjects,
   ]);
 
