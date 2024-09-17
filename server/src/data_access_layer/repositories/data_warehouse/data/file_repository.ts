@@ -194,8 +194,8 @@ export default class FileRepository extends Repository implements RepositoryInte
         return Promise.resolve(Result.Success(listed.value));
     }
 
-    async setDescriptions(fileID: string, d: FileDescriptionColumn[]): Promise<Result<boolean>> {
-        return this.#mapper.SetDescriptions(fileID, d);
+    async setDescriptions(descriptions: FileDescription[]): Promise<Result<boolean>> {
+        return this.#mapper.SetDescriptions(descriptions);
     }
 
     async checkTimeseries(fileIDs: string[]): Promise<Result<boolean>> {

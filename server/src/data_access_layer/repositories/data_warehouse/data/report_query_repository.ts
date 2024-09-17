@@ -87,8 +87,8 @@ export default class ReportQueryRepository extends Repository implements Reposit
         // formulate query if describe, check for presence of table name if regular query
         if (describe) {
             const describeQueries: string[] = [];
-            request.file_ids?.forEach((id => describeQueries.push(`DESCRIBE table_${id}; `)));
-            request.query = describeQueries.join("");
+            request.file_ids?.forEach((id => describeQueries.push(`DESCRIBE table_${id}`)));
+            request.query = describeQueries.join(";");
         } else {
             const errorFiles: string[] = [];
             request.file_ids?.forEach((id => {
@@ -176,7 +176,6 @@ export default class ReportQueryRepository extends Repository implements Reposit
                 adapter: parsedResults.adapter,
                 adapter_file_path: parsedResults.file_path
             });
-            console.log(parsedResults.file_path);
             const fileCreated = await this.#fileMapper.Create(user.id!, file);
 
             // if there's an error with file record creation, set report status to "error"
@@ -196,7 +195,6 @@ export default class ReportQueryRepository extends Repository implements Reposit
 
             // if everything was successful, set the report status to completed
             const successMessage = `results now available. Download them at "/containers/${containerID}/files/${fileCreated.value.id}/download"`;
-            console.log(successMessage);
             void this.#reportRepo.setStatus(reportID, 'completed', successMessage);
         } catch (e) {
             // set report status to "error"
@@ -209,11 +207,13 @@ export default class ReportQueryRepository extends Repository implements Reposit
     async processTSdescribe(reportID: string, query: string, storageConnection: string, files: FileMetadata[]): Promise<void> {
         try {
             const results = await processUpload(reportID, query, storageConnection, files);
-            const parsedDesc = JSON.parse(results);
-            
+            // // const parsedDesc = JSON.parse(results);
+
+            // const bob = "{\"descriptions\":[{\"description\":\"[{\\\"column_name\\\":\\\"Timestamp\\\",\\\"data_type\\\":\\\"Timestamp(Nanosecond, None)\\\",\\\"is_nullable\\\":\\\"YES\\\"},{\\\"column_name\\\":\\\"Temperature (K)\\\",\\\"data_type\\\":\\\"Int64\\\",\\\"is_nullable\\\":\\\"YES\\\"},{\\\"column_name\\\":\\\"Velocity[i] (m/s)\\\",\\\"data_type\\\":\\\"Int64\\\",\\\"is_nullable\\\":\\\"YES\\\"},{\\\"column_name\\\":\\\"Velocity[j] (m/s)\\\",\\\"data_type\\\":\\\"Int64\\\",\\\"is_nullable\\\":\\\"YES\\\"},{\\\"column_name\\\":\\\"X (m)\\\",\\\"data_type\\\":\\\"Int64\\\",\\\"is_nullable\\\":\\\"YES\\\"},{\\\"column_name\\\":\\\"Y (m)\\\",\\\"data_type\\\":\\\"Int64\\\",\\\"is_nullable\\\":\\\"YES\\\"},{\\\"column_name\\\":\\\"Z (m)\\\",\\\"data_type\\\":\\\"Int64\\\",\\\"is_nullable\\\":\\\"YES\\\"}]\",\"file_id\":\"15\"},{\"description\":\"[{\\\"column_name\\\":\\\"Timestamp\\\",\\\"data_type\\\":\\\"Timestamp(Nanosecond, None)\\\",\\\"is_nullable\\\":\\\"YES\\\"},{\\\"column_name\\\":\\\"Temperature (K)\\\",\\\"data_type\\\":\\\"Int64\\\",\\\"is_nullable\\\":\\\"YES\\\"},{\\\"column_name\\\":\\\"Velocity[i] (m/s)\\\",\\\"data_type\\\":\\\"Int64\\\",\\\"is_nullable\\\":\\\"YES\\\"},{\\\"column_name\\\":\\\"Velocity[j] (m/s)\\\",\\\"data_type\\\":\\\"Int64\\\",\\\"is_nullable\\\":\\\"YES\\\"},{\\\"column_name\\\":\\\"X (m)\\\",\\\"data_type\\\":\\\"Int64\\\",\\\"is_nullable\\\":\\\"YES\\\"},{\\\"column_name\\\":\\\"Y (m)\\\",\\\"data_type\\\":\\\"Int64\\\",\\\"is_nullable\\\":\\\"YES\\\"},{\\\"column_name\\\":\\\"Z (m)\\\",\\\"data_type\\\":\\\"Int64\\\",\\\"is_nullable\\\":\\\"YES\\\"}]\",\"file_id\":\"16\"}],\"reportID\":\"69\"}"
             // since we have a nested json we need to do some initial parsing before loading data into the DB
-            parsedDesc['description'] = JSON.parse(parsedDesc['description']) as FileDescriptionColumn[];
-            const described = await this.#fileRepo.setDescriptions(parsedDesc.file_id!, parsedDesc.description!);
+            const descriptionsList = JSON.parse(results)['descriptions'];
+            descriptionsList.map((o: {[key: string]: any}) => o.description = JSON.parse(o['description']) as FileDescription);
+            const described = await this.#fileRepo.setDescriptions(descriptionsList as FileDescription[]);
             
             // if there is an error describing, set report status to "error"
             if (described.isError) {

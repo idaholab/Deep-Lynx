@@ -158,9 +158,6 @@ export class FileDescription extends NakedDomainClass {
     @IsString()
     file_id?: string;
 
-    @IsString()
-    report_id?: string;
-
     @IsArray()
     description?: FileDescriptionColumn[];
 }
