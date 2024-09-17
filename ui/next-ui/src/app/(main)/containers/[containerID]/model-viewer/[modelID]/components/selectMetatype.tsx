@@ -44,7 +44,10 @@ function SelectMetatype() {
       <Typography variant="subtitle1">Select a Class</Typography>
       <Typography variant="body2">
         Choose classes to view nodes in the DeepLynx graph related to your
-        engineering model
+        engineering model.
+        <br />
+        You can select multiple classes and the model will return any related
+        nodes belonging to these classes.
       </Typography>
       <br />
       <FormControl sx={{ width: "100%" }}>

@@ -15,6 +15,7 @@ import { PayloadT } from "./page";
 type PropsT = {
   payload: PayloadT;
   setData: Function;
+  setMesh: Function;
 };
 
 const WebGL = (props: PropsT) => {
@@ -35,7 +36,6 @@ const WebGL = (props: PropsT) => {
   // Handlers
   const handleJsonObjects = useCallback(
     (data: any) => {
-      console.log(data);
       props.setData(JSON.parse(data));
     },
     [props]
@@ -44,15 +44,10 @@ const WebGL = (props: PropsT) => {
   const handleMeshData = useCallback(
     (data: any) => {
       console.log(data);
-      // props.setMesh(JSON.parse(data).data.graph);
+      props.setMesh(JSON.parse(data));
     },
     [props]
   );
-
-  // Hooks
-  useEffect(() => {
-    console.log("Scene status: " + isLoaded);
-  }, [isLoaded]);
 
   useEffect(() => {
     addEventListener("SendCadNodeDataToReact", handleMeshData);
