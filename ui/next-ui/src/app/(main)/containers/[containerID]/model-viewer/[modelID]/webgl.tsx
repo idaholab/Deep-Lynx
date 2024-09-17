@@ -40,6 +40,7 @@ const WebGL = (props: PropsT) => {
     },
     [props]
   );
+
   const handleMeshData = useCallback(
     (data: any) => {
       console.log(data);
@@ -79,6 +80,7 @@ const WebGL = (props: PropsT) => {
     <Container disableGutters>
       <Unity
         unityProvider={unityProvider}
+        tabIndex={1} // Set tabIndex for Unity canvas to allow keyboard input; https://react-unity-webgl.dev/docs/api/tab-index
         style={{
           width: "100%",
           height: "50%",
