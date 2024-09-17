@@ -2,7 +2,7 @@ use chrono::Utc;
 use connection_string::AdoNetString;
 use datafusion::{arrow::json::ArrayWriter, dataframe::DataFrameWriteOptions};
 use file_metadata::FileMetadata;
-use serde_json::json;
+use serde_json::{json, Value};
 use short_uuid::short;
 use tokio::fs::File;
 
@@ -34,39 +34,51 @@ pub async fn process_upload(
         "Failed to set up datafusion session context with reason: {e}"
       ))
     })?;
-  let results = ctx
-    .sql(query.as_str())
-    .await
-    .map_err(|e| napi::Error::from_reason(format!("Failed to run query {query} with reason: {e}")))?
-    .collect()
-    .await
-    .map_err(|e| {
-      napi::Error::from_reason(format!("Failed to write results to JSON with reason: {e}"))
+
+  let queries = query.split(";");
+  let mut file_descriptions: Vec<Value> = Vec::new();
+  for (i, q) in queries.enumerate() {
+    let results = ctx
+      .sql(q)
+      .await
+      .map_err(|e| {
+        napi::Error::from_reason(format!("Failed to run query {query} with reason: {e}"))
+      })?
+      .collect()
+      .await
+      .map_err(|e| {
+        napi::Error::from_reason(format!("Failed to write results to JSON with reason: {e}"))
+      })?;
+
+    let batches = results.iter().collect::<Vec<&_>>();
+    let buf = Vec::new();
+    let mut writer = ArrayWriter::new(buf);
+    writer.write_batches(&batches).map_err(|e| {
+      napi::Error::from_reason(format!(
+        "Failed to write record batches to json with reason: {e}"
+      ))
+    })?;
+    writer.finish().map_err(|e| {
+      napi::Error::from_reason(format!(
+        "Failed to finish writing record batches to json with reason: {e}"
+      ))
+    })?;
+    let description_json = writer.into_inner();
+    let description_string = String::from_utf8(description_json).map_err(|e| {
+      napi::Error::from_reason(format!(
+        "Failed to get json string from bytes with reason: {e}"
+      ))
     })?;
 
-  let batches = results.iter().collect::<Vec<&_>>();
-  let buf = Vec::new();
-  let mut writer = ArrayWriter::new(buf);
-  writer.write_batches(&batches).map_err(|e| {
-    napi::Error::from_reason(format!(
-      "Failed to write record batches to json with reason: {e}"
-    ))
-  })?;
-  writer.finish().map_err(|e| {
-    napi::Error::from_reason(format!(
-      "Failed to finish writing record batches to json with reason: {e}"
-    ))
-  })?;
-  let description_json = writer.into_inner();
-  let description_string = String::from_utf8(description_json).map_err(|e| {
-    napi::Error::from_reason(format!(
-      "Failed to get json string from bytes with reason: {e}"
-    ))
-  })?;
+    file_descriptions.push(json!({
+      "file_id": files[i].id,
+      "description": description_string
+    }))
+  }
+
   let describe_report = json!({
     "reportID": report_id,
-    "file_id": files[0].id,
-    "description": description_string
+    "descriptions": file_descriptions
   });
 
   Ok(describe_report.to_string())
@@ -224,6 +236,65 @@ mod tests {
         file_name: "ten-entries.csv".to_string(),
         file_path: "containers/1/datasources/1".to_string(),
       }],
+    )
+    .await
+    {
+      Ok(res) => {
+        dbg!(res);
+      }
+      Err(e) => {
+        panic!("{}", e.reason);
+      }
+    };
+  }
+
+  #[tokio::test]
+  async fn multi_file_describe_with_azure() {
+    match process_upload(
+      "69".to_string(),
+      "DESCRIBE table_15; DESCRIBE table_16".to_string(),
+      "provider=azure;uploadPath=containers/1/datasources/1;blobEndpoint=http://127.0.0.1:10000;accountName=devstoreaccount1;accountKey='Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==';containerName=deep-lynx".to_string(),
+      vec![
+        FileMetadata {
+          id: "15".to_string(),
+          file_name: "czpadKZbKNDamk3amXCBMften-entries.csv".to_string(),
+          file_path: "containers/1/datasources/1".to_string(),
+        },
+        FileMetadata {
+          id: "16".to_string(),
+          file_name: "1FFXveoRMrs1tKb1FTCTMXten-entries-2.csv".to_string(),
+          file_path: "containers/1/datasources/1".to_string(),
+        },
+      ]
+    ).await {
+      Ok(res) => {
+        dbg!(res);
+      }
+      Err(e) => {
+        panic!("{}", e.reason);
+      }
+    };
+  }
+
+  #[tokio::test]
+  async fn multi_file_describe_with_filesystem() {
+    match process_upload(
+      "420".to_string(),
+      "DESCRIBE table_1; DESCRIBE table_2".to_string(),
+      "provider=filesystem;uploadPath=containers/1/datasources/1;rootFilePath=./../../../storage/"
+        .to_string(),
+      vec![
+        FileMetadata {
+          id: "1".to_string(),
+          file_name: "ten-entries.csv".to_string(),
+          file_path: "containers/1/datasources/1".to_string(),
+        },
+        FileMetadata {
+          id: "2".to_string(),
+          file_name: "ten-entries-2.csv".to_string(),
+          file_path: "containers/1/datasources/1".to_string(),
+        },
+      ],
     )
     .await
     {
