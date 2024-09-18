@@ -1,9 +1,6 @@
 use chrono::Utc;
 use connection_string::AdoNetString;
-use datafusion::{
-  arrow::json::ArrayWriter, common::file_options::csv_writer::CsvWriterOptions, config::CsvOptions,
-  dataframe::DataFrameWriteOptions,
-};
+use datafusion::{arrow::json::ArrayWriter, config::CsvOptions, dataframe::DataFrameWriteOptions};
 use file_metadata::FileMetadata;
 use serde_json::{json, Value};
 use short_uuid::short;
@@ -167,7 +164,7 @@ pub async fn process_query(
   let result_metadata = json!({
     "file_name": file_name,
     "file_size": file_size as f64 / 1000.00,
-    "file_path": upload_path,
+    "file_path": format!("{upload_path}/"),
     "adapter": provider,
   });
 
