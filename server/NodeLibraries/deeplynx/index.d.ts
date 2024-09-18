@@ -12,7 +12,7 @@ export interface Options {
   stopNodes?: Array<string>
   valueNodes?: Array<string>
 }
-export function hash(a: string, options: Options): string
+export declare function hash(a: string, options: Options): string
 export interface LegacyTimeseriesColumn {
   column_name: string
   property_name: string
@@ -20,7 +20,7 @@ export interface LegacyTimeseriesColumn {
   type: string
   date_conversion_format_string?: string
 }
-export function inferLegacySchema(csv: Buffer): Array<LegacyTimeseriesColumn>
+export declare function inferLegacySchema(csv: Buffer): Array<LegacyTimeseriesColumn>
 export interface FileMetadata {
   id: string
   file_name: string
@@ -30,13 +30,13 @@ export interface FileMetadata {
  * For processing file uploads
  * Returns the results of a SQL `DESCRIBE` of the file as stringified JSON.
  */
-export function processUpload(reportId: string, query: string, storageConnection: string, files: Array<FileMetadata>): Promise<string>
+export declare function processUpload(reportId: string, query: string, storageConnection: string, files: Array<FileMetadata>): Promise<string>
 /**
  * For processing a query against a set of files.
  * Uploads results to a location specified in the request object.
  * Returns the metadata of the query results as stringified JSON.
  */
-export function processQuery(reportId: string, query: string, storageConnection: string, files: Array<FileMetadata>): Promise<string>
+export declare function processQuery(reportId: string, query: string, storageConnection: string, files: Array<FileMetadata>): Promise<string>
 export type JsRedisGraphLoader = RedisGraphLoader
 export declare class RedisGraphLoader {
   constructor()
@@ -97,34 +97,4 @@ export declare class BucketRepository {
    * ingestion and can also be used to check for errors during the operation
    */
   completeIngestion(): Promise<void>
-}
-export type JsRedisGraphLoader = RedisGraphLoader
-export declare class RedisGraphLoader {
-  constructor()
-  /**
-   * # Safety
-   *
-   * This function should be called before any work done on the object
-   */
-  init(config: Configuration): Promise<void>
-  generateRedisGraph(containerId: string, timestamp?: string | undefined | null, ttl?: number | undefined | null): Promise<string>
-}
-export type JsSnapshotGenerator = SnapshotGenerator
-export declare class SnapshotGenerator {
-  constructor()
-  /**
-   * # Safety
-   *
-   * This function should be called before any work done on the object
-   * This generates the node snapshot dataframe and stores it on the SnapshotGenerator instance. This
-   * MUST be run before you attempt to find any nodes.
-   */
-  init(config: Configuration, containerId: string, timestamp?: string | undefined | null): Promise<void>
-  /**
-   * Find all the nodes that match a given set of parameters. Parameters must be EdgeParameters passed
-   * in as JSON in order to handle the fact that the value could be any valid JSON data-type. This function
-   * returns only the _database_ ids of the matching nodes - this is in order to avoid expensive serialization
-   * across the border.
-   */
-  findNodes(parametersJson: string): Promise<Array<string>>
 }

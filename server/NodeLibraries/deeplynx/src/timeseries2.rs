@@ -30,7 +30,7 @@ pub async fn process_upload(
   let queries = query.split(";");
   let mut file_descriptions: Vec<Value> = Vec::new();
 
-  for (i, q) in queries.enumerate() {
+  for q in queries {
     let results = ctx
       .sql(q)
       .await
@@ -64,7 +64,10 @@ pub async fn process_upload(
     })?;
 
     file_descriptions.push(json!({
-      "file_id": files[i].id,
+      "file_id": q
+        .to_lowercase()
+        .trim_start_matches("describe table_")
+        .to_string(),
       "description": description_string
     }))
   }
