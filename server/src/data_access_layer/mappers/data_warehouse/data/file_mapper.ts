@@ -376,7 +376,7 @@ export default class FileMapper extends Mapper {
                         GROUP BY f.id) AS created_at
                     FROM (VALUES %L) AS fd(file_id, description)
                     ON CONFLICT (file_id, file_created_at)
-                    DO UPDATE SET described_at = EXCLUDED.described_at`;
+                    DO UPDATE SET description = EXCLUDED.description`;
         const values = descriptions.map((desc) => [
             desc.file_id,
             JSON.stringify(desc.description)

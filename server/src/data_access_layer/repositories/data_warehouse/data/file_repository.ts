@@ -11,10 +11,6 @@ import BlobStorageProvider from '../../../../services/blob_storage/blob_storage'
 import EventRepository from '../../event_system/event_repository';
 import Event from '../../../../domain_objects/event_system/event';
 import Logger from '../../../../services/logger';
-import { serialize } from 'v8';
-import Cache from '../../../../services/cache/cache';
-import Config from '../../../../services/config';
-import { plainToClass } from 'class-transformer';
 const short = require('short-uuid');
 
 /*
@@ -122,7 +118,6 @@ export default class FileRepository extends Repository implements RepositoryInte
 
             if (file.id) {
                 toUpdate.push(file);
-                void this.deleteCachedDesc(file.id);
             } else {
                 toCreate.push(file);
             }
@@ -175,17 +170,7 @@ export default class FileRepository extends Repository implements RepositoryInte
     }
 
     async listDescriptionColumns(id: string): Promise<Result<FileDescriptionColumn[]>> {
-        // check for a cached description
-        const cached = await this.getCachedDesc(id);
-        if (cached) return Promise.resolve(Result.Success(cached));
-
-        // if no cached version, fetch from DB and cache
-        const retrieved = await this.#mapper.ListDescriptionColumns(id);
-        if (!retrieved.isError) {
-            await this.setDescCashe(id, retrieved.value);
-        }
-
-        return Promise.resolve(retrieved);
+        return this.#mapper.ListDescriptionColumns(id);
     }
 
     async listPathMetadata(...fileIDs: string[]): Promise<Result<FilePathMetadata[]>> {
@@ -275,10 +260,6 @@ export default class FileRepository extends Repository implements RepositoryInte
         const saved = await this.save(file, user);
         if (saved.isError) return Promise.resolve(Result.Pass(saved));
 
-        // clear any cached details on file description if file was updated
-        const cacheDeleted = await this.deleteCachedDesc(fileID);
-        if (!cacheDeleted) Logger.error(`unable to clear cache for file ${fileID}`);
-
         return Promise.resolve(Result.Success(file));
     }
 
@@ -321,33 +302,5 @@ export default class FileRepository extends Repository implements RepositoryInte
 
     listFiles(containerID: string): Promise<Result<File[]>> {
         return this.#mapper.ListForContainer(containerID);
-    }
-
-    // caching for file descriptions
-    private async setDescCashe(id: string, desc: FileDescriptionColumn[]): Promise<boolean> {
-        const set = await Cache.set(
-            `${FileMapper.tableName}:fileID:${id}:description`,
-            serialize(desc),
-            Config.cache_default_ttl
-        )
-
-        return Promise.resolve(set);
-    }
-
-    private async getCachedDesc(id: string): Promise<FileDescriptionColumn[] | undefined> {
-        const cached = await Cache.get<object[]>(`${FileMapper.tableName}:fileID:${id}:description`);
-        if (cached) {
-            const description = plainToClass(FileDescriptionColumn, cached);
-            return Promise.resolve(description);
-        }
-
-        return Promise.resolve(undefined);
-    }
-
-    private async deleteCachedDesc(id: string): Promise<boolean> {
-        const deleted = await Cache.del(`${FileMapper.tableName}:fileID:${id}:description`);
-        if (!deleted) Logger.error(`unable to remove file description ${id} from cache`);
-
-        return Promise.resolve(deleted);
     }
 }

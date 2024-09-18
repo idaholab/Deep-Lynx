@@ -119,12 +119,12 @@ export default class ReportQueryRepository extends Repository implements Reposit
             const rootFilePath = (Config.filesystem_storage_directory.startsWith('./')) ? `${Config.filesystem_storage_directory}` : Config.filesystem_storage_directory;
             storageConnection = `provider=filesystem;uploadPath=${uploadPath};rootFilePath=${rootFilePath};`;
         } else if (Config.file_storage_method === 'azure_blob') {
-            const accountName = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('AccountName='))?.split('=')[1];
+            const accountName = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('AccountName='))?.split('AccountName=')[1];
             // we need to remove accountName from the end of the blobEndpoint
-            const blobEndpoint = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('BlobEndpoint='))?.split('=')[1].split(`/${accountName}`)[0]!;
-            const accountKey = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('AccountKey='))?.split('=')[1];
+            const blobEndpoint = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('BlobEndpoint='))?.split('BlobEndpoint=')[1].split(`/${accountName}`)[0]!;
+            const accountKey = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('AccountKey='))?.split('AccountKey=')[1];
             const containerName = Config.azure_blob_container_name;
-            storageConnection = `provider=azure;uploadPath=${uploadPath};blobEndpoint=${blobEndpoint};accountName=${accountName};accountKey=${accountKey};containerName=${containerName};`;
+            storageConnection = `provider=azure_blob;uploadPath=${uploadPath};blobEndpoint=${blobEndpoint};accountName=${accountName};accountKey='${accountKey}';containerName=${containerName};`;
         } else {
             return Promise.resolve(Result.Failure(`error: unsupported or unimplemented file storage method being used`));
         }
@@ -167,6 +167,10 @@ export default class ReportQueryRepository extends Repository implements Reposit
 
             // extract containerID from file_path
             const containerID = parsedResults.file_path.split('containers/')[1].split('/')[0];
+
+            if (parsedResults.adapter === 'filesystem') {
+                parsedResults.file_path = `${Config.filesystem_storage_directory}${parsedResults.file_path}`;
+            }
             
             // create a file record in the DB
             const file = new File({
@@ -207,14 +211,12 @@ export default class ReportQueryRepository extends Repository implements Reposit
     async processTSdescribe(reportID: string, query: string, storageConnection: string, files: FileMetadata[]): Promise<void> {
         try {
             const results = await processUpload(reportID, query, storageConnection, files);
-            // // const parsedDesc = JSON.parse(results);
-
-            // const bob = "{\"descriptions\":[{\"description\":\"[{\\\"column_name\\\":\\\"Timestamp\\\",\\\"data_type\\\":\\\"Timestamp(Nanosecond, None)\\\",\\\"is_nullable\\\":\\\"YES\\\"},{\\\"column_name\\\":\\\"Temperature (K)\\\",\\\"data_type\\\":\\\"Int64\\\",\\\"is_nullable\\\":\\\"YES\\\"},{\\\"column_name\\\":\\\"Velocity[i] (m/s)\\\",\\\"data_type\\\":\\\"Int64\\\",\\\"is_nullable\\\":\\\"YES\\\"},{\\\"column_name\\\":\\\"Velocity[j] (m/s)\\\",\\\"data_type\\\":\\\"Int64\\\",\\\"is_nullable\\\":\\\"YES\\\"},{\\\"column_name\\\":\\\"X (m)\\\",\\\"data_type\\\":\\\"Int64\\\",\\\"is_nullable\\\":\\\"YES\\\"},{\\\"column_name\\\":\\\"Y (m)\\\",\\\"data_type\\\":\\\"Int64\\\",\\\"is_nullable\\\":\\\"YES\\\"},{\\\"column_name\\\":\\\"Z (m)\\\",\\\"data_type\\\":\\\"Int64\\\",\\\"is_nullable\\\":\\\"YES\\\"}]\",\"file_id\":\"15\"},{\"description\":\"[{\\\"column_name\\\":\\\"Timestamp\\\",\\\"data_type\\\":\\\"Timestamp(Nanosecond, None)\\\",\\\"is_nullable\\\":\\\"YES\\\"},{\\\"column_name\\\":\\\"Temperature (K)\\\",\\\"data_type\\\":\\\"Int64\\\",\\\"is_nullable\\\":\\\"YES\\\"},{\\\"column_name\\\":\\\"Velocity[i] (m/s)\\\",\\\"data_type\\\":\\\"Int64\\\",\\\"is_nullable\\\":\\\"YES\\\"},{\\\"column_name\\\":\\\"Velocity[j] (m/s)\\\",\\\"data_type\\\":\\\"Int64\\\",\\\"is_nullable\\\":\\\"YES\\\"},{\\\"column_name\\\":\\\"X (m)\\\",\\\"data_type\\\":\\\"Int64\\\",\\\"is_nullable\\\":\\\"YES\\\"},{\\\"column_name\\\":\\\"Y (m)\\\",\\\"data_type\\\":\\\"Int64\\\",\\\"is_nullable\\\":\\\"YES\\\"},{\\\"column_name\\\":\\\"Z (m)\\\",\\\"data_type\\\":\\\"Int64\\\",\\\"is_nullable\\\":\\\"YES\\\"}]\",\"file_id\":\"16\"}],\"reportID\":\"69\"}"
+            
             // since we have a nested json we need to do some initial parsing before loading data into the DB
             const descriptionsList = JSON.parse(results)['descriptions'];
             descriptionsList.map((o: {[key: string]: any}) => o.description = JSON.parse(o['description']) as FileDescription);
             const described = await this.#fileRepo.setDescriptions(descriptionsList as FileDescription[]);
-            
+
             // if there is an error describing, set report status to "error"
             if (described.isError) {
                 const errorMessage = `error describing files for report ${reportID}: ${described.error.error}`;
