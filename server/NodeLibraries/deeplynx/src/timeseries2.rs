@@ -26,17 +26,10 @@ pub async fn process_upload(
       "Failed to parse storage_connection string with reason: {e}"
     ))
   })?;
-
-  let ctx = populate_session(&storage_connection, files.clone())
-    .await
-    .map_err(|e| {
-      napi::Error::from_reason(format!(
-        "Failed to set up datafusion session context with reason: {e}"
-      ))
-    })?;
-
+  let ctx = populate_session(&storage_connection, files.clone()).await?;
   let queries = query.split(";");
   let mut file_descriptions: Vec<Value> = Vec::new();
+
   for (i, q) in queries.enumerate() {
     let results = ctx
       .sql(q)
@@ -102,18 +95,10 @@ pub async fn process_query(
     ))
   })?;
 
-  let ctx = populate_session(&storage_connection, files)
-    .await
-    .map_err(|e| {
-      napi::Error::from_reason(format!(
-        "Failed to set up datafusion session context with reason: {e}"
-      ))
-    })?;
-
+  let ctx = populate_session(&storage_connection, files).await?;
   let query_results = ctx.sql(query.as_str()).await.map_err(|e| {
     napi::Error::from_reason(format!("Failed to run query {query} with reason: {e}"))
   })?;
-
   let provider = storage_connection.get("provider").ok_or_else(|| {
     napi::Error::from_reason("provider is not set in connection string".to_string())
   })?;
@@ -121,7 +106,6 @@ pub async fn process_query(
     napi::Error::from_reason("uploadPath is not set in connection string".to_string())
   })?;
   let file_name = format!("{}_{}_{}.csv", uuid, report_id, now.timestamp_millis());
-
   let root_upload_path = match provider.as_str() {
     "filesystem" => {
       let root_file_path = storage_connection.get("rootfilepath").ok_or_else(|| {
@@ -155,23 +139,11 @@ pub async fn process_query(
   let file_size = match provider.as_str() {
     "filesystem" => {
       let res_file = File::open(&full_upload_path).await?;
-      res_file
-        .metadata()
-        .await
-        .map_err(|e| {
-          napi::Error::from_reason(format!(
-            "Failed to read results file metadata with reason: {e}"
-          ))
-        })?
-        .len()
+      res_file.metadata().await?.len()
     }
-    "azure" => azure_object_store::get_blob_size(&storage_connection, upload_path, &file_name)
-      .await
-      .map_err(|e| {
-        napi::Error::from_reason(format!(
-          "Failed to get results file size from Azure with reason: {e}"
-        ))
-      })?,
+    "azure" => {
+      azure_object_store::get_blob_size(&storage_connection, upload_path, &file_name).await?
+    }
     _ => {
       return Err(napi::Error::from_reason(
         "Cannot get file metadata: provider is not set in connection string".to_string(),
@@ -204,13 +176,13 @@ mod tests {
   #[tokio::test]
   async fn describe_with_azure() {
     match process_upload(
-      "69".to_string(),
-      "DESCRIBE table_15".to_string(),
+      "1".to_string(),
+      "DESCRIBE table_1".to_string(),
       "provider=azure;uploadPath=containers/1/datasources/1;blobEndpoint=http://127.0.0.1:10000;accountName=devstoreaccount1;accountKey='Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==';containerName=deep-lynx".to_string(),
       vec![
         FileMetadata {
-          id: "15".to_string(),
-          file_name: "czpadKZbKNDamk3amXCBMften-entries.csv".to_string(),
+          id: "1".to_string(),
+          file_name: "ten-entries.csv".to_string(),
           file_path: "containers/1/datasources/1".to_string(),
         },
       ]
@@ -227,9 +199,9 @@ mod tests {
   #[tokio::test]
   async fn describe_with_filesystem() {
     match process_upload(
-      "420".to_string(),
+      "2".to_string(),
       "DESCRIBE table_1".to_string(),
-      "provider=filesystem;uploadPath=containers/1/datasources/1;rootFilePath=./../../../storage/"
+      "provider=filesystem;uploadPath=containers/1/datasources/1;rootFilePath=./test_files/timeseries2/"
         .to_string(),
       vec![FileMetadata {
         id: "1".to_string(),
@@ -251,18 +223,18 @@ mod tests {
   #[tokio::test]
   async fn multi_file_describe_with_azure() {
     match process_upload(
-      "69".to_string(),
-      "DESCRIBE table_15; DESCRIBE table_16".to_string(),
+      "3".to_string(),
+      "DESCRIBE table_1; DESCRIBE table_2".to_string(),
       "provider=azure;uploadPath=containers/1/datasources/1;blobEndpoint=http://127.0.0.1:10000;accountName=devstoreaccount1;accountKey='Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==';containerName=deep-lynx".to_string(),
       vec![
         FileMetadata {
-          id: "15".to_string(),
-          file_name: "czpadKZbKNDamk3amXCBMften-entries.csv".to_string(),
+          id: "1".to_string(),
+          file_name: "ten-entries.csv".to_string(),
           file_path: "containers/1/datasources/1".to_string(),
         },
         FileMetadata {
-          id: "16".to_string(),
-          file_name: "1FFXveoRMrs1tKb1FTCTMXten-entries-2.csv".to_string(),
+          id: "2".to_string(),
+          file_name: "ten-entries-2.csv".to_string(),
           file_path: "containers/1/datasources/1".to_string(),
         },
       ]
@@ -279,9 +251,9 @@ mod tests {
   #[tokio::test]
   async fn multi_file_describe_with_filesystem() {
     match process_upload(
-      "420".to_string(),
+      "4".to_string(),
       "DESCRIBE table_1; DESCRIBE table_2".to_string(),
-      "provider=filesystem;uploadPath=containers/1/datasources/1;rootFilePath=./../../../storage/"
+      "provider=filesystem;uploadPath=containers/1/datasources/1;rootFilePath=./test_files/timeseries2/"
         .to_string(),
       vec![
         FileMetadata {
@@ -310,13 +282,13 @@ mod tests {
   #[tokio::test]
   async fn query_with_azure() {
     match process_query(
-      "69".to_string(),
-      "SELECT * FROM table_15".to_string(),
+      "5".to_string(),
+      "SELECT * FROM table_1".to_string(),
       "provider=azure;uploadPath=containers/1/datasources/1;blobEndpoint=http://127.0.0.1:10000;accountName=devstoreaccount1;accountKey='Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==';containerName=deep-lynx".to_string(),
       vec![
         FileMetadata {
-          id: "15".to_string(),
-          file_name: "czpadKZbKNDamk3amXCBMften-entries.csv".to_string(),
+          id: "1".to_string(),
+          file_name: "ten-entries.csv".to_string(),
           file_path: "containers/1/datasources/1".to_string(),
         },
       ]
@@ -333,9 +305,9 @@ mod tests {
   #[tokio::test]
   async fn query_with_filesystem() {
     match process_query(
-      "420".to_string(),
+      "6".to_string(),
       "SELECT * FROM table_1".to_string(),
-      "provider=filesystem;uploadPath=containers/1/datasources/1;rootFilePath=./../../../storage/"
+      "provider=filesystem;uploadPath=containers/1/datasources/1;rootFilePath=./test_files/timeseries2/"
         .to_string(),
       vec![FileMetadata {
         id: "1".to_string(),
