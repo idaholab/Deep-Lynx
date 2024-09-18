@@ -1,6 +1,9 @@
 use chrono::Utc;
 use connection_string::AdoNetString;
-use datafusion::{arrow::json::ArrayWriter, dataframe::DataFrameWriteOptions};
+use datafusion::{
+  arrow::json::ArrayWriter, common::file_options::csv_writer::CsvWriterOptions, config::CsvOptions,
+  dataframe::DataFrameWriteOptions,
+};
 use file_metadata::FileMetadata;
 use serde_json::{json, Value};
 use short_uuid::short;
@@ -133,7 +136,14 @@ pub async fn process_query(
   let full_upload_path = format!("{root_upload_path}{file_name}");
 
   query_results
-    .write_csv(&full_upload_path, DataFrameWriteOptions::new(), None)
+    .write_csv(
+      &full_upload_path,
+      DataFrameWriteOptions::new(),
+      Some(CsvOptions {
+        has_header: Some(true),
+        ..Default::default()
+      }),
+    )
     .await
     .map_err(|e| {
       napi::Error::from_reason(format!("Failed to write results to CSV with reason: {e}"))
