@@ -166,7 +166,7 @@ pub async fn process_query(
 
   let result_metadata = json!({
     "file_name": file_name,
-    "file_size": file_size as f64 / 1000.00,
+    "file_size": file_size as f64 / 1024.00,
     "file_path": root_upload_path,
     "adapter": provider,
   });
