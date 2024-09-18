@@ -119,7 +119,7 @@ pub async fn process_query(
       })?;
       format!("{root_file_path}{upload_path}/")
     }
-    "azure" => {
+    "azure_blob" => {
       let blob_endpoint = storage_connection.get("blobendpoint").ok_or_else(|| {
         napi::Error::from_reason(
           "blobEndpoint not set in connection string with provider: azure".to_string(),
@@ -154,7 +154,7 @@ pub async fn process_query(
       let res_file = File::open(&full_upload_path).await?;
       res_file.metadata().await?.len()
     }
-    "azure" => {
+    "azure_blob" => {
       azure_object_store::get_blob_size(&storage_connection, upload_path, &file_name).await?
     }
     _ => {
@@ -167,7 +167,7 @@ pub async fn process_query(
   let result_metadata = json!({
     "file_name": file_name,
     "file_size": file_size as f64 / 1000.00,
-    "file_path": root_upload_path,
+    "file_path": upload_path,
     "adapter": provider,
   });
 
@@ -191,7 +191,7 @@ mod tests {
     match process_upload(
       "1".to_string(),
       "DESCRIBE table_1".to_string(),
-      "provider=azure;uploadPath=containers/1/datasources/1;blobEndpoint=http://127.0.0.1:10000;accountName=devstoreaccount1;accountKey='Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==';containerName=deep-lynx".to_string(),
+      "provider=azure_blob;uploadPath=containers/1/datasources/1;blobEndpoint=http://127.0.0.1:10000;accountName=devstoreaccount1;accountKey='Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==';containerName=deep-lynx".to_string(),
       vec![
         FileMetadata {
           id: "1".to_string(),
@@ -238,7 +238,7 @@ mod tests {
     match process_upload(
       "3".to_string(),
       "DESCRIBE table_1; DESCRIBE table_2".to_string(),
-      "provider=azure;uploadPath=containers/1/datasources/1;blobEndpoint=http://127.0.0.1:10000;accountName=devstoreaccount1;accountKey='Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==';containerName=deep-lynx".to_string(),
+      "provider=azure_blob;uploadPath=containers/1/datasources/1;blobEndpoint=http://127.0.0.1:10000;accountName=devstoreaccount1;accountKey='Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==';containerName=deep-lynx".to_string(),
       vec![
         FileMetadata {
           id: "1".to_string(),
@@ -297,7 +297,7 @@ mod tests {
     match process_query(
       "5".to_string(),
       "SELECT * FROM table_1".to_string(),
-      "provider=azure;uploadPath=containers/1/datasources/1;blobEndpoint=http://127.0.0.1:10000;accountName=devstoreaccount1;accountKey='Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==';containerName=deep-lynx".to_string(),
+      "provider=azure_blob;uploadPath=containers/1/datasources/1;blobEndpoint=http://127.0.0.1:10000;accountName=devstoreaccount1;accountKey='Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==';containerName=deep-lynx".to_string(),
       vec![
         FileMetadata {
           id: "1".to_string(),

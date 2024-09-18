@@ -21,7 +21,7 @@ pub async fn populate_session(
     }
   })?;
   let root_endpoint = match provider.as_str() {
-    "azure" => storage_connection.get("blobendpoint").ok_or_else(|| {
+    "azure_blob" => storage_connection.get("blobendpoint").ok_or_else(|| {
       Timeseries2Error::ReceivedNullDataInRequest {
         msg: "blobEndpoint not set in connection string with provider: azure".to_string(),
       }
@@ -39,7 +39,7 @@ pub async fn populate_session(
   };
 
   match provider.as_str() {
-    "azure" => {
+    "azure_blob" => {
       let object_store_url = Url::parse(root_endpoint.as_str())?;
       let azure_store = register_azure_store(storage_connection)?;
       ctx.register_object_store(&object_store_url, Arc::new(azure_store));
