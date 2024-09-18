@@ -12,7 +12,7 @@ export interface Options {
   stopNodes?: Array<string>
   valueNodes?: Array<string>
 }
-export function hash(a: string, options: Options): string
+export declare function hash(a: string, options: Options): string
 export interface LegacyTimeseriesColumn {
   column_name: string
   property_name: string
@@ -20,7 +20,7 @@ export interface LegacyTimeseriesColumn {
   type: string
   date_conversion_format_string?: string
 }
-export function inferLegacySchema(csv: Buffer): Array<LegacyTimeseriesColumn>
+export declare function inferLegacySchema(csv: Buffer): Array<LegacyTimeseriesColumn>
 export interface FileMetadata {
   id: string
   file_name: string
@@ -30,13 +30,13 @@ export interface FileMetadata {
  * For processing file uploads
  * Returns the results of a SQL `DESCRIBE` of the file as stringified JSON.
  */
-export function processUpload(reportId: string, query: string, storageConnection: string, files: Array<FileMetadata>): Promise<string>
+export declare function processUpload(reportId: string, query: string, storageConnection: string, files: Array<FileMetadata>): Promise<string>
 /**
  * For processing a query against a set of files.
  * Uploads results to a location specified in the request object.
  * Returns the metadata of the query results as stringified JSON.
  */
-export function processQuery(reportId: string, query: string, storageConnection: string, files: Array<FileMetadata>): Promise<string>
+export declare function processQuery(reportId: string, query: string, storageConnection: string, files: Array<FileMetadata>): Promise<string>
 export type JsRedisGraphLoader = RedisGraphLoader
 export declare class RedisGraphLoader {
   constructor()
