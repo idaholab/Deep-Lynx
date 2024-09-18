@@ -3,7 +3,7 @@ import axios, {AxiosRequestConfig} from 'axios';
 import MetatypeKeyMapper from './metatype_key_mapper';
 import Result from '../../../../common_classes/result';
 import Logger from '../../../../services/logger';
-import ContainerRepository from '../../../repositories/data_warehouse/ontology/container_respository';
+import ContainerRepository from '../../../repositories/data_warehouse/ontology/container_repository';
 import Container, {ContainerAlert, ContainerConfig} from "../../../../domain_objects/data_warehouse/ontology/container";
 import MetatypeRepository from '../../../repositories/data_warehouse/ontology/metatype_repository';
 import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
@@ -300,7 +300,7 @@ export default class ContainerImport {
                 }
             }
 
-            // New ontology version ID will be obtained from current ontology ID if versioning is disabled. ID can be obtained from previous/current ontology regardless of status message because it is overwritting the ontology and recycling only the ID. 
+            // New ontology version ID will be obtained from current ontology ID if versioning is disabled. ID can be obtained from previous/current ontology regardless of status message because it is overwritting the ontology and recycling only the ID.
             if (!ontologyVersionID) {
                 try {
                     const results = await ontologyRepo
@@ -309,23 +309,23 @@ export default class ContainerImport {
                         .and()
                         .status('in', ['published', 'ready', 'error'])
                         .list({ sortBy: 'id', sortDesc: true });
-            
+
                     if (results.isError) {
                         Logger.error(`Unable to find published version of ontology: ${results.error?.error}`);
                     }
-            
+
                     const versions = results.value;
                     if (versions.length === 0) {
                         Logger.info('No ontology versions found.');
                     }
-            
+
                     ontologyVersionID = versions.find(version => version.status === 'published')?.id
                         || versions.find(version => version.status === 'ready')?.id
                         || versions.find(version => version.status === 'error')?.id;
-            
+
                     if (!ontologyVersionID) {
                         Logger.info('No suitable ontology version found.');
-                    } 
+                    }
                 } catch (error) {
                     Logger.error(`An unexpected error occurred: ${error}`);
                 }

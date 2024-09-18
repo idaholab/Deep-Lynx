@@ -9,7 +9,7 @@ import {ResetPasswordEmailTemplate} from '../../../services/email/templates/rese
 import Authorization from '../../../domain_objects/access_management/authorization/authorization';
 import ContainerUserInviteMapper from '../../mappers/access_management/container_user_invite_mapper';
 import {ContainerInviteEmailTemplate} from '../../../services/email/templates/container_invite';
-import ContainerRepository from '../data_warehouse/ontology/container_respository';
+import ContainerRepository from '../data_warehouse/ontology/container_repository';
 import Config from '../../../services/config';
 import KeyPairMapper from '../../mappers/access_management/keypair_mapper';
 import {plainToClass} from 'class-transformer';

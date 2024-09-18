@@ -4,7 +4,7 @@ import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/p
 import Logger from '../../../../services/logger';
 import Container from '../../../../domain_objects/data_warehouse/ontology/container';
 import UserMapper from '../../../../data_access_layer/mappers/access_management/user_mapper';
-import ContainerRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
+import ContainerRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/container_repository';
 import {User} from '../../../../domain_objects/access_management/user';
 import fs from 'fs';
 import FileRepository from '../../../../data_access_layer/repositories/data_warehouse/data/file_repository';

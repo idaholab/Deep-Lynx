@@ -30,6 +30,7 @@ import MetatypeRelationship from '../../../../domain_objects/data_warehouse/onto
 import MetatypeKeyRepository from './metatype_key_repository';
 import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
 import MetatypeRelationshipKey from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
+import MetatypeInheritance from '../../../../domain_objects/data_warehouse/ontology/metatype_inheritance';
 import MetatypeRelationshipKeyRepository from './metatype_relationship_key_repository';
 import MetatypeRelationshipPairRepository from './metatype_relationship_pair_repository';
 import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
@@ -327,6 +328,9 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         const relationship_pairs = await MetatypeRelationshipPairMapper.Instance.ListForExport(containerID, ontologyVersionID);
         if (relationship_pairs.isError) return Promise.resolve(Result.Pass(relationship_pairs));
 
+        const metatype_inheritance = await MetatypeMapper.Instance.ListInheritancesForExport(metatypes?.value)
+        if (metatype_inheritance.isError) return Promise.resolve(Result.Pass(metatype_inheritance));
+
         return Promise.resolve(
             Result.Success(
                 new ContainerExport({
@@ -336,6 +340,7 @@ export default class ContainerRepository implements RepositoryInterface<Containe
                     relationships: relationships.value,
                     relationship_keys: relationship_keys.value,
                     relationship_pairs: relationship_pairs.value,
+                    metatype_inheritance: metatype_inheritance.value,
                 }),
             ),
         );
@@ -350,7 +355,7 @@ export default class ContainerRepository implements RepositoryInterface<Containe
             !('relationship_keys' in jsonImport) ||
             !('relationship_pairs' in jsonImport)
         ) {
-            return Promise.resolve(Result.Failure('Container export file does not contain all necessary sections for an ontology export.'));
+            return Promise.resolve(Result.Failure('Container export file does not contain all necessary sections for an ontology import.'));
         }
 
         const ontologyVersionRepo = new OntologyVersionRepository();
@@ -438,10 +443,6 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         const metatypeKeyRepo = new MetatypeKeyRepository();
         void (await metatypeKeyRepo.saveFromJSON(metatypeKeys));
 
-        // refresh metatype key view
-        const mKeyMapper = new MetatypeKeyMapper();
-        void mKeyMapper.RefreshView();
-
         const relationshipKeys: MetatypeRelationshipKey[] = [];
         jsonImport.relationship_keys.forEach((key: any) => {
             key.container_id = containerID;
@@ -467,8 +468,15 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         const relationshipPairRepo = new MetatypeRelationshipPairRepository();
         void (await relationshipPairRepo.saveFromJSON(relationshipPairs));
 
-        // refresh relationship pair view
+        const metatypeInheritances: MetatypeInheritance[] = [];
+        jsonImport.metatype_inheritance.forEach((metatypeInheritance: any) => {
+            metatypeInheritances.push(metatypeInheritance);
+        });
+        void (await metatypeRepo.updateInheritance(metatypeInheritances));
+
+        // refresh relationship pairs materialized view in order to accurately reflect inheritance changes
         void relationshipPairRepo.RefreshView();
+        void metatypeKeyRepo.RefreshView();
 
         // after successful ontology imports (or after error), update ontology version statuses
         void ontologyVersionRepo.setStatus(oldOntologyVersionID!, 'deprecated', 'Replaced by imported ontology from container file');
