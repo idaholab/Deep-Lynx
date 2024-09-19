@@ -8,51 +8,28 @@ import { useContainer } from "@/lib/context/ContainerProvider";
 import { Button, Container, Grid } from "@mui/material";
 
 // Components
-import Panel from "./panel";
+import Panel from "./graph";
 import WebGL from "./webgl";
 
 // Store
 import { useAppSelector } from "@/lib/store/hooks";
 
 // Types
-import { ContainerT, FileT } from "@/lib/types";
-type RelatedNodeT = {
-  MetatypeName: string;
-  OwnerId: string;
-  [key: string]: string;
-};
-export type PayloadT = {
-  ConfigType: string;
-  FileName: string;
-  GraphType: string;
-  GraphRootDlId: string;
-  AssetMetatypeName: string;
-  DefaultInteractions: Array<string>;
-  MetatypeMappings: MetatypeMappingsT;
-  BaseUrl: string;
-  Token: string;
-  ContainerId: string;
-  FileId: string;
-};
-type MetatypeMappingsT = Record<string, string> & {
-  CADMetadata: string;
-};
-export type MeshObject = {
-  Part: {
-    [key: string]: any;
-  };
-  Assembly: {
-    [key: string]: any;
-  };
-  AssemblyParents: Array<any>;
-};
+import { ContainerT, FileT } from "@/lib/types/deeplynx";
+import {
+  PayloadT,
+  RelatedNodeT,
+  MeshObject,
+  MetatypeMappingsT,
+} from "@/lib/types/modules/modelViewer";
 
-export default function Home({ params }: { params: { modelID: string } }) {
+export default function Home() {
   // Hooks
   const [render, setRender] = useState<boolean>(false);
   const [payload, setPayload] = useState<PayloadT>({} as PayloadT);
-  const [data, setData] = useState<Array<RelatedNodeT> | undefined>();
+  const [graph, setGraph] = useState<Array<RelatedNodeT> | undefined>();
   const [mesh, setMesh] = useState<MeshObject | undefined>();
+  const [selected, setSelected] = useState<boolean>(false);
   const mappings = useAppSelector((state) => state.modelViewer.mappings);
 
   // Store
@@ -94,9 +71,9 @@ export default function Home({ params }: { params: { modelID: string } }) {
     <>
       <Grid container>
         <Grid item xs={4}>
-          <Panel data={data} mesh={mesh} />
+          <Panel graph={graph} mesh={mesh} selected={selected} />
           <br />
-          {!render && mappings.length ? (
+          {!render ? (
             <Container>
               <Button onClick={handleRender}>Start Viewer</Button>
             </Container>
@@ -104,7 +81,12 @@ export default function Home({ params }: { params: { modelID: string } }) {
         </Grid>
         <Grid item xs={8}>
           {render ? (
-            <WebGL payload={payload} setData={setData} setMesh={setMesh} />
+            <WebGL
+              payload={payload}
+              setGraph={setGraph}
+              setMesh={setMesh}
+              setSelected={setSelected}
+            />
           ) : null}
         </Grid>
       </Grid>

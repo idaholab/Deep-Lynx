@@ -9,7 +9,7 @@ import { ontologyActions } from "@/lib/store/features/ontology/ontologySlice";
 import { containerActions } from "../store/features/container/containerSlice";
 
 // Types
-import { ContainerT, DataSourceT, MetatypeT } from "../types";
+import { ContainerT, DataSourceT, MetatypeT } from "../types/deeplynx";
 
 let ContainerContext = createContext<ContainerT>({} as ContainerT);
 let MetatypeContext = createContext<Array<MetatypeT>>([]);

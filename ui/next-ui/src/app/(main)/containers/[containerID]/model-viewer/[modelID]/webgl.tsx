@@ -11,56 +11,78 @@ import { Unity } from "react-unity-webgl";
 import { Container } from "@mui/material";
 
 // Types
-import { PayloadT } from "./page";
+import {
+  PayloadT,
+  MeshObject,
+  MeshBoolCallbackT,
+  RelatedNodeT,
+} from "@/lib/types/modules/modelViewer";
+
 type PropsT = {
   payload: PayloadT;
-  setData: Function;
+  setGraph: Function;
   setMesh: Function;
+  setSelected: Function;
 };
 
-const WebGL = (props: PropsT) => {
-  const {
-    unityProvider,
-    addEventListener,
-    removeEventListener,
-    sendMessage,
-    isLoaded,
-  } = useUnityContext({
-    loaderUrl: "/webgl/webgl.loader.js",
-    dataUrl: "/webgl/webgl.data",
-    frameworkUrl: "/webgl/webgl.framework.js",
-    codeUrl: "/webgl/webgl.wasm",
-    streamingAssetsUrl: "/webgl/StreamingAssets",
-  });
+export default function WebGL(props: PropsT) {
+  // Hooks
+  const { unityProvider, addEventListener, removeEventListener, sendMessage } =
+    useUnityContext({
+      loaderUrl: "/webgl/webgl.loader.js",
+      dataUrl: "/webgl/webgl.data",
+      frameworkUrl: "/webgl/webgl.framework.js",
+      codeUrl: "/webgl/webgl.wasm",
+      streamingAssetsUrl: "/webgl/StreamingAssets",
+    });
+
+  // Props
+  const setGraph = props.setGraph;
+  const setMesh = props.setMesh;
+  const setSelected = props.setSelected;
 
   // Handlers
   const handleJsonObjects = useCallback(
-    (data: any) => {
-      props.setData(JSON.parse(data));
+    (data: unknown) => {
+      const nodes: Array<RelatedNodeT> = JSON.parse(data as string);
+      setGraph(nodes);
     },
-    [props]
+    [setGraph]
   );
 
   const handleMeshData = useCallback(
-    (data: any) => {
+    (data: unknown) => {
       console.log(data);
-      props.setMesh(JSON.parse(data));
+      const mesh: MeshObject = JSON.parse(data as string);
+      setMesh(mesh);
     },
-    [props]
+    [setMesh]
   );
 
+  const handleMeshBool = useCallback(
+    (data: unknown) => {
+      const highlight: MeshBoolCallbackT = JSON.parse(data as string);
+      setSelected(highlight.selected);
+    },
+    [setSelected]
+  );
+
+  // Hooks
   useEffect(() => {
     addEventListener("SendCadNodeDataToReact", handleMeshData);
     addEventListener("SendJsonObjectsToReact", handleJsonObjects);
+    addEventListener("SendSelectedBoolToReact", handleMeshBool);
     return () => {
       removeEventListener("SendCadNodeDataToReact", handleMeshData);
       removeEventListener("SendJsonObjectsToReact", handleJsonObjects);
+      addEventListener("SendSelectedBoolToReact", handleMeshBool);
     };
   }, [
     addEventListener,
     removeEventListener,
     handleMeshData,
     handleJsonObjects,
+    handleMeshBool,
   ]);
 
   useEffect(() => {
@@ -83,6 +105,4 @@ const WebGL = (props: PropsT) => {
       />
     </Container>
   );
-};
-
-export default WebGL;
+}

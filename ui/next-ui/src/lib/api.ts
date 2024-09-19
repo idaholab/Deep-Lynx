@@ -4,7 +4,7 @@ import {
   AxiosResponse,
   AxiosBasicCredentials,
 } from "axios";
-import { ContainerT } from "./types";
+import { ContainerT } from "./types/deeplynx";
 import buildURL from "build-url";
 import Authentication from "./authentication_service";
 const axios = require("axios").default;
