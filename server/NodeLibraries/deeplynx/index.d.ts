@@ -13,14 +13,6 @@ export interface Options {
   valueNodes?: Array<string>
 }
 export declare function hash(a: string, options: Options): string
-export interface LegacyTimeseriesColumn {
-  column_name: string
-  property_name: string
-  is_primary_timestamp: boolean
-  type: string
-  date_conversion_format_string?: string
-}
-export declare function inferLegacySchema(csv: Buffer): Array<LegacyTimeseriesColumn>
 export interface FileMetadata {
   id: string
   file_name: string
@@ -37,6 +29,13 @@ export declare function processUpload(reportId: string, query: string, storageCo
  * Returns the metadata of the query results as stringified JSON.
  */
 export declare function processQuery(reportId: string, query: string, storageConnection: string, files: Array<FileMetadata>): Promise<string>
+export interface LegacyTimeseriesColumn {
+  column_name: string
+  property_name: string
+  is_primary_timestamp: boolean
+  type: string
+  date_conversion_format_string?: string
+}
 export type JsRedisGraphLoader = RedisGraphLoader
 export declare class RedisGraphLoader {
   constructor()

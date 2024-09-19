@@ -4,34 +4,34 @@ use connection_string::AdoNetString;
 use object_store::azure::MicrosoftAzure;
 use object_store::azure::MicrosoftAzureBuilder;
 
-use super::errors::Timeseries2Error;
+use crate::timeseries::errors::QueryError;
 
 pub fn register_azure_store(
   storage_connection: &AdoNetString,
-) -> Result<MicrosoftAzure, Timeseries2Error> {
+) -> Result<MicrosoftAzure, QueryError> {
   #[cfg(debug_assertions)]
   return Ok(
     MicrosoftAzureBuilder::new()
       .with_endpoint(
         storage_connection
           .get("blobendpoint")
-          .ok_or_else(|| Timeseries2Error::ReceivedNullDataInRequest {
+          .ok_or_else(|| QueryError::ReceivedNullDataInRequest {
             msg: "Azure Blob Endpoint is not set in connection string".to_string(),
           })?
           .to_owned(),
       )
       .with_account(storage_connection.get("accountname").ok_or_else(|| {
-        Timeseries2Error::ReceivedNullDataInRequest {
+        QueryError::ReceivedNullDataInRequest {
           msg: "Azure Account Name is not set in connection string".to_string(),
         }
       })?)
       .with_access_key(storage_connection.get("accountkey").ok_or_else(|| {
-        Timeseries2Error::ReceivedNullDataInRequest {
+        QueryError::ReceivedNullDataInRequest {
           msg: "Azure Account Access Key is not set in connection string".to_string(),
         }
       })?)
       .with_container_name(storage_connection.get("containername").ok_or_else(|| {
-        Timeseries2Error::ReceivedNullDataInRequest {
+        QueryError::ReceivedNullDataInRequest {
           msg: "Azure Container Name is not set in connection string".to_string(),
         }
       })?)
@@ -46,23 +46,23 @@ pub fn register_azure_store(
       .with_endpoint(
         storage_connection
           .get("blobendpoint")
-          .ok_or_else(|| Timeseries2Error::ReceivedNullDataInRequest {
+          .ok_or_else(|| QueryError::ReceivedNullDataInRequest {
             msg: "Azure Blob Endpoint is not set in connection string".to_string(),
           })?
           .to_owned(),
       )
       .with_account(storage_connection.get("accountname").ok_or_else(|| {
-        Timeseries2Error::ReceivedNullDataInRequest {
+        QueryError::ReceivedNullDataInRequest {
           msg: "Azure Account Name is not set in connection string".to_string(),
         }
       })?)
       .with_access_key(storage_connection.get("accountkey").ok_or_else(|| {
-        Timeseries2Error::ReceivedNullDataInRequest {
+        QueryError::ReceivedNullDataInRequest {
           msg: "Azure Account Access Key is not set in connection string".to_string(),
         }
       })?)
       .with_container_name(storage_connection.get("containername").ok_or_else(|| {
-        Timeseries2Error::ReceivedNullDataInRequest {
+        QueryError::ReceivedNullDataInRequest {
           msg: "Azure Container Name is not set in connection string".to_string(),
         }
       })?)
@@ -75,16 +75,16 @@ pub async fn get_blob_size(
   storage_connection: &AdoNetString,
   upload_path: &String,
   file_name: &String,
-) -> Result<u64, Timeseries2Error> {
+) -> Result<u64, QueryError> {
   let account = storage_connection
     .get("accountname")
-    .ok_or_else(|| Timeseries2Error::ReceivedNullDataInRequest {
+    .ok_or_else(|| QueryError::ReceivedNullDataInRequest {
       msg: "Azure Account Name is not set in connection string".to_string(),
     })?
     .to_owned();
   let access_key = storage_connection
     .get("accountkey")
-    .ok_or_else(|| Timeseries2Error::ReceivedNullDataInRequest {
+    .ok_or_else(|| QueryError::ReceivedNullDataInRequest {
       msg: "Azure Account Access Key is not set in connection string".to_string(),
     })?
     .to_owned();
@@ -92,13 +92,13 @@ pub async fn get_blob_size(
 
   let container = storage_connection
     .get("containername")
-    .ok_or_else(|| Timeseries2Error::ReceivedNullDataInRequest {
+    .ok_or_else(|| QueryError::ReceivedNullDataInRequest {
       msg: "Azure Container Name is not set in connection string".to_string(),
     })?
     .to_owned();
   let endpoint = storage_connection
     .get("blobendpoint")
-    .ok_or_else(|| Timeseries2Error::ReceivedNullDataInRequest {
+    .ok_or_else(|| QueryError::ReceivedNullDataInRequest {
       msg: "Azure Blob Endpoint is not set in connection string".to_string(),
     })?
     .to_owned();

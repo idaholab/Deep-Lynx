@@ -1,16 +1,13 @@
 use chrono::Utc;
 use connection_string::AdoNetString;
 use datafusion::{arrow::json::ArrayWriter, config::CsvOptions, dataframe::DataFrameWriteOptions};
-use file_metadata::FileMetadata;
 use serde_json::{json, Value};
 use short_uuid::short;
 use tokio::fs::File;
 
-pub mod azure_object_store;
-pub mod errors;
-pub mod file_metadata;
-pub mod timeseries_query;
-use timeseries_query::populate_session;
+use crate::timeseries::azure_object_store;
+use crate::timeseries::datafusion_session::populate_session;
+use crate::timeseries::file_metadata::FileMetadata;
 
 /// For processing file uploads
 /// Returns the results of a SQL `DESCRIBE` of the file as stringified JSON.
@@ -185,164 +182,4 @@ pub async fn process_query(
   })?;
 
   Ok(metadata_res_json)
-}
-
-#[cfg(test)]
-mod tests {
-  use file_metadata::FileMetadata;
-
-  use super::*;
-
-  #[tokio::test]
-  async fn describe_with_azure() {
-    match process_upload(
-      "1".to_string(),
-      "DESCRIBE table_1".to_string(),
-      "provider=azure_blob;uploadPath=containers/1/datasources/1;blobEndpoint=http://127.0.0.1:10000;accountName=devstoreaccount1;accountKey='Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==';containerName=deep-lynx".to_string(),
-      vec![
-        FileMetadata {
-          id: "1".to_string(),
-          file_name: "ten-entries.csv".to_string(),
-          file_path: "containers/1/datasources/1".to_string(),
-        },
-      ]
-    ).await {
-      Ok(res) => {
-        dbg!(res);
-      }
-      Err(e) => {
-        panic!("{}", e.reason);
-      }
-    };
-  }
-
-  #[tokio::test]
-  async fn describe_with_filesystem() {
-    match process_upload(
-      "2".to_string(),
-      "DESCRIBE table_1".to_string(),
-      "provider=filesystem;uploadPath=containers/1/datasources/1;rootFilePath=./test_files/timeseries2/"
-        .to_string(),
-      vec![FileMetadata {
-        id: "1".to_string(),
-        file_name: "ten-entries.csv".to_string(),
-        file_path: "containers/1/datasources/1".to_string(),
-      }],
-    )
-    .await
-    {
-      Ok(res) => {
-        dbg!(res);
-      }
-      Err(e) => {
-        panic!("{}", e.reason);
-      }
-    };
-  }
-
-  #[tokio::test]
-  async fn multi_file_describe_with_azure() {
-    match process_upload(
-      "3".to_string(),
-      "DESCRIBE table_1; DESCRIBE table_2".to_string(),
-      "provider=azure_blob;uploadPath=containers/1/datasources/1;blobEndpoint=http://127.0.0.1:10000;accountName=devstoreaccount1;accountKey='Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==';containerName=deep-lynx".to_string(),
-      vec![
-        FileMetadata {
-          id: "1".to_string(),
-          file_name: "ten-entries.csv".to_string(),
-          file_path: "containers/1/datasources/1".to_string(),
-        },
-        FileMetadata {
-          id: "2".to_string(),
-          file_name: "ten-entries-2.csv".to_string(),
-          file_path: "containers/1/datasources/1".to_string(),
-        },
-      ]
-    ).await {
-      Ok(res) => {
-        dbg!(res);
-      }
-      Err(e) => {
-        panic!("{}", e.reason);
-      }
-    };
-  }
-
-  #[tokio::test]
-  async fn multi_file_describe_with_filesystem() {
-    match process_upload(
-      "4".to_string(),
-      "DESCRIBE table_1; DESCRIBE table_2".to_string(),
-      "provider=filesystem;uploadPath=containers/1/datasources/1;rootFilePath=./test_files/timeseries2/"
-        .to_string(),
-      vec![
-        FileMetadata {
-          id: "1".to_string(),
-          file_name: "ten-entries.csv".to_string(),
-          file_path: "containers/1/datasources/1".to_string(),
-        },
-        FileMetadata {
-          id: "2".to_string(),
-          file_name: "ten-entries-2.csv".to_string(),
-          file_path: "containers/1/datasources/1".to_string(),
-        },
-      ],
-    )
-    .await
-    {
-      Ok(res) => {
-        dbg!(res);
-      }
-      Err(e) => {
-        panic!("{}", e.reason);
-      }
-    };
-  }
-
-  #[tokio::test]
-  async fn query_with_azure() {
-    match process_query(
-      "5".to_string(),
-      "SELECT * FROM table_1".to_string(),
-      "provider=azure_blob;uploadPath=containers/1/datasources/1;blobEndpoint=http://127.0.0.1:10000;accountName=devstoreaccount1;accountKey='Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==';containerName=deep-lynx".to_string(),
-      vec![
-        FileMetadata {
-          id: "1".to_string(),
-          file_name: "ten-entries.csv".to_string(),
-          file_path: "containers/1/datasources/1".to_string(),
-        },
-      ]
-    ).await {
-      Ok(res) => {
-        dbg!(res);
-      }
-      Err(e) => {
-        panic!("{}", e.reason);
-      }
-    };
-  }
-
-  #[tokio::test]
-  async fn query_with_filesystem() {
-    match process_query(
-      "6".to_string(),
-      "SELECT * FROM table_1".to_string(),
-      "provider=filesystem;uploadPath=containers/1/datasources/1;rootFilePath=./test_files/timeseries2/"
-        .to_string(),
-      vec![FileMetadata {
-        id: "1".to_string(),
-        file_name: "ten-entries.csv".to_string(),
-        file_path: "containers/1/datasources/1".to_string(),
-      }],
-    )
-    .await
-    {
-      Ok(res) => {
-        dbg!(res);
-      }
-      Err(e) => {
-        panic!("{}", e.reason);
-      }
-    };
-  }
 }
