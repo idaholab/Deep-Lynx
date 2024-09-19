@@ -5,3 +5,4 @@ npm-debug.log
 server/dist
 ui/AdminWebApp/node_modules
 ui/WebGLViewer/node_modules
+chart
