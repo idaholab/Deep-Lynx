@@ -468,11 +468,13 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         const relationshipPairRepo = new MetatypeRelationshipPairRepository();
         void (await relationshipPairRepo.saveFromJSON(relationshipPairs));
 
-        const metatypeInheritances: MetatypeInheritance[] = [];
-        jsonImport.metatype_inheritance.forEach((metatypeInheritance: any) => {
-            metatypeInheritances.push(metatypeInheritance);
-        });
-        void (await metatypeRepo.updateInheritance(metatypeInheritances));
+        if (jsonImport.metatype_inheritance) {
+            const metatypeInheritances: MetatypeInheritance[] = [];
+            jsonImport.metatype_inheritance.forEach((metatypeInheritance: any) => {
+                metatypeInheritances.push(metatypeInheritance);
+            });
+            void (await metatypeRepo.updateInheritance(metatypeInheritances));
+        }
 
         // refresh relationship pairs materialized view in order to accurately reflect inheritance changes
         void relationshipPairRepo.RefreshView();
