@@ -1,4 +1,4 @@
-import {BlobStorage, BlobUploadResponse} from './blob_storage';
+import {BlobStorage, BlobUploadOptions, BlobUploadResponse} from './blob_storage';
 import Result from '../../common_classes/result';
 import {Readable} from 'stream';
 import {BlobServiceClient, ContainerClient, RestError} from '@azure/storage-blob';
@@ -47,9 +47,15 @@ export default class MinioBlobImpl implements BlobStorage {
     }
 
     async deleteFile(f: File): Promise<Result<boolean>> {
+        let filePath;
+        if (f.timeseries === true) {
+            filePath = `${f.adapter_file_path}${f.short_uuid}${f.file_name}`;
+        } else {
+            filePath = `${f.adapter_file_path}${f.file_name}${f.short_uuid}`;
+        }
         if (f.short_uuid) {
             try {
-                await this._client.removeObject(Config.minio_bucket_name, `${f.adapter_file_path}${f.file_name}${f.short_uuid}`);
+                await this._client.removeObject(Config.minio_bucket_name, filePath);
             } catch (e: any) {
                 return Promise.resolve(Result.Error(e));
             }
@@ -64,9 +70,14 @@ export default class MinioBlobImpl implements BlobStorage {
         return Promise.resolve(Result.Success(true));
     }
 
-    async uploadPipe(filepath: string, filename: string, stream: Readable | null, contentType: string, encoding: string): Promise<Result<BlobUploadResponse>> {
+    async uploadPipe(filepath: string, filename: string, stream: Readable | null, contentType: string, encoding: string, options?: BlobUploadOptions): Promise<Result<BlobUploadResponse>> {
         const shortUUID = short.generate();
-        const name = `${filepath}${filename}${shortUUID}`;
+        let name;
+        if (options?.timeseries === true) {
+            name = `${filepath}${shortUUID}${filename}`;
+        } else {
+            name = `${filepath}${filename}${shortUUID}`;
+        }
 
         if (stream) {
             let md5hash = '';
@@ -106,9 +117,15 @@ export default class MinioBlobImpl implements BlobStorage {
     }
 
     async downloadStream(f: File): Promise<Readable | undefined> {
+        let filePath;
+        if (f.timeseries === true) {
+            filePath = `${f.adapter_file_path}${f.short_uuid}${f.file_name}`;
+        } else {
+            filePath = `${f.adapter_file_path}${f.file_name}${f.short_uuid}`;
+        }
         if (f.short_uuid) {
             try {
-                return this._client.getObject(Config.minio_bucket_name, `${f.adapter_file_path}${f.file_name}${f.short_uuid}`);
+                return this._client.getObject(Config.minio_bucket_name, filePath);
             } catch (e: any) {
                 return Promise.reject(e);
             }

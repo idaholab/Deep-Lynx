@@ -25,6 +25,8 @@
         "build:web": "npm --prefix ../ui/AdminWebApp install && npm --prefix ../ui/AdminWebApp run build -- --dest ./../../server/dist/http_server/web_gui --mode bundled",
         "build:webgl": "npm --prefix ../ui/WebGLViewer install && npm --prefix ../ui/WebGLViewer run build -- --base=/viewer/ --config=./vite.config.ts",
         "build:rust": "cd ./NodeLibraries/deeplynx && yarn install && yarn run build",
+        "build:dev": "tsc -p ./tsconfig.json && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && copyfiles -u 1 \"src/http_server/assets/**\" ./dist && yarn run build:web && yarn run build:webgl && yarn run build:rust:debug",
+        "build:rust:debug": "cd ./NodeLibraries/deeplynx && yarn install && yarn run build:debug",
         "watch": "nodemon",
         "start": "tsc && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && copyfiles -u 1 \"./src/http_server/assets/**\" ./dist && node --no-deprecation -r dotenv/config ./dist/main.js",
         "start:docker": "node ./dist/main.js",
