@@ -46,16 +46,19 @@ pub async fn process_upload(
     let batches = results.iter().collect::<Vec<&_>>();
     let buf = Vec::new();
     let mut writer = ArrayWriter::new(buf);
+
     writer.write_batches(&batches).map_err(|e| {
       napi::Error::from_reason(format!(
         "Failed to write record batches to json with reason: {e}"
       ))
     })?;
+
     writer.finish().map_err(|e| {
       napi::Error::from_reason(format!(
         "Failed to finish writing record batches to json with reason: {e}"
       ))
     })?;
+
     let description_json = writer.into_inner();
     let description_string = String::from_utf8(description_json).map_err(|e| {
       napi::Error::from_reason(format!(
@@ -92,6 +95,7 @@ pub async fn process_query(
 ) -> napi::Result<String> {
   let uuid = short!();
   let now = Utc::now();
+
   let storage_connection: AdoNetString = storage_connection.parse().map_err(|e| {
     napi::Error::from_reason(format!(
       "Failed to parse storage_connection string with reason: {e}"
@@ -99,16 +103,21 @@ pub async fn process_query(
   })?;
 
   let ctx = populate_session(&storage_connection, files).await?;
+
   let query_results = ctx.sql(query.as_str()).await.map_err(|e| {
     napi::Error::from_reason(format!("Failed to run query {query} with reason: {e}"))
   })?;
+
   let provider = storage_connection.get("provider").ok_or_else(|| {
     napi::Error::from_reason("provider is not set in connection string".to_string())
   })?;
+
   let upload_path = storage_connection.get("uploadpath").ok_or_else(|| {
     napi::Error::from_reason("uploadPath is not set in connection string".to_string())
   })?;
+
   let file_name = format!("{}_{}_{}.csv", uuid, report_id, now.timestamp_millis());
+
   let root_upload_path = match provider.as_str() {
     "filesystem" => {
       let root_file_path = storage_connection.get("rootfilepath").ok_or_else(|| {
@@ -130,6 +139,7 @@ pub async fn process_query(
       ))
     }
   };
+
   let full_upload_path = format!("{root_upload_path}{file_name}");
 
   query_results
