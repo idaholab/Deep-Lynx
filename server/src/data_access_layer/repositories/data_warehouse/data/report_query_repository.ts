@@ -1,10 +1,10 @@
 import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
-import ReportQuery, { TS2InitialRequest } from '../../../../domain_objects/data_warehouse/data/report_query';
+import ReportQuery, { TimeseriesInitialRequest } from '../../../../domain_objects/data_warehouse/data/report_query';
 import Result from '../../../../common_classes/result';
 import ReportQueryMapper from '../../../mappers/data_warehouse/data/report_query_mapper';
 import {PoolClient} from 'pg';
 import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
-import File, { FileDescription, FileDescriptionColumn } from '../../../../domain_objects/data_warehouse/data/file';
+import File, { FileDescription } from '../../../../domain_objects/data_warehouse/data/file';
 import { User } from '../../../../domain_objects/access_management/user';
 import Report from '../../../../domain_objects/data_warehouse/data/report';
 import ReportMapper from '../../../mappers/data_warehouse/data/report_mapper';
@@ -72,7 +72,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
         return Promise.resolve(Result.Success(true));
     }
 
-    async initiateQuery(containerID: string, dataSourceID: string, request: TS2InitialRequest, user: User, describe: boolean): Promise<Result<string>> {
+    async initiateQuery(containerID: string, dataSourceID: string, request: TimeseriesInitialRequest, user: User, describe: boolean): Promise<Result<string>> {
         // check that all files exist and are timeseries, return an error if not
         const isTimeseries = await this.#fileRepo.checkTimeseries(request.file_ids!);
         if (isTimeseries.isError) {return Promise.resolve(Result.Pass(isTimeseries))}
@@ -81,8 +81,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
         const report = new Report({container_id: containerID});
         const reportSaved = await this.#reportMapper.Create(user.id!, report);
         if (reportSaved.isError) {return Promise.resolve(Result.Pass(reportSaved))}
-        Object.assign(report, reportSaved.value);
-        const reportID = report.id!
+        const reportID = reportSaved.value.id!
 
         // formulate query if describe, check for presence of table name if regular query
         if (describe) {
@@ -99,12 +98,11 @@ export default class ReportQueryRepository extends Repository implements Reposit
             }
         }
 
-        // create a report query based on the TS2 rust module query request
+        // create a report query based on the timeseries rust module query request
         const reportQuery = new ReportQuery({query: request.query!, report_id: reportID});
         const querySaved = await this.#mapper.Create(user.id!, reportQuery);
         if (querySaved.isError) { return Promise.resolve(Result.Pass(querySaved))}
-        Object.assign(reportQuery, querySaved.value);
-        const queryID = reportQuery.id!
+        const queryID = querySaved.value.id!
 
         // fetch file metadata
         const fileInfo = await this.#fileRepo.listPathMetadata(...request.file_ids!);
@@ -130,9 +128,9 @@ export default class ReportQueryRepository extends Repository implements Reposit
         }
 
         if (describe) {
-            this.processTSdescribe(reportID, request.query!, storageConnection, files as FileMetadata[]);
+            this.processDescribe(reportID, request.query!, storageConnection, files as FileMetadata[]);
         } else {
-            this.processTSquery(
+            this.processQuery(
                 reportID, 
                 request.query!, 
                 storageConnection, 
@@ -153,7 +151,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
         return Promise.resolve(Result.Success(reportID));
     }
 
-    async processTSquery(
+    async processQuery(
         reportID: string, 
         query: string, 
         storageConnection: string, 
@@ -208,7 +206,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
         }
     }
 
-    async processTSdescribe(reportID: string, query: string, storageConnection: string, files: FileMetadata[]): Promise<void> {
+    async processDescribe(reportID: string, query: string, storageConnection: string, files: FileMetadata[]): Promise<void> {
         try {
             const results = await processUpload(reportID, query, storageConnection, files);
             

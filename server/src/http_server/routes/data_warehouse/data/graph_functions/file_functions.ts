@@ -4,7 +4,7 @@ import Result from '../../../../../common_classes/result';
 // Domain Objects
 import Import from '../../../../../domain_objects/data_warehouse/import/import';
 import File, { FileUploadOptions } from '../../../../../domain_objects/data_warehouse/data/file';
-import { TS2InitialRequest } from '../../../../../domain_objects/data_warehouse/data/report_query';
+import { TimeseriesInitialRequest } from '../../../../../domain_objects/data_warehouse/data/report_query';
 
 // Express
 import {NextFunction, Request, Response} from 'express';
@@ -374,7 +374,7 @@ export default class FileFunctions {
 
                     if (options && options.describe) {
                         // kick off a file describe if specified
-                        const request = new TS2InitialRequest({
+                        const request = new TimeseriesInitialRequest({
                             query: `DESCRIBE table;`,
                             file_ids: results.map(r => r.value.id!)
                         });

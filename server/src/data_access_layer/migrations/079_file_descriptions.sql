@@ -1,4 +1,4 @@
--- adding a timeseries boolean to files to indicate timeseries uploads for the TS2 rust module
+-- adding a timeseries boolean to files to indicate timeseries uploads for the timeseries rust module
 ALTER TABLE files ADD COLUMN IF NOT EXISTS timeseries boolean DEFAULT FALSE;
 
 -- table for tracking DESCRIBE results for a given file version

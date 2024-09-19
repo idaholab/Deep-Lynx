@@ -6,7 +6,7 @@ import { Request, Response, NextFunction, Application } from "express";
 import { authInContainer } from "../../../middleware";
 
 // Domain Objects
-import { TS2InitialRequest } from "../../../../domain_objects/data_warehouse/data/report_query";
+import { TimeseriesInitialRequest } from "../../../../domain_objects/data_warehouse/data/report_query";
 
 // Utilities
 import Result from "../../../../common_classes/result";
@@ -31,7 +31,7 @@ export default class ReportRoutes {
             ...middleware,
             authInContainer('read', 'data'),
             this.getFileDescription);
-        // kick off a request to the TS2 rust module (either describe OR query)
+        // kick off a request to the timeseries rust module (either describe OR query)
         app.post('/containers/:containerID/import/datasources/:sourceID/reports/query',
             ...middleware,
             authInContainer('write', 'data'),
@@ -61,10 +61,10 @@ export default class ReportRoutes {
             .finally(() => next());
     }
 
-    // send either a describe or a user-provided query to the TS2 rust module for processing
+    // send either a describe or a user-provided query to the timeseries rust module for processing
     private static queryTimeseries(req: Request, res: Response, next: NextFunction) {
         if (req.container) {
-            const payload = plainToClass(TS2InitialRequest, req.body as object);
+            const payload = plainToClass(TimeseriesInitialRequest, req.body as object);
 
             // verify that payload contains at least 1 file
             if (!Array.isArray(payload.file_ids) || payload.file_ids.length === 0) {

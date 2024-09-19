@@ -39,8 +39,8 @@ export default class ReportQuery extends BaseDomainClass{
     }
 }
 
-// initial object used to create request for the TS2 rust module
-export class TS2InitialRequest {
+// initial object used to create request for the timeseries rust module
+export class TimeseriesInitialRequest {
     @IsOptional()
     @IsString()
     report_id?: string;

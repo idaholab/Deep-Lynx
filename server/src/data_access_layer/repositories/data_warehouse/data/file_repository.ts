@@ -194,9 +194,9 @@ export default class FileRepository extends Repository implements RepositoryInte
         }
 
         // check each result and if any are not ts, return with a failure
-        const nonTS = tsResults.value.filter(r => !r.timeseries).map(f => f.id!);
-        if (nonTS.length > 0) {
-            return Promise.resolve(Result.Failure(`one or more files are not timeseries: [${nonTS.join(', ')}]`));
+        const nonTimeseries = tsResults.value.filter(r => !r.timeseries).map(f => f.id!);
+        if (nonTimeseries.length > 0) {
+            return Promise.resolve(Result.Failure(`one or more files are not timeseries: [${nonTimeseries.join(', ')}]`));
         }
 
         return Promise.resolve(Result.Success(true));

@@ -5919,7 +5919,7 @@ paths:
         - TimeSeries
       responses: {}
       operationId: post-containers-container_id-import-datasources-data_source_id-files-timeseries
-      description: Uploads a file and it's metadata to DeepLynx. Marks the file as "timeseries" so it can be processed by the TS2 rust module.
+      description: Uploads a file and it's metadata to DeepLynx. Marks the file as "timeseries" so it can be processed by the timeseries rust module.
       requestBody:
         content:
           multipart/form-data:
@@ -5963,7 +5963,7 @@ paths:
         - Report
       responses: {}
       operationId: post-containers-container_id-reports-query
-      description: Send a either a describe or a user-provided query to the TS2 rust module for processing.
+      description: Send a either a describe or a user-provided query to the timeseries rust module for processing.
       requestBody:
         content:
           application/json:
