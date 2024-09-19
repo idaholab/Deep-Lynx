@@ -15,4 +15,3 @@ pub mod redis_graph;
 pub mod shape_hasher;
 mod snapshot;
 mod timeseries;
-mod timeseries2;
