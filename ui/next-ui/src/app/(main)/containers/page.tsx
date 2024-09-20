@@ -51,7 +51,7 @@ const ContainerSelect = () => {
         (item: ContainerT) => item.name === selectedContainer
       )!;
       storeDispatch(containerActions.setContainer(selection));
-      router.push(`/containers/${selection.id}`);
+      // router.push(`/containers/${selection.id}`);
     }
   }, [containers, selectedContainer, router, storeDispatch]);
 
@@ -81,18 +81,18 @@ const ContainerSelect = () => {
           }}
         >
           <FormControl sx={{ width: "50%" }}>
-            <InputLabel id="Container Select">Containers</InputLabel>
+            <InputLabel id="/containers/ContainerSelect">Containers</InputLabel>
             <Select
-              labelId="Container Select"
-              id="/containers/ContainerSelect"
+              autoFocus
               label="Containers"
+              id="/containers/ContainerSelect"
               value={selectedContainer}
-              onChange={handleContainer}
+              onChange={() => handleContainer}
             >
               {containers.length
                 ? containers.map((container: ContainerT) => {
                     return (
-                      <MenuItem key={container.id} value={container.name}>
+                      <MenuItem key={container.id} value={container.name} dense>
                         {container.name}
                       </MenuItem>
                     );

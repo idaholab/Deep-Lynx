@@ -8,7 +8,7 @@ import { useContainer } from "@/lib/context/ContainerProvider";
 import { Button, Container, Grid } from "@mui/material";
 
 // Components
-import Panel from "./graph";
+import Graph from "./graph";
 import WebGL from "./webgl";
 
 // Store
@@ -30,13 +30,17 @@ export default function Home() {
   const [graph, setGraph] = useState<Array<RelatedNodeT> | undefined>();
   const [mesh, setMesh] = useState<MeshObject | undefined>();
   const [selected, setSelected] = useState<boolean>(false);
-  const mappings = useAppSelector((state) => state.modelViewer.mappings);
+  const mappings: Array<string> = useAppSelector(
+    (state) => state.modelViewer.mappings
+  );
 
   // Store
   const container: ContainerT = useContainer();
   const file: FileT = useAppSelector((state) => state.modelViewer.file!);
 
   useEffect(() => {
+    setGraph(undefined);
+
     let MetatypeMappings: MetatypeMappingsT = mappings.reduce(
       (accumulator, mapping) => {
         accumulator[mapping] = "JsonObjectsToReact";
@@ -71,18 +75,20 @@ export default function Home() {
     <>
       <Grid container>
         <Grid item xs={4}>
-          <Panel graph={graph} mesh={mesh} selected={selected} />
+          <Graph graph={graph} mesh={mesh} selected={selected} />
           <br />
           {!render ? (
             <Container>
               <Button onClick={handleRender}>Start Viewer</Button>
             </Container>
           ) : null}
+          <br />
         </Grid>
         <Grid item xs={8}>
           {render ? (
             <WebGL
               payload={payload}
+              mappings={mappings}
               setGraph={setGraph}
               setMesh={setMesh}
               setSelected={setSelected}

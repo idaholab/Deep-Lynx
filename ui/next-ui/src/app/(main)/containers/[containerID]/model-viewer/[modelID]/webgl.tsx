@@ -1,7 +1,7 @@
 "use client";
 
 // Hooks
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useUnityContext } from "react-unity-webgl";
 
 // Unity
@@ -17,29 +17,46 @@ import {
   MeshBoolCallbackT,
   RelatedNodeT,
 } from "@/lib/types/modules/modelViewer";
+import { UnityProvider } from "react-unity-webgl/distribution/types/unity-provider";
 
 type PropsT = {
   payload: PayloadT;
+  mappings: Array<string>;
   setGraph: Function;
   setMesh: Function;
   setSelected: Function;
 };
 
 export default function WebGL(props: PropsT) {
-  // Hooks
-  const { unityProvider, addEventListener, removeEventListener, sendMessage } =
-    useUnityContext({
-      loaderUrl: "/webgl/webgl.loader.js",
-      dataUrl: "/webgl/webgl.data",
-      frameworkUrl: "/webgl/webgl.framework.js",
-      codeUrl: "/webgl/webgl.wasm",
-      streamingAssetsUrl: "/webgl/StreamingAssets",
-    });
-
   // Props
+  const payload = props.payload;
+  const mappings = props.mappings;
   const setGraph = props.setGraph;
   const setMesh = props.setMesh;
   const setSelected = props.setSelected;
+
+  // Hooks
+  const {
+    unityProvider,
+    addEventListener,
+    removeEventListener,
+    sendMessage,
+    unload,
+  } = useUnityContext({
+    loaderUrl: "/webgl/webgl.loader.js",
+    dataUrl: "/webgl/webgl.data",
+    frameworkUrl: "/webgl/webgl.framework.js",
+    codeUrl: "/webgl/webgl.wasm",
+    streamingAssetsUrl: "/webgl/StreamingAssets",
+  });
+
+  const scene = useRef<UnityProvider | null>(unityProvider);
+
+  useEffect(() => {
+    if (scene.current) {
+      sendMessage("ReactMessenger", "SetModelConfig", JSON.stringify(payload));
+    }
+  }, [sendMessage, payload, scene]);
 
   // Handlers
   const handleJsonObjects = useCallback(
@@ -52,7 +69,6 @@ export default function WebGL(props: PropsT) {
 
   const handleMeshData = useCallback(
     (data: unknown) => {
-      console.log(data);
       const mesh: MeshObject = JSON.parse(data as string);
       setMesh(mesh);
     },
@@ -85,24 +101,19 @@ export default function WebGL(props: PropsT) {
     handleMeshBool,
   ]);
 
-  useEffect(() => {
-    sendMessage(
-      "ReactMessenger",
-      "SetModelConfig",
-      JSON.stringify(props.payload)
-    );
-  }, [sendMessage, props.payload]);
-
   return (
     <Container disableGutters>
-      <Unity
-        unityProvider={unityProvider}
-        tabIndex={1} // Set tabIndex for Unity canvas to allow keyboard input; https://react-unity-webgl.dev/docs/api/tab-index
-        style={{
-          width: "100%",
-          height: "50%",
-        }}
-      />
+      {scene.current ? (
+        <Unity
+          id={"webgl"}
+          unityProvider={unityProvider}
+          tabIndex={1} // Set tabIndex for Unity canvas to allow keyboard input; https://react-unity-webgl.dev/docs/api/tab-index
+          style={{
+            width: "100%",
+            height: "50%",
+          }}
+        />
+      ) : null}
     </Container>
   );
 }

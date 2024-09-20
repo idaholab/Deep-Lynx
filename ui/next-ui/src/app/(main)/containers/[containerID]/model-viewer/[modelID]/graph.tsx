@@ -1,7 +1,7 @@
 "use client";
 
 // Hooks
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // MUI
 import {
@@ -62,6 +62,10 @@ export default function Graph(props: Props) {
     setNodeExpand(index);
   };
 
+  useEffect(() => {
+    console.log("Graph: " + JSON.stringify(graph));
+  }, [graph]);
+
   return (
     <>
       <Container>
@@ -121,7 +125,7 @@ export default function Graph(props: Props) {
                           timeout="auto"
                           unmountOnExit
                         >
-                          <Ancestry ancestry={ancestry} />
+                          <Ancestry ancestry={ancestry} mesh={mesh} />
                         </Collapse>
                       </>
                     ) : null}
@@ -142,7 +146,7 @@ export default function Graph(props: Props) {
                           let [key, value] = entry;
                           return (
                             <>
-                              <ListItem>
+                              <ListItem key={key}>
                                 <Grid container spacing={2}>
                                   <Grid item xs={4}>
                                     <Typography
@@ -159,7 +163,7 @@ export default function Graph(props: Props) {
                                   </Grid>
                                 </Grid>
                               </ListItem>
-                              <Divider />
+                              <Divider key={key} />
                             </>
                           );
                         })}
@@ -171,7 +175,7 @@ export default function Graph(props: Props) {
             </Card>
           </>
         ) : null}
-        <MetatypeDialog open={dialog} setOpen={setDialog} />
+        {dialog ? <MetatypeDialog open={dialog} setOpen={setDialog} /> : null}
         <Button onClick={() => setDialog(true)}>Metatypes</Button>
         <br />
         <br />
@@ -197,7 +201,7 @@ export default function Graph(props: Props) {
                         return (
                           <ListItemText
                             inset
-                            key={key}
+                            key={index + key}
                             primaryTypographyProps={{
                               variant: "subtitle2",
                               fontWeight: "bold",
