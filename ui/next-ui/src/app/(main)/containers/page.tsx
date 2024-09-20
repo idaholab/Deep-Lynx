@@ -51,7 +51,7 @@ const ContainerSelect = () => {
         (item: ContainerT) => item.name === selectedContainer
       )!;
       storeDispatch(containerActions.setContainer(selection));
-      // router.push(`/containers/${selection.id}`);
+      router.push(`/containers/${selection.id}`);
     }
   }, [containers, selectedContainer, router, storeDispatch]);
 
@@ -87,7 +87,7 @@ const ContainerSelect = () => {
               label="Containers"
               id="/containers/ContainerSelect"
               value={selectedContainer}
-              onChange={() => handleContainer}
+              onChange={handleContainer}
             >
               {containers.length
                 ? containers.map((container: ContainerT) => {
