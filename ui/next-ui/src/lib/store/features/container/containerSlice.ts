@@ -5,7 +5,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "@/lib/store/store";
 
 // Types
-import { ContainerT, DataSourceT } from "@/lib/types";
+import { ContainerT, DataSourceT } from "@/lib/types/deeplynx";
 
 // Define a type for the slice state
 interface ContainerStateI {

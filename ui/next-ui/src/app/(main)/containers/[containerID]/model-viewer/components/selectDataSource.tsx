@@ -15,7 +15,7 @@ import { useAppSelector, useAppDispatch } from "@/lib/store/hooks";
 import { containerActions } from "@/lib/store/features/container/containerSlice";
 
 // Types
-import { DataSourceT } from "@/lib/types";
+import { DataSourceT } from "@/lib/types/deeplynx";
 
 const DataSourceSelector = () => {
   // Hooks

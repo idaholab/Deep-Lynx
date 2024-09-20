@@ -5,7 +5,7 @@ import { useNodes } from "../hooks/useNodes";
 import { useState } from "react";
 
 // Types
-import { NodeT } from "@/lib/types";
+import { NodeT } from "@/lib/types/deeplynx";
 import { SelectChangeEvent } from "@mui/material";
 
 // MUI

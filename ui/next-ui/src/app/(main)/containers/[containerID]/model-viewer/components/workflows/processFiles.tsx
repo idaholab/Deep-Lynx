@@ -30,7 +30,7 @@ import { supportedFiletypes } from "../../supportedFileTypes";
 import axios from "axios";
 
 // Types
-import { NodeT, FileT, DagT } from "@/lib/types";
+import { NodeT, FileT, DagT } from "@/lib/types/deeplynx";
 import { SelectChangeEvent } from "@mui/material";
 type Props = {
   node: NodeT;

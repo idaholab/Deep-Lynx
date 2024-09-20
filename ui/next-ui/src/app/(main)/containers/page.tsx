@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 // Types
-import { ContainerT } from "@/lib/types";
+import { ContainerT } from "@/lib/types/deeplynx";
 import { SelectChangeEvent } from "@mui/material";
 
 // MUI

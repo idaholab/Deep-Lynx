@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 
 // Types
-import { MetatypeT } from "@/lib/types";
+import { MetatypeT } from "@/lib/types/deeplynx";
 
 // MUI
 import { Autocomplete, Grid, TextField } from "@mui/material";

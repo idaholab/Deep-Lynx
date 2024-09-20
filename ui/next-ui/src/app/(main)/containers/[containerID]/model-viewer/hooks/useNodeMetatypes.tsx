@@ -4,7 +4,7 @@ import { useContainer, useMetatypes } from "@/lib/context/ContainerProvider";
 import { useNodes } from "./useNodes";
 
 // Types
-import { MetatypeT, NodeT } from "@/lib/types";
+import { MetatypeT, NodeT } from "@/lib/types/deeplynx";
 
 // Axios
 import axios from "axios";

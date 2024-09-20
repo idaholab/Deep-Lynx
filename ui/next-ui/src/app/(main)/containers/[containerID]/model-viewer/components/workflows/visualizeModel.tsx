@@ -25,7 +25,7 @@ import { useAppDispatch } from "@/lib/store/hooks";
 import { modelViewerActions } from "@/lib/store/features/model-viewer/modelViewerSlice";
 
 // Types
-import { NodeT, FileT } from "@/lib/types";
+import { NodeT, FileT } from "@/lib/types/deeplynx";
 import { SelectChangeEvent } from "@mui/material";
 type Props = {
   node: NodeT;

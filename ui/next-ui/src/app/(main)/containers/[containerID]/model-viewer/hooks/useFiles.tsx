@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useContainer } from "@/lib/context/ContainerProvider";
 
 // Types
-import { NodeT, FileT } from "@/lib/types";
+import { NodeT, FileT } from "@/lib/types/deeplynx";
 
 // Axios
 import axios from "axios";
