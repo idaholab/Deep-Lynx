@@ -1,22 +1,27 @@
 "use client";
 
-import React, { createContext, useContext } from "react";
+// Hooks
 import { useAppSelector } from "@/lib/store/hooks";
 
-let ThemeContext = createContext<string>("");
+// Providers
+import { ThemeProvider as MUITheme } from "@mui/material/styles";
+
+// Styles
+import { StyledEngineProvider } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
+import { lightTheme, darkTheme } from "@/lib/theme/themes";
 
 export default function ThemeProvider({
-    children,
+  children,
 }: {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-    const theme = useAppSelector((state) => state.theme.theme);
-    ThemeContext = createContext(theme);
+  const theme = useAppSelector((state) => state.theme.theme);
 
-    return (
-        <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>
-    );
+  return (
+    <MUITheme theme={theme === "light" ? lightTheme : darkTheme}>
+      <CssBaseline />
+      <StyledEngineProvider injectFirst>{children}</StyledEngineProvider>
+    </MUITheme>
+  );
 }
-
-// Custom hook to use the ThemeContext
-export const useTheme = () => useContext(ThemeContext);

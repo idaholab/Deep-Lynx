@@ -6,10 +6,11 @@ import { useEffect, useState } from "react";
 
 // Types
 import { ContainerT } from "@/lib/types/deeplynx";
-import { SelectChangeEvent } from "@mui/material";
+import { SelectChangeEvent, Typography } from "@mui/material";
 
 // MUI
 import {
+  Box,
   Card,
   Container,
   InputLabel,
@@ -17,6 +18,7 @@ import {
   MenuItem,
   Select,
 } from "@mui/material";
+import { classes } from "@/app/styles";
 
 // Store
 import { useAppDispatch } from "@/lib/store/hooks";
@@ -62,44 +64,54 @@ const ContainerSelect = () => {
 
   return (
     <>
-      <Container
-        sx={{
-          height: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+      <Container className={classes.container}>
         <Card
-          elevation={21}
+          elevation={10}
           sx={{
             height: "50%",
             width: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
           }}
         >
-          <FormControl sx={{ width: "50%" }}>
-            <InputLabel id="/containers/ContainerSelect">Containers</InputLabel>
-            <Select
-              autoFocus
-              label="Containers"
-              id="/containers/ContainerSelect"
-              value={selectedContainer}
-              onChange={handleContainer}
-            >
-              {containers.length
-                ? containers.map((container: ContainerT) => {
-                    return (
-                      <MenuItem key={container.id} value={container.name} dense>
-                        {container.name}
-                      </MenuItem>
-                    );
-                  })
-                : null}
-            </Select>
-          </FormControl>
+          <Typography variant="h3" component={"h3"}>
+            Select a Container
+          </Typography>
+
+          <Box
+            sx={{
+              height: "50%",
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <FormControl sx={{ width: "50%" }}>
+              <InputLabel id="/containers/ContainerSelect">
+                Containers
+              </InputLabel>
+              <Select
+                autoFocus
+                label="Containers"
+                id="/containers/ContainerSelect"
+                value={selectedContainer}
+                onChange={handleContainer}
+              >
+                {containers.length
+                  ? containers.map((container: ContainerT) => {
+                      return (
+                        <MenuItem
+                          key={container.id}
+                          value={container.name}
+                          dense
+                        >
+                          {container.name}
+                        </MenuItem>
+                      );
+                    })
+                  : null}
+              </Select>
+            </FormControl>
+          </Box>
         </Card>
       </Container>
     </>

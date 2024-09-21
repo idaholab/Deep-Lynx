@@ -3,9 +3,6 @@
 // React
 import React from "react";
 
-// Hooks
-import { useState } from "react";
-
 // MUI
 import { Button } from "@mui/material";
 
@@ -14,18 +11,18 @@ import LightModeIcon from "@mui/icons-material/LightMode";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 
 // Store
-import { useAppDispatch } from "@/lib/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
 import { themeActions } from "@/lib/store/features/ux/themeSlice";
-import { useTheme } from "../../lib/context/ThemeProvider";
 
 import { Styles } from "@/lib/theme/styles";
 
 const DarkModeToggle = () => {
-  const theme = useTheme();
+  const theme = useAppSelector((state) => state.theme.theme);
   const storeDispatch = useAppDispatch();
 
   // Handlers
   const handleTheme = () => {
+    console.log(theme);
     theme === "light"
       ? storeDispatch(themeActions.setTheme("dark"))
       : storeDispatch(themeActions.setTheme("light"));
