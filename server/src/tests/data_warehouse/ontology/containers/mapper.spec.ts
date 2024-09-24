@@ -172,4 +172,22 @@ describe('A Container Mapper', async () => {
 
         return Promise.resolve();
     });
+
+    it('can lock a container and not wait to get a lock if it is held', async () => {
+        const mapper = ContainerStorage.Instance;
+
+        let transaction = await mapper.startTransaction();
+        expect(transaction.isError).false;
+
+        let transaction2 = await mapper.startTransaction();
+        expect(transaction2.isError).false;
+
+        let result = await mapper.AdvisoryLockContainer('1', transaction.value);
+        expect(result).true;
+
+        let result2 = await mapper.AdvisoryLockContainer('1', transaction2.value);
+        expect(result2).false;
+
+        return Promise.resolve();
+    });
 });
