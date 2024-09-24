@@ -53,8 +53,9 @@ const ContainerSelect = () => {
     // When the user selects a container, dispatch that container's metadata to the Redux store, and navigate to the dashboard
     if (selectedContainer) {
       const selection: ContainerT = containers.find(
-        (item: ContainerT) => item.name === selectedContainer
+        (item: ContainerT) => item.id === selectedContainer
       )!;
+
       storeDispatch(containerActions.setContainer(selection));
       router.push(`/containers/${selection.id}`);
     }
@@ -105,7 +106,7 @@ const ContainerSelect = () => {
                         return (
                           <MenuItem
                             key={container.id}
-                            value={container.name}
+                            value={container.id}
                             dense
                           >
                             {container.name}

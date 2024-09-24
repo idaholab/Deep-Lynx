@@ -1,8 +1,9 @@
 "use client";
 
 // Hooks
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useContainer } from "@/lib/context/ContainerProvider";
+import { useMetatypes } from "@/lib/context/ContainerProvider";
 
 // MUI
 import {
@@ -30,6 +31,9 @@ import SendIcon from "@mui/icons-material/Send";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import LogoutIcon from "@mui/icons-material/Logout";
 
+// Store
+import { useAppSelector } from "@/lib/store/hooks";
+
 // Types
 type PropsT = {
   drawer: boolean;
@@ -42,7 +46,7 @@ import { classes } from "@/app/styles";
 export default function Sidebar(props: PropsT) {
   // Hooks
   const router = useRouter();
-  const container = useContainer();
+  const container = useAppSelector((state) => state.container.container!);
 
   return (
     <>
@@ -78,6 +82,7 @@ export default function Sidebar(props: PropsT) {
               <Button
                 startIcon={<HomeIcon className={classes.icon} />}
                 className={classes.sidebar.button}
+                onClick={() => router.push(`/containers/${container.id}`)}
                 sx={{ "& .MuiButton-startIcon": { paddingLeft: "1rem" } }}
               >
                 <Typography
