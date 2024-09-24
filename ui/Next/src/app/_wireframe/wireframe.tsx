@@ -1,7 +1,7 @@
 "use client";
 
-// MUI
-import { Toolbar } from "@mui/material";
+// Hooks
+import { usePathname } from "next/navigation";
 
 // Store
 import { useAppSelector, useAppDispatch } from "@/lib/store/hooks";
@@ -14,6 +14,7 @@ import Navbar from "./navbar";
 export default function Wireframe(props: any) {
   const container = useAppSelector((state) => state.container.container);
   const drawer: boolean = useAppSelector((state) => state.ux.drawer);
+  const path = usePathname();
 
   const storeDispatch = useAppDispatch();
 
@@ -25,7 +26,7 @@ export default function Wireframe(props: any) {
   return (
     <>
       <Navbar handleDrawer={handleDrawer} />
-      {container ? (
+      {container && path.includes(container.id) ? (
         <Sidebar drawer={drawer} handleDrawer={handleDrawer} />
       ) : null}
       {props.children}
