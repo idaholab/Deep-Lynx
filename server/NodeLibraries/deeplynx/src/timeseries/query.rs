@@ -113,7 +113,7 @@ pub async fn process_query(
     napi::Error::from_reason("uploadPath is not set in connection string".to_string())
   })?;
 
-  let file_name = format!("{}_{}_{}.csv", uuid, report_id, now.timestamp_millis());
+  let file_name = format!("{}_report_{}_{}.csv", uuid, report_id, now.timestamp_millis());
 
   let root_upload_path = match provider.as_str() {
     "filesystem" => {
@@ -173,6 +173,7 @@ pub async fn process_query(
     "file_size": file_size as f64 / 1000.00,
     "file_path": format!("{upload_path}/"),
     "adapter": provider,
+    "uuid": format!("{uuid}_"),
   });
 
   let metadata_res_json = serde_json::to_string(&result_metadata).map_err(|e| {
