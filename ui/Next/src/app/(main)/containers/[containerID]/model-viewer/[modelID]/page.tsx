@@ -1,0 +1,92 @@
+"use client";
+
+// Hooks
+import { useEffect, useState } from "react";
+import { useContainer } from "@/lib/context/ContainerProvider";
+
+// MUI
+import { Button, Container, Grid } from "@mui/material";
+
+// Styles
+import { classes } from "@/app/styles";
+
+// Components
+import Graph from "./graph";
+import WebGL from "./webgl";
+
+// Store
+import { useAppSelector } from "@/lib/store/hooks";
+
+// Types
+import { ContainerT, FileT } from "@/lib/types/deeplynx";
+import {
+  PayloadT,
+  RelatedNodeT,
+  MeshObject,
+  MetatypeMappingsT,
+} from "@/lib/types/modules/modelViewer";
+
+export default function Home() {
+  // Hooks
+  const [render, setRender] = useState<boolean>(false);
+  const [payload, setPayload] = useState<PayloadT>({} as PayloadT);
+  const [graph, setGraph] = useState<Array<RelatedNodeT> | undefined>();
+  const [mesh, setMesh] = useState<MeshObject | undefined>();
+  const [selected, setSelected] = useState<boolean>(false);
+  const mappings: Array<string> = useAppSelector(
+    (state) => state.modelViewer.mappings
+  );
+
+  // Store
+  const container: ContainerT = useContainer();
+  const file: FileT = useAppSelector((state) => state.modelViewer.file!);
+
+  useEffect(() => {
+    setGraph(undefined);
+
+    setPayload({
+      ConfigType: "Remote",
+      FileName: file.file_name,
+      GraphType: "cad",
+      GraphRootDlId: "2", // Must come from Pixyz; now using Pixyz' NodeId instead of DeepLynxID; the root Pixyz' NodeId should always be "2" (at least according to all the CAD models I've tested); however, we can make this more robust, and the best way might be for React to receive info back from Airflow https://github.inl.gov/Digital-Engineering/Pythagoras/issues/17
+      AssetMetatypeName: "MeshGameObject",
+      DefaultInteractions: ["CadNodeDataToReact", "SelectAndFadeOthers"],
+      BaseUrl: "https://deeplynx.dev.inl.gov",
+      Token: process.env.NEXT_PUBLIC_TOKEN!,
+      ContainerId: container.id,
+      FileId: file.id,
+    });
+  }, [container, file, mappings]);
+
+  const handleRender = () => {
+    setRender(true);
+  };
+
+  return (
+    <>
+      <Grid container className={classes.grid}>
+        <Grid item xs={4}>
+          <Graph graph={graph} mesh={mesh} selected={selected} />
+          <br />
+          {!render ? (
+            <Container>
+              <Button onClick={handleRender}>Start Viewer</Button>
+            </Container>
+          ) : null}
+          <br />
+        </Grid>
+        <Grid item xs={8}>
+          {render ? (
+            <WebGL
+              payload={payload}
+              mappings={mappings}
+              setGraph={setGraph}
+              setMesh={setMesh}
+              setSelected={setSelected}
+            />
+          ) : null}
+        </Grid>
+      </Grid>
+    </>
+  );
+}
