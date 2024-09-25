@@ -11,6 +11,7 @@ import {
   Button,
   InputLabel,
   FormControl,
+  LinearProgress,
   MenuItem,
   Select,
   Typography,
@@ -73,46 +74,49 @@ const ProcessModel = (props: Props) => {
   return (
     <>
       <Typography variant="body2">
-        Select a file for DeepLynx to process
+        Select a model for DeepLynx to process
       </Typography>
       <br />
-      <FormControl fullWidth>
-        <InputLabel id="Process Model">Models</InputLabel>
-        <Select
-          labelId="Process Model"
-          id="/model-viewer/workflows/process_files/process_model"
-          label="Models"
-          value={file ? file.id : ""}
-          onChange={handleFile}
-        >
-          {files
-            ? files.map((file: FileT) => {
-                // Test for file extensions. If the file doesn't have a file extension, we can't know whether its eligible for transformation, so return
-                if (!file.file_name.split(".")[1]) return;
+      {files ? (
+        <FormControl fullWidth>
+          <InputLabel id="Process Model">Models</InputLabel>
+          <Select
+            labelId="Process Model"
+            id="/model-viewer/workflows/process_files/process_model"
+            label="Models"
+            value={file ? file.id : ""}
+            onChange={handleFile}
+          >
+            {files.map((file: FileT) => {
+              // Test for file extensions. If the file doesn't have a file extension, we can't know whether its eligible for transformation, so return
+              if (!file.file_name.split(".")[1]) return;
 
-                // Grab the file extension
-                let extension = /\.([^.]+)$/.exec(file.file_name)![0];
+              // Grab the file extension
+              let extension = /\.([^.]+)$/.exec(file.file_name)![0];
 
-                // If the file extension is in the supported filetypes array, its eligible for transformation
-                if (
-                  supportedFiletypes.includes(extension.toLocaleLowerCase())
-                ) {
-                  return (
-                    <MenuItem key={file.id} value={file.id}>
-                      <Typography variant="caption" sx={{ color: "grey" }}>
-                        ID: {file.id}
-                      </Typography>
-                      <Box flexGrow={1} />
-                      <Typography variant="subtitle1">
-                        {file.file_name}
-                      </Typography>
-                    </MenuItem>
-                  );
-                }
-              })
-            : null}
-        </Select>
-      </FormControl>
+              // If the file extension is in the supported filetypes array, its eligible for transformation
+              if (supportedFiletypes.includes(extension.toLocaleLowerCase())) {
+                return (
+                  <MenuItem key={file.id} value={file.id}>
+                    <Typography variant="caption" sx={{ color: "grey" }}>
+                      ID: {file.id}
+                    </Typography>
+                    <Box flexGrow={1} />
+                    <Typography variant="subtitle1">
+                      {file.file_name}
+                    </Typography>
+                  </MenuItem>
+                );
+              }
+            })}
+          </Select>
+        </FormControl>
+      ) : (
+        <Box sx={{ width: "100%" }}>
+          <LinearProgress />
+        </Box>
+      )}
+
       <br />
       <br />
       {file ? (

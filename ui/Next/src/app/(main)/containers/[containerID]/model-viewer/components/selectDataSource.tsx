@@ -4,6 +4,7 @@
 import {
   Box,
   FormControl,
+  LinearProgress,
   MenuItem,
   Select,
   SelectChangeEvent,
@@ -47,19 +48,23 @@ const DataSourceSelector = () => {
           value={dataSource ? dataSource.id : ""}
           onChange={handleDataSource}
         >
-          {dataSources
-            ? dataSources.map((ds: DataSourceT) => {
-                return (
-                  <MenuItem key={ds.id} value={ds.id}>
-                    <Typography variant="caption" sx={{ color: "grey" }}>
-                      ID: {ds.id}
-                    </Typography>
-                    <Box flexGrow={1} />
-                    <Typography variant="subtitle1">{ds.name}</Typography>
-                  </MenuItem>
-                );
-              })
-            : null}
+          {dataSources ? (
+            dataSources.map((ds: DataSourceT) => {
+              return (
+                <MenuItem key={ds.id} value={ds.id}>
+                  <Typography variant="caption" sx={{ color: "grey" }}>
+                    ID: {ds.id}
+                  </Typography>
+                  <Box flexGrow={1} />
+                  <Typography variant="subtitle1">{ds.name}</Typography>
+                </MenuItem>
+              );
+            })
+          ) : (
+            <Box sx={{ width: "100%" }}>
+              <LinearProgress />
+            </Box>
+          )}
         </Select>
       </FormControl>
     </>

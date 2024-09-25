@@ -25,6 +25,7 @@ import { useAppSelector } from "@/lib/store/hooks";
 
 // Components
 import DataSourceSelector from "./selectDataSource";
+import NodeSelector from "./selectNode";
 import UploadModel from "./workflows/uploadModel";
 import ProcessModel from "./workflows/processFiles";
 import VisualizeModel from "./workflows/visualizeModel";
@@ -37,16 +38,7 @@ const Workflows = () => {
   // Redux Hooks
   const dataSource = useAppSelector((state) => state.container.dataSource!);
 
-  // DeepLynx Hooks
-  const nodes = useNodes(dataSource);
-
   // Handlers
-  const handleNode = (event: SelectChangeEvent) => {
-    let node: NodeT = nodes!.find(
-      (node: NodeT) => node.id === event.target.value
-    )!;
-    setNode(node);
-  };
   const handleTab = (event: React.SyntheticEvent, tab: string) => {
     setTab(tab);
   };
@@ -56,31 +48,8 @@ const Workflows = () => {
       <DataSourceSelector />
       <br />
       <br />
-      {dataSource && nodes ? (
-        <FormControl fullWidth>
-          <InputLabel id="Node Select">Nodes</InputLabel>
-          <Select
-            labelId="Node Select"
-            id="/model-viewer/components/SelectFile/node"
-            label="Nodes"
-            value={node ? node.id : ""}
-            onChange={handleNode}
-          >
-            {nodes.map((node: NodeT) => {
-              return (
-                <MenuItem key={node.id} value={node.id}>
-                  <Typography variant="caption" sx={{ color: "grey" }}>
-                    ID: {node.id}
-                  </Typography>
-                  <Box flexGrow={1} />
-                  <Typography variant="subtitle1">
-                    {JSON.stringify(node.properties)}
-                  </Typography>
-                </MenuItem>
-              );
-            })}
-          </Select>
-        </FormControl>
+      {dataSource ? (
+        <NodeSelector dataSource={dataSource} node={node} setNode={setNode} />
       ) : null}
       <br />
       <br />

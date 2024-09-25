@@ -8,8 +8,8 @@ import { DataSourceT, NodeT } from "@/lib/types/deeplynx";
 // Axios
 import axios from "axios";
 
-export const useNodes = (datasource: DataSourceT | null = null) => {
-  const [nodes, setNodes] = useState<Array<NodeT> | null>(null);
+export const useNodes = (datasource: DataSourceT) => {
+  const [nodes, setNodes] = useState<Array<NodeT> | undefined>(undefined);
   const container = useContainer();
 
   useEffect(() => {
@@ -27,7 +27,9 @@ export const useNodes = (datasource: DataSourceT | null = null) => {
       setNodes(nodes);
     }
 
-    fetchNodes();
+    if (datasource) {
+      fetchNodes();
+    }
   }, [container, datasource]);
 
   return nodes;

@@ -170,9 +170,7 @@ export default function Graph(props: Props) {
           </>
         ) : null}
         {dialog ? <MetatypeDialog open={dialog} setOpen={setDialog} /> : null}
-        <Button onClick={() => setDialog(true)} className={classes.button}>
-          Metatypes
-        </Button>
+        <Button onClick={() => setDialog(true)}>Metatypes</Button>
         <br />
         <br />
         {graph ? (

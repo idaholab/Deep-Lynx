@@ -1,14 +1,26 @@
 "use client";
 
 // Hooks
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
 import { useUnityContext } from "react-unity-webgl";
 
 // Unity
 import { Unity } from "react-unity-webgl";
 
 // MUI
-import { Container } from "@mui/material";
+import {
+  Box,
+  Container,
+  Divider,
+  Grid,
+  Tooltip,
+  Typography,
+} from "@mui/material";
+
+// Icons
+import InfoIcon from "@mui/icons-material/Info";
+import KeyboardIcon from "@mui/icons-material/Keyboard";
+import MouseIcon from "@mui/icons-material/Mouse";
 
 // Store
 import { useAppSelector } from "@/lib/store/hooks";
@@ -42,19 +54,14 @@ export default function WebGL(props: PropsT) {
   );
 
   // Hooks
-  const {
-    unityProvider,
-    addEventListener,
-    removeEventListener,
-    sendMessage,
-    unload,
-  } = useUnityContext({
-    loaderUrl: "/webgl/webgl.loader.js",
-    dataUrl: "/webgl/webgl.data",
-    frameworkUrl: "/webgl/webgl.framework.js",
-    codeUrl: "/webgl/webgl.wasm",
-    streamingAssetsUrl: "/webgl/StreamingAssets",
-  });
+  const { unityProvider, addEventListener, removeEventListener, sendMessage } =
+    useUnityContext({
+      loaderUrl: "/webgl/webgl.loader.js",
+      dataUrl: "/webgl/webgl.data",
+      frameworkUrl: "/webgl/webgl.framework.js",
+      codeUrl: "/webgl/webgl.wasm",
+      streamingAssetsUrl: "/webgl/StreamingAssets",
+    });
 
   useEffect(() => {
     sendMessage("ReactMessenger", "SetModelConfig", JSON.stringify(payload));
@@ -118,6 +125,68 @@ export default function WebGL(props: PropsT) {
           height: "50%",
         }}
       />
+      <br />
+      <br />
+      <Box>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "start",
+            alignItems: "center",
+            width: "50%",
+          }}
+        >
+          <Typography variant="button" sx={{ padding: ".45rem" }}>
+            Game Controls
+          </Typography>
+        </Box>
+
+        <Divider />
+        <Box>
+          <Tooltip
+            title={
+              "Use the WASD keys to move forward, left, backward, and right. Use the Q and E keys to move down, and up."
+            }
+            placement={"left"}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "start",
+                alignItems: "center",
+                width: "50%",
+              }}
+            >
+              <KeyboardIcon fontSize="small" />
+              <Typography variant="button" sx={{ padding: ".45rem" }}>
+                Keyboard Controls
+              </Typography>
+            </Box>
+          </Tooltip>
+        </Box>
+        <Box>
+          <Tooltip
+            title={
+              "Right click to select an object. Left click and drag to rotate the camera."
+            }
+            placement={"left"}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "start",
+                alignItems: "center",
+                width: "50%",
+              }}
+            >
+              <MouseIcon fontSize="small" />
+              <Typography variant="button" sx={{ padding: ".45rem" }}>
+                Mouse Controls
+              </Typography>
+            </Box>
+          </Tooltip>
+        </Box>
+      </Box>
     </Container>
   );
 }

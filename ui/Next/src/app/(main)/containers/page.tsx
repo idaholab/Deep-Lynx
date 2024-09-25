@@ -17,6 +17,7 @@ import {
   Grid,
   InputLabel,
   FormControl,
+  LinearProgress,
   MenuItem,
   Select,
 } from "@mui/material";
@@ -53,7 +54,7 @@ const ContainerSelect = () => {
     // When the user selects a container, dispatch that container's metadata to the Redux store, and navigate to the dashboard
     if (selectedContainer) {
       const selection: ContainerT = containers.find(
-        (item: ContainerT) => item.id === selectedContainer
+        (container: ContainerT) => container!.id === selectedContainer
       )!;
 
       storeDispatch(containerActions.setContainer(selection));
@@ -89,33 +90,34 @@ const ContainerSelect = () => {
                 alignItems: "center",
                 justifyContent: "center",
               }}
+              xs
             >
-              <FormControl sx={{ width: "100%" }}>
-                <InputLabel id="/containers/ContainerSelect">
-                  Containers
-                </InputLabel>
-                <Select
-                  autoFocus
-                  label="Containers"
-                  id="/containers/ContainerSelect"
-                  value={selectedContainer}
-                  onChange={handleContainer}
-                >
-                  {containers.length
-                    ? containers.map((container: ContainerT) => {
-                        return (
-                          <MenuItem
-                            key={container.id}
-                            value={container.id}
-                            dense
-                          >
-                            {container.name}
-                          </MenuItem>
-                        );
-                      })
-                    : null}
-                </Select>
-              </FormControl>
+              {containers.length ? (
+                <FormControl sx={{ width: "100%" }}>
+                  <InputLabel id="/containers/ContainerSelect">
+                    Containers
+                  </InputLabel>
+                  <Select
+                    autoFocus
+                    label="Containers"
+                    id="/containers/ContainerSelect"
+                    value={selectedContainer}
+                    onChange={handleContainer}
+                  >
+                    {containers.map((container: ContainerT) => {
+                      return (
+                        <MenuItem key={container.id} value={container.id} dense>
+                          {container.name}
+                        </MenuItem>
+                      );
+                    })}
+                  </Select>
+                </FormControl>
+              ) : (
+                <Box sx={{ width: "100%" }}>
+                  <LinearProgress />
+                </Box>
+              )}
             </Grid>
             <Grid
               item
@@ -124,10 +126,11 @@ const ContainerSelect = () => {
                 alignItems: "center",
                 justifyContent: "center",
               }}
+              xs
             >
               <Box
                 component={"img"}
-                sx={{ width: "50%", paddingTop: "3rem" }}
+                sx={{ width: "50%" }}
                 src={
                   theme.palette.mode === "dark"
                     ? "lynx-white.png"
@@ -142,6 +145,7 @@ const ContainerSelect = () => {
                 alignItems: "center",
                 justifyContent: "center",
               }}
+              xs
             >
               <Typography variant="caption">
                 Developed by Digital Engineering

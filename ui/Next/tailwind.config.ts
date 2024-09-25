@@ -22,6 +22,6 @@ export default {
   plugins: [require("@tailwindcss/forms")],
   darkMode: "selector",
   corePlugins: {
-    preflight: false, // Apply tailwind styles only after MUI has applied native styles and theme
+    preflight: false, // Apply tailwind styles only after MUI has applied its native styles and theme to our UX components
   },
 } satisfies Config;

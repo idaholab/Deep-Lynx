@@ -12,6 +12,7 @@ import {
   Button,
   InputLabel,
   FormControl,
+  LinearProgress,
   MenuItem,
   Select,
   Typography,
@@ -57,38 +58,43 @@ const VisualizeModel = (props: Props) => {
   return (
     <>
       <Typography variant="body2">
-        Select a processed file to visualize in the DeepLynx Model Viewer
+        Select a processed model to visualize in the DeepLynx Model Viewer
       </Typography>
       <br />
-      <FormControl fullWidth>
-        <InputLabel id="Visualize Model">Models</InputLabel>
-        <Select
-          labelId="Visualize Model"
-          id="/model-viewer/workflows/process_files/visualize_model"
-          label="Models"
-          value={file ? file.id : ""}
-          onChange={handleFile}
-        >
-          {files
-            ? files.map((file: FileT) => {
-                const glb = /\.glb$/.test(file.file_name);
-                if (glb) {
-                  return (
-                    <MenuItem key={file.id} value={file.id}>
-                      <Typography variant="caption" sx={{ color: "grey" }}>
-                        ID: {file.id}
-                      </Typography>
-                      <Box flexGrow={1} />
-                      <Typography variant="subtitle1">
-                        {file.file_name}
-                      </Typography>
-                    </MenuItem>
-                  );
-                }
-              })
-            : null}
-        </Select>
-      </FormControl>
+      {files ? (
+        <FormControl fullWidth>
+          <InputLabel id="Visualize Model">Models</InputLabel>
+          <Select
+            labelId="Visualize Model"
+            id="/model-viewer/workflows/process_files/visualize_model"
+            label="Models"
+            value={file ? file.id : ""}
+            onChange={handleFile}
+          >
+            {files.map((file: FileT) => {
+              const glb = /\.glb$/.test(file.file_name);
+              if (glb) {
+                return (
+                  <MenuItem key={file.id} value={file.id}>
+                    <Typography variant="caption" sx={{ color: "grey" }}>
+                      ID: {file.id}
+                    </Typography>
+                    <Box flexGrow={1} />
+                    <Typography variant="subtitle1">
+                      {file.file_name}
+                    </Typography>
+                  </MenuItem>
+                );
+              }
+            })}
+          </Select>
+        </FormControl>
+      ) : (
+        <Box sx={{ width: "100%" }}>
+          <LinearProgress />
+        </Box>
+      )}
+
       <br />
       <br />
       {file ? (

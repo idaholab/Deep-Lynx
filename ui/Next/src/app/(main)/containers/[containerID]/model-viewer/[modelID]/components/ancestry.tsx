@@ -6,7 +6,7 @@ import TimelineConnector from "@mui/lab/TimelineConnector";
 import TimelineContent from "@mui/lab/TimelineContent";
 import TimelineOppositeContent from "@mui/lab/TimelineOppositeContent";
 import TimelineDot from "@mui/lab/TimelineDot";
-import { Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 
 // Types
 import { Ancestor, MeshObject } from "@/lib/types/modules/modelViewer";
@@ -22,9 +22,11 @@ export default function Ancestry(props: Props) {
 
   return (
     <>
-      <Typography variant="body1">
-        The model hierarchy lists the complete ancestry of the selected object
-      </Typography>
+      <Box sx={{ padding: ".5rem" }}>
+        <Typography variant="body1">
+          The model hierarchy lists the complete ancestry of the selected object
+        </Typography>
+      </Box>
       <br />
       <Timeline position={"left"}>
         {ancestry
@@ -38,7 +40,7 @@ export default function Ancestry(props: Props) {
                     {ancestor.Name.toLowerCase()}
                   </TimelineOppositeContent>
                   <TimelineSeparator>
-                    <TimelineDot />
+                    <TimelineDot color="primary" />
                     <TimelineConnector />
                   </TimelineSeparator>
                   <TimelineContent sx={{ flex: 0.15 }} typography={"caption"}>

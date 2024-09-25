@@ -54,7 +54,7 @@ export default function Sidebar(props: PropsT) {
         open={props.drawer}
         onClose={() => props.handleDrawer()}
         classes={{
-          paper: classes.sidebar.drawer,
+          paper: classes.drawer.paper,
         }}
       >
         <AppBar position="sticky" className={classes.appbar}>
@@ -73,7 +73,7 @@ export default function Sidebar(props: PropsT) {
             />
           </Toolbar>
         </AppBar>
-        <Container className={classes.container}>
+        <Container className={classes.drawer.sidebar}>
           <Box sx={{ width: "100%" }}>
             <Typography variant="overline">DeepLynx</Typography>
             <Divider className={classes.divider} />
@@ -81,7 +81,7 @@ export default function Sidebar(props: PropsT) {
             <Box>
               <Button
                 startIcon={<HomeIcon className={classes.icon} />}
-                className={classes.sidebar.button}
+                className={classes.drawer.button}
                 onClick={() => router.push(`/containers/${container.id}`)}
                 sx={{ "& .MuiButton-startIcon": { paddingLeft: "1rem" } }}
               >
@@ -102,7 +102,7 @@ export default function Sidebar(props: PropsT) {
             <Box>
               <Button
                 startIcon={<SearchIcon className={classes.icon} />}
-                className={classes.sidebar.button}
+                className={classes.drawer.button}
                 sx={{ "& .MuiButton-startIcon": { paddingLeft: "1rem" } }}
               >
                 <Typography variant="button" sx={{ padding: "0 1rem" }}>
@@ -113,7 +113,7 @@ export default function Sidebar(props: PropsT) {
             <Box>
               <Button
                 startIcon={<ViewInArIcon className={classes.icon} />}
-                className={classes.sidebar.button}
+                className={classes.drawer.button}
                 onClick={() =>
                   router.push(`/containers/${container.id}/model-viewer`)
                 }
@@ -127,7 +127,7 @@ export default function Sidebar(props: PropsT) {
             <Box>
               <Button
                 startIcon={<FilePresentIcon className={classes.icon} />}
-                className={classes.sidebar.button}
+                className={classes.drawer.button}
                 sx={{ "& .MuiButton-startIcon": { paddingLeft: "1rem" } }}
               >
                 <Typography variant="button" sx={{ padding: "0 1rem" }}>
@@ -138,7 +138,7 @@ export default function Sidebar(props: PropsT) {
             <Box>
               <Button
                 startIcon={<InsightsIcon className={classes.icon} />}
-                className={classes.sidebar.button}
+                className={classes.drawer.button}
                 sx={{ "& .MuiButton-startIcon": { paddingLeft: "1rem" } }}
               >
                 <Typography variant="button" sx={{ padding: "0 1rem" }}>
@@ -153,7 +153,7 @@ export default function Sidebar(props: PropsT) {
             <Box>
               <Button
                 startIcon={<AccountTreeIcon className={classes.icon} />}
-                className={classes.sidebar.button}
+                className={classes.drawer.button}
                 sx={{ "& .MuiButton-startIcon": { paddingLeft: "1rem" } }}
               >
                 <Typography variant="button" sx={{ padding: "0 1rem" }}>
@@ -164,7 +164,7 @@ export default function Sidebar(props: PropsT) {
             <Box>
               <Button
                 startIcon={<MoveToInboxIcon className={classes.icon} />}
-                className={classes.sidebar.button}
+                className={classes.drawer.button}
                 sx={{ "& .MuiButton-startIcon": { paddingLeft: "1rem" } }}
               >
                 <Typography variant="button" sx={{ padding: "0 1rem" }}>
@@ -175,7 +175,7 @@ export default function Sidebar(props: PropsT) {
             <Box>
               <Button
                 startIcon={<StyleIcon className={classes.icon} />}
-                className={classes.sidebar.button}
+                className={classes.drawer.button}
                 sx={{ "& .MuiButton-startIcon": { paddingLeft: "1rem" } }}
               >
                 <Typography variant="button" sx={{ padding: "0 1rem" }}>
@@ -186,7 +186,7 @@ export default function Sidebar(props: PropsT) {
             <Box>
               <Button
                 startIcon={<SendIcon className={classes.icon} />}
-                className={classes.sidebar.button}
+                className={classes.drawer.button}
                 sx={{ "& .MuiButton-startIcon": { paddingLeft: "1rem" } }}
               >
                 <Typography variant="button" sx={{ padding: "0 1rem" }}>
@@ -206,7 +206,7 @@ export default function Sidebar(props: PropsT) {
             >
               <Button
                 startIcon={<AccountBoxIcon className={classes.icon} />}
-                className={classes.sidebar.button}
+                className={classes.drawer.button}
                 sx={{ "& .MuiButton-startIcon": { paddingLeft: "1rem" } }}
               >
                 <Typography variant="button" sx={{ padding: "0 1rem" }}>
@@ -217,7 +217,7 @@ export default function Sidebar(props: PropsT) {
             <Box>
               <Button
                 startIcon={<LogoutIcon className={classes.icon} />}
-                className={classes.sidebar.button}
+                className={classes.drawer.button}
                 sx={{ "& .MuiButton-startIcon": { paddingLeft: "1rem" } }}
               >
                 <Typography variant="button" sx={{ padding: "0 1rem" }}>

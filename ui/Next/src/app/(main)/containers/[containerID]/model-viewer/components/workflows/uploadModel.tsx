@@ -30,7 +30,7 @@ const UploadModel = () => {
       />
       <br />
       <br />
-      <Button className={classes.button}>Upload</Button>
+      {file ? <Button className={classes.button}>Upload</Button> : null}
     </>
   );
 };
