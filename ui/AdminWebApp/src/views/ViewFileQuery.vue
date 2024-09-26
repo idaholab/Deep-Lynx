@@ -43,7 +43,21 @@
                     :label="$t('files.selectToUpload')"
                     @change="addFile"
                   ></v-file-input>
+                  <v-checkbox v-if="fileToSave"
+                    :label="$t('timeseries.isTimeseries')"
+                    v-model="isTimeseries"
+                  />
+                  <v-checkbox v-if="isTimeseries" :disabled="!isTimeseries"
+                    :label="$t('timeseries.describe')"
+                    v-model="describe"
+                  />
                 </v-card-text>
+
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn color="error" text @click="exitDialog">{{$t("general.cancel")}}</v-btn>
+                  <v-btn color="primary" text @click="saveFile" :disabled=!fileToSave v-if="datasourceID">{{$t("general.save")}}</v-btn>
+                </v-card-actions>
               </v-card>
             </v-dialog>
           </v-toolbar>
@@ -114,10 +128,13 @@ import SelectDataSource from "../components/dataSources/SelectDataSource.vue";
 interface FilesDialogModel {
   dialog: boolean;
   fileLoading: boolean;
+  isTimeseries: boolean;
+  describe: boolean;
   addFileDialog: boolean;
   errorMessage: string;
   datasourceID: string | null;
   files: FileT[];
+  fileToSave: File | null;
   copy: string;
   imageViewers: Map<string, Viewer>;
   dataSourceCompleted: boolean;
@@ -136,8 +153,11 @@ export default Vue.extend({
     dialog: false,
     fileLoading: false,
     addFileDialog: false,
+    isTimeseries: false,
+    describe: false,
     errorMessage: "",
     files: [],
+    fileToSave: null,
     datasourceID: null,
     copy: mdiFileDocumentMultiple,
     imageViewers: new Map(),
@@ -216,11 +236,19 @@ export default Vue.extend({
         { text: this.$t("general.actions"), value: "actions", sortable: false },
       ];
     },
+    exitDialog() {
+      this.addFileDialog = false;
+      this.fileLoading = false;
+      this.$emit("nodeFilesDialogClose");
+    },
     addFile(file: File) {
+      this.fileToSave = file;
+    },
+    saveFile() {
       this.fileLoading = true;
 
       this.$client
-        .uploadFile(this.container.id, this.datasourceID!, file)
+        .uploadFile(this.container.id, this.datasourceID!, this.fileToSave!, this.isTimeseries, this.describe)
         .then(() => {
           this.loadFiles();
         })

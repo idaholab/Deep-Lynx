@@ -31,6 +31,7 @@
                   :rules="[validationRule]"
                   required
               ></v-textarea>
+              <!-- JMB -->
               <v-file-input @change="addFile">
                 <template v-slot:label>
                   {{$t('ontology.owlFile')}} <small>({{$t('general.optional')}})</small>
