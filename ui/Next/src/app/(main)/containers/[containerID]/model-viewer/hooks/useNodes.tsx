@@ -7,9 +7,11 @@ import { DataSourceT, NodeT } from "@/lib/types/deeplynx";
 
 // Axios
 import axios from "axios";
+import { useAppSelector } from "@/lib/store/hooks";
 
-export const useNodes = (datasource: DataSourceT) => {
+export const useNodes = () => {
   const [nodes, setNodes] = useState<Array<NodeT> | undefined>(undefined);
+  const dataSource = useAppSelector((state) => state.container.dataSource);
   const container = useContainer();
 
   useEffect(() => {
@@ -17,7 +19,7 @@ export const useNodes = (datasource: DataSourceT) => {
       let nodes = await axios
         .get(`/api/containers/${container.id}/graphs/nodes`, {
           params: {
-            dataSourceId: datasource ? datasource.id : null,
+            dataSourceId: dataSource!.id,
           },
         })
         .then((response) => {
@@ -27,10 +29,10 @@ export const useNodes = (datasource: DataSourceT) => {
       setNodes(nodes);
     }
 
-    if (datasource) {
+    if (dataSource) {
       fetchNodes();
     }
-  }, [container, datasource]);
+  }, [container, dataSource]);
 
   return nodes;
 };

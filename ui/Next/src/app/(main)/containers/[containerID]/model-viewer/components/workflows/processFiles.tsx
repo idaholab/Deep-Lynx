@@ -2,7 +2,7 @@
 
 // Hooks
 import { useFiles } from "../../hooks/useFiles";
-import { SyntheticEvent, useState } from "react";
+import { SyntheticEvent, useEffect, useState } from "react";
 import { useContainer } from "@/lib/context/ContainerProvider";
 
 // MUI

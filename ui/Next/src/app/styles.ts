@@ -23,6 +23,7 @@ export const classes = {
     button:
       "w-full justify-start text-black hover:bg-gray-500 dark:text-white dark:hover:bg-gray-800",
   },
+  fab: "gray-500 dark:gray-800",
   font: {
     colors: {
       // These colors are registered in tailwind.config.ts
@@ -31,7 +32,7 @@ export const classes = {
     },
   },
   grid: "p-10",
-  icon: "fill-black dark:fill-gray-100 hover:bg-transparent",
+  icon: "fill-white dark:fill-gray-100 hover:bg-transparent",
   logo: "pl-8",
   toolbar: "h-full p-0 bg-gray-500 dark:bg-gray-800",
 };

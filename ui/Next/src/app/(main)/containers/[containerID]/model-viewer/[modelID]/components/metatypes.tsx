@@ -1,14 +1,16 @@
 "use client";
 
 // Hooks
-import { useNodeMetatypes } from "../../hooks/useNodeMetatypes";
+import { useWebglMetatypes } from "../../hooks/useWebglMetatypes";
 
 // MUI
 import {
   Box,
+  Button,
   Dialog,
   FormControl,
   InputLabel,
+  LinearProgress,
   MenuItem,
   Select,
   Typography,
@@ -17,6 +19,12 @@ import {
 // Store
 import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
 import { modelViewerActions } from "@/lib/store/features/model-viewer/modelViewerSlice";
+
+// Style
+import { classes } from "@/app/styles";
+
+// Icons
+import CloseIcon from "@mui/icons-material/Close";
 
 // Types
 import { MetatypeT } from "@/lib/types/deeplynx";
@@ -29,8 +37,8 @@ type Props = {
 
 function MetatypeDialog(props: Props) {
   // Hooks
+  const webglMetatypes = useWebglMetatypes();
   const mappings = useAppSelector((state) => state.modelViewer.mappings);
-  const nodeMetatypes = useNodeMetatypes();
 
   // Props
   const open = props.open;
@@ -53,7 +61,14 @@ function MetatypeDialog(props: Props) {
   return (
     <>
       <Dialog open={open} onClose={() => setOpen(false)}>
-        <Box sx={{ padding: "2.5rem" }}>
+        <Box
+          sx={{ display: "flex", justifyContent: "start", padding: ".5rem" }}
+        >
+          <Button onClick={() => setOpen(false)}>
+            <CloseIcon />
+          </Button>
+        </Box>
+        <Box sx={{ padding: "1rem 2.5rem 2.5rem 2.5rem" }}>
           <Typography variant="subtitle1">Select Classes</Typography>
           <Typography variant="body2">
             Choose one or more classes to view nodes in the DeepLynx graph
@@ -63,25 +78,32 @@ function MetatypeDialog(props: Props) {
             related nodes belonging to these classes.
           </Typography>
           <br />
-          <FormControl sx={{ width: "100%" }}>
-            <InputLabel>Classes</InputLabel>
-            <Select
-              label={"Classes"}
-              multiple
-              onChange={handleMetatypes}
-              value={mappings}
-            >
-              {nodeMetatypes
-                ? nodeMetatypes.map((metatype: MetatypeT) => {
-                    return (
-                      <MenuItem key={metatype.id} value={metatype.name}>
-                        {metatype.name}
-                      </MenuItem>
-                    );
-                  })
-                : null}
-            </Select>
-          </FormControl>
+          {webglMetatypes ? (
+            <FormControl sx={{ width: "100%" }}>
+              <InputLabel>Classes</InputLabel>
+              <Select
+                label={"Classes"}
+                multiple
+                onChange={handleMetatypes}
+                value={mappings}
+              >
+                {webglMetatypes.map((metatype: MetatypeT) => {
+                  return (
+                    <MenuItem key={metatype.id} value={metatype.name}>
+                      {metatype.name}
+                    </MenuItem>
+                  );
+                })}
+              </Select>
+            </FormControl>
+          ) : (
+            <LinearProgress />
+          )}
+        </Box>
+        <Box sx={{ display: "flex", justifyContent: "end", padding: "1.5rem" }}>
+          <Button onClick={() => setOpen(false)} classes={classes.button}>
+            Apply
+          </Button>
         </Box>
       </Dialog>
     </>

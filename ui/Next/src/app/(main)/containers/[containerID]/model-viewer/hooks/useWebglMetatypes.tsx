@@ -1,7 +1,6 @@
 // Hooks
 import { useState, useEffect } from "react";
 import { useContainer, useMetatypes } from "@/lib/context/ContainerProvider";
-import { useNodes } from "./useNodes";
 
 // Types
 import { MetatypeT, NodeT } from "@/lib/types/deeplynx";
@@ -9,16 +8,15 @@ import { MetatypeT, NodeT } from "@/lib/types/deeplynx";
 // Axios
 import axios from "axios";
 
-export const useNodeMetatypes = () => {
-  const [nodeMetatypes, setNodeMetatypes] = useState<
+export const useWebglMetatypes = () => {
+  const [webglMetatypes, setNodeMetatypes] = useState<
     Array<MetatypeT> | undefined
   >();
-  const nodes = useNodes();
   const container = useContainer();
   const metatypes = useMetatypes();
 
   useEffect(() => {
-    async function fetchNodes() {
+    async function fetchMetatypes() {
       let nodes = await axios
         .get(`/api/containers/${container.id}/graphs/nodes`)
         .then((response) => {
@@ -34,8 +32,8 @@ export const useNodeMetatypes = () => {
       setNodeMetatypes(nodeMetatypes);
     }
 
-    if (nodes && metatypes) fetchNodes();
-  }, [container, nodes, metatypes]);
+    if (metatypes && !webglMetatypes) fetchMetatypes();
+  }, [container, metatypes, webglMetatypes]);
 
-  return nodeMetatypes;
+  return webglMetatypes;
 };

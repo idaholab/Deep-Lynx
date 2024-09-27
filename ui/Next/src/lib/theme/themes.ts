@@ -1,5 +1,6 @@
 import { createTheme } from "@mui/material/styles";
 import config from "../../../tailwind.config";
+import colors from "tailwindcss/colors";
 
 /**
  * The MUI theme is the global theme applied to the user interface
@@ -17,6 +18,9 @@ export const darkTheme = createTheme({
     primary: {
       main: config.theme.extend.colors.electricity,
     },
+    secondary: {
+      main: colors.gray[800],
+    },
   },
   components: {
     MuiButtonBase: {
@@ -32,6 +36,9 @@ export const lightTheme = createTheme({
     mode: "light",
     primary: {
       main: config.theme.extend.colors.cherenkov,
+    },
+    secondary: {
+      main: colors.gray[500],
     },
   },
   components: {

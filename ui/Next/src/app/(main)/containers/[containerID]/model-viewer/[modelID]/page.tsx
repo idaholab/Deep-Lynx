@@ -30,8 +30,9 @@ export default function Home() {
   // Hooks
   const [render, setRender] = useState<boolean>(false);
   const [payload, setPayload] = useState<PayloadT>({} as PayloadT);
-  const [graph, setGraph] = useState<Array<RelatedNodeT> | undefined>();
-  const [mesh, setMesh] = useState<MeshObject | undefined>();
+
+  const [mesh, setMesh] = useState<MeshObject | undefined>(); // Mesh is the gameobject selected in the scene
+  const [graph, setGraph] = useState<Array<RelatedNodeT> | undefined>(); // Graph is the array of nodes related to the selected mesh
   const [selected, setSelected] = useState<boolean>(false);
   const mappings: Array<string> = useAppSelector(
     (state) => state.modelViewer.mappings
@@ -42,8 +43,6 @@ export default function Home() {
   const file: FileT = useAppSelector((state) => state.modelViewer.file!);
 
   useEffect(() => {
-    setGraph(undefined);
-
     setPayload({
       ConfigType: "Remote",
       FileName: file.file_name,
@@ -56,7 +55,11 @@ export default function Home() {
       ContainerId: container.id,
       FileId: file.id,
     });
-  }, [container, file, mappings]);
+  }, [container, file]);
+
+  useEffect(() => {
+    setGraph(undefined); // If the metatype mappings have changed, remove the graph from state
+  }, [mappings]);
 
   const handleRender = () => {
     setRender(true);

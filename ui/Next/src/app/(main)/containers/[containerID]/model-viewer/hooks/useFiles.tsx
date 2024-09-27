@@ -9,7 +9,7 @@ import { NodeT, FileT } from "@/lib/types/deeplynx";
 import axios from "axios";
 
 export const useFiles = (node: NodeT | undefined = undefined) => {
-  const [files, setFiles] = useState<Array<FileT> | null>(null);
+  const [files, setFiles] = useState<Array<FileT> | undefined>(undefined);
   const container = useContainer();
 
   useEffect(() => {
@@ -25,18 +25,6 @@ export const useFiles = (node: NodeT | undefined = undefined) => {
     if (!node) return;
     fetchFiles();
   }, [container, node]);
-
-  return files;
-};
-
-export const useTest = async (node: NodeT | undefined = undefined) => {
-  const container = useContainer();
-
-  if (!node) return;
-
-  let files = await fetch(
-    `/api/containers/${container!.id}/graphs/nodes/${node!.id}/files`
-  );
 
   return files;
 };

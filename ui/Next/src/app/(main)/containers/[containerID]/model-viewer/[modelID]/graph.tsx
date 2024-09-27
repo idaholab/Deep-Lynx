@@ -5,12 +5,14 @@ import { useEffect, useState } from "react";
 
 // MUI
 import {
+  Box,
   Button,
   Collapse,
   Card,
   CardContent,
   Container,
   Divider,
+  Fab,
   Grid,
   List,
   ListItem,
@@ -22,9 +24,10 @@ import {
 // Icons
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
+import AddIcon from "@mui/icons-material/Add";
 
 // Components
-import MetatypeDialog from "./components/dialog";
+import MetatypeDialog from "./components/metatypes";
 import Ancestry from "./components/ancestry";
 
 // Styles
@@ -60,6 +63,10 @@ export default function Graph(props: Props) {
     }
     setNodeExpand(index);
   };
+
+  useEffect(() => {
+    console.log(graph);
+  }, [graph]);
 
   return (
     <>
@@ -169,11 +176,9 @@ export default function Graph(props: Props) {
             </Card>
           </>
         ) : null}
-        {dialog ? <MetatypeDialog open={dialog} setOpen={setDialog} /> : null}
-        <Button onClick={() => setDialog(true)}>Metatypes</Button>
         <br />
         <br />
-        {graph ? (
+        {graph && selected ? (
           <>
             <Typography variant="h5">Related Nodes</Typography>
             <Divider />
@@ -216,6 +221,20 @@ export default function Graph(props: Props) {
           </>
         ) : null}
         <br />
+        {!dialog ? (
+          <Fab
+            color="secondary"
+            sx={{
+              position: "fixed",
+              bottom: "3.5rem",
+              left: "3.5rem",
+            }}
+            onClick={() => setDialog(true)}
+          >
+            <AddIcon className={classes.icon} />
+          </Fab>
+        ) : null}
+        {dialog ? <MetatypeDialog open={dialog} setOpen={setDialog} /> : null}
       </Container>
     </>
   );

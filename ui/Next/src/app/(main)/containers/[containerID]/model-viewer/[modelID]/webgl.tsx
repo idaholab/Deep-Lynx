@@ -72,16 +72,17 @@ export default function WebGL(props: PropsT) {
   }, [sendMessage, mappings]);
 
   // Handlers
-  const handleJsonObjects = useCallback(
+  const handleGraph = useCallback(
     (data: unknown) => {
       const nodes: Array<RelatedNodeT> = JSON.parse(data as string);
-      setGraph(nodes);
+      if (nodes.length) setGraph(nodes);
     },
     [setGraph]
   );
 
-  const handleMeshData = useCallback(
+  const handleMesh = useCallback(
     (data: unknown) => {
+      setGraph(undefined);
       const mesh: MeshObject = JSON.parse(data as string);
       setMesh(mesh);
     },
@@ -98,19 +99,19 @@ export default function WebGL(props: PropsT) {
 
   // Hooks
   useEffect(() => {
-    addEventListener("SendCadNodeDataToReact", handleMeshData);
-    addEventListener("SendJsonObjectsToReact", handleJsonObjects);
+    addEventListener("SendCadNodeDataToReact", handleMesh);
+    addEventListener("SendJsonObjectsToReact", handleGraph);
     addEventListener("SendSelectedBoolToReact", handleMeshBool);
     return () => {
-      removeEventListener("SendCadNodeDataToReact", handleMeshData);
-      removeEventListener("SendJsonObjectsToReact", handleJsonObjects);
+      removeEventListener("SendCadNodeDataToReact", handleMesh);
+      removeEventListener("SendJsonObjectsToReact", handleGraph);
       addEventListener("SendSelectedBoolToReact", handleMeshBool);
     };
   }, [
     addEventListener,
     removeEventListener,
-    handleMeshData,
-    handleJsonObjects,
+    handleMesh,
+    handleGraph,
     handleMeshBool,
   ]);
 

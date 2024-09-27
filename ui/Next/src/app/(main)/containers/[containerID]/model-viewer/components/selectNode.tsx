@@ -27,7 +27,7 @@ type PropsT = {
 };
 
 const NodeSelector = (props: PropsT) => {
-  const nodes = useNodes(props.dataSource);
+  const nodes = useNodes();
   const node = props.node;
   const setNode = props.setNode;
 
