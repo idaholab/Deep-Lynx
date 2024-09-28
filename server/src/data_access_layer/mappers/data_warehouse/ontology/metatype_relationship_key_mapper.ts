@@ -386,7 +386,7 @@ export default class MetatypeRelationshipKeyMapper extends Mapper {
                 created_by text,
                 modified_by text,
                 metatype_relationship_id int8)
-            LEFT JOIN metatype_relationships ON metatype_relationships.old_id = ont_import.metatype_relationship_id
+            JOIN metatype_relationships ON metatype_relationships.old_id = ont_import.metatype_relationship_id
                 ON CONFLICT (metatype_relationship_id, property_name) 
                 DO UPDATE SET
                     created_by = EXCLUDED.created_by,
