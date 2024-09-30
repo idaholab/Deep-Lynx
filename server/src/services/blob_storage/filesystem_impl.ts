@@ -17,17 +17,21 @@ export default class Filesystem implements BlobStorage {
     private _isWindows: boolean | undefined;
 
     async deleteFile(f: File): Promise<Result<boolean>> {
-        let filepath;
+        let filePath;
         if (f.short_uuid) {
-            filepath = `${f.adapter_file_path}${f.file_name}${f.short_uuid}`;
+            if (f.timeseries === true) {
+                filePath = `${f.adapter_file_path}${f.short_uuid}${f.file_name}`;
+            } else {
+                filePath = `${f.adapter_file_path}${f.file_name}${f.short_uuid}`;
+            }
         } else {
-            filepath = `${f.adapter_file_path}${f.file_name}`;
+            filePath = `${f.adapter_file_path}${f.file_name}`;
         }
-        if (this._isWindows) filepath = filepath.replace(new RegExp('/', 'g'), `\\`);
+        if (this._isWindows) filePath = filePath.replace(new RegExp('/', 'g'), `\\`);
 
-        fs.unlinkSync(filepath);
+        fs.unlinkSync(filePath);
 
-        if (fs.existsSync(filepath)) {
+        if (fs.existsSync(filePath)) {
             return Promise.resolve(Result.Failure('unable to delete file'));
         }
 
@@ -64,7 +68,14 @@ export default class Filesystem implements BlobStorage {
             fs.mkdirSync(`${this._directory}${filepath}`, {recursive: true});
         }
 
-        const writeStream = fs.createWriteStream(`${this._directory}${filepath}${filename}${shortUUID}`, {flags: 'w'});
+        let filePath;
+        if (options?.timeseries === true) {
+            filePath = `${this._directory}${filepath}${shortUUID}${filename}`;
+        } else {
+            filePath = `${this._directory}${filepath}${filename}${shortUUID}`;
+        }
+
+        const writeStream = fs.createWriteStream(filePath, {flags: 'w'});
 
         stream?.on('error', (err: Error) => {
             Logger.error(`error saving file to filesystem ${err}`);
@@ -112,7 +123,14 @@ export default class Filesystem implements BlobStorage {
             fs.mkdirSync(file.adapter_file_path!, {recursive: true});
         }
 
-        const writeStream = fs.createWriteStream(`${file.adapter_file_path}${file.file_name}${file.short_uuid}`, {flags: 'a'});
+        let filePath;
+        if (file.timeseries === true) {
+            filePath = `${file.adapter_file_path}${file.short_uuid}${file.file_name}`;
+        } else {
+            filePath = `${file.adapter_file_path}${file.file_name}${file.short_uuid}`;
+        }
+
+        const writeStream = fs.createWriteStream(filePath, {flags: 'a'});
 
         stream?.on('error', (err: Error) => {
             Logger.error(`error saving file to filesystem ${err}`);
@@ -124,13 +142,17 @@ export default class Filesystem implements BlobStorage {
     }
 
     downloadStream(f: File): Promise<Readable | undefined> {
-        let filepath;
+        let filePath;
         if (f.short_uuid) {
-            filepath = `${f.adapter_file_path}${f.file_name}${f.short_uuid}`;
+            if (f.timeseries === true) {
+                filePath = `${f.adapter_file_path}${f.short_uuid}${f.file_name}`;
+            } else {
+                filePath = `${f.adapter_file_path}${f.file_name}${f.short_uuid}`;
+            }
         } else {
-            filepath = `${f.adapter_file_path}${f.file_name}`;
+            filePath = `${f.adapter_file_path}${f.file_name}`;
         }
-        return Promise.resolve(fs.createReadStream(filepath));
+        return Promise.resolve(fs.createReadStream(filePath));
     }
 
     // the isWindows could be solved by looking at process.platform instead, but I'd rather limit the access

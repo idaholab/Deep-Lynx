@@ -9,7 +9,7 @@ import {ResetPasswordEmailTemplate} from '../../../services/email/templates/rese
 import Authorization from '../../../domain_objects/access_management/authorization/authorization';
 import ContainerUserInviteMapper from '../../mappers/access_management/container_user_invite_mapper';
 import {ContainerInviteEmailTemplate} from '../../../services/email/templates/container_invite';
-import ContainerRepository from '../data_warehouse/ontology/container_respository';
+import ContainerRepository from '../data_warehouse/ontology/container_repository';
 import Config from '../../../services/config';
 import KeyPairMapper from '../../mappers/access_management/keypair_mapper';
 import {plainToClass} from 'class-transformer';
@@ -492,30 +492,6 @@ export default class UserRepository extends Repository implements RepositoryInte
 
     listServiceUsersForContainer(containerID: string): Promise<Result<User[]>> {
         return this.#mapper.ListServiceUsersForContainer(containerID);
-    }
-
-    async createServiceUserWithPerms(containerID: string, userID: string, permissions: ContainerPermissionSet): Promise<Result<User>> {
-        // create and save a service user
-        const service = new User({
-            identity_provider: 'service',
-            admin: false,
-            display_name: 'test service user',
-            type: 'service'
-        })
-        const saved = await this.#mapper.Create(userID, service);
-        if (saved.isError) {return Promise.resolve(Result.Pass(saved))}
-        Object.assign(service, saved.value);
-
-        // add user to container
-        const added = await this.#mapper.AddServiceUserToContainer(service.id!, containerID);
-        if (added.isError) {return Promise.resolve(Result.Pass(added))}
-
-        // set perms
-        const set = await this.setContainerPermissions(service.id!, containerID, permissions);
-        if (set.isError) {return Promise.resolve(Result.Pass(set))}
-
-        // return saved user
-        return Promise.resolve(Result.Success(service));
     }
 
     constructor() {

@@ -124,8 +124,8 @@ export default class FileMapper extends Mapper {
         return super.runStatement(this.detachFileFromNodesStatement(fileID));
     }
 
-    public async SetDescriptions(desc: FileDescription[]): Promise<Result<boolean>> {
-        return super.runStatement(this.setDescriptionsStatement(...desc));
+    public async SetDescriptions(descriptions: FileDescription[]): Promise<Result<boolean>> {
+        return super.runStatement(this.setDescriptionsStatement(descriptions));
     }
 
     public async CheckTimeseries(fileIDs: string[]): Promise<Result<TimeseriesInfo[]>> {
@@ -149,8 +149,8 @@ export default class FileMapper extends Mapper {
         return Promise.resolve(Result.Success(result));
     }
 
-    public async ListPathMetadata(...fileID: string[]): Promise<Result<FilePathMetadata[]>> {
-        return super.rows<FilePathMetadata>(this.filePathMetadataStatement(fileID), {
+    public async ListPathMetadata(...fileIDs: string[]): Promise<Result<FilePathMetadata[]>> {
+        return super.rows<FilePathMetadata>(this.filePathMetadataStatement(fileIDs), {
             resultClass: FilePathMetadata,
         });
     }
@@ -206,7 +206,7 @@ export default class FileMapper extends Mapper {
             short_uuid,
             timeseries,
             created_by,
-            modified_by) VALUES %L 
+            modified_by) VALUES %L
             ON CONFLICT(id, md5hash) DO UPDATE SET
                 file_name = EXCLUDED.file_name,
                 file_size = EXCLUDED.file_size,
@@ -294,7 +294,7 @@ export default class FileMapper extends Mapper {
             values: [containerID],
         };
     }
-    
+
     private filesForEdgeStatement(edgeID: string, revisionOnly?: boolean): QueryConfig {
         if (revisionOnly) {
             return {
@@ -334,9 +334,9 @@ export default class FileMapper extends Mapper {
     }
 
     private filesForDataStagingStatement(dataStagingID: string[]): QueryConfig {
-        const text = `SELECT files.* 
-                        FROM data_staging_files 
-                        LEFT JOIN files ON files.id = data_staging_files.file_id 
+        const text = `SELECT files.*
+                        FROM data_staging_files
+                        LEFT JOIN files ON files.id = data_staging_files.file_id
                         WHERE data_staging_id IN (%L)`;
         const values = dataStagingID;
 
@@ -356,8 +356,9 @@ export default class FileMapper extends Mapper {
 
     // fetch the fully qualified file path complete with file name and short uuid
     private filePathMetadataStatement(fileIDs: string[]): QueryConfig {
-        const text = `SELECT id, adapter, data_source_id,
-                        adapter_file_path || file_name || short_uuid AS adapter_file_path
+        const text = `SELECT id,
+                        short_uuid || file_name AS file_name,
+                        TRIM('/\\' FROM adapter_file_path) AS access_path
                         FROM files
                         WHERE id IN (%L)`;
         const values = fileIDs;
@@ -365,20 +366,20 @@ export default class FileMapper extends Mapper {
         return format(text, values);
     }
 
-    private setDescriptionsStatement(...descriptions: FileDescription[]): QueryConfig {
+    private setDescriptionsStatement(descriptions: FileDescription[]): QueryConfig {
         const text = `INSERT INTO file_descriptions (file_id, description, file_created_at)
                     SELECT file_id::bigint, description::jsonb,
                         -- subquery to get created_at for the foreign key
-                        (SELECT MAX(f.created_at) 
+                        (SELECT MAX(f.created_at)
                         FROM files f
                         WHERE f.id = fd.file_id::bigint
                         GROUP BY f.id) AS created_at
                     FROM (VALUES %L) AS fd(file_id, description)
                     ON CONFLICT (file_id, file_created_at)
-                    DO UPDATE SET described_at = EXCLUDED.described_at`;
+                    DO UPDATE SET description = EXCLUDED.description`;
         const values = descriptions.map((desc) => [
             desc.file_id,
-            JSON.stringify(desc.column_info)
+            JSON.stringify(desc.description)
         ]);
 
         return format(text, values);

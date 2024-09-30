@@ -1,7 +1,6 @@
 use crate::config::Configuration;
-use crate::timeseries::data_types::LegacyDataTypes;
+use crate::timeseries::errors::TimeseriesError;
 use crate::timeseries::ingestion;
-use crate::timeseries::timeseries_errors::TimeseriesError;
 use sqlx::postgres::PgPool;
 use std::io::Read;
 use std::sync::Arc;
@@ -48,69 +47,6 @@ impl BucketRepository {
       stream_reader_channel: None,
       reader_status_channel: None,
     })
-  }
-
-  pub fn infer_legacy_schema<T: Read>(
-    reader: T,
-  ) -> Result<Vec<LegacyTimeseriesColumn>, TimeseriesError> {
-    let mut csv_reader = csv::ReaderBuilder::new().from_reader(reader);
-
-    let mut results: Vec<LegacyTimeseriesColumn> = csv_reader
-      .headers()?
-      .iter()
-      .map(|h| LegacyTimeseriesColumn {
-        column_name: h.to_string(),
-        property_name: "".to_string(),
-        is_primary_timestamp: false,
-        data_type: "".to_string(),
-        date_conversion_format_string: None,
-      })
-      .collect();
-
-    while let Some(record) = csv_reader.records().next() {
-      let record = record?;
-
-      for (i, column) in results.iter_mut().enumerate() {
-        let value = match record.get(i) {
-          None => continue,
-          Some(v) => v,
-        };
-
-        if value.is_empty() {
-          continue;
-        }
-
-        if value.to_lowercase() == "true" || value.to_lowercase() == "false" {
-          column.data_type = LegacyDataTypes::Boolean.into();
-          continue;
-        }
-
-        if value.starts_with('{') && value.ends_with('}') {
-          column.data_type = LegacyDataTypes::Json.into();
-          continue;
-        }
-
-        if value.replace(',', "").parse::<i32>().is_ok() {
-          column.data_type = LegacyDataTypes::Number.into();
-          continue;
-        }
-
-        if value.replace(',', "").parse::<i64>().is_ok() {
-          column.data_type = LegacyDataTypes::Number64.into();
-          continue;
-        }
-
-        // we can't do the same stripping on floats because of european number notation with commas
-        if value.parse::<f64>().is_ok() {
-          column.data_type = LegacyDataTypes::Float64.into();
-          continue;
-        }
-
-        column.data_type = LegacyDataTypes::String.into();
-      }
-    }
-
-    Ok(results)
   }
 
   /// `begin_legacy_csv_ingestion` intializes a data pipeline and prepares it to receive csv data from a node.js

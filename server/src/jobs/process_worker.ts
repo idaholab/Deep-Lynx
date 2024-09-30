@@ -16,11 +16,15 @@ import ImportRepository from '../data_access_layer/repositories/data_warehouse/i
 import {SnapshotGenerator} from 'deeplynx';
 import Config from '../services/config';
 import ContainerMapper from '../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
+import ImportMapper from '../data_access_layer/mappers/data_warehouse/import/import_mapper';
 
 export async function ProcessWorkerStart(importIDs: string[], containerID: string): Promise<void> {
     await PostgresAdapter.Instance.init();
     const client = await PostgresAdapter.Instance.Pool.connect();
     const insertClient = await PostgresAdapter.Instance.Pool.connect();
+
+    // increment the attempt on the importIDs outside the transaction so that if this crashes it doesn't take down the whole thread
+    await ImportMapper.Instance.IncrementAttempts(...importIDs);
 
     // we need to run a lock on the container first so that we can maintain we're the only process running on it
     const transactionResult = await ContainerMapper.Instance.startTransaction();
@@ -33,9 +37,11 @@ export async function ProcessWorkerStart(importIDs: string[], containerID: strin
     // or doesn't need one
     const transaction = transactionResult.value;
 
+    // we attempt to pull an advisory lock in the transaction - this will immediately return whether we have the lock, up to caller
+    // to check value
     const lockResult = await ContainerMapper.Instance.AdvisoryLockContainer(containerID, transaction);
-    if (lockResult.isError) {
-        Logger.error(`unable to lock container for processing in processing thread ${JSON.stringify(lockResult.error)}`);
+    if (!lockResult) {
+        Logger.error(`unable to lock container for processing in processing thread for container ${containerID}`);
         process.exit(0);
     }
 
