@@ -73,9 +73,6 @@ export default function Graph(props: Props) {
       <Container>
         {selected && mesh ? (
           <>
-            <Typography variant="h5">Object Metadata</Typography>
-            <Divider />
-            <br />
             <Card>
               <CardContent>
                 <List component="div" disablePadding>
@@ -83,31 +80,43 @@ export default function Graph(props: Props) {
                     <ListItemText
                       primary={mesh.Assembly.Name}
                       primaryTypographyProps={{
+                        variant: "h4",
                         fontWeight: "bold",
                       }}
                     />
                     {meshExpand ? <ExpandLess /> : <ExpandMore />}
                   </ListItemButton>
                   <Collapse in={meshExpand} timeout="auto" unmountOnExit>
+                    <br />
                     {Object.entries(mesh.Assembly).map((entry) => {
                       let [key, value]: [string, string] = entry;
                       if (key === "Metadata") return;
                       return (
-                        <ListItemText
-                          inset
-                          key={key}
-                          primaryTypographyProps={{
-                            variant: "subtitle2",
-                            fontWeight: "bold",
-                          }}
-                          primary={key.toUpperCase()}
-                          secondary={value}
-                          secondaryTypographyProps={{
-                            variant: "caption",
-                          }}
-                        />
+                        <>
+                          <Box sx={{ paddingLeft: "2.5rem" }}>
+                            <ListItem key={key}>
+                              <Grid container spacing={2}>
+                                <Grid item xs={4}>
+                                  <Typography
+                                    variant="caption"
+                                    fontWeight={"bold"}
+                                  >
+                                    {key.toLowerCase()}
+                                  </Typography>
+                                </Grid>
+                                <Grid item xs={8}>
+                                  <Typography variant="caption">
+                                    {value as string}
+                                  </Typography>
+                                </Grid>
+                              </Grid>
+                            </ListItem>
+                            <Divider key={key} />
+                          </Box>
+                        </>
                       );
                     })}
+                    <br />
                     {ancestry ? (
                       <>
                         <ListItemButton
@@ -121,6 +130,7 @@ export default function Graph(props: Props) {
                           />
                           {hierarchyExpand ? <ExpandLess /> : <ExpandMore />}
                         </ListItemButton>
+                        <br />
                         <Collapse
                           in={hierarchyExpand}
                           timeout="auto"
@@ -147,24 +157,33 @@ export default function Graph(props: Props) {
                           let [key, value] = entry;
                           return (
                             <>
-                              <ListItem key={key}>
-                                <Grid container spacing={2}>
-                                  <Grid item xs={4}>
-                                    <Typography
-                                      variant="caption"
-                                      fontWeight={"bold"}
+                              <Box sx={{ paddingLeft: "1.5rem" }}>
+                                <ListItem key={key}>
+                                  <Grid container spacing={2}>
+                                    <Grid item xs={4}>
+                                      <Typography
+                                        variant="caption"
+                                        fontWeight={"bold"}
+                                      >
+                                        {key.toLowerCase()}
+                                      </Typography>
+                                    </Grid>
+                                    <Grid
+                                      item
+                                      xs={8}
+                                      sx={{
+                                        display: "flex",
+                                        justifyContent: "end",
+                                      }}
                                     >
-                                      {key.toLowerCase()}
-                                    </Typography>
+                                      <Typography variant="caption">
+                                        {value as string}
+                                      </Typography>
+                                    </Grid>
                                   </Grid>
-                                  <Grid item xs={8}>
-                                    <Typography variant="caption">
-                                      {value as string}
-                                    </Typography>
-                                  </Grid>
-                                </Grid>
-                              </ListItem>
-                              <Divider key={key} />
+                                </ListItem>
+                                <Divider key={key} />
+                              </Box>
                             </>
                           );
                         })}
@@ -198,19 +217,23 @@ export default function Graph(props: Props) {
                       {Object.entries(node).map((entry) => {
                         let [key, value] = entry;
                         return (
-                          <ListItemText
-                            inset
-                            key={index + key}
-                            primaryTypographyProps={{
-                              variant: "subtitle2",
-                              fontWeight: "bold",
-                            }}
-                            primary={key.toUpperCase()}
-                            secondary={value}
-                            secondaryTypographyProps={{
-                              variant: "caption",
-                            }}
-                          />
+                          <>
+                            <Box sx={{ paddingLeft: "2.5rem" }}>
+                              <ListItemText
+                                inset
+                                key={index + key}
+                                primaryTypographyProps={{
+                                  variant: "subtitle2",
+                                  fontWeight: "bold",
+                                }}
+                                primary={key.toUpperCase()}
+                                secondary={value}
+                                secondaryTypographyProps={{
+                                  variant: "caption",
+                                }}
+                              />
+                            </Box>
+                          </>
                         );
                       })}
                     </List>
@@ -224,6 +247,7 @@ export default function Graph(props: Props) {
         {!dialog ? (
           <Fab
             color="secondary"
+            variant="extended"
             sx={{
               position: "fixed",
               bottom: "3.5rem",
@@ -232,6 +256,7 @@ export default function Graph(props: Props) {
             onClick={() => setDialog(true)}
           >
             <AddIcon className={classes.icon} />
+            Update Graph Query
           </Fab>
         ) : null}
         {dialog ? <MetatypeDialog open={dialog} setOpen={setDialog} /> : null}

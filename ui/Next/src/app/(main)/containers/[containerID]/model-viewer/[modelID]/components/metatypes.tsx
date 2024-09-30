@@ -69,13 +69,12 @@ function MetatypeDialog(props: Props) {
           </Button>
         </Box>
         <Box sx={{ padding: "1rem 2.5rem 2.5rem 2.5rem" }}>
-          <Typography variant="subtitle1">Select Classes</Typography>
+          <Typography variant="h5">Select Classes</Typography>
           <Typography variant="body2">
-            Choose one or more classes to view nodes in the DeepLynx graph
-            related to your engineering model.
+            Query model relationships in DeepLynx.
             <br />
-            You can select multiple classes and the model will return any
-            related nodes belonging to these classes.
+            You can select multiple classes and DeepLynx will return all nodes
+            of the selected class related to the clicked element in the model.
           </Typography>
           <br />
           {webglMetatypes ? (

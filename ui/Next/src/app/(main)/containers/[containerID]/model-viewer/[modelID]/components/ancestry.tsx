@@ -22,29 +22,43 @@ export default function Ancestry(props: Props) {
 
   return (
     <>
-      <Box sx={{ padding: ".5rem" }}>
+      <Box sx={{ paddingLeft: "2.5rem" }}>
         <Typography variant="body1">
           The model hierarchy lists the complete ancestry of the selected object
         </Typography>
       </Box>
+
       <br />
       <Timeline position={"left"}>
         {ancestry
           ? ancestry.map((ancestor: Ancestor) => {
               return (
                 <TimelineItem key={ancestor.NodeId}>
-                  <TimelineOppositeContent
-                    sx={{ flex: 0.5 }}
-                    typography={"body2"}
-                  >
-                    {ancestor.Name.toLowerCase()}
+                  <TimelineOppositeContent sx={{ flex: 0.5 }}>
+                    <Typography variant="body2">
+                      {ancestor.Name.toLowerCase()}
+                    </Typography>
                   </TimelineOppositeContent>
                   <TimelineSeparator>
                     <TimelineDot color="primary" />
                     <TimelineConnector />
                   </TimelineSeparator>
-                  <TimelineContent sx={{ flex: 0.15 }} typography={"caption"}>
-                    NodeID: {ancestor.NodeId}
+                  <TimelineContent
+                    sx={{
+                      flex: 0.175,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "start",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Typography variant="caption">
+                        NodeID: {ancestor.NodeId}
+                      </Typography>
+                    </Box>
                   </TimelineContent>
                 </TimelineItem>
               );
@@ -55,10 +69,24 @@ export default function Ancestry(props: Props) {
             {assembly.Name.toLowerCase()}
           </TimelineOppositeContent>
           <TimelineSeparator>
-            <TimelineDot />
+            <TimelineDot color="primary" />
           </TimelineSeparator>
-          <TimelineContent sx={{ flex: 0.15 }} typography={"caption"}>
-            NodeID: {assembly.NodeId}
+          <TimelineContent
+            sx={{
+              flex: 0.175,
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "start",
+                alignItems: "center",
+              }}
+            >
+              <Typography variant="caption">
+                NodeID: {assembly.NodeId}
+              </Typography>
+            </Box>
           </TimelineContent>
         </TimelineItem>
       </Timeline>

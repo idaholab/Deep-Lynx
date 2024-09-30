@@ -5,12 +5,13 @@ import { useEffect, useState } from "react";
 import { useContainer } from "@/lib/context/ContainerProvider";
 
 // MUI
-import { Button, Container, Grid } from "@mui/material";
+import { Grid } from "@mui/material";
 
 // Styles
 import { classes } from "@/app/styles";
 
 // Components
+import Welcome from "./components/welcome";
 import Graph from "./graph";
 import WebGL from "./webgl";
 
@@ -23,12 +24,11 @@ import {
   PayloadT,
   RelatedNodeT,
   MeshObject,
-  MetatypeMappingsT,
 } from "@/lib/types/modules/modelViewer";
 
 export default function Home() {
   // Hooks
-  const [render, setRender] = useState<boolean>(false);
+  const [start, setStart] = useState<boolean>(false);
   const [payload, setPayload] = useState<PayloadT>({} as PayloadT);
 
   const [mesh, setMesh] = useState<MeshObject | undefined>(); // Mesh is the gameobject selected in the scene
@@ -61,25 +61,17 @@ export default function Home() {
     setGraph(undefined); // If the metatype mappings have changed, remove the graph from state
   }, [mappings]);
 
-  const handleRender = () => {
-    setRender(true);
-  };
-
   return (
     <>
       <Grid container className={classes.grid}>
         <Grid item xs={4}>
           <Graph graph={graph} mesh={mesh} selected={selected} />
           <br />
-          {!render ? (
-            <Container>
-              <Button onClick={handleRender}>Start Viewer</Button>
-            </Container>
-          ) : null}
+          {start ? null : <Welcome setStart={setStart} />}
           <br />
         </Grid>
         <Grid item xs={8}>
-          {render ? (
+          {start ? (
             <WebGL
               payload={payload}
               mappings={mappings}
