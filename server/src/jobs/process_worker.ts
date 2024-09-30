@@ -45,23 +45,6 @@ export async function ProcessWorkerStart(importIDs: string[], containerID: strin
         process.exit(0);
     }
 
-    // we need to run a lock on the container first so that we can maintain we're the only process running on it
-    const transactionResult = await ContainerMapper.Instance.startTransaction();
-    if (transactionResult.isError) {
-        Logger.error(`unexpected error in obtaining a transaction in processing thread ${JSON.stringify(transactionResult.error)}`);
-        process.exit(0);
-    }
-
-    // we only use this transaction to hold the lock, nothing else. Everything else is as either their own client transaction
-    // or doesn't need one
-    const transaction = transactionResult.value;
-
-    const lockResult = await ContainerMapper.Instance.AdvisoryLockContainer(containerID, transaction);
-    if (lockResult.isError) {
-        Logger.error(`unable to lock container for processing in processing thread ${JSON.stringify(lockResult.error)}`);
-        process.exit(0);
-    }
-
     // set process start time
     const importRepo = new ImportRepository();
     void (await importRepo.setStart(new Date(), importIDs));
