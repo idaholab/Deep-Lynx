@@ -94,13 +94,18 @@ export default class ContainerMapper extends Mapper {
         return super.runStatement(this.deleteStatement(containerID));
     }
 
-    // open an advisory lock on the container, will wait until the lock is available
+    // try to open an advisory lock on the container, will wait until the lock is available
     // we need to run this in a transaction so we hold a connection open throughout the processes that
-    // use it, the pool will close otherwise
-    public async AdvisoryLockContainer(containerID: string, transaction: PoolClient): Promise<Result<boolean>> {
-        return super.runStatement(this.lockContainerStatement(containerID), {
+    // use it, the pool will close otherwise - will return false if it cannot pull the lock
+    // https://www.postgresql.org/docs/current/functions-admin.html#FUNCTIONS-ADVISORY-LOCKS
+    public async AdvisoryLockContainer(containerID: string, transaction: PoolClient): Promise<boolean> {
+        const r = await super.retrieve<{[key: string]: any}>(this.lockContainerStatement(containerID), {
             transaction,
         });
+
+        if (r.isError) return Promise.resolve(false);
+
+        return Promise.resolve(r.value.lock);
     }
 
     public async CreateDataSourceTemplate(template: DataSourceTemplate, containerID: string, transaction?: PoolClient): Promise<Result<DataSourceTemplate[]>> {
@@ -242,26 +247,28 @@ export default class ContainerMapper extends Mapper {
     // My hope is that this method will allow us to be flexible and create more complicated
     // queries more easily.
     private createStatement(userID: string, ...containers: Container[]): string {
-        const text = `INSERT INTO containers(
-                       name,
-                       description,
-                       config, 
-                       created_by, 
-                       modified_by) VALUES %L RETURNING *`;
+        const text = `INSERT INTO containers(name,
+                                             description,
+                                             config,
+                                             created_by,
+                                             modified_by)
+        VALUES
+        %L RETURNING *`;
         const values = containers.map((container) => [container.name, container.description, container.config, userID, userID]);
 
         return format(text, values);
     }
 
     private fullUpdateStatement(userID: string, ...containers: Container[]): string {
-        const text = `UPDATE containers AS c SET
-                        name = u.name,
-                        description = u.description,
-                        config = u.config::jsonb,
-                        modified_by = u.modified_by,
-                        modified_at = NOW()
-                      FROM(VALUES %L) AS u(id, name, description, config, modified_by)
-                      WHERE u.id::bigint = c.id RETURNING c.*`;
+        const text = `UPDATE containers AS c
+                      SET name        = u.name,
+                          description = u.description,
+                          config      = u.config::jsonb,
+                          modified_by = u.modified_by,
+                          modified_at = NOW()
+                      FROM (VALUES %L) AS u(id, name, description, config, modified_by)
+                      WHERE u.id::bigint = c.id
+                      RETURNING c.*`;
         const values = containers.map((container) => [container.id, container.name, container.description, container.config, userID]);
 
         return format(text, values);
@@ -269,21 +276,29 @@ export default class ContainerMapper extends Mapper {
 
     private archiveStatement(containerID: string, userID: string): QueryConfig {
         return {
-            text: `UPDATE containers SET deleted_at = NOW(), modified_by = $2  WHERE id = $1`,
+            text: `UPDATE containers
+                   SET deleted_at  = NOW(),
+                       modified_by = $2
+                   WHERE id = $1`,
             values: [containerID, userID],
         };
     }
 
     private setActiveStatement(containerID: string, userID: string): QueryConfig {
         return {
-            text: `UPDATE containers SET modified_at = NOW(), modified_by = $2 WHERE id = $1`,
+            text: `UPDATE containers
+                   SET modified_at = NOW(),
+                       modified_by = $2
+                   WHERE id = $1`,
             values: [containerID, userID],
         };
     }
 
     private deleteStatement(containerID: string): QueryConfig {
         return {
-            text: `DELETE FROM containers WHERE id = $1`,
+            text: `DELETE
+                   FROM containers
+                   WHERE id = $1`,
             values: [containerID],
         };
     }
@@ -291,8 +306,8 @@ export default class ContainerMapper extends Mapper {
     private retrieveStatement(id: string): QueryConfig {
         return {
             text: `SELECT c.*
-                    FROM containers c
-                    WHERE c.id = $1`,
+                   FROM containers c
+                   WHERE c.id = $1`,
             values: [id],
         };
     }
@@ -300,18 +315,18 @@ export default class ContainerMapper extends Mapper {
     private listStatement(): QueryConfig {
         return {
             text: `SELECT c.*
-                    FROM containers c`,
+                   FROM containers c`,
         };
     }
 
-    private lockContainerStatement(containerID: string): string {
-        return format(`SELECT pg_advisory_xact_lock(%L);`, [containerID]);
+    private lockContainerStatement(containerID: string): QueryConfig {
+        return {text: `SELECT pg_try_advisory_xact_lock($1) as lock;`, values: [containerID]};
     }
 
     private listFromIDsStatement(ids: string[]): string {
         const text = `SELECT c.*
-                    FROM containers c
-                    WHERE c.id IN(%L)`;
+                      FROM containers c
+                      WHERE c.id IN (%L)`;
 
         return format(text, ids);
     }
@@ -319,9 +334,9 @@ export default class ContainerMapper extends Mapper {
     private listForServiceUserStatement(userID: string): QueryConfig {
         return {
             text: `SELECT c.*
-                    FROM container_service_users cs
-                    JOIN containers c ON cs.container_id = c.id
-                    WHERE cs.user_id = $1`,
+                   FROM container_service_users cs
+                            JOIN containers c ON cs.container_id = c.id
+                   WHERE cs.user_id = $1`,
             values: [userID],
         };
     }
@@ -331,18 +346,17 @@ export default class ContainerMapper extends Mapper {
     private createDataSourceTemplateStatement(templates: DataSourceTemplate[], containerID: string): QueryConfig {
         const templateIDs = templates.map((t) => t.id);
         return {
-            text: `UPDATE containers AS c SET
-                config = jsonb_set(config, '{data_source_templates}',
-                    CASE
-                        WHEN config->'data_source_templates' IS NULL THEN $1::jsonb
-                        ELSE config->'data_source_templates' || $1::jsonb
-                    END
-                ) WHERE c.id = $2
-                RETURNING (
-                    SELECT jsonb_agg(e)
-                    FROM jsonb_array_elements(c.config->'data_source_templates') AS e
-                    WHERE e->>'id' = ANY($3)
-                ) AS data_source_templates`,
+            text: `UPDATE containers AS c
+                   SET config = jsonb_set(config, '{data_source_templates}',
+                                          CASE
+                                              WHEN config -> 'data_source_templates' IS NULL THEN $1::jsonb
+                                              ELSE config -> 'data_source_templates' || $1::jsonb
+                                              END
+                                )
+                   WHERE c.id = $2
+                   RETURNING (SELECT jsonb_agg(e)
+                              FROM jsonb_array_elements(c.config -> 'data_source_templates') AS e
+                              WHERE e ->> 'id' = ANY ($3)) AS data_source_templates`,
             values: [JSON.stringify(templates), containerID, templateIDs],
         };
     }
@@ -350,8 +364,10 @@ export default class ContainerMapper extends Mapper {
     private retrieveDataSourceTemplateByIDStatement(templateID: string, containerID: string): QueryConfig {
         return {
             text: `SELECT jsonb_agg(e)
-                FROM containers c, jsonb_array_elements(c.config->'data_source_templates') AS e
-                WHERE e->>'id' = $1 AND c.id = $2`,
+                   FROM containers c,
+                        jsonb_array_elements(c.config -> 'data_source_templates') AS e
+                   WHERE e ->> 'id' = $1
+                     AND c.id = $2`,
             values: [templateID, containerID],
         };
     }
@@ -359,17 +375,19 @@ export default class ContainerMapper extends Mapper {
     private retrieveDataSourceTemplateByNameStatement(templateName: string, containerID: string): QueryConfig {
         return {
             text: `SELECT jsonb_agg(e)
-                FROM containers c, jsonb_array_elements(c.config->'data_source_templates') AS e
-                WHERE e->>'name' = $1 AND c.id = $2`,
+                   FROM containers c,
+                        jsonb_array_elements(c.config -> 'data_source_templates') AS e
+                   WHERE e ->> 'name' = $1
+                     AND c.id = $2`,
             values: [templateName, containerID],
         };
     }
 
     private listDataSourceTemplatesStatement(containerID: string): QueryConfig {
         return {
-            text: `SELECT c.config->>'data_source_templates' AS data_source_templates
-                FROM containers c
-                WHERE c.id = $1`,
+            text: `SELECT c.config ->> 'data_source_templates' AS data_source_templates
+                   FROM containers c
+                   WHERE c.id = $1`,
             values: [containerID],
         };
     }
@@ -380,16 +398,16 @@ export default class ContainerMapper extends Mapper {
     // layer, within a transaction.
     private updateDataSourceTemplateStatement(template: DataSourceTemplate, containerID: string): QueryConfig {
         return {
-            text: `UPDATE containers AS c SET
-                config = jsonb_set(config, '{data_source_templates}', (
-                    SELECT jsonb_agg(
-                        CASE
-                            WHEN e->>'id' = $1 THEN $2::jsonb
-                            ELSE e
-                        END
-                    ) FROM jsonb_array_elements(c.config->'data_source_templates') AS e
-                )) WHERE c.id = $3
-                RETURNING c.config->>'data_source_templates' AS data_source_templates`,
+            text: `UPDATE containers AS c
+                   SET config = jsonb_set(config, '{data_source_templates}', (SELECT jsonb_agg(
+                                                                                             CASE
+                                                                                                 WHEN e ->> 'id' = $1 THEN $2::jsonb
+                                                                                                 ELSE e
+                                                                                                 END
+                                                                                     )
+                                                                              FROM jsonb_array_elements(c.config -> 'data_source_templates') AS e))
+                   WHERE c.id = $3
+                   RETURNING c.config ->> 'data_source_templates' AS data_source_templates`,
             values: [template.id!, JSON.stringify(template), containerID],
         };
     }
@@ -397,32 +415,32 @@ export default class ContainerMapper extends Mapper {
     // if all items are deleted, set the array to an empty array instead of null
     private deleteDataSourceTemplateStatement(templateIDs: string[], containerID: string): QueryConfig {
         return {
-            text: `UPDATE containers AS c SET
-                config = jsonb_set(config, '{data_source_templates}', (
-                    SELECT CASE
-                        WHEN COUNT(e) = 0 THEN '[]'::jsonb
-                        ELSE jsonb_agg(e)
-                    END
-                    FROM jsonb_array_elements(c.config->'data_source_templates') AS e
-                    WHERE e->>'id' <> ALL($1)
-                )) WHERE c.id = $2
-                RETURNING c.config->>'data_source_templates' AS data_source_templates`,
+            text: `UPDATE containers AS c
+                   SET config = jsonb_set(config, '{data_source_templates}', (SELECT CASE
+                                                                                         WHEN COUNT(e) = 0 THEN '[]'::jsonb
+                                                                                         ELSE jsonb_agg(e)
+                                                                                         END
+                                                                              FROM jsonb_array_elements(c.config -> 'data_source_templates') AS e
+                                                                              WHERE e ->> 'id' <> ALL ($1)))
+                   WHERE c.id = $2
+                   RETURNING c.config ->> 'data_source_templates' AS data_source_templates`,
             values: [templateIDs, containerID],
         };
     }
 
     private authorizeDataSourceTemplateStatement(templateName: string, containerID: string): QueryConfig {
         return {
-            text: `UPDATE containers AS c SET
-                config = jsonb_set(config, '{data_source_templates}', (
-                    SELECT jsonb_agg(
-                        CASE
-                            WHEN e->>'name' = $1 THEN jsonb_set(e, '{authorized}', 'true'::jsonb)
-                            ELSE e
-                        END
-                    ) FROM jsonb_array_elements(c.config->'data_source_templates') AS e
-                )) WHERE c.id = $2
-                RETURNING c.config->>'data_source_templates' AS data_source_templates`,
+            text: `UPDATE containers AS c
+                   SET config = jsonb_set(config, '{data_source_templates}', (SELECT jsonb_agg(
+                                                                                             CASE
+                                                                                                 WHEN e ->> 'name' = $1
+                                                                                                     THEN jsonb_set(e, '{authorized}', 'true'::jsonb)
+                                                                                                 ELSE e
+                                                                                                 END
+                                                                                     )
+                                                                              FROM jsonb_array_elements(c.config -> 'data_source_templates') AS e))
+                   WHERE c.id = $2
+                   RETURNING c.config ->> 'data_source_templates' AS data_source_templates`,
             values: [templateName, containerID],
         };
     }
