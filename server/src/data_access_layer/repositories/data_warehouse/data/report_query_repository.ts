@@ -118,10 +118,24 @@ export default class ReportQueryRepository extends Repository implements Reposit
             storageConnection = `provider=filesystem;uploadPath=${uploadPath};rootFilePath=${rootFilePath};`;
         } else if (Config.file_storage_method === 'azure_blob') {
             const accountName = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('AccountName='))?.split('AccountName=')[1];
-            // we need to remove accountName from the end of the blobEndpoint
-            const blobEndpoint = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('BlobEndpoint='))?.split('BlobEndpoint=')[1].split(`/${accountName}`)[0]!;
             const accountKey = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('AccountKey='))?.split('AccountKey=')[1];
             const containerName = Config.azure_blob_container_name;
+
+            // set blobEndpoint
+            let blobEndpoint: string = '';
+            // check for presence of EndpointSuffix; if so we need to construct the BlobEndpoint
+            if (Config.azure_blob_connection_string.includes('EndpointSuffix=')) {
+                const protocol = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('DefaultEndpointsProtocol='))?.split('DefaultEndpointsProtocol=')[1];
+                const suffix = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('EndpointSuffix='))?.split('EndpointSuffix=')[1];
+                blobEndpoint = `${protocol}://${accountName}.${suffix}`
+            } // otherwise we need to remove accountName from the end of the BlobEndpoint
+            else if (Config.azure_blob_connection_string.includes('BlobEndpoint=')) {
+                blobEndpoint = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('BlobEndpoint='))?.split('BlobEndpoint=')[1].split(`/${accountName}`)[0]!;
+            } // return an error if BlobEndpoint is unable to be constructed
+            else {
+                return Promise.resolve(Result.Failure(`error: unable to construct BlobEndpoint`));
+            }
+            
             storageConnection = `provider=azure_blob;uploadPath=${uploadPath};blobEndpoint=${blobEndpoint};accountName=${accountName};accountKey='${accountKey}';containerName=${containerName};`;
         } else {
             return Promise.resolve(Result.Failure(`error: unsupported or unimplemented file storage method being used`));
