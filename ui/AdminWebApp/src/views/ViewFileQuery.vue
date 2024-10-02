@@ -40,6 +40,7 @@
                     v-if="fileLoading"
                   ></v-progress-linear>
                   <v-file-input
+                    v-model="fileToSave"
                     :label="$t('files.selectToUpload')"
                     @change="addFile"
                   ></v-file-input>
@@ -56,7 +57,10 @@
                 <v-card-actions>
                   <v-spacer></v-spacer>
                   <v-btn color="error" text @click="exitDialog">{{$t("general.cancel")}}</v-btn>
-                  <v-btn color="primary" text @click="saveFile" :disabled=!fileToSave v-if="datasourceID">{{$t("general.save")}}</v-btn>
+                  <v-btn color="primary" text @click="saveFile" :disabled=!fileToSave v-if="datasourceID">
+                    <span v-if="!fileLoading">{{$t("general.save")}}</span>
+                    <span v-if="fileLoading"><v-progress-circular indeterminate></v-progress-circular></span>
+                  </v-btn>
                 </v-card-actions>
               </v-card>
             </v-dialog>
@@ -237,6 +241,9 @@ export default Vue.extend({
       ];
     },
     exitDialog() {
+      this.fileToSave = null;
+      this.isTimeseries = false;
+      this.describe = false;
       this.addFileDialog = false;
       this.fileLoading = false;
       this.$emit("nodeFilesDialogClose");
@@ -254,6 +261,9 @@ export default Vue.extend({
         })
         .catch((e) => (this.errorMessage = e))
         .finally(() => {
+          this.fileToSave = null;
+          this.isTimeseries = false;
+          this.describe = false;
           this.addFileDialog = false;
           this.fileLoading = false;
           this.$emit("nodeFilesDialogClose");
