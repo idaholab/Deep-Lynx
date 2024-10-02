@@ -409,7 +409,7 @@ export default class ContainerRoutes {
 
         busboy.on('finish', async () => {
             // check query params supplied and attempt to import
-            let importErrors = '';
+            let importErrors = [];
             let ontologyResult = '';
             let dataSourceMap: Map<string, string> | null = null;
             const typeMappingMap: Map<string, string> = new Map();
@@ -419,7 +419,7 @@ export default class ContainerRoutes {
             if (String(req.query.importOntology).toLowerCase() === 'true') {
                 const ontologyImport = await repository.importOntology(req.container!.id!, req.currentUser!, jsonImport);
                 if (ontologyImport.isError) {
-                    importErrors += ontologyImport.error;
+                    importErrors.push(ontologyImport.error.error);
                 } else {
                     ontologyResult = ontologyImport.value;
                 }
@@ -428,21 +428,19 @@ export default class ContainerRoutes {
                 const dsRepository = new DataSourceRepository();
                 const dataSourceImport = await dsRepository.importDataSources(req.container!.id!, req.currentUser!, jsonImport);
                 if (dataSourceImport.isError) {
-                    importErrors += dataSourceImport.error;
+                    importErrors.push(dataSourceImport.error.error);
                 } else {
                     dataSourceMap = dataSourceImport.value;
                 }
             }
             if (String(req.query.importTypeMappings).toLowerCase() === 'true') {
                 // dependent on successful data source import
-                if (dataSourceMap === null) {
-                    importErrors +=
-                        ' Tye mapping import is dependent on a successful data source import. ' +
-                        'Fix data source import errors to enable type mapping import.';
+
+                if (typeof jsonImport.type_mappings === 'undefined' || jsonImport.type_mappings.length === 0) {
+                    importErrors.push('Container export file does not contain all necessary sections for a type mapping import- missing type_mappings');
+                } else if (dataSourceMap === null) {
+                    importErrors.push('Type mapping import is dependent on a successful data source import. Fix data source import errors to enable type mapping import.')
                 } else {
-                    if (!('type_mappings' in jsonImport)) {
-                        importErrors += 'Container export file does not contain all necessary sections for a type mapping import.';
-                    }
                     const mappings = jsonImport.type_mappings as TypeMapping[];
                     const mappingRepo = new TypeMappingRepository();
 
@@ -461,7 +459,7 @@ export default class ContainerRoutes {
                     for (const mappingResult of mappingImport) {
                         for (const mapping of mappingResult) {
                             if (mapping.isError) {
-                                importErrors += mapping.error;
+                                importErrors.push(mapping.error.error);
                             } else {
                                 typeMappingMap.set(mapping.value.id!, 'success');
                             }
@@ -479,7 +477,7 @@ export default class ContainerRoutes {
             };
 
             if (importErrors.length > 0) {
-                Result.Failure(importErrors + resultMessage()).asResponse(res);
+                Result.Failure(importErrors.join(',')).asResponse(res);
             } else {
                 Result.Success(resultMessage()).asResponse(res);
             }
