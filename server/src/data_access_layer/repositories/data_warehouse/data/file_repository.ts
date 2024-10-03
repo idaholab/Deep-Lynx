@@ -275,7 +275,7 @@ export default class FileRepository extends Repository implements RepositoryInte
             container_id: file.container_id!,
             data_source_id: file.data_source_id,
             short_uuid: file.short_uuid!,
-            timeseries: true, // why is this not setting in mapper?
+            timeseries: true,
         });
 
         const provider = BlobStorageProvider(file.adapter)!;
