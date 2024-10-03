@@ -501,7 +501,7 @@ export class Client {
 
     refreshRepairPermissions(containerID: string): Promise<JSON>{
 
-        return new Promise((resolve, reject) => { 
+        return new Promise((resolve, reject) => {
             this.post<JSON>(`containers/${containerID}/permissions`,String)
             .then((results) => resolve(results))
             .catch((e) => reject(e))})
@@ -692,6 +692,10 @@ export class Client {
 
     deleteFile(containerID: string, fileID: string): Promise<boolean> {
         return this.delete(`/containers/${containerID}/files/${fileID}`);
+    }
+
+    renameFile(containerID: string, fileID: string): Promise<boolean> {
+      return this.put(`/containers/${containerID}/files/${fileID}/rename`);
     }
 
     attachFileToNode(containerID: string, nodeID: string, fileID: string): Promise<boolean> {

@@ -211,6 +211,7 @@ export default class FileMapper extends Mapper {
                 file_name = EXCLUDED.file_name,
                 file_size = EXCLUDED.file_size,
                 metadata = EXCLUDED.metadata,
+                timeseries = EXCLUDED.timeseries,
                 modified_at = NOW()
             WHERE EXCLUDED.id = files.id
             RETURNING *`;

@@ -74,9 +74,20 @@
             <v-icon small @click="downloadFile(item)" class="mr-2">
               mdi-download
             </v-icon>
-
-            <v-icon small @click="removeFile(item)" class="">
+            <v-icon small @click="removeFile(item)" class="mr-2">
               mdi-delete
+            </v-icon>
+            <v-icon
+              small
+              v-if="
+                !item.timeseries &&
+                (item.file_name.includes('.csv') ||
+                  item.file_name.includes('.json'))
+              "
+              @click="retrofitTimeseries(item)"
+              class="mr-2"
+            >
+              mdi-file-compare
             </v-icon>
             <!-- not the world's best if statement for catching IFC files, but will work in 99% of the cases -->
             <ifc-viewer
@@ -280,6 +291,12 @@ export default Vue.extend({
           link.click();
         }
       });
+    },
+    retrofitTimeseries(file: FileT) {
+      this.$client
+        .renameFile(this.container.id, file.id)
+        .then(() => this.loadFiles())
+        .catch((e) => (this.errorMessage = e));
     },
     isImage(fileName: string): boolean {
       const extensions = [
