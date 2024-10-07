@@ -36,7 +36,7 @@ pub fn register_azure_store(
         }
       })?)
       .with_allow_http(true) // only on dev builds
-      .with_use_emulator(true)
+      .with_use_emulator(true) // only on dev builds
       .build()?,
   );
 
@@ -66,7 +66,6 @@ pub fn register_azure_store(
           msg: "Azure Container Name is not set in connection string".to_string(),
         }
       })?)
-      .with_use_emulator(true)
       .build()?,
   )
 }

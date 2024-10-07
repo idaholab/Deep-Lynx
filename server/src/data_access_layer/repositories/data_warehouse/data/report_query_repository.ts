@@ -127,7 +127,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
             if (Config.azure_blob_connection_string.includes('EndpointSuffix=')) {
                 const protocol = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('DefaultEndpointsProtocol='))?.split('DefaultEndpointsProtocol=')[1];
                 const suffix = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('EndpointSuffix='))?.split('EndpointSuffix=')[1];
-                blobEndpoint = `${protocol}://${accountName}.${suffix}`
+                blobEndpoint = `${protocol}://${accountName}.blob.${suffix}`
             } // otherwise we need to remove accountName from the end of the BlobEndpoint
             else if (Config.azure_blob_connection_string.includes('BlobEndpoint=')) {
                 blobEndpoint = Config.azure_blob_connection_string.split(';').find(e => e.startsWith('BlobEndpoint='))?.split('BlobEndpoint=')[1].split(`/${accountName}`)[0]!;
@@ -135,7 +135,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
             else {
                 return Promise.resolve(Result.Failure(`error: unable to construct BlobEndpoint`));
             }
-            
+
             storageConnection = `provider=azure_blob;uploadPath=${uploadPath};blobEndpoint=${blobEndpoint};accountName=${accountName};accountKey='${accountKey}';containerName=${containerName};`;
         } else {
             return Promise.resolve(Result.Failure(`error: unsupported or unimplemented file storage method being used`));
@@ -145,9 +145,9 @@ export default class ReportQueryRepository extends Repository implements Reposit
             this.processDescribe(reportID, request.query!, storageConnection, files as FileMetadata[]);
         } else {
             this.processQuery(
-                reportID, 
-                request.query!, 
-                storageConnection, 
+                reportID,
+                request.query!,
+                storageConnection,
                 files as FileMetadata[],
                 queryID,
                 user
@@ -156,7 +156,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
 
         // set report status to "processing"
         let statusSet = await this.#reportRepo.setStatus(
-            reportID, 'processing', 
+            reportID, 'processing',
             `executing query ${queryID}: "${reportQuery.query}" as part of report ${reportID}`
         );
         if (statusSet.isError) {return Promise.resolve(Result.Failure(`unable to set report status`))}
@@ -166,9 +166,9 @@ export default class ReportQueryRepository extends Repository implements Reposit
     }
 
     async processQuery(
-        reportID: string, 
-        query: string, 
-        storageConnection: string, 
+        reportID: string,
+        query: string,
+        storageConnection: string,
         files: FileMetadata[],
         queryID: string,
         user: User
@@ -183,7 +183,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
             if (parsedResults.adapter === 'filesystem') {
                 parsedResults.file_path = `${Config.filesystem_storage_directory}${parsedResults.file_path}`;
             }
-            
+
             // create a file record in the DB
             const file = new File({
                 container_id: containerID,
@@ -226,7 +226,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
     async processDescribe(reportID: string, query: string, storageConnection: string, files: FileMetadata[]): Promise<void> {
         try {
             const results = await processUpload(reportID, query, storageConnection, files);
-            
+
             // since we have a nested json we need to do some initial parsing before loading data into the DB
             const descriptionsList = JSON.parse(results)['descriptions'];
             descriptionsList.map((o: {[key: string]: any}) => o.description = JSON.parse(o['description']) as FileDescription);
