@@ -310,10 +310,10 @@ export default class FileFunctions {
                 }
             } else {
                 files.push(fileRepo.uploadFile(
-                    req.params.containerID, 
-                    req.currentUser!, 
-                    filename, 
-                    file as Readable, 
+                    req.params.containerID,
+                    req.currentUser!,
+                    filename,
+                    file as Readable,
                     req.params.sourceID,
                     options
                 ));
@@ -568,6 +568,23 @@ export default class FileFunctions {
         } else {
             Result.Failure(`file not found`, 404).asResponse(res);
             next();
+        }
+    }
+
+    public static renameFile(req: Request, res: Response, next: NextFunction) {
+        if (!req.file) {
+            Result.Failure(`file not found`, 404).asResponse(res);
+            next();
+        } else {
+            fileRepo
+                .renameFile(req.file, req.currentUser!)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
         }
     }
 }

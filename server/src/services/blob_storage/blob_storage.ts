@@ -22,6 +22,7 @@ export interface BlobStorage {
     ): Promise<Result<BlobUploadResponse>>;
     appendPipe(file: File, stream: Readable | null): Promise<Result<boolean>>;
     deleteFile(file: File): Promise<Result<boolean>>;
+    renameFile?(file: File): Promise<Result<boolean>>;
     downloadStream(file: File): Promise<Readable | undefined>;
     name(): string;
 }
