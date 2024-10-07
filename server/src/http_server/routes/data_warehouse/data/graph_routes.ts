@@ -98,6 +98,7 @@ export default class GraphRoutes {
             FileFunctions.deleteFile,
         );
         app.get('/containers/:containerID/graphs/nodes/:nodeID/files', ...middleware, authInContainer('read', 'data'), FileFunctions.listFilesForNode);
+        app.put('/containers/:containerID/files/:fileID/rename', ...middleware, authInContainer('write', 'data'), FileFunctions.renameFile);
 
         //Files for Container
         app.get('/containers/:containerID/files', ...middleware, authInContainer('read', 'data'), FileFunctions.listFilesForContainer);

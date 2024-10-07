@@ -263,6 +263,35 @@ export default class FileRepository extends Repository implements RepositoryInte
         return Promise.resolve(Result.Success(file));
     }
 
+    async renameFile(file: File, user: User): Promise<Result<boolean>> {
+        const newFile = new File({
+            id: file.id,
+            file_name: file.file_name!,
+            file_size: file.file_size!,
+            md5hash: file.md5hash,
+            adapter_file_path: file.adapter_file_path!,
+            adapter: file.adapter!,
+            metadata: file.metadata,
+            container_id: file.container_id!,
+            data_source_id: file.data_source_id,
+            short_uuid: file.short_uuid!,
+            timeseries: true,
+        });
+
+        const provider = BlobStorageProvider(file.adapter)!;
+        const blob_res = await provider.renameFile?.(newFile);
+        if (blob_res?.isError) {
+            return Promise.resolve(Result.Pass(blob_res));
+        }
+
+        const db_res = await this.#mapper.Update(user.id!, newFile);
+        if (db_res.isError) {
+            return Promise.resolve(Result.Pass(db_res));
+        }
+
+        return Promise.resolve(Result.Success(true));
+    }
+
     constructor() {
         super(FileMapper.tableName);
     }

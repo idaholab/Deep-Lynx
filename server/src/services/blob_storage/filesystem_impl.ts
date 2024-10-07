@@ -170,4 +170,29 @@ export default class Filesystem implements BlobStorage {
         this._directory = directory;
         this._isWindows = isWindows;
     }
+
+    renameFile(f: File): Promise<Result<boolean>> {
+        try {
+            /* eslint-disable-next-line security/detect-non-literal-fs-filename --
+             * TypeScript wants to guard against malicious file renaming,
+             * but since the rename is generated server-side and not by the end user,
+             * there is no security risk
+            **/
+            const rename_res = fs.rename(
+                `${f.adapter_file_path}${f.file_name}${f.short_uuid}`,
+                `${f.adapter_file_path}${f.short_uuid}${f.file_name}`,
+                (err) => {
+                    if (err) throw err;
+            });
+
+            if (rename_res === null || rename_res === undefined) {
+                return Promise.resolve(Result.Success(true));
+            }
+        } catch (e) {
+            Logger.error(`filesystem rename error: ${e}`);
+            return Promise.resolve(Result.Success(false));
+        }
+
+        return Promise.resolve(Result.Success(false));
+    }
 }
