@@ -176,13 +176,15 @@ defmodule DatumWeb.OriginExplorerLive do
   end
 
   def handle_event("home_navigate", _params, socket) do
+    user = socket.assigns.current_user
+
     {:noreply,
      socket
      |> assign(:items, [])
      |> assign(:path_items, [])
      |> assign(:origin, nil)
      |> assign_async(:origins, fn ->
-       {:ok, %{origins: Datum.DataOrigin.list_data_orgins_user(socket.assigns.current_user)}}
+       {:ok, %{origins: Datum.DataOrigin.list_data_orgins_user(user)}}
      end)}
   end
 

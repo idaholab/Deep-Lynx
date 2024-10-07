@@ -1,6 +1,28 @@
 defmodule Datum.Plugins.Extractor do
   @moduledoc """
-  Run is in charge of loading the WASM modules from the Plugin schema and
+  Extractor module for running either the plugin system for extracting metadata
+  or native elixir code to do the same.
+  """
+
+  alias Datum.Plugins.Plugin
+
+  @doc """
+  Extract either defers out to the plugin system or runs native elixir packages to extract metadata.
+  You should typically call this over `extract_with_plugin/3` unless you know what you're doing.
+  """
+  def extract_metadata(path, opts \\ []) do
+    # overwrite the extension if provided - this can also force an extractor if the file type is difficult
+    ext = Keyword.get(opts, :ext, Path.extname(path))
+
+    case ext do
+      ".parquet" -> nil
+      _ -> {:error, :unsupported_file_type}
+    end
+  end
+
+  @doc """
+  TODO: remove this eventually, right now we need for tests, we'll consolidate this a bit more soon
+  Extract with plugin is in charge of loading the WASM modules from the Plugin schema and
   running the WASI runtime. Keep in mind that we should try and limit how
   often we compile the module, but we still need to start a genserver each time
   in order to limit file visibility to the directory where the file is at.
@@ -8,10 +30,7 @@ defmodule Datum.Plugins.Extractor do
   In time the pipeline running this should be intelligent enough to run all loaded scanners
   for the directory instead of recompiling for each one.
   """
-
-  alias Datum.Plugins.Plugin
-
-  def extract(%Plugin{} = plugin, path, _opts \\ []) do
+  def extract_with_plugin(%Plugin{} = plugin, path, _opts \\ []) do
     {:ok, stderr} = Wasmex.Pipe.new()
     {:ok, stdout} = Wasmex.Pipe.new()
 
@@ -49,4 +68,10 @@ defmodule Datum.Plugins.Extractor do
         {:error, Wasmex.Pipe.read(stderr)}
     end
   end
+
+  @doc """
+  The extract behavior that each Elixir based extractor should implement
+  """
+  @callback extract(path :: String.t(), opts :: Keyword.t()) ::
+              {:ok, %{}} | {:error, Exception.t()}
 end

@@ -17,9 +17,6 @@ defmodule Datum.ScannerFixtures do
     delete_directory(test_path)
   end
 
-  @doc """
-  Generate files and directories for random scanning testing
-  """
   defp generate_files(path, depth) do
     if depth > 0 do
       # Generate a random number of files between 5 and 10

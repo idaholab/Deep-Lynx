@@ -19,7 +19,7 @@ defmodule Datum.PluginsRunTest do
       assert plugin.name == "csv extractor"
       assert plugin.filetypes == [".csv", "text/csv"]
 
-      {:ok, json} = Extractor.extract(plugin, "#{__DIR__}/test_files/smallpop.csv")
+      {:ok, json} = Extractor.extract_with_plugin(plugin, "#{__DIR__}/test_files/smallpop.csv")
       assert is_map(json)
     end
   end

@@ -85,6 +85,7 @@ defmodule Datum.MixProject do
       {:yaml_elixir, "~> 2.11"},
       {:gen_smtp, "~> 1.1"},
       {:prompt, "~> 0.10.0"},
+      {:explorer, "~> 0.9.2"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end
