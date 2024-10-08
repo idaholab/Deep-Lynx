@@ -26,7 +26,8 @@ export default function RootLayout({
   return (
     <StoreProvider>
       <ThemeProvider>
-        <Wireframe>{children}</Wireframe>
+        {/* <Wireframe>{children}</Wireframe> */}
+        {children}
       </ThemeProvider>
     </StoreProvider>
   );
