@@ -81,6 +81,7 @@ pub async fn get_blob_size(
       msg: "Azure Account Name is not set in connection string".to_string(),
     })?
     .to_owned();
+
   let access_key = storage_connection
     .get("accountkey")
     .ok_or_else(|| QueryError::ReceivedNullDataInRequest {
@@ -95,18 +96,23 @@ pub async fn get_blob_size(
       msg: "Azure Container Name is not set in connection string".to_string(),
     })?
     .to_owned();
-  let endpoint = storage_connection
+
+  let uri = storage_connection
     .get("blobendpoint")
     .ok_or_else(|| QueryError::ReceivedNullDataInRequest {
       msg: "Azure Blob Endpoint is not set in connection string".to_string(),
     })?
     .to_owned();
-  let cloud_location = CloudLocation::Custom {
-    account: account.clone(),
-    uri: format!("{endpoint}/{account}"),
+
+  let cloud_location = match uri.contains(account.as_str()) {
+    true => CloudLocation::Custom { account, uri },
+    false => CloudLocation::Custom {
+      account: account.clone(),
+      uri: format!("{uri}/{account}"),
+    },
   };
-  let blob_client = ClientBuilder::new(account, storage_credentials)
-    .cloud_location(cloud_location)
+
+  let blob_client = ClientBuilder::with_location(cloud_location, storage_credentials)
     .blob_client(&container, format!("{upload_path}/{file_name}"));
 
   Ok(
