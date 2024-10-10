@@ -481,18 +481,13 @@ export default class TypeMappingRepository extends Repository implements Reposit
                 typeMapping.transformations[i].modified_by = undefined;
                 typeMapping.transformations[i].modified_at = undefined;
 
-                // wipe the metatypeIDs in the edge connection params if there are any as well as data sources and node ids
+                // wipe the metatypeIDs in the edge connection params if there are any as well as node ids
                 // wipe only if they are VALUES not keys, keys will change as the data changes
                 if (typeMapping.transformations[i].origin_parameters) {
                     for (const j in typeMapping.transformations[i].origin_parameters!) {
                         if (typeMapping.transformations[i].origin_parameters![j].type)
                             switch (typeMapping.transformations[i].origin_parameters![j].type) {
                                 case 'metatype_id': {
-                                    typeMapping.transformations[i].origin_parameters![j].value = undefined;
-                                    break;
-                                }
-
-                                case 'data_source': {
                                     typeMapping.transformations[i].origin_parameters![j].value = undefined;
                                     break;
                                 }
@@ -514,11 +509,6 @@ export default class TypeMappingRepository extends Repository implements Reposit
                         if (typeMapping.transformations[i].destination_parameters![j].type)
                             switch (typeMapping.transformations[i].destination_parameters![j].type) {
                                 case 'metatype_id': {
-                                    typeMapping.transformations[i].destination_parameters![j].value = undefined;
-                                    break;
-                                }
-
-                                case 'data_source': {
                                     typeMapping.transformations[i].destination_parameters![j].value = undefined;
                                     break;
                                 }

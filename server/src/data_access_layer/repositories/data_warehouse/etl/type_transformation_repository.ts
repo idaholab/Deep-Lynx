@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-for-in-array */
 import RepositoryInterface, {DeleteOptions, QueryOptions, Repository} from "../../repository";
-import TypeTransformation from '../../../../domain_objects/data_warehouse/etl/type_transformation';
+import TypeTransformation, { EdgeConnectionParameter } from '../../../../domain_objects/data_warehouse/etl/type_transformation';
 import Result from '../../../../common_classes/result';
 import {User} from '../../../../domain_objects/access_management/user';
 import TypeTransformationMapper from '../../../mappers/data_warehouse/etl/type_transformation_mapper';
@@ -20,6 +20,8 @@ import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/
 import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
 import OntologyVersionRepository from "../ontology/versioning/ontology_version_repository";
 import {PoolClient} from "pg";
+import DataSourceRepository from "../import/data_source_repository";
+import { DataSource } from "../../../../interfaces_and_impl/data_warehouse/import/data_source";
 
 /*
     TypeTransformationRepository contains methods for persisting and retrieving
@@ -202,11 +204,11 @@ export default class TypeTransformationRepository extends Repository implements 
         return Promise.resolve();
     }
 
-    // backfillIDs will attempt to take a transformation and populate the metatype/relationship pair id as well as the
-    // keys based on name only. This function is generally only used as part of the type mapping export pipeline and
-    // should be used very carefully. This function does not error out of it cannot find the ids specified, the caller
-    // must handle the results of this function separately. Note: this function will only run for those transformations
-    // which lack either metatype or relationship pair id. Making it safe to call on already populated classes
+    // backfillIDs will attempt to take a transformation and populate the metatype/relationship pair id as well as the keys
+    // based on name only. It will also backfill data source mappings using old IDs. This function is generally only used as
+    // part of the type mapping export pipeline and should be used very carefully. This function does not error out of it cannot
+    // find the ids specified, the caller must handle the results of this function separately. Note: this function will only run
+    // for those transformations which lack either metatype or relationship pair id. Making it safe to call on already populated classes
     async backfillIDs(containerID: string, dataSourceID: string,  ...transformations: TypeTransformation[]): Promise<void> {
         // in order to minimize database transactions we will end up looping through the same data multiple times. It's
         // much faster to loop through some in-memory classes than it is to make a very large amount of database transactions
@@ -214,15 +216,18 @@ export default class TypeTransformationRepository extends Repository implements 
         // has to be run for each mapping in the export
         let metatypeRepo = new MetatypeRepository();
         let relationshipPairRepo = new MetatypeRelationshipPairRepository();
+        let dataSourceRepo = new DataSourceRepository();
         // we must get the latest ontology version so we're importing the mappings to the correct ontology version
         const ontologyRepository = new OntologyVersionRepository()
         let ontologyVersion: string | undefined
 
         const metatypeNames: string[] = [];
         const relationshipPairNames: string[] = [];
+        const dataSourceOldIDs: string[] = [];
 
         let metatypes: Metatype[] = [];
         let relationshipPairs: MetatypeRelationshipPair[] = [];
+        let dataSources: (DataSource | undefined)[] = [];
 
         const ontResults = await ontologyRepository.where().containerID('eq', containerID).and().status('eq', 'published').list({sortBy: 'id', sortDesc: true})
         if(ontResults.isError || ontResults.value.length === 0) {
@@ -232,12 +237,34 @@ export default class TypeTransformationRepository extends Repository implements 
         }
 
         for (const transformation of transformations) {
+            // check for metatypes and relationships which need IDs backfilled
             if (transformation.metatype_name && !transformation.metatype_id) metatypeNames.push(transformation.metatype_name);
             if (transformation.selected_relationship_pair_name && !transformation.metatype_relationship_pair_id)
                 relationshipPairNames.push(transformation.selected_relationship_pair_name.replace(/:/g, '-'));
             if (transformation.origin_metatype_name && !transformation.origin_metatype_id) metatypeNames.push(transformation.origin_metatype_name);
             if (transformation.destination_metatype_name && !transformation.destination_metatype_id)
                 metatypeNames.push(transformation.destination_metatype_name);
+
+            // check for datasources which need IDs backfilled
+            // check origin params
+            if (transformation.origin_parameters && transformation.origin_parameters.some(p => p.type === 'data_source')) {
+                // add the value for any origin params with 'data_source' type to the array of old IDs
+                transformation.origin_parameters?.forEach(param => {
+                    if (param.type === 'data_source' && param.value) {
+                        dataSourceOldIDs.push(param.value);
+                    }
+                });
+            }
+
+            // check destination params
+            if (transformation.destination_parameters && transformation.destination_parameters.some(p => p.type === 'data_source')) {
+                // add the value for any destination params with 'data_source' type to the array of old IDs
+                transformation.destination_parameters?.forEach(param => {
+                    if (param.type === 'data_source' && param.value) {
+                        dataSourceOldIDs.push(param.value);
+                    }
+                });
+            }
         }
 
         // fetch all metatypes and relationship pairs by name specified, this allows us to minimize DB calls, though it
@@ -276,9 +303,23 @@ export default class TypeTransformationRepository extends Repository implements 
             else relationshipPairs = results.value;
         }
 
+        // fetch all datasources by old IDs
+        if (dataSourceOldIDs.length > 0) {
+            const results = await dataSourceRepo.where()
+                .containerID('eq', containerID)
+                .and().oldID('in', dataSourceOldIDs)
+                .list();
+
+            if (results.isError) {
+                Logger.error(`unable to fetch datasources for set of transformations on backfill ${results.error?.error}`);
+            }
+            dataSources = results.value;
+        }
+
         // now that we have the metatypes/pairs and their keys - loop through the data again and set id's based on name
         // always check to see if an id is present prior to change, as we don't want to modify any ids already present
         for (const i in transformations) {
+
             // set metatype id and any attached keys correctly
             if (!transformations[i].metatype_id && transformations[i].metatype_name) {
                 const foundMetatype = metatypes.find((m) => m.name === transformations[i].metatype_name);
@@ -347,6 +388,34 @@ export default class TypeTransformationRepository extends Repository implements 
                     transformations[i].destination_metatype_id = foundMetatype.id;
                 }
             }
+
+            // if the data_source value for any given param is an old ID for an existing data source, replace it with the actual data source ID
+            const backfillDataSources = (params: EdgeConnectionParameter[]) => {
+                params.forEach(param => {
+                    console.log('old param val', param.value);
+                    if (param.value) {
+                        // backfill old ID with new ID if present
+                        const matchedSource = dataSources.find(src => src?.DataSourceRecord?.old_id === param.value);
+                        console.log('old id', matchedSource?.DataSourceRecord?.old_id);
+                        console.log('new id', matchedSource?.DataSourceRecord?.id);
+                        if (matchedSource) param.value = matchedSource!.DataSourceRecord!.id!;
+                        console.log('new param val', param.value);
+                    } else {
+                        console.log('dsID', dataSourceID);
+                        param.value = dataSourceID;
+                        console.log('new param val', param.value);
+                    }
+                })
+            }
+
+            // combine origin and destination params and filter for data source params only
+            const filteredParams = [
+                ...(transformations[i].origin_parameters || []).filter(p => p.type === 'data_source'), 
+                ...(transformations[i].destination_parameters || []).filter(p => p.type === 'data_source')
+            ];
+
+            // pass in filtered params to backfill datasources
+            if (filteredParams && filteredParams.length > 0) backfillDataSources(filteredParams);
         }
 
         return Promise.resolve();
