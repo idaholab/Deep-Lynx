@@ -196,7 +196,8 @@ export default class DataSourceMapper extends Mapper {
             data_format,
             name,
             created_by,
-            modified_by) VALUES %L RETURNING *`;
+            modified_by,
+            old_id) VALUES %L RETURNING *`;
         const values = sources.map((source) => [
             source.container_id,
             source.adapter_type,
@@ -206,6 +207,7 @@ export default class DataSourceMapper extends Mapper {
             source.name,
             userID,
             userID,
+            source.old_id ? source.old_id : null,
         ]);
 
         return format(text, values);

@@ -1,0 +1,1 @@
+ALTER TABLE data_sources ADD COLUMN old_id bigint DEFAULT NULL;
