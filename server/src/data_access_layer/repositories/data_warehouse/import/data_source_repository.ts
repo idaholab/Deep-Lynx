@@ -199,6 +199,9 @@ export default class DataSourceRepository extends Repository implements Reposito
                 return Promise.resolve(Result.Failure('Data source provided in import with invalid format. Please review.'));
             }
 
+            // grab the old ID from the data source record to make mappings that include data sources easier to process
+            const oldID = source.DataSourceRecord.id!;
+
             const dataSourceRecord = plainToClass(DataSourceRecord, source.DataSourceRecord as object);
 
             const dataSource = await this.#factory.fromDataSourceRecord(dataSourceRecord);
@@ -214,6 +217,8 @@ export default class DataSourceRepository extends Repository implements Reposito
                 dataSource.DataSourceRecord.id = undefined;
             }
 
+            // set old_id on the new DataSourceRecord
+            dataSource.DataSourceRecord.old_id = oldID;
             dataSource.DataSourceRecord.container_id = containerID;
             dataSource.DataSourceRecord.active = false;
 
@@ -294,6 +299,11 @@ export default class DataSourceRepository extends Repository implements Reposito
 
     archived(value: boolean) {
         super.query('archived', 'eq', value);
+        return this;
+    }
+
+    oldID(operator:string, value: any) {
+        super.query('old_id', operator, value);
         return this;
     }
 

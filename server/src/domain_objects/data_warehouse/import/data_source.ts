@@ -404,6 +404,9 @@ export default class DataSourceRecord extends BaseDomainClass {
     @IsBoolean()
     archived = false;
 
+    @IsOptional()
+    old_id?: string;
+
     @ValidateNested()
     @Type(() => BaseDataSourceConfig, {
         keepDiscriminatorProperty: true,
@@ -445,6 +448,7 @@ export default class DataSourceRecord extends BaseDomainClass {
         status_message?: string;
         data_retention_days?: number;
         archived?: boolean;
+        old_id?: string;
     }) {
         super();
         this.config = new StandardDataSourceConfig();
@@ -460,6 +464,7 @@ export default class DataSourceRecord extends BaseDomainClass {
             if (input.status_message) this.status_message = input.status_message;
             if (input.data_retention_days) this.config.data_retention_days = input.data_retention_days;
             if (input.archived) this.archived = input.archived;
+            if (input.old_id) this.old_id = input.old_id;
         }
     }
 }
