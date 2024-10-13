@@ -86,6 +86,7 @@ defmodule Datum.MixProject do
       {:gen_smtp, "~> 1.1"},
       {:prompt, "~> 0.10.0"},
       {:explorer, "~> 0.9.2"},
+      {:ymlr, "~> 5.1"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end
@@ -98,7 +99,13 @@ defmodule Datum.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
-      setup: ["deps.get", "ecto.setup", "assets.setup", "assets.build", "sqlite.fetch"],
+      setup: [
+        "deps.get",
+        "ecto.setup",
+        "assets.setup",
+        "assets.build",
+        "sqlite.fetch"
+      ],
       "ecto.setup": ["clean.db", "ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       "clean.db": ["cmd rm -rf databases"],

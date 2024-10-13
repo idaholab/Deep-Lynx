@@ -43,3 +43,9 @@ npm-debug.log
 
 # Ignore Burrito artifacts
 /burrito_out/
+
+/.elixir_ls
+
+/.elixir_tools
+
+/.vscode

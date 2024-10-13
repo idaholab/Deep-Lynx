@@ -8,9 +8,17 @@ defmodule Datum.Application do
   @impl true
   def start(_type, _args) do
     case Burrito.Util.Args.argv() do
+      ["help" | args] ->
+        help(args)
+        System.halt(0)
+
+      ["init" | args] ->
+        :ok = init(args)
+        IO.puts("Successfully wrote configuration file.")
+        System.halt(0)
+
       ["scan" | paths] ->
         children = [
-          DatumWeb.Telemetry,
           Datum.Repo,
           {Datum.Scanners.Filesystem, paths},
           {Task.Supervisor, name: Datum.TaskSupervisor}
@@ -21,7 +29,7 @@ defmodule Datum.Application do
         opts = [strategy: :one_for_one, name: Datum.Supervisor]
         Supervisor.start_link(children, opts)
 
-      _ ->
+      ["server" | _args] ->
         children = [
           DatumWeb.Telemetry,
           Datum.Repo,
@@ -49,5 +57,69 @@ defmodule Datum.Application do
   def config_change(changed, _new, removed) do
     DatumWeb.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  defp init(args) do
+    {parsed, _rest, _invalid} =
+      args |> OptionParser.parse(switches: [endpoint: :string, token: :string])
+
+    endpoint =
+      Keyword.get(
+        parsed,
+        :endpoint
+      )
+
+    endpoint =
+      if endpoint do
+        endpoint
+      else
+        Prompt.text("Please enter the URL for the central Datum server you wish to use:")
+      end
+
+    token =
+      Keyword.get(parsed, :token)
+
+    token =
+      if token do
+        token
+      else
+        Prompt.text("Please enter your Personal Access Token (PAT):")
+      end
+
+    File.write(
+      Path.join(System.user_home(), ".datum-config"),
+      Ymlr.document!(%{endpoint: endpoint, token: token})
+    )
+  end
+
+  defp help(args) do
+    case args do
+      [] ->
+        IO.puts("""
+        Datum is a data catalog and command line tool for mapping data and metadata effectively.
+
+        Usage:
+
+            datum <command> [arguments]
+
+        The commands are:
+
+            init        Initialize the Datum CLI and gather necessary config values.
+            scan        Scan the given paths and upload the metadata to a central Datum catalog.
+            server      Start the Datum central webserver.
+
+        Use datum help <command> to find out more about that command.
+        """)
+
+      ["init" | _rest] ->
+        IO.puts("""
+        usage: datum init [--token] [--endpoint]
+
+        Init will attempt to capture the endpoint and token for your centralized Datum server. If provided
+        via the '--token' and '--endpoint' flags, no user interaction will be necessary. Once this is initialized
+        the configuration will be written to your home directory in the '.datum-config' file and used for all
+        subsequent invocations.
+        """)
+    end
   end
 end

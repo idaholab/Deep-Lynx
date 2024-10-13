@@ -53,7 +53,8 @@ defmodule Datum.Scanners.Filesystem do
   defp act_on_file(%Origin{} = origin, %Data{} = parent, path, user_id) do
     mimetype = MIME.from_path(path)
 
-    # TODO: if this becomes an issue, stop loading plugins from the DB for every file call and instead keep a passed list or cache it
+    # TODO: this won't work duh, because the origin isn't here - we need to either make a call out or load in
+    # somehow
     plugins = Plugins.list_plugins_by_extensions([mimetype])
 
     statuses =
