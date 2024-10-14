@@ -111,6 +111,10 @@ export function authenticateRoute(): any {
             return passport.authenticate('jwt', {session: false, keepSessionInfo: true});
         }
 
+        case 'session': {
+            return passport.authenticate('session', {session: true, keepSessionInfo: true});
+        }
+
         default: {
             return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
                 req.currentUser = SuperUser;
