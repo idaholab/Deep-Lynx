@@ -72,6 +72,15 @@ export class Config {
     private readonly _saml_adfs_want_authn_response_signed: boolean;
     private readonly _saml_adfs_want_assertions_signed: boolean;
 
+    private readonly _oidc_enabled: boolean;
+    private readonly _oidc_issuer: string;
+    private readonly _oidc_authorizationURL: string;
+    private readonly _oidc_tokenURL: string;
+    private readonly _oidc_userInfoURL: string;
+    private readonly _oidc_clientID: string;
+    private readonly _oidc_clientSecret: string;
+    private readonly _oidc_callbackURL: string;
+
     private readonly _auth_config_file: string;
 
     private readonly _max_import_retries: number;
@@ -194,6 +203,16 @@ export class Config {
         this._saml_enabled = process.env.SAML_ENABLED === 'true';
         this._auth_config_file =
             process.env.AUTH_CONFIG_FILE_PATH || path.resolve(__dirname, '../../src/domain_objects/access_management/authorization/auth_model.conf');
+
+
+        this._oidc_enabled: process.env.OIDC_ENABLED;
+        this._oidc_issuer: process.env.OIDC_ISSUER || '';
+        this._oidc_authorizationURL: process.env.OIDC_AUTHORIZATIONURL;
+        this._oidc_tokenURL: process.env.OIDC_TOKENURL
+        this._oidc_userInfoURL: process.env.OIDC_USERINFOURL;
+        this._oidc_clientID: process.env.OIDC_CLIENTID;
+        this._oidc_clientSecret: process.env.OIDC_CLIENTSECRET;
+        this._oidc_callbackURL: process.env.OIDC_CALLBACK;
 
         this._data_source_receive_buffer = process.env.DATA_SOURCE_RECEIVE_BUFFER ? parseInt(process.env.DATA_SOURCE_RECEIVE_BUFFER, 10) : 1000;
 
@@ -468,6 +487,38 @@ export class Config {
     get saml_adfs_disable_requested_authn_context(): boolean {
         return this._saml_adfs_disable_requested_authn_context;
     }
+    get oidc_enabled() {
+        return this._oidc_enabled;
+    }
+
+    get oidc_issuer() {
+        return this._oidc_issuer;
+    }
+
+    get oidc_authorizationURL() {
+        return this._oidc_authorizationURL;
+    }
+
+    get oidc_tokenURL() {
+        return this._oidc_tokenURL;
+    }
+
+    get oidc_userInfoURL() {
+        return this._oidc_userInfoURL;
+    }
+
+    get oidc_clientID() {
+        return this._oidc_clientID;
+    }
+
+    get oidc_clientSecret() {
+        return this._oidc_clientSecret;
+    }
+
+    get oidc_callbackURL() {
+        return this._oidc_callbackURL;
+    }
+
 
     get smtp_username(): string {
         return this._smtp_username;
