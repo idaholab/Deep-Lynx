@@ -205,14 +205,14 @@ export class Config {
             process.env.AUTH_CONFIG_FILE_PATH || path.resolve(__dirname, '../../src/domain_objects/access_management/authorization/auth_model.conf');
 
 
-        this._oidc_enabled: process.env.OIDC_ENABLED;
-        this._oidc_issuer: process.env.OIDC_ISSUER || '';
-        this._oidc_authorizationURL: process.env.OIDC_AUTHORIZATIONURL;
-        this._oidc_tokenURL: process.env.OIDC_TOKENURL
-        this._oidc_userInfoURL: process.env.OIDC_USERINFOURL;
-        this._oidc_clientID: process.env.OIDC_CLIENTID;
-        this._oidc_clientSecret: process.env.OIDC_CLIENTSECRET;
-        this._oidc_callbackURL: process.env.OIDC_CALLBACK;
+        this._oidc_enabled = process.env.OIDC_ENABLED === 'true';
+        this._oidc_issuer = process.env.OIDC_ISSUER || '';
+        this._oidc_authorizationURL = process.env.OIDC_AUTHORIZATIONURL || '';
+        this._oidc_tokenURL = process.env.OIDC_TOKENURL || '';
+        this._oidc_userInfoURL = process.env.OIDC_USERINFOURL || '';
+        this._oidc_clientID = process.env.OIDC_CLIENTID || '';
+        this._oidc_clientSecret = process.env.OIDC_CLIENTSECRET || '';
+        this._oidc_callbackURL = process.env.OIDC_CALLBACK || '';
 
         this._data_source_receive_buffer = process.env.DATA_SOURCE_RECEIVE_BUFFER ? parseInt(process.env.DATA_SOURCE_RECEIVE_BUFFER, 10) : 1000;
 
