@@ -13,7 +13,7 @@ import MetatypeRelationshipPairRepository from '../../../../data_access_layer/re
 import UserMapper from '../../../../data_access_layer/mappers/access_management/user_mapper';
 import {User} from '../../../../domain_objects/access_management/user';
 import Node from '../../../../domain_objects/data_warehouse/data/node';
-import ContainerRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
+import ContainerRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/container_repository';
 import Edge from '../../../../domain_objects/data_warehouse/data/edge';
 
 describe('A Container Import', async () => {

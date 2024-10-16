@@ -17,7 +17,7 @@ import Import from '../../../domain_objects/data_warehouse/import/import';
 import TimeseriesDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/timeseries_data_source';
 import fs from 'fs';
 import FileRepository from '../../../data_access_layer/repositories/data_warehouse/data/file_repository';
-import ContainerRepository from '../../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
+import ContainerRepository from '../../../data_access_layer/repositories/data_warehouse/ontology/container_repository';
 import {DataSource} from '../../../interfaces_and_impl/data_warehouse/import/data_source';
 
 // some general tests on data sources that aren't specific to the implementation

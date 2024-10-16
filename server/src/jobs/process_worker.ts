@@ -37,9 +37,11 @@ export async function ProcessWorkerStart(importIDs: string[], containerID: strin
     // or doesn't need one
     const transaction = transactionResult.value;
 
+    // we attempt to pull an advisory lock in the transaction - this will immediately return whether we have the lock, up to caller
+    // to check value
     const lockResult = await ContainerMapper.Instance.AdvisoryLockContainer(containerID, transaction);
-    if (lockResult.isError) {
-        Logger.error(`unable to lock container for processing in processing thread ${JSON.stringify(lockResult.error)}`);
+    if (!lockResult) {
+        Logger.error(`unable to lock container for processing in processing thread for container ${containerID}`);
         process.exit(0);
     }
 

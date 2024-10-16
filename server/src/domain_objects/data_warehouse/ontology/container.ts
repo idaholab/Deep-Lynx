@@ -24,6 +24,7 @@ import MetatypeRelationship from './metatype_relationship';
 import MetatypeKey from './metatype_key';
 import MetatypeRelationshipKey from './metatype_relationship_key';
 import MetatypeRelationshipPair from './metatype_relationship_pair';
+import MetatypeInheritance from './metatype_inheritance';
 import TypeMapping from '../etl/type_mapping';
 import {v4 as uuidv4} from 'uuid';
 import {DataSource} from "../../../interfaces_and_impl/data_warehouse/import/data_source";
@@ -239,6 +240,9 @@ export class ContainerExport extends NakedDomainClass {
     relationship_pairs?: MetatypeRelationshipPair[];
 
     @IsOptional()
+    metatype_inheritance?: MetatypeInheritance[];
+
+    @IsOptional()
     data_sources?: DataSource[];
 
     @IsOptional()
@@ -251,6 +255,7 @@ export class ContainerExport extends NakedDomainClass {
         relationships?: MetatypeRelationship[];
         relationship_keys?: MetatypeRelationshipKey[];
         relationship_pairs?: MetatypeRelationshipPair[];
+        metatype_inheritance?: MetatypeInheritance[];
     }) {
         super();
         if (input) {
@@ -260,6 +265,7 @@ export class ContainerExport extends NakedDomainClass {
             this.relationships = input.relationships;
             this.relationship_keys = input.relationship_keys;
             this.relationship_pairs = input.relationship_pairs;
+            if (input.metatype_inheritance) this.metatype_inheritance = input.metatype_inheritance;
         }
     }
 }

@@ -8,7 +8,7 @@ import {expect} from 'chai';
 import UserRepository from '../../data_access_layer/repositories/access_management/user_repository';
 import UserMapper from '../../data_access_layer/mappers/access_management/user_mapper';
 import KeyPairMapper from '../../data_access_layer/mappers/access_management/keypair_mapper';
-import ContainerRepository from '../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
+import ContainerRepository from '../../data_access_layer/repositories/data_warehouse/ontology/container_repository';
 import Authorization from '../../domain_objects/access_management/authorization/authorization';
 
 describe('A User Repository', async () => {

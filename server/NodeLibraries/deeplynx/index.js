@@ -224,17 +224,32 @@ switch (platform) {
         }
         break
       case 'arm':
-        localFileExisted = existsSync(
-          join(__dirname, 'deeplynx.linux-arm-gnueabihf.node')
-        )
-        try {
-          if (localFileExisted) {
-            nativeBinding = require('./deeplynx.linux-arm-gnueabihf.node')
-          } else {
-            nativeBinding = require('deeplynx-linux-arm-gnueabihf')
+        if (isMusl()) {
+          localFileExisted = existsSync(
+            join(__dirname, 'deeplynx.linux-arm-musleabihf.node')
+          )
+          try {
+            if (localFileExisted) {
+              nativeBinding = require('./deeplynx.linux-arm-musleabihf.node')
+            } else {
+              nativeBinding = require('deeplynx-linux-arm-musleabihf')
+            }
+          } catch (e) {
+            loadError = e
           }
-        } catch (e) {
-          loadError = e
+        } else {
+          localFileExisted = existsSync(
+            join(__dirname, 'deeplynx.linux-arm-gnueabihf.node')
+          )
+          try {
+            if (localFileExisted) {
+              nativeBinding = require('./deeplynx.linux-arm-gnueabihf.node')
+            } else {
+              nativeBinding = require('deeplynx-linux-arm-gnueabihf')
+            }
+          } catch (e) {
+            loadError = e
+          }
         }
         break
       case 'riscv64':
@@ -266,6 +281,20 @@ switch (platform) {
           }
         }
         break
+      case 's390x':
+        localFileExisted = existsSync(
+          join(__dirname, 'deeplynx.linux-s390x-gnu.node')
+        )
+        try {
+          if (localFileExisted) {
+            nativeBinding = require('./deeplynx.linux-s390x-gnu.node')
+          } else {
+            nativeBinding = require('deeplynx-linux-s390x-gnu')
+          }
+        } catch (e) {
+          loadError = e
+        }
+        break
       default:
         throw new Error(`Unsupported architecture on Linux: ${arch}`)
     }
@@ -281,10 +310,11 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { BucketRepository, inferLegacySchema, RedisGraphLoader, hash, SnapshotGenerator } = nativeBinding
+const { RedisGraphLoader, hash, SnapshotGenerator, BucketRepository, processUpload, processQuery } = nativeBinding
 
-module.exports.BucketRepository = BucketRepository
-module.exports.inferLegacySchema = inferLegacySchema
 module.exports.RedisGraphLoader = RedisGraphLoader
 module.exports.hash = hash
 module.exports.SnapshotGenerator = SnapshotGenerator
+module.exports.BucketRepository = BucketRepository
+module.exports.processUpload = processUpload
+module.exports.processQuery = processQuery

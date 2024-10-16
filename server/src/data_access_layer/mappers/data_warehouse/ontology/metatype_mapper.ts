@@ -2,6 +2,7 @@ import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
 import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
+import MetatypeInheritance from '../../../../domain_objects/data_warehouse/ontology/metatype_inheritance';
 
 const format = require('pg-format');
 
@@ -54,6 +55,17 @@ export default class MetatypeMapper extends Mapper {
         return super.retrieve(this.retrieveStatementByUUID(id), {resultClass: this.resultClass});
     }
 
+    public async RetrieveByOldID(oldId: string, transaction?: PoolClient): Promise<Result<Metatype>> {
+        return super.retrieve(this.retrieveStatementByOldID(oldId), {resultClass: this.resultClass});
+    }
+
+    public async BulkRetrieveByOldID(oldId: string[], transaction?: PoolClient): Promise<Result<Metatype[]>> {
+        return super.run(this.retrieveStatementByMultipleOldIDs(...oldId), {
+            transaction,
+            resultClass: this.resultClass
+        });
+    }
+
     public async Update(userID: string, m: Metatype, transaction?: PoolClient): Promise<Result<Metatype>> {
         const r = await super.run(this.fullUpdateStatement(userID, m), {
             transaction,
@@ -74,6 +86,13 @@ export default class MetatypeMapper extends Mapper {
     public async ListForExport(containerID: string, ontologyVersionID?: string): Promise<Result<Metatype[]>> {
         return super.rows(this.forExportStatement(containerID, ontologyVersionID), {
             resultClass: this.resultClass,
+        });
+    }
+
+    public async ListInheritancesForExport(m: Metatype[], transaction?: PoolClient): Promise<Result<MetatypeInheritance[]>> {
+        return super.rows(this.forExportInheritancesStatement(...m), {
+            transaction,
+            resultClass: MetatypeInheritance,
         });
     }
 
@@ -126,6 +145,10 @@ export default class MetatypeMapper extends Mapper {
         return super.runStatement(this.enableInheritanceTrigger());
     }
 
+    public async upsertInheritances(mi: MetatypeInheritance[]): Promise<Result<boolean>> {
+        return super.runStatement(this.upsertMetatypeInheritances(mi));
+    }
+
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
@@ -169,6 +192,21 @@ export default class MetatypeMapper extends Mapper {
                     WHERE uuid = $1 AND ontology_version IN (SELECT id FROM ontology_versions WHERE status = 'published' ORDER BY id DESC LIMIT 1)`,
             values: [metatypeID],
         };
+    }
+
+    private retrieveStatementByOldID(metatypeOldID: string): QueryConfig {
+        return {
+            text: `SELECT * FROM metatypes_view WHERE old_id = $1 
+                    ORDER BY id DESC LIMIT 1`,
+            values: [metatypeOldID],
+        };
+    }
+
+    private retrieveStatementByMultipleOldIDs(...metatypeOldIDs: string[]): string {
+        const text = `SELECT * FROM metatypes_view WHERE old_id in %L 
+                        ORDER BY id DESC`;
+        const values = [metatypeOldIDs];
+        return format(text, values);
     }
 
     private archiveStatement(metatypeID: string, userID: string): QueryConfig {
@@ -240,6 +278,12 @@ export default class MetatypeMapper extends Mapper {
         }
     }
 
+    private forExportInheritancesStatement(...metatypes: Metatype[]): string {
+        const text = `SELECT * FROM metatypes_inheritance WHERE parent_id IN (%L)`;
+        const values = metatypes.map((metatype) => [metatype.old_id]);
+        return format(text, values);
+    }
+
     // uses json_to_recordset to directly insert metatypes from json
     private insertFromJSONStatement(metatypes: Metatype[]) {
         const text = `INSERT INTO metatypes(
@@ -309,5 +353,15 @@ export default class MetatypeMapper extends Mapper {
             text: `ALTER TABLE metatypes_inheritance ENABLE TRIGGER check_metatype_inheritance;`,
             values: [],
         };
+    }
+
+    // accommodates both new inheritance inserts and parent_id updates
+    private upsertMetatypeInheritances(metatypesInheritance: MetatypeInheritance[]): QueryConfig {
+        const text = `INSERT INTO metatypes_inheritance (parent_id, child_id) 
+                    VALUES %L
+                    ON CONFLICT (parent_id, child_id) DO UPDATE
+                    SET parent_id = excluded.parent_id`;
+        const values = metatypesInheritance.map((metatype) => [metatype.parent_id, metatype.child_id]);
+        return format(text, values);
     }
 }

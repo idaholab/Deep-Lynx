@@ -501,7 +501,7 @@ export class Client {
 
     refreshRepairPermissions(containerID: string): Promise<JSON>{
 
-        return new Promise((resolve, reject) => { 
+        return new Promise((resolve, reject) => {
             this.post<JSON>(`containers/${containerID}/permissions`,String)
             .then((results) => resolve(results))
             .catch((e) => reject(e))})
@@ -676,22 +676,40 @@ export class Client {
         return this.postFile(`/containers/${containerID}/import/datasources/${dataSourceID}/imports`, 'import', file, {fastLoad: fastload});
     }
 
-    async uploadFile(containerID: string, dataSourceID: string, file: File): Promise<FileT> {
-        const results = await this.postFileRawReturn<ResultT<ResultT<FileT>[]>>(
-            `/containers/${containerID}/import/datasources/${dataSourceID}/files`,
-            'import',
-            file,
-        );
+    async uploadFile(containerID: string, dataSourceID: string, file: File, timeseries?: boolean, describe?: boolean): Promise<FileT> {
+        console.log(describe);
+        let results: ResultT<ResultT<FileT>[]> | null = null;
+        if (timeseries) {
+            results = await this.postFileRawReturn<ResultT<ResultT<FileT>[]>>(
+                `/containers/${containerID}/import/datasources/${dataSourceID}/files/timeseries?describe=${describe}`,
+                'timeseries',
+                file
+            )
+        } else {
+            results = await this.postFileRawReturn<ResultT<ResultT<FileT>[]>>(
+                `/containers/${containerID}/import/datasources/${dataSourceID}/files`,
+                'import',
+                file,
+            );
+        }
 
         return new Promise((resolve, reject) => {
-            if (results.value[0].isError) reject(results.value[0].error);
-
-            resolve(new Promise((r) => r(results.value[0].value as FileT)));
+            if (!results) {
+                reject('unable to upload file')
+            } else if (results.value[0].isError) {
+                reject(results.value[0].error);
+            } else {
+                resolve(new Promise((r) => r(results!.value[0].value as FileT)));
+            }
         });
     }
 
     deleteFile(containerID: string, fileID: string): Promise<boolean> {
         return this.delete(`/containers/${containerID}/files/${fileID}`);
+    }
+
+    renameFile(containerID: string, fileID: string): Promise<boolean> {
+      return this.put(`/containers/${containerID}/files/${fileID}/rename`);
     }
 
     attachFileToNode(containerID: string, nodeID: string, fileID: string): Promise<boolean> {

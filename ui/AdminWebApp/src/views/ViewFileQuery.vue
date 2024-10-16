@@ -40,10 +40,28 @@
                     v-if="fileLoading"
                   ></v-progress-linear>
                   <v-file-input
+                    v-model="fileToSave"
                     :label="$t('files.selectToUpload')"
                     @change="addFile"
                   ></v-file-input>
+                  <v-checkbox v-if="fileToSave"
+                    :label="$t('timeseries.isTimeseries')"
+                    v-model="isTimeseries"
+                  />
+                  <v-checkbox v-if="isTimeseries" :disabled="!isTimeseries"
+                    :label="$t('timeseries.describe')"
+                    v-model="describe"
+                  />
                 </v-card-text>
+
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn color="error" text @click="exitDialog">{{$t("general.cancel")}}</v-btn>
+                  <v-btn color="primary" text @click="saveFile" :disabled=!fileToSave v-if="datasourceID">
+                    <span v-if="!fileLoading">{{$t("general.save")}}</span>
+                    <span v-if="fileLoading"><v-progress-circular indeterminate></v-progress-circular></span>
+                  </v-btn>
+                </v-card-actions>
               </v-card>
             </v-dialog>
           </v-toolbar>
@@ -74,9 +92,20 @@
             <v-icon small @click="downloadFile(item)" class="mr-2">
               mdi-download
             </v-icon>
-
-            <v-icon small @click="removeFile(item)" class="">
+            <v-icon small @click="removeFile(item)" class="mr-2">
               mdi-delete
+            </v-icon>
+            <v-icon
+              small
+              v-if="
+                !item.timeseries &&
+                (item.file_name.includes('.csv') ||
+                  item.file_name.includes('.json'))
+              "
+              @click="retrofitTimeseries(item)"
+              class="mr-2"
+            >
+              mdi-file-compare
             </v-icon>
             <!-- not the world's best if statement for catching IFC files, but will work in 99% of the cases -->
             <ifc-viewer
@@ -114,10 +143,13 @@ import SelectDataSource from "../components/dataSources/SelectDataSource.vue";
 interface FilesDialogModel {
   dialog: boolean;
   fileLoading: boolean;
+  isTimeseries: boolean;
+  describe: boolean;
   addFileDialog: boolean;
   errorMessage: string;
   datasourceID: string | null;
   files: FileT[];
+  fileToSave: File | null;
   copy: string;
   imageViewers: Map<string, Viewer>;
   dataSourceCompleted: boolean;
@@ -136,8 +168,11 @@ export default Vue.extend({
     dialog: false,
     fileLoading: false,
     addFileDialog: false,
+    isTimeseries: false,
+    describe: false,
     errorMessage: "",
     files: [],
+    fileToSave: null,
     datasourceID: null,
     copy: mdiFileDocumentMultiple,
     imageViewers: new Map(),
@@ -216,16 +251,30 @@ export default Vue.extend({
         { text: this.$t("general.actions"), value: "actions", sortable: false },
       ];
     },
+    exitDialog() {
+      this.fileToSave = null;
+      this.isTimeseries = false;
+      this.describe = false;
+      this.addFileDialog = false;
+      this.fileLoading = false;
+      this.$emit("nodeFilesDialogClose");
+    },
     addFile(file: File) {
+      this.fileToSave = file;
+    },
+    saveFile() {
       this.fileLoading = true;
 
       this.$client
-        .uploadFile(this.container.id, this.datasourceID!, file)
+        .uploadFile(this.container.id, this.datasourceID!, this.fileToSave!, this.isTimeseries, this.describe)
         .then(() => {
           this.loadFiles();
         })
         .catch((e) => (this.errorMessage = e))
         .finally(() => {
+          this.fileToSave = null;
+          this.isTimeseries = false;
+          this.describe = false;
           this.addFileDialog = false;
           this.fileLoading = false;
           this.$emit("nodeFilesDialogClose");
@@ -280,6 +329,12 @@ export default Vue.extend({
           link.click();
         }
       });
+    },
+    retrofitTimeseries(file: FileT) {
+      this.$client
+        .renameFile(this.container.id, file.id)
+        .then(() => this.loadFiles())
+        .catch((e) => (this.errorMessage = e));
     },
     isImage(fileName: string): boolean {
       const extensions = [

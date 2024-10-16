@@ -1,11 +1,10 @@
 import {BlobStorage, BlobUploadOptions, BlobUploadResponse} from './blob_storage';
 import Result from '../../common_classes/result';
 import {Readable} from 'stream';
-import {BlobSASPermissions, BlobServiceClient, ContainerClient, generateBlobSASQueryParameters, RestError, StorageSharedKeyCredential} from '@azure/storage-blob';
+import {BlobServiceClient, ContainerClient, RestError} from '@azure/storage-blob';
 import Logger from './../logger';
 import File from '../../domain_objects/data_warehouse/data/file';
 import {buffer} from 'stream/consumers';
-import Config from '../config';
 const short = require('short-uuid');
 const digestStream = require('digest-stream');
 
@@ -24,7 +23,11 @@ export default class AzureBlobImpl implements BlobStorage {
     async deleteFile(f: File): Promise<Result<boolean>> {
         let blobClient;
         if (f.short_uuid) {
-            blobClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.file_name}${f.short_uuid}`);
+            if (f.timeseries === true) {
+                blobClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.short_uuid}${f.file_name}`);
+            } else {
+                blobClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.file_name}${f.short_uuid}`);
+            }
         } else {
             blobClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.file_name}`);
         }
@@ -51,7 +54,12 @@ export default class AzureBlobImpl implements BlobStorage {
         // if they're uploading a file they want to append to, we'll need to create it as an append blob as block blobs
         // are immutable
         if (stream && options?.canAppend) {
-            const appendBlobClient = this._ContainerClient.getAppendBlobClient(`${filepath}${filename}${shortUUID}`);
+            let appendBlobClient;
+            if (options?.timeseries === true) {
+                appendBlobClient = this._ContainerClient.getAppendBlobClient(`${filepath}${shortUUID}${filename}`);
+            } else {
+                appendBlobClient = this._ContainerClient.getAppendBlobClient(`${filepath}${filename}${shortUUID}`);
+            }
             const result = await appendBlobClient.createIfNotExists();
 
             if (result._response.status > 299 || result._response.status < 200) {
@@ -86,7 +94,12 @@ export default class AzureBlobImpl implements BlobStorage {
             }
         }
 
-        const blobClient = this._ContainerClient.getBlockBlobClient(`${filepath}${filename}${shortUUID}`);
+        let blobClient;
+        if (options?.timeseries === true) {
+            blobClient = this._ContainerClient.getBlockBlobClient(`${filepath}${shortUUID}${filename}`);
+        } else {
+            blobClient = this._ContainerClient.getBlockBlobClient(`${filepath}${filename}${shortUUID}`);
+        }
 
         if (stream) {
             let md5hash = '';
@@ -136,7 +149,12 @@ export default class AzureBlobImpl implements BlobStorage {
     }
 
     async appendPipe(file: File, stream: Readable | null): Promise<Result<boolean>> {
-        const appendBlobClient = this._ContainerClient.getAppendBlobClient(`${file.adapter_file_path}${file.file_name}${file.short_uuid}`);
+        let appendBlobClient;
+        if (file.timeseries === true) {
+            appendBlobClient = this._ContainerClient.getAppendBlobClient(`${file.adapter_file_path}${file.short_uuid}${file.file_name}`);
+        } else {
+            appendBlobClient = this._ContainerClient.getAppendBlobClient(`${file.adapter_file_path}${file.file_name}${file.short_uuid}`);
+        }
         const result = await appendBlobClient.createIfNotExists();
 
         if (result._response.status > 299 || result._response.status < 200) {
@@ -182,7 +200,11 @@ export default class AzureBlobImpl implements BlobStorage {
     async downloadStream(f: File): Promise<Readable | undefined> {
         let blobClient;
         if (f.short_uuid) {
-            blobClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.file_name}${f.short_uuid}`);
+            if (f.timeseries === true) {
+                blobClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.short_uuid}${f.file_name}`);
+            } else {
+                blobClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.file_name}${f.short_uuid}`);
+            }
         } else {
             blobClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.file_name}`);
         }
@@ -191,37 +213,26 @@ export default class AzureBlobImpl implements BlobStorage {
         return Promise.resolve(download.readableStreamBody as Readable);
     }
 
-    // generate a short access signature token in order to give applications
-    // such as the TS2 rust module limited access to blob storage in order to
-    // upload and download files.
-    async generateSASToken(): Promise<Result<string>> {
+    async renameFile(f: File): Promise<Result<boolean>> {
+        const newFileClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.short_uuid}${f.file_name}`);
+        const oldFileClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.file_name}${f.short_uuid}`);
+
         try {
-            const connectionString = Config.azure_blob_connection_string;
-            const accountName = connectionString.split(';').find(e => e.startsWith('AccountName='))?.split('=')[1];
-            const accountKey = connectionString.split(';').find(e => e.startsWith('AccountKey='))?.split('=')[1];
+            const copyPoller = await newFileClient.beginCopyFromURL(oldFileClient.url);
+            const copy_res = await copyPoller.pollUntilDone();
 
-            if (!accountName || !accountKey) {
-                return Promise.resolve(Result.Failure(`failure creating sas token: unable to extract acount details from connection string`));
+            if (copy_res._response.status === 201 || copy_res._response.status === 202) {
+                const delete_res = await oldFileClient.delete();
+
+                if (delete_res._response.status === 201 || delete_res._response.status === 202) {
+                    return Promise.resolve(Result.Success(true));
+                }
             }
-
-            const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey);
-
-            // set the expiration to 12 hours from now
-            const sasExpiryDate = new Date()
-            sasExpiryDate.setHours(sasExpiryDate.getHours() + 12);
-
-            // set permissions to read existing blobs and add new ones. No editing or deleting.
-            const sasPermissions = BlobSASPermissions.parse("rac");
-
-            const sasToken = generateBlobSASQueryParameters({
-                containerName: Config.azure_blob_container_name,
-                permissions: sasPermissions,
-                expiresOn: sasExpiryDate
-            }, sharedKeyCredential).toString();
-
-            return Promise.resolve(Result.Success(sasToken));
-        } catch (e: any) {
-            return Promise.resolve(Result.Failure(`failure creating sas token: ${e.toString()}`))
+        } catch (e) {
+            Logger.error(`azure rename blob error: ${e}`);
+            return Promise.resolve(Result.Success(false));
         }
+
+        return Promise.resolve(Result.Success(false));
     }
 }

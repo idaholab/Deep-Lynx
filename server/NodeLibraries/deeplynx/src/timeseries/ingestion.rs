@@ -1,6 +1,6 @@
 use crate::timeseries::data_types::LegacyDataTypes;
+use crate::timeseries::errors::{TimeseriesError, ValidationError};
 use crate::timeseries::repository::LegacyTimeseriesColumn;
-use crate::timeseries::timeseries_errors::{TimeseriesError, ValidationError};
 use chrono::NaiveDateTime;
 use sqlx::{Pool, Postgres};
 use std::io::Read;
@@ -89,11 +89,11 @@ pub async fn ingest_csv_legacy<T: Read>(
           let timestamp = NaiveDateTime::parse_from_str(value, format_string.as_str())?;
           copier.send(timestamp.to_string().as_bytes()).await?
         }
-        _ => copier.send(value.to_string().as_bytes()).await?
+        _ => copier.send(value.to_string().as_bytes()).await?,
       };
 
-      if i == &positions.len() - 1  {
-       copier.send("\n".as_bytes()).await?;
+      if i == &positions.len() - 1 {
+        copier.send("\n".as_bytes()).await?;
       } else {
         copier.send(",".as_bytes()).await?;
       }

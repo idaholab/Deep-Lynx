@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import RepositoryInterface from '../repository';
 import { KeyPair, User } from '../../../domain_objects/access_management/user';
 import Result from '../../../common_classes/result';
-import ContainerRepository from '../data_warehouse/ontology/container_respository';
+import ContainerRepository from '../data_warehouse/ontology/container_repository';
 import Logger from '../../../services/logger';
 
 /*

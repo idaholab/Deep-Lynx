@@ -78,10 +78,13 @@ redis:
     disableCommands: []
 
 ingress-nginx:
+  # See CONTRIBUTING.md for instructions on how to stand up ingress-nginx
+  # for local deployments
   enabled: false
   controller:
     metrics:
       enabled: true
+    containerPort: {"http":80, "https":443, "tcp":8090}
 
 prometheus:
   enabled: true
@@ -94,7 +97,29 @@ k8s-dashboard:
         enabled: false
 
 airflow:
-  enabled: false
+  enabled: true
+  useStandardNaming: true
+  data:
+    metadataConnection:
+      # password for postgres user
+      pass: "root"
+      # postgres host, using the defined service here
+      host: "deeplynx-postgres"
+    # redis connection string. should match secret-redis-connection
+    brokerUrl: "redis://:root@deeplynx-redis:6379/"
+  postgresql:
+    # do not stand up an additional postgres for airflow
+    enabled: false
+  redis:
+    # do not stand up an additional redis for airflow
+    enabled: false
+  statsd:
+    # do not stand up statsd
+    enabled: false
+  config:
+    core:
+      # whether to load example DAGs
+      load_examples: true
 
 datahub:
   enabled: false

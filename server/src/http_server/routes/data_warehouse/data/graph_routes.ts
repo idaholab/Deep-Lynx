@@ -16,7 +16,7 @@ import WebGLFunctions from './graph_functions/webgl_functions';
 // Utilities
 import Config from '../../../../services/config';
 import Result from '../../../../common_classes/result';
-import ContainerRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
+import ContainerRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/container_repository';
 import RedisGraphService from '../../../../services/cache/redis_graph_loader';
 import {parseISO} from 'date-fns';
 
@@ -98,6 +98,7 @@ export default class GraphRoutes {
             FileFunctions.deleteFile,
         );
         app.get('/containers/:containerID/graphs/nodes/:nodeID/files', ...middleware, authInContainer('read', 'data'), FileFunctions.listFilesForNode);
+        app.put('/containers/:containerID/files/:fileID/rename', ...middleware, authInContainer('write', 'data'), FileFunctions.renameFile);
 
         //Files for Container
         app.get('/containers/:containerID/files', ...middleware, authInContainer('read', 'data'), FileFunctions.listFilesForContainer);

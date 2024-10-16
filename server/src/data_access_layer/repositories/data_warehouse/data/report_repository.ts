@@ -53,7 +53,7 @@ export default class ReportRepository extends Repository implements RepositoryIn
         if (!set.isError) {
             // delete the currently cached report
             const deleted = await this.deleteCached(reportID);
-            if (deleted) Logger.error(`unable to clear cache for report ${reportID}`);
+            if (!deleted) Logger.error(`unable to clear cache for report ${reportID}`);
 
             // run findByID to cache the updated report
             const cached = await this.findByID(reportID);

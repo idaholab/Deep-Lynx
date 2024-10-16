@@ -11,10 +11,6 @@ import BlobStorageProvider from '../../../../services/blob_storage/blob_storage'
 import EventRepository from '../../event_system/event_repository';
 import Event from '../../../../domain_objects/event_system/event';
 import Logger from '../../../../services/logger';
-import { serialize } from 'v8';
-import Cache from '../../../../services/cache/cache';
-import Config from '../../../../services/config';
-import { plainToClass } from 'class-transformer';
 const short = require('short-uuid');
 
 /*
@@ -122,7 +118,6 @@ export default class FileRepository extends Repository implements RepositoryInte
 
             if (file.id) {
                 toUpdate.push(file);
-                void this.deleteCachedDesc(file.id);
             } else {
                 toCreate.push(file);
             }
@@ -175,17 +170,7 @@ export default class FileRepository extends Repository implements RepositoryInte
     }
 
     async listDescriptionColumns(id: string): Promise<Result<FileDescriptionColumn[]>> {
-        // check for a cached description
-        const cached = await this.getCachedDesc(id);
-        if (cached) return Promise.resolve(Result.Success(cached));
-
-        // if no cached version, fetch from DB and cache
-        const retrieved = await this.#mapper.ListDescriptionColumns(id);
-        if (!retrieved.isError) {
-            await this.setDescCashe(id, retrieved.value);
-        }
-
-        return Promise.resolve(retrieved);
+        return this.#mapper.ListDescriptionColumns(id);
     }
 
     async listPathMetadata(...fileIDs: string[]): Promise<Result<FilePathMetadata[]>> {
@@ -194,34 +179,24 @@ export default class FileRepository extends Repository implements RepositoryInte
         return Promise.resolve(Result.Success(listed.value));
     }
 
-    async setDescriptions(d: FileDescription[]): Promise<Result<boolean>> {
-        for (const desc of d) {
-            const errors = await desc.validationErrors();
-            if (errors) {
-                return Promise.resolve(Result.Failure(`one or more file descriptions did not pass validation ${errors.join(',')}`));
-            }
-
-            // extract actual id and save back to object
-            desc.file_id = desc.file_id?.replace("file_", "");
-        }
-
-        return this.#mapper.SetDescriptions(d);
+    async setDescriptions(descriptions: FileDescription[]): Promise<Result<boolean>> {
+        return this.#mapper.SetDescriptions(descriptions);
     }
 
     async checkTimeseries(fileIDs: string[]): Promise<Result<boolean>> {
         const tsResults = await this.#mapper.CheckTimeseries(fileIDs);
         if (tsResults.isError) {return Promise.resolve(Result.Pass(tsResults))}
 
-        // if there are no results, none of the files exist- return an error
-        if(tsResults.value.length === 0) {
-            return Promise.resolve(Result.Failure(`no valid file IDs supplied: ${fileIDs}`));
+        // verify that the resultant IDs match the supplied file IDs- otherwise some files do not exist
+        const missingIDs = fileIDs.filter(id => !tsResults.value.map(result => result.id).includes(id));
+        if(missingIDs.length > 0) {
+            return Promise.resolve(Result.Failure(`one or more files not found: [${missingIDs.join(', ')}]`));
         }
 
         // check each result and if any are not ts, return with a failure
-        const nonTS = tsResults.value.filter(r => !r.timeseries).map(f => f.id!);
-
-        if (nonTS.length !== 0) {
-            return Promise.resolve(Result.Failure(`one or more files are not timeseries: [${nonTS.join(', ')}]`));
+        const nonTimeseries = tsResults.value.filter(r => !r.timeseries).map(f => f.id!);
+        if (nonTimeseries.length > 0) {
+            return Promise.resolve(Result.Failure(`one or more files are not timeseries: [${nonTimeseries.join(', ')}]`));
         }
 
         return Promise.resolve(Result.Success(true));
@@ -238,7 +213,7 @@ export default class FileRepository extends Repository implements RepositoryInte
         if (!provider) return Promise.resolve(Result.Failure('no storage provider set'));
 
         // run the actual file upload the storage provider
-        const result = await provider.uploadPipe(`containers/${containerID}/datasources/${dataSourceID ? dataSourceID : '0'}/`, filename, stream);
+        const result = await provider.uploadPipe(`containers/${containerID}/datasources/${dataSourceID ? dataSourceID : '0'}/`, filename, stream, undefined, undefined, {timeseries: options?.timeseries});
         if (result.isError) return Promise.resolve(Result.Pass(result));
 
         const file = new File({
@@ -285,11 +260,36 @@ export default class FileRepository extends Repository implements RepositoryInte
         const saved = await this.save(file, user);
         if (saved.isError) return Promise.resolve(Result.Pass(saved));
 
-        // clear any cached details on file description if file was updated
-        const cacheDeleted = await this.deleteCachedDesc(fileID);
-        if (!cacheDeleted) Logger.error(`unable to clear cache for file ${fileID}`);
-
         return Promise.resolve(Result.Success(file));
+    }
+
+    async renameFile(file: File, user: User): Promise<Result<boolean>> {
+        const newFile = new File({
+            id: file.id,
+            file_name: file.file_name!,
+            file_size: file.file_size!,
+            md5hash: file.md5hash,
+            adapter_file_path: file.adapter_file_path!,
+            adapter: file.adapter!,
+            metadata: file.metadata,
+            container_id: file.container_id!,
+            data_source_id: file.data_source_id,
+            short_uuid: file.short_uuid!,
+            timeseries: true,
+        });
+
+        const provider = BlobStorageProvider(file.adapter)!;
+        const blob_res = await provider.renameFile?.(newFile);
+        if (blob_res?.isError) {
+            return Promise.resolve(Result.Pass(blob_res));
+        }
+
+        const db_res = await this.#mapper.Update(user.id!, newFile);
+        if (db_res.isError) {
+            return Promise.resolve(Result.Pass(db_res));
+        }
+
+        return Promise.resolve(Result.Success(true));
     }
 
     constructor() {
@@ -331,33 +331,5 @@ export default class FileRepository extends Repository implements RepositoryInte
 
     listFiles(containerID: string): Promise<Result<File[]>> {
         return this.#mapper.ListForContainer(containerID);
-    }
-
-    // caching for file descriptions
-    private async setDescCashe(id: string, desc: FileDescriptionColumn[]): Promise<boolean> {
-        const set = await Cache.set(
-            `${FileMapper.tableName}:fileID:${id}:description`,
-            serialize(desc),
-            Config.cache_default_ttl
-        )
-        
-        return Promise.resolve(set);
-    }
-
-    private async getCachedDesc(id: string): Promise<FileDescriptionColumn[] | undefined> {
-        const cached = await Cache.get<object[]>(`${FileMapper.tableName}:fileID:${id}:description`);
-        if (cached) {
-            const description = plainToClass(FileDescriptionColumn, cached);
-            return Promise.resolve(description);
-        }
-
-        return Promise.resolve(undefined);
-    }
-
-    private async deleteCachedDesc(id: string): Promise<boolean> {
-        const deleted = await Cache.del(`${FileMapper.tableName}:fileID:${id}:description`);
-        if (!deleted) Logger.error(`unable to remove file description ${id} from cache`);
-
-        return Promise.resolve(deleted);
     }
 }

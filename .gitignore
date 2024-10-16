@@ -10,6 +10,7 @@ exceptions.log
 node_modules
 profile-logs
 .vscode/
+.zed/
 /src/access_management/authentication/saml/*.crt
 /src/access_management/authentication/saml/*.key
 .nyc_output

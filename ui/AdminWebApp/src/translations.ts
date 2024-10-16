@@ -697,6 +697,8 @@ export default {
             showTimestampColumns: 'Show Timestamp Columns',
             deselectAllYvals: 'Deselect All Y Columns',
             selectAllYvals: 'Select All Y Columns',
+            isTimeseries: 'File is Timeseries Compatible',
+            describe: 'Describe Timeseries File'
         },
         typeMappings: {
             mappingsMaybePlural: 'Mapping(s)',

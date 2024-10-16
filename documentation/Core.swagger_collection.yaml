@@ -5919,7 +5919,7 @@ paths:
         - TimeSeries
       responses: {}
       operationId: post-containers-container_id-import-datasources-data_source_id-files-timeseries
-      description: Uploads a file and it's metadata to DeepLynx. Marks the file as "timeseries" so it can be processed by the TS2 rust module.
+      description: Uploads a file and it's metadata to DeepLynx. Marks the file as "timeseries" so it can be processed by the timeseries rust module.
       requestBody:
         content:
           multipart/form-data:
@@ -5930,46 +5930,7 @@ paths:
                   type: string
                   format: binary
         description: This should be a collection of files.
-  '/containers/{container_id}/files/timeseries/describe':
-    parameters:
-      - schema:
-          type: string
-        name: container_id
-        in: path
-        required: true
-    post:
-      summary: Add File Description
-      operationId: post-containers-container_id-reports-report_id-files-file_id-description
-      responses:
-        '200':
-          description: OK
-      description: Upload file description (schema)
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                file_id:
-                  type: string
-                column_info:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      column_name:
-                        type: string
-                      data_type:
-                        type: string
-              x-examples:
-                Example 1:
-                  file_id: '6'
-                  column_info:
-                    - column_name: greg
-                      data_type: string
-                    - column_name: fred
-                      data_type: boolean
-  '/containers/{container_id}/files/timeseries/{file_id}/description':
+  '/containers/{container_id}/import/datasources/{data_source_id}/files/{file_id}/description':
     parameters:
       - schema:
           type: string
@@ -5981,6 +5942,11 @@ paths:
         name: file_id
         in: path
         required: true
+      - schema:
+          type: string
+        name: data_source_id
+        in: path
+        required: true
     get:
       summary: Get File Description
       tags:
@@ -5990,14 +5956,14 @@ paths:
       responses: {}
       operationId: get-containers-container_id-reports-report_id-files-file_id-description
       description: Retrieve the file description (schema) for a given report file
-  '/containers/{container_id}/reports/query':
+  '/containers/{container_id}/import/datasources/{data_source_id}/reports/query':
     post:
       summary: Query Timeseries
       tags:
         - Report
       responses: {}
       operationId: post-containers-container_id-reports-query
-      description: Send a either a describe or a user-provided query to the TS2 rust module for processing.
+      description: Send a either a describe or a user-provided query to the timeseries rust module for processing.
       requestBody:
         content:
           application/json:
@@ -6016,7 +5982,24 @@ paths:
                   file_ids:
                     - <string>
                     - <string>
-  '/containers/{container_id}/reports/{report_id}/status':
+      parameters:
+        - schema:
+            type: boolean
+          in: query
+          name: describe
+          description: indicates whether or not to send a describe query
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: data_source_id
+        in: path
+        required: true
+  '/containers/{container_id}/import/datasources/{data_source_id}/reports/{report_id}':
     parameters:
       - schema:
           type: string
@@ -6026,6 +6009,11 @@ paths:
       - schema:
           type: string
         name: report_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: data_source_id
         in: path
         required: true
     get:
@@ -6035,51 +6023,6 @@ paths:
       responses: {}
       operationId: get-containers-container_id-reports-report_id-status
       description: Check the status for a given report
-  '/containers/{container_id}/reports/{report_id}/query/{report_query_id}':
-    parameters:
-      - schema:
-          type: string
-        name: container_id
-        in: path
-        required: true
-      - schema:
-          type: string
-        name: report_id
-        in: path
-        required: true
-      - schema:
-          type: string
-        name: report_query_id
-        in: path
-        required: true
-    post:
-      summary: Upload Timeseries Results
-      tags: []
-      responses: {}
-      operationId: post-containers-container_id-reports-report_id-query-report_query_id
-      description: |-
-        Endpoint for the TS2 rust module to upload file results. TS2 will already have uploaded the data to the
-        appropriate storage provider, so we just need to attach the file metadata to the report.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                file_name:
-                  type: string
-                file_size:
-                  type: number
-                adapter_file_path:
-                  type: string
-                adapter:
-                  type: string
-              x-examples:
-                Example 1:
-                  file_name: greg.json
-                  file_size: 0.141
-                  adapter_file_path: /trees/greg
-                  adapter: filesystem
 components:
   securitySchemes:
     BearerAuth:

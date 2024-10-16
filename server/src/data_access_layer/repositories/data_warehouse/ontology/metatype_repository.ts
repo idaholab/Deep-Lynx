@@ -11,9 +11,9 @@ import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/meta
 import {PoolClient} from 'pg';
 import {User} from '../../../../domain_objects/access_management/user';
 import MetatypeKeyRepository from './metatype_key_repository';
-import GraphQLRunner from '../../../../graphql/schema';
 import MetatypeRelationshipPairMapper from '../../../mappers/data_warehouse/ontology/metatype_relationship_pair_mapper';
 import MetatypeRelationshipPairRepository from './metatype_relationship_pair_repository';
+import MetatypeInheritance from '../../../../domain_objects/data_warehouse/ontology/metatype_inheritance';
 
 /*
     MetatypeRepository contains methods for persisting and retrieving a metatype
@@ -375,6 +375,33 @@ export default class MetatypeRepository extends Repository implements Repository
         return Promise.resolve(retrieved);
     }
 
+    async findByOldId(oldId: string, loadKeys = true, fromView?: boolean): Promise<Result<Metatype>> {
+        const retrieved = await this.#mapper.RetrieveByOldID(oldId);
+        // we do not want to cache this unless we have the entire object, keys included
+        if (!retrieved.isError && loadKeys) {
+            if (fromView) {
+                // do not set the cache from the materialized view as it could be out of date data
+                const keys = await this.#keyMapper.ListFromViewForMetatype(retrieved.value.id!);
+                if (!keys.isError) retrieved.value.addKey(...keys.value);
+
+                const pairs = await this.#pairMapper.ListFromViewForMetatype(retrieved.value.id!);
+                if (!pairs.isError) retrieved.value.addRelationship(...pairs.value);
+            } else {
+                const keys = await this.#keyMapper.ListForMetatype(retrieved.value.id!, retrieved.value.container_id!);
+                if (!keys.isError) retrieved.value.addKey(...keys.value);
+
+                const pairs = await this.#pairMapper.ListForMetatype(retrieved.value.id!, retrieved.value.container_id!);
+                if (!pairs.isError) retrieved.value.addRelationship(...pairs.value);
+            }
+        }
+
+        return Promise.resolve(retrieved);
+    }
+
+    async bulkFindByOldId(oldId: string[], loadKeys = true, fromView?: boolean): Promise<Result<Metatype[]>> {
+        return this.#mapper.BulkRetrieveByOldID(oldId);
+    }
+
     private async getCached(id: string): Promise<Metatype | undefined> {
         const cached = await Cache.get<object>(`${MetatypeMapper.tableName}:${id}`);
         if (cached) {
@@ -516,5 +543,49 @@ export default class MetatypeRepository extends Repository implements Repository
         }
 
         return Promise.resolve(Result.Success(results.value));
+    }
+
+    async updateInheritance(inhertitances: MetatypeInheritance[]): Promise<Result<boolean>> {
+        const metatypeRepo = new MetatypeRepository();
+        /*below may be refactored by altering the ret val of metatypeRepo.saveFromJSON() 
+        in server/src/data_access_layer/repositories/data_warehouse/ontology/container_respository.ts
+        or somehow eventually passing the new metatype id's in directly.
+        We just need the new id's so they may be mapped with the old ids*/
+        const metatypeIdsFlatArray: string [] = inhertitances.flatMap(obj => [obj.parent_id!, obj.child_id!]);
+        //it may eventually be refactored with old_id bulk retrieval from the metatype repo
+        const promises: Promise<Result<Metatype>>[] = metatypeIdsFlatArray.map(async id => { 
+            return metatypeRepo.findByOldId(id); 
+        });
+        const resultsWithPotentialUndefined: (Result<Metatype> | undefined)[] = await Promise.all(promises);
+        const metatypes: Metatype[] = resultsWithPotentialUndefined
+            .filter((obj) => obj !== undefined) //filter out undefined objects
+            .map(obj => obj.value); //get Metatype out of Result<Metatype>
+        const newInheritances: MetatypeInheritance[] = this.mapNewInheritanceIds(inhertitances, metatypes); //call private map function to split long code 
+        const update = await this.#mapper.upsertInheritances(newInheritances);
+        if (update.isError) {
+            return Promise.resolve(Result.Failure(`Error importing new metatype inheritances`)); 
+        }
+        return Promise.resolve(Result.Success(true));
+    }
+
+    private mapNewInheritanceIds(inheritances: MetatypeInheritance[], newMetatypes: Metatype[]): MetatypeInheritance[] {
+        const metatypeInheritances: MetatypeInheritance[] = [];
+        const idMap = new Map<string, string>(); //old_id: id map
+        newMetatypes.forEach(obj => { 
+            if (obj.old_id && obj.id) 
+                idMap.set(obj.old_id, obj.id) //every old_id represents its new id in the map
+        });
+
+        //for each old_id key, get it's new id value based on the corresponding map value
+        inheritances.map(rel => {
+            if (rel.parent_id && rel.child_id) {
+                const newInheritance = new MetatypeInheritance({
+                    parent_id: idMap.get(rel.parent_id),
+                    child_id: idMap.get(rel.child_id),
+                });
+                metatypeInheritances.push(newInheritance);
+            }
+        });   
+        return metatypeInheritances;
     }
 }

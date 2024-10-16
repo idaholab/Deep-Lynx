@@ -420,7 +420,7 @@ export default class MetatypeKeyMapper extends Mapper {
                 created_by text,
                 modified_by text,
                 metatype_id int8)
-            LEFT JOIN metatypes ON metatypes.old_id = ont_import.metatype_id
+            JOIN metatypes ON metatypes.old_id = ont_import.metatype_id
             ON CONFLICT (metatype_id, property_name)
             DO UPDATE SET
                 created_by = EXCLUDED.created_by,

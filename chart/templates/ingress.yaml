@@ -70,31 +70,29 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/use-regex: "true"
+{{/*  see docs at https://kubernetes.github.io/ingress-nginx/examples/rewrite/  */}}
   name: deeplynx-nginx-ingress
 spec:
   ingressClassName: nginx
   rules:
     # can optionally supply a host as necessary, e.g. host: deeplynx.de.org
+    # for environments that have DNS host records or after editing the local host file appropriately.
+    # note that ingress rules cannot be made for receiving traffic on any ports besides
+    # the defined HTTP and HTTPS ports (80 and 443 by default).
+    # To receive and forward data on other ports, the ports must be:
+    # 1) exposed by the cluster and mapped to a localhost port
+    # 2) exposed as a port in nginx-values.yaml controller.containerPort
+    # 3) added to the tcp map at the root level of nginx-values.yaml which in turn points to
+    # 4) a service and port defined in service.yaml
     - http:
         paths:
-          - path: /deeplynx(/|$)(.*)
-            pathType: Prefix
-            backend:
-              service:
-                name: deeplynx-ingress
-                port:
-                  number: 80
-          - path: /redis(/|$)(.*)
-            pathType: Prefix
-            backend:
-              service:
-                name: deeplynx-redis
-                port:
-                  number: 80
+          # this rule forwards all traffic received by the load balancer on the HTTP (80) port
+          # to the DeepLynx service
           - path: /(.*)
-            pathType: Prefix
+            # ImplementationSpecific required for regex paths
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: deeplynx-ingress
                 port:
-                  number: 80
+                  number: 8090
