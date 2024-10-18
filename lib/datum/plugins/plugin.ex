@@ -11,6 +11,7 @@ defmodule Datum.Plugins.Plugin do
     field :module, :binary
     field :name, :string
     field :path, :string
+    field :enabled, :boolean
     field :plugin_type, Ecto.Enum, values: [:extractor, :sampler]
     field :filetypes, {:array, :string}
 
@@ -21,7 +22,7 @@ defmodule Datum.Plugins.Plugin do
   def changeset(plugin, attrs) do
     changeset =
       plugin
-      |> cast(attrs, [:name, :filetypes, :path, :module])
+      |> cast(attrs, [:name, :filetypes, :path, :module, :enabled])
       |> validate_required([:name, :filetypes])
 
     if field_missing?(changeset, :path) && field_missing?(changeset, :module) do

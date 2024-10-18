@@ -34,7 +34,7 @@ defmodule Datum.MixProject do
   # Type `mix help compile.app` for more information.
   def application do
     [
-      mod: {Datum.Application, []},
+      mod: {Datum.Application, ["server"]},
       extra_applications: [:logger, :runtime_tools]
     ]
   end

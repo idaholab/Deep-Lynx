@@ -15,6 +15,14 @@ defmodule DatumWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    # the plug below also sets the current user
+    plug :require_authenticated_token
+  end
+
+  scope "/api/v1", DatumWeb do
+    pipe_through :api
+
+    get "/plugins", PluginsController, :list_info
   end
 
   scope "/", DatumWeb do

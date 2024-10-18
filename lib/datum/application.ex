@@ -17,10 +17,12 @@ defmodule Datum.Application do
         IO.puts("Successfully wrote configuration file.")
         System.halt(0)
 
-      ["scan" | paths] ->
+      ["scan" | args] ->
         children = [
           Datum.Repo,
-          {Datum.Scanners.Filesystem, paths},
+          {Datum.Scan, args},
+          # the task supervisor is for the file scan tasks generated
+          # by the scanner
           {Task.Supervisor, name: Datum.TaskSupervisor}
         ]
 
@@ -30,6 +32,28 @@ defmodule Datum.Application do
         Supervisor.start_link(children, opts)
 
       ["server" | _args] ->
+        children = [
+          DatumWeb.Telemetry,
+          Datum.Repo,
+          {DNSCluster, query: Application.get_env(:datum, :dns_cluster_query) || :ignore},
+          {Phoenix.PubSub, name: Datum.PubSub},
+          # Start the Finch HTTP client for sending emails
+          {Finch, name: Datum.Finch},
+          # Start a worker by calling: Datum.Worker.start_link(arg)
+          # {Datum.Worker, arg},
+          # Start to serve requests, typically the last entry
+          DatumWeb.Endpoint,
+          {Task.Supervisor, name: Datum.TaskSupervisor}
+        ]
+
+        # See https://hexdocs.pm/elixir/Supervisor.html
+        # for other strategies and supported options
+        opts = [strategy: :one_for_one, name: Datum.Supervisor]
+        Supervisor.start_link(children, opts)
+
+      # for now, fallback to the default setup for the testing environment or if
+      # they run with no arguments
+      _ ->
         children = [
           DatumWeb.Telemetry,
           Datum.Repo,

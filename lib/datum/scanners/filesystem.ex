@@ -17,18 +17,6 @@ defmodule Datum.Scanners.Filesystem do
   alias Datum.DataOrigin.Data
   alias Datum.Plugins.Extractor
 
-  # we are treating this module as a SupervisedTask to be run, allowing us to run concurrently
-  # and not have a crash here crash the parent process
-  def start_link(arg) do
-    Task.start_link(__MODULE__, :run, [arg])
-  end
-
-  # TODO: finish hooking this up
-  def run(_args) do
-    Prompt.display("BOB")
-    Prompt.text("TEST")
-  end
-
   def scan_directory(%Origin{} = origin, root_path, user_id \\ nil) do
     {:ok, parent} =
       DataOrigin.add_data(origin, %{
@@ -53,8 +41,8 @@ defmodule Datum.Scanners.Filesystem do
   defp act_on_file(%Origin{} = origin, %Data{} = parent, path, user_id) do
     mimetype = MIME.from_path(path)
 
-    # TODO: this won't work duh, because the origin isn't here - we need to either make a call out or load in
-    # somehow
+    # This works because the Scan CLI process will build a local copy of the
+    # operations database with the plugins owned by the user
     plugins = Plugins.list_plugins_by_extensions([mimetype])
 
     statuses =
@@ -63,7 +51,7 @@ defmodule Datum.Scanners.Filesystem do
         plugins,
         fn plugin ->
           case plugin.type do
-            :extractor -> Extractor.extract(plugin, path)
+            :extractor -> Extractor.extract_with_plugin(plugin, path)
             :sampler -> {:error, "sampler plugins not yet supported"}
           end
         end,

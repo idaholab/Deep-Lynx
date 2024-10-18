@@ -31,6 +31,15 @@ defmodule Datum.Plugins do
     |> Repo.all()
   end
 
+  def list_plugin_info() do
+    query =
+      from p in Plugin,
+        where: p.enabled == true,
+        select: [p.name, p.filetypes, p.plugin_type]
+
+    Repo.all(query)
+  end
+
   @doc """
   Gets a single plugin.
 

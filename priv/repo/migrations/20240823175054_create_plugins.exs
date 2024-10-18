@@ -4,6 +4,7 @@ defmodule Datum.Repo.Migrations.CreatePlugins do
   def change do
     create table(:plugins) do
       add :name, :string
+      add :enabled, :booelan, default: false
       add :filetypes, {:array, :string}
       add :plugin_type, :string
       add :path, :string
