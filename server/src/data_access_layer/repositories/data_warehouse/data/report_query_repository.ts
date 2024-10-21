@@ -141,6 +141,14 @@ export default class ReportQueryRepository extends Repository implements Reposit
             return Promise.resolve(Result.Failure(`error: unsupported or unimplemented file storage method being used`));
         }
 
+        // set report status to "processing"
+        let statusSet = await this.#reportRepo.setStatus(
+            reportID, 'processing',
+            `executing query ${queryID}: "${reportQuery.query}" as part of report ${reportID}`
+        );
+        if (statusSet.isError) {return Promise.resolve(Result.Failure(`unable to set report status`))}
+
+        // kick off the describe or query process
         if (describe) {
             this.processDescribe(reportID, request.query!, storageConnection, files as FileMetadata[]);
         } else {
@@ -153,13 +161,6 @@ export default class ReportQueryRepository extends Repository implements Reposit
                 user
             );
         }
-
-        // set report status to "processing"
-        let statusSet = await this.#reportRepo.setStatus(
-            reportID, 'processing',
-            `executing query ${queryID}: "${reportQuery.query}" as part of report ${reportID}`
-        );
-        if (statusSet.isError) {return Promise.resolve(Result.Failure(`unable to set report status`))}
 
         // return report ID to the user so they can poll for results
         return Promise.resolve(Result.Success(reportID));

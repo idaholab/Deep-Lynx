@@ -214,25 +214,30 @@ export default class AzureBlobImpl implements BlobStorage {
     }
 
     async renameFile(f: File): Promise<Result<boolean>> {
-        const newFileClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.short_uuid}${f.file_name}`);
-        const oldFileClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.file_name}${f.short_uuid}`);
+        // only perform the rename if uuid is present; otherwise, file should already be accessible
+        if (!f.short_uuid) {
+            return Promise.resolve(Result.Success(true));
+        } else {
+            const newFileClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.short_uuid}${f.file_name}`);
+            const oldFileClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.file_name}${f.short_uuid}`);
 
-        try {
-            const copyPoller = await newFileClient.beginCopyFromURL(oldFileClient.url);
-            const copy_res = await copyPoller.pollUntilDone();
+            try {
+                const copyPoller = await newFileClient.beginCopyFromURL(oldFileClient.url);
+                const copy_res = await copyPoller.pollUntilDone();
 
-            if (copy_res._response.status === 201 || copy_res._response.status === 202) {
-                const delete_res = await oldFileClient.delete();
+                if (copy_res._response.status === 201 || copy_res._response.status === 202) {
+                    const delete_res = await oldFileClient.delete();
 
-                if (delete_res._response.status === 201 || delete_res._response.status === 202) {
-                    return Promise.resolve(Result.Success(true));
+                    if (delete_res._response.status === 201 || delete_res._response.status === 202) {
+                        return Promise.resolve(Result.Success(true));
+                    }
                 }
+            } catch (e) {
+                Logger.error(`azure rename blob error: ${e}`);
+                return Promise.resolve(Result.Success(false));
             }
-        } catch (e) {
-            Logger.error(`azure rename blob error: ${e}`);
+
             return Promise.resolve(Result.Success(false));
         }
-
-        return Promise.resolve(Result.Success(false));
     }
 }
