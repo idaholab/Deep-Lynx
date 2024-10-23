@@ -4440,6 +4440,7 @@ __metadata:
     passport-http: "npm:^0.3.0"
     passport-jwt: "npm:^4.0.1"
     passport-local: "npm:^1.0.0"
+    passport-openidconnect: "npm:^0.1.2"
     pem-jwk: "npm:^2.0.0"
     pg: "npm:^8.12.0"
     pg-connection-string: "npm:^2.6.4"
@@ -8935,6 +8936,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"oauth@npm:0.10.x":
+  version: 0.10.0
+  resolution: "oauth@npm:0.10.0"
+  checksum: 10c0/76f3e186cfd76cb33e5d5d442861c86680a5c3b71b2db1b854212087532c265a69de1a2ab9db683e6c6df733e17cfc67476527b81b224a19c1917de2bc3f75fa
+  languageName: node
+  linkType: hard
+
 "object-assign@npm:^4, object-assign@npm:^4.0.1, object-assign@npm:^4.1.1":
   version: 4.1.1
   resolution: "object-assign@npm:4.1.1"
@@ -9386,6 +9394,16 @@ __metadata:
   dependencies:
     passport-strategy: "npm:1.x.x"
   checksum: 10c0/59becb988014921a5d6056470d9373c41db452fcf113323064f39d53baa6f184e72151bf269ca6770511f7f0260e13632dacc7b6afdbf60ebf63e90327e186d4
+  languageName: node
+  linkType: hard
+
+"passport-openidconnect@npm:^0.1.2":
+  version: 0.1.2
+  resolution: "passport-openidconnect@npm:0.1.2"
+  dependencies:
+    oauth: "npm:0.10.x"
+    passport-strategy: "npm:1.x.x"
+  checksum: 10c0/4d4662b91e2580baa7cf2f341904c352de9ec776a3897f8bf51a90f248ee7dab26b94e2e3c590d14821b04b0fa95cb8d7cfad6edc095e3966b7666e8779b0b68
   languageName: node
   linkType: hard
 

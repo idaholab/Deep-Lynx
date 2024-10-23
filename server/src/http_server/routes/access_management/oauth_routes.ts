@@ -53,10 +53,27 @@ export default class OAuthRoutes {
         app.get('/login-saml', this.loginSaml);
         app.post('/oauth/saml', this.saml);
 
+        // oidc specific
+        app.get('/login-oidc', passport.authenticate('openidconnect'));
+        app.get(
+            '/oauth/authorize',
+            passport.authenticate('openidconnect', {
+                successReturnToOrRedirect: '/',
+                failureRedirect: '/login',
+            }),
+        );
+        app.get('/check-oidc', (req, res) => {
+            if (req.isAuthenticated()) {
+                return res.json({authenticated: true});
+            } else {
+                return res.json({authenticated: false});
+            }
+        });
+
         app.get('/oauth/register', csurf(), this.registerPage);
         app.post('/oauth/register', csurf(), this.createNewUser);
 
-        app.get('/oauth/authorize', csurf(), LocalAuthMiddleware, this.authorizePage);
+        //app.get('/oauth/authorize', csurf(), LocalAuthMiddleware, this.authorizePage);
         app.post('/oauth/authorize', csurf(), LocalAuthMiddleware, this.authorize);
         app.post('/oauth/exchange', this.tokenExchange);
         app.get('/oauth/token', this.getToken);
@@ -352,7 +369,7 @@ export default class OAuthRoutes {
             registerLink: buildUrl('/oauth/register', {
                 queryParams: req.query,
             }),
-            loginWithWindowsLink: buildUrl('/login-saml', {
+            loginWithWindowsLink: buildUrl('/login-oidc', {
                 queryParams: req.query,
             }),
             _success: req.query.success ? DOMPurify.sanitize(req.query.success as string) : undefined,

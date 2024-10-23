@@ -161,6 +161,17 @@ export function IsLoggedIn(): boolean {
     return false;
 }
 
+export async function IsAuthed() {
+    try {
+        const res = await fetch('/check-oidc');
+        const isAuth = await res.json();
+        return isAuth.authenticated === true;
+    } catch (error) {
+        console.error('There has been a problem with your check auth operation:', error);
+        return false;  // Return false in case of an error
+    }
+}
+
 // used to refresh user permissions after login
 export async function RefreshPermissions(): Promise<boolean> {
     // axios request configuration

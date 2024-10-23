@@ -75,6 +75,7 @@ import OntologyVersionRoutes from './data_warehouse/ontology/versioning/ontology
 import StatsMapper from '../../data_access_layer/mappers/stats_mapper';
 import Result from '../../common_classes/result';
 import ReportRoutes from './data_warehouse/data/report_routes';
+import {SetOidc} from '../authentication/oidc/oidc';
 
 const winston = require('winston');
 const expressWinston = require('express-winston');
@@ -194,7 +195,15 @@ export class Router {
             metatypeContext(),
             currentUser(),
         ]);
-        ReportRoutes.mount(this.app, [authenticateRoute(), containerContext(), dataSourceContext(), fileContext(), reportContext(), reportQueryContext(), currentUser()]);
+        ReportRoutes.mount(this.app, [
+            authenticateRoute(),
+            containerContext(),
+            dataSourceContext(),
+            fileContext(),
+            reportContext(),
+            reportQueryContext(),
+            currentUser(),
+        ]);
         EventRoutes.mount(this.app, [authenticateRoute(), containerContext(), eventActionContext(), eventActionStatusContext(), currentUser()]);
         DataQueryRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
         TaskRoutes.mount(this.app, [authenticateRoute(), containerContext(), taskContext(), currentUser()]);
@@ -291,6 +300,7 @@ export class Router {
             }),
         );
 
+        if (Config.oidc_enabled) SetOidc(this.app);
         // SetSaml will initialize and assign the saml auth strategy
         if (Config.saml_enabled) SetSamlAdfs(this.app);
         SetLocalAuthMethod(this.app);
