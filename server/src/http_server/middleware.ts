@@ -109,11 +109,16 @@ export function authenticateRoute(): any {
         }
 
         case 'token': {
-            return passport.authenticate('jwt', {session: false, keepSessionInfo: true});
+            return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
+                const authHeader = req.header('Authorization');
+                if (authHeader && authHeader.startsWith('Bearer ')) {
+                    passport.authenticate('jwt', {session: false, keepSessionInfo: true})(req, resp, next);
+                } else {
+                    passport.authenticate('openidconnect', {session: true})(req, resp, next);
+                }
+            };
         }
-        case 'openidconnect': {
-            return passport.authenticate('openidconnect', {session: true});
-        }
+
         default: {
             return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
                 req.currentUser = SuperUser;
