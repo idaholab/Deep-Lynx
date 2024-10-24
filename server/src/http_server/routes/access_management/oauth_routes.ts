@@ -56,7 +56,7 @@ export default class OAuthRoutes {
         // oidc specific
         app.get('/login-oidc', passport.authenticate('openidconnect'));
         app.get(
-            '/oauth/authorize',
+            '/oauth/oidc',
             passport.authenticate('openidconnect', {
                 successReturnToOrRedirect: '/',
                 failureRedirect: '/login',
@@ -73,7 +73,7 @@ export default class OAuthRoutes {
         app.get('/oauth/register', csurf(), this.registerPage);
         app.post('/oauth/register', csurf(), this.createNewUser);
 
-        //app.get('/oauth/authorize', csurf(), LocalAuthMiddleware, this.authorizePage);
+        app.get('/oauth/authorize', csurf(), LocalAuthMiddleware, this.authorizePage);
         app.post('/oauth/authorize', csurf(), LocalAuthMiddleware, this.authorize);
         app.post('/oauth/exchange', this.tokenExchange);
         app.get('/oauth/token', this.getToken);
