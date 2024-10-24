@@ -392,18 +392,12 @@ export default class TypeTransformationRepository extends Repository implements 
             // if the data_source value for any given param is an old ID for an existing data source, replace it with the actual data source ID
             const backfillDataSources = (params: EdgeConnectionParameter[]) => {
                 params.forEach(param => {
-                    console.log('old param val', param.value);
                     if (param.value) {
                         // backfill old ID with new ID if present
                         const matchedSource = dataSources.find(src => src?.DataSourceRecord?.old_id === param.value);
-                        console.log('old id', matchedSource?.DataSourceRecord?.old_id);
-                        console.log('new id', matchedSource?.DataSourceRecord?.id);
                         if (matchedSource) param.value = matchedSource!.DataSourceRecord!.id!;
-                        console.log('new param val', param.value);
                     } else {
-                        console.log('dsID', dataSourceID);
                         param.value = dataSourceID;
-                        console.log('new param val', param.value);
                     }
                 })
             }
