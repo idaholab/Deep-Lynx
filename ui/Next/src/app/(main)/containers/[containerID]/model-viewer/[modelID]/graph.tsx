@@ -157,13 +157,14 @@ export default function Graph(props: Props) {
                           let [key, value] = entry;
                           return (
                             <>
-                              <Box sx={{ paddingLeft: "1.5rem" }}>
+                              <Box sx={{ paddingLeft: "2.5rem" }}>
                                 <ListItem key={key}>
                                   <Grid container spacing={2}>
                                     <Grid item xs={4}>
                                       <Typography
                                         variant="caption"
                                         fontWeight={"bold"}
+                                        sx={{ wordWrap: "break-word" }}
                                       >
                                         {key.toLowerCase()}
                                       </Typography>
@@ -177,7 +178,10 @@ export default function Graph(props: Props) {
                                       }}
                                     >
                                       <Typography variant="caption">
-                                        {value as string}
+                                        {(value as string).replace(
+                                          /['"]+/g,
+                                          ""
+                                        )}
                                       </Typography>
                                     </Grid>
                                   </Grid>

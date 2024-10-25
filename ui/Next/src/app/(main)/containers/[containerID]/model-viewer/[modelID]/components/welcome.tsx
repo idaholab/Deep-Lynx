@@ -23,14 +23,17 @@ export default function Welcome(props: PropsT) {
         <br />
         <Typography variant="body1">
           Your 3D model has been transformed and is available in the Unity game.
+          <br />
+          <br />
           Click <Typography variant="button">START VIEWER</Typography> to launch
           the game.
         </Typography>
         <br />
         <Typography variant="body1">
-          You can optionally expand the floating{" "}
-          <Typography variant="button">+</Typography> button in the bottom left
-          corner to query for related nodes in DeepLynx.
+          You can optionally for related nodes in DeepLynx by expanding the{" "}
+          <Typography variant="button">UPDATE GRAPH QUERY</Typography> button in
+          the bottom left corner. Select one or more class types in the ontology
+          to search for.
         </Typography>
         <br />
         <br />
