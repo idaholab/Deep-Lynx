@@ -16,6 +16,10 @@ There is no auth at this time. To get into your container, you should already ha
 
 ## Best Practices
 
+### Standards
+
+Its possible this application should implement coding standards developed by other technology companies. For example AWS has [documentation](https://docs.aws.amazon.com/prescriptive-guidance/latest/best-practices-cdk-typescript-iac/typescript-best-practices.html) on best practices for coding in TypeScript.
+
 ### Source Code
 
 #### (main)
