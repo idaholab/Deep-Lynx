@@ -92,6 +92,38 @@ const ContainerSelect = () => {
               }}
               xs
             >
+              <Box
+                component={"img"}
+                sx={{ width: "50%" }}
+                src={
+                  theme.palette.mode === "dark"
+                    ? "lynx-white.png"
+                    : "lynx-blue.png"
+                }
+              />
+            </Grid>
+            <Grid
+              item
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              xs
+            >
+              <Typography variant="caption">
+                Developed by Digital Engineering
+              </Typography>
+            </Grid>
+            <Grid
+              item
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              xs
+            >
               {containers.length ? (
                 <FormControl sx={{ width: "100%" }}>
                   <InputLabel id="/containers/ContainerSelect">
@@ -118,38 +150,6 @@ const ContainerSelect = () => {
                   <LinearProgress />
                 </Box>
               )}
-            </Grid>
-            <Grid
-              item
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-              xs
-            >
-              <Box
-                component={"img"}
-                sx={{ width: "50%" }}
-                src={
-                  theme.palette.mode === "dark"
-                    ? "lynx-white.png"
-                    : "lynx-blue.png"
-                }
-              />
-            </Grid>
-            <Grid
-              item
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-              xs
-            >
-              <Typography variant="caption">
-                Developed by Digital Engineering
-              </Typography>
             </Grid>
           </Grid>
         </Card>
