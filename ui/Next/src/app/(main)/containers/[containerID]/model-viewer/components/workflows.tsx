@@ -60,7 +60,7 @@ const Workflows = () => {
           </Typography>
           <br />
           <Tabs value={tab} onChange={handleTab}>
-            <Tab label="Upload Model" value={"upload"}></Tab>
+            {/* <Tab label="Upload Model" value={"upload"}></Tab> */}
             <Tab label="Process Model" value={"process"}></Tab>
             <Tab label="Visualize Model" value={"visualize"}></Tab>
           </Tabs>
