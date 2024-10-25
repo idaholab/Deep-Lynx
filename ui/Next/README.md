@@ -36,16 +36,12 @@ We're using libraries that enjoy widespread adoption for their breadth of compon
 
 #### MUI
 
-UX components come from MUI. They have good documentation and are probably the most prominent component library in the world. You can style them with JSX using their native `sx` prop.
+UX components come from MUI. They have good documentation, a mature codebase, and are probably the most recognizeable component library in the world. You can style them with JSX using their native `sx` prop, or with TailwindCSS using the React `className` prop.
 
 #### TailwindCSS
 
-Eventually we should use Tailwind to design custom styles, and insert them into our MUI components using their `sx` prop. These global styles or themes might live in the `lib` directory.
+Tailwind is used to design custom styles, and insert them into our MUI components using their `className` prop. These global styles or themes might live in the `lib` directory.
 
-#### useSWR
+#### Redux
 
-This is the data fetching hook recommended by NextJS for client side data fetching.
-
-#### useContext
-
-Notice that a custom hook is defined in `src/app/(main)/containers/[containerID]/layout.tsx`. This hook wraps the `useContext` React hook to provide container metadata to any component that requires it. You can pull the container's metadata into a component by calling `useContainer()`.
+Redux is a state management library that implements a global store, enabling components to access application state anywhere in the component hierarchy. Developers can both read from and write to the Redux store. The store differs from any implementation of React contexts, which are read-only and accessible only by components with a direct ancestry.
