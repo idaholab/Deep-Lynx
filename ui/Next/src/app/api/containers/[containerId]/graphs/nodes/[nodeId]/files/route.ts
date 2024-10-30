@@ -8,8 +8,9 @@ const token = process.env.NEXT_PUBLIC_TOKEN!;
 
 export const GET = async (
   req: NextRequest,
-  { params }: { params: { containerId: string; nodeId: string } }
+  props: { params: Promise<{ containerId: string; nodeId: string }> }
 ) => {
+  const params = await props.params;
   const { containerId, nodeId } = params;
 
   const url = new URL(

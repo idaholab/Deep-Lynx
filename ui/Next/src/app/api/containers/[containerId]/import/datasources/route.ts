@@ -6,10 +6,8 @@ import axios from "axios";
 const base = process.env.DEEPLYNX_URL!;
 const token = process.env.NEXT_PUBLIC_TOKEN!;
 
-export const GET = async (
-  req: NextRequest,
-  { params }: { params: { containerId: string } }
-) => {
+export const GET = async (req: NextRequest, props: { params: Promise<{ containerId: string }> }) => {
+  const params = await props.params;
   const { containerId } = params;
 
   const query = req.nextUrl.searchParams;

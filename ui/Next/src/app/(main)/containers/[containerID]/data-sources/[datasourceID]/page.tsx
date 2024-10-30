@@ -24,7 +24,8 @@ const tabs = [
     return classes.filter(Boolean).join(' ')
   }
 
-  export default function Home({params}: {params: {datasourceID: string}}) {
+  export default async function Home(props: {params: Promise<{datasourceID: string}>}) {
+    const params = await props.params;
     return (<div>
       <div>
         <div className="sm:hidden">

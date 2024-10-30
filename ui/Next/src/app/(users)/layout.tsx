@@ -15,12 +15,14 @@ export const metadata: Metadata = {
 // THIS LAYOUT IS FOR PAGES WITH BOTH THE NAVBAR AND SIDEBAR BUT AT THE ROOT PATH OF THE APP
 // (/admin, /profile, etc.)
 
-export default function RootLayout({
-    children,
-}: Readonly<{
-    children: React.ReactNode;
-}>) {
-    const prefersDark = cookies().get("x-theme")?.value === "dark";
+export default async function RootLayout(
+    {
+        children,
+    }: Readonly<{
+        children: React.ReactNode;
+    }>
+) {
+    const prefersDark = (await cookies()).get("x-theme")?.value === "dark";
     return (
         <html lang="en">
             <body>{children}</body>
