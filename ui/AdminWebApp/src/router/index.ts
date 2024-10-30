@@ -11,6 +11,7 @@ import {
 import PageContainerInvite from "@/pages/PageContainerInvite.vue";
 import { RawLocation } from "vue-router/types/router";
 import { Result } from "element-ui";
+import config from "@/config";
 
 Vue.use(VueRouter);
 
@@ -118,14 +119,20 @@ router.beforeEach((to, from, next) => {
       })
       .catch(() => next("login"));
   } else {
-    if (authRequired) {
+    if (authRequired && config.oidcEnabled === true) {
       IsAuthed().then((result) => {
         if (!result && !IsLoggedIn) {
           next("/login");
           return;
         }
       });
+    } else {
+      if (!IsLoggedIn) {
+        next("/login");
+        return;
+      }
     }
+
     next();
   }
 });
