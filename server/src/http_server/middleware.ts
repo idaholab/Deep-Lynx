@@ -3,7 +3,7 @@ import express from 'express';
 import Authorization from '../domain_objects/access_management/authorization/authorization';
 import Config from '../services/config';
 import passport from 'passport';
-import ContainerRepository from '../data_access_layer/repositories/data_warehouse/ontology/container_respository';
+import ContainerRepository from '../data_access_layer/repositories/data_warehouse/ontology/container_repository';
 import MetatypeRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_repository';
 import MetatypeRelationshipRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_repository';
 import MetatypeRelationshipPairRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_pair_repository';

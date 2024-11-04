@@ -132,26 +132,15 @@ export class EdgeFile extends NakedDomainClass {
 
 export class FilePathMetadata extends NakedDomainClass {
     @IsString()
-    @IsOptional()
     id?: string;
 
+    // file name (sans extension) will be used as table name in the query
     @IsString()
-    @IsIn(['filesystem', 'azure_blob', 'minio'])
-    adapter?: string;
+    file_name?: string;
 
+    // this is the path at which the file can be accessed within object storage
     @IsString()
-    @IsOptional()
-    data_source_id?: string;
-
-    // this is the fully qualified file path complete with file name and short uuid
-    @IsString()
-    adapter_file_path?: string;
-}
-
-export type AzureMetadata = {
-    azure_url: string;
-    azure_container: string;
-    sas_token: string;
+    access_path?: string;
 }
 
 export class FileDescriptionColumn extends NakedDomainClass {
@@ -160,6 +149,9 @@ export class FileDescriptionColumn extends NakedDomainClass {
 
     @IsString()
     data_type?: string;
+
+    @IsBoolean()
+    is_nullable?: boolean;
 }
 
 export class FileDescription extends NakedDomainClass {
@@ -167,7 +159,7 @@ export class FileDescription extends NakedDomainClass {
     file_id?: string;
 
     @IsArray()
-    column_info?: FileDescriptionColumn[];
+    description?: FileDescriptionColumn[];
 }
 
 export class TimeseriesInfo extends NakedDomainClass {

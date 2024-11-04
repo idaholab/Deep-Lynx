@@ -7,7 +7,7 @@ import {PoolClient} from 'pg';
 import UserRepository from '../../../access_management/user_repository';
 import TypeMappingMapper from '../../../../mappers/data_warehouse/etl/type_mapping_mapper';
 import Logger from '../../../../../services/logger';
-import ContainerRepository from '../container_respository';
+import ContainerRepository from '../container_repository';
 import {ContainerAlert} from '../../../../../domain_objects/data_warehouse/ontology/container';
 
 export default class OntologyVersionRepository extends Repository implements RepositoryInterface<OntologyVersion> {

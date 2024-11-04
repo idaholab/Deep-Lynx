@@ -4,7 +4,7 @@ import Result from '../../../../../common_classes/result';
 // Domain Objects
 import Import from '../../../../../domain_objects/data_warehouse/import/import';
 import File, { FileUploadOptions } from '../../../../../domain_objects/data_warehouse/data/file';
-import { TS2InitialRequest } from '../../../../../domain_objects/data_warehouse/data/report_query';
+import { TimeseriesInitialRequest } from '../../../../../domain_objects/data_warehouse/data/report_query';
 
 // Express
 import {NextFunction, Request, Response} from 'express';
@@ -310,10 +310,10 @@ export default class FileFunctions {
                 }
             } else {
                 files.push(fileRepo.uploadFile(
-                    req.params.containerID, 
-                    req.currentUser!, 
-                    filename, 
-                    file as Readable, 
+                    req.params.containerID,
+                    req.currentUser!,
+                    filename,
+                    file as Readable,
                     req.params.sourceID,
                     options
                 ));
@@ -374,13 +374,13 @@ export default class FileFunctions {
 
                     if (options && options.describe) {
                         // kick off a file describe if specified
-                        const request = new TS2InitialRequest({
+                        const request = new TimeseriesInitialRequest({
                             query: `DESCRIBE table;`,
                             file_ids: results.map(r => r.value.id!)
                         });
 
                         const queryRepo = new ReportQueryRepository();
-                        void queryRepo.initiateQuery(req.params.containerID, request, req.currentUser!)
+                        void queryRepo.initiateQuery(req.params.containerID, req.params.sourceID, request, req.currentUser!, true)
                             .then((result) => {
                                 if (result.isError) {
                                     Logger.error(`error describing files ${result.error?.error}`);
@@ -568,6 +568,23 @@ export default class FileFunctions {
         } else {
             Result.Failure(`file not found`, 404).asResponse(res);
             next();
+        }
+    }
+
+    public static renameFile(req: Request, res: Response, next: NextFunction) {
+        if (!req.file) {
+            Result.Failure(`file not found`, 404).asResponse(res);
+            next();
+        } else {
+            fileRepo
+                .renameFile(req.file, req.currentUser!)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
+                .finally(() => next());
         }
     }
 }

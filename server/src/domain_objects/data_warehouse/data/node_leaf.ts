@@ -120,27 +120,27 @@ export function getNodeLeafQuery(nodeID: string, containerID: string, depth: str
 const nodeLeafQuery = `SELECT nodeleafs.* FROM
 (WITH RECURSIVE search_graph(
 	origin_id, origin_data_source, origin_metadata, origin_metadata_properties, origin_properties,
-	origin_created_by, origin_created_at, origin_modified_by, origin_modified_at, origin_metatype_id, 
+	origin_created_by, origin_created_at, origin_modified_by, origin_modified_at, origin_metatype_id,
 	edge_id, edge_data_source, edge_metadata, edge_metadata_properties, edge_properties,
-	edge_created_by, edge_created_at, edge_modified_by, edge_modified_at, relationship_pair_id, 
-	destination_id, destination_data_source, destination_metadata, destination_metadata_properties, 
+	edge_created_by, edge_created_at, edge_modified_by, edge_modified_at, relationship_pair_id,
+	destination_id, destination_data_source, destination_metadata, destination_metadata_properties,
 	destination_properties, destination_created_by, destination_created_at, destination_modified_by,
 	destination_modified_at, destination_metatype_id, edge_direction, depth, path
 ) AS (
 	(SELECT DISTINCT ON (e.id)
-		o.id AS origin_id, o.data_source_id AS origin_data_source, o.metadata AS origin_metadata, 
-		o.metadata_properties AS origin_metadata_properties, o.properties AS origin_properties, 
-		o.created_by AS origin_created_by, o.created_at AS origin_created_at, 
-		o.modified_by AS origin_modified_by, o.modified_at AS origin_modified_at, 
-		o.metatype_id AS origin_metatype_id, e.id AS edge_id, e.data_source_id AS edge_data_source, 
-		e.metadata AS edge_metadata, e.metadata_properties AS edge_metadata_properties, 
-		e.properties AS edge_properties, e.created_by AS edge_created_by, e.created_at AS edge_created_at, 
-		e.modified_by AS edge_modified_by, e.modified_at AS edge_modified_at, e.relationship_pair_id, 
-		d.id AS destination_id, d.data_source_id AS destination_data_source, 
-		d.metadata AS destination_metadata, d.metadata_properties AS destination_metadata_properties, 
-		d.properties AS destination_properties, d.created_by AS destination_created_by, 
-		d.created_at AS destination_created_at, d.modified_by AS destination_modified_by, 
-		d.modified_at AS destination_modified_at, d.metatype_id AS destination_metatype_id, 
+		o.id AS origin_id, o.data_source_id AS origin_data_source, o.metadata AS origin_metadata,
+		o.metadata_properties AS origin_metadata_properties, o.properties AS origin_properties,
+		o.created_by AS origin_created_by, o.created_at AS origin_created_at,
+		o.modified_by AS origin_modified_by, o.modified_at AS origin_modified_at,
+		o.metatype_id AS origin_metatype_id, e.id AS edge_id, e.data_source_id AS edge_data_source,
+		e.metadata AS edge_metadata, e.metadata_properties AS edge_metadata_properties,
+		e.properties AS edge_properties, e.created_by AS edge_created_by, e.created_at AS edge_created_at,
+		e.modified_by AS edge_modified_by, e.modified_at AS edge_modified_at, e.relationship_pair_id,
+		d.id AS destination_id, d.data_source_id AS destination_data_source,
+		d.metadata AS destination_metadata, d.metadata_properties AS destination_metadata_properties,
+		d.properties AS destination_properties, d.created_by AS destination_created_by,
+		d.created_at AS destination_created_at, d.modified_by AS destination_modified_by,
+		d.modified_at AS destination_modified_at, d.metatype_id AS destination_metatype_id,
 		CASE WHEN o.id = e.origin_id THEN 'outgoing' ELSE 'incoming' END AS edge_direction,
 		1 AS depth, ARRAY[o.id] AS path
 	FROM edges e
@@ -150,43 +150,43 @@ const nodeLeafQuery = `SELECT nodeleafs.* FROM
 	ORDER BY e.id)
 UNION
 	(SELECT DISTINCT ON (e.id)
-		g.destination_id AS origin_id, g.destination_data_source AS origin_data_source, 
-		g.destination_metadata AS origin_metadata, g.destination_metadata_properties AS origin_metadata_properties, 
-		g.destination_properties AS origin_properties, g.destination_created_by AS origin_created_by, 
-		g.destination_created_at AS origin_created_at, g.destination_modified_by AS origin_modified_by, 
-		g.destination_modified_at AS origin_modified_at, g.destination_metatype_id AS origin_metatype_id, 
-		e.id AS edge_id, e.data_source_id AS edge_data_source, 
-		e.metadata AS edge_metadata, e.metadata_properties AS edge_metadata_properties, 
-		e.properties AS edge_properties, e.created_by AS edge_created_by, e.created_at AS edge_created_at, 
-		e.modified_by AS edge_modified_by, e.modified_at AS edge_modified_at, e.relationship_pair_id, 
-		d.id AS destination_id, d.data_source_id AS destination_data_source, 
-		d.metadata AS destination_metadata, d.metadata_properties AS destination_metadata_properties, 
-		d.properties AS destination_properties, d.created_by AS destination_created_by, 
-		d.created_at AS destination_created_at, d.modified_by AS destination_modified_by, 
-		d.modified_at AS destination_modified_at, d.metatype_id AS destination_metatype_id, 
+		g.destination_id AS origin_id, g.destination_data_source AS origin_data_source,
+		g.destination_metadata AS origin_metadata, g.destination_metadata_properties AS origin_metadata_properties,
+		g.destination_properties AS origin_properties, g.destination_created_by AS origin_created_by,
+		g.destination_created_at AS origin_created_at, g.destination_modified_by AS origin_modified_by,
+		g.destination_modified_at AS origin_modified_at, g.destination_metatype_id AS origin_metatype_id,
+		e.id AS edge_id, e.data_source_id AS edge_data_source,
+		e.metadata AS edge_metadata, e.metadata_properties AS edge_metadata_properties,
+		e.properties AS edge_properties, e.created_by AS edge_created_by, e.created_at AS edge_created_at,
+		e.modified_by AS edge_modified_by, e.modified_at AS edge_modified_at, e.relationship_pair_id,
+		d.id AS destination_id, d.data_source_id AS destination_data_source,
+		d.metadata AS destination_metadata, d.metadata_properties AS destination_metadata_properties,
+		d.properties AS destination_properties, d.created_by AS destination_created_by,
+		d.created_at AS destination_created_at, d.modified_by AS destination_modified_by,
+		d.modified_at AS destination_modified_at, d.metatype_id AS destination_metatype_id,
 		CASE WHEN g.destination_id = e.origin_id THEN 'outgoing' ELSE 'incoming' END AS edge_direction,
 		depth + 1 AS depth, path || g.destination_id AS path
 	FROM edges e
-		INNER JOIN search_graph g ON g.destination_id 
+		INNER JOIN search_graph g ON g.destination_id
 			IN (e.origin_id, e.destination_id)
 	 		AND g.destination_id <> ALL(g.path)
-		LEFT JOIN nodes d ON d.id 
+		LEFT JOIN nodes d ON d.id
 	 		IN (e.origin_id, e.destination_id)
 			AND g.destination_id != d.id
-	WHERE e.container_id = %s AND depth < %s AND d.id <> ALL(path)
+	WHERE e.container_id = %s AND depth < %s AND d.id <> ALL(path) AND e.deleted_at IS NULL
 	ORDER BY e.id)
 ) SELECT
-	g.origin_id, origin_data_source, origin_metadata, origin_metadata_properties, 
-	origin_properties, origin_created_by, origin_created_at, origin_modified_by, 
+	g.origin_id, origin_data_source, origin_metadata, origin_metadata_properties,
+	origin_properties, origin_created_by, origin_created_at, origin_modified_by,
 	origin_modified_at, g.origin_metatype_id, ometa.name AS origin_metatype_name,
-	ometa.uuid AS origin_metatype_uuid, edge_id, edge_data_source, edge_metadata, 
-	edge_metadata_properties, edge_properties, edge_created_by, edge_created_at, 
-	edge_modified_by, edge_modified_at, relationship_pair_id, 
-	p.uuid AS relationship_pair_uuid, r.id AS relationship_id, 
+	ometa.uuid AS origin_metatype_uuid, edge_id, edge_data_source, edge_metadata,
+	edge_metadata_properties, edge_properties, edge_created_by, edge_created_at,
+	edge_modified_by, edge_modified_at, relationship_pair_id,
+	p.uuid AS relationship_pair_uuid, r.id AS relationship_id,
 	r.uuid AS relationship_uuid, r.name AS relationship_name,
-	g.destination_id, destination_data_source, destination_metadata, 
-	destination_metadata_properties, destination_properties, destination_created_by, 
-	destination_created_at, destination_modified_by, destination_modified_at, 
+	g.destination_id, destination_data_source, destination_metadata,
+	destination_metadata_properties, destination_properties, destination_created_by,
+	destination_created_at, destination_modified_by, destination_modified_at,
 	g.destination_metatype_id, dmeta.name AS destination_metatype_name,
 	dmeta.uuid AS destination_metatype_uuid, depth, path, edge_direction
 FROM search_graph g

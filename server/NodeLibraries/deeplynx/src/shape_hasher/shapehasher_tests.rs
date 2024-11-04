@@ -8,7 +8,7 @@ mod main_tests {
 
     #[test]
     fn nested_array() {
-        let file_path = "./test_files/nestedArrayTest.json";
+        let file_path = "./test_files/shape_hasher/nestedArrayTest.json";
 
         // Read the file's contents into a String
         let json_string = fs::read_to_string(file_path).expect("Failed to read file");
@@ -29,7 +29,7 @@ mod main_tests {
 
     #[test]
     fn stop_node_test() {
-        let file_path = "./test_files/stopNodeTester.json";
+        let file_path = "./test_files/shape_hasher/stopNodeTester.json";
 
         // Read the file's contents into a String
         let json_string = fs::read_to_string(file_path).expect("Failed to read file");
@@ -50,7 +50,7 @@ mod main_tests {
 
     #[test]
     fn value_node_test() {
-        let file_path = "./test_files/valueNodeTester.json";
+        let file_path = "./test_files/shape_hasher/valueNodeTester.json";
 
         // Read the file's contents into a String
         let json_string = fs::read_to_string(file_path).expect("Failed to read file");
@@ -72,7 +72,7 @@ mod main_tests {
 
     #[test]
     fn multiple_objectArray_test() {
-        let file_path = "./test_files/multipleObjectArrayTest.json";
+        let file_path = "./test_files/shape_hasher/multipleObjectArrayTest.json";
 
         // Read the file's contents into a String
         let json_string = fs::read_to_string(file_path).expect("Failed to read file");
@@ -93,7 +93,7 @@ mod main_tests {
 
     #[test]
     fn complex_value_node_test() {
-        let file_path = "./test_files/complexValueNodeTester.json";
+        let file_path = "./test_files/shape_hasher/complexValueNodeTester.json";
 
         // Read the file's contents into a String
         let json_string = fs::read_to_string(file_path).expect("Failed to read file");
@@ -115,7 +115,7 @@ mod main_tests {
 
     #[test]
     fn multipe_same_simplifier_test() {
-        let file_path = "./test_files/multipleSameSimplifierTest.json";
+        let file_path = "./test_files/shape_hasher/multipleSameSimplifierTest.json";
 
         // Read the file's contents into a String
         let json_string = fs::read_to_string(file_path).expect("Failed to read file");
@@ -136,7 +136,7 @@ mod main_tests {
 
     #[test]
     fn simple_test() {
-        let file_path = "./test_files/simpleTest.json";
+        let file_path = "./test_files/shape_hasher/simpleTest.json";
 
         // Read the file's contents into a String
         let json_string = fs::read_to_string(file_path).expect("Failed to read file");
@@ -157,7 +157,7 @@ mod main_tests {
 
     #[test]
     fn data_type_test() {
-        let file_path = "./test_files/dataTypeTest.json";
+        let file_path = "./test_files/shape_hasher/dataTypeTest.json";
 
         // Read the file's contents into a String
         let json_string = fs::read_to_string(file_path).expect("Failed to read file");
