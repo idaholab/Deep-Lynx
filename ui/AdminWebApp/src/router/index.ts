@@ -126,11 +126,9 @@ router.beforeEach((to, from, next) => {
           return;
         }
       });
-    } else {
-      if (!IsLoggedIn) {
-        next("/login");
-        return;
-      }
+    } else if (authRequired && !IsLoggedIn) {
+      next("/login");
+      return;
     }
 
     next();
