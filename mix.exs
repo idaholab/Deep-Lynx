@@ -110,7 +110,11 @@ defmodule Datum.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       "clean.db": ["cmd rm -rf databases"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
-      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
+      "assets.setup": [
+        "cmd cd assets && npm install",
+        "tailwind.install --if-missing",
+        "esbuild.install --if-missing"
+      ],
       "assets.build": ["tailwind datum", "esbuild datum"],
       "assets.deploy": [
         "tailwind datum --minify",
