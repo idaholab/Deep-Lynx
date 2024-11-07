@@ -23,13 +23,43 @@ import {
 } from "@mui/material";
 import { classes } from "@/app/styles";
 
+
 // Store
-import { useAppDispatch } from "@/lib/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
 import { containerActions } from "@/lib/store/features/container/containerSlice";
+import BasicSidebar from "@/app/_wireframe/basic-sidenav";
+import { uxActions } from "@/lib/store/features/ux/uxSlice";
+import Navbar from "@/app/_wireframe/navbar";
+import { CalendarIcon, ChartPieIcon, DocumentDuplicateIcon, FolderIcon, HomeIcon, UsersIcon } from "@heroicons/react/24/outline";
+
+
+const navigation = [
+  { name: 'Dashboard', href: '#', icon: HomeIcon, current: true },
+  { name: 'Team', href: '#', icon: UsersIcon, current: false },
+  { name: 'Projects', href: '#', icon: FolderIcon, current: false },
+  { name: 'Calendar', href: '#', icon: CalendarIcon, current: false },
+  { name: 'Documents', href: '#', icon: DocumentDuplicateIcon, current: false },
+  { name: 'Reports', href: '#', icon: ChartPieIcon, current: false },
+]
+const teams = [
+  { id: 1, name: 'Heroicons', href: '#', initial: 'H', current: false },
+  { id: 2, name: 'Tailwind Labs', href: '#', initial: 'T', current: false },
+  { id: 3, name: 'Workcation', href: '#', initial: 'W', current: false },
+]
+const userNavigation = [
+  { name: 'Your profile', href: '#' },
+  { name: 'Sign out', href: '#' },
+]
+
+// function classNames(...classes) {
+//   return classes.filter(Boolean).join(' ')
+// }
+
 
 const ContainerSelect = () => {
   // Store
   const storeDispatch = useAppDispatch();
+  const drawer: boolean = useAppSelector((state) => state.ux.drawer);
 
   // Hooks
   const [containers, setContainers] = useState<Array<ContainerT>>([]);
@@ -67,93 +97,105 @@ const ContainerSelect = () => {
     setSelectedContainer(event.target.value);
   };
 
+    // Handlers
+    const handleDrawer = () => {
+      storeDispatch(uxActions.drawer(!drawer));
+    };
+
   return (
     <>
-      <Container className={classes.container}>
-        <Card
-          elevation={10}
-          sx={{
-            height: "50%",
-            width: "50%",
-          }}
-        >
-          <Grid
-            container
-            direction={"column"}
-            sx={{ height: "100%", padding: "2.5rem" }}
-            spacing={2}
-          >
-            <Grid
-              item
+      <div>
+        <div>
+        <Navbar/>
+        <BasicSidebar/>
+          <Container className={classes.container}>
+            <Card
+              elevation={10}
               sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                height: "50%",
+                width: "50%",
               }}
-              xs
             >
-              <Box
-                component={"img"}
-                sx={{ width: "50%" }}
-                src={
-                  theme.palette.mode === "dark"
-                    ? "lynx-white.png"
-                    : "lynx-blue.png"
-                }
-              />
-            </Grid>
-            <Grid
-              item
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-              xs
-            >
-              <Typography variant="caption">
-                Developed by Digital Engineering
-              </Typography>
-            </Grid>
-            <Grid
-              item
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-              xs
-            >
-              {containers.length ? (
-                <FormControl sx={{ width: "100%" }}>
-                  <InputLabel id="/containers/ContainerSelect">
-                    Containers
-                  </InputLabel>
-                  <Select
-                    autoFocus
-                    label="Containers"
-                    id="/containers/ContainerSelect"
-                    value={selectedContainer}
-                    onChange={handleContainer}
-                  >
-                    {containers.map((container: ContainerT) => {
-                      return (
-                        <MenuItem key={container.id} value={container.id} dense>
-                          {container.name}
-                        </MenuItem>
-                      );
-                    })}
-                  </Select>
-                </FormControl>
-              ) : (
-                <Box sx={{ width: "100%" }}>
-                  <LinearProgress />
-                </Box>
-              )}
-            </Grid>
-          </Grid>
-        </Card>
-      </Container>
+              <Grid
+                container
+                direction={"column"}
+                sx={{ height: "100%", padding: "2.5rem" }}
+                spacing={2}
+              >
+                <Grid
+                  item
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  xs
+                >
+                  <Box
+                    component={"img"}
+                    sx={{ width: "50%" }}
+                    src={
+                      theme.palette.mode === "dark"
+                        ? "lynx-white.png"
+                        : "lynx-blue.png"
+                    }
+                  />
+                </Grid>
+                <Grid
+                  item
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  xs
+                >
+                  <Typography variant="caption">
+                    Developed by Digital Engineering
+                  </Typography>
+                </Grid>
+                <Grid
+                  item
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  xs
+                >
+                  {containers.length ? (
+                    <FormControl sx={{ width: "100%" }}>
+                      <InputLabel id="/containers/ContainerSelect">
+                        Containers
+                      </InputLabel>
+                      <Select
+                        autoFocus
+                        label="Containers"
+                        id="/containers/ContainerSelect"
+                        value={selectedContainer}
+                        onChange={handleContainer}
+                      >
+                        {containers.map((container: ContainerT) => {
+                          return (
+                            // <MenuItem key={container.id} value={container.id} dense>
+                            //   {container.name}
+                            // </MenuItem>
+                            <></>
+                          );
+                        })}
+                      </Select>
+                    </FormControl>
+                  ) : (
+                    <Box sx={{ width: "100%" }}>
+                      <LinearProgress />
+                    </Box>
+                  )}
+                </Grid>
+              </Grid>
+            </Card>
+          </Container>
+        </div>
+      </div>
     </>
   );
 };

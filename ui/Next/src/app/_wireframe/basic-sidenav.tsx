@@ -4,12 +4,9 @@
 import * as React from 'react';
 
 
-import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
-import CssBaseline from '@mui/material/CssBaseline';
 import List from '@mui/material/List';
-import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -19,10 +16,9 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
 import { Collapse, Link } from "@mui/material";
 
+
 import { translations } from '@/lib/translations';
 import { classes } from "../styles";
-
-
 
 const drawerWidth = 440;
 const appBarHeight = 64;
@@ -33,14 +29,6 @@ const faq = [
     answer: translations.en.containers.answer1
   }
 ]
-
-const DrawerHeader = styled('div')(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  padding: theme.spacing(0, 1),
-  ...theme.mixins.toolbar,
-  justifyContent: 'flex-end',
-}));
 
 export default function BasicSidebar() {
   // Hooks
@@ -58,26 +46,22 @@ export default function BasicSidebar() {
   }
   return (
     <>
-      <Box sx={{ display: 'flex'}}>
-        <CssBaseline />
+      <Box sx={{ display: 'flex' }}>
         <Drawer
           sx={{
             '& .MuiDrawer-paper': {
-              width: drawerWidth, 
-              top: appBarHeight, 
+              width: drawerWidth,
+              top: appBarHeight,
             }
           }}
-          className={classes.basicdrawer}
+          className={classes.basicDrawer}
           variant="persistent"
           anchor="left"
           open={open}
         >
-          <DrawerHeader>
-            <Typography variant='h6' style={{ flex: 1, textAlign: "left", padding: 16 }}>{translations.en.containers.welcome}</Typography>
-          </DrawerHeader>
-          <Divider />
-          <Typography sx={{ padding: 3, fontSize: 14 }}>DeepLynx is a unique data warehouse designed to provide easy collaboration on large projects. DeepLynx allows users to define an ontology and then store data under it. Find more information on our wiki by clicking <Link href="https://github.com/idaholab/Deep-Lynx/wiki">here</Link>.</Typography>
-          <Typography sx={{ paddingLeft: 3, paddingBottom: 1 }}>FAQ's</Typography>
+          <div className={classes.sidenav.header}>{translations.en.containers.welcome}</div>
+          <div className={classes.sidenav.div}>DeepLynx is a unique data warehouse designed to provide easy collaboration on large projects. DeepLynx allows users to define an ontology and then store data under it. Find more information on our wiki by clicking <Link href="https://github.com/idaholab/Deep-Lynx/wiki">here</Link>.</div>
+          <div className={classes.sidenav.header2}>FAQ's</div>
           <Divider />
           <List sx={{ listStyleType: 'disc' }}>
             {faq.map((bullets, index) => (
@@ -88,15 +72,15 @@ export default function BasicSidebar() {
                   </ListItemButton>
                 </ListItem>
                 <Collapse in={openIndex === index} timeout="auto" unmountOnExit>
-                  <Typography sx={{ paddingLeft: 3, paddingBottom: 2 }}>
+                  <div className={classes.sidenav.answer}>
                     {bullets.answer}
-                  </Typography>
+                  </div>
                 </Collapse>
               </div>
             ))}
           </List>
           <Divider />
-          <Typography sx={{ padding: 3, fontSize: 14 }}>Have more questions? Get in touch at <Link href="mailto: deeplynx@admin.com" >deeplynx@admin.com</Link></Typography>
+          <div className={classes.sidenav.div}>Have more questions? Get in touch at <Link href="mailto: deeplynx@admin.com" >deeplynx@admin.com</Link></div>
         </Drawer>
         <Box
           sx={{
@@ -111,7 +95,7 @@ export default function BasicSidebar() {
             justifyContent: 'center',
             alignItems: 'center',
             cursor: 'pointer',
-            zIndex: 1300 
+            zIndex: 1300
           }}
           onClick={handleDrawerMovement}
         >

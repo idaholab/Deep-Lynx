@@ -35,5 +35,13 @@ export const classes = {
   icon: "fill-white dark:fill-gray-100 hover:bg-transparent",
   logo: "pl-8",
   toolbar: "h-full p-0 bg-[#083769]",
-  basicdrawer: " flexShrink: 0, boxSizing: 'border-box', backgroundColor: '#EEF1F6'"
+  basicDrawer: " flexShrink: 0, boxSizing: 'border-box', backgroundColor: '#EEF1F6'",
+  sidenav: {
+    header: "text-left p-6 font-bold text-lg",
+    div: "p-6 py-2 text-sm",
+    header2: "p-6 pb-2 text-lg", 
+    listItem: "list-disc text-sm", 
+    answer: "pl-10"
+
+  }
 };
