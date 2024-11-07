@@ -34,5 +34,6 @@ export const classes = {
   grid: "p-10",
   icon: "fill-white dark:fill-gray-100 hover:bg-transparent",
   logo: "pl-8",
-  toolbar: "h-full p-0 bg-gray-500 dark:bg-gray-800",
+  toolbar: "h-full p-0 bg-[#083769]",
+  basicdrawer: " flexShrink: 0, boxSizing: 'border-box', backgroundColor: '#EEF1F6'"
 };
