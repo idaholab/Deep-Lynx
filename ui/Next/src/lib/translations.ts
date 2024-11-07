@@ -482,6 +482,9 @@ export const translations = {
       change: "Change Container",
       repair: "Repair Permissions",
       repaired: "Permissions Repaired",
+      faq1: "Possible question", 
+      answer1: "Possible answer", 
+      welcome: "Welcome to DeepLynx!"
     },
     ontology: {
       ontology: "Ontology",

@@ -25,10 +25,8 @@ export default function Wireframe(props: any) {
 
   return (
     <>
-      <Navbar handleDrawer={handleDrawer} />
-      {container && path.includes(container.id) ? (
-        <Sidebar drawer={drawer} handleDrawer={handleDrawer} />
-      ) : null}
+      <Navbar />
+      <Sidebar drawer={drawer} handleDrawer={handleDrawer} />
       {props.children}
     </>
   );
