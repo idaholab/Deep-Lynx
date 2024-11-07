@@ -11,7 +11,7 @@ defmodule Datum.Plugins.Plugin do
     field :module, :binary
     field :name, :string
     field :path, :string
-    field :enabled, :boolean
+    field :enabled, :boolean, default: false
     field :plugin_type, Ecto.Enum, values: [:extractor, :sampler]
     field :filetypes, {:array, :string}
 
