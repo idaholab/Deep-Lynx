@@ -123,7 +123,7 @@ defmodule Datum.MixProject do
         "phx.digest"
       ],
       "sqlite.fetch": [
-        "cmd cd priv/sqlite_extensions && curl -L https://github.com/asg017/sqlite-vec/releases/download/v0.1.1/install.sh | sh",
+        "cmd cd priv/sqlite_extensions && curl -L https://github.com/asg017/sqlite-vec/releases/download/v0.1.3/install.sh | sh",
         "cmd cd priv/sqlite_extensions && sh install.sh"
       ]
     ]

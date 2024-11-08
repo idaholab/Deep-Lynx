@@ -7,22 +7,7 @@ defmodule Datum.Plugins.Extractor do
   alias Datum.Plugins.Plugin
 
   @doc """
-  Extract either defers out to the plugin system or runs native elixir packages to extract metadata.
-  You should typically call this over `extract_with_plugin/3` unless you know what you're doing.
-  """
-  def extract_metadata(path, opts \\ []) do
-    # overwrite the extension if provided - this can also force an extractor if the file type is difficult
-    ext = Keyword.get(opts, :ext, Path.extname(path))
-
-    case ext do
-      ".parquet" -> nil
-      _ -> {:error, :unsupported_file_type}
-    end
-  end
-
-  @doc """
-  TODO: remove this eventually, right now we need for tests, we'll consolidate this a bit more soon
-  Extract with plugin is in charge of loading the WASM modules from the Plugin schema and
+  Extract with plugin is in charge of loading the WASM or Elixir modules from the Plugin schema and
   running the WASI runtime. Keep in mind that we should try and limit how
   often we compile the module, but we still need to start a genserver each time
   in order to limit file visibility to the directory where the file is at.
@@ -30,7 +15,15 @@ defmodule Datum.Plugins.Extractor do
   In time the pipeline running this should be intelligent enough to run all loaded scanners
   for the directory instead of recompiling for each one.
   """
-  def extract_with_plugin(%Plugin{} = plugin, path, _opts \\ []) do
+  def extract_with_plugin(%Plugin{} = plugin, path, opts \\ []) do
+    if plugin.path || plugin.module do
+      plugin_extract(:wasm, plugin, path, opts)
+    else
+      plugin_extract(:elixir, plugin, path, opts)
+    end
+  end
+
+  defp plugin_extract(:wasm, %Plugin{} = plugin, path, _opts) do
     {:ok, stderr} = Wasmex.Pipe.new()
     {:ok, stdout} = Wasmex.Pipe.new()
 
@@ -67,6 +60,12 @@ defmodule Datum.Plugins.Extractor do
         Wasmex.Pipe.seek(stderr, 0)
         {:error, Wasmex.Pipe.read(stderr)}
     end
+  end
+
+  defp plugin_extract(:elixir, %Plugin{} = plugin, path, opts) do
+    # check out apply/3 documentation - module_name should be being returned as an atom representing a module
+    # which has been compiled as part of the main application
+    apply(String.to_existing_atom(plugin.module_name), :extract, [path, opts])
   end
 
   @doc """

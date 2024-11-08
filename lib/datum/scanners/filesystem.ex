@@ -39,11 +39,11 @@ defmodule Datum.Scanners.Filesystem do
   end
 
   defp act_on_file(%Origin{} = origin, %Data{} = parent, path, user_id) do
-    mimetype = MIME.from_path(path)
+    extensions = MIME.from_path(path) |> MIME.extensions()
 
     # This works because the Scan CLI process will build a local copy of the
     # operations database with the plugins owned by the user
-    plugins = Plugins.list_plugins_by_extensions([mimetype])
+    plugins = Plugins.list_plugins_by_extensions(extensions)
 
     statuses =
       Task.Supervisor.async_stream_nolink(
