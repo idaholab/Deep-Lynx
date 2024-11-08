@@ -24,9 +24,7 @@ defmodule Datum.DataOriginFixtures do
   def extracted_metadata_fixture(attrs \\ %{}) do
     {:ok, extracted_metadata} =
       attrs
-      |> Enum.into(%{
-
-      })
+      |> Enum.into(%{})
       |> Datum.DataOrigin.create_extracted_metadata()
 
     extracted_metadata

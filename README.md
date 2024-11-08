@@ -26,6 +26,7 @@
 
  You might need to additionally install the language servers yourself, if the editors have a hard time doing so. We recommend either ElixirLS or Next-LS for now.
 
+
 ## Gotchas for Development
 
 - Might need to fix your Zig install for Burrito - https://ziggit.dev/t/what-to-fix-this-related-libsystem-build-error/5387/3

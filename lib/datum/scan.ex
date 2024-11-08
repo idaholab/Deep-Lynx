@@ -22,7 +22,6 @@ defmodule Datum.Scan do
 
     # sync the local operations database with the cloud one
     # pull the user record, and download the shared plugins
-    
 
     # start a supervised task for each of the paths passed in from the args
     # logging will inform the user of any issues etc.
