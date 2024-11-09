@@ -1,11 +1,10 @@
 "use client";
 
 // Hooks
-import { useNodes } from "../hooks/useNodes";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // Types
-import { NodeT } from "@/lib/types/deeplynx";
+import { NodeT, FileT, ContainerT } from "@/lib/types/deeplynx";
 import { SelectChangeEvent } from "@mui/material";
 
 // MUI
@@ -24,19 +23,35 @@ import {
 import { useAppSelector } from "@/lib/store/hooks";
 
 // Components
-import DataSourceSelector from "./selectDataSource";
-import NodeSelector from "./selectNode";
+import FileSelector from "./fileSelector";
 import UploadModel from "./workflows/uploadModel";
 import ProcessModel from "./workflows/processFiles";
 import VisualizeModel from "./workflows/visualizeModel";
 
+// Functions
+import { fetchFiles } from "@/lib/client";
+
 const Workflows = () => {
   // Component Hooks
+  const [files, setFiles] = useState<Array<FileT> | undefined>();
   const [node, setNode] = useState<NodeT | undefined>(undefined);
   const [tab, setTab] = useState<string>("upload");
 
-  // Redux Hooks
-  const dataSource = useAppSelector((state) => state.container.dataSource!);
+  const container: ContainerT = useAppSelector(
+    (state) => state.container.container!
+  );
+
+  useEffect(() => {
+    const get = async () => {
+      await fetchFiles(container.id).then((files) => {
+        setFiles(files);
+      });
+    };
+
+    if (container.id) {
+      get();
+    }
+  }, [container]);
 
   // Handlers
   const handleTab = (event: React.SyntheticEvent, tab: string) => {
@@ -45,31 +60,19 @@ const Workflows = () => {
 
   return (
     <>
-      <DataSourceSelector />
+      <Typography variant="body2">
+        Select a file action to get started.
+      </Typography>
       <br />
+      <Tabs value={tab} onChange={handleTab}>
+        <Tab label="Upload Model" value={"upload"}></Tab>
+        <Tab label="Process Model" value={"process"}></Tab>
+        <Tab label="Visualize Model" value={"visualize"}></Tab>
+      </Tabs>
       <br />
-      {dataSource ? (
-        <NodeSelector dataSource={dataSource} node={node} setNode={setNode} />
-      ) : null}
-      <br />
-      <br />
-      {node ? (
-        <>
-          <Typography variant="body2">
-            Select a file action for files attached to this node
-          </Typography>
-          <br />
-          <Tabs value={tab} onChange={handleTab}>
-            {/* <Tab label="Upload Model" value={"upload"}></Tab> */}
-            <Tab label="Process Model" value={"process"}></Tab>
-            <Tab label="Visualize Model" value={"visualize"}></Tab>
-          </Tabs>
-          <br />
-          {tab === "upload" ? <UploadModel /> : null}
-          {tab === "process" ? <ProcessModel node={node} /> : null}
-          {tab === "visualize" ? <VisualizeModel node={node} /> : null}
-        </>
-      ) : null}
+      {tab === "upload" ? <UploadModel /> : null}
+      {tab === "process" ? <ProcessModel files={files} /> : null}
+      {tab === "visualize" ? <VisualizeModel files={files} /> : null}
     </>
   );
 };

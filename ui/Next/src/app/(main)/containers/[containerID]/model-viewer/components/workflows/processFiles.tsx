@@ -1,9 +1,7 @@
 "use client";
 
 // Hooks
-import { useFiles } from "../../hooks/useFiles";
-import { SyntheticEvent, useEffect, useState } from "react";
-import { useContainer } from "@/lib/context/ContainerProvider";
+import { useState } from "react";
 
 // MUI
 import {
@@ -27,49 +25,44 @@ import { modelViewerActions } from "@/lib/store/features/model-viewer/modelViewe
 // Filetypes
 import { supportedFiletypes } from "../../supportedFileTypes";
 
-// Axios
-import axios from "axios";
-
 // Types
 import { NodeT, FileT, DagT } from "@/lib/types/deeplynx";
 import { SelectChangeEvent } from "@mui/material";
 type Props = {
-  node: NodeT;
+  files: Array<FileT> | undefined;
 };
 
 const ProcessModel = (props: Props) => {
   // Component Hooks
+  const files = props.files;
   const [file, setFile] = useState<FileT | undefined>();
 
   // Redux Hooks
   const storeDispatch = useAppDispatch();
   const dataSource = useAppSelector((state) => state.container.dataSource!);
 
-  // DeepLynx Hooks
-  const container = useContainer();
-  const files = useFiles(props.node);
-
   // Handlers
   const handleFile = (event: SelectChangeEvent) => {
     setFile(files!.find((file: FileT) => file.id === event.target.value)!);
   };
-  const handlePixyz = async (event: SyntheticEvent) => {
-    await axios
-      .get("/api/pythagoras", {
-        params: {
-          containerId: container.id,
-          dataSourceId: dataSource.id,
-          dataSourceName: dataSource.name,
-          nodeId: props.node!.id,
-          fileId: file!.id,
-          fileName: file!.file_name,
-        },
-      })
-      .then((response) => {
-        let dag: DagT = response.data;
-        storeDispatch(modelViewerActions.setDag(dag));
-      });
-  };
+
+  // const handlePixyz = async (event: SyntheticEvent) => {
+  //   await axios
+  //     .get("/api/pythagoras", {
+  //       params: {
+  //         containerId: container.id,
+  //         dataSourceId: dataSource.id,
+  //         dataSourceName: dataSource.name,
+  //         nodeId: props.node!.id,
+  //         fileId: file!.id,
+  //         fileName: file!.file_name,
+  //       },
+  //     })
+  //     .then((response) => {
+  //       let dag: DagT = response.data;
+  //       storeDispatch(modelViewerActions.setDag(dag));
+  //     });
+  // };
 
   return (
     <>
@@ -121,9 +114,7 @@ const ProcessModel = (props: Props) => {
       <br />
       {file ? (
         <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-          <Button onClick={handlePixyz} startIcon={<CloudSyncIcon />}>
-            Process Model
-          </Button>
+          <Button startIcon={<CloudSyncIcon />}>Process Model</Button>
         </Box>
       ) : null}
     </>

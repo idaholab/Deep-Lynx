@@ -1,7 +1,6 @@
 "use client";
 
 // Hooks
-import { useFiles } from "../../hooks/useFiles";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useContainer } from "@/lib/context/ContainerProvider";
@@ -26,14 +25,14 @@ import { useAppDispatch } from "@/lib/store/hooks";
 import { modelViewerActions } from "@/lib/store/features/model-viewer/modelViewerSlice";
 
 // Types
-import { NodeT, FileT } from "@/lib/types/deeplynx";
+import { FileT } from "@/lib/types/deeplynx";
 import { SelectChangeEvent } from "@mui/material";
 type Props = {
-  node: NodeT;
+  files: Array<FileT> | undefined;
 };
 
 const VisualizeModel = (props: Props) => {
-  // Component Hooks
+  const files = props.files;
   const [file, setFile] = useState<FileT | undefined>();
 
   // Redux Hooks
@@ -44,7 +43,6 @@ const VisualizeModel = (props: Props) => {
 
   // DeepLynx Hooks
   const container = useContainer();
-  const files = useFiles(props.node);
 
   // Handlers
   const handleFile = (event: SelectChangeEvent) => {

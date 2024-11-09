@@ -25,7 +25,7 @@ export default function Wireframe(props: any) {
 
   return (
     <>
-      <Navbar />
+      <Navbar handleDrawer={handleDrawer} />
       <Sidebar drawer={drawer} handleDrawer={handleDrawer} />
       {props.children}
     </>
