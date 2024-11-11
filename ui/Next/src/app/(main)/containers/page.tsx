@@ -49,8 +49,19 @@ import {
 import { classes } from "@/app/styles";
 
 // Store
-import { useAppDispatch } from "@/lib/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
 import { containerActions } from "@/lib/store/features/container/containerSlice";
+import BasicSidebar from "@/app/_wireframe/basic-sidenav";
+import { uxActions } from "@/lib/store/features/ux/uxSlice";
+import Navbar from "@/app/_wireframe/navbar";
+import {
+  CalendarIcon,
+  ChartPieIcon,
+  DocumentDuplicateIcon,
+  FolderIcon,
+  HomeIcon,
+  UsersIcon,
+} from "@heroicons/react/24/outline";
 
 const navigation = [
   { name: "Dashboard", href: "#", icon: HomeIcon, current: true },
@@ -70,13 +81,14 @@ const userNavigation = [
   { name: "Sign out", href: "#" },
 ];
 
-function classNames(...classes) {
-  return classes.filter(Boolean).join(" ");
-}
+// function classNames(...classes) {
+//   return classes.filter(Boolean).join(' ')
+// }
 
 const ContainerSelect = () => {
   // Store
   const storeDispatch = useAppDispatch();
+  const drawer: boolean = useAppSelector((state) => state.ux.drawer);
 
   // Hooks
   const [containers, setContainers] = useState<Array<ContainerT>>([]);
@@ -115,10 +127,17 @@ const ContainerSelect = () => {
     setSelectedContainer(event.target.value);
   };
 
+  // Handlers
+  const handleDrawer = () => {
+    storeDispatch(uxActions.drawer(!drawer));
+  };
+
   return (
     <>
       <div>
         <div>
+          <Navbar />
+          <BasicSidebar />
           <Container className={classes.container}>
             <Card
               elevation={10}
@@ -188,13 +207,10 @@ const ContainerSelect = () => {
                       >
                         {containers.map((container: ContainerT) => {
                           return (
-                            <MenuItem
-                              key={container.id}
-                              value={container.id}
-                              dense
-                            >
-                              {container.name}
-                            </MenuItem>
+                            // <MenuItem key={container.id} value={container.id} dense>
+                            //   {container.name}
+                            // </MenuItem>
+                            <></>
                           );
                         })}
                       </Select>
