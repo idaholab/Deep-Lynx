@@ -58,8 +58,8 @@ export default class OAuthRoutes {
         app.get(
             '/oauth/oidc',
             passport.authenticate('openidconnect', {
-                successReturnToOrRedirect: '/#',
-                failureRedirect: '/oauth',
+                successReturnToOrRedirect: '/',
+                failureRedirect: '/unauthorized',
             }),
         );
         app.get('/check-oidc', (req, res) => {
