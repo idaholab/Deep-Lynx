@@ -29,7 +29,7 @@ import {
   MenuItem,
   MenuItems,
   TransitionChild,
-} from '@headlessui/react'
+} from "@headlessui/react";
 import {
   Bars3Icon,
   BellIcon,
@@ -41,8 +41,11 @@ import {
   HomeIcon,
   UsersIcon,
   XMarkIcon,
-} from '@heroicons/react/24/outline'
-import { ChevronDownIcon, MagnifyingGlassIcon } from '@heroicons/react/20/solid'
+} from "@heroicons/react/24/outline";
+import {
+  ChevronDownIcon,
+  MagnifyingGlassIcon,
+} from "@heroicons/react/20/solid";
 import { classes } from "@/app/styles";
 
 // Store
@@ -50,27 +53,26 @@ import { useAppDispatch } from "@/lib/store/hooks";
 import { containerActions } from "@/lib/store/features/container/containerSlice";
 
 const navigation = [
-  { name: 'Dashboard', href: '#', icon: HomeIcon, current: true },
-  { name: 'Team', href: '#', icon: UsersIcon, current: false },
-  { name: 'Projects', href: '#', icon: FolderIcon, current: false },
-  { name: 'Calendar', href: '#', icon: CalendarIcon, current: false },
-  { name: 'Documents', href: '#', icon: DocumentDuplicateIcon, current: false },
-  { name: 'Reports', href: '#', icon: ChartPieIcon, current: false },
-]
+  { name: "Dashboard", href: "#", icon: HomeIcon, current: true },
+  { name: "Team", href: "#", icon: UsersIcon, current: false },
+  { name: "Projects", href: "#", icon: FolderIcon, current: false },
+  { name: "Calendar", href: "#", icon: CalendarIcon, current: false },
+  { name: "Documents", href: "#", icon: DocumentDuplicateIcon, current: false },
+  { name: "Reports", href: "#", icon: ChartPieIcon, current: false },
+];
 const teams = [
-  { id: 1, name: 'Heroicons', href: '#', initial: 'H', current: false },
-  { id: 2, name: 'Tailwind Labs', href: '#', initial: 'T', current: false },
-  { id: 3, name: 'Workcation', href: '#', initial: 'W', current: false },
-]
+  { id: 1, name: "Heroicons", href: "#", initial: "H", current: false },
+  { id: 2, name: "Tailwind Labs", href: "#", initial: "T", current: false },
+  { id: 3, name: "Workcation", href: "#", initial: "W", current: false },
+];
 const userNavigation = [
-  { name: 'Your profile', href: '#' },
-  { name: 'Sign out', href: '#' },
-]
+  { name: "Your profile", href: "#" },
+  { name: "Sign out", href: "#" },
+];
 
 function classNames(...classes) {
-  return classes.filter(Boolean).join(' ')
+  return classes.filter(Boolean).join(" ");
 }
-
 
 const ContainerSelect = () => {
   // Store
@@ -80,21 +82,21 @@ const ContainerSelect = () => {
   const [containers, setContainers] = useState<Array<ContainerT>>([]);
   const [selectedContainer, setSelectedContainer] = useState<string>("");
   const theme = useTheme();
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const router = useRouter();
 
-  useEffect(() => {
-    async function fetchContainers() {
-      let containers = await fetch("/api/containers").then((response) => {
-        return response.json();
-      });
+  // useEffect(() => {
+  //   async function fetchContainers() {
+  //     let containers = await fetch("/api/containers").then((response) => {
+  //       return response.json();
+  //     });
 
-      setContainers(containers);
-    }
+  //     setContainers(containers);
+  //   }
 
-    fetchContainers();
-  }, []);
+  //   fetchContainers();
+  // }, []);
 
   useEffect(() => {
     // When the user selects a container, dispatch that container's metadata to the Redux store, and navigate to the dashboard
@@ -186,7 +188,11 @@ const ContainerSelect = () => {
                       >
                         {containers.map((container: ContainerT) => {
                           return (
-                            <MenuItem key={container.id} value={container.id} dense>
+                            <MenuItem
+                              key={container.id}
+                              value={container.id}
+                              dense
+                            >
                               {container.name}
                             </MenuItem>
                           );
@@ -202,12 +208,10 @@ const ContainerSelect = () => {
               </Grid>
             </Card>
           </Container>
-
         </div>
       </div>
     </>
-  )
-
+  );
 };
 
 export default ContainerSelect;
