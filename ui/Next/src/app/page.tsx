@@ -15,6 +15,7 @@ import {
   PlusSmallIcon,
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
+import Link from "next/link";
 
 const secondFeatures = [
   {
@@ -336,12 +337,12 @@ export default function Home() {
                 enabling data discovery, AI/ML, and data science breakthroughs.
               </p>
               <div className="mt-10 flex items-center justify-center gap-x-6">
-                <a
-                  href="#"
+                <Link
+                  href="/containers"
                   className="rounded-md bg-indigo-500 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
                 >
                   Get started
-                </a>
+                </Link>
                 <a
                   href="#"
                   className="text-sm font-semibold leading-6 text-white"
@@ -499,12 +500,9 @@ export default function Home() {
             Access our dashboard today!
           </h2>
           <div className="mt-10 flex items-center gap-x-6 lg:mt-0 lg:flex-shrink-0">
-            <a
-              href="#"
-              className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-            >
+            <Link href="/containers" className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
               Get started
-            </a>
+            </Link>
             <a href="#" className="text-sm font-semibold leading-6 text-white">
               Learn more <span aria-hidden="true">→</span>
             </a>
