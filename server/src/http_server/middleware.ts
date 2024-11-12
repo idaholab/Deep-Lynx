@@ -114,7 +114,11 @@ export function authenticateRoute(): any {
                 if (authHeader && authHeader.startsWith('Bearer ')) {
                     passport.authenticate('jwt', {session: false, keepSessionInfo: true})(req, resp, next);
                 } else {
-                    passport.authenticate('openidconnect', {session: true})(req, resp, next);
+                    if (req.isAuthenticated()) {
+                        next();
+                    } else {
+                        resp.status(401).send('unauthorized');
+                    }
                 }
             };
         }
