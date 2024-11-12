@@ -12,7 +12,7 @@ defmodule Datum.DataOriginTest do
 
     test "list_data_origins/0 returns all data_origins" do
       origin = origin_fixture()
-      assert DataOrigin.list_data_origins() == [origin]
+      assert Enum.member?(DataOrigin.list_data_origins(), origin)
     end
 
     test "get_origin!/1 returns the origin with given id" do

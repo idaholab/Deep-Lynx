@@ -10,6 +10,7 @@ defmodule Datum.DataOrigin.OriginRepo.Migrations.Init do
       add :file_type, :string
       add :properties, :jsonb
       add :description, :string
+      add :natural_language_properties, :string
       add :owned_by, :binary
 
       add :tags, {:array, :string}

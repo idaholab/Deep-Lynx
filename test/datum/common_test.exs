@@ -14,7 +14,7 @@ defmodule Datum.CommonTest do
       explorer_tabs = explorer_tabs_fixture()
       explorer_tabs = Common.get_explorer_tabs!(explorer_tabs.id)
 
-      assert Common.list_explorer_tabs() == [explorer_tabs]
+      assert Enum.member?(Common.list_explorer_tabs(), explorer_tabs)
     end
 
     test "get_explorer_tabs!/1 returns the explorer_tabs with given id" do

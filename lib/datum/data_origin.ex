@@ -210,20 +210,24 @@ defmodule Datum.DataOrigin do
           select: g.group_id
       )
 
-    OriginRepo.with_dynamic_repo(origin, fn ->
-      query =
-        from d in Data,
-          distinct: true,
-          left_join: p in Datum.Permissions.Data,
-          on: d.id == p.data_id,
-          where:
-            (p.user_id == ^user.id or
-               p.group_id in ^groups) and p.permission_type in [:read, :readwrite] and
-              d.id == ^data_id,
-          select: d
+    OriginRepo.with_dynamic_repo(
+      origin,
+      fn ->
+        query =
+          from d in Data,
+            distinct: true,
+            left_join: p in Datum.Permissions.Data,
+            on: d.id == p.data_id,
+            where:
+              (p.user_id == ^user.id or
+                 p.group_id in ^groups) and p.permission_type in [:read, :readwrite] and
+                d.id == ^data_id,
+            select: d
 
-      OriginRepo.one(query)
-    end)
+        OriginRepo.one(query)
+      end,
+      mode: :readonly
+    )
   end
 
   def list_data_user(%Origin{} = origin, %User{} = user, opts \\ []) do
@@ -236,26 +240,30 @@ defmodule Datum.DataOrigin do
           select: g.group_id
       )
 
-    OriginRepo.with_dynamic_repo(origin, fn ->
-      query =
-        from d in Data,
-          distinct: true,
-          left_join: p in Datum.Permissions.Data,
-          on: d.id == p.data_id,
-          where:
-            (p.user_id == ^user.id or
-               p.group_id in ^groups) and p.permission_type in [:read, :readwrite],
-          select: d
+    OriginRepo.with_dynamic_repo(
+      origin,
+      fn ->
+        query =
+          from d in Data,
+            distinct: true,
+            left_join: p in Datum.Permissions.Data,
+            on: d.id == p.data_id,
+            where:
+              (p.user_id == ^user.id or
+                 p.group_id in ^groups) and p.permission_type in [:read, :readwrite],
+            select: d
 
-      query =
-        if only_ids do
-          from d in query, where: d.id in ^only_ids
-        else
-          query
-        end
+        query =
+          if only_ids do
+            from d in query, where: d.id in ^only_ids
+          else
+            query
+          end
 
-      OriginRepo.all(query)
-    end)
+        OriginRepo.all(query)
+      end,
+      mode: :readonly
+    )
   end
 
   def list_data_descendants_user(%Origin{} = origin, %User{} = user, data_id) do
@@ -266,42 +274,50 @@ defmodule Datum.DataOrigin do
           select: g.group_id
       )
 
-    OriginRepo.with_dynamic_repo(origin, fn ->
-      subquery =
-        from d in Data,
-          join: p in DataTreePath,
-          as: :tree,
-          on: d.id == p.descendant,
-          where: p.ancestor == ^data_id and p.descendant != p.ancestor,
-          order_by: [asc: p.depth],
-          select: d.id
+    OriginRepo.with_dynamic_repo(
+      origin,
+      fn ->
+        subquery =
+          from d in Data,
+            join: p in DataTreePath,
+            as: :tree,
+            on: d.id == p.descendant,
+            where: p.ancestor == ^data_id and p.descendant != p.ancestor,
+            order_by: [asc: p.depth],
+            select: d.id
 
-      query =
-        from d in Data,
-          distinct: true,
-          left_join: p in Datum.Permissions.Data,
-          on: d.id == p.data_id,
-          where:
-            (p.user_id == ^user.id or
-               p.group_id in ^groups) and p.permission_type in [:read, :readwrite] and
-              d.id in subquery(subquery),
-          order_by: [asc: d.type],
-          select: d
+        query =
+          from d in Data,
+            distinct: true,
+            left_join: p in Datum.Permissions.Data,
+            on: d.id == p.data_id,
+            where:
+              (p.user_id == ^user.id or
+                 p.group_id in ^groups) and p.permission_type in [:read, :readwrite] and
+                d.id in subquery(subquery),
+            order_by: [asc: d.type],
+            select: d
 
-      OriginRepo.all(query)
-    end)
+        OriginRepo.all(query)
+      end,
+      mode: :readonly
+    )
   end
 
   def list_roots(%Origin{} = origin) do
-    OriginRepo.with_dynamic_repo(origin, fn ->
-      query =
-        from d in Data,
-          distinct: true,
-          ## this marks a root file system in CTE
-          where: d.type == :root_directory
+    OriginRepo.with_dynamic_repo(
+      origin,
+      fn ->
+        query =
+          from d in Data,
+            distinct: true,
+            ## this marks a root file system in CTE
+            where: d.type == :root_directory
 
-      OriginRepo.all(query)
-    end)
+        OriginRepo.all(query)
+      end,
+      mode: :readonly
+    )
   end
 
   alias Datum.DataOrigin.ExtractedMetadata

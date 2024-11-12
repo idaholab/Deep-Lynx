@@ -1,3 +1,6 @@
+# uncomment this line if you're behind a corporate firewall
+# :public_key.cacerts_load("/Users/Shared/CAINLROOT_B64.crt")
+
 defmodule Datum.MixProject do
   use Mix.Project
 
@@ -56,7 +59,7 @@ defmodule Datum.MixProject do
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       # TODO bump on release to {:phoenix_live_view, "~> 1.0.0"},
-      {:phoenix_live_view, "~> 1.0.0-rc.6", override: true},
+      {:phoenix_live_view, "~> 1.0.0-rc.7", override: true},
       {:floki, ">= 0.30.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.8.3"},
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
@@ -88,6 +91,10 @@ defmodule Datum.MixProject do
       {:prompt, "~> 0.10.0"},
       {:explorer, "~> 0.10.0"},
       {:ymlr, "~> 5.1"},
+      {:exla, "~> 0.9.0"},
+      {:bumblebee, "~> 0.6.0"},
+      {:axon, "~> 0.7.0"},
+      {:nx, "~> 0.9.1"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end

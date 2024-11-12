@@ -12,6 +12,7 @@ defmodule Datum.DataOrigin.Data do
     field :type, Ecto.Enum, values: [:directory, :file, :root_directory]
     field :file_type, :string, default: nil
     field :description, :string
+    field :natural_language_properties, :string
     field :properties, Datum.JSONB
 
     # owned_by can't be foreign key since it's referring to the ops db
@@ -33,6 +34,7 @@ defmodule Datum.DataOrigin.Data do
       :id,
       :type,
       :file_type,
+      :natural_language_properties,
       :properties,
       :original_path,
       :owned_by,
