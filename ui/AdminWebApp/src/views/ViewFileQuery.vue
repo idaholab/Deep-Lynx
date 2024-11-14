@@ -134,7 +134,6 @@ import {
   AxiosResponse,
   default as axios,
 } from "axios";
-import { RetrieveJWT } from "@/auth/authentication_service";
 import buildURL from "build-url";
 import ViewMediaFileDialog from "../components/dialogs/ViewMediaFileDialog.vue";
 import VideoPlayer from "../components/media/VideoPlayer.vue";
@@ -299,9 +298,6 @@ export default Vue.extend({
       config.responseType = "blob";
       config.headers = { "Access-Control-Allow-Origin": "*" };
 
-      if (Config?.deepLynxApiAuth === "token") {
-        config.headers = { Authorization: `Bearer ${RetrieveJWT()}` };
-      }
 
       if (Config?.deepLynxApiAuth === "basic") {
         config.auth = {

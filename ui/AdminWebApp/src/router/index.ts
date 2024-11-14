@@ -3,11 +3,7 @@ import VueRouter, { Route } from "vue-router";
 import PageHome from "@/pages/PageHome.vue";
 import PageContainerSelect from "@/pages/PageContainerSelect.vue";
 import PageLogin from "@/pages/PageLogin.vue";
-import {
-  IsAuthed,
-  IsLoggedIn,
-  LoginFromToken,
-} from "@/auth/authentication_service";
+import { IsAuthed, IsLoggedIn } from "@/auth/authentication_service";
 import PageContainerInvite from "@/pages/PageContainerInvite.vue";
 import { RawLocation } from "vue-router/types/router";
 import { Result } from "element-ui";
@@ -79,11 +75,6 @@ const routes = [
     component: PageContainerInvite,
   },
   {
-    path: "/login",
-    name: "Login",
-    component: PageLogin,
-  },
-  {
     path: "*",
     redirect: "/",
   },
@@ -93,46 +84,6 @@ const router = new VueRouter({
   mode: process.env.VUE_APP_BUNDLED_BUILD === "true" ? undefined : "history",
   base: process.env.BASE_URL,
   routes,
-});
-
-router.beforeEach((to, from, next) => {
-  const publicPages = [
-    "/login",
-    "/reset-password",
-    "/validate",
-    "/register",
-    "/container-invite",
-  ];
-  const authRequired = !publicPages.includes(to.path);
-
-  // if main route we need to check if this is a redirect by checking
-  // the presence of a JWT
-  if (to.path === "/" && to.query.token) {
-    LoginFromToken(to.query.token as string, to.query.state as string)
-      .then((result) => {
-        if (result) {
-          next("/");
-          return;
-        }
-
-        next("/login");
-      })
-      .catch(() => next("login"));
-  } else {
-    if (authRequired && config.oidcEnabled === true) {
-      IsAuthed().then((result) => {
-        if (!result && !IsLoggedIn) {
-          next("/login");
-          return;
-        }
-      });
-    } else if (authRequired && !IsLoggedIn) {
-      next("/login");
-      return;
-    }
-
-    next();
-  }
 });
 
 export default router;

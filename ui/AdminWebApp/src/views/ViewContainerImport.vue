@@ -64,7 +64,6 @@
   import buildURL from "build-url";
   import Config from "@/config";
   import {AxiosBasicCredentials, AxiosRequestConfig, AxiosResponse, default as axios} from "axios";
-  import {RetrieveJWT} from "@/auth/authentication_service";
 
   interface ContainerImportModel {
     errorMessage: string,
@@ -116,9 +115,6 @@
         const config: AxiosRequestConfig = {}
         config.headers = {"Access-Control-Allow-Origin": "*"}
 
-        if(Config?.deepLynxApiAuth === "token") {
-          config.headers = {"Authorization": `Bearer ${RetrieveJWT()}`}
-        }
 
         if(Config?.deepLynxApiAuth === "basic") {
           config.auth = {username: Config.deepLynxApiAuthBasicUser, password: Config.deepLynxApiAuthBasicPass} as AxiosBasicCredentials
