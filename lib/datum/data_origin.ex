@@ -4,6 +4,7 @@ defmodule Datum.DataOrigin do
   """
 
   import Ecto.Query, warn: false
+  alias Datum.DataOrigin.DataSearch
   alias Datum.DataOrigin.DataTreePath
   alias Datum.Repo
   alias Datum.DataOrigin.OriginRepo
@@ -317,6 +318,29 @@ defmodule Datum.DataOrigin do
         OriginRepo.all(query)
       end,
       mode: :readonly
+    )
+  end
+
+  def search_origin(%Origin{} = origin, search_term, opts \\ []) do
+    OriginRepo.with_dynamic_repo(
+      origin,
+      fn ->
+        if search_term == "" do
+          []
+        else
+          search_term = String.replace(search_term, " ", "")
+
+          query =
+            from ds in DataSearch,
+              join: d in Data,
+              on: ds.id == d.id,
+              where: fragment("data_search MATCH ?", ^search_term),
+              order_by: fragment("bm25(data_search,1.0, 5.0, 5.0,7.0,7.0,8.0,9.0,9.0)"),
+              select: d
+
+          OriginRepo.all(query)
+        end
+      end
     )
   end
 

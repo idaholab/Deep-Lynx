@@ -44,6 +44,42 @@ defmodule Datum.DataOriginRepoTest do
                })
     end
 
+    test "DataOriginRepo can search data in an origin" do
+      # keep in mind that actually testing how effective search is, is really difficult and
+      # typically more heurstics than anything. Thus we only test that the search works
+      # and some very basic keyword returns and checking
+      valid_attrs = %{name: "some name"}
+
+      assert {:ok, %Origin{} = origin} = DataOrigin.create_origin(valid_attrs)
+      assert origin.name == "some name"
+
+      assert {:ok, d} =
+               origin
+               |> DataOrigin.add_data(%{
+                 path: "/some/nonexistent/path",
+                 description: "keyword description",
+                 type: :file
+               })
+
+      assert DataOrigin.search_origin(origin, "keyword") == [d]
+      assert DataOrigin.search_origin(origin, "NONSENSE") == []
+
+      # lets make sure tags and domains work
+      assert {:ok, t} =
+               origin
+               |> DataOrigin.add_data(%{
+                 path: "/some/nonexistent/path/two",
+                 description: "keyword description",
+                 tags: ["tag", "hello"],
+                 domains: ["domain"],
+                 type: :file
+               })
+
+      assert DataOrigin.search_origin(origin, "domain") == [t]
+      assert DataOrigin.search_origin(origin, "tag") == [t]
+      assert DataOrigin.search_origin(origin, "hello") == [t]
+    end
+
     test "DataOriginRepo can connect two pieces of data" do
       valid_attrs = %{name: "some name"}
 

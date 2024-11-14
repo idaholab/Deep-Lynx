@@ -43,3 +43,25 @@ defmodule Datum.DataOrigin.Data do
     |> validate_required([:path])
   end
 end
+
+defmodule Datum.DataOrigin.DataSearch do
+  @moduledoc """
+  Reflects the virtual table for FTS5 searching.
+  """
+  use Ecto.Schema
+
+  @primary_key false
+  schema "data_search" do
+    field :rowid, :integer
+    field :id, :binary_id
+    field :path, :string
+    field :original_path, :string
+    field :file_type, :string
+    field :description, :string
+    field :natural_language_properties, :string
+    field :tags, {:array, :string}
+    field :domains, {:array, :string}
+
+    field :rank, :float, virtual: true
+  end
+end
