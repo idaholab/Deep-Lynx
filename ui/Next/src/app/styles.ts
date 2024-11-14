@@ -19,9 +19,11 @@ export const classes = {
   divider: "border-black dark:border-gray-50",
   drawer: {
     sidebar: "pt-8",
-    paper: "w-80 bg-gray-400 dark:bg-gray-800",
+    paper: "w-80 bg-cherenkov text-white",
     button:
       "w-full justify-start text-black hover:bg-gray-500 dark:text-white dark:hover:bg-gray-800",
+    typography: "p-1 text-white normal-case text-base", 
+    header: "normal-case text-small"
   },
   fab: "gray-500 dark:gray-800",
   font: {
