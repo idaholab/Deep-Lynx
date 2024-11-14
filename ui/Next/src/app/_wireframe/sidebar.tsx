@@ -3,47 +3,38 @@
 // Hooks
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useMetatypes } from "@/lib/context/ContainerProvider";
 
 // MUI
 import {
-  AppBar,
   Box,
   Button,
   Container,
-  Divider,
   Drawer,
-  Toolbar,
   Typography,
 } from "@mui/material";
 
+
 // Icons
-import MenuIcon from "@mui/icons-material/Menu";
+import ManageSearchIcon from '@mui/icons-material/ManageSearch';
 import HomeIcon from "@mui/icons-material/Home";
-import SearchIcon from "@mui/icons-material/Search";
+import AppsIcon from '@mui/icons-material/Apps';
 import ViewInArIcon from "@mui/icons-material/ViewInAr";
-import FilePresentIcon from "@mui/icons-material/FilePresent";
-import InsightsIcon from "@mui/icons-material/Insights";
-import AccountTreeIcon from "@mui/icons-material/AccountTree";
-import MoveToInboxIcon from "@mui/icons-material/MoveToInbox";
-import StyleIcon from "@mui/icons-material/Style";
-import SendIcon from "@mui/icons-material/Send";
-import AccountBoxIcon from "@mui/icons-material/AccountBox";
-import LogoutIcon from "@mui/icons-material/Logout";
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import TimelineIcon from '@mui/icons-material/Timeline';
+import LanIcon from '@mui/icons-material/Lan';
+import InboxIcon from '@mui/icons-material/Inbox';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 // Store
 import { useAppSelector } from "@/lib/store/hooks";
 
-// Types
-type PropsT = {
-  drawer: boolean;
-  handleDrawer: Function;
-};
 
 // Styles
 import { classes } from "@/app/styles";
 
-export default function Sidebar(props: PropsT) {
+export default function Sidebar() {
   // Hooks
   const router = useRouter();
   const container = useAppSelector((state) => state.container.container!);
@@ -51,194 +42,154 @@ export default function Sidebar(props: PropsT) {
   return (
     <>
       <Drawer
-        open={props.drawer}
-        onClose={() => props.handleDrawer()}
+        sx={{
+          '& .MuiDrawer-paper': {
+            width: 350,
+            top: 64,
+          }
+        }}
+        open={true}
+        variant="persistent"
+        anchor="left"
         classes={{
           paper: classes.drawer.paper,
         }}
       >
-        <AppBar position="sticky" className={classes.appbar}>
-          <Toolbar className={classes.toolbar}>
-            <Button
-              onClick={() => props.handleDrawer()}
-              className={classes.button}
-            >
-              <MenuIcon className={classes.icon} />
-            </Button>
-            <Box
-              component={"img"}
-              sx={{ height: "75%" }}
-              src={"/lynx-white.png"}
-              className={classes.logo}
-            />
-          </Toolbar>
-        </AppBar>
         <Container className={classes.drawer.sidebar}>
           <Box sx={{ width: "100%" }}>
-            <Typography variant="overline">DeepLynx</Typography>
-            <Divider className={classes.divider} />
-            <br />
             <Box>
               <Button
                 startIcon={<HomeIcon className={classes.icon} />}
                 className={classes.drawer.button}
-                onClick={() => router.push(`/containers/${container.id}`)}
-                sx={{ "& .MuiButton-startIcon": { paddingLeft: "1rem" } }}
-              >
+                onClick={() => router.push(`/containers/`)}>
                 <Typography
                   variant="button"
-                  sx={{
-                    padding: "0 1rem",
-                  }}
+                  className={classes.drawer.typography}
                 >
-                  Dashboard
+                  All Containers
                 </Typography>
               </Button>
-            </Box>
-            <br />
-            <Typography variant="overline">Data</Typography>
-            <Divider className={classes.divider} />
-            <br />
-            <Box>
               <Button
-                startIcon={<SearchIcon className={classes.icon} />}
+                startIcon={<AppsIcon className={classes.icon} />}
                 className={classes.drawer.button}
-                sx={{ "& .MuiButton-startIcon": { paddingLeft: "1rem" } }}
-              >
-                <Typography variant="button" sx={{ padding: "0 1rem" }}>
-                  View
+                onClick={() => router.push(`/containers/${container.id}`)}>
+                <Typography
+                  variant="button"
+                  className={classes.drawer.typography}
+                >
+                 Current Container Dashboard
                 </Typography>
               </Button>
             </Box>
+            <br />
+            <Typography variant="overline" className={classes.drawer.header}>Your Data</Typography>
             <Box>
               <Button
-                startIcon={<ViewInArIcon className={classes.icon} />}
+                startIcon={<ManageSearchIcon className={classes.icon} />}
                 className={classes.drawer.button}
                 onClick={() =>
-                  router.push(`/containers/${container.id}/model-viewer`)
-                }
-                sx={{ "& .MuiButton-startIcon": { paddingLeft: "1rem" } }}
-              >
-                <Typography variant="button" sx={{ padding: "0 1rem" }}>
-                  Model Viewer
+                  router.push(`/containers/${container.id}/data-query`)}>
+                <Typography variant="button" className={classes.drawer.typography}>
+                  Data Viewer
                 </Typography>
               </Button>
             </Box>
             <Box>
               <Button
-                startIcon={<FilePresentIcon className={classes.icon} />}
+                startIcon={<TimelineIcon className={classes.icon} />}
                 className={classes.drawer.button}
-                sx={{ "& .MuiButton-startIcon": { paddingLeft: "1rem" } }}
-              >
-                <Typography variant="button" sx={{ padding: "0 1rem" }}>
-                  Files
+                // Times series end point changing maybe?
+                onClick={() =>
+                  router.push(`/containers/${container.id}/timeseries-viewer`)}>
+                <Typography variant="button" className={classes.drawer.typography}>
+                  Timeseries Viewer
                 </Typography>
               </Button>
             </Box>
             <Box>
               <Button
-                startIcon={<InsightsIcon className={classes.icon} />}
+                startIcon={<InsertDriveFileIcon className={classes.icon} />}
                 className={classes.drawer.button}
-                sx={{ "& .MuiButton-startIcon": { paddingLeft: "1rem" } }}
-              >
-                <Typography variant="button" sx={{ padding: "0 1rem" }}>
-                  Reports
+                onClick={() =>
+                  router.push(`/containers/${container.id}/files`)}>
+                <Typography variant="button" className={classes.drawer.typography}>
+                  File Viewer
                 </Typography>
               </Button>
             </Box>
+
             <br />
-            <Typography variant="overline">Data Management</Typography>
-            <Divider className={classes.divider} />
-            <br />
+            <Typography variant="overline" className={classes.drawer.header}>Data Management</Typography>
             <Box>
               <Button
-                startIcon={<AccountTreeIcon className={classes.icon} />}
+                startIcon={<LanIcon className={classes.icon} />}
                 className={classes.drawer.button}
-                sx={{ "& .MuiButton-startIcon": { paddingLeft: "1rem" } }}
-              >
-                <Typography variant="button" sx={{ padding: "0 1rem" }}>
+                onClick={() =>
+                  router.push(`/containers/${container.id}/metatypes`)}>
+                <Typography variant="button" className={classes.drawer.typography}>
                   Ontology
                 </Typography>
               </Button>
             </Box>
             <Box>
               <Button
-                startIcon={<MoveToInboxIcon className={classes.icon} />}
+                startIcon={<InboxIcon className={classes.icon} />}
                 className={classes.drawer.button}
-                sx={{ "& .MuiButton-startIcon": { paddingLeft: "1rem" } }}
-              >
-                <Typography variant="button" sx={{ padding: "0 1rem" }}>
+                onClick={() =>
+                  router.push(`/containers/${container.id}/data-sources`)}>
+                <Typography variant="button" className={classes.drawer.typography}>
                   Data Sources
                 </Typography>
               </Button>
             </Box>
             <Box>
               <Button
-                startIcon={<StyleIcon className={classes.icon} />}
+                startIcon={<LocalOfferIcon className={classes.icon} />}
                 className={classes.drawer.button}
-                sx={{ "& .MuiButton-startIcon": { paddingLeft: "1rem" } }}
-              >
-                <Typography variant="button" sx={{ padding: "0 1rem" }}>
+                onClick={() =>
+                  router.push(`/containers/${container.id}/tags`)}>
+                <Typography variant="button" className={classes.drawer.typography}>
                   Tags
                 </Typography>
               </Button>
             </Box>
+
+            <br />
+            <Typography variant="overline" className={classes.drawer.header}>Widgets</Typography>
             <Box>
               <Button
-                startIcon={<SendIcon className={classes.icon} />}
+                startIcon={<ViewInArIcon className={classes.icon} />}
                 className={classes.drawer.button}
-                sx={{ "& .MuiButton-startIcon": { paddingLeft: "1rem" } }}
-              >
-                <Typography variant="button" sx={{ padding: "0 1rem" }}>
+                onClick={() =>
+                  router.push(`/containers/${container.id}/model-viewer`)
+                }>
+                <Typography variant="button" className={classes.drawer.typography}>
+                  Model Viewer
+                </Typography>
+              </Button>
+            </Box>
+            <Box>
+              <Button
+                startIcon={<CalendarMonthIcon className={classes.icon} />}
+                className={classes.drawer.button}
+                onClick={() =>
+                  router.push(`/containers/${container.id}/events`)}>
+                <Typography variant="button" className={classes.drawer.typography}>
                   Events
                 </Typography>
               </Button>
             </Box>
-            <br />
-            <Typography variant="overline">User</Typography>
-            <Divider className={classes.divider} />
-            <br />
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              <Button
-                startIcon={<AccountBoxIcon className={classes.icon} />}
-                className={classes.drawer.button}
-                sx={{ "& .MuiButton-startIcon": { paddingLeft: "1rem" } }}
-              >
-                <Typography variant="button" sx={{ padding: "0 1rem" }}>
-                  Profile
-                </Typography>
-              </Button>
-            </Box>
-            <Box>
-              <Button
-                startIcon={<LogoutIcon className={classes.icon} />}
-                className={classes.drawer.button}
-                sx={{ "& .MuiButton-startIcon": { paddingLeft: "1rem" } }}
-              >
-                <Typography variant="button" sx={{ padding: "0 1rem" }}>
-                  Sign Out
-                </Typography>
-              </Button>
-            </Box>
-            <Box
-              flexGrow={1}
-              sx={{
-                display: "flex",
-                padding: "2.5rem 0 0 0",
-                alignItems: "center",
-                justifyContent: "center",
-                minHeight: "15vh",
-              }}
-            >
-              <Typography variant="caption">
-                Developed by Digital Engineering
+          </Box>
+          <Box sx={{ marginTop: 30 }}>
+            <Button
+              startIcon={<SettingsIcon className={classes.icon} />}
+              className={classes.drawer.button}
+              onClick={() =>
+                router.push(`/containers/${container.id}/settings`)}>
+              <Typography variant="button" className={classes.drawer.typography}>
+                Container Settings
               </Typography>
-            </Box>
+            </Button>
           </Box>
         </Container>
       </Drawer>
