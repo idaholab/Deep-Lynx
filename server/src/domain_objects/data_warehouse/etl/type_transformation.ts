@@ -413,6 +413,7 @@ export default class TypeTransformation extends BaseDomainClass {
         let results: Node[] | Edge[] = [];
         // if no root array, act normally
         if (!this.root_array) {
+
             let valid = false;
 
             // no conditions immediately equals true
@@ -430,6 +431,7 @@ export default class TypeTransformation extends BaseDomainClass {
  
             // we don't error out on a non-matching condition, simply pass the transformation by
             if (!valid) return new Promise((resolve) => resolve(Result.Success([])));
+
             const results = await this.generateResults(data);
 
             if (results.isError) {
