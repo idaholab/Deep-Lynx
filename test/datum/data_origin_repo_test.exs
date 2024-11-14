@@ -2,6 +2,7 @@ defmodule Datum.DataOriginRepoTest do
   use Datum.DataOriginCase, async: false
 
   alias Datum.DataOrigin
+  import Datum.AccountsFixtures
   alias Datum.DataOrigin.OriginRepo
 
   describe "data_origins" do
@@ -48,6 +49,7 @@ defmodule Datum.DataOriginRepoTest do
       # keep in mind that actually testing how effective search is, is really difficult and
       # typically more heurstics than anything. Thus we only test that the search works
       # and some very basic keyword returns and checking
+      user = user_fixture()
       valid_attrs = %{name: "some name"}
 
       assert {:ok, %Origin{} = origin} = DataOrigin.create_origin(valid_attrs)
@@ -61,8 +63,10 @@ defmodule Datum.DataOriginRepoTest do
                  type: :file
                })
 
-      assert DataOrigin.search_origin(origin, "keyword") == [d]
-      assert DataOrigin.search_origin(origin, "NONSENSE") == []
+      d = %{d | row_num: 1}
+
+      assert DataOrigin.search_origin(origin, user, "keyword") == [d]
+      assert DataOrigin.search_origin(origin, user, "NONSENSE") == []
 
       # lets make sure tags and domains work
       assert {:ok, t} =
@@ -75,9 +79,10 @@ defmodule Datum.DataOriginRepoTest do
                  type: :file
                })
 
-      assert DataOrigin.search_origin(origin, "domain") == [t]
-      assert DataOrigin.search_origin(origin, "tag") == [t]
-      assert DataOrigin.search_origin(origin, "hello") == [t]
+      t = %{t | row_num: 1}
+      assert DataOrigin.search_origin(origin, user, "domain") == [t]
+      assert DataOrigin.search_origin(origin, user, "tag") == [t]
+      assert DataOrigin.search_origin(origin, user, "hello") == [t]
     end
 
     test "DataOriginRepo can connect two pieces of data" do

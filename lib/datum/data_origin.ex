@@ -321,26 +321,65 @@ defmodule Datum.DataOrigin do
     )
   end
 
-  def search_origin(%Origin{} = origin, search_term, _opts \\ []) do
+  @page_size 1000
+
+  def search_origin(%Origin{} = origin, %Datum.Accounts.User{} = user, search_term, opts \\ []) do
+    groups =
+      Repo.all(
+        from g in Datum.Accounts.UserGroup,
+          where: g.user_id == ^user.id,
+          select: g.group_id
+      )
+
     OriginRepo.with_dynamic_repo(
       origin,
       fn ->
         if search_term == "" do
           []
         else
+          page = Keyword.get(opts, :page, 0)
+          page_size = Keyword.get(opts, :page_size, @page_size)
+
           search_term = String.replace(search_term, " ", "")
+          lower = page_size * page
+          upper = page_size * (page + 1)
+
+          subquery =
+            from d in Data,
+              join: p in Datum.Permissions.Data,
+              on: d.id == p.data_id,
+              where:
+                ((p.user_id == ^user.id or
+                    p.group_id in ^groups) and p.permission_type in [:read, :readwrite]) or
+                  is_nil(p.user_id),
+              select: d.id
 
           query =
             from ds in DataSearch,
               join: d in Data,
               on: ds.id == d.id,
-              where: fragment("data_search MATCH ?", ^search_term),
-              order_by: fragment("bm25(data_search,1.0, 5.0, 5.0,7.0,7.0,8.0,9.0,9.0)"),
-              select: d
+              where:
+                fragment(
+                  "data_search MATCH (?)",
+                  ^search_term
+                ) and d.id in subquery(subquery),
+              select: %{
+                d
+                | row_num:
+                    row_number()
+                    |> over(
+                      order_by: fragment("bm25(data_search,1.0, 5.0, 5.0,7.0,7.0,8.0,9.0,9.0)")
+                    )
+              }
 
-          OriginRepo.all(query)
+          OriginRepo.all(
+            from q in subquery(query),
+              where: q.row_num > ^lower and q.row_num <= ^upper,
+              select: q
+          )
         end
-      end
+      end,
+      mode: :readonly
     )
   end
 

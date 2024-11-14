@@ -7,6 +7,7 @@ defmodule Datum.DataOrigin.Data do
 
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "data" do
+    field :row_num, :integer, virtual: true
     field :path, :string
     field :original_path, :string
     field :type, Ecto.Enum, values: [:directory, :file, :root_directory]
