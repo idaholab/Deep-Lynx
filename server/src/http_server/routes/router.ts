@@ -115,6 +115,10 @@ export class Router {
         // mounted afterwards secure
         this.mountPreMiddleware();
 
+        // web gui
+        this.app.use('/', express.static(Config.web_gui_dir));
+        this.app.use('/viewer', authenticateRoute(), express.static(Config.web_gl_viewer_dir));
+
         // statistics endpoint
         this.app.get(
             '/stats',
@@ -228,10 +232,6 @@ export class Router {
 
         // assets
         this.app.use(express.static(Config.asset_dir));
-
-        // web gui
-        this.app.use('/', express.static(Config.web_gui_dir));
-        this.app.use('/viewer', express.static(Config.web_gl_viewer_dir));
 
         this.app.use(
             helmet({

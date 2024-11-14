@@ -62,13 +62,6 @@ export default class OAuthRoutes {
                 failureRedirect: '/unauthorized',
             }),
         );
-        app.get('/check-oidc', (req, res) => {
-            if (req.isAuthenticated()) {
-                return res.json({authenticated: true});
-            } else {
-                return res.json({authenticated: false});
-            }
-        });
 
         app.get('/oauth/register', csurf(), this.registerPage);
         app.post('/oauth/register', csurf(), this.createNewUser);
