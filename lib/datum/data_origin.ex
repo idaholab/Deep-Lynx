@@ -321,7 +321,7 @@ defmodule Datum.DataOrigin do
     )
   end
 
-  def search_origin(%Origin{} = origin, search_term, opts \\ []) do
+  def search_origin(%Origin{} = origin, search_term, _opts \\ []) do
     OriginRepo.with_dynamic_repo(
       origin,
       fn ->
