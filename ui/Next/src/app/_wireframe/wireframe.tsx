@@ -18,15 +18,10 @@ export default function Wireframe(props: any) {
 
   const storeDispatch = useAppDispatch();
 
-  // Handlers
-  const handleDrawer = () => {
-    storeDispatch(uxActions.drawer(!drawer));
-  };
-
   return (
     <>
-      <Navbar />
-      <Sidebar drawer={drawer} handleDrawer={handleDrawer} />
+      <Navbar/>
+      <Sidebar/>
       {props.children}
     </>
   );
