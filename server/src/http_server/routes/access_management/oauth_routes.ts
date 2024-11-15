@@ -62,6 +62,13 @@ export default class OAuthRoutes {
                 failureRedirect: '/unauthorized',
             }),
         );
+        app.get('/check-oidc', (req, res) => {
+            if (req.isAuthenticated()) {
+                return res.json({authenticated: true});
+            } else {
+                return res.json({authenticated: false});
+            }
+        });
 
         app.get('/oauth/register', csurf(), this.registerPage);
         app.post('/oauth/register', csurf(), this.createNewUser);
@@ -433,13 +440,13 @@ export default class OAuthRoutes {
     }
 
     private static logout(req: Request, res: Response, next: NextFunction) {
-        req.logout({keepSessionInfo: true}, (err: any) => {});
+        req.logout({keepSessionInfo: true}, (err: any) => {
+            if (err) {
+                return console.log(err);
+            }
 
-        if (req.query.redirect_uri) {
-            return res.redirect(req.query.redirect_uri as string);
-        }
-
-        res.redirect('/oauth');
+            res.redirect('/oauth');
+        });
     }
 
     private static login(req: Request, res: Response, next: NextFunction) {

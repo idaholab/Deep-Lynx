@@ -31,8 +31,11 @@ export class Authentication {
   }
 
   async Logout() {
-    const response = await axios.get("/logout"); // Call your backend logout route
-    return;
+    try {
+      await axios.get("/logout");
+    } catch (error) {
+      console.error("An error occurred during logout:", error);
+    }
   }
 
   IsAdmin(): boolean {

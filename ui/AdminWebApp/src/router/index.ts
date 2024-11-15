@@ -2,12 +2,9 @@ import Vue from "vue";
 import VueRouter, { Route } from "vue-router";
 import PageHome from "@/pages/PageHome.vue";
 import PageContainerSelect from "@/pages/PageContainerSelect.vue";
-import PageLogin from "@/pages/PageLogin.vue";
-import { IsAuthed, IsLoggedIn } from "@/auth/authentication_service";
 import PageContainerInvite from "@/pages/PageContainerInvite.vue";
 import { RawLocation } from "vue-router/types/router";
-import { Result } from "element-ui";
-import config from "@/config";
+import { IsAuthed } from "@/auth/authentication_service";
 
 Vue.use(VueRouter);
 
