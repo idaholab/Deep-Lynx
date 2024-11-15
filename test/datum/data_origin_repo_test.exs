@@ -1,15 +1,15 @@
 defmodule Datum.DataOriginRepoTest do
-  use Datum.DataOriginCase, async: false
+  use Datum.DataCase, async: false
 
   alias Datum.DataOrigin
   import Datum.AccountsFixtures
   alias Datum.DataOrigin.OriginRepo
 
-  describe "data_origins" do
+  describe "data_origin repo" do
     alias Datum.DataOrigin.Origin
     alias Datum.DataOrigin.Data
 
-    test "DataOriginRepo can create a database and run initial migrations" do
+    test "can create a database and run initial migrations" do
       valid_attrs = %{name: "some name"}
 
       assert {:ok, %Origin{} = origin} = DataOrigin.create_origin(valid_attrs)
@@ -31,7 +31,7 @@ defmodule Datum.DataOriginRepoTest do
       )
     end
 
-    test "DataOriginRepo can add data to an origin" do
+    test "can add data to an origin" do
       valid_attrs = %{name: "some name"}
 
       assert {:ok, %Origin{} = origin} = DataOrigin.create_origin(valid_attrs)
@@ -45,7 +45,7 @@ defmodule Datum.DataOriginRepoTest do
                })
     end
 
-    test "DataOriginRepo can search data in an origin" do
+    test "can search data in an origin" do
       # keep in mind that actually testing how effective search is, is really difficult and
       # typically more heurstics than anything. Thus we only test that the search works
       # and some very basic keyword returns and checking
@@ -85,7 +85,7 @@ defmodule Datum.DataOriginRepoTest do
       assert DataOrigin.search_origin(origin, user, "hello") == [t]
     end
 
-    test "DataOriginRepo can connect two pieces of data" do
+    test "can connect two pieces of data" do
       valid_attrs = %{name: "some name"}
 
       assert {:ok, %Origin{} = origin} = DataOrigin.create_origin(valid_attrs)

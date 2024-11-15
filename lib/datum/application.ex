@@ -35,6 +35,7 @@ defmodule Datum.Application do
         children = [
           DatumWeb.Telemetry,
           Datum.Repo,
+          Datum.Search,
           {DNSCluster, query: Application.get_env(:datum, :dns_cluster_query) || :ignore},
           {Phoenix.PubSub, name: Datum.PubSub},
           # Start the Finch HTTP client for sending emails

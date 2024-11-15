@@ -18,6 +18,9 @@ defmodule Datum.DataOrigin.Data do
 
     # owned_by can't be foreign key since it's referring to the ops db
     field :owned_by, :binary_id
+    # we need to reference the origin - while this could be a virtual field, then
+    # we have to set it correctly in each set. Also this lets us combine origin results
+    field :origin_id, :binary_id
 
     field :tags, {:array, :string}
     field :domains, {:array, :string}
@@ -38,6 +41,7 @@ defmodule Datum.DataOrigin.Data do
       :natural_language_properties,
       :properties,
       :original_path,
+      :origin_id,
       :owned_by,
       :description
     ])

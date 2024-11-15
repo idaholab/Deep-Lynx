@@ -12,6 +12,7 @@ defmodule Datum.DataOrigin.OriginRepo.Migrations.Init do
       add :description, :string
       add :natural_language_properties, :string
       add :owned_by, :binary
+      add :origin_id, :binary
 
       add :tags, {:array, :string}
       add :domains, {:array, :string}

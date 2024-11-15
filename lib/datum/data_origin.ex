@@ -31,7 +31,7 @@ defmodule Datum.DataOrigin do
   Returns a list of data_origins for a user - taking into account
   their groups and permissions for said origins.
   """
-  def list_data_orgins_user(%User{} = user) do
+  def list_data_orgins_user(%User{} = user, exclude \\ []) do
     query =
       from o in Origin,
         distinct: true,
@@ -41,7 +41,7 @@ defmodule Datum.DataOrigin do
           (p.user_id == ^user.id or
              p.group_id in subquery(
                from g in UserGroup, where: g.user_id == ^user.id, select: g.group_id
-             )) and p.permission_type in [:read, :readwrite],
+             )) and p.permission_type in [:read, :readwrite] and o.id not in ^exclude,
         select: o
 
     Repo.all(query)
@@ -159,7 +159,7 @@ defmodule Datum.DataOrigin do
     OriginRepo.with_dynamic_repo(origin, fn ->
       with {:ok, data} <-
              %Data{}
-             |> Data.changeset(attrs)
+             |> Data.changeset(Map.put(attrs, :origin_id, origin.id))
              |> OriginRepo.insert(),
            {:ok, _perm} <-
              %Datum.Permissions.Data{}
@@ -180,7 +180,7 @@ defmodule Datum.DataOrigin do
     OriginRepo.with_dynamic_repo(origin, fn ->
       with %Data{} = data <-
              %Data{}
-             |> Data.changeset(attrs)
+             |> Data.changeset(Map.put(attrs, :origin_id, origin.id))
              |> OriginRepo.insert!(),
            %Datum.Permissions.Data{} = _perm <-
              %Datum.Permissions.Data{}
@@ -321,7 +321,7 @@ defmodule Datum.DataOrigin do
     )
   end
 
-  @page_size 1000
+  @page_size 10_000
 
   def search_origin(%Origin{} = origin, %Datum.Accounts.User{} = user, search_term, opts \\ []) do
     groups =
@@ -340,7 +340,8 @@ defmodule Datum.DataOrigin do
           page = Keyword.get(opts, :page, 0)
           page_size = Keyword.get(opts, :page_size, @page_size)
 
-          search_term = String.replace(search_term, " ", "")
+          # dashes are interpreted as column filters, so we want to remove that
+          search_term = String.replace(search_term, "-", "")
           lower = page_size * page
           upper = page_size * (page + 1)
 
