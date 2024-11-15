@@ -20,7 +20,6 @@ defmodule Datum.Application do
       ["scan" | args] ->
         children = [
           Datum.Repo,
-          {Datum.Scan, args},
           # the task supervisor is for the file scan tasks generated
           # by the scanner
           {Task.Supervisor, name: Datum.TaskSupervisor}
@@ -28,8 +27,12 @@ defmodule Datum.Application do
 
         # See https://hexdocs.pm/elixir/Supervisor.html
         # for other strategies and supported options
-        opts = [strategy: :one_for_one, name: Datum.Supervisor]
-        Supervisor.start_link(children, opts)
+        {:ok, _pid} =
+          Supervisor.start_link(children, strategy: :one_for_one, name: Datum.Supervisor)
+
+        Datum.Scan.run(args)
+        IO.puts("Filescanner has completed its run")
+        System.halt(0)
 
       ["server" | _args] ->
         children = [

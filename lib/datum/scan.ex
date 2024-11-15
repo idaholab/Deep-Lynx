@@ -4,14 +4,7 @@ defmodule Datum.Scan do
   you are wanting the server or other processes to run scanning - prefer using the scanner you
   need directly.
   """
-  use Task
   require Logger
-
-  # we are treating this module as a SupervisedTask to be run, allowing us to run concurrently
-  # and not have a crash here crash the parent process
-  def start_link(args) do
-    Task.start_link(__MODULE__, :run, [args])
-  end
 
   def run(_args) do
     # run the migrations and open a read/write connection to local ops db
