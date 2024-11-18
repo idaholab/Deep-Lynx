@@ -1,5 +1,6 @@
 defmodule DatumWeb.UserLoginLive do
   use DatumWeb, :live_view
+  use Gettext, backend: DatumWeb.Gettext
 
   def render(assigns) do
     ~H"""

@@ -15,9 +15,9 @@ defmodule DatumWeb.CoreComponents do
   Icons are provided by [heroicons](https://heroicons.com). See `icon/1` for usage.
   """
   use Phoenix.Component
+  use Gettext, backend: DatumWeb.Gettext
 
   alias Phoenix.LiveView.JS
-  import DatumWeb.Gettext
 
   @doc """
   Renders a modal.

@@ -10,6 +10,7 @@ defmodule DatumWeb.OriginExplorerLive do
   here.
   """
   use DatumWeb, :live_view
+  use Gettext, backend: DatumWeb.Gettext
 
   def display_name, do: "Origin Explorer"
   alias Datum.Common

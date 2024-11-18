@@ -31,7 +31,6 @@ config :datum, DatumWeb.Endpoint,
 # at the `config/runtime.exs`.
 config :datum, Datum.Mailer, adapter: Swoosh.Adapters.Local
 
-
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.17.11",
