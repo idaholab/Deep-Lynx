@@ -355,10 +355,11 @@ export default class FileMapper extends Mapper {
         };
     }
 
-    // fetch the fully qualified file path complete with file name and short uuid
+    // fetch the fully qualified file path complete with file name and short uuid (if present)
     private filePathMetadataStatement(fileIDs: string[]): QueryConfig {
         const text = `SELECT id,
-                        short_uuid || file_name AS file_name,
+                        CASE WHEN short_uuid IS NULL THEN file_name
+	                        ELSE short_uuid || file_name END AS file_name,
                         TRIM('/\\' FROM adapter_file_path) AS access_path
                         FROM files
                         WHERE id IN (%L)`;

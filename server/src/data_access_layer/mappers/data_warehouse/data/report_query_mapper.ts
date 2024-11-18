@@ -1,7 +1,7 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import { PoolClient, QueryConfig } from 'pg';
-import ReportQuery from '../../../../domain_objects/data_warehouse/data/report_query';
+import ReportQuery, { CompletedQueryMatch } from '../../../../domain_objects/data_warehouse/data/report_query';
 
 const format = require('pg-format');
 
@@ -86,6 +86,12 @@ export default class ReportQueryMapper extends Mapper {
 
     public async Delete(id: string, transaction?: PoolClient): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id), { transaction });
+    }
+
+    CheckQueryExists(query: string): Promise<Result<CompletedQueryMatch>> {
+        return super.retrieve<CompletedQueryMatch>(this.checkQueryExistsStatement(query), {
+            resultClass: CompletedQueryMatch
+        });
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -186,5 +192,19 @@ export default class ReportQueryMapper extends Mapper {
                     AND query_id = $2`,
             values: [queryID, fileID],
         };
+    }
+
+    private checkQueryExistsStatement(query: string): QueryConfig {
+        // compare a query with those in the database, sanitizing queries
+        // of extraneous whitespace and casing before comparison
+        // return {
+            const text = `SELECT rq.id, r.status_message
+            FROM report_queries rq JOIN reports r ON rq.report_id = r.id
+            WHERE r.status = 'completed'
+            AND LOWER(REGEXP_REPLACE(TRIM(rq.query), '\\s+', ' ', 'g')) = LOWER(REGEXP_REPLACE(TRIM($1), '\\s+', ' ', 'g'))
+            ORDER BY rq.created_at DESC LIMIT 1`;
+            const values = [query];
+        // }
+        return {text, values}
     }
 }
