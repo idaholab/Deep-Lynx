@@ -14,6 +14,7 @@
     methods: {
       logout() {
         this.$auth.Logout()
+        window.location.href = `${Config.deepLynxApiUri}/logout`;
       }
     }
   })

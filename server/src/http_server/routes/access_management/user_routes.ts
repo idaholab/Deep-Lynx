@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import {Application, NextFunction, Request, Response} from 'express';
-import {authInContainer, authRequest} from '../../middleware';
+import {authInContainer, authRequest, currentUser} from '../../middleware';
 import ContainerUserInviteMapper from '../../../data_access_layer/mappers/access_management/container_user_invite_mapper';
 import UserRepository from '../../../data_access_layer/repositories/access_management/user_repository';
 import Result from '../../../common_classes/result';
@@ -85,12 +85,7 @@ export default class UserRoutes {
             authInContainer('write', 'users'),
             this.deleteKeyPairForServiceUser,
         );
-        app.get(
-            '/containers/:containerID/service-users/keys',
-            ...middleware,
-            authInContainer('read', 'users'),
-            this.listServiceKeysForContainer,
-        );
+        app.get('/containers/:containerID/service-users/keys', ...middleware, authInContainer('read', 'users'), this.listServiceKeysForContainer);
     }
 
     private static retrieveUser(req: Request, res: Response, next: NextFunction) {
@@ -222,17 +217,14 @@ export default class UserRoutes {
                 })
                 .catch((err) => Result.Error(err).asResponse(res))
                 .finally(() => next());
-        } 
-	else if (req.container && req.currentUser && req.currentUser.admin) {
-		Result.Failure('user is admin', 403).asResponse(res);
-		next();
-	}
-	else {
+        } else if (req.container && req.currentUser && req.currentUser.admin) {
+            Result.Failure('user is admin', 403).asResponse(res);
+            next();
+        } else {
             Result.Failure('user not found', 404).asResponse(res);
             next();
         }
     }
-
 
     private static listUserPermissions(req: Request, res: Response, next: NextFunction) {
         if (req.currentUser) {
@@ -240,7 +232,8 @@ export default class UserRoutes {
                 .retrievePermissions(req.currentUser)
                 .then((result) => {
                     // @ts-ignore
-                    res.status(200).json(result.value);
+                    res.status(200).json(req.currentUser);
+                    // res.status(200).json(result.value);
                 })
                 .catch((err) => Result.Error(err).asResponse(res))
                 .finally(() => next());
@@ -491,7 +484,7 @@ export default class UserRoutes {
 
     private static listKeyPairsForServiceUser(req: Request, res: Response, next: NextFunction) {
         if (req.serviceUser) {
-            const note = req.query.note ? req.query.note as string : undefined;
+            const note = req.query.note ? (req.query.note as string) : undefined;
             KeyPairMapper.Instance.KeysForUser(req.serviceUser.id!, note)
                 .then((results) => {
                     results.asResponse(res);
@@ -508,7 +501,7 @@ export default class UserRoutes {
 
     private static listServiceKeysForContainer(req: Request, res: Response, next: NextFunction) {
         if (req.container) {
-            const note = req.query.note ? req.query.note as string : undefined;
+            const note = req.query.note ? (req.query.note as string) : undefined;
             KeyPairMapper.Instance.ServiceKeysForContainer(req.container.id!, note)
                 .then((results) => {
                     results.asResponse(res);

@@ -7,29 +7,6 @@ const axios = require("axios").default;
 import buildURL from "build-url";
 
 export class Authentication {
-  // Can you spoof IsLoggedIn? Sure, just like you can spoof most JWTs. While the
-  // frontend might suddenly let you in places you shouldn't be, the backend won't
-  // honor malformed jwt requests.
-  IsLoggedIn(): boolean {
-    const user = localStorage.getItem("user");
-
-    if (user) {
-      const userT: UserT = JSON.parse(user);
-
-      // check to see if we're expired
-      if (Date.now() >= userT.exp * 1000) {
-        localStorage.removeItem("user");
-        localStorage.removeItem("user.token");
-
-        return false;
-      }
-
-      return true;
-    }
-
-    return false;
-  }
-
   async Logout() {
     try {
       await axios.get("/logout");
@@ -95,29 +72,6 @@ export default function AuthPlugin(Vue: typeof _Vue): void {
   Vue.prototype.$auth = new Authentication();
 }
 
-// Can you spoof IsLoggedIn? Sure, just like you can spoof most JWTs. While the
-// frontend might suddenly let you in places you shouldn't be, the backend won't
-// honor malformed jwt requests.
-export function IsLoggedIn(): boolean {
-  const user = localStorage.getItem("user");
-
-  if (user) {
-    const userT: UserT = JSON.parse(user);
-
-    // check to see if we're expired
-    if (Date.now() >= userT.exp * 1000) {
-      localStorage.removeItem("user");
-      localStorage.removeItem("user.token");
-
-      return false;
-    }
-
-    return true;
-  }
-
-  return false;
-}
-
 export async function IsAuthed() {
   try {
     const res = await fetch("/check-oidc");
@@ -163,12 +117,7 @@ export async function RefreshPermissions(): Promise<boolean> {
     return new Promise((resolve) => resolve(false));
   }
 
-  // set permissions on localStorage user
-  if (user) {
-    const userT: UserT = JSON.parse(user);
-    userT.permissions = resp.data;
-    localStorage.setItem("user", JSON.stringify(userT));
-  }
+  localStorage.setItem("user", JSON.stringify(resp.data));
 
   return new Promise((resolve) => resolve(true));
 }
