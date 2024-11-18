@@ -83,6 +83,19 @@ defmodule Datum.DataOriginRepoTest do
       assert DataOrigin.search_origin(origin, user, "domain") == [t]
       assert DataOrigin.search_origin(origin, user, "tag") == [t]
       assert DataOrigin.search_origin(origin, user, "hello") == [t]
+
+      # lets make sure properties work
+      assert {:ok, j} =
+               origin
+               |> DataOrigin.add_data(%{
+                 path: "/some/nonexistent/path/two",
+                 properties: %{"json field one" => "json value one"},
+                 type: :file
+               })
+
+      j = %{j | row_num: 1}
+      assert DataOrigin.search_origin(origin, user, "json") == [j]
+      assert DataOrigin.search_origin(origin, user, "field") == [j]
     end
 
     test "can connect two pieces of data" do

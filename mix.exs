@@ -91,10 +91,7 @@ defmodule Datum.MixProject do
       {:prompt, "~> 0.10.0"},
       {:explorer, "~> 0.10.0"},
       {:ymlr, "~> 5.1"},
-      {:exla, "~> 0.9.0"},
-      {:bumblebee, "~> 0.6.0"},
-      {:axon, "~> 0.7.0"},
-      {:nx, "~> 0.9.1"},
+      {:tdms_parser, path: "~/tdms-parser"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end

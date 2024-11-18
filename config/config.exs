@@ -31,7 +31,6 @@ config :datum, DatumWeb.Endpoint,
 # at the `config/runtime.exs`.
 config :datum, Datum.Mailer, adapter: Swoosh.Adapters.Local
 
-config :nx, default_backend: EXLA.Backend
 
 # Configure esbuild (the version is required)
 config :esbuild,
