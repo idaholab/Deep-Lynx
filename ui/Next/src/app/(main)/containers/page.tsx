@@ -19,6 +19,7 @@ import { containerActions } from "@/lib/store/features/container/containerSlice"
 import BasicSidebar from "@/app/_wireframe/basic-sidenav";
 import Navbar from "@/app/_wireframe/navbar";
 import SearchIcon from '@mui/icons-material/Search';
+import AddContainerDialog from "@/app/_wireframe/add-container-dialog";
 
 
 
@@ -71,6 +72,15 @@ const ContainerSelect = () => {
     }
   }, [containers, selectedContainer, router, storeDispatch]);
 
+  const [open, setOpen] = useState(false);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
 
 
   return (
@@ -108,9 +118,12 @@ const ContainerSelect = () => {
                     <Paper
                       className={classes.containers.addItem}>
                       <h1>
-                        <IconButton>
-                          <AddCircleIcon className={classes.containers.addIcon} />
-                        </IconButton>
+                        <div>
+                          <IconButton onClick={handleClickOpen}>
+                            <AddCircleIcon className={classes.containers.addIcon}/>
+                          </IconButton>
+                          <AddContainerDialog open={open} onClose={handleClose} />
+                        </div>
                       </h1>
                       <h3>Create New Container</h3>
                     </Paper>
