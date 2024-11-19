@@ -3,81 +3,39 @@
 // Hooks
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useTheme } from "@mui/material";
+import { Box, Button, Divider, IconButton, InputAdornment, Paper, Stack, styled, TextField, useTheme } from "@mui/material";
+import { classes } from "../../styles";
+import AddIcon from '@mui/icons-material/Add';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
 
 // Types
 import { ContainerT } from "@/lib/types/deeplynx";
-import { SelectChangeEvent, Typography } from "@mui/material";
 
 // MUI
-import {
-  Box,
-  Card,
-  Container,
-  Grid,
-  InputLabel,
-  FormControl,
-  LinearProgress,
-  Select,
-} from "@mui/material";
-import {
-  Dialog,
-  DialogBackdrop,
-  DialogPanel,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuItems,
-  TransitionChild,
-} from "@headlessui/react";
-import {
-  Bars3Icon,
-  BellIcon,
-  Cog6ToothIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
-import {
-  ChevronDownIcon,
-  MagnifyingGlassIcon,
-} from "@heroicons/react/20/solid";
-import { classes } from "@/app/styles";
+import Grid from '@mui/material/Grid2';
 
 // Store
 import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
 import { containerActions } from "@/lib/store/features/container/containerSlice";
 import BasicSidebar from "@/app/_wireframe/basic-sidenav";
-import { uxActions } from "@/lib/store/features/ux/uxSlice";
 import Navbar from "@/app/_wireframe/navbar";
-import {
-  CalendarIcon,
-  ChartPieIcon,
-  DocumentDuplicateIcon,
-  FolderIcon,
-  HomeIcon,
-  UsersIcon,
-} from "@heroicons/react/24/outline";
+import { white } from "tailwindcss/colors";
+import SearchIcon from '@mui/icons-material/Search';
+import { alignProperty } from "@mui/material/styles/cssUtils";
 
-const navigation = [
-  { name: "Dashboard", href: "#", icon: HomeIcon, current: true },
-  { name: "Team", href: "#", icon: UsersIcon, current: false },
-  { name: "Projects", href: "#", icon: FolderIcon, current: false },
-  { name: "Calendar", href: "#", icon: CalendarIcon, current: false },
-  { name: "Documents", href: "#", icon: DocumentDuplicateIcon, current: false },
-  { name: "Reports", href: "#", icon: ChartPieIcon, current: false },
-];
-const teams = [
-  { id: 1, name: "Heroicons", href: "#", initial: "H", current: false },
-  { id: 2, name: "Tailwind Labs", href: "#", initial: "T", current: false },
-  { id: 3, name: "Workcation", href: "#", initial: "W", current: false },
-];
-const userNavigation = [
-  { name: "Your profile", href: "#" },
-  { name: "Sign out", href: "#" },
+
+
+let list = [
+  { name: 'QuantumBox', description: 'Advanced quantum computing device' },
+  { name: 'NanoChamber', description: 'Microscopic containment for nanomaterials' },
+  { name: 'BioReactor', description: 'System for growing microbial cultures' },
+  { name: 'PhotonContainer', description: 'Light-based data storage unit' },
+  { name: 'GeoVault', description: 'Geological sample preservation unit' },
+  { name: 'CryoBox', description: 'Cryogenic sample storage container' }
 ];
 
-// function classNames(...classes) {
-//   return classes.filter(Boolean).join(' ')
-// }
+
+
 
 const ContainerSelect = () => {
   // Store
@@ -88,7 +46,6 @@ const ContainerSelect = () => {
   const [containers, setContainers] = useState<Array<ContainerT>>([]);
   const [selectedContainer, setSelectedContainer] = useState<string>("");
   const theme = useTheme();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const router = useRouter();
 
@@ -116,108 +73,67 @@ const ContainerSelect = () => {
     }
   }, [containers, selectedContainer, router, storeDispatch]);
 
-  // Handlers
-  const handleContainer = (event: SelectChangeEvent) => {
-    setSelectedContainer(event.target.value);
-  };
 
-  // Handlers
-  const handleDrawer = () => {
-    storeDispatch(uxActions.drawer(!drawer));
-  };
 
   return (
     <>
       <div>
         <div>
           <Navbar />
-          <BasicSidebar />
-          <Container className={classes.container}>
-            <Card
-              elevation={10}
-              sx={{
-                height: "50%",
-                width: "50%",
-              }}
-            >
-              <Grid
-                container
-                direction={"column"}
-                sx={{ height: "100%", padding: "2.5rem" }}
-                spacing={2}
-              >
-                <Grid
-                  item
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                  xs
-                >
-                  <Box
-                    component={"img"}
-                    sx={{ width: "50%" }}
-                    src={
-                      theme.palette.mode === "dark"
-                        ? "lynx-white.png"
-                        : "lynx-blue.png"
-                    }
-                  />
-                </Grid>
-                <Grid
-                  item
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                  xs
-                >
-                  <Typography variant="caption">
-                    Developed by Digital Engineering
-                  </Typography>
-                </Grid>
-                <Grid
-                  item
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                  xs
-                >
-                  {containers.length ? (
-                    <FormControl sx={{ width: "100%" }}>
-                      <InputLabel id="/containers/ContainerSelect">
-                        Containers
-                      </InputLabel>
-                      <Select
-                        autoFocus
-                        label="Containers"
-                        id="/containers/ContainerSelect"
-                        value={selectedContainer}
-                        onChange={handleContainer}
-                      >
-                        {containers.map((container: ContainerT) => {
-                          return (
-                            // <MenuItem key={container.id} value={container.id} dense>
-                            //   {container.name}
-                            // </MenuItem>
-                            <></>
-                          );
-                        })}
-                      </Select>
-                    </FormControl>
-                  ) : (
-                    <Box sx={{ width: "100%" }}>
-                      <LinearProgress />
-                    </Box>
-                  )}
-                </Grid>
-              </Grid>
-            </Card>
-          </Container>
+          <BasicSidebar>
+            <Stack className={classes.containers.header} spacing={2} direction="row">
+              <h1 className={classes.containers.header}>Your Containers</h1>
+              <Box>
+              <TextField
+                variant="outlined"
+                placeholder="Search..."
+                slotProps={{
+                  input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon />
+                    </InputAdornment>
+                  ),
+                }}}
+              />
+              </Box>
+            </Stack>
+            <Divider sx={{ marginTop: '2px', marginBottom: '20px' }} />
+            <Grid container spacing={3}>
+              {list.map((item, index) => (
+                index === 0 ? (
+                  <Grid
+                    className={classes.containers.gridItem}
+                    key={index}
+                  >
+                    <Paper
+                      className={classes.containers.addItem}>
+                      <h1>
+                        <IconButton>
+                          <AddCircleIcon className={classes.containers.addIcon} />
+                        </IconButton>
+                      </h1>
+                      <h3>Create New Container</h3>
+                    </Paper>
+                  </Grid>
+                ) : (
+                  <Grid className={classes.containers.gridItem}
+                    key={index}
+                  >
+                    <Paper className={classes.containers.paperItem}>
+                      <h3>{item.name}</h3>
+                      <p>{item.description}</p>
+                      <Stack className={classes.containers.buttons} spacing={2} direction="row">
+                        <Button className={classes.containers.text} variant="outlined">More Info</Button>
+                        <Button className={classes.containers.text} variant="contained">Enter Container</Button>
+                      </Stack>
+                    </Paper>
+                  </Grid>
+                )
+              ))}
+            </Grid>
+          </BasicSidebar>
+
         </div>
       </div>
     </>

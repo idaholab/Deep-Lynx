@@ -1,6 +1,6 @@
 "use client";
 
-// Hooks
+// // Hooks
 import * as React from 'react';
 
 
@@ -14,11 +14,13 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
-import { Collapse, Link } from "@mui/material";
+import { Collapse, Link, Paper, styled } from "@mui/material";
+import Grid from "@mui/material/Grid2"
 
 
 import { translations } from '@/lib/translations';
 import { classes } from "../styles";
+import { ReactNode } from 'react';
 
 const drawerWidth = 440;
 const appBarHeight = 64;
@@ -30,7 +32,46 @@ const faq = [
   }
 ]
 
-export default function BasicSidebar() {
+const Item = styled(Paper)(({ theme }) => ({
+  backgroundColor: '#fff',
+  ...theme.typography.body2,
+  padding: theme.spacing(1),
+  textAlign: 'center',
+  color: theme.palette.text.secondary,
+  ...theme.applyStyles('dark', {
+    backgroundColor: '#1A2027',
+  }),
+}));
+
+const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })<{
+  open?: boolean;
+}>(({ theme }) => ({
+  flexGrow: 1,
+  padding: theme.spacing(3),
+  transition: theme.transitions.create('margin', {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.leavingScreen,
+  }),
+  marginLeft: `-${drawerWidth}px`,
+  variants: [
+    {
+      props: ({ open }) => open,
+      style: {
+        transition: theme.transitions.create('margin', {
+          easing: theme.transitions.easing.easeOut,
+          duration: theme.transitions.duration.enteringScreen,
+        }),
+        marginLeft: 0,
+      },
+    },
+  ],
+}));
+
+interface Props {
+  children: ReactNode;
+}
+
+export default function BasicSidebar({ children }: Props) {
   // Hooks
   const [open, setOpen] = React.useState(true);
   const [openIndex, setOpenIndex] = React.useState(null);
@@ -49,9 +90,13 @@ export default function BasicSidebar() {
       <Box sx={{ display: 'flex' }}>
         <Drawer
           sx={{
+            width: drawerWidth,
+            flexShrink: 0,
             '& .MuiDrawer-paper': {
               width: drawerWidth,
               top: appBarHeight,
+              backgroundColor: '#EEF1F6',
+              boxSizing: 'border-box',
             }
           }}
           className={classes.basicDrawer}
@@ -103,6 +148,11 @@ export default function BasicSidebar() {
             {open ? <ChevronLeftIcon /> : <ChevronRightIcon />}
           </IconButton>
         </Box>
+        <Main open={open}>
+          <Box sx={{ flexGrow: 1 }}>
+            {children}
+          </Box>
+        </Main>
       </Box>
     </>
   );

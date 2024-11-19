@@ -16,6 +16,7 @@ export default {
       colors: {
         cherenkov: "#07519E", // INL Dark Blue
         electricity: "#2BA8E0", // INL Light Blue
+        containerGray: "#EEF1F6" // Gray container drawer
       },
     },
   },
