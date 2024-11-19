@@ -1,5 +1,7 @@
-import { Box, Divider, Grid, List, ListItem, Typography } from "@mui/material";
+// MUI
+import { Box, Divider, Grid, ListItem, Typography } from "@mui/material";
 
+// Types
 import { MeshObject } from "@/lib/types/modules/modelViewer";
 
 type PropsT = {

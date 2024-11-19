@@ -12,14 +12,12 @@ import {
   Box,
   Container,
   Divider,
-  Grid,
   Skeleton,
   Tooltip,
   Typography,
 } from "@mui/material";
 
 // Icons
-import InfoIcon from "@mui/icons-material/Info";
 import KeyboardIcon from "@mui/icons-material/Keyboard";
 import MouseIcon from "@mui/icons-material/Mouse";
 
