@@ -65,8 +65,7 @@ export default function Home() {
     <>
       <Grid container className={classes.grid}>
         <Grid item xs={4}>
-          <Graph graph={graph} mesh={mesh} selected={selected} />
-          <br />
+          <Graph graph={graph} mesh={mesh} selected={selected} start={start} />
           {start ? null : <Welcome setStart={setStart} />}
           <br />
         </Grid>

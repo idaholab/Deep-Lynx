@@ -38,6 +38,7 @@ type Props = {
   graph: Array<RelatedNodeT> | undefined;
   mesh: MeshObject | undefined;
   selected: boolean;
+  start: boolean;
 };
 
 export default function Graph(props: Props) {
@@ -51,6 +52,7 @@ export default function Graph(props: Props) {
   const mesh: MeshObject | undefined = props.mesh;
   const ancestry = mesh ? [...mesh.AssemblyParents].reverse() : undefined;
   const selected: boolean = props.selected;
+  const start: boolean = props.start;
 
   return (
     <>
@@ -59,7 +61,9 @@ export default function Graph(props: Props) {
           <>
             <Card>
               <CardContent>
-                <Typography variant="h4">{mesh.Assembly.Name}</Typography>
+                <Typography variant="h4" fontWeight={"bold"}>
+                  {mesh.Assembly.Name}
+                </Typography>
                 <List component="div" disablePadding>
                   <ListItemButton onClick={() => setMeshExpand(!meshExpand)}>
                     <ListItemText
@@ -122,7 +126,7 @@ export default function Graph(props: Props) {
           </>
         ) : null}
         <br />
-        {!dialog ? (
+        {!dialog && start ? (
           <Fab
             color="secondary"
             variant="extended"
