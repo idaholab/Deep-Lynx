@@ -5,25 +5,14 @@ import { useState, useEffect } from "react";
 
 // Types
 import { NodeT, FileT, ContainerT } from "@/lib/types/deeplynx";
-import { SelectChangeEvent } from "@mui/material";
 
 // MUI
-import {
-  Box,
-  InputLabel,
-  FormControl,
-  MenuItem,
-  Select,
-  Tab,
-  Tabs,
-  Typography,
-} from "@mui/material";
+import { Tab, Tabs, Typography } from "@mui/material";
 
 // Store
 import { useAppSelector } from "@/lib/store/hooks";
 
 // Components
-import FileSelector from "./fileSelector";
 import UploadModel from "./workflows/uploadModel";
 import ProcessModel from "./workflows/processFiles";
 import VisualizeModel from "./workflows/visualizeModel";
@@ -34,7 +23,6 @@ import { fetchFiles } from "@/lib/client";
 const Workflows = () => {
   // Component Hooks
   const [files, setFiles] = useState<Array<FileT> | undefined>();
-  const [node, setNode] = useState<NodeT | undefined>(undefined);
   const [tab, setTab] = useState<string>("upload");
 
   const container: ContainerT = useAppSelector(
