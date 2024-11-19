@@ -13,6 +13,7 @@ import {
   Container,
   Divider,
   Grid,
+  Skeleton,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -54,22 +55,31 @@ export default function WebGL(props: PropsT) {
   );
 
   // Hooks
-  const { unityProvider, addEventListener, removeEventListener, sendMessage } =
-    useUnityContext({
-      loaderUrl: "/webgl/webgl.loader.js",
-      dataUrl: "/webgl/webgl.data",
-      frameworkUrl: "/webgl/webgl.framework.js",
-      codeUrl: "/webgl/webgl.wasm",
-      streamingAssetsUrl: "/webgl/StreamingAssets",
-    });
+  const {
+    unityProvider,
+    addEventListener,
+    removeEventListener,
+    sendMessage,
+    isLoaded,
+  } = useUnityContext({
+    loaderUrl: "/webgl/webgl.loader.js",
+    dataUrl: "/webgl/webgl.data",
+    frameworkUrl: "/webgl/webgl.framework.js",
+    codeUrl: "/webgl/webgl.wasm",
+    streamingAssetsUrl: "/webgl/StreamingAssets",
+  });
 
   useEffect(() => {
-    sendMessage("ReactMessenger", "SetModelConfig", JSON.stringify(payload));
-  }, [sendMessage, payload]);
+    isLoaded
+      ? sendMessage("ReactMessenger", "SetModelConfig", JSON.stringify(payload))
+      : null;
+  }, [sendMessage, payload, isLoaded]);
 
   useEffect(() => {
-    sendMessage("DataManager", "UpdateMetatypes", JSON.stringify(mappings));
-  }, [sendMessage, mappings]);
+    isLoaded
+      ? sendMessage("DataManager", "UpdateMetatypes", JSON.stringify(mappings))
+      : null;
+  }, [sendMessage, mappings, isLoaded]);
 
   // Handlers
   const handleGraph = useCallback(
@@ -86,7 +96,7 @@ export default function WebGL(props: PropsT) {
       const mesh: MeshObject = JSON.parse(data as string);
       setMesh(mesh);
     },
-    [setMesh]
+    [setGraph, setMesh]
   );
 
   const handleMeshBool = useCallback(
@@ -122,72 +132,81 @@ export default function WebGL(props: PropsT) {
         unityProvider={unityProvider}
         tabIndex={1} // Set tabIndex for Unity canvas to allow keyboard input; https://react-unity-webgl.dev/docs/api/tab-index
         style={{
+          display: isLoaded ? "block" : "none",
           width: "100%",
-          height: "50%",
+          height: "65vh",
         }}
       />
-      <br />
-      <br />
-      <Box>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "start",
-            alignItems: "center",
-            width: "50%",
-          }}
-        >
-          <Typography variant="button" sx={{ padding: ".45rem" }}>
-            Game Controls
-          </Typography>
-        </Box>
+      {isLoaded ? (
+        <>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "start",
+              alignItems: "center",
+              width: "50%",
+            }}
+          >
+            <Typography variant="button" sx={{ padding: ".45rem" }}>
+              Game Controls
+            </Typography>
+          </Box>
 
-        <Divider />
-        <Box>
-          <Tooltip
-            title={
-              "Use the WASD keys to move forward, left, backward, and right. Use the Q and E keys to move down, and up."
-            }
-            placement={"left"}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "start",
-                alignItems: "center",
-                width: "50%",
-              }}
+          <Divider />
+          <Box>
+            <Tooltip
+              title={
+                "Use the WASD keys to move forward, left, backward, and right. Use the Q and E keys to move down, and up."
+              }
+              placement={"left"}
             >
-              <KeyboardIcon fontSize="small" />
-              <Typography variant="button" sx={{ padding: ".45rem" }}>
-                Keyboard Controls
-              </Typography>
-            </Box>
-          </Tooltip>
-        </Box>
-        <Box>
-          <Tooltip
-            title={
-              "Right click to select an object. Left click and drag to rotate the camera."
-            }
-            placement={"left"}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "start",
-                alignItems: "center",
-                width: "50%",
-              }}
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "start",
+                  alignItems: "center",
+                  width: "fit-content",
+                }}
+              >
+                <KeyboardIcon fontSize="small" />
+                <Typography variant="button" sx={{ padding: ".45rem" }}>
+                  Keyboard Controls
+                </Typography>
+              </Box>
+            </Tooltip>
+          </Box>
+          <Box>
+            <Tooltip
+              title={
+                "Right click to select an object. Left click and drag to rotate the camera."
+              }
+              placement={"left"}
             >
-              <MouseIcon fontSize="small" />
-              <Typography variant="button" sx={{ padding: ".45rem" }}>
-                Mouse Controls
-              </Typography>
-            </Box>
-          </Tooltip>
-        </Box>
-      </Box>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "start",
+                  alignItems: "center",
+                  width: "fit-content",
+                }}
+              >
+                <MouseIcon fontSize="small" />
+                <Typography variant="button" sx={{ padding: ".45rem" }}>
+                  Mouse Controls
+                </Typography>
+              </Box>
+            </Tooltip>
+          </Box>
+        </>
+      ) : (
+        <>
+          <Skeleton variant="rectangular" width={"100%"} height={"65vh"} />
+          <br />
+          <Skeleton variant="text" width={"50%"} height={"5vh"} />
+          <Skeleton variant="text" width={"50%"} height={"5vh"} />
+          <Skeleton variant="text" width={"50%"} height={"5vh"} />
+        </>
+      )}
     </Container>
   );
 }
