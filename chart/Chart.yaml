@@ -53,12 +53,6 @@ dependencies:
     condition: airflow.enabled
     tags:
       - digitalTwin
-  - name: datahub
-    version: 0.4.19
-    repository: https://helm.datahubproject.io
-    condition: datahub.enabled
-    tags:
-      - digitalTwin
   - name: mlflow
     version: 1.4.16
     repository: https://charts.bitnami.com/bitnami
