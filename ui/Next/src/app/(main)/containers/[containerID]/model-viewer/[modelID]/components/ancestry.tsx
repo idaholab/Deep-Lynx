@@ -64,7 +64,7 @@ export default function Ancestry(props: Props) {
               );
             })
           : null}
-        <TimelineItem key={assembly.NodeId}>
+        <TimelineItem>
           <TimelineOppositeContent sx={{ flex: 0.5 }} typography={"body2"}>
             {assembly.Name.toLowerCase()}
           </TimelineOppositeContent>
