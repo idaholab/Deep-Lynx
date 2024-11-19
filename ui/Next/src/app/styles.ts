@@ -31,6 +31,7 @@ export const classes = {
       // These colors are registered in tailwind.config.ts
       cherenkov: `text-cherenkov`,
       electricity: `text-electricity`,
+      white: 'text-white'
     },
   },
   grid: "p-10",
@@ -53,7 +54,7 @@ export const classes = {
     addIcon: "text-cherenkov scale-[2]", 
     buttons: "mb-4",
     text: "lowercase", 
-    header: "mb-0 ml-6 justify-between"
+    header: "mb-0 ml-7 justify-between"
 
   }
 };

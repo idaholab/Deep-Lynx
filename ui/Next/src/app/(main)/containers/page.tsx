@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Box, Button, Divider, IconButton, InputAdornment, Paper, Stack, styled, TextField, useTheme } from "@mui/material";
 import { classes } from "../../styles";
-import AddIcon from '@mui/icons-material/Add';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 
 // Types
@@ -19,9 +18,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
 import { containerActions } from "@/lib/store/features/container/containerSlice";
 import BasicSidebar from "@/app/_wireframe/basic-sidenav";
 import Navbar from "@/app/_wireframe/navbar";
-import { white } from "tailwindcss/colors";
 import SearchIcon from '@mui/icons-material/Search';
-import { alignProperty } from "@mui/material/styles/cssUtils";
 
 
 
@@ -38,6 +35,7 @@ let list = [
 
 
 const ContainerSelect = () => {
+
   // Store
   const storeDispatch = useAppDispatch();
   const drawer: boolean = useAppSelector((state) => state.ux.drawer);
@@ -84,18 +82,19 @@ const ContainerSelect = () => {
             <Stack className={classes.containers.header} spacing={2} direction="row">
               <h1 className={classes.containers.header}>Your Containers</h1>
               <Box>
-              <TextField
-                variant="outlined"
-                placeholder="Search..."
-                slotProps={{
-                  input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon />
-                    </InputAdornment>
-                  ),
-                }}}
-              />
+                <TextField
+                  variant="outlined"
+                  placeholder="Search..."
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SearchIcon />
+                        </InputAdornment>
+                      ),
+                    }
+                  }}
+                />
               </Box>
             </Stack>
             <Divider sx={{ marginTop: '2px', marginBottom: '20px' }} />
@@ -124,8 +123,8 @@ const ContainerSelect = () => {
                       <h3>{item.name}</h3>
                       <p>{item.description}</p>
                       <Stack className={classes.containers.buttons} spacing={2} direction="row">
-                        <Button className={classes.containers.text} variant="outlined">More Info</Button>
-                        <Button className={classes.containers.text} variant="contained">Enter Container</Button>
+                        <Button sx={{ backgroundColor: "white" }} className={classes.containers.text} variant="outlined">More Info</Button>
+                        <Button sx={{ color: "white" }} className={classes.containers.text} variant="contained">Enter Container</Button>
                       </Stack>
                     </Paper>
                   </Grid>
