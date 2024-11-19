@@ -40,5 +40,23 @@ defmodule Datum.PluginsRunTest do
 
       assert is_map(json)
     end
+
+    test "can run the default tdms index elixir plugin" do
+      valid_attrs = %{
+        name: "tdms index extractor_elixir",
+        module_name: Datum.Plugins.TdmsIndex,
+        filetypes: [".tdms_index"],
+        plugin_type: :extractor
+      }
+
+      assert {:ok, %Plugin{} = plugin} = Plugins.create_plugin(valid_attrs)
+      assert plugin.name == "tdms index extractor_elixir"
+      assert plugin.filetypes == [".tdms_index"]
+
+      {:ok, json} =
+        Extractor.extract_with_plugin(plugin, "#{__DIR__}/test_files/doe.tdms_index")
+
+      assert is_map(json)
+    end
   end
 end
