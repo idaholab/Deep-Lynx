@@ -27,8 +27,28 @@ const appBarHeight = 64;
 
 const faq = [
   {
-    question: translations.en.containers.faq1,
-    answer: translations.en.containers.answer1
+      "question": "How does DeepLynx integrate with other systems?",
+      "answer": "DeepLynx integrates with other systems through APIs, data connectors, and custom integration scripts, enabling seamless data flow between different platforms and databases."
+  },
+  {
+      "question": "What types of data can DeepLynx handle?",
+      "answer": "DeepLynx can handle structured, semi-structured, and unstructured data from multiple sources, including databases, IoT devices, spreadsheets, and cloud services."
+  },
+  {
+      "question": "Can DeepLynx visualize data?",
+      "answer": "Yes, DeepLynx offers powerful data visualization tools that allow users to create graphs to better understand and analyze their data."
+  },
+  {
+      "question": "Is DeepLynx scalable?",
+      "answer": "Yes, DeepLynx is designed to be scalable, accommodating growing data volumes and increasing user demands without compromising performance."
+  },
+  {
+      "question": "What are the main benefits of using DeepLynx?",
+      "answer": "The main benefits include improved data integration, enhanced data visualization, increased operational efficiency, better decision-making, and robust data security."
+  },
+  {
+      "question": "Do I need technical expertise to use DeepLynx?",
+      "answer": "While some technical knowledge can be helpful, DeepLynx is designed with user-friendly interfaces and comprehensive support resources to assist users with varying levels of technical expertise."
   }
 ]
 
@@ -109,9 +129,9 @@ export default function BasicSidebar({ children }: Props) {
           <div className={classes.sidenav.header2}>FAQ's</div>
           <Divider />
           <List sx={{ listStyleType: 'disc' }}>
-            {faq.map((bullets, index) => (
-              <div>
-                <ListItem key={bullets.question} disablePadding sx={{ paddingLeft: 3 }}>
+            {faq.map((bullets, index) => ( 
+              <div key={index}>
+                <ListItem disablePadding sx={{ paddingLeft: 3 }}>
                   <ListItemButton onClick={() => handleCollapse(index)}>
                     <ListItemText sx={{ display: 'list-item', fontSize: 14 }} primary={bullets.question} />
                   </ListItemButton>
