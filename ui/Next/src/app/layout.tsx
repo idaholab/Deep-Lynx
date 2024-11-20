@@ -3,7 +3,6 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 
 import StoreProvider from "@/lib/context/StoreProvider";
-import ThemeProvider from "@/lib/context/ThemeProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,11 +23,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    <html>
+    <body>
     <StoreProvider>
-      <ThemeProvider>
         {/* <Wireframe>{children}</Wireframe> */}
         {children}
-      </ThemeProvider>
     </StoreProvider>
+    </body>
+    </html>
   );
 }
