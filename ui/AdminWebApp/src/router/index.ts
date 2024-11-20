@@ -4,7 +4,6 @@ import PageHome from "@/pages/PageHome.vue";
 import PageContainerSelect from "@/pages/PageContainerSelect.vue";
 import PageContainerInvite from "@/pages/PageContainerInvite.vue";
 import { RawLocation } from "vue-router/types/router";
-import { IsAuthed } from "@/auth/authentication_service";
 
 Vue.use(VueRouter);
 

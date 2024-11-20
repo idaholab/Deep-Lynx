@@ -7,11 +7,21 @@ const axios = require("axios").default;
 import buildURL from "build-url";
 
 export class Authentication {
+  IsLoggedIn(): boolean {
+    const user = localStorage.getItem("user");
+
+    if (user) {
+      return true;
+    }
+
+    return false;
+  }
   async Logout() {
     try {
+      localStorage.removeItem("user");
       await axios.get("/logout");
     } catch (error) {
-      console.error("An error occurred during logout:", error);
+      console.error("error:", error);
     }
   }
 
@@ -84,6 +94,15 @@ export async function IsAuthed() {
     );
     return false; // Return false in case of an error
   }
+}
+export function IsLoggedIn(): boolean {
+  const user = localStorage.getItem("user");
+
+  if (user) {
+    return true;
+  }
+
+  return false;
 }
 
 // used to refresh user permissions after login
