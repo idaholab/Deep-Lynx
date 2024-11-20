@@ -11,7 +11,7 @@ import { classes } from "../styles";
 
 // Store
 import { useAppSelector } from "@/lib/store/hooks";
-
+import Profile from "./profile";
 
 export default function Navbar() {
   const container = useAppSelector((state) => state.container.container);
@@ -27,7 +27,8 @@ export default function Navbar() {
             className={classes.logo}
           />
           <Box flexGrow={1} />
-          <DarkModeToggle />
+          <Profile />
+          {/* <DarkModeToggle /> */}
         </Toolbar>
       </AppBar>
     </>

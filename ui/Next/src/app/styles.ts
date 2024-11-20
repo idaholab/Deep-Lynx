@@ -31,19 +31,33 @@ export const classes = {
       // These colors are registered in tailwind.config.ts
       cherenkov: `text-cherenkov`,
       electricity: `text-electricity`,
+      white: 'text-white'
     },
   },
   grid: "p-10",
   icon: "fill-white dark:fill-gray-100 hover:bg-transparent",
   logo: "pl-8",
   toolbar: "h-full p-0 bg-[#083769]",
-  basicDrawer: " flexShrink: 0, boxSizing: 'border-box', backgroundColor: '#EEF1F6'",
+  basicDrawer: " flexShrink: 0, boxSizing: 'border-box'",
   sidenav: {
     header: "text-left p-6 font-bold text-lg",
     div: "p-6 py-2 text-sm",
     header2: "p-6 pb-2 text-lg", 
     listItem: "list-disc text-sm", 
     answer: "pl-10"
+
+  }, 
+  containers: {
+    gridItem: "max-w-[400px] min-w-[400px] ml-[30px]",
+    addItem: "grid justify-items-center min-h-44 shadow-none",
+    paperItem: "grid justify-items-center min-h-44 bg-[#E9EDF0] shadow-none",
+    addIcon: "text-cherenkov scale-[2]", 
+    buttons: "mb-4",
+    text: "lowercase", 
+    header: "mb-0 ml-7 justify-between", 
+    dialog: {
+      header: "text-center text-2xl m-2"
+    }
 
   }
 };
