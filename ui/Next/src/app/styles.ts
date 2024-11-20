@@ -54,7 +54,10 @@ export const classes = {
     addIcon: "text-cherenkov scale-[2]", 
     buttons: "mb-4",
     text: "lowercase", 
-    header: "mb-0 ml-7 justify-between"
+    header: "mb-0 ml-7 justify-between", 
+    dialog: {
+      header: "text-center text-2xl m-2"
+    }
 
   }
 };
