@@ -2,7 +2,6 @@
 
 // Hooks
 import { useContext, useEffect, useState } from "react";
-import { useContainer } from "@/lib/context/ContainerProvider";
 
 // MUI
 import { Grid, Tab, Tabs } from "@mui/material";
@@ -13,10 +12,8 @@ import { classes } from "@/app/styles";
 // Components
 import Welcome from "./descriptive/components/welcome";
 import Descriptive from "./descriptive/descriptive";
+import Informative from "./informative/informative";
 import WebGL from "./webgl";
-
-// Context
-import { PayloadContext } from "./context/payload";
 
 // Providers
 import PayloadProvider from "./context/payload";
@@ -25,16 +22,12 @@ import PayloadProvider from "./context/payload";
 import { useAppSelector } from "@/lib/store/hooks";
 
 // Types
-import { ContainerT, FileT } from "@/lib/types/deeplynx";
 import { RelatedNodeT, MeshObject } from "@/lib/types/modules/modelViewer";
 
 export default function ModelViewer() {
   // Hooks
   const [start, setStart] = useState<boolean>(false);
   const [phase, setPhase] = useState<string>("descriptive");
-
-  // Context
-  const { payload, setPayload } = useContext(PayloadContext);
 
   // Descriptive
   const [mesh, setMesh] = useState<MeshObject | undefined>(); // Mesh is the gameobject selected in the scene
@@ -64,9 +57,10 @@ export default function ModelViewer() {
                 <Tabs value={phase} onChange={handlePhase}>
                   <Tab label="Descriptive" value={"descriptive"} />
                   <Tab label="Informative" value={"informative"} />
-                  <Tab label="Predictive" value={"predictive"} />
-                  <Tab label="Living" value={"living"} />
+                  <Tab disabled label="Predictive" value={"predictive"} />
+                  <Tab disabled label="Living" value={"living"} />
                 </Tabs>
+                <br />
                 {phase === "descriptive" ? (
                   <Descriptive
                     graph={graph}
@@ -75,6 +69,7 @@ export default function ModelViewer() {
                     start={start}
                   />
                 ) : null}
+                {phase === "informative" ? <Informative /> : null}
               </>
             ) : (
               <Welcome setStart={setStart} />

@@ -5,10 +5,10 @@ import { useState } from "react";
 
 // MUI
 import {
+  Box,
   Collapse,
   Card,
   CardContent,
-  Container,
   Fab,
   List,
   ListItemButton,
@@ -32,7 +32,7 @@ import { classes } from "@/app/styles";
 
 // Types
 import { MeshObject, RelatedNodeT } from "@/lib/types/modules/modelViewer";
-import Edges from "./components/edges";
+import Edges from "./components/relationships";
 
 type Props = {
   graph: Array<RelatedNodeT> | undefined;
@@ -57,107 +57,108 @@ export default function Descriptive(props: Props) {
 
   return (
     <>
-      <Container>
-        {selected && mesh ? (
-          <>
-            <Card>
-              <CardContent>
-                <Typography variant="h4" fontWeight={"bold"}>
-                  {mesh.Assembly.Name}
-                </Typography>
-                <List component="div" disablePadding>
-                  <ListItemButton onClick={() => setMeshExpand(!meshExpand)}>
-                    <ListItemText
-                      primary={"Mesh"}
-                      primaryTypographyProps={{
-                        fontWeight: "bold",
-                      }}
-                    />
-                    {meshExpand ? <ExpandLess /> : <ExpandMore />}
-                  </ListItemButton>
-                  <Collapse in={meshExpand} timeout="auto" unmountOnExit>
-                    <Assembly mesh={mesh} />
-                  </Collapse>
-                  {ancestry ? (
-                    <>
-                      <ListItemButton
-                        onClick={() => setHierarchyExpand(!hierarchyExpand)}
-                      >
-                        <ListItemText
-                          primary={"Ancestry"}
-                          primaryTypographyProps={{
-                            fontWeight: "bold",
-                          }}
-                        />
-                        {hierarchyExpand ? <ExpandLess /> : <ExpandMore />}
-                      </ListItemButton>
-                      <Collapse
-                        in={hierarchyExpand}
-                        timeout="auto"
-                        unmountOnExit
-                      >
-                        <Ancestry ancestry={ancestry} mesh={mesh} />
-                      </Collapse>
-                    </>
-                  ) : null}
-                  <ListItemButton
-                    onClick={() => setMetadataExpand(!metadataExpand)}
-                  >
-                    <ListItemText
-                      primary={"Metadata"}
-                      primaryTypographyProps={{
-                        fontWeight: "bold",
-                      }}
-                    />
-                    {metadataExpand ? <ExpandLess /> : <ExpandMore />}
-                  </ListItemButton>
-                  <Collapse in={metadataExpand} timeout="auto" unmountOnExit>
-                    <Metadata mesh={mesh} />
-                  </Collapse>
-                  {graph && selected ? (
-                    <>
-                      <ListItemButton
-                        onClick={() => setEdgesExpand(!edgesExpand)}
-                      >
-                        <ListItemText
-                          primary={"Related Nodes"}
-                          primaryTypographyProps={{
-                            fontWeight: "bold",
-                          }}
-                        />
-                        {edgesExpand ? <ExpandLess /> : <ExpandMore />}
-                      </ListItemButton>
-                      <Collapse in={edgesExpand} timeout="auto" unmountOnExit>
-                        <Edges graph={graph} />
-                      </Collapse>
-                    </>
-                  ) : null}
-                </List>
-              </CardContent>
-            </Card>
-          </>
-        ) : null}
-        <br />
-        <br />
+      <Typography variant="subtitle1">Descriptive Twin</Typography>
+      <Typography variant="caption">
+        A descriptive digital twin enables design and visualization of
+        engineering models. The descriptive digital twin facilitates operator
+        understanding and training.
+      </Typography>
+      <br />
+      <br />
+      {selected && mesh ? (
+        <>
+          <Card>
+            <CardContent>
+              <Typography variant="h4" fontWeight={"bold"}>
+                {mesh.Assembly.Name}
+              </Typography>
+              <List component="div" disablePadding>
+                <ListItemButton onClick={() => setMeshExpand(!meshExpand)}>
+                  <ListItemText
+                    primary={"Mesh"}
+                    primaryTypographyProps={{
+                      fontWeight: "bold",
+                    }}
+                  />
+                  {meshExpand ? <ExpandLess /> : <ExpandMore />}
+                </ListItemButton>
+                <Collapse in={meshExpand} timeout="auto" unmountOnExit>
+                  <Assembly mesh={mesh} />
+                </Collapse>
+                {ancestry ? (
+                  <>
+                    <ListItemButton
+                      onClick={() => setHierarchyExpand(!hierarchyExpand)}
+                    >
+                      <ListItemText
+                        primary={"Ancestry"}
+                        primaryTypographyProps={{
+                          fontWeight: "bold",
+                        }}
+                      />
+                      {hierarchyExpand ? <ExpandLess /> : <ExpandMore />}
+                    </ListItemButton>
+                    <Collapse in={hierarchyExpand} timeout="auto" unmountOnExit>
+                      <Ancestry ancestry={ancestry} mesh={mesh} />
+                    </Collapse>
+                  </>
+                ) : null}
+                <ListItemButton
+                  onClick={() => setMetadataExpand(!metadataExpand)}
+                >
+                  <ListItemText
+                    primary={"Metadata"}
+                    primaryTypographyProps={{
+                      fontWeight: "bold",
+                    }}
+                  />
+                  {metadataExpand ? <ExpandLess /> : <ExpandMore />}
+                </ListItemButton>
+                <Collapse in={metadataExpand} timeout="auto" unmountOnExit>
+                  <Metadata mesh={mesh} />
+                </Collapse>
+                {graph && selected ? (
+                  <>
+                    <ListItemButton
+                      onClick={() => setEdgesExpand(!edgesExpand)}
+                    >
+                      <ListItemText
+                        primary={"Relationships"}
+                        primaryTypographyProps={{
+                          fontWeight: "bold",
+                        }}
+                      />
+                      {edgesExpand ? <ExpandLess /> : <ExpandMore />}
+                    </ListItemButton>
+                    <Collapse in={edgesExpand} timeout="auto" unmountOnExit>
+                      <Edges graph={graph} />
+                    </Collapse>
+                  </>
+                ) : null}
+              </List>
+            </CardContent>
+            {!dialog && start ? (
+              <Box sx={{ padding: "1.5rem" }}>
+                <Fab
+                  className={classes.fab}
+                  variant="extended"
+                  size="small"
+                  onClick={() => setDialog(true)}
+                >
+                  <AddIcon className={classes.icon} />
+                  Update Graph Query
+                </Fab>
+              </Box>
+            ) : null}
+          </Card>
+        </>
+      ) : null}
+      <br />
+      <br />
 
-        <br />
-        {!dialog && start ? (
-          <Fab
-            color="secondary"
-            variant="extended"
-            sx={{
-              position: "fixed",
-              bottom: "3.5rem",
-              left: "3.5rem",
-            }}
-            onClick={() => setDialog(true)}
-          >
-            <AddIcon className={classes.icon} />
-            Update Graph Query
-          </Fab>
-        ) : null}
-        {dialog ? <MetatypeDialog open={dialog} setOpen={setDialog} /> : null}
-      </Container>
+      <br />
+
+      {dialog ? <MetatypeDialog open={dialog} setOpen={setDialog} /> : null}
     </>
   );
 }
