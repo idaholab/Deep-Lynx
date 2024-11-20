@@ -1,7 +1,7 @@
 "use client";
 
 // Hooks
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useContainer } from "@/lib/context/ContainerProvider";
 
 // MUI
@@ -15,23 +15,28 @@ import Welcome from "./descriptive/components/welcome";
 import Descriptive from "./descriptive/descriptive";
 import WebGL from "./webgl";
 
+// Context
+import { PayloadContext } from "./context/payload";
+
+// Providers
+import PayloadProvider from "./context/payload";
+
 // Store
 import { useAppSelector } from "@/lib/store/hooks";
 
 // Types
 import { ContainerT, FileT } from "@/lib/types/deeplynx";
-import {
-  PayloadT,
-  RelatedNodeT,
-  MeshObject,
-} from "@/lib/types/modules/modelViewer";
+import { RelatedNodeT, MeshObject } from "@/lib/types/modules/modelViewer";
 
-export default function Home() {
+export default function ModelViewer() {
   // Hooks
   const [start, setStart] = useState<boolean>(false);
-  const [payload, setPayload] = useState<PayloadT>({} as PayloadT);
   const [phase, setPhase] = useState<string>("descriptive");
 
+  // Context
+  const { payload, setPayload } = useContext(PayloadContext);
+
+  // Descriptive
   const [mesh, setMesh] = useState<MeshObject | undefined>(); // Mesh is the gameobject selected in the scene
   const [graph, setGraph] = useState<Array<RelatedNodeT> | undefined>(); // Graph is the array of nodes related to the selected mesh
   const [selected, setSelected] = useState<boolean>(false);
@@ -39,72 +44,55 @@ export default function Home() {
     (state) => state.modelViewer.mappings
   );
 
-  // Store
-  const container: ContainerT = useContainer();
-  const file: FileT = useAppSelector((state) => state.modelViewer.file!);
-
   // Handlers
   const handlePhase = (event: React.SyntheticEvent, phase: string) => {
     setPhase(phase);
   };
 
-  useEffect(() => {
-    setPayload({
-      ConfigType: "Remote",
-      FileName: file.file_name,
-      GraphType: "cad",
-      GraphRootDlId: "2", // Must come from Pixyz; now using Pixyz' NodeId instead of DeepLynxID; the root Pixyz' NodeId should always be "2" (at least according to all the CAD models I've tested); however, we can make this more robust, and the best way might be for React to receive info back from Airflow https://github.inl.gov/Digital-Engineering/Pythagoras/issues/17
-      AssetMetatypeName: "MeshGameObject",
-      DefaultInteractions: ["CadNodeDataToReact", "SelectAndFadeOthers"],
-      BaseUrl: "https://deeplynx.dev.inl.gov",
-      Token: process.env.NEXT_PUBLIC_TOKEN!,
-      ContainerId: container.id,
-      FileId: file.id,
-    });
-  }, [container, file]);
-
+  // TODO: Refactor this
   useEffect(() => {
     setGraph(undefined); // If the metatype mappings have changed, remove the graph from state
   }, [mappings]);
 
   return (
     <>
-      <Grid container className={classes.grid}>
-        <Grid item xs={4}>
-          {start ? (
-            <>
-              <Tabs value={phase} onChange={handlePhase}>
-                <Tab label="Descriptive" value={"descriptive"} />
-                <Tab label="Informative" value={"informative"} />
-                <Tab label="Predictive" value={"predictive"} />
-                <Tab label="Living" value={"living"} />
-              </Tabs>
-              {phase === "descriptive" ? (
-                <Descriptive
-                  graph={graph}
-                  mesh={mesh}
-                  selected={selected}
-                  start={start}
-                />
-              ) : null}
-            </>
-          ) : (
-            <Welcome setStart={setStart} />
-          )}
-          <br />
+      <PayloadProvider>
+        <Grid container className={classes.grid}>
+          <Grid item xs={4}>
+            {start ? (
+              <>
+                <Tabs value={phase} onChange={handlePhase}>
+                  <Tab label="Descriptive" value={"descriptive"} />
+                  <Tab label="Informative" value={"informative"} />
+                  <Tab label="Predictive" value={"predictive"} />
+                  <Tab label="Living" value={"living"} />
+                </Tabs>
+                {phase === "descriptive" ? (
+                  <Descriptive
+                    graph={graph}
+                    mesh={mesh}
+                    selected={selected}
+                    start={start}
+                  />
+                ) : null}
+              </>
+            ) : (
+              <Welcome setStart={setStart} />
+            )}
+            <br />
+          </Grid>
+          <Grid item xs={8}>
+            {start ? (
+              <WebGL
+                mappings={mappings}
+                setGraph={setGraph}
+                setMesh={setMesh}
+                setSelected={setSelected}
+              />
+            ) : null}
+          </Grid>
         </Grid>
-        <Grid item xs={8}>
-          {start ? (
-            <WebGL
-              payload={payload}
-              mappings={mappings}
-              setGraph={setGraph}
-              setMesh={setMesh}
-              setSelected={setSelected}
-            />
-          ) : null}
-        </Grid>
-      </Grid>
+      </PayloadProvider>
     </>
   );
 }

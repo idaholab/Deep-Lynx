@@ -1,7 +1,7 @@
 "use client";
 
 // Hooks
-import { useCallback, useEffect } from "react";
+import { useCallback, useContext, useEffect } from "react";
 import { useUnityContext } from "react-unity-webgl";
 
 // Unity
@@ -21,19 +21,20 @@ import {
 import KeyboardIcon from "@mui/icons-material/Keyboard";
 import MouseIcon from "@mui/icons-material/Mouse";
 
+// Context
+import { PayloadContext } from "./context/payload";
+
 // Store
 import { useAppSelector } from "@/lib/store/hooks";
 
 // Types
 import {
-  PayloadT,
   MeshObject,
   MeshBoolCallbackT,
   RelatedNodeT,
 } from "@/lib/types/modules/modelViewer";
 
 type PropsT = {
-  payload: PayloadT;
   mappings: Array<string>;
   setGraph: Function;
   setMesh: Function;
@@ -41,8 +42,11 @@ type PropsT = {
 };
 
 export default function WebGL(props: PropsT) {
+  // Context
+  const context = useContext(PayloadContext);
+  const payload = context.payload;
+
   // Props
-  const payload = props.payload;
   const setGraph = props.setGraph;
   const setMesh = props.setMesh;
   const setSelected = props.setSelected;
