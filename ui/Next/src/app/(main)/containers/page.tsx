@@ -1,8 +1,6 @@
-"use client";
 
+'use client';
 // Hooks
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { Box, Button, Divider, IconButton, InputAdornment, Paper, Stack, styled, TextField, useTheme } from "@mui/material";
 import { classes } from "../../styles";
 import AddCircleIcon from '@mui/icons-material/AddCircle';
@@ -14,13 +12,15 @@ import { ContainerT } from "@/lib/types/deeplynx";
 import Grid from '@mui/material/Grid2';
 
 // Store
-import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
-import { containerActions } from "@/lib/store/features/container/containerSlice";
+import { useAppSelector } from "@/lib/store/hooks";
 import BasicSidebar from "@/app/_wireframe/basic-sidenav";
 import Navbar from "@/app/_wireframe/navbar";
 import SearchIcon from '@mui/icons-material/Search';
 import AddContainerDialog from "@/app/_wireframe/add-container-dialog";
 
+import Containers from './containers'
+import { useState } from "react";
+import Navbar2 from "@/app/_wireframe/navbar2";
 
 
 let list = [
@@ -37,40 +37,17 @@ let list = [
 
 const ContainerSelect = () => {
 
-  // Store
-  const storeDispatch = useAppDispatch();
-  const drawer: boolean = useAppSelector((state) => state.ux.drawer);
-
-  // Hooks
-  const [containers, setContainers] = useState<Array<ContainerT>>([]);
-  const [selectedContainer, setSelectedContainer] = useState<string>("");
-  const theme = useTheme();
-
-  const router = useRouter();
-
   // useEffect(() => {
-  //   async function fetchContainers() {
-  //     let containers = await fetch("/api/containers").then((response) => {
-  //       return response.json();
-  //     });
+  //   // When the user selects a container, dispatch that container's metadata to the Redux store, and navigate to the dashboard
+  //   if (selectedContainer) {
+  //     const selection: ContainerT = containers.find(
+  //       (container: ContainerT) => container!.id === selectedContainer
+  //     )!;
 
-  //     setContainers(containers);
+  //     storeDispatch(containerActions.setContainer(selection));
+  //     router.push(`/containers/${selection.id}`);
   //   }
-
-  //   fetchContainers();
-  // }, []);
-
-  useEffect(() => {
-    // When the user selects a container, dispatch that container's metadata to the Redux store, and navigate to the dashboard
-    if (selectedContainer) {
-      const selection: ContainerT = containers.find(
-        (container: ContainerT) => container!.id === selectedContainer
-      )!;
-
-      storeDispatch(containerActions.setContainer(selection));
-      router.push(`/containers/${selection.id}`);
-    }
-  }, [containers, selectedContainer, router, storeDispatch]);
+  // }, [containers, selectedContainer, router, storeDispatch]);
 
   const [open, setOpen] = useState(false);
 
@@ -115,7 +92,7 @@ const ContainerSelect = () => {
                     className={classes.containers.gridItem}
                     key={index}
                   >
-                    <Paper
+                    <Paper sx={{border: "1px solid grey"}}
                       className={classes.containers.addItem}>
                       <h1>
                         <div>
@@ -132,7 +109,7 @@ const ContainerSelect = () => {
                   <Grid className={classes.containers.gridItem}
                     key={index}
                   >
-                    <Paper className={classes.containers.paperItem}>
+                    <Paper sx={{border: "1px solid grey"}} className={classes.containers.paperItem}>
                       <h3>{item.name}</h3>
                       <p>{item.description}</p>
                       <Stack className={classes.containers.buttons} spacing={2} direction="row">

@@ -49,8 +49,8 @@ export const classes = {
   }, 
   containers: {
     gridItem: "max-w-[400px] min-w-[400px] ml-[30px]",
-    addItem: "grid justify-items-center min-h-44",
-    paperItem: "grid justify-items-center min-h-44 bg-[#D2CDCD]",
+    addItem: "grid justify-items-center min-h-44 shadow-none",
+    paperItem: "grid justify-items-center min-h-44 bg-[#E9EDF0] shadow-none",
     addIcon: "text-cherenkov scale-[2]", 
     buttons: "mb-4",
     text: "lowercase", 
