@@ -5,14 +5,14 @@ import { useEffect, useState } from "react";
 import { useContainer } from "@/lib/context/ContainerProvider";
 
 // MUI
-import { Grid } from "@mui/material";
+import { Grid, Tab, Tabs } from "@mui/material";
 
 // Styles
 import { classes } from "@/app/styles";
 
 // Components
-import Welcome from "./components/welcome";
-import Graph from "./graph";
+import Welcome from "./descriptive/components/welcome";
+import Descriptive from "./descriptive/descriptive";
 import WebGL from "./webgl";
 
 // Store
@@ -30,6 +30,7 @@ export default function Home() {
   // Hooks
   const [start, setStart] = useState<boolean>(false);
   const [payload, setPayload] = useState<PayloadT>({} as PayloadT);
+  const [phase, setPhase] = useState<string>("descriptive");
 
   const [mesh, setMesh] = useState<MeshObject | undefined>(); // Mesh is the gameobject selected in the scene
   const [graph, setGraph] = useState<Array<RelatedNodeT> | undefined>(); // Graph is the array of nodes related to the selected mesh
@@ -41,6 +42,11 @@ export default function Home() {
   // Store
   const container: ContainerT = useContainer();
   const file: FileT = useAppSelector((state) => state.modelViewer.file!);
+
+  // Handlers
+  const handlePhase = (event: React.SyntheticEvent, phase: string) => {
+    setPhase(phase);
+  };
 
   useEffect(() => {
     setPayload({
@@ -65,8 +71,26 @@ export default function Home() {
     <>
       <Grid container className={classes.grid}>
         <Grid item xs={4}>
-          <Graph graph={graph} mesh={mesh} selected={selected} start={start} />
-          {start ? null : <Welcome setStart={setStart} />}
+          {start ? (
+            <>
+              <Tabs value={phase} onChange={handlePhase}>
+                <Tab label="Descriptive" value={"descriptive"} />
+                <Tab label="Informative" value={"informative"} />
+                <Tab label="Predictive" value={"predictive"} />
+                <Tab label="Living" value={"living"} />
+              </Tabs>
+              {phase === "descriptive" ? (
+                <Descriptive
+                  graph={graph}
+                  mesh={mesh}
+                  selected={selected}
+                  start={start}
+                />
+              ) : null}
+            </>
+          ) : (
+            <Welcome setStart={setStart} />
+          )}
           <br />
         </Grid>
         <Grid item xs={8}>

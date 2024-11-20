@@ -1,7 +1,7 @@
 "use client";
 
 // Hooks
-import { useWebglMetatypes } from "../../hooks/useWebglMetatypes";
+import { useWebglMetatypes } from "../../../hooks/useWebglMetatypes";
 
 // MUI
 import {

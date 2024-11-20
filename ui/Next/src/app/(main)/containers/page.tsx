@@ -30,8 +30,14 @@ import { containerActions } from "@/lib/store/features/container/containerSlice"
 import BasicSidebar from "@/app/_wireframe/basic-sidenav";
 import { uxActions } from "@/lib/store/features/ux/uxSlice";
 import Navbar from "@/app/_wireframe/navbar";
-import { CalendarIcon, ChartPieIcon, DocumentDuplicateIcon, FolderIcon, HomeIcon, UsersIcon } from "@heroicons/react/24/outline";
-
+import {
+  CalendarIcon,
+  ChartPieIcon,
+  DocumentDuplicateIcon,
+  FolderIcon,
+  HomeIcon,
+  UsersIcon,
+} from "@heroicons/react/24/outline";
 
 const navigation = [
   { name: 'Dashboard', href: '#', icon: HomeIcon, current: true },

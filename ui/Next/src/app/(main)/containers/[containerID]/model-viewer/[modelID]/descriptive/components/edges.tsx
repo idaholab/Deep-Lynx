@@ -36,11 +36,9 @@ export default function Edges(props: PropsT) {
 
   return (
     <>
-      <Typography variant="h5">Related Nodes</Typography>
-      <Divider />
       {graph.map((node: RelatedNodeT, index: number) => {
         return (
-          <List key={`${node.MetatypeName}`}>
+          <List key={index} sx={{ paddingLeft: "2.5rem" }}>
             <ListItemButton onClick={() => handleExpand(index)}>
               <ListItemText primary={node.MetatypeName} />
               {index === nodeExpand ? <ExpandLess /> : <ExpandMore />}
@@ -49,22 +47,20 @@ export default function Edges(props: PropsT) {
               <List component="div" disablePadding>
                 {Object.entries(node).map(([key, value]) => {
                   return (
-                    <>
-                      <Box key={key} sx={{ paddingLeft: "2.5rem" }}>
-                        <ListItemText
-                          inset
-                          primaryTypographyProps={{
-                            variant: "subtitle2",
-                            fontWeight: "bold",
-                          }}
-                          primary={key.toUpperCase()}
-                          secondary={value}
-                          secondaryTypographyProps={{
-                            variant: "caption",
-                          }}
-                        />
-                      </Box>
-                    </>
+                    <Box key={key} sx={{ paddingLeft: ".5rem" }}>
+                      <ListItemText
+                        inset
+                        primaryTypographyProps={{
+                          variant: "subtitle2",
+                          fontWeight: "bold",
+                        }}
+                        primary={key.toUpperCase()}
+                        secondary={value}
+                        secondaryTypographyProps={{
+                          variant: "caption",
+                        }}
+                      />
+                    </Box>
                   );
                 })}
               </List>

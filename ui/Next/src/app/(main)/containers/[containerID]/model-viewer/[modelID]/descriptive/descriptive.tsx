@@ -41,11 +41,12 @@ type Props = {
   start: boolean;
 };
 
-export default function Graph(props: Props) {
+export default function Descriptive(props: Props) {
   // Hooks
   const [meshExpand, setMeshExpand] = useState<boolean>(true);
   const [hierarchyExpand, setHierarchyExpand] = useState<boolean>(false);
   const [metadataExpand, setMetadataExpand] = useState<boolean>(false);
+  const [edgesExpand, setEdgesExpand] = useState<boolean>(false);
   const [dialog, setDialog] = useState<boolean>(false);
 
   const graph: Array<RelatedNodeT> | undefined = props.graph;
@@ -113,6 +114,24 @@ export default function Graph(props: Props) {
                   <Collapse in={metadataExpand} timeout="auto" unmountOnExit>
                     <Metadata mesh={mesh} />
                   </Collapse>
+                  {graph && selected ? (
+                    <>
+                      <ListItemButton
+                        onClick={() => setEdgesExpand(!edgesExpand)}
+                      >
+                        <ListItemText
+                          primary={"Related Nodes"}
+                          primaryTypographyProps={{
+                            fontWeight: "bold",
+                          }}
+                        />
+                        {edgesExpand ? <ExpandLess /> : <ExpandMore />}
+                      </ListItemButton>
+                      <Collapse in={edgesExpand} timeout="auto" unmountOnExit>
+                        <Edges graph={graph} />
+                      </Collapse>
+                    </>
+                  ) : null}
                 </List>
               </CardContent>
             </Card>
@@ -120,11 +139,7 @@ export default function Graph(props: Props) {
         ) : null}
         <br />
         <br />
-        {graph && selected ? (
-          <>
-            <Edges graph={graph} />
-          </>
-        ) : null}
+
         <br />
         {!dialog && start ? (
           <Fab
