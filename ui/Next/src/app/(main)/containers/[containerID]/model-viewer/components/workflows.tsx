@@ -3,9 +3,6 @@
 // Hooks
 import { useState, useEffect } from "react";
 
-// Types
-import { NodeT, FileT, ContainerT } from "@/lib/types/deeplynx";
-
 // MUI
 import { Tab, Tabs, Typography } from "@mui/material";
 
@@ -19,6 +16,9 @@ import VisualizeModel from "./workflows/visualizeModel";
 
 // Functions
 import { fetchFiles } from "@/lib/client";
+
+// Types
+import { FileT, ContainerT } from "@/lib/types/deeplynx";
 
 const Workflows = () => {
   // Component Hooks

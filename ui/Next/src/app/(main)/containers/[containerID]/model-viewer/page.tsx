@@ -29,57 +29,66 @@ const ModelViewer = () => {
 
   return (
     <>
-      <Grid container spacing={4} className={classes.grid}>
-        <Grid item xs={2}>
-          <Button onClick={handleExpand} className={classes.button}>
-            {expand ? (
-              <KeyboardArrowDownIcon sx={{ paddingBottom: ".15rem" }} />
-            ) : (
-              <KeyboardArrowRightIcon sx={{ paddingBottom: ".15rem" }} />
-            )}
-            <Typography variant="caption">Supported file extensions</Typography>
-          </Button>
-          <Box
-            sx={{
-              maxHeight: "75vh",
-              overflowY: expand ? "scroll" : "unset",
-            }}
-          >
+      <Container className={classes.container} maxWidth={false}>
+        <Grid container spacing={4} className={classes.grid}>
+          <Grid item xs={2}>
+            <Button onClick={handleExpand} className={classes.button}>
+              {expand ? (
+                <KeyboardArrowDownIcon sx={{ paddingBottom: ".15rem" }} />
+              ) : (
+                <KeyboardArrowRightIcon sx={{ paddingBottom: ".15rem" }} />
+              )}
+              <Typography variant="caption">
+                Supported file extensions
+              </Typography>
+            </Button>
+            <Box
+              sx={{
+                maxHeight: "75vh",
+                overflowY: expand ? "scroll" : "unset",
+              }}
+            >
+              <br />
+              {expand ? (
+                <Box>
+                  <Typography variant="caption">
+                    {supportedFiletypes.sort().map((type) => {
+                      return (
+                        <Box key={type} sx={{ whiteSpace: "nowrap" }}>
+                          {type}
+                        </Box>
+                      );
+                    })}
+                  </Typography>
+                </Box>
+              ) : null}
+            </Box>
+          </Grid>
+          <Grid item xs={5}>
+            <Typography variant="h4">Choose a Model</Typography>
             <br />
-            {expand ? (
-              <Box>
-                <Typography variant="caption">
-                  {supportedFiletypes.sort().map((type) => {
-                    return (
-                      <Box key={type} sx={{ whiteSpace: "nowrap" }}>
-                        {type}
-                      </Box>
-                    );
-                  })}
-                </Typography>
-              </Box>
-            ) : null}
-          </Box>
-        </Grid>
-        <Grid item xs={10}>
-          <Box sx={{ width: "50%" }}>
             <Typography variant="body2">
-              Select a file attached to a node in DeepLynx, and transform it
-              into an interactive model.
-              <br />
-              <br />
-              Behind the scenes, a DeepLynx module extracts metadata from the
-              geometry in your model, and transforms the geometry into a .glb.
-              <br />
-              <br />
+              Behind the scenes, DeepLynx extracts metadata from the model, and
+              transforms the it into a digital twin.
             </Typography>
             <br />
             <Divider />
             <br />
             <Workflows />
-          </Box>
+          </Grid>
+          <Grid item xs={5}>
+            <Typography variant="h4">Type Mapping</Typography>
+            <br />
+            <Typography variant="body2">
+              Develop a type mapping to simplify your model and manage the
+              digital twin
+            </Typography>
+            <br />
+            <Divider />
+            <br />
+          </Grid>
         </Grid>
-      </Grid>
+      </Container>
     </>
   );
 };
