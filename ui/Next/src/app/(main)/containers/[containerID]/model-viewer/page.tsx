@@ -29,7 +29,7 @@ const ModelViewer = () => {
 
   return (
     <>
-      <Container className={classes.container} maxWidth={false}>
+      <Container maxWidth={false}>
         <Grid container spacing={4} className={classes.grid}>
           <Grid item xs={2}>
             <Button onClick={handleExpand} className={classes.button}>
