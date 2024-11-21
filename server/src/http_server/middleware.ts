@@ -117,7 +117,7 @@ export function authenticateRoute(): any {
                     if (req.isAuthenticated()) {
                         next();
                     } else {
-                        resp.status(401).send('unauthorized');
+                        resp.redirect('/oauth');
                     }
                 }
             };
