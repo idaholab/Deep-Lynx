@@ -17,9 +17,10 @@ export default {
         cherenkov: "#07519E", // INL Dark Blue
         electricity: "#2BA8E0", // INL Light Blue
         containerGray: "#EEF1F6", // Gray container drawer
-        darkBlue: '#083769'
+        darkBlue: '#083769', 
+        basicSideNav: '#EEF1F6'
       },
-    },
+    }
   },
   plugins: [require("@tailwindcss/forms"), require('daisyui')],
   darkMode: "selector",

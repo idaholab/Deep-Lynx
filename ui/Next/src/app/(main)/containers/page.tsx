@@ -21,6 +21,7 @@ import AddContainerDialog from "@/app/_wireframe/add-container-dialog";
 import Containers from './containers'
 import { useState } from "react";
 import Navbar2 from "@/app/_wireframe/navbar2";
+import BasicSidebar2 from "@/app/_wireframe/basic-sidenav2";
 
 
 let list = [
@@ -64,8 +65,9 @@ const ContainerSelect = () => {
     <>
       <div>
         <div>
-          <Navbar />
-          <BasicSidebar>
+          <Navbar2/>
+          <BasicSidebar2>Hello world</BasicSidebar2>
+          {/* <BasicSidebar>
             <Stack className={classes.containers.header} spacing={2} direction="row">
               <h1 className={classes.containers.header}>Your Containers</h1>
               <Box>
@@ -84,8 +86,8 @@ const ContainerSelect = () => {
                 />
               </Box>
             </Stack>
-            <Divider sx={{ marginTop: '2px', marginBottom: '20px' }} />
-            <Grid container spacing={3}>
+            <Divider sx={{ marginTop: '2px', marginBottom: '20px' }} /> */}
+            {/* <Grid container spacing={3}>
               {list.map((item, index) => (
                 index === 0 ? (
                   <Grid
@@ -120,8 +122,8 @@ const ContainerSelect = () => {
                   </Grid>
                 )
               ))}
-            </Grid>
-          </BasicSidebar>
+            </Grid> */}
+          {/* </BasicSidebar> */}
 
         </div>
       </div>
