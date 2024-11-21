@@ -103,6 +103,10 @@
       outstandingInvites: []
     }),
 
+    created() {
+      this.IsAuthed();
+    },
+
     methods: {
       containerSelected(container: ContainerT) {
         this.selectedContainer = container
@@ -166,6 +170,15 @@
 
         // Return a default value or handle the error as per requirements
         return '';
+      },
+      async IsAuthed() {
+        const res = await fetch("/check-oidc");
+        const isAuth = await res.json();
+        const loggedIn = isAuth.authenticated === true
+        if (!loggedIn) {
+          window.location.href = '/oauth'; // Redirect to login if not logged in
+        }
+        return
       }
     },
 

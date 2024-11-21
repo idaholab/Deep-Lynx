@@ -105,7 +105,6 @@
   import 'viewerjs/dist/viewer.css';
   import Viewer from 'viewerjs';
   import {AxiosBasicCredentials, AxiosRequestConfig, AxiosResponse, default as axios} from "axios";
-  import {RetrieveJWT} from "@/auth/authentication_service";
   import buildURL from "build-url";
   import ViewMediaFileDialog from "../dialogs/ViewMediaFileDialog.vue";
   import VideoPlayer from "../media/VideoPlayer.vue";
@@ -242,9 +241,6 @@
         config.responseType = "blob"
         config.headers = {"Access-Control-Allow-Origin": "*"}
 
-        if(Config?.deepLynxApiAuth === "token") {
-          config.headers = {"Authorization": `Bearer ${RetrieveJWT()}`}
-        }
 
         if(Config?.deepLynxApiAuth === "basic") {
           config.auth = {username: Config.deepLynxApiAuthBasicUser, password: Config.deepLynxApiAuthBasicPass} as AxiosBasicCredentials

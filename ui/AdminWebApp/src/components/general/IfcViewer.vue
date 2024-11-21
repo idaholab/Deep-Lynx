@@ -50,7 +50,6 @@
 <script lang="ts">
   import Vue from 'vue';
   import Config from "@/config";
-  import {RetrieveJWT} from "@/auth/authentication_service";
   import {
   Raycaster,
   Vector2
@@ -226,10 +225,6 @@
         // the web assembly package - must be served locally
         ifcLoader.ifcManager.setWasmPath("../files/");
 
-        // without the authorization header you will fail when attempting to load the file from DeepLynx
-        ifcLoader.setRequestHeader({
-          'Authorization': `Bearer ${RetrieveJWT()}`,
-        })
 
         // this raycaster is for highlighting the elements we mouse over
         const raycaster = new Raycaster();

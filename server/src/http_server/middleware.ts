@@ -103,12 +103,24 @@ export function authenticateRoute(): any {
     switch (Config.auth_strategy) {
         // basic assumes we are sending the username/password each request. In this
         // case we don't rely on the session for any login/user information
+
         case 'basic': {
             return passport.authenticate('basic', {session: true, keepSessionInfo: true});
         }
 
         case 'token': {
-            return passport.authenticate('jwt', {session: false, keepSessionInfo: true});
+            return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
+                const authHeader = req.header('Authorization');
+                if (authHeader && authHeader.startsWith('Bearer ')) {
+                    passport.authenticate('jwt', {session: false, keepSessionInfo: true})(req, resp, next);
+                } else {
+                    if (req.isAuthenticated()) {
+                        next();
+                    } else {
+                        resp.redirect('/oauth');
+                    }
+                }
+            };
         }
 
         default: {
@@ -216,7 +228,7 @@ export function metatypeContext(): any {
             repo.findByUUID(req.params.metatypeID, true)
                 .then((result) => {
                     if (result.isError) {
-                        resp.status(result.error?.errorCode!).json(result);
+                        resp.status(result.error?.errorCode).json(result);
                         return;
                     }
 
@@ -231,7 +243,7 @@ export function metatypeContext(): any {
             repo.findByID(req.params.metatypeID, true)
                 .then((result) => {
                     if (result.isError) {
-                        resp.status(result.error?.errorCode!).json(result);
+                        resp.status(result.error?.errorCode).json(result);
                         return;
                     }
 
@@ -262,7 +274,7 @@ export function metatypeKeyContext(): any {
         repo.findByID(req.params.metatypeKeyID, req.params.metatypeID)
             .then((result) => {
                 if (result.isError) {
-                    resp.status(result.error?.errorCode!).json(result);
+                    resp.status(result.error?.errorCode).json(result);
                     return;
                 }
 
@@ -292,7 +304,7 @@ export function metatypeRelationshipContext(): any {
         repo.findByID(req.params.metatypeRelationshipID)
             .then((result) => {
                 if (result.isError) {
-                    resp.status(result.error?.errorCode!).json(result);
+                    resp.status(result.error?.errorCode).json(result);
                     return;
                 }
 
@@ -322,7 +334,7 @@ export function metatypeRelationshipKeyContext(): any {
         repo.findByID(req.params.relationshipKeyID)
             .then((result) => {
                 if (result.isError) {
-                    resp.status(result.error?.errorCode!).json(result);
+                    resp.status(result.error?.errorCode).json(result);
                     return;
                 }
 
@@ -352,7 +364,7 @@ export function metatypeRelationshipPairContext(): any {
         repo.findByID(req.params.relationshipPairID)
             .then((result) => {
                 if (result.isError) {
-                    resp.status(result.error?.errorCode!).json(result);
+                    resp.status(result.error?.errorCode).json(result);
                     return;
                 }
 
@@ -382,7 +394,7 @@ export function userContext(): any {
         repo.findByID(req.params.userID)
             .then((result) => {
                 if (result.isError) {
-                    resp.status(result.error?.errorCode!).json(result);
+                    resp.status(result.error?.errorCode).json(result);
                     return;
                 }
 
@@ -426,7 +438,7 @@ export function serviceUserContext(): any {
                     repo.findByID(req.params.serviceUserID)
                         .then((result) => {
                             if (result.isError) {
-                                resp.status(result.error?.errorCode!).json(result);
+                                resp.status(result.error?.errorCode).json(result);
                                 return;
                             }
 
@@ -478,7 +490,7 @@ export function oauthAppContext(): any {
         repo.findByID(req.params.oauthAppID)
             .then((result) => {
                 if (result.isError) {
-                    resp.status(result.error?.errorCode!).json(result);
+                    resp.status(result.error?.errorCode).json(result);
                     return;
                 }
 
@@ -508,7 +520,7 @@ export function eventActionContext(): any {
         repo.findByID(req.params.actionID)
             .then((result) => {
                 if (result.isError) {
-                    resp.status(result.error?.errorCode!).json(result);
+                    resp.status(result.error?.errorCode).json(result);
                     return;
                 }
 
@@ -538,7 +550,7 @@ export function eventActionStatusContext(): any {
         repo.findByID(req.params.statusID)
             .then((result) => {
                 if (result.isError) {
-                    resp.status(result.error?.errorCode!).json(result);
+                    resp.status(result.error?.errorCode).json(result);
                     return;
                 }
 
@@ -568,7 +580,7 @@ export function nodeContext(): any {
         repo.findByID(req.params.nodeID)
             .then((result) => {
                 if (result.isError) {
-                    resp.status(result.error?.errorCode!).json(result);
+                    resp.status(result.error?.errorCode).json(result);
                     return;
                 }
 
@@ -598,7 +610,7 @@ export function edgeContext(): any {
         repo.findByID(req.params.edgeID)
             .then((result) => {
                 if (result.isError) {
-                    resp.status(result.error?.errorCode!).json(result);
+                    resp.status(result.error?.errorCode).json(result);
                     return;
                 }
 
@@ -628,7 +640,7 @@ export function typeMappingContext(): any {
         repo.findByID(req.params.mappingID)
             .then((result) => {
                 if (result.isError) {
-                    resp.status(result.error?.errorCode!).json(result);
+                    resp.status(result.error?.errorCode).json(result);
                     return;
                 }
 
@@ -658,7 +670,7 @@ export function typeTransformationContext(): any {
         repo.findByID(req.params.transformationID)
             .then((result) => {
                 if (result.isError) {
-                    resp.status(result.error?.errorCode!).json(result);
+                    resp.status(result.error?.errorCode).json(result);
                     return;
                 }
 
@@ -688,7 +700,7 @@ export function exporterContext(): any {
         repo.findByID(req.params.exportID)
             .then((result) => {
                 if (result.isError) {
-                    resp.status(result.error?.errorCode!).json(result);
+                    resp.status(result.error?.errorCode).json(result);
                     return;
                 }
 
@@ -718,7 +730,7 @@ export function importContext(): any {
         repo.findByID(req.params.importID)
             .then((result) => {
                 if (result.isError) {
-                    resp.status(result.error?.errorCode!).json(result);
+                    resp.status(result.error?.errorCode).json(result);
                     return;
                 }
 
@@ -748,7 +760,7 @@ export function dataStagingContext(): any {
         repo.findByID(req.params.dataID)
             .then((result) => {
                 if (result.isError) {
-                    resp.status(result.error?.errorCode!).json(result);
+                    resp.status(result.error?.errorCode).json(result);
                     return;
                 }
 
@@ -778,7 +790,7 @@ export function dataSourceContext(): any {
         repo.findByID(req.params.sourceID)
             .then((result) => {
                 if (result.isError) {
-                    resp.status(result.error?.errorCode!).json(result);
+                    resp.status(result.error?.errorCode).json(result);
                     return;
                 }
 
@@ -808,7 +820,7 @@ export function dataTargetContext(): any {
         repo.findByID(req.params.dataTargetID)
             .then((result) => {
                 if (result.isError) {
-                    resp.status(result.error?.errorCode!).json(result);
+                    resp.status(result.error?.errorCode).json(result);
                     return;
                 }
 
@@ -838,7 +850,7 @@ export function fileContext(): any {
         repo.findByID(req.params.fileID)
             .then((result) => {
                 if (result.isError) {
-                    resp.status(result.error?.errorCode!).json(result);
+                    resp.status(result.error?.errorCode).json(result);
                     return;
                 }
 
@@ -868,7 +880,7 @@ export function reportContext(): any {
         repo.findByID(req.params.reportID)
             .then((result) => {
                 if (result.isError) {
-                    resp.status(result.error?.errorCode!).json(result);
+                    resp.status(result.error?.errorCode).json(result);
                     return;
                 }
 
@@ -879,7 +891,7 @@ export function reportContext(): any {
                 resp.status(500).json(error);
                 return;
             });
-    }
+    };
 }
 
 // reportQuery context will attempt to fetch a reportQuery by id specified by the
@@ -898,7 +910,7 @@ export function reportQueryContext(): any {
         repo.findByID(req.params.reportQueryID)
             .then((result) => {
                 if (result.isError) {
-                    resp.status(result.error?.errorCode!).json(result);
+                    resp.status(result.error?.errorCode).json(result);
                     return;
                 }
 
@@ -908,8 +920,8 @@ export function reportQueryContext(): any {
             .catch((error) => {
                 resp.status(500).json(error);
                 return;
-            })
-    }
+            });
+    };
 }
 
 // tagContext will attempt to fetch a tag by id specified by the
@@ -928,7 +940,7 @@ export function tagContext(): any {
         repo.findByID(req.params.tagID)
             .then((result) => {
                 if (result.isError) {
-                    resp.status(result.error?.errorCode!).json(result);
+                    resp.status(result.error?.errorCode).json(result);
                     return;
                 }
 

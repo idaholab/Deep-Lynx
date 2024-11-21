@@ -46,7 +46,6 @@
 <script lang="ts">
   import Vue, { PropType } from 'vue'
   import {ContainerT, DataSourceT, TypeMappingT} from "../../api/types";
-  import {RetrieveJWT} from "@/auth/authentication_service";
   import buildURL from "build-url";
   import {AxiosBasicCredentials, AxiosRequestConfig, AxiosResponse} from "axios";
   import Config from "@/config";
@@ -68,9 +67,9 @@
       containerID: {type: String, required: true},
       dataSourceID: {type: String, required: true},
       mappings: {
-        type: Array as PropType<TypeMappingT[]>, 
-        required: false, 
-        default: () => [] 
+        type: Array as PropType<TypeMappingT[]>,
+        required: false,
+        default: () => []
       },
       containerName: {type: String, required: false},
       dataSourceName: {type: String, required: false},
@@ -119,9 +118,6 @@
         config.responseType = "blob"
         config.headers = {"Access-Control-Allow-Origin": "*"}
 
-        if(Config?.deepLynxApiAuth === "token") {
-          config.headers = {"Authorization": `Bearer ${RetrieveJWT()}`}
-        }
 
         if(Config?.deepLynxApiAuth === "basic") {
           config.auth = {username: Config.deepLynxApiAuthBasicUser, password: Config.deepLynxApiAuthBasicPass} as AxiosBasicCredentials
