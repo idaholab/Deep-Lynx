@@ -39,7 +39,10 @@
   border-radius: 4px;
 }
 
-a{
+a {
   text-decoration: none;
 }
- 
+
+.recharts-tooltip-label {
+  color: black;
+}

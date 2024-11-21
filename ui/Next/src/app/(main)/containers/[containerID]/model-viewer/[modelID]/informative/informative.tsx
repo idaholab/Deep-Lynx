@@ -1,4 +1,8 @@
+// MUI
 import { Typography } from "@mui/material";
+
+// Components
+import Charts from "./components/charts";
 
 export default function Informative() {
   return (
@@ -11,6 +15,7 @@ export default function Informative() {
       </Typography>
       <br />
       <br />
+      <Charts />
     </>
   );
 }
