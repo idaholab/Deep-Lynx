@@ -36,6 +36,12 @@ defmodule Datum.JSONB do
     {:ok, [<<IO.iodata_length(data) + 1::int32(), 1>> | data]}
   end
 
+  def dump(value) when is_list(value) do
+    data = Jason.encode_to_iodata!(value)
+
+    {:ok, [<<IO.iodata_length(data) + 1::int32(), 1>> | data]}
+  end
+
   def dump(value) when is_bitstring(value) do
     {:ok, [<<IO.iodata_length(value) + 1::int32(), 1>> | value]}
   end

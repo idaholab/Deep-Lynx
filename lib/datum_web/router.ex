@@ -25,12 +25,6 @@ defmodule DatumWeb.Router do
     get "/plugins", PluginsController, :list_info
   end
 
-  scope "/", DatumWeb do
-    pipe_through :browser
-
-    get "/", PageController, :home
-  end
-
   # Other scopes may use custom stacks.
   # scope "/api", DatumWeb do
   #   pipe_through :api
@@ -74,7 +68,7 @@ defmodule DatumWeb.Router do
 
     live_session :require_authenticated_user,
       on_mount: [{DatumWeb.UserAuth, :ensure_authenticated}] do
-      live "/home", HomeLive, :index
+      live "/", HomeLive, :index
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
     end

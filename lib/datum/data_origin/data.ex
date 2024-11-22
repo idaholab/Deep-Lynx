@@ -10,7 +10,7 @@ defmodule Datum.DataOrigin.Data do
     field :row_num, :integer, virtual: true
     field :path, :string
     field :original_path, :string
-    field :type, Ecto.Enum, values: [:directory, :file, :root_directory]
+    field :type, Ecto.Enum, values: [:directory, :file, :root_directory, :organization, :person]
     field :file_type, :string, default: nil
     field :description, :string
     field :natural_language_properties, :string
@@ -24,6 +24,14 @@ defmodule Datum.DataOrigin.Data do
 
     field :tags, {:array, :string}
     field :domains, {:array, :string}
+
+    # we are storing relationships as a sparse adjacency list - this means that each piece of data contains the information
+    # on the data it is directly connected to within the graph, with no additional information as to other ancestors
+    # this allows us to store a graph relatively cheaply and works well with BFS/DFS algorithms and since we're most likely
+    # not going to have a more relationships than data, this _should_ work well.
+    # These should be stored as a multidimensional array. Passing in lists should work just fine with JASON
+    field :incoming_relationships, Datum.JSONB, default: []
+    field :outgoing_relationships, Datum.JSONB, default: []
 
     timestamps(type: :utc_datetime)
   end
@@ -43,6 +51,8 @@ defmodule Datum.DataOrigin.Data do
       :original_path,
       :origin_id,
       :owned_by,
+      :incoming_relationships,
+      :outgoing_relationships,
       :description
     ])
     |> validate_required([:path])

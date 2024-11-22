@@ -360,9 +360,9 @@ defmodule DatumWeb.HomeLive do
            end
          end)
        )
-       |> push_patch(to: ~p"/home")}
+       |> push_patch(to: ~p"/")}
     else
-      {:noreply, socket |> assign(:tabs, tabs) |> push_patch(to: ~p"/home")}
+      {:noreply, socket |> assign(:tabs, tabs) |> push_patch(to: ~p"/")}
     end
   end
 
@@ -400,7 +400,7 @@ defmodule DatumWeb.HomeLive do
     {:noreply,
      socket
      |> assign(:selected_tabs, selected_tabs)
-     |> push_patch(to: ~p"/home")}
+     |> push_patch(to: ~p"/")}
   end
 
   def handle_event("close_tab", %{"tab-id" => tab_id}, socket) do
@@ -441,7 +441,7 @@ defmodule DatumWeb.HomeLive do
        :selected_tabs,
        List.replace_at(socket.assigns.selected_tabs, group_index, new_tab)
      )
-     |> push_patch(to: ~p"/home")}
+     |> push_patch(to: ~p"/")}
   end
 
   # handles a call from one of the tabs to close it - we will take it out of the tabs list
@@ -501,7 +501,7 @@ defmodule DatumWeb.HomeLive do
            end
          end)
        )
-       |> push_patch(to: ~p"/home")}
+       |> push_patch(to: ~p"/")}
     else
       {:noreply, socket |> assign(:tabs, tabs)}
     end

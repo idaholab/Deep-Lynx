@@ -7,7 +7,7 @@ defmodule DatumWeb.UserRegistrationLive do
   def render(assigns) do
     ~H"""
     <div class="mx-auto max-w-sm">
-      <.header class="text-center">
+      <.header class="text-center text-white">
         Register for an account
         <:subtitle>
           Already registered?

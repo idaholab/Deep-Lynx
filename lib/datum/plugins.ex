@@ -35,7 +35,7 @@ defmodule Datum.Plugins do
     query =
       from p in Plugin,
         where: p.enabled == true,
-        select: [p.name, p.filetypes, p.plugin_type]
+        select: [p.id, p.name, p.filetypes, p.plugin_type]
 
     Repo.all(query)
   end

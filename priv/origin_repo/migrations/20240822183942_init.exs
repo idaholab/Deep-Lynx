@@ -17,13 +17,16 @@ defmodule Datum.DataOrigin.OriginRepo.Migrations.Init do
       add :tags, {:array, :string}
       add :domains, {:array, :string}
 
+      add :incoming_relationships, :jsonb
+      add :outgoing_relationships, :jsonb
+
       timestamps(type: :utc_datetime)
     end
 
     create table(:documentation, primary_key: false) do
       add :id, :binary, primary_key: true
       add :body, :string
-      add :data, references(:datas, on_delete: :delete_all, type: :binary_id)
+      add :data, references(:datas, on_delete: :delete_all, on_update: :update_all, type: :binary_id)
       add :owned_by, :binary
 
       add :tags, {:array, :string}
