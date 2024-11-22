@@ -1,21 +1,15 @@
 
 'use client';
 // Hooks
-import { Box, Button, Divider, IconButton, InputAdornment, Paper, Stack, styled, TextField, useTheme } from "@mui/material";
 import { classes } from "../../styles";
-import AddCircleIcon from '@mui/icons-material/AddCircle';
 
 // Types
 import { ContainerT } from "@/lib/types/deeplynx";
 
 // MUI
-import Grid from '@mui/material/Grid2';
 
 // Store
 import { useAppSelector } from "@/lib/store/hooks";
-import BasicSidebar from "@/app/_wireframe/basic-sidenav";
-import Navbar from "@/app/_wireframe/navbar";
-import SearchIcon from '@mui/icons-material/Search';
 import AddContainerDialog from "@/app/_wireframe/add-container-dialog";
 
 import Containers from './containers'
@@ -25,12 +19,18 @@ import BasicSidebar2 from "@/app/_wireframe/basic-sidenav2";
 
 
 let list = [
-  { name: 'QuantumBox', description: 'Advanced quantum computing device' },
-  { name: 'NanoChamber', description: 'Microscopic containment for nanomaterials' },
-  { name: 'BioReactor', description: 'System for growing microbial cultures' },
-  { name: 'PhotonContainer', description: 'Light-based data storage unit' },
-  { name: 'GeoVault', description: 'Geological sample preservation unit' },
-  { name: 'CryoBox', description: 'Cryogenic sample storage container' }
+  { name: 'QuantumBox', description: 'Advanced quantum computing device designed for high-efficiency quantum calculations, offering unprecedented processing power and speed.' },
+  { name: 'NanoChamber', description: 'Microscopic containment for nanomaterials, ensuring stable and secure storage for delicate nanostructures used in cutting-edge research.' },
+  { name: 'BioReactor', description: 'System for growing microbial cultures, optimized for maintaining ideal conditions to cultivate and study various microorganisms and bioengineered cells.' },
+  { name: 'PhotonContainer', description: 'Light-based data storage unit that leverages photonic technology to store massive amounts of data with high speed and minimal energy consumption.' },
+  { name: 'GeoVault', description: 'Geological sample preservation unit designed to maintain and protect valuable geological specimens, ensuring their integrity for scientific analysis.' },
+  { name: 'CryoBox', description: 'Cryogenic sample storage container engineered to preserve biological and chemical samples at ultra-low temperatures, ensuring long-term viability.' },
+  { name: 'QuantumBox', description: 'Advanced quantum computing device designed for high-efficiency quantum calculations, offering unprecedented processing power and speed.' },
+  { name: 'NanoChamber', description: 'Microscopic containment for nanomaterials, ensuring stable and secure storage for delicate nanostructures used in cutting-edge research.' },
+  { name: 'BioReactor', description: 'System for growing microbial cultures, optimized for maintaining ideal conditions to cultivate and study various microorganisms and bioengineered cells.' },
+  { name: 'PhotonContainer', description: 'Light-based data storage unit that leverages photonic technology to store massive amounts of data with high speed and minimal energy consumption.' },
+  { name: 'GeoVault', description: 'Geological sample preservation unit designed to maintain and protect valuable geological specimens, ensuring their integrity for scientific analysis.' },
+  { name: 'CryoBox', description: 'Cryogenic sample storage container engineered to preserve biological and chemical samples at ultra-low temperatures, ensuring long-term viability.' }
 ];
 
 
@@ -65,68 +65,51 @@ const ContainerSelect = () => {
     <>
       <div>
         <div>
-          <Navbar2/>
-          <BasicSidebar2>Hello world</BasicSidebar2>
-          {/* <BasicSidebar>
-            <Stack className={classes.containers.header} spacing={2} direction="row">
-              <h1 className={classes.containers.header}>Your Containers</h1>
-              <Box>
-                <TextField
-                  variant="outlined"
-                  placeholder="Search..."
-                  slotProps={{
-                    input: {
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <SearchIcon />
-                        </InputAdornment>
-                      ),
-                    }
-                  }}
-                />
-              </Box>
-            </Stack>
-            <Divider sx={{ marginTop: '2px', marginBottom: '20px' }} /> */}
-            {/* <Grid container spacing={3}>
+          <Navbar2 />
+          <BasicSidebar2>
+
+            {/* Top */}
+            <div className="flex flex-row justify-between pl-9 pr-9">
+              <div className="text-2xl p-5 text-black">Your Containers</div>
+              <input type="text" placeholder="Search..." className="input input-bordered  max-w-xs bg-white mb-3 border-black" />
+            </div>
+            <hr className="mt-0.5 mb-5" />
+
+            {/* Grid */}
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 p-9">
               {list.map((item, index) => (
                 index === 0 ? (
-                  <Grid
-                    className={classes.containers.gridItem}
-                    key={index}
-                  >
-                    <Paper sx={{border: "1px solid grey"}}
-                      className={classes.containers.addItem}>
-                      <h1>
-                        <div>
-                          <IconButton onClick={handleClickOpen}>
-                            <AddCircleIcon className={classes.containers.addIcon}/>
-                          </IconButton>
-                          <AddContainerDialog open={open} onClose={handleClose} />
-                        </div>
-                      </h1>
-                      <h3>Create New Container</h3>
-                    </Paper>
-                  </Grid>
+                  <div key={index} className="p-4 rounded-lg flex flex-col items-center border-[#D2CDCD] border-solid bg-white justify-center">
+                    <div className="text-lg font-semibold mb-2">
+                      <div>
+                        <button onClick={handleClickOpen} className="btn btn-ghost">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#07519E" className="size-20">
+                            <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25V15a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                        <AddContainerDialog open={open} onClose={handleClose} />
+                      </div>
+                    </div>
+                    <div className="text-lg text-black">Create New Container</div>
+                  </div>
                 ) : (
-                  <Grid className={classes.containers.gridItem}
-                    key={index}
-                  >
-                    <Paper sx={{border: "1px solid grey"}} className={classes.containers.paperItem}>
-                      <h3>{item.name}</h3>
-                      <p>{item.description}</p>
-                      <Stack className={classes.containers.buttons} spacing={2} direction="row">
-                        <Button sx={{ backgroundColor: "white" }} className={classes.containers.text} variant="outlined">More Info</Button>
-                        <Button sx={{ color: "white" }} className={classes.containers.text} variant="contained">Enter Container</Button>
-                      </Stack>
-                    </Paper>
-                  </Grid>
+                  <div key={index} className="text-center p-4 rounded-lg border-[#D2CDCD] border-solid bg-[#E9EDF0]">
+                    <div className="align-middle">
+                    <div className="text-lg text-black font-semibold p-1">{item.name}</div>
+                    <div className="text-sm text-black p-2">{item.description}</div>
+                    <div className="flex justify-between p-3 sm:flex-wrap">
+                      <button className="btn btn-outline bg-white border-cherenkov text-cherenkov lowercase flex-inital w-full md:w-1/2">More Info</button>
+                      <button className="btn btn-primary bg-cherenkov text-white lowercase flex-initial w-full md:w-1/2 mt-2 md:mt-0">Enter Container</button>
+                    </div>
+                    </div>
+                  </div>
                 )
               ))}
-            </Grid> */}
-          {/* </BasicSidebar> */}
-
+            </div>
+          </BasicSidebar2>
         </div>
       </div>
+
     </>
   );
 };

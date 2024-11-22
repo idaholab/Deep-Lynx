@@ -23,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html>
+    <html className="bg-white">
     <body>
     <StoreProvider>
         {/* <Wireframe>{children}</Wireframe> */}

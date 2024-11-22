@@ -1,3 +1,4 @@
+import { Roboto_Flex } from "next/font/google";
 import type { Config } from "tailwindcss";
 
 export default {
@@ -20,7 +21,10 @@ export default {
         darkBlue: '#083769', 
         basicSideNav: '#EEF1F6'
       },
-    }
+    }, 
+    fontFamily: {
+      sans: ['Roboto Flex', 'sans-serif'],
+    },
   },
   plugins: [require("@tailwindcss/forms"), require('daisyui')],
   darkMode: "selector",

@@ -1,10 +1,9 @@
-
 // // Hooks
 import * as React from 'react';
 
 import { translations } from '@/lib/translations';
 import { classes } from "../styles";
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 
 import './basic-sidenav2'
 
@@ -42,63 +41,64 @@ interface Props {
 
 export default function BasicSidebar2({ children }: Props) {
     // Hooks
-    const [open, setOpen] = React.useState(true);
-    const [openIndex, setOpenIndex] = React.useState(null);
+    const [openIndex, setOpenIndex] = useState(null);
+    const [open, setOpen] = useState(true);
+
 
     const handleCollapse = (index: any) => {
         setOpenIndex((prevIndex) => (prevIndex === index ? null : index));
     }
 
+    const handleDrawerMovement = () => {
+        let result = !open
+        setOpen(result)
+    }
+
     return (
         <>
-            <div className="flex">
-                <div className="drawer mt-20 ml-0">
-                    <input id="my-drawer" type="checkbox" className="drawer-toggle" />
-                    <div className="drawer-content">
-                        <label htmlFor="my-drawer" className="btn btn-primary btn-sm drawer-button bg-darkBlue hover:bg-darkBlue">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="size-6">
-                                <path fillRule="evenodd" d="M7.72 12.53a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 1 1 1.06 1.06L9.31 12l6.97 6.97a.75.75 0 1 1-1.06 1.06l-7.5-7.5Z" clipRule="evenodd" />
-                            </svg>
-                        </label>
-                        <div className='text-center'>
-                            <p>
-                                {children}
-                            </p>
+            <div className="drawer drawer-open">
+                <input id="my-drawer" type="checkbox" className="drawer-toggle" />
+                <div className="drawer-content mt-16 z-10 relative">
+                    {children}
+                </div>
+                <div className="flex justify-end">
+                            <button className={`btn btn-primary btn-sm drawer-button bg-darkBlue hover:bg-darkBlue fixed top-20 w-6 h-12 bg-[#083769] rounded-r-lg flex justify-center items-center cursor-pointer z-[1300] text-white ${open ? 'left-[390px]' : 'left-0'}`} onClick={handleDrawerMovement} >
+                                {open ? '<' : '>'}
+                            </button>
                         </div>
-                    </div>
-                    <div className="drawer-side mt-16 scroll-mx-0">
-                        <label htmlFor="my-drawer" aria-label="close sidebar" className="drawer-overlay justify-center">
-                        </label>
-                        <ul className="menu bg-basicSideNav text-black p-9 min-h-full w-80 mt-0">
-                            <p className='text-2xl mt-0'>{translations.en.containers.welcome}</p>
-                            <p className='text-sm mt-0'>
+                <div className="drawer-side mt-14">
+                    <label htmlFor="my-drawer" aria-label="close sidebar" className="drawer-overlay"></label>
+                    <aside className={`menu min-h-full bg-basicSideNav text-base-content p-0 ${open ? 'w-96' : 'w-0'}`}>
+                        
+                        <ul className='p-9'>
+                            <div className='text-black text-2xl mt-0'>{translations.en.containers.welcome}</div>
+                            <div className='text-black text-sm mt-0 pt-4'>
                                 DeepLynx is a unique data warehouse designed to provide easy collaboration on large projects. DeepLynx allows users to define an ontology and then store data under it. Find more information on our wiki by clicking <a href="https://github.com/idaholab/Deep-Lynx/wiki" className="text-blue-500 underline">here</a>.
-                            </p>
-                            <div className="flex w-full flex-col">
-                                <div className='pb-0 text-lg'>FAQ's</div>
+                            </div>
+                            <div className="flex flex-col pt-4">
+                                <div className='pb-0 text-lg text-black'>FAQ's</div>
                                 <div className="divider divider-default p-0 m-0"></div>
                             </div>
                             {faq.map((bullets, index) => (
-                                 <div>
-                                <li key={index} className="mb-2 pl-0">
-                                    <button className="btn-ghost w-fit bg-basicSideNav p-0 m-0" onClick={() => handleCollapse(index)}>
-                                        <span className="text-black">{bullets.question}</span>
-                                    </button>
-                                    {openIndex === index && (
-                                        <div className="pl-2 mt-2 text-black">
-                                            {bullets.answer}
-                                        </div>
-                                    )}
-                                </li>
-                                <div className="divider divider-default m-0"></div>
+                                <div key={index}>
+                                    <li className="mb-2 pl-0">
+                                        <button className="btn-ghost w-fit bg-basicSideNav p-0 m-0" onClick={() => handleCollapse(index)}>
+                                            <span className="text-black">{bullets.question}</span>
+                                        </button>
+                                        {openIndex === index && (
+                                            <div className="pl-2 mt-2 text-black">
+                                                {bullets.answer}
+                                            </div>
+                                        )}
+                                    </li>
+                                    <div className="divider divider-default m-0"></div>
                                 </div>
                             ))}
-                            <p className="text-sm">Have more questions? Get in touch at <a href="mailto: deeplynx@admin.com" >deeplynx@admin.com</a></p>
+                            <div className="text-sm">Have more questions? Get in touch at <a href="mailto: deeplynx@admin.com" >deeplynx@admin.com</a></div>
                         </ul>
-                    </div>
+                    </aside>
                 </div>
             </div>
-
         </>
     );
 }
