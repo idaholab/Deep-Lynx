@@ -53,24 +53,44 @@ msgstr ""
 msgid "close"
 msgstr ""
 
-#: lib/datum_web/live/user_login_live.ex:12
+#: lib/datum_web/live/user_login_live.ex:13
 #, elixir-autogen, elixir-format
 msgid "Sign up"
 msgstr ""
 
-#: lib/datum_web/live/origin_explorer_live.ex:23
-#, elixir-autogen, elixir-format
-msgid "Data Origins"
-msgstr ""
-
-#: lib/datum_web/live/origin_explorer_live.ex:36
-#: lib/datum_web/live/origin_explorer_live.ex:65
+#: lib/datum_web/live/origin_explorer_live.ex:56
+#: lib/datum_web/live/origin_explorer_live.ex:92
 #, elixir-autogen, elixir-format
 msgid "Date Created"
 msgstr ""
 
-#: lib/datum_web/live/origin_explorer_live.ex:35
-#: lib/datum_web/live/origin_explorer_live.ex:64
+#: lib/datum_web/live/origin_explorer_live.ex:55
+#: lib/datum_web/live/origin_explorer_live.ex:91
 #, elixir-autogen, elixir-format
 msgid "Name"
 msgstr ""
+
+#: lib/datum_web/live/home_live.ex:114
+#, elixir-autogen, elixir-format
+msgid "Explore Data Origins"
+msgstr ""
+
+#: lib/datum_web/live/home_live.ex:120
+#, elixir-autogen, elixir-format
+msgid "Explore Data Origins Description"
+msgstr "Navigate this catalog's data by using a file explorer like interface."
+
+#: lib/datum_web/live/origin_explorer_live.ex:26
+#, elixir-autogen, elixir-format
+msgid "Home"
+msgstr ""
+
+#: lib/datum_web/live/home_live.ex:155
+#, elixir-autogen, elixir-format
+msgid "Search"
+msgstr ""
+
+#: lib/datum_web/live/home_live.ex:159
+#, elixir-autogen, elixir-format
+msgid "Search Description"
+msgstr "Search across all of Datum and view the results."

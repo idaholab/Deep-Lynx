@@ -13,7 +13,7 @@ defmodule Datum.Search do
 
   # Client
   def start_link(default) do
-    GenServer.start_link(__MODULE__, default)
+    GenServer.start_link(__MODULE__, default, name: __MODULE__)
   end
 
   @doc """

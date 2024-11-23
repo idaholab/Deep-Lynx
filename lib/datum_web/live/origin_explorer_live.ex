@@ -21,6 +21,14 @@ defmodule DatumWeb.OriginExplorerLive do
     <div>
       <div class="breadcrumbs text-sm">
         <ul>
+          <span
+            phx-click="close_tab"
+            phx-value-tab-id={@tab.id}
+            class="tooltip tooltip-right mr-5"
+            data-tip={gettext("Close Tab")}
+          >
+            <.icon name="hero-x-mark" class="ml-2 h-5 w-5 cursor-pointer hover:bg-base-300" />
+          </span>
           <li>
             <a phx-click="home_navigate">
               <.icon name="hero-home" class="mr-1 h-3 w-3" /><%= gettext("Home") %>
@@ -253,6 +261,11 @@ defmodule DatumWeb.OriginExplorerLive do
 
     {:noreply,
      socket |> assign(:path_items, path_items) |> assign(:items, items) |> update_state()}
+  end
+
+  def handle_event("close_tab", _unsigned_params, socket) do
+    notify_parent({:close_tab, socket.assigns.tab.id}, socket.assigns.parent)
+    {:noreply, socket}
   end
 
   # pull the common assigns from socket and update the tab's state with them

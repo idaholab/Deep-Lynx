@@ -202,7 +202,7 @@ defmodule DatumWeb.CoreComponents do
   def simple_form(assigns) do
     ~H"""
     <.form :let={f} for={@for} as={@as} {@rest}>
-      <div class="mt-10 space-y-8 bg-base-100">
+      <div class=" space-y-8 bg-base-100">
         <%= render_slot(@inner_block, f) %>
         <div :for={action <- @actions} class="mt-2 flex items-center justify-between gap-6">
           <%= render_slot(action, f) %>
@@ -361,6 +361,33 @@ defmodule DatumWeb.CoreComponents do
         ]}
         {@rest}
       ><%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
+      <.error :for={msg <- @errors}><%= msg %></.error>
+    </div>
+    """
+  end
+
+  def input(%{type: "search"} = assigns) do
+    ~H"""
+    <div>
+      <.label for={@id}><%= @label %></.label>
+      <div class="grid grid-cols-6 gap-4">
+        <input
+          type={@type}
+          name={@name}
+          id={@id}
+          value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+          class={[
+            "col-span-5 mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6",
+            @errors == [] && "border-zinc-300 focus:border-zinc-400",
+            @errors != [] && "border-rose-400 focus:border-rose-400"
+          ]}
+          {@rest}
+        />
+        <button class="btn btn-circle col-span-1">
+          <.icon name="hero-magnifying-glass" />
+        </button>
+      </div>
+
       <.error :for={msg <- @errors}><%= msg %></.error>
     </div>
     """

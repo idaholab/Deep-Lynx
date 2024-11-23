@@ -111,6 +111,7 @@ defmodule Datum.MixProject do
         "assets.build",
         "sqlite.fetch"
       ],
+      translations: ["gettext.extract", "gettext.merge priv/gettext --locale en"],
       "ecto.setup": ["clean.db", "ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       "clean.db": ["cmd rm -rf databases"],

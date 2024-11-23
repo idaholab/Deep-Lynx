@@ -65,7 +65,10 @@ defmodule Datum.DataOriginRepoTest do
 
       d = %{d | row_num: 1}
 
-      assert DataOrigin.search_origin(origin, user, "keyword") == [d]
+      assert DataOrigin.search_origin(origin, user, "keyword") |> Enum.map(fn r -> r.id end) == [
+               d.id
+             ]
+
       assert DataOrigin.search_origin(origin, user, "NONSENSE") == []
 
       # lets make sure tags and domains work
@@ -80,9 +83,16 @@ defmodule Datum.DataOriginRepoTest do
                })
 
       t = %{t | row_num: 1}
-      assert DataOrigin.search_origin(origin, user, "domain") == [t]
-      assert DataOrigin.search_origin(origin, user, "tag") == [t]
-      assert DataOrigin.search_origin(origin, user, "hello") == [t]
+
+      assert DataOrigin.search_origin(origin, user, "domain") |> Enum.map(fn r -> r.id end) == [
+               t.id
+             ]
+
+      assert DataOrigin.search_origin(origin, user, "tag") |> Enum.map(fn r -> r.id end) == [t.id]
+
+      assert DataOrigin.search_origin(origin, user, "hello") |> Enum.map(fn r -> r.id end) == [
+               t.id
+             ]
 
       # lets make sure properties work
       assert {:ok, j} =
@@ -94,8 +104,14 @@ defmodule Datum.DataOriginRepoTest do
                })
 
       j = %{j | row_num: 1}
-      assert DataOrigin.search_origin(origin, user, "json") == [j]
-      assert DataOrigin.search_origin(origin, user, "field") == [j]
+
+      assert DataOrigin.search_origin(origin, user, "json") |> Enum.map(fn r -> r.id end) == [
+               j.id
+             ]
+
+      assert DataOrigin.search_origin(origin, user, "field") |> Enum.map(fn r -> r.id end) == [
+               j.id
+             ]
     end
 
     test "can connect two pieces of data" do

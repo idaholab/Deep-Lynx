@@ -28,6 +28,12 @@ alias Datum.DataOrigin
     owned_by: admin.id
   })
 
+{:ok, origin2} =
+  DataOrigin.create_origin(%{
+    name: "Test Origin The Second",
+    owned_by: admin.id
+  })
+
 # build a simple nested directory
 dir_one =
   DataOrigin.add_data!(origin, %{
@@ -67,6 +73,47 @@ file_two =
   })
 
 {:ok, _} = DataOrigin.connect_data(origin, dir_two, file_two)
+
+# now do the same for the other origin, eventually we can do specific things
+# build a simple nested directory
+dir_one =
+  DataOrigin.add_data!(origin2, %{
+    path: "root",
+    original_path: "/Users/darrjw/home",
+    type: :root_directory,
+    owned_by: admin.id
+  })
+
+file_one =
+  DataOrigin.add_data!(origin2, %{
+    path: "test.txt",
+    original_path: "/Users/darrjw/home/test.txt",
+    type: :file,
+    owned_by: admin.id
+  })
+
+{:ok, _} = DataOrigin.connect_data(origin2, dir_one, dir_one)
+{:ok, _} = DataOrigin.connect_data(origin2, dir_one, file_one)
+
+dir_two =
+  DataOrigin.add_data!(origin2, %{
+    path: "second",
+    original_path: "/Users/darrjw/home/second",
+    type: :directory,
+    owned_by: admin.id
+  })
+
+{:ok, _} = DataOrigin.connect_data(origin2, dir_one, dir_two)
+
+file_two =
+  DataOrigin.add_data!(origin2, %{
+    path: "picture.png",
+    original_path: "/Users/darrjw/home/second/picture.png",
+    type: :file,
+    owned_by: admin.id
+  })
+
+{:ok, _} = DataOrigin.connect_data(origin2, dir_two, file_two)
 
 # Tabs for the home page view, eventually won't need them as we'll want to maintain state a different way
 {:ok, tab_one} =

@@ -5,6 +5,7 @@ defmodule DatumWeb.HomeLive do
   will probably get more complicated as we add inter-view communication.
   """
   use DatumWeb, :live_view
+  use Gettext, backend: DatumWeb.Gettext
 
   alias Datum.Common
 
@@ -58,7 +59,7 @@ defmodule DatumWeb.HomeLive do
               class={"tab tooltip tooltip-bottom #{if Enum.member?(@selected_tabs, tab) do "tab-active" else "hover:bg-neutral" end}"}
               data-tip="Click to open or Drag to move"
             >
-              <%= Map.get(tab.state, "name", tab.module.display_name) %>
+              <%= Map.get(tab.state, "name", tab.module.display_name()) %>
             </a>
             <a
               role="tab"
@@ -72,16 +73,6 @@ defmodule DatumWeb.HomeLive do
           </div>
 
           <%= if List.first(Enum.filter(tab_group, fn tab -> Enum.member?(@selected_tabs, tab) end))do %>
-            <span
-              phx-click="close_tab"
-              phx-value-tab-id={
-                List.first(Enum.filter(tab_group, fn tab -> Enum.member?(@selected_tabs, tab) end)).id
-              }
-              class="tooltip tooltip-top "
-              data-tip="Close Tab"
-            >
-              <.icon name="hero-x-mark" class="ml-2 h-5 w-5 cursor-pointer hover:bg-base-300" />
-            </span>
             <div class="divider p-0 m-0"></div>
             <%= live_render(
               @socket,
@@ -110,11 +101,13 @@ defmodule DatumWeb.HomeLive do
                 <div class="mt-8">
                   <h3 class="text-base font-semibold leading-6 text-primary-content">
                     <a class="focus:outline-none">
-                      <span class="absolute inset-0" aria-hidden="true"></span> Explore Data Origins
+                      <span class="absolute inset-0" aria-hidden="true"></span> <%= gettext(
+                        "Explore Data Origins"
+                      ) %>
                     </a>
                   </h3>
                   <p class="mt-2 text-sm text-primary-content">
-                    Navigate this catalog's data by using a file explorer like interface.
+                    <%= gettext("Explore Data Origins Description") %>
                   </p>
                 </div>
 
@@ -127,33 +120,25 @@ defmodule DatumWeb.HomeLive do
                   </svg>
                 </span>
               </div>
-              <div class="hover:bg-base-300 group relative bg-base-200 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-accent sm:rounded-tr-lg">
+              <div
+                phx-click="open_tab"
+                phx-value-group={group_index}
+                phx-value-tab="Elixir.DatumWeb.SearchLive"
+                class="hover:bg-base-300 group relative bg-base-200 p-6 sm:rounded-tr-lg"
+              >
                 <div>
                   <span class="inline-flex rounded-lg bg-base-300 p-3 text-white ring-4 ring-base-400">
-                    <svg
-                      class="h-6 w-6"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke-width="1.5"
-                      stroke="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"
-                      />
-                    </svg>
+                    <.icon name="hero-magnifying-glass" />
                   </span>
                 </div>
                 <div class="mt-8">
                   <h3 class="text-base font-semibold leading-6 text-primary-content">
                     <a href="#" class="focus:outline-none">
-                      <span class="absolute inset-0" aria-hidden="true"></span> Benefits
+                      <span class="absolute inset-0" aria-hidden="true"></span> <%= gettext("Search") %>
                     </a>
                   </h3>
                   <p class="mt-2 text-sm text-primary-content">
-                    Doloribus dolores nostrum quia qui natus officia quod et dolorem. Sit repellendus qui ut at blanditiis et quo et molestiae.
+                    <%= gettext("Search Description") %>
                   </p>
                 </div>
 

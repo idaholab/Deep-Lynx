@@ -364,17 +364,30 @@ defmodule Datum.DataOrigin do
                   "data_search MATCH (?)",
                   ^search_term
                 ) and d.id in subquery(subquery),
+              order_by: fragment("bm25(data_search,1.0, 5.0, 5.0,7.0,7.0,8.0,9.0,9.0)"),
               select: %{
                 d
+                | description_snippet:
+                    fragment("""
+                    snippet(data_search,3,'', '',',', 64)
+                    """),
+                  natural_language_properties_snippet:
+                    fragment("""
+                    snippet(data_search,5,'', '',',', 64)
+                    """)
+              }
+
+          outter =
+            from q in subquery(query),
+              select: %{
+                q
                 | row_num:
                     row_number()
-                    |> over(
-                      order_by: fragment("bm25(data_search,1.0, 5.0, 5.0,7.0,7.0,8.0,9.0,9.0)")
-                    )
+                    |> over()
               }
 
           OriginRepo.all(
-            from q in subquery(query),
+            from q in subquery(outter),
               where: q.row_num > ^lower and q.row_num <= ^upper,
               select: q
           )

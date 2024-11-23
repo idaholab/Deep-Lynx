@@ -7,6 +7,8 @@
 # General application configuration
 import Config
 
+config :gettext, :default_locale, "en"
+
 config :datum,
   ecto_repos: [Datum.Repo],
   generators: [timestamp_type: :utc_datetime]
