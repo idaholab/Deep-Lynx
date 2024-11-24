@@ -364,7 +364,7 @@ defmodule Datum.DataOrigin do
                   "data_search MATCH (?)",
                   ^search_term
                 ) and d.id in subquery(subquery),
-              order_by: fragment("bm25(data_search,1.0, 5.0, 5.0,7.0,7.0,8.0,9.0,9.0)"),
+              order_by: fragment("bm25(data_search,1.0, 5.0, 5.0,7.0,7.0,8.0,9.0,9.0,9.0)"),
               select: %{
                 d
                 | description_snippet:
@@ -383,7 +383,8 @@ defmodule Datum.DataOrigin do
                 q
                 | row_num:
                     row_number()
-                    |> over()
+                    |> over(),
+                  count: count() |> over()
               }
 
           OriginRepo.all(
@@ -395,6 +396,8 @@ defmodule Datum.DataOrigin do
       end,
       mode: :readonly
     )
+    # allows us to use the operational repo and load the results origins in one call
+    |> Repo.preload(:origin)
   end
 
   alias Datum.DataOrigin.ExtractedMetadata

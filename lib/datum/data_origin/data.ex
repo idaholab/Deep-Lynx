@@ -2,14 +2,18 @@ defmodule Datum.DataOrigin.Data do
   @moduledoc """
   Data is the actual stored data for an origin, typically represents a file or directory.
   """
+  alias Datum.DataOrigin.Origin
   use Ecto.Schema
   import Ecto.Changeset
 
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "data" do
     field :row_num, :integer, virtual: true
+    field :count, :integer, virtual: true
     field :description_snippet, :string, virtual: true
     field :natural_language_properties_snippet, :string, virtual: true
+    field :in_compliance, :boolean, virtual: true, default: nil
+
     field :path, :string
     field :original_path, :string
     field :type, Ecto.Enum, values: [:directory, :file, :root_directory, :organization, :person]
@@ -22,10 +26,10 @@ defmodule Datum.DataOrigin.Data do
     field :owned_by, :binary_id
     # we need to reference the origin - while this could be a virtual field, then
     # we have to set it correctly in each set. Also this lets us combine origin results
-    field :origin_id, :binary_id
+    belongs_to :origin, Origin, type: :binary_id, foreign_key: :origin_id
 
-    field :tags, {:array, :string}
-    field :domains, {:array, :string}
+    field :tags, {:array, :string}, default: []
+    field :domains, {:array, :string}, default: []
 
     # we are storing relationships as a sparse adjacency list - this means that each piece of data contains the information
     # on the data it is directly connected to within the graph, with no additional information as to other ancestors

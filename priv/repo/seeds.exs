@@ -48,6 +48,8 @@ file_one =
     path: "test.txt",
     original_path: "/Users/darrjw/home/test.txt",
     type: :file,
+    tags: ["sensor data"],
+    domains: ["geomagentic"],
     owned_by: admin.id
   })
 
@@ -68,11 +70,31 @@ file_two =
   DataOrigin.add_data!(origin, %{
     path: "picture.png",
     original_path: "/Users/darrjw/home/second/picture.png",
+    tags: ["selfies"],
+    domain: ["individualisim"],
     type: :file,
     owned_by: admin.id
   })
 
+person =
+  DataOrigin.add_data!(origin, %{
+    path: "James Holden",
+    original_path: "/Users/darrjw/home/second/picture.png",
+    type: :person,
+    owned_by: admin.id
+  })
+
+org =
+  DataOrigin.add_data!(origin, %{
+    path: "OPA",
+    original_path: "/Users/darrjw/home/second/picture.png",
+    type: :organization,
+    owned_by: admin.id
+  })
+
 {:ok, _} = DataOrigin.connect_data(origin, dir_two, file_two)
+{:ok, _} = DataOrigin.connect_data(origin, dir_two, person)
+{:ok, _} = DataOrigin.connect_data(origin, dir_two, org)
 
 # now do the same for the other origin, eventually we can do specific things
 # build a simple nested directory

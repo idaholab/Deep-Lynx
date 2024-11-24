@@ -38,8 +38,14 @@ defmodule Datum.SearchTest do
 
       # run a basic search: because search is tricky, we're doing only basic things here
       # and can't always guarantee the number of results.
-      assert Search.search_origins(pid, user, "data one") == [%{data1 | row_num: 1}]
-      assert Search.search_origins(pid, user, "data two") == [%{data2 | row_num: 1}]
+      assert Search.search_origins(pid, user, "data one") |> Enum.map(fn d -> d.id end) == [
+               data1.id
+             ]
+
+      assert Search.search_origins(pid, user, "data two") |> Enum.map(fn d -> d.id end) == [
+               data2.id
+             ]
+
       assert Enum.count(Search.search_origins(pid, user, "data")) == 2
     end
   end
