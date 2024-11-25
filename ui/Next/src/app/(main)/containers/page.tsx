@@ -76,35 +76,37 @@ const ContainerSelect = () => {
             <hr className="mt-0.5 mb-5" />
 
             {/* Grid */}
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 p-9">
-              {list.map((item, index) => (
-                index === 0 ? (
-                  <div key={index} className="p-4 rounded-lg flex flex-col items-center border-[#D2CDCD] border-solid bg-white justify-center">
-                    <div className="text-lg font-semibold mb-2">
-                      <div>
-                        <button onClick={handleClickOpen} className="btn btn-ghost">
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#07519E" className="size-20">
-                            <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25V15a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-                        <AddContainerDialog open={open} onClose={handleClose} />
+            <div className="flex-grow">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 p-9">
+                {list.map((item, index) => (
+                  index === 0 ? (
+                    <div key={index} className="p-4 rounded-lg flex flex-col items-center border-[#D2CDCD] border-solid bg-white justify-center">
+                      <div className="text-lg font-semibold mb-2">
+                        <div>
+                          <button onClick={handleClickOpen} className="btn btn-ghost">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#07519E" className="size-20">
+                              <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25V15a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                          <AddContainerDialog open={open} onClose={handleClose} />
+                        </div>
+                      </div>
+                      <div className="text-lg text-black">Create New Container</div>
+                    </div>
+                  ) : (
+                    <div key={index} className="flex flex-col justify-between text-center p-4 rounded-lg border-[#D2CDCD] border-solid bg-[#E9EDF0]">
+                      <div className="align-middle">
+                        <div className="text-lg text-black font-semibold p-1">{item.name}</div>
+                        <div className="text-sm text-black p-2">{item.description}</div>
+                        <div className="flex flex-wrap justify-center mt-4">
+                          <button className="btn btn-outline bg-white border-cherenkov text-cherenkov lowercase m-2 w-full md:w-auto">More Info</button>
+                          <button className="btn btn-primary bg-cherenkov text-white lowercase m-2 w-full md:w-auto">Enter Container</button>
+                        </div>
                       </div>
                     </div>
-                    <div className="text-lg text-black">Create New Container</div>
-                  </div>
-                ) : (
-                  <div key={index} className="text-center p-4 rounded-lg border-[#D2CDCD] border-solid bg-[#E9EDF0]">
-                    <div className="align-middle">
-                    <div className="text-lg text-black font-semibold p-1">{item.name}</div>
-                    <div className="text-sm text-black p-2">{item.description}</div>
-                    <div className="flex justify-between p-3 sm:flex-wrap">
-                      <button className="btn btn-outline bg-white border-cherenkov text-cherenkov lowercase flex-inital w-full md:w-1/2">More Info</button>
-                      <button className="btn btn-primary bg-cherenkov text-white lowercase flex-initial w-full md:w-1/2 mt-2 md:mt-0">Enter Container</button>
-                    </div>
-                    </div>
-                  </div>
-                )
-              ))}
+                  )
+                ))}
+              </div>
             </div>
           </BasicSidebar2>
         </div>
