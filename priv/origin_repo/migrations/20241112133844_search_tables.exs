@@ -2,7 +2,7 @@ defmodule Datum.DataOrigin.OriginRepo.Migrations.SearchTables do
   use Ecto.Migration
 
   def change do
-    execute "CREATE VIRTUAL TABLE data_search USING fts5(id,path,original_path,description,file_type,natural_language_properties,properties,tags,domains, tokenize='porter unicode61', content='data', content_rowid='rowid');"
+    execute "CREATE VIRTUAL TABLE data_search USING fts5(id,path,original_path,description,file_type,natural_language_properties,properties,tags,domains, tokenize='porter trigram', content='data', content_rowid='rowid');"
 
     # the triggers for creating the indices while we add/update/delete data
     execute "CREATE TRIGGER t1_ai_data_search AFTER INSERT ON data BEGIN

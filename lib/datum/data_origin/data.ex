@@ -20,7 +20,7 @@ defmodule Datum.DataOrigin.Data do
     field :file_type, :string, default: nil
     field :description, :string
     field :natural_language_properties, :string
-    field :properties, Datum.JSONB
+    field :properties, :map
 
     # owned_by can't be foreign key since it's referring to the ops db
     field :owned_by, :binary_id
@@ -36,8 +36,8 @@ defmodule Datum.DataOrigin.Data do
     # this allows us to store a graph relatively cheaply and works well with BFS/DFS algorithms and since we're most likely
     # not going to have a more relationships than data, this _should_ work well.
     # These should be stored as a multidimensional array. Passing in lists should work just fine with JASON
-    field :incoming_relationships, Datum.JSONB, default: []
-    field :outgoing_relationships, Datum.JSONB, default: []
+    field :incoming_relationships, :map
+    field :outgoing_relationships, :map
 
     timestamps(type: :utc_datetime)
   end

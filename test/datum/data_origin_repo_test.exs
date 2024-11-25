@@ -22,7 +22,7 @@ defmodule Datum.DataOriginRepoTest do
             Data.changeset(%Data{}, %{
               type: :file,
               path: "/test/path.txt",
-              metadata: %{plugin_generated_metadata: [%{test: "Test"}]}
+              properties: %{"json field one" => "json value one"}
             })
           )
         end,
@@ -41,6 +41,7 @@ defmodule Datum.DataOriginRepoTest do
                origin
                |> DataOrigin.add_data(%{
                  path: "/some/nonexistent/path",
+                 properties: %{plugin_generated_metadata: [%{test: "Test"}]},
                  type: :file
                })
     end
@@ -98,7 +99,7 @@ defmodule Datum.DataOriginRepoTest do
       assert {:ok, j} =
                origin
                |> DataOrigin.add_data(%{
-                 path: "/some/nonexistent/path/two",
+                 path: "/some/nonexistent/path/three",
                  properties: %{"json field one" => "json value one"},
                  type: :file
                })

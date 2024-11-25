@@ -12,7 +12,7 @@ defmodule Datum.Common.ExplorerTabs do
 
   schema "explorer_tabs" do
     field :module, Datum.ModuleName
-    field :state, Datum.JSONB
+    field :state, :map
     belongs_to :user, User, type: :binary_id, foreign_key: :user_id
   end
 
