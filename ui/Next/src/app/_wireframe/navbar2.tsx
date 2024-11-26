@@ -1,4 +1,3 @@
-
 // Styles
 import { classes } from "../styles";
 
@@ -7,7 +6,6 @@ import { useAppSelector } from "@/lib/store/hooks";
 import Profile from "./profile";
 
 export default function Navbar2() {
-    const container = useAppSelector((state) => state.container.container);
 
     return (
         <>

@@ -1,3 +1,4 @@
+'use client'; 
 // // Hooks
 import * as React from 'react';
 
@@ -61,8 +62,8 @@ export default function BasicSidebar2({ children }: Props) {
                 <div className="drawer-content mt-16 z-10 relative">
                     {children}
                 </div>
-                <div className="flex justify-end">
-                            <button className={`btn btn-primary btn-sm drawer-button bg-darkBlue hover:bg-darkBlue fixed top-20 w-6 h-12 bg-[#083769] rounded-r-lg flex justify-center items-center cursor-pointer z-[1300] text-white ${open ? 'left-[390px]' : 'left-0'}`} onClick={handleDrawerMovement} >
+                <div className="flex justify-end z-20 relative">
+                            <button className={`btn btn-primary btn-sm drawer-button bg-darkBlue hover:bg-darkBlue fixed top-20 w-6 h-12 bg-[#083769] rounded-r-lg flex justify-center items-center cursor-pointer text-white ${open ? 'left-[390px]' : 'left-0'}`} onClick={handleDrawerMovement} >
                                 {open ? '<' : '>'}
                             </button>
                         </div>
