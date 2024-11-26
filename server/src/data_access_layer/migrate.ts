@@ -104,6 +104,12 @@ export class Migrator {
                     Logger.warn(`Skipping ${filename}, TimescaleDB is not enabled`)
                     continue;
                 }
+                
+                // if this is a pgvector migration, check first to see if we're in a pgvector enabled environment
+                if (filename.includes('[pgv]') && !Config.pgvector_enabled) {
+                    Logger.warn(`Skipping ${filename}, pgvector is not enabled`)
+                    continue;
+                }
 
                 await this.pool.query('BEGIN');
 

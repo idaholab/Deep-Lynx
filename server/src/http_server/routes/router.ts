@@ -75,6 +75,7 @@ import OntologyVersionRoutes from './data_warehouse/ontology/versioning/ontology
 import StatsMapper from '../../data_access_layer/mappers/stats_mapper';
 import Result from '../../common_classes/result';
 import ReportRoutes from './data_warehouse/data/report_routes';
+import VectorRoutes from './data_warehouse/data/vector_routes';
 
 const winston = require('winston');
 const expressWinston = require('express-winston');
@@ -195,6 +196,7 @@ export class Router {
             currentUser(),
         ]);
         ReportRoutes.mount(this.app, [authenticateRoute(), containerContext(), dataSourceContext(), fileContext(), reportContext(), reportQueryContext(), currentUser()]);
+        VectorRoutes.mount(this.app, [authenticateRoute(), currentUser()]);
         EventRoutes.mount(this.app, [authenticateRoute(), containerContext(), eventActionContext(), eventActionStatusContext(), currentUser()]);
         DataQueryRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
         TaskRoutes.mount(this.app, [authenticateRoute(), containerContext(), taskContext(), currentUser()]);
