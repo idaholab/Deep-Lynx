@@ -11,10 +11,10 @@ import AddContainerDialog from "@/app/_wireframe/add-container-dialog";
 
 export default async function ContainerSelect() {
 
-  let hello = {
+  let headers = {
     Authorization: `bearer ${process.env.NEXT_PUBLIC_TOKEN}`,
   }
-  const reponse = await fetch("http://localhost:8090/containers", {headers: hello}); 
+  const reponse = await fetch("http://localhost:8090/containers", {headers: headers}); 
   const test = await reponse.json();
   const containers: ContainerT[] = test.value;
 
@@ -47,7 +47,7 @@ export default async function ContainerSelect() {
               <div key={index} className="flex flex-col justify-between text-center p-4 rounded-lg border-[#D2CDCD] border-solid bg-[#E9EDF0]">
                 <div className="align-middle">
                   <div className="text-lg text-black font-semibold p-1">{item.name}</div>
-                  <div className="text-sm text-black p-2">{item.description}</div>
+                  <div className="text-sm text-black p-2 text-pretty">{item.description}</div>
                   <div className="flex flex-wrap justify-center mt-4">
                     <button className="btn btn-outline bg-white border-cherenkov text-cherenkov lowercase m-2 w-full md:w-auto">More Info</button>
                     <button className="btn btn-primary bg-cherenkov text-white lowercase m-2 w-full md:w-auto">Enter Container</button>

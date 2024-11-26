@@ -1,20 +1,35 @@
 'use client';
 import * as React from 'react';
 import MultiSelect from './multi-select';
+import { ContainerT } from '@/lib/types/deeplynx';
+import { useState } from 'react';
 
 const dataSources = ["standard", "http", "aveva", "p6", "timeseries", "custom"];
 
-interface NewContainer {
-    name: string,
-    description: string, 
-    config: {
-      data_versioning_enabled: boolean,
-      ontology_versioning_enabled: boolean,
-      enabled_data_sources: string[]
-  }}
-
 export default function FormDialog() {
-    const [isOpen, setIsOpen] = React.useState(false);
+    const [isOpen, setIsOpen] = useState(false);
+    const [isChecked, setIsChecked] = useState(false);
+    
+    let headers = {
+            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_TOKEN}`, 
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
+
+
+    async function handleSubmit(e: any) {
+        // Prevent the browser from reloading the page
+        e.preventDefault();
+    
+        // Read the form data
+        const form = e.target;
+        const formData = new FormData(form);
+        const formJson = Object.fromEntries(formData.entries());
+        console.log(formJson);
+    
+        const reponse = await fetch("http://localhost:8090/containers", {method: form.method, body: JSON.stringify(formJson), headers: headers}); 
+        const test = await reponse.json();
+      }
 
     return (
         <div>
@@ -25,14 +40,15 @@ export default function FormDialog() {
             </button>
 
             {isOpen && (
-                <div id="newContainerModal" className="modal modal-open text-black bg-white">
+                <div id="newContainerModal" className="modal modal-open text-black bg-white mt-8">
                     <div className="modal-box bg-white p-12 pt-3 pb-3 font-normal caret-black">
                         <h3 className="text-center font-normal">Create New Container</h3>
+                        <form method="post" onSubmit={handleSubmit}>
                         <div className='ml-4'>
                             <div>Name</div>
-                            <input type="text" className="rounded-lg border-solid border-strokeGray w-11/12" />
+                            <input type="text" name="name" className="rounded-lg border-solid border-strokeGray w-11/12" />
                             <div className='pt-2'>Description</div>
-                            <input type="text" className="rounded-lg border-solid border-strokeGray w-11/12 pb-12" />
+                            <input type="text" name="description" className="rounded-lg border-solid border-strokeGray w-11/12 pb-12" />
                         </div>
                         <div className="ml-4 mt-4">
                             <div className="rounded-lg bg-dialogGray p-8 text-black mr-4">
@@ -44,7 +60,7 @@ export default function FormDialog() {
                                         </svg>
                                     </div>
                                 </div>
-                                <input type="file" className="file-input file-input-accent bg-white file:text-white"/>
+                                <input type="file" name="file" className="file-input file-input-accent bg-white file:text-white"/>
                                 <div className='flex items-center mt-4'>
                                     <div className='ml-4'>URL to .owl File</div>
                                     <div className='tooltip' data-tip="URL">
@@ -53,10 +69,10 @@ export default function FormDialog() {
                                         </svg>
                                     </div>
                                 </div>
-                                <input type="url" placeholder="https://example.com" className="input rounded-lg bg-white input-bordered w-11/12 caret-black	" />
+                                <input type="url" name="path" placeholder="https://example.com" className="input rounded-lg bg-white input-bordered w-11/12 caret-black	" />
                                 <div className="form-control pt-2">
                                     <label className="label cursor-pointer flex justify-start justify-items-start">
-                                        <input type="checkbox" defaultChecked className="checkbox [--chkbg:theme(colors.cherenkov)]" />
+                                        <input checked={isChecked} onChange={() => setIsChecked(!isChecked)} type="checkbox" name="ontology_versioning_enabled" className="checkbox [--chkbg:theme(colors.cherenkov)]" />
                                         <div className="text-black ml-2">Ontology Versioning Enabled <span className="align-super text-xs">BETA</span></div>
                                         <div className='tooltip' data-tip="Ontology Versioning Blurb">
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6 ml-2">
@@ -74,12 +90,13 @@ export default function FormDialog() {
                         <div className='text-sm p-4 pb-1'>Need Help? Details on creating or updating a container via an ontology file can be found on our <a href='https://github.com/idaholab/Deep-Lynx/wiki/'>Wiki</a></div>
                         <div className='flex justify-between pb-2 pl-3 pr-3'>
                         <div className="modal-action">
-                            <button className="btn btn-accent text-white" onClick={() => setIsOpen(false)}>Save</button>
+                            <button className="btn btn-accent text-white" type="submit">Save</button>
                         </div>
                         <div className="modal-action justify-left">
                             <button className="btn btn-accent text-white" onClick={() => setIsOpen(false)}>Close</button>
                         </div>
                         </div>
+                        </form>
                     </div>
                 </div>
             )}
