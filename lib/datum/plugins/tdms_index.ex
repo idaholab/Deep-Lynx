@@ -6,6 +6,9 @@ defmodule Datum.Plugins.TdmsIndex do
 
   @impl true
   def extract(path, _opts \\ []) do
-    {:ok, TDMS.Parser.parse_index(File.read!(path))}
+    case TDMS.Parser.parse_index(File.read!(path)) do
+      {:error, message} -> {:error, message}
+      file -> {:ok, file}
+    end
   end
 end

@@ -46,6 +46,8 @@ npm-debug.log
 
 /.elixir_ls
 
+/.lexical
+
 /.elixir_tools
 
 /.vscode
