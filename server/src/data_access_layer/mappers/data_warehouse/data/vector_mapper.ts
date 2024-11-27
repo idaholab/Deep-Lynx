@@ -1,9 +1,9 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
-import { PoolClient } from 'pg';
+import { PoolClient, QueryConfig } from 'pg';
 import PostgresAdapter from '../../db_adapters/postgres/postgres';
 import { CopyStreamQuery } from 'pg-copy-streams';
-import VectorData from '../../../../domain_objects/data_warehouse/data/vector';
+import VectorData, { TextResult } from '../../../../domain_objects/data_warehouse/data/vector';
 import pgvector from 'pgvector/pg';
 
 const copyFrom = require('pg-copy-streams').from;
@@ -59,6 +59,24 @@ export default class VectorMapper extends Mapper {
         })
     }
 
+    public async LoadQuery(embedding: number[]): Promise<Result<boolean>> {
+        return super.runStatement(this.loadQuery(embedding));
+    }
+
+    public async SearchByDistance(embedding: number[], limit: number): Promise<Result<TextResult[]>> {
+        return super.rows(
+            this.searchByDistance(embedding, limit),
+            {resultClass: TextResult}
+        );
+    }
+
+    public async SearchByCosine(embedding: number[], limit: number): Promise<Result<TextResult[]>> {
+        return super.rows(
+            this.searchByCosineDistance(embedding, limit),
+            {resultClass: TextResult}
+        );
+    }
+
     // write lines to stream- helper function copied from pgvector documentation:
     // https://github.com/pgvector/pgvector-node/blob/master/examples/loading/example.js#L23
     private copyRow(stream: CopyStreamQuery, line: string): Promise<void> {
@@ -71,5 +89,28 @@ export default class VectorMapper extends Mapper {
                 resolve();
             }
         })
+    }
+
+    private searchByDistance(embedding: number[], limit: number): QueryConfig {
+        return {
+            text: `SELECT textual_data FROM bdsis_vectors
+                ORDER BY embedding <-> $1 ASC LIMIT $2`,
+            values: [pgvector.toSql(embedding), limit]
+        }
+    }
+
+    private searchByCosineDistance(embedding: number[], limit: number): QueryConfig {
+        return {
+            text: `SELECT textual_data FROM bdsis_vectors
+                ORDER BY 1 = (embedding <=> $1) DESC LIMIT $2`,
+            values: [pgvector.toSql(embedding), limit]
+        }
+    }
+
+    private loadQuery(embedding: number[]): QueryConfig {
+        return {
+            text: `INSERT INTO bdsis_queries (embedding) VALUES ($1)`,
+            values: [pgvector.toSql(embedding)],
+        };
     }
 }

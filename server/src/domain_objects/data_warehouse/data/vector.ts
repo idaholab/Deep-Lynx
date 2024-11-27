@@ -8,3 +8,8 @@ export default class VectorData extends NakedDomainClass {
     @IsString()
     text?: string;
 }
+
+export class TextResult extends NakedDomainClass {
+    @IsString()
+    text?: string;
+}
