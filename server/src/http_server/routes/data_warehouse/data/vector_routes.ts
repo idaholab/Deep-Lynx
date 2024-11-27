@@ -14,17 +14,19 @@ import { Readable } from "stream";
 import VectorData from "../../../../domain_objects/data_warehouse/data/vector";
 import VectorMapper from "../../../../data_access_layer/mappers/data_warehouse/data/vector_mapper";
 import { FileInfo } from "busboy";
+import VectorRepository from "../../../../data_access_layer/repositories/data_warehouse/data/vector_repository";
 const Busboy = require('busboy');
 const JSONStream = require('JSONStream');
 
 export default class VectorRoutes {
     public static mount(app: Application, middleware: any[]) {
-        // insert vectors via npy file
+        // insert vectors via json. TODO: better encoding for this?
         app.post('/vectors/copy', ...middleware, this.copyVectors);
+        // vector comparison
     }
 
     private static copyVectors(req: Request, res: Response, next: NextFunction) {
-        const mapper = VectorMapper.Instance;
+        const repo = new VectorRepository();
         let embeddings: VectorData[] = [];
 
         // if we have a json body, ignore anything else and simply use the json
@@ -34,13 +36,23 @@ export default class VectorRoutes {
             } else {
                 embeddings = [plainToClass(VectorData, req.body as object)];
             }
-            mapper.CopyFromJson(embeddings)
+            repo.copyFromJson(embeddings)
                 .then((result) => {
-                    result.asResponse(res);
+                    if (result.isError) {
+                        res.status(500).json(result);
+                        next();
+                        return;
+                    }
+
+                    res.status(200).json(result);
                     next();
+                    return;
                 })
-                .catch((e) => Result.Error(e).asResponse(res));
-        } else {
+                .catch((e) => {
+                    Result.Failure(`error parsing body: ${(e as Error).message}`).asResponse(res);
+                    return;
+                });
+        } else if (req.headers['content-type']) {
             const busboy = Busboy({headers: req.headers});
 
             busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, info: FileInfo) => {
@@ -49,12 +61,17 @@ export default class VectorRoutes {
                     return;
                 }
 
-                const stream = JSONStream.parse('*');
+                const stream = JSONStream.parse();
                 file.pipe(stream);
 
                 stream.on('data', (data: any) => {
-                    const vectorData = plainToClass(VectorData, data);
-                    embeddings.push(vectorData);
+                    let embeddingsToAdd: VectorData[] = []
+                    if (Array.isArray(data)) {
+                        embeddingsToAdd = plainToClass(VectorData, data);
+                    } else {
+                        embeddingsToAdd = [plainToClass(VectorData, data as object)];
+                    }
+                    embeddings.push(...embeddingsToAdd);
                 });
 
                 stream.on('error', (error: Error) => {
@@ -62,25 +79,40 @@ export default class VectorRoutes {
                 });
 
                 stream.on('end', () => {
-                    mapper.CopyFromJson(embeddings)
+                    repo.copyFromJson(embeddings)
                         .then((result) => {
-                            result.asResponse(res);
+                            if (result.isError) {
+                                res.status(500).json(result);
+                                next();
+                                return;
+                            }
+        
+                            res.status(200).json(result);
                             next();
+                            return;
                         })
-                        .catch((e) => Result.Error(e).asResponse(res));
+                        .catch((e) => {
+                            Result.Failure(`error parsing body: ${(e as Error).message}`).asResponse(res);
+                            return;
+                        });
                 });
             });
 
             busboy.on('error', (error: Error) => {
                 Result.Failure(error.message).asResponse(res);
+                return;
             });
     
-            req.pipe(busboy);
-        }
-        
-        
-        if (!req.file) {
-            return res.status(400).send('No file uploaded');
+            try {
+                return req.pipe(busboy);
+            } catch (e: any) {
+                Result.Failure(`error parsing body: ${(e as Error).message}`).asResponse(res);
+                return;
+            }
+        } else {
+            Result.Failure(`unable to find embeddings`, 404).asResponse(res);
+            next();
+            return;
         }
     }
 }

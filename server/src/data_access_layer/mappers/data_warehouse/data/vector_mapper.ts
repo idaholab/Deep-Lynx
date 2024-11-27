@@ -1,31 +1,18 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
-import {PoolClient, QueryConfig} from 'pg';
-import DataSourceRecord, {TimeseriesDataSourceConfig} from '../../../../domain_objects/data_warehouse/import/data_source';
-import Event from '../../../../domain_objects/event_system/event';
-import EventRepository from '../../../repositories/event_system/event_repository';
+import { PoolClient } from 'pg';
 import PostgresAdapter from '../../db_adapters/postgres/postgres';
-import QueryStream from 'pg-query-stream';
-import {plainToClass} from 'class-transformer';
-import {DataStaging} from '../../../../domain_objects/data_warehouse/import/import';
-import Config from '../../../../services/config';
-import {ReadStream} from 'fs';
 import { CopyStreamQuery } from 'pg-copy-streams';
-import { Readable } from 'stream';
 import VectorData from '../../../../domain_objects/data_warehouse/data/vector';
 import pgvector from 'pgvector/pg';
 
-const format = require('pg-format');
-const devnull = require('dev-null');
-const copyFrom = require('pg-copy-streams');
+const copyFrom = require('pg-copy-streams').from;
 
 export default class VectorMapper extends Mapper {
-    public resultClass = DataSourceRecord;
+    public resultClass = VectorData;
     public static tableName = 'bdsis_vectors';
 
     private static instance: VectorMapper;
-
-    private eventRepo = new EventRepository();
 
     public static get Instance(): VectorMapper {
         if (!VectorMapper.instance) {
@@ -44,9 +31,12 @@ export default class VectorMapper extends Mapper {
                 }
 
                 const stream = client.query(copyFrom(
-                    `COPY bdsis_vectors (textual_data, embedding)
+                    `COPY bdsis_vectors (embedding, textual_data)
                     FROM STDIN WITH (FORMAT csv, DELIMITER E'\t')`
                 ));
+
+                // Set max listeners to avoid warning
+                stream.setMaxListeners(embeddingData.length + 10); // +10 to provide some buffer
 
                 embeddingData.forEach(async ({text, embedding}) => {
                     const line = `${pgvector.toSql(embedding)}\t${text}\n`;
@@ -60,19 +50,8 @@ export default class VectorMapper extends Mapper {
     
                 // create indexes on the table after loading data
                 stream.on('finish', async () => {
-                    try {
-                        await client.query("SET maintenance_work_mem = '8GB'");
-                        await client.query('SET max_parallel_maintenance_workers = 7');
-                        await client.query('CREATE INDEX ON bdsis_vectors USING hnsw (embedding vector_cosine_ops)');
-    
-                        // update planner statistics for good measure
-                        await client.query('ANALYZE bdsis_vectors');
-                        done();
-                        return resolve(Result.Success(true));
-                    } catch (error) {
-                        done();
-                        return resolve(Result.Failure((error as Error).message));
-                    }
+                    done();
+                    return resolve(Result.Success(true));
                 });
     
                 stream.end();
