@@ -15,18 +15,6 @@ export default class VectorRepository {
         return this.#mapper.CopyFromJson(embeddings);
     }
 
-    public async loadQuery(embeddings: any[]): Promise<Result<boolean>> {
-        let oldData = embeddings;
-        while (oldData.length === 1) {
-            const newData = oldData[0];
-            oldData = newData;
-        }
-        if (oldData.length !== 1) {
-            console.log(oldData.length);
-        }
-        return this.#mapper.LoadQuery(oldData);
-    }
-
     // TODO: add method and limit
     // we use "any" instead of number in case the embedding is a deeply nested array
     public async similaritySearch(embedding: any[]): Promise<Result<TextResult[]>> {

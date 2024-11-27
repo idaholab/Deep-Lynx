@@ -59,10 +59,6 @@ export default class VectorMapper extends Mapper {
         })
     }
 
-    public async LoadQuery(embedding: number[]): Promise<Result<boolean>> {
-        return super.runStatement(this.loadQuery(embedding));
-    }
-
     public async SearchByDistance(embedding: number[], limit: number): Promise<Result<TextResult[]>> {
         return super.rows(
             this.searchByDistance(embedding, limit),
@@ -105,12 +101,5 @@ export default class VectorMapper extends Mapper {
                 ORDER BY 1 = (embedding <=> $1) DESC LIMIT $2`,
             values: [pgvector.toSql(embedding), limit]
         }
-    }
-
-    private loadQuery(embedding: number[]): QueryConfig {
-        return {
-            text: `INSERT INTO bdsis_queries (embedding) VALUES ($1)`,
-            values: [pgvector.toSql(embedding)],
-        };
     }
 }
