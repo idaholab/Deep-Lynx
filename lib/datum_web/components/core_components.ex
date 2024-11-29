@@ -632,12 +632,9 @@ defmodule DatumWeb.CoreComponents do
             >
               <%= render_slot(col, @row_item.(row)) %>
             </td>
-            <td :if={@action != []}>
+            <td :for={action <- @action} :if={@action != []}>
               <div>
-                <span
-                  :for={action <- @action}
-                  class="relative ml-4 font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
-                >
+                <span class="relative  font-semibold leading-6 text-zinc-900 hover:text-zinc-700">
                   <%= render_slot(action, @row_item.(row)) %>
                 </span>
               </div>

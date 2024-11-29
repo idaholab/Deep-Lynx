@@ -95,12 +95,39 @@ defmodule DatumWeb.OriginExplorerLive do
               <span :if={data.type == :file}>
                 <.icon name="hero-document" />
               </span>
+              <span :if={data.type == :person}>
+                <.icon name="hero-user" />
+              </span>
+              <span :if={data.type == :organization}>
+                <.icon name="hero-user-group" />
+              </span>
             </:col>
             <:col :let={data} label={gettext("Name")}><%= data.path %></:col>
             <:col :let={data} label={gettext("Date Created")}>
               <%= "#{data.inserted_at.month}/#{data.inserted_at.day}/#{data.inserted_at.year}" %>
             </:col>
 
+            <:action :let={data}>
+              <span
+                class="tooltip tooltip-bottom"
+                data-tip={gettext("Graph View")}
+                phx-click="open_graph"
+                phx-data-focus={data.id}
+              >
+                <svg
+                  class="h-6 w-6 "
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="1em"
+                  height="1em"
+                  viewBox="0 0 256 256"
+                >
+                  <path
+                    fill="white"
+                    d="M200 152a31.84 31.84 0 0 0-19.53 6.68l-23.11-18A31.65 31.65 0 0 0 160 128c0-.74 0-1.48-.08-2.21l13.23-4.41A32 32 0 1 0 168 104c0 .74 0 1.48.08 2.21l-13.23 4.41A32 32 0 0 0 128 96a32.6 32.6 0 0 0-5.27.44L115.89 81A32 32 0 1 0 96 88a32.6 32.6 0 0 0 5.27-.44l6.84 15.4a31.92 31.92 0 0 0-8.57 39.64l-25.71 22.84a32.06 32.06 0 1 0 10.63 12l25.71-22.84a31.91 31.91 0 0 0 37.36-1.24l23.11 18A31.65 31.65 0 0 0 168 184a32 32 0 1 0 32-32m0-64a16 16 0 1 1-16 16a16 16 0 0 1 16-16M80 56a16 16 0 1 1 16 16a16 16 0 0 1-16-16M56 208a16 16 0 1 1 16-16a16 16 0 0 1-16 16m56-80a16 16 0 1 1 16 16a16 16 0 0 1-16-16m88 72a16 16 0 1 1 16-16a16 16 0 0 1-16 16"
+                  />
+                </svg>
+              </span>
+            </:action>
             <:action>
               <details class="dropdown">
                 <summary class="hero-bars-3 text-primary-content ">open or close</summary>
@@ -124,7 +151,12 @@ defmodule DatumWeb.OriginExplorerLive do
 
   def mount(
         _params,
-        %{"tab_id" => tab_id, "user_token" => user_token, "parent" => parent_pid} = _session,
+        %{
+          "tab_id" => tab_id,
+          "group_index" => group_index,
+          "user_token" => user_token,
+          "parent" => parent_pid
+        } = _session,
         socket
       ) do
     user = Datum.Accounts.get_user_by_session_token(user_token)
@@ -164,7 +196,11 @@ defmodule DatumWeb.OriginExplorerLive do
         if path_items != [] do
           DataOrigin.list_data_descendants_user(origin, user, List.last(path_items).id)
         else
-          []
+          if origin do
+            DataOrigin.list_roots(origin)
+          else
+            []
+          end
         end
 
       # set what we can here and common practice is to set all your used variables in the socket as
@@ -178,6 +214,7 @@ defmodule DatumWeb.OriginExplorerLive do
        |> assign(:parent, parent_pid)
        |> assign(:current_user, user)
        |> assign(:tab, tab)
+       |> assign(:group_index, group_index)
        |> assign_async(:origins, fn ->
          {:ok, %{origins: Datum.DataOrigin.list_data_orgins_user(user)}}
        end)}
@@ -268,6 +305,28 @@ defmodule DatumWeb.OriginExplorerLive do
     {:noreply, socket}
   end
 
+  def handle_event("open_graph", %{"focus" => focus} = _params, socket) do
+    notify_parent(
+      {:open_tab, DatumWeb.GraphExplorerLive,
+       %{items: [[focus, socket.assigns.origin.id]], focus: focus}, socket.assigns.group_index},
+      socket.assigns.parent
+    )
+
+    {:noreply, socket}
+  end
+
+  def handle_event("open_graph", _params, socket) do
+    notify_parent(
+      {:open_tab, DatumWeb.GraphExplorerLive,
+       %{
+         items: Enum.map(socket.assigns.items, fn item -> [item.id, socket.assigns.origin.id] end)
+       }, socket.assigns.group_index},
+      socket.assigns.parent
+    )
+
+    {:noreply, socket}
+  end
+
   # pull the common assigns from socket and update the tab's state with them
   # ALWAYS put at the END of the assigns list, or else it might not find what it needs
   def update_state(socket) do
@@ -281,7 +340,6 @@ defmodule DatumWeb.OriginExplorerLive do
           # path items are condensed down down to just their data ids - they'll be hydrated by the mount function
           path_items:
             if socket.assigns.path_items do
-              dbg(socket.assigns.path_items)
               Enum.map(socket.assigns.path_items, fn item -> item.id end)
             end,
           name:

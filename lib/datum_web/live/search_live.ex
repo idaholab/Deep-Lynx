@@ -40,7 +40,7 @@ defmodule DatumWeb.SearchLive do
             <span>
               <.icon name="hero-document" class="mr-1 h-3 w-3" />
             </span>
-            <%= Map.get(@selected.path, gettext("Result Item")) %>
+            <%= Map.get(@selected, :path, gettext("Result Item")) %>
           </li>
         </ul>
       </div>
@@ -50,10 +50,76 @@ defmodule DatumWeb.SearchLive do
         </.simple_form>
       </div>
 
+      <div class="mx-auto max-w-md sm:max-w-3xl">
+        <div>
+          <form class="mt-6 sm:flex sm:items-center" action="#">
+            <label for="emails" class="sr-only">Email addresses</label>
+            <div class="grid grid-cols-1 sm:flex-auto">
+              <input
+                type="text"
+                name="emails"
+                id="emails"
+                class="peer relative col-start-1 row-start-1 border-0 bg-transparent py-1.5 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm/6"
+                placeholder="Enter an email"
+              />
+              <div
+                class="col-start-1 col-end-3 row-start-1 rounded-md shadow-sm ring-1 ring-inset ring-gray-300 peer-focus:ring-2 peer-focus:ring-indigo-600"
+                aria-hidden="true"
+              >
+              </div>
+              <div class="col-start-2 row-start-1 flex items-center">
+                <span class="h-4 w-px flex-none bg-gray-200" aria-hidden="true"></span>
+                <label for="role" class="sr-only">Role</label>
+                <select
+                  id="role"
+                  name="role"
+                  class="rounded-md border-0 bg-transparent py-1.5 pl-4 pr-7 text-gray-900 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm/6"
+                >
+                  <option>Can edit</option>
+                  <option>Can view</option>
+                </select>
+              </div>
+            </div>
+            <div class="mt-3 sm:ml-4 sm:mt-0 sm:shrink-0">
+              <button
+                type="submit"
+                class="block w-full rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              >
+                Search
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <div class="divider">Results</div>
 
+      <div class="text-center">
+        <svg
+          class="mx-auto size-12 text-gray-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            vector-effect="non-scaling-stroke"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"
+          />
+        </svg>
+        <h3 class="mt-2 text-sm font-semibold ">No results</h3>
+        <p class="mt-1 text-sm text-gray-500">Get started by typing a query.</p>
+      </div>
+
       <ul :for={data <- @results} role="list" class="divide-y divide-white/5">
-        <li class="relative flex items-center space-x-4 py-4">
+        <li
+          class="relative flex items-center space-x-4 py-4 cursor-pointer hover:bg-neutral px-5"
+          phx-click="select_result"
+          phx-value-result={data.id}
+        >
           <div class="min-w-0 flex-auto">
             <div
               class="flex items-center gap-x-3 tooltip tooltip-left"
@@ -184,7 +250,12 @@ defmodule DatumWeb.SearchLive do
 
   def mount(
         _params,
-        %{"tab_id" => tab_id, "user_token" => user_token, "parent" => parent_pid} = _session,
+        %{
+          "tab_id" => tab_id,
+          "group_index" => group_index,
+          "user_token" => user_token,
+          "parent" => parent_pid
+        } = _session,
         socket
       ) do
     user = Datum.Accounts.get_user_by_session_token(user_token)
@@ -203,6 +274,7 @@ defmodule DatumWeb.SearchLive do
      |> assign(:query, "")
      |> assign(:current_user, user)
      |> assign(:parent, parent_pid)
+     |> assign(:group_index, group_index)
      |> assign(:form, to_form(%{"query" => nil, "no_results" => 25}))}
   end
 
@@ -243,6 +315,11 @@ defmodule DatumWeb.SearchLive do
   def handle_event("close_tab", _unsigned_params, socket) do
     notify_parent({:close_tab, socket.assigns.tab.id}, socket.assigns.parent)
     {:noreply, socket}
+  end
+
+  def handle_event("select_result", %{"result" => result_id}, socket) do
+    {:noreply,
+     socket |> assign(:selected, Enum.find(socket.assigns.results, fn r -> r.id == result_id end))}
   end
 
   def handle_event("search", %{"query" => query} = _params, socket) do

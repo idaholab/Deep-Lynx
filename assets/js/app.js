@@ -21,6 +21,7 @@ import "phoenix_html";
 import { Socket } from "phoenix";
 import { LiveSocket } from "phoenix_live_view";
 import topbar from "../vendor/topbar";
+import graphHook from "./graph"
 
 let Hooks = {};
 
@@ -29,7 +30,6 @@ Hooks.DraggableTab = {
     let tab_id = this.el.dataset.tab;
     let group_index = this.el.dataset.group;
     this.el.addEventListener("dragstart", (e) => {
-      console.log(tab_id);
       e.dataTransfer.setData("tab", tab_id);
       e.dataTransfer.setData("group", group_index);
     });
@@ -50,6 +50,8 @@ Hooks.DraggableDropZone = {
     });
   },
 };
+
+Hooks.GraphView = graphHook
 
 let csrfToken = document
   .querySelector("meta[name='csrf-token']")

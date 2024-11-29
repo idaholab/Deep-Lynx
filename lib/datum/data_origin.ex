@@ -197,6 +197,9 @@ defmodule Datum.DataOrigin do
     end)
   end
 
+  # this is the connection for data within a single origin, typically how we represent
+  # the filesystem heirarchy. If you're looking for cross-origin relationships, or just
+  # general relationships without modifying the filesystem, look at add_relationship/3
   def connect_data(%Origin{} = origin, %Data{} = ancestor, %Data{} = leaf) do
     OriginRepo.with_dynamic_repo(origin, fn ->
       Datum.DataOrigin.CT.insert(leaf.id, ancestor.id)
@@ -229,6 +232,84 @@ defmodule Datum.DataOrigin do
       end,
       mode: :readonly
     )
+  end
+
+  def get_data!(%Origin{} = origin, data_id) do
+    OriginRepo.with_dynamic_repo(
+      origin,
+      fn ->
+        OriginRepo.get!(Data, data_id)
+      end,
+      mode: :readonly
+    )
+  end
+
+  # add relationship will attempt to update the data record on both supplied origins with
+  # information about the other, creating a linkagae between the two. Options are available
+  # for supplying a type to the relationship and eventually, hopefully, validating it against
+  # an ontology. Note: the relationships are not updated from storage before being appended
+  # permissions should happen before this
+  def add_relationship(
+        {%Data{} = o_data, %Origin{} = o_origin} = _origin,
+        {%Data{} = d_data, %Origin{} = d_origin} = _destination,
+        opts \\ []
+      ) do
+    relationship_type = Keyword.get(opts, :type, "")
+
+    o_result =
+      OriginRepo.with_dynamic_repo(
+        o_origin,
+        fn ->
+          result =
+            o_data
+            |> Data.changeset(%{
+              outgoing_relationships: [
+                [d_data.id, d_origin.id, relationship_type]
+                | o_data.incoming_relationships
+              ]
+            })
+            |> OriginRepo.update()
+
+          case result do
+            {:ok, _r} ->
+              if o_origin.id == d_origin.id do
+                d_data
+                |> Data.changeset(%{
+                  incoming_relationships: [
+                    [o_data.id, o_origin.id, relationship_type]
+                    | d_data.incoming_relationships
+                  ]
+                })
+                |> OriginRepo.update()
+              else
+                result
+              end
+
+            _ ->
+              result
+          end
+        end,
+        mode: :readwrite
+      )
+
+    if o_origin.id == d_origin.id do
+      o_result
+    else
+      OriginRepo.with_dynamic_repo(
+        d_origin,
+        fn ->
+          d_data
+          |> Data.changeset(%{
+            incoming_relationships: [
+              [o_data.id, o_origin.id, relationship_type]
+              | d_data.incoming_relationships
+            ]
+          })
+          |> OriginRepo.update()
+        end,
+        mode: :readwrite
+      )
+    end
   end
 
   def list_data_user(%Origin{} = origin, %User{} = user, opts \\ []) do

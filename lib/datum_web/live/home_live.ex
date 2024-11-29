@@ -80,6 +80,7 @@ defmodule DatumWeb.HomeLive do
               id:
                 "explorer_tab_#{List.first(Enum.filter(tab_group, fn tab -> Enum.member?(@selected_tabs, tab) end)).id}",
               session: %{
+                "group_index" => group_index,
                 "parent" => self(),
                 "tab_id" => Enum.find(tab_group, fn tab -> Enum.member?(@selected_tabs, tab) end).id
               }
@@ -384,8 +385,7 @@ defmodule DatumWeb.HomeLive do
 
     {:noreply,
      socket
-     |> assign(:selected_tabs, selected_tabs)
-     |> push_patch(to: ~p"/")}
+     |> assign(:selected_tabs, selected_tabs)}
   end
 
   def handle_event("close_tab", %{"tab-id" => tab_id}, socket) do
@@ -437,6 +437,47 @@ defmodule DatumWeb.HomeLive do
 
   def handle_info({:tab_updated, tab_id}, socket) do
     {:noreply, socket |> replace_tab(Common.get_user_tab!(socket.assigns.current_user, tab_id))}
+  end
+
+  # handles a call from a module who wants to open a module in a new tab but different grouping
+  def handle_info({:open_tab, tab_module, state, group_index}, socket) do
+    group_index =
+      if group_index > 0 do
+        group_index - 1
+      else
+        group_index
+      end
+
+    {:ok, new_tab} =
+      Common.create_explorer_tabs_for_user(socket.assigns.current_user, %{
+        module: tab_module,
+        state: state
+      })
+
+    # for some reason the module doesn't get set correctly
+    new_tab = Common.get_explorer_tabs!(new_tab.id)
+
+    tabs =
+      socket.assigns.tabs
+      |> Enum.with_index()
+      |> Enum.map(fn {group, index} ->
+        if index == group_index do
+          [new_tab | group]
+        else
+          group
+        end
+      end)
+
+    save_tabs(tabs, socket)
+
+    {:noreply,
+     socket
+     |> assign(:tabs, tabs)
+     |> assign(
+       :selected_tabs,
+       List.replace_at(socket.assigns.selected_tabs, group_index, new_tab)
+     )
+     |> push_patch(to: ~p"/")}
   end
 
   defp replace_tab(socket, tab) do

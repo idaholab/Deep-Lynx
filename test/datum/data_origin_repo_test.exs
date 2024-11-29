@@ -137,5 +137,55 @@ defmodule Datum.DataOriginRepoTest do
 
       assert {:ok, _} = DataOrigin.connect_data(origin, parent, child)
     end
+
+    test "can create a relationship between two pieces of data" do
+      valid_attrs = %{name: "some name"}
+
+      assert {:ok, %Origin{} = origin} = DataOrigin.create_origin(valid_attrs)
+      assert {:ok, %Origin{} = origin2} = DataOrigin.create_origin(valid_attrs)
+
+      assert {:ok, data1} =
+               origin
+               |> DataOrigin.add_data(%{
+                 path: "/some/nonexistent/path",
+                 type: :directory
+               })
+
+      assert {:ok, data2} =
+               origin
+               |> DataOrigin.add_data(%{
+                 path: "/some/nonexistent/path/child",
+                 type: :file
+               })
+
+      assert {:ok, data3} =
+               origin2
+               |> DataOrigin.add_data(%{
+                 path: "/some/nonexistent/path/child",
+                 type: :file
+               })
+
+      # first we make sure we can make a relationship in the same origin
+      {:ok, _r} = DataOrigin.add_relationship({data1, origin}, {data2, origin})
+
+      assert DataOrigin.get_data!(origin, data1.id).outgoing_relationships == [
+               [data2.id, origin.id]
+             ]
+
+      assert DataOrigin.get_data!(origin, data2.id).incoming_relationships == [
+               [data1.id, origin.id]
+             ]
+
+      # now we check between origins
+      {:ok, _r} = DataOrigin.add_relationship({data1, origin}, {data3, origin2})
+
+      assert DataOrigin.get_data!(origin, data1.id).outgoing_relationships == [
+               [data3.id, origin2.id]
+             ]
+
+      assert DataOrigin.get_data!(origin2, data3.id).incoming_relationships == [
+               [data1.id, origin.id]
+             ]
+    end
   end
 end

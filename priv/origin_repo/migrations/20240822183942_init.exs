@@ -4,6 +4,7 @@ defmodule Datum.DataOrigin.OriginRepo.Migrations.Init do
   def up do
     create table(:data, primary_key: false) do
       add :id, :binary, primary_key: true
+      add :in_compliance, :boolean, default: false
       add :path, :string
       add :original_path, :string
       add :type, :string
@@ -17,8 +18,8 @@ defmodule Datum.DataOrigin.OriginRepo.Migrations.Init do
       add :tags, {:array, :string}
       add :domains, {:array, :string}
 
-      add :incoming_relationships, :jsonb
-      add :outgoing_relationships, :jsonb
+      add :incoming_relationships, {:array, :map}
+      add :outgoing_relationships, {:array, :map}
 
       timestamps(type: :utc_datetime)
     end
@@ -26,7 +27,10 @@ defmodule Datum.DataOrigin.OriginRepo.Migrations.Init do
     create table(:documentation, primary_key: false) do
       add :id, :binary, primary_key: true
       add :body, :string
-      add :data, references(:datas, on_delete: :delete_all, on_update: :update_all, type: :binary_id)
+
+      add :data,
+          references(:datas, on_delete: :delete_all, on_update: :update_all, type: :binary_id)
+
       add :owned_by, :binary
 
       add :tags, {:array, :string}
@@ -35,6 +39,5 @@ defmodule Datum.DataOrigin.OriginRepo.Migrations.Init do
     end
 
     create index(:data, [:path])
-
   end
 end

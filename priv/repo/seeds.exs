@@ -95,6 +95,10 @@ org =
 {:ok, _} = DataOrigin.connect_data(origin, dir_two, file_two)
 {:ok, _} = DataOrigin.connect_data(origin, dir_two, person)
 {:ok, _} = DataOrigin.connect_data(origin, dir_two, org)
+{:ok, _} = DataOrigin.add_relationship({person, origin}, {org, origin}, type: "belongs_to")
+{:ok, _} = DataOrigin.add_relationship({person, origin}, {file_two, origin}, type: "belongs_to")
+{:ok, _} = DataOrigin.add_relationship({dir_one, origin}, {file_two, origin}, type: "belongs_to")
+{:ok, _} = DataOrigin.add_relationship({person, origin}, {file_one, origin}, type: "belongs_to")
 
 # now do the same for the other origin, eventually we can do specific things
 # build a simple nested directory
@@ -116,6 +120,8 @@ file_one =
 
 {:ok, _} = DataOrigin.connect_data(origin2, dir_one, dir_one)
 {:ok, _} = DataOrigin.connect_data(origin2, dir_one, file_one)
+{:ok, _} = DataOrigin.add_relationship({person, origin}, {file_one, origin2})
+{:ok, _} = DataOrigin.add_relationship({person, origin}, {dir_one, origin2})
 
 dir_two =
   DataOrigin.add_data!(origin2, %{

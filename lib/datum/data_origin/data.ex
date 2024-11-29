@@ -6,14 +6,30 @@ defmodule Datum.DataOrigin.Data do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @derive {Jason.Encoder,
+           only: [
+             :id,
+             :path,
+             :type,
+             :file_type,
+             :description,
+             :properties,
+             :owned_by,
+             :origin_id,
+             :tags,
+             :domains,
+             :incoming_relationships,
+             :outgoing_relationships
+           ]}
+
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "data" do
     field :row_num, :integer, virtual: true
     field :count, :integer, virtual: true
     field :description_snippet, :string, virtual: true
     field :natural_language_properties_snippet, :string, virtual: true
-    field :in_compliance, :boolean, virtual: true, default: nil
 
+    field :in_compliance, :boolean, virtual: true, default: nil
     field :path, :string
     field :original_path, :string
     field :type, Ecto.Enum, values: [:directory, :file, :root_directory, :organization, :person]
@@ -35,9 +51,9 @@ defmodule Datum.DataOrigin.Data do
     # on the data it is directly connected to within the graph, with no additional information as to other ancestors
     # this allows us to store a graph relatively cheaply and works well with BFS/DFS algorithms and since we're most likely
     # not going to have a more relationships than data, this _should_ work well.
-    # These should be stored as a multidimensional array. Passing in lists should work just fine with JASON
-    field :incoming_relationships, :map
-    field :outgoing_relationships, :map
+    # format should be {data_id, origin_id, type (optional)}
+    field :incoming_relationships, {:array, {:array, :string}}, default: []
+    field :outgoing_relationships, {:array, {:array, :string}}, default: []
 
     timestamps(type: :utc_datetime)
   end
@@ -48,6 +64,7 @@ defmodule Datum.DataOrigin.Data do
     |> cast(attrs, [
       :path,
       :tags,
+      :in_compliance,
       :domains,
       :id,
       :type,

@@ -1,5 +1,8 @@
 {
   "devDependencies": {
     "daisyui": "^4.12.10"
+  },
+  "dependencies": {
+    "force-graph": "^1.46.0"
   }
 }
