@@ -109,10 +109,10 @@ defmodule DatumWeb.OriginExplorerLive do
 
             <:action :let={data}>
               <span
+                :if={data.incoming_relationships != [] || data.outgoing_relationships != []}
                 class="tooltip tooltip-bottom"
                 data-tip={gettext("Graph View")}
                 phx-click="open_graph"
-                phx-data-focus={data.id}
               >
                 <svg
                   class="h-6 w-6 "
@@ -302,16 +302,6 @@ defmodule DatumWeb.OriginExplorerLive do
 
   def handle_event("close_tab", _unsigned_params, socket) do
     notify_parent({:close_tab, socket.assigns.tab.id}, socket.assigns.parent)
-    {:noreply, socket}
-  end
-
-  def handle_event("open_graph", %{"focus" => focus} = _params, socket) do
-    notify_parent(
-      {:open_tab, DatumWeb.GraphExplorerLive,
-       %{items: [[focus, socket.assigns.origin.id]], focus: focus}, socket.assigns.group_index},
-      socket.assigns.parent
-    )
-
     {:noreply, socket}
   end
 

@@ -27,9 +27,9 @@ defmodule DatumWeb.GraphExplorerLive do
           </span>
         </ul>
       </div>
-      <!-- TODO: set dynamic id part -->
+      <!-- we need to set ignore so that we're not re-rendering the graph from elixir's side -->
       <div
-        id="graph_viewer"
+        id={"graph_viewer #{ShortUUID.encode!(UUID.uuid4())}"}
         phx-hook="GraphView"
         phx-update="ignore"
         data-items={Jason.encode!(@items)}
@@ -123,8 +123,11 @@ defmodule DatumWeb.GraphExplorerLive do
         data -> !Enum.any?(original_items, fn o -> o.id == data.id end)
       end)
 
+    # though this is expensive, we need to keep track both of the list with all items and only our new ones
     combined_items = items ++ original_items
 
+    # now we build the linkagages between the nodes that are available. We expect a map with source and target
+    # on the frontend for rendering
     links =
       combined_items
       |> Enum.filter(fn
@@ -134,11 +137,15 @@ defmodule DatumWeb.GraphExplorerLive do
       |> Enum.flat_map(fn data ->
         outgoing =
           data.outgoing_relationships
-          |> Enum.map(fn [data_id, _origin_id | _rest] -> %{source: data.id, target: data_id} end)
+          |> Enum.map(fn [data_id, _origin_id | rest] ->
+            %{source: data.id, target: data_id, label: Enum.join(rest, ",")}
+          end)
 
         incoming =
           data.incoming_relationships
-          |> Enum.map(fn [data_id, _origin_id | _rest] -> %{source: data_id, target: data.id} end)
+          |> Enum.map(fn [data_id, _origin_id | rest] ->
+            %{source: data_id, target: data.id, label: Enum.join(rest, ",")}
+          end)
 
         incoming ++ outgoing
       end)
@@ -148,7 +155,8 @@ defmodule DatumWeb.GraphExplorerLive do
       end)
 
     # iterate through the items again - now we're building the nodes in the graph that represent
-    # the rest of their connections
+    # the rest of their connections - note we're looking at the combined items for matches to make
+    # sure we're nto duplicating any items
     {additional_items, addtional_links} =
       items
       |> Enum.filter(fn
@@ -180,7 +188,8 @@ defmodule DatumWeb.GraphExplorerLive do
            },
            %{
              source: data.id,
-             target: "#{data.id}-connections"
+             target: "#{data.id}-connections",
+             label: ""
            }}
         else
           {nil, nil}
