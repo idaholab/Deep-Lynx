@@ -26,6 +26,14 @@ if config_env() == :prod do
     ssl_keyfile_path: System.get_env("SSL_KEYFILE_PATH"),
     ssl_cert_path: System.get_env("SSL_CERT_PATH"),
     dns_cluster_query: System.get_env("DNS_CLUSTER_QUERY"),
+    ai: %{
+      openai_enabled: System.get_env("OPENAI_ENABLED", "FALSE"),
+      openai_endpoint:
+        System.get_env("OPENAI_ENDPOINT", "http://localhost:11434/v1/chat/completions"),
+      openai_key: System.get_env("OPENAI_KEY", "ollama"),
+      openai_model: System.get_env("OPENAI_MODEL", "llama3.2"),
+      openai_temp: System.get_env("OPENAI_TEMP", 0)
+    },
     smtp:
       if System.get_env("USE_SMTP_MAILER", "FALSE") |> String.upcase() == "TRUE" do
         %{
@@ -82,6 +90,15 @@ if config_env() == :prod do
       port: vars.port
     ],
     secret_key_base: vars.secret_key_base
+
+  if vars.ai do
+    config :datum,
+      openai_enabled: vars.ai.openai_enabled,
+      openai_endpoint: vars.ai.openai_endpoint,
+      openai_key: vars.ai.openai_key,
+      openai_model: vars.ai.openai_model,
+      openai_temp: vars.ai.openai_temp
+  end
 
   if vars.server_ssl do
     config :datum, DatumWeb.Endpoint,

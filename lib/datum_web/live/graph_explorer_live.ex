@@ -7,7 +7,7 @@ defmodule DatumWeb.GraphExplorerLive do
   use DatumWeb, :live_view
   use Gettext, backend: DatumWeb.Gettext
 
-  def display_name, do: "Graph Explorer"
+  def display_name, do: gettext("Graph Explorer")
   alias Datum.Common
   alias Datum.DataOrigin
 

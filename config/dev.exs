@@ -92,3 +92,14 @@ config :phoenix_live_view,
 
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
+
+# we use openAI compatible agents - this way we can hook up to the service
+# OR more likely, to Ollama or another locally running model with openAI
+# compatible specs - by default it talks to ollama and the model that INL
+# has an agreement to use
+config :datum,
+  openai_enabled: true,
+  openai_endpoint: "http://localhost:11434/v1/chat/completions",
+  openai_key: "ollama",
+  openai_model: "llama3.2",
+  openai_temp: 1

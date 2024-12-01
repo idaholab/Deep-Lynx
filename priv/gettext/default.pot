@@ -11,8 +11,8 @@
 msgid ""
 msgstr ""
 
-#: lib/datum_web/components/core_components.ex:482
-#: lib/datum_web/components/core_components.ex:564
+#: lib/datum_web/components/core_components.ex:536
+#: lib/datum_web/components/core_components.ex:618
 #, elixir-autogen, elixir-format
 msgid "Actions"
 msgstr ""
@@ -58,39 +58,113 @@ msgstr ""
 msgid "Sign up"
 msgstr ""
 
-#: lib/datum_web/live/origin_explorer_live.ex:56
-#: lib/datum_web/live/origin_explorer_live.ex:92
+#: lib/datum_web/live/origin_explorer_live.ex:64
+#: lib/datum_web/live/origin_explorer_live.ex:106
 #, elixir-autogen, elixir-format
 msgid "Date Created"
 msgstr ""
 
-#: lib/datum_web/live/origin_explorer_live.ex:55
-#: lib/datum_web/live/origin_explorer_live.ex:91
+#: lib/datum_web/live/origin_explorer_live.ex:63
+#: lib/datum_web/live/origin_explorer_live.ex:105
 #, elixir-autogen, elixir-format
 msgid "Name"
 msgstr ""
 
-#: lib/datum_web/live/home_live.ex:114
+#: lib/datum_web/live/home_live.ex:105
 #, elixir-autogen, elixir-format
 msgid "Explore Data Origins"
 msgstr ""
 
-#: lib/datum_web/live/home_live.ex:120
+#: lib/datum_web/live/home_live.ex:111
 #, elixir-autogen, elixir-format
 msgid "Explore Data Origins Description"
 msgstr ""
 
-#: lib/datum_web/live/origin_explorer_live.ex:26
+#: lib/datum_web/live/origin_explorer_live.ex:34
 #, elixir-autogen, elixir-format
 msgid "Home"
 msgstr ""
 
-#: lib/datum_web/live/home_live.ex:155
+#: lib/datum_web/live/home_live.ex:138
+#: lib/datum_web/live/search_live.ex:31
 #, elixir-autogen, elixir-format
 msgid "Search"
 msgstr ""
 
-#: lib/datum_web/live/home_live.ex:159
+#: lib/datum_web/live/home_live.ex:142
 #, elixir-autogen, elixir-format
 msgid "Search Description"
+msgstr ""
+
+#: lib/datum_web/live/agent_live.ex:10
+#, elixir-autogen, elixir-format
+msgid "AI Assistant"
+msgstr ""
+
+#: lib/datum_web/live/home_live.ex:169
+#, elixir-autogen, elixir-format
+msgid "Chat with an AI Assistant"
+msgstr ""
+
+#: lib/datum_web/live/home_live.ex:175
+#, elixir-autogen, elixir-format
+msgid "Chat with an AI Assistant Description"
+msgstr "Interact with a Large Language Model (LLM) and ask it questions about your data. This service is entirely local, no data will be sent to outside services"
+
+#: lib/datum_web/live/agent_live.ex:23
+#: lib/datum_web/live/graph_explorer_live.ex:24
+#: lib/datum_web/live/origin_explorer_live.ex:28
+#: lib/datum_web/live/search_live.ex:25
+#, elixir-autogen, elixir-format
+msgid "Close Tab"
+msgstr ""
+
+#: lib/datum_web/live/search_live.ex:185
+#, elixir-autogen, elixir-format
+msgid "Data has no description"
+msgstr ""
+
+#: lib/datum_web/live/graph_explorer_live.ex:10
+#, elixir-autogen, elixir-format
+msgid "Graph Explorer"
+msgstr ""
+
+#: lib/datum_web/live/origin_explorer_live.ex:114
+#, elixir-autogen, elixir-format
+msgid "Graph View"
+msgstr ""
+
+#: lib/datum_web/live/search_live.ex:131
+#, elixir-autogen, elixir-format
+msgid "In Compliance"
+msgstr ""
+
+#: lib/datum_web/live/search_live.ex:128
+#, elixir-autogen, elixir-format
+msgid "No Metadata"
+msgstr ""
+
+#: lib/datum_web/live/search_live.ex:133
+#, elixir-autogen, elixir-format
+msgid "Out of Compliance"
+msgstr ""
+
+#: lib/datum_web/live/search_live.ex:43
+#, elixir-autogen, elixir-format
+msgid "Result Item"
+msgstr ""
+
+#: lib/datum_web/live/search_live.ex:36
+#, elixir-autogen, elixir-format
+msgid "Results"
+msgstr ""
+
+#: lib/datum_web/live/search_live.ex:229
+#, elixir-autogen, elixir-format
+msgid "Results per Origin"
+msgstr ""
+
+#: lib/datum_web/live/graph_explorer_live.ex:185
+#, elixir-autogen, elixir-format
+msgid "additional connection(s)"
 msgstr ""
