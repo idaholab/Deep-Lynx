@@ -4,32 +4,9 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-// MUI
-import {
-  Box,
-  Button,
-  Container,
-  Drawer,
-  Typography,
-} from "@mui/material";
-
-
-// Icons
-import ManageSearchIcon from '@mui/icons-material/ManageSearch';
-import HomeIcon from "@mui/icons-material/Home";
-import AppsIcon from '@mui/icons-material/Apps';
-import ViewInArIcon from "@mui/icons-material/ViewInAr";
-import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
-import TimelineIcon from '@mui/icons-material/Timeline';
-import LanIcon from '@mui/icons-material/Lan';
-import InboxIcon from '@mui/icons-material/Inbox';
-import LocalOfferIcon from '@mui/icons-material/LocalOffer';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import SettingsIcon from '@mui/icons-material/Settings';
 
 // Store
 import { useAppSelector } from "@/lib/store/hooks";
-
 
 // Styles
 import { classes } from "@/app/styles";
@@ -41,158 +18,87 @@ export default function Sidebar() {
 
   return (
     <>
-      <Drawer
-        sx={{
-          '& .MuiDrawer-paper': {
-            width: 350,
-            top: 64,
-          }
-        }}
-        open={true}
-        variant="persistent"
-        anchor="left"
-        classes={{
-          paper: classes.drawer.paper,
-        }}
-      >
-        <Container className={classes.drawer.sidebar}>
-          <Box sx={{ width: "100%" }}>
-            <Box>
-              <Button
-                startIcon={<HomeIcon className={classes.icon} />}
-                className={classes.drawer.button}
-                onClick={() => router.push(`/containers/`)}>
-                <Typography
-                  variant="button"
-                  className={classes.drawer.typography}
-                >
-                  All Containers
-                </Typography>
-              </Button>
-              <Button
-                startIcon={<AppsIcon className={classes.icon} />}
-                className={classes.drawer.button}
-                onClick={() => router.push(`/containers/${container.id}`)}>
-                <Typography
-                  variant="button"
-                  className={classes.drawer.typography}
-                >
-                 Current Container Dashboard
-                </Typography>
-              </Button>
-            </Box>
-            <br />
-            <Typography variant="overline" className={classes.drawer.header}>Your Data</Typography>
-            <Box>
-              <Button
-                startIcon={<ManageSearchIcon className={classes.icon} />}
-                className={classes.drawer.button}
-                onClick={() =>
-                  router.push(`/containers/${container.id}/data-query`)}>
-                <Typography variant="button" className={classes.drawer.typography}>
-                  Data Viewer
-                </Typography>
-              </Button>
-            </Box>
-            <Box>
-              <Button
-                startIcon={<TimelineIcon className={classes.icon} />}
-                className={classes.drawer.button}
-                // Times series end point changing maybe?
-                onClick={() =>
-                  router.push(`/containers/${container.id}/timeseries-viewer`)}>
-                <Typography variant="button" className={classes.drawer.typography}>
-                  Timeseries Viewer
-                </Typography>
-              </Button>
-            </Box>
-            <Box>
-              <Button
-                startIcon={<InsertDriveFileIcon className={classes.icon} />}
-                className={classes.drawer.button}
-                onClick={() =>
-                  router.push(`/containers/${container.id}/files`)}>
-                <Typography variant="button" className={classes.drawer.typography}>
-                  File Viewer
-                </Typography>
-              </Button>
-            </Box>
-
-            <br />
-            <Typography variant="overline" className={classes.drawer.header}>Data Management</Typography>
-            <Box>
-              <Button
-                startIcon={<LanIcon className={classes.icon} />}
-                className={classes.drawer.button}
-                onClick={() =>
-                  router.push(`/containers/${container.id}/metatypes`)}>
-                <Typography variant="button" className={classes.drawer.typography}>
-                  Ontology
-                </Typography>
-              </Button>
-            </Box>
-            <Box>
-              <Button
-                startIcon={<InboxIcon className={classes.icon} />}
-                className={classes.drawer.button}
-                onClick={() =>
-                  router.push(`/containers/${container.id}/data-sources`)}>
-                <Typography variant="button" className={classes.drawer.typography}>
-                  Data Sources
-                </Typography>
-              </Button>
-            </Box>
-            <Box>
-              <Button
-                startIcon={<LocalOfferIcon className={classes.icon} />}
-                className={classes.drawer.button}
-                onClick={() =>
-                  router.push(`/containers/${container.id}/tags`)}>
-                <Typography variant="button" className={classes.drawer.typography}>
-                  Tags
-                </Typography>
-              </Button>
-            </Box>
-
-            <br />
-            <Typography variant="overline" className={classes.drawer.header}>Widgets</Typography>
-            <Box>
-              <Button
-                startIcon={<ViewInArIcon className={classes.icon} />}
-                className={classes.drawer.button}
-                onClick={() =>
-                  router.push(`/containers/${container.id}/model-viewer`)
-                }>
-                <Typography variant="button" className={classes.drawer.typography}>
-                  Model Viewer
-                </Typography>
-              </Button>
-            </Box>
-            <Box>
-              <Button
-                startIcon={<CalendarMonthIcon className={classes.icon} />}
-                className={classes.drawer.button}
-                onClick={() =>
-                  router.push(`/containers/${container.id}/events`)}>
-                <Typography variant="button" className={classes.drawer.typography}>
-                  Events
-                </Typography>
-              </Button>
-            </Box>
-          </Box>
-          <Box sx={{ marginTop: 30 }}>
-            <Button
-              startIcon={<SettingsIcon className={classes.icon} />}
-              className={classes.drawer.button}
-              onClick={() =>
-                router.push(`/containers/${container.id}/settings`)}>
-              <Typography variant="button" className={classes.drawer.typography}>
-                Container Settings
-              </Typography>
-            </Button>
-          </Box>
-        </Container>
-      </Drawer>
+      <div className="drawer drawer-open">
+        <input id="my-drawer-2" type="checkbox" className="drawer-toggle" />
+        <div className="drawer-content">
+          {/* Page content here */}
+        </div>
+        <div className="drawer-side mt-10 fixed">
+          <label htmlFor="my-drawer-2" aria-label="close sidebar" className="drawer-overlay fixed"></label>
+          <ul className="menu bg-cherenkov text-base-content min-h-full w-80 text-white fixed left-0">
+            <div className="p-5">
+              <li><a className="link link-hover link-neutral" href="/containers">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
+                  <path d="M11.47 3.841a.75.75 0 0 1 1.06 0l8.69 8.69a.75.75 0 1 0 1.06-1.061l-8.689-8.69a2.25 2.25 0 0 0-3.182 0l-8.69 8.69a.75.75 0 1 0 1.061 1.06l8.69-8.689Z" />
+                  <path d="m12 5.432 8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 0 1-.75-.75v-4.5a.75.75 0 0 0-.75-.75h-3a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75H5.625a1.875 1.875 0 0 1-1.875-1.875v-6.198a2.29 2.29 0 0 0 .091-.086L12 5.432Z" />
+                </svg>
+                All Containers</a></li>
+              <li><a className="link link-hover link-neutral" href="/containers">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
+                  <path fillRule="evenodd" d="M1.5 7.125c0-1.036.84-1.875 1.875-1.875h6c1.036 0 1.875.84 1.875 1.875v3.75c0 1.036-.84 1.875-1.875 1.875h-6A1.875 1.875 0 0 1 1.5 10.875v-3.75Zm12 1.5c0-1.036.84-1.875 1.875-1.875h5.25c1.035 0 1.875.84 1.875 1.875v8.25c0 1.035-.84 1.875-1.875 1.875h-5.25a1.875 1.875 0 0 1-1.875-1.875v-8.25ZM3 16.125c0-1.036.84-1.875 1.875-1.875h5.25c1.036 0 1.875.84 1.875 1.875v2.25c0 1.035-.84 1.875-1.875 1.875h-5.25A1.875 1.875 0 0 1 3 18.375v-2.25Z" clipRule="evenodd" />
+                </svg>
+                Current Container Dashboard
+              </a></li>
+              <div className="text-xs pt-5 pl-4 pb-1 font-thin">Your Data</div>
+              <li><a className="link link-hover link-neutral" href="/containers">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
+                  <path d="M21 6.375c0 2.692-4.03 4.875-9 4.875S3 9.067 3 6.375 7.03 1.5 12 1.5s9 2.183 9 4.875Z" />
+                  <path d="M12 12.75c2.685 0 5.19-.586 7.078-1.609a8.283 8.283 0 0 0 1.897-1.384c.016.121.025.244.025.368C21 12.817 16.97 15 12 15s-9-2.183-9-4.875c0-.124.009-.247.025-.368a8.285 8.285 0 0 0 1.897 1.384C6.809 12.164 9.315 12.75 12 12.75Z" />
+                  <path d="M12 16.5c2.685 0 5.19-.586 7.078-1.609a8.282 8.282 0 0 0 1.897-1.384c.016.121.025.244.025.368 0 2.692-4.03 4.875-9 4.875s-9-2.183-9-4.875c0-.124.009-.247.025-.368a8.284 8.284 0 0 0 1.897 1.384C6.809 15.914 9.315 16.5 12 16.5Z" />
+                  <path d="M12 20.25c2.685 0 5.19-.586 7.078-1.609a8.282 8.282 0 0 0 1.897-1.384c.016.121.025.244.025.368 0 2.692-4.03 4.875-9 4.875s-9-2.183-9-4.875c0-.124.009-.247.025-.368a8.284 8.284 0 0 0 1.897 1.384C6.809 19.664 9.315 20.25 12 20.25Z" />
+                </svg>
+                Data Viewer</a></li>
+              <li><a className="link link-hover link-neutral" href="/containers">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5m.75-9 3-3 2.148 2.148A12.061 12.061 0 0 1 16.5 7.605" />
+                </svg>
+                Timeseries Viewer</a></li>
+              <li><a className="link link-hover link-neutral" href="/containers">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
+                  <path d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5H5.625Z" />
+                  <path d="M12.971 1.816A5.23 5.23 0 0 1 14.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 0 1 3.434 1.279 9.768 9.768 0 0 0-6.963-6.963Z" />
+                </svg>
+                File Viewer</a></li>
+              <div className="text-xs pt-5 pl-4 pb-1 font-thin">Data Management</div>
+              <li><a className="link link-hover link-neutral" href="/containers">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
+                  <path d="M11.25 5.337c0-.355-.186-.676-.401-.959a1.647 1.647 0 0 1-.349-1.003c0-1.036 1.007-1.875 2.25-1.875S15 2.34 15 3.375c0 .369-.128.713-.349 1.003-.215.283-.401.604-.401.959 0 .332.278.598.61.578 1.91-.114 3.79-.342 5.632-.676a.75.75 0 0 1 .878.645 49.17 49.17 0 0 1 .376 5.452.657.657 0 0 1-.66.664c-.354 0-.675-.186-.958-.401a1.647 1.647 0 0 0-1.003-.349c-1.035 0-1.875 1.007-1.875 2.25s.84 2.25 1.875 2.25c.369 0 .713-.128 1.003-.349.283-.215.604-.401.959-.401.31 0 .557.262.534.571a48.774 48.774 0 0 1-.595 4.845.75.75 0 0 1-.61.61c-1.82.317-3.673.533-5.555.642a.58.58 0 0 1-.611-.581c0-.355.186-.676.401-.959.221-.29.349-.634.349-1.003 0-1.035-1.007-1.875-2.25-1.875s-2.25.84-2.25 1.875c0 .369.128.713.349 1.003.215.283.401.604.401.959a.641.641 0 0 1-.658.643 49.118 49.118 0 0 1-4.708-.36.75.75 0 0 1-.645-.878c.293-1.614.504-3.257.629-4.924A.53.53 0 0 0 5.337 15c-.355 0-.676.186-.959.401-.29.221-.634.349-1.003.349-1.036 0-1.875-1.007-1.875-2.25s.84-2.25 1.875-2.25c.369 0 .713.128 1.003.349.283.215.604.401.959.401a.656.656 0 0 0 .659-.663 47.703 47.703 0 0 0-.31-4.82.75.75 0 0 1 .83-.832c1.343.155 2.703.254 4.077.294a.64.64 0 0 0 .657-.642Z" />
+                </svg>
+                Ontology</a></li>
+              <li><a className="link link-hover link-neutral" href="/containers">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
+                  <path fillRule="evenodd" d="M6.912 3a3 3 0 0 0-2.868 2.118l-2.411 7.838a3 3 0 0 0-.133.882V18a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3v-4.162c0-.299-.045-.596-.133-.882l-2.412-7.838A3 3 0 0 0 17.088 3H6.912Zm13.823 9.75-2.213-7.191A1.5 1.5 0 0 0 17.088 4.5H6.912a1.5 1.5 0 0 0-1.434 1.059L3.265 12.75H6.11a3 3 0 0 1 2.684 1.658l.256.513a1.5 1.5 0 0 0 1.342.829h3.218a1.5 1.5 0 0 0 1.342-.83l.256-.512a3 3 0 0 1 2.684-1.658h2.844Z" clipRule="evenodd" />
+                </svg>
+                Data Sources</a></li>
+              <li><a className="link link-hover link-neutral" href="/containers">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
+                  <path fillRule="evenodd" d="M5.25 2.25a3 3 0 0 0-3 3v4.318a3 3 0 0 0 .879 2.121l9.58 9.581c.92.92 2.39 1.186 3.548.428a18.849 18.849 0 0 0 5.441-5.44c.758-1.16.492-2.629-.428-3.548l-9.58-9.581a3 3 0 0 0-2.122-.879H5.25ZM6.375 7.5a1.125 1.125 0 1 0 0-2.25 1.125 1.125 0 0 0 0 2.25Z" clipRule="evenodd" />
+                </svg>
+                Tags</a></li>
+              <div className="text-xs pt-5 pl-4 pb-1 font-thin">Widgets</div>
+              <li><a className="link link-hover link-neutral" href="/containers">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
+                  <path d="M6 3a3 3 0 0 0-3 3v1.5a.75.75 0 0 0 1.5 0V6A1.5 1.5 0 0 1 6 4.5h1.5a.75.75 0 0 0 0-1.5H6ZM16.5 3a.75.75 0 0 0 0 1.5H18A1.5 1.5 0 0 1 19.5 6v1.5a.75.75 0 0 0 1.5 0V6a3 3 0 0 0-3-3h-1.5ZM12 8.25a3.75 3.75 0 1 0 0 7.5 3.75 3.75 0 0 0 0-7.5ZM4.5 16.5a.75.75 0 0 0-1.5 0V18a3 3 0 0 0 3 3h1.5a.75.75 0 0 0 0-1.5H6A1.5 1.5 0 0 1 4.5 18v-1.5ZM21 16.5a.75.75 0 0 0-1.5 0V18a1.5 1.5 0 0 1-1.5 1.5h-1.5a.75.75 0 0 0 0 1.5H18a3 3 0 0 0 3-3v-1.5Z" />
+                </svg>
+                Model Viewer</a></li>
+              <li><a className="link link-hover link-neutral" href="/containers">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
+                  <path d="M12.75 12.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM7.5 15.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM8.25 17.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM9.75 15.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM10.5 17.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12 15.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM12.75 17.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM14.25 15.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM15 17.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM16.5 15.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM15 12.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM16.5 13.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" />
+                  <path fillRule="evenodd" d="M6.75 2.25A.75.75 0 0 1 7.5 3v1.5h9V3A.75.75 0 0 1 18 3v1.5h.75a3 3 0 0 1 3 3v11.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V7.5a3 3 0 0 1 3-3H6V3a.75.75 0 0 1 .75-.75Zm13.5 9a1.5 1.5 0 0 0-1.5-1.5H5.25a1.5 1.5 0 0 0-1.5 1.5v7.5a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5v-7.5Z" clipRule="evenodd" />
+                </svg>
+                Events</a></li>
+            </div>
+            <div className="p-4 pt-96">
+              <li><a className="link link-hover link-neutral" href="/containers">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
+                  <path d="M17.004 10.407c.138.435-.216.842-.672.842h-3.465a.75.75 0 0 1-.65-.375l-1.732-3c-.229-.396-.053-.907.393-1.004a5.252 5.252 0 0 1 6.126 3.537ZM8.12 8.464c.307-.338.838-.235 1.066.16l1.732 3a.75.75 0 0 1 0 .75l-1.732 3c-.229.397-.76.5-1.067.161A5.23 5.23 0 0 1 6.75 12a5.23 5.23 0 0 1 1.37-3.536ZM10.878 17.13c-.447-.098-.623-.608-.394-1.004l1.733-3.002a.75.75 0 0 1 .65-.375h3.465c.457 0 .81.407.672.842a5.252 5.252 0 0 1-6.126 3.539Z" />
+                  <path fillRule="evenodd" d="M21 12.75a.75.75 0 1 0 0-1.5h-.783a8.22 8.22 0 0 0-.237-1.357l.734-.267a.75.75 0 1 0-.513-1.41l-.735.268a8.24 8.24 0 0 0-.689-1.192l.6-.503a.75.75 0 1 0-.964-1.149l-.6.504a8.3 8.3 0 0 0-1.054-.885l.391-.678a.75.75 0 1 0-1.299-.75l-.39.676a8.188 8.188 0 0 0-1.295-.47l.136-.77a.75.75 0 0 0-1.477-.26l-.136.77a8.36 8.36 0 0 0-1.377 0l-.136-.77a.75.75 0 1 0-1.477.26l.136.77c-.448.121-.88.28-1.294.47l-.39-.676a.75.75 0 0 0-1.3.75l.392.678a8.29 8.29 0 0 0-1.054.885l-.6-.504a.75.75 0 1 0-.965 1.149l.6.503a8.243 8.243 0 0 0-.689 1.192L3.8 8.216a.75.75 0 1 0-.513 1.41l.735.267a8.222 8.222 0 0 0-.238 1.356h-.783a.75.75 0 0 0 0 1.5h.783c.042.464.122.917.238 1.356l-.735.268a.75.75 0 0 0 .513 1.41l.735-.268c.197.417.428.816.69 1.191l-.6.504a.75.75 0 0 0 .963 1.15l.601-.505c.326.323.679.62 1.054.885l-.392.68a.75.75 0 0 0 1.3.75l.39-.679c.414.192.847.35 1.294.471l-.136.77a.75.75 0 0 0 1.477.261l.137-.772a8.332 8.332 0 0 0 1.376 0l.136.772a.75.75 0 1 0 1.477-.26l-.136-.771a8.19 8.19 0 0 0 1.294-.47l.391.677a.75.75 0 0 0 1.3-.75l-.393-.679a8.29 8.29 0 0 0 1.054-.885l.601.504a.75.75 0 0 0 .964-1.15l-.6-.503c.261-.375.492-.774.69-1.191l.735.267a.75.75 0 1 0 .512-1.41l-.734-.267c.115-.439.195-.892.237-1.356h.784Zm-2.657-3.06a6.744 6.744 0 0 0-1.19-2.053 6.784 6.784 0 0 0-1.82-1.51A6.705 6.705 0 0 0 12 5.25a6.8 6.8 0 0 0-1.225.11 6.7 6.7 0 0 0-2.15.793 6.784 6.784 0 0 0-2.952 3.489.76.76 0 0 1-.036.098A6.74 6.74 0 0 0 5.251 12a6.74 6.74 0 0 0 3.366 5.842l.009.005a6.704 6.704 0 0 0 2.18.798l.022.003a6.792 6.792 0 0 0 2.368-.004 6.704 6.704 0 0 0 2.205-.811 6.785 6.785 0 0 0 1.762-1.484l.009-.01.009-.01a6.743 6.743 0 0 0 1.18-2.066c.253-.707.39-1.469.39-2.263a6.74 6.74 0 0 0-.408-2.309Z" clipRule="evenodd" />
+                </svg>
+                Container Settings</a></li>
+            </div>
+          </ul>
+        </div>
+      </div>
     </>
   );
 }

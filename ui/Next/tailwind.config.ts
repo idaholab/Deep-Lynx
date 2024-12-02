@@ -39,7 +39,7 @@ export default {
           "primary": "#07519E", // INL Dark Blue
           "secondary": "#2BA8E0", // INL Light Blue
           "accent": "#07519E",
-          "neutral": "#3D4451",
+          "neutral": "#FFFFFF",
           "base-100": "#FFFFFF",
           "info": "#2BA8E0", // INL Light Blue
           "success": "#36D399",

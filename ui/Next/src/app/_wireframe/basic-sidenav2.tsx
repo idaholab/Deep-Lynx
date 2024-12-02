@@ -69,7 +69,7 @@ export default function BasicSidebar2({ children }: Props) {
                         </div>
                 <div className="drawer-side mt-14">
                     <label htmlFor="my-drawer" aria-label="close sidebar" className="drawer-overlay"></label>
-                    <aside className={`menu min-h-full bg-basicSideNav text-base-content p-0 ${open ? 'w-96' : 'w-0'}`}>
+                    <aside className={`left-0 menu min-h-full bg-basicSideNav text-base-content p-0 ${open ? 'w-96' : 'w-0'}`}>
                         
                         <ul className='p-9'>
                             <div className='text-black text-2xl mt-0'>{translations.en.containers.welcome}</div>

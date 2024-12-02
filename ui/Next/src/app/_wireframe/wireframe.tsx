@@ -9,7 +9,7 @@ import { uxActions } from "@/lib/store/features/ux/uxSlice";
 
 // Components
 import Sidebar from "./sidebar";
-import Navbar from "./navbar";
+import Navbar from "./navbar2";
 
 export default function Wireframe(props: any) {
   const container = useAppSelector((state) => state.container.container);
