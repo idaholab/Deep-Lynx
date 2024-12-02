@@ -1,150 +1,105 @@
+'use client';
 import * as React from 'react';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
-import { Box, FormControl, InputLabel, Link, MenuItem, Select, SelectChangeEvent, styled, Tooltip } from '@mui/material';
-import { classes } from '../styles';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import InfoIcon from '@mui/icons-material/Info';
+import MultiSelect from './multi-select';
+import { ContainerT } from '@/lib/types/deeplynx';
+import { useState } from 'react';
+
+const dataSources = ["standard", "http", "aveva", "p6", "timeseries", "custom"];
+
+export default function FormDialog() {
+    const [isOpen, setIsOpen] = useState(false);
+    const [isChecked, setIsChecked] = useState(false);
+    
+    let headers = {
+            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_TOKEN}`, 
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
 
 
-const VisuallyHiddenInput = styled('input')({
-    clip: 'rect(0 0 0 0)',
-    clipPath: 'inset(50%)',
-    height: 1,
-    overflow: 'hidden',
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    whiteSpace: 'nowrap',
-    width: 1,
-});
-
-const dataSourceTypes = [
-    { key: 'Standard', value: 'Standard' },
-    { key: 'Timeseries', value: 'Timeseries' },
-    { key: 'Custom', value: 'Custom' },
-];
-
-export default function FormDialog({ open, onClose }: any) {
-    const [dataSource, setDataSource] = React.useState('');
-
-    const handleChange = (event: SelectChangeEvent) => {
-        setDataSource(event.target.value as string);
-    };
+    async function handleSubmit(e: any) {
+        // Prevent the browser from reloading the page
+        e.preventDefault();
+    
+        // Read the form data
+        const form = e.target;
+        const formData = new FormData(form);
+        const formJson = Object.fromEntries(formData.entries());
+        console.log(formJson);
+    
+        const reponse = await fetch("http://localhost:8090/containers", {method: form.method, body: JSON.stringify(formJson), headers: headers}); 
+        const test = await reponse.json();
+      }
 
     return (
-        <Box >
-            <Dialog
-                open={open}
-                onClose={onClose}
-                PaperProps={{
-                    component: 'form',
-                    onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
-                        event.preventDefault();
-                        const formData = new FormData(event.currentTarget);
-                        const formJson = Object.fromEntries((formData as any).entries());
-                        const email = formJson.email;
-                    },
-                    style: { minWidth: '500px', padding: '40px' }
-                }}
+        <div>
+            <button className="btn btn-ghost btn-lg btn-circle" onClick={() => setIsOpen(true)}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 30" fill="#07519E" className="size-20">
+                    <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25V15a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z" clipRule="evenodd" />
+                </svg>
+            </button>
 
-            >
-                <DialogTitle className={classes.containers.dialog.header}>Create New Container</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        Name
-                    </DialogContentText>
-                    <TextField
-                        required
-                        id="outlined-required"
-                        fullWidth
-                        margin="dense"
-                    />
-                </DialogContent>
-                <DialogContent>
-                    <DialogContentText>
-                        Description
-                    </DialogContentText>
-                    <TextField
-                        required
-                        id="outlined-required"
-                        fullWidth
-                        margin="dense"
-                    />
-                </DialogContent>
-                <Box sx={{
-                    flex: 10,
-                    backgroundColor: ['#E9EDF0'], borderRadius: '16px',  // Adjust the value as needed
-                    border: '1px solid #ccc',  // Optional: Add a border to make the rounded corners more visible
-                    padding: '16px',
-                }}>
-                    <DialogContent>
-                        <DialogContentText>
-                            Upload .owl file (optional)
-                            <Tooltip title="You know why">
-                                <InfoIcon sx={{ scale: '70%' }} />
-                            </Tooltip>
-                        </DialogContentText>
-                        <Button
-                            component="label"
-                            role={undefined}
-                            variant="contained"
-                            tabIndex={-1}
-                            startIcon={<CloudUploadIcon />}
-                        >
-                            Choose file
-                            <VisuallyHiddenInput
-                                type="file"
-                                onChange={(event) => console.log(event.target.files)}
-                                multiple
-                            />
-                        </Button>
-                    </DialogContent>
-                    <DialogContent><DialogContentText>Or</DialogContentText></DialogContent>
-                    <DialogContent>
-                        <DialogContentText>
-                            URL to .owl file (optional)
-                            <Tooltip title="You know why">
-                                <InfoIcon sx={{ scale: '70%' }} />
-                            </Tooltip>
-                        </DialogContentText>
-                        <TextField
-                            id="outlined-required"
-                            fullWidth
-                        />
-                    </DialogContent>
-                    <DialogContent>
-                        <DialogContentText>
-                            Select enabled data source types
-                        </DialogContentText>
-                        <FormControl fullWidth>
-                            <Select
-                                labelId="demo-simple-select-label"
-                                id="demo-simple-select"
-                                value={dataSource}
-                                onChange={handleChange}>
-                                {dataSourceTypes.map((item) => (
-                                    <MenuItem key={item.key} value={item.key}>
-                                        {item.value}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                    </DialogContent>
-                    <DialogContent>
-                        <DialogContentText>Need Help? Details on creating or updating a container via an ontology file can be found on our <Link href="https://github.com/idaholab/Deep-Lynx/wiki">Wiki</Link></DialogContentText>
-                    </DialogContent>
-                </Box>
-                <DialogActions sx={{ justifyContent: 'space-between', padding: '20px' }}>
-                    <Button sx={{ backgroundColor: "white" }} variant="outlined" onClick={onClose}>Cancel</Button>
-                    <Button sx={{ color: "white" }} variant="contained" type="submit">Save</Button>
-                </DialogActions>
-            </Dialog>
-        </Box>
+            {isOpen && (
+                <div id="newContainerModal" className="modal modal-open text-black bg-white mt-8">
+                    <div className="modal-box bg-white p-12 pt-3 pb-3 font-normal caret-black">
+                        <h3 className="text-center font-normal">Create New Container</h3>
+                        <form method="post" onSubmit={handleSubmit}>
+                        <div className='ml-4'>
+                            <div>Name</div>
+                            <input type="text" name="name" className="rounded-lg border-solid border-strokeGray w-11/12" />
+                            <div className='pt-2'>Description</div>
+                            <input type="text" name="description" className="rounded-lg border-solid border-strokeGray w-11/12 pb-12" />
+                        </div>
+                        <div className="ml-4 mt-4">
+                            <div className="rounded-lg bg-dialogGray p-8 text-black mr-4">
+                                <div className='flex items-center mt-4'>
+                                    <div className='ml-4'>Upload .owl file (optional)</div>
+                                    <div className='tooltip' data-tip="FILE">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6 ml-2">
+                                            <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 0 1 .67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 1 1-.671-1.34l.041-.022ZM12 9a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clipRule="evenodd" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <input type="file" name="file" className="file-input file-input-accent bg-white file:text-white"/>
+                                <div className='flex items-center mt-4'>
+                                    <div className='ml-4'>URL to .owl File</div>
+                                    <div className='tooltip' data-tip="URL">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6 ml-2">
+                                            <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 0 1 .67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 1 1-.671-1.34l.041-.022ZM12 9a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clipRule="evenodd" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <input type="url" name="path" placeholder="https://example.com" className="input rounded-lg bg-white input-bordered w-11/12 caret-black	" />
+                                <div className="form-control pt-2">
+                                    <label className="label cursor-pointer flex justify-start justify-items-start">
+                                        <input checked={isChecked} onChange={() => setIsChecked(!isChecked)} type="checkbox" name="ontology_versioning_enabled" className="checkbox [--chkbg:theme(colors.cherenkov)]" />
+                                        <div className="text-black ml-2">Ontology Versioning Enabled <span className="align-super text-xs">BETA</span></div>
+                                        <div className='tooltip' data-tip="Ontology Versioning Blurb">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6 ml-2">
+                                                <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 0 1 .67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 1 1-.671-1.34l.041-.022ZM12 9a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clipRule="evenodd" />
+                                            </svg>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div className='p-4 flex items-center'>
+                           <MultiSelect options={dataSources}/>
+                            <span className=''>Select Enabled Data Source Types</span>
+                        </div>
+                        <div className='text-sm p-4 pb-1'>Need Help? Details on creating or updating a container via an ontology file can be found on our <a href='https://github.com/idaholab/Deep-Lynx/wiki/'>Wiki</a></div>
+                        <div className='flex justify-between pb-2 pl-3 pr-3'>
+                        <div className="modal-action">
+                            <button className="btn btn-accent text-white" type="submit">Save</button>
+                        </div>
+                        <div className="modal-action justify-left">
+                            <button className="btn btn-accent text-white" onClick={() => setIsOpen(false)}>Close</button>
+                        </div>
+                        </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }

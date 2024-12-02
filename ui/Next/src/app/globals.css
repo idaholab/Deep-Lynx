@@ -42,4 +42,8 @@
 a{
   text-decoration: none;
 }
+
+body {
+  font-family: 'Roboto Flex', sans-serif;
+}
  

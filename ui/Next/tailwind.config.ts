@@ -16,13 +16,47 @@ export default {
       colors: {
         cherenkov: "#07519E", // INL Dark Blue
         electricity: "#2BA8E0", // INL Light Blue
-        containerGray: "#EEF1F6" // Gray container drawer
+        containerGray: "#EEF1F6", // Gray container drawer
+        darkBlue: '#083769', 
+        basicSideNav: '#EEF1F6', 
+        dialogGray: '#E9EDF0', 
+        strokeGray: '#B2B2B2', 
+        accent: "#07519E"
       },
+    }, 
+    fontFamily: {
+      sans: ['Roboto Flex', 'sans-serif'],
     },
   },
-  plugins: [require("@tailwindcss/forms")],
-  darkMode: "selector",
+  plugins: [
+    require("@tailwindcss/forms"),
+    require('daisyui')
+  ],
+  daisyui: {
+    themes: [
+      {
+        customtheme: {
+          "primary": "#07519E", // INL Dark Blue
+          "secondary": "#2BA8E0", // INL Light Blue
+          "accent": "#07519E",
+          "neutral": "#FFFFFF",
+          "base-100": "#FFFFFF",
+          "info": "#2BA8E0", // INL Light Blue
+          "success": "#36D399",
+          "warning": "#FBBD23",
+          "error": "#F87272",
+          "container-gray": "#EEF1F6", // Gray container drawer
+          "dark-blue": '#083769', 
+          "basic-sidenav": '#EEF1F6', 
+          "dialog-gray": '#E9EDF0', 
+          "stroke-gray": '#B2B2B2',
+        },
+      },
+      "light", // Keep the default light theme as a fallback
+    ],
+  },
+  darkMode: "class", // Changed from "selector" to "class" for simplicity
   corePlugins: {
-    preflight: false, // Apply tailwind styles only after MUI has applied its native styles and theme to our UX components
+    preflight: false, // Apply Tailwind styles only after MUI has applied its native styles and theme to our UX components
   },
 } satisfies Config;

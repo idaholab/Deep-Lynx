@@ -1,132 +1,67 @@
-
-'use client';
 // Hooks
-import { Box, Button, Divider, IconButton, InputAdornment, Paper, Stack, styled, TextField, useTheme } from "@mui/material";
 import { classes } from "../../styles";
-import AddCircleIcon from '@mui/icons-material/AddCircle';
 
 // Types
 import { ContainerT } from "@/lib/types/deeplynx";
 
-// MUI
-import Grid from '@mui/material/Grid2';
-
-// Store
-import { useAppSelector } from "@/lib/store/hooks";
-import BasicSidebar from "@/app/_wireframe/basic-sidenav";
-import Navbar from "@/app/_wireframe/navbar";
-import SearchIcon from '@mui/icons-material/Search';
+import Navbar2 from "@/app/_wireframe/navbar2";
+import BasicSidebar2 from "@/app/_wireframe/basic-sidenav2";
 import AddContainerDialog from "@/app/_wireframe/add-container-dialog";
 
-import Containers from './containers'
-import { useState } from "react";
-import Navbar2 from "@/app/_wireframe/navbar2";
 
+export default async function ContainerSelect() {
 
-let list = [
-  { name: 'QuantumBox', description: 'Advanced quantum computing device' },
-  { name: 'NanoChamber', description: 'Microscopic containment for nanomaterials' },
-  { name: 'BioReactor', description: 'System for growing microbial cultures' },
-  { name: 'PhotonContainer', description: 'Light-based data storage unit' },
-  { name: 'GeoVault', description: 'Geological sample preservation unit' },
-  { name: 'CryoBox', description: 'Cryogenic sample storage container' }
-];
-
-
-
-
-const ContainerSelect = () => {
-
-  // useEffect(() => {
-  //   // When the user selects a container, dispatch that container's metadata to the Redux store, and navigate to the dashboard
-  //   if (selectedContainer) {
-  //     const selection: ContainerT = containers.find(
-  //       (container: ContainerT) => container!.id === selectedContainer
-  //     )!;
-
-  //     storeDispatch(containerActions.setContainer(selection));
-  //     router.push(`/containers/${selection.id}`);
-  //   }
-  // }, [containers, selectedContainer, router, storeDispatch]);
-
-  const [open, setOpen] = useState(false);
-
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
-
+  let headers = {
+    Authorization: `bearer ${process.env.NEXT_PUBLIC_TOKEN}`,
+  }
+  const reponse = await fetch("http://localhost:8090/containers", {headers: headers}); 
+  const test = await reponse.json();
+  const containers: ContainerT[] = test.value;
 
   return (
     <>
       <div>
         <div>
-          <Navbar />
-          <BasicSidebar>
-            <Stack className={classes.containers.header} spacing={2} direction="row">
-              <h1 className={classes.containers.header}>Your Containers</h1>
-              <Box>
-                <TextField
-                  variant="outlined"
-                  placeholder="Search..."
-                  slotProps={{
-                    input: {
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <SearchIcon />
-                        </InputAdornment>
-                      ),
-                    }
-                  }}
-                />
-              </Box>
-            </Stack>
-            <Divider sx={{ marginTop: '2px', marginBottom: '20px' }} />
-            <Grid container spacing={3}>
-              {list.map((item, index) => (
-                index === 0 ? (
-                  <Grid
-                    className={classes.containers.gridItem}
-                    key={index}
-                  >
-                    <Paper sx={{border: "1px solid grey"}}
-                      className={classes.containers.addItem}>
-                      <h1>
-                        <div>
-                          <IconButton onClick={handleClickOpen}>
-                            <AddCircleIcon className={classes.containers.addIcon}/>
-                          </IconButton>
-                          <AddContainerDialog open={open} onClose={handleClose} />
-                        </div>
-                      </h1>
-                      <h3>Create New Container</h3>
-                    </Paper>
-                  </Grid>
-                ) : (
-                  <Grid className={classes.containers.gridItem}
-                    key={index}
-                  >
-                    <Paper sx={{border: "1px solid grey"}} className={classes.containers.paperItem}>
-                      <h3>{item.name}</h3>
-                      <p>{item.description}</p>
-                      <Stack className={classes.containers.buttons} spacing={2} direction="row">
-                        <Button sx={{ backgroundColor: "white" }} className={classes.containers.text} variant="outlined">More Info</Button>
-                        <Button sx={{ color: "white" }} className={classes.containers.text} variant="contained">Enter Container</Button>
-                      </Stack>
-                    </Paper>
-                  </Grid>
-                )
-              ))}
-            </Grid>
-          </BasicSidebar>
+          <Navbar2 />
+          <BasicSidebar2>
 
+            {/* Top */}
+            <div className="flex flex-row justify-between pl-9 pr-9">
+              <div className="text-2xl p-5 text-black">Your Containers</div>
+              <input type="text" placeholder="Search..." className="input input-bordered  max-w-xs bg-white mb-3 border-black caret-black" />
+            </div>
+            <hr className="mt-0.5 mb-5" />
+
+            {/* Grid */}
+            <div className="flex-grow">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 p-9">
+          {containers.map((item: any, index: number) => (
+            index === 0 ? (
+              <div key={index} className="p-4 rounded-lg flex flex-col items-center border-[#D2CDCD] border-solid bg-white justify-center">
+                <div className="text-lg font-semibold mb-2">
+                    <AddContainerDialog></AddContainerDialog>
+                </div>
+                <div className="text-lg text-black">Create New Container</div>
+              </div>
+            ) : (
+              <div key={index} className="flex flex-col justify-between text-center p-4 rounded-lg border-[#D2CDCD] border-solid bg-[#E9EDF0]">
+                <div className="align-middle">
+                  <div className="text-lg text-black font-semibold p-1">{item.name}</div>
+                  <div className="text-sm text-black p-2 text-pretty">{item.description}</div>
+                  <div className="flex flex-wrap justify-center mt-4">
+                    <button className="btn btn-outline bg-white border-cherenkov text-cherenkov lowercase m-2 w-full md:w-auto">More Info</button>
+                    <button className="btn btn-primary bg-cherenkov text-white lowercase m-2 w-full md:w-auto">Enter Container</button>
+                  </div>
+                </div>
+              </div>
+            )
+          ))}
         </div>
       </div>
+          </BasicSidebar2>
+        </div>
+      </div>
+
     </>
   );
 };
-
-export default ContainerSelect;
