@@ -1,4 +1,7 @@
 defmodule DatumWeb.UserAuth do
+  @moduledoc """
+  This module contains mostly user authentication middleware needed by various routes
+  """
   use DatumWeb, :verified_routes
 
   import Plug.Conn

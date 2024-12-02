@@ -100,6 +100,8 @@ defmodule DatumWeb.AgentLive do
     {:noreply, socket}
   end
 
+  # this sends the user's message/query to the AI agent process - note that its an
+  # async operation, we listen for an incoming message in a handle_info/3 process
   @impl true
   def handle_event("send_message", %{"user_input" => input}, socket) do
     if !input || input == "" do
@@ -119,6 +121,8 @@ defmodule DatumWeb.AgentLive do
   end
 
   # handles a response from the AI agent genserver, typically in the form of a message struct
+  # eventually we will do more complex operations depending on the message received - for now though
+  # just append it and move on.
   @impl true
   def handle_info({:new_message, message}, socket) do
     {:noreply,
@@ -127,7 +131,7 @@ defmodule DatumWeb.AgentLive do
      |> assign(:messages, socket.assigns.messages ++ [message])}
   end
 
-  # we have to do this so we can delay sending the message long enough for the stream to update
+  # we have to do this so we can delay sending the message long enough for the socket to update
   # with the user's message
   @impl true
   def handle_info({:send_message, message}, socket) do
@@ -136,4 +140,6 @@ defmodule DatumWeb.AgentLive do
   end
 
   defp notify_parent(msg, process), do: send(process, msg)
+
+  # TODO: we need to include the update state functionality in this module at some point
 end

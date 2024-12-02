@@ -1,7 +1,9 @@
 defmodule Datum.Plugins.Plugin do
   @moduledoc """
-  Plugin represents a WASM plugin supplied either by the system or by the user.
+  Plugin represents a plugin supplied either by the system or by the user.
   These plugins are typically used for file system scanning and metadata extraction.
+  Plugins can be WASM modules, either raw binary or on disk, or Elixir modules implementing
+  the correct plugin type behavior.
   """
   use Ecto.Schema
   import Ecto.Changeset
@@ -11,7 +13,8 @@ defmodule Datum.Plugins.Plugin do
     field :module, :binary
     field :name, :string
     field :path, :string
-    # note that the module _must_ implement the callback behavior dictated in Datum.Extractor
+
+    # note that the module _must_ implement the callback behavior dictated in Datum.Extractor or others
     field :module_name, Datum.ModuleName
     field :enabled, :boolean, default: false
     field :plugin_type, Ecto.Enum, values: [:extractor, :sampler]

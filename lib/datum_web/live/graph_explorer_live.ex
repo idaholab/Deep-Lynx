@@ -2,7 +2,7 @@ defmodule DatumWeb.GraphExplorerLive do
   @moduledoc """
   This is the live component for exploring data in a graph like manner. Typically started
   with either one or a group of a data. This component allows users to traverse their data
-  in a graph and make connections between pieces of data manually.
+  in a graph and make connections between pieces of data manually (planned, not currently implemented)
   """
   use DatumWeb, :live_view
   use Gettext, backend: DatumWeb.Gettext
@@ -203,4 +203,6 @@ defmodule DatumWeb.GraphExplorerLive do
 
     {items ++ additional_items, links ++ addtional_links}
   end
+
+  # TODO: we need to include the update state functionality in this module at some point
 end

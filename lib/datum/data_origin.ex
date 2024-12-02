@@ -1,6 +1,7 @@
 defmodule Datum.DataOrigin do
   @moduledoc """
-  The DataOrigin context.
+  The DataOrigin context. See data_origin/Origin.ex for information on what a DataOrigin is
+  and how it slots into the bigger picture of Datum.
   """
 
   import Ecto.Query, warn: false

@@ -1,6 +1,7 @@
 defmodule Datum.Plugins do
   @moduledoc """
-  The Plugins context.
+  The Plugins context. See the plugins/Plugin.ex file for information on what a plugin is.
+  These are all the functions for interacting with the Plugin model in the database
   """
 
   import Ecto.Query, warn: false

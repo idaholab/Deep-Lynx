@@ -1,6 +1,6 @@
 defmodule Datum.Permissions do
   @moduledoc """
-  The Permissions context.
+  The Permissions context. See the permissions folder for information.
   """
 
   import Ecto.Query, warn: false

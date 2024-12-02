@@ -19,6 +19,7 @@ defmodule Datum.MixProject do
 
   def releases do
     [
+      # this is for the Burrito single binary output
       datum: [
         steps: [:assemble, &Burrito.wrap/1],
         burrito: [
@@ -130,6 +131,7 @@ defmodule Datum.MixProject do
         "esbuild datum --minify",
         "phx.digest"
       ],
+      # sqlite fetch _should_ handle getting all the required extensions we need and install them locally
       "sqlite.fetch": [
         "cmd cd priv/sqlite_extensions && curl -L https://github.com/asg017/sqlite-vec/releases/download/v0.1.3/install.sh | sh",
         "cmd cd priv/sqlite_extensions && sh install.sh"

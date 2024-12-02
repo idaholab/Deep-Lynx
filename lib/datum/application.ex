@@ -7,14 +7,15 @@ defmodule Datum.Application do
 
   @impl true
   def start(_type, _args) do
+    # we read in the user arguments using the utility function, cutting the first argument
+    # and acting accordingly - no argument should start the server
     case Burrito.Util.Args.argv() do
       ["help" | args] ->
         help(args)
         System.halt(0)
 
       ["init" | args] ->
-        :ok = init(args)
-        IO.puts("Successfully wrote configuration file.")
+        init(args)
         System.halt(0)
 
       ["scan" | args] ->
@@ -30,6 +31,8 @@ defmodule Datum.Application do
         {:ok, _pid} =
           Supervisor.start_link(children, strategy: :one_for_one, name: Datum.Supervisor)
 
+        # we played around with making this part of the supervisor, but it needs the Repo process started
+        # before it can interact with its local database
         Datum.Scan.run(args)
         IO.puts("Filescanner has completed its run")
         System.halt(0)
@@ -115,10 +118,13 @@ defmodule Datum.Application do
         Prompt.text("Please enter your Personal Access Token (PAT):")
       end
 
-    File.write(
-      Path.join(System.user_home(), ".datum-config"),
-      Ymlr.document!(%{endpoint: endpoint, token: token})
-    )
+    :ok =
+      File.write(
+        Path.join(System.user_home(), ".datum-config"),
+        Ymlr.document!(%{endpoint: endpoint, token: token})
+      )
+
+    IO.puts("Successfully wrote configuration file.")
   end
 
   defp help(args) do

@@ -50,6 +50,7 @@ defmodule Datum.DataOrigin.OriginRepo do
       ]
     ]
 
+    # check to see if it's already started, pulling that PID if it is
     repo =
       case Datum.DataOrigin.OriginRepo.start_link(start_opts) do
         {:ok, repo_pid} ->
@@ -65,6 +66,7 @@ defmodule Datum.DataOrigin.OriginRepo do
 
     if repo do
       try do
+        # put_dynamic_repo sets this repo PID for the life of the process or until its called again
         Datum.DataOrigin.OriginRepo.put_dynamic_repo(repo)
 
         # we have to run the migrations for this repo or else we might

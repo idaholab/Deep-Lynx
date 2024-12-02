@@ -6,8 +6,8 @@ defmodule Datum.DataOrigin.Origin do
   or figuring how to handle splitting the underlying Sqlite3 database. That's right - each Origin has it's OWN Sqlite3
   databased stored at the configured filesystem point.
 
-  Separate databases allow us to search them concurrently, handle need to know and permissions across a better security surface (can't)
-  break out of a table if you're not even in the database, and to handle differing encryption and classification needs for the origins.
+  Separate databases allow us to search them concurrently, handle need to know and permissions across a better security surface (can't
+  break out of a table if you're not even in the database) and to handle differing encryption and classification needs for the origins.
   The endgoal here is that these origin's might be running on different servers, or even typically available in other networks, but attached
   to an operational database.
 

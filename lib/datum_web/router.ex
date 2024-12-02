@@ -25,11 +25,6 @@ defmodule DatumWeb.Router do
     get "/plugins", PluginsController, :list_info
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", DatumWeb do
-  #   pipe_through :api
-  # end
-
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:datum, :dev_routes) do
     # If you want to use the LiveDashboard in production, you should put

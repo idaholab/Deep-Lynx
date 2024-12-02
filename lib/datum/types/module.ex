@@ -2,6 +2,7 @@ defmodule Datum.ModuleName do
   @moduledoc """
     This is how we store and restore Elixir module names in our
     application. Typically used for our explorer window panes or plugin names.
+    This type is used by Ecto to safely store and restore Strings to Atoms.
   """
   use Ecto.Type
   def type, do: :string

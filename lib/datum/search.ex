@@ -25,12 +25,13 @@ defmodule Datum.Search do
   end
 
   # Server (callbacks)
-
   @impl true
   def init(state) do
     {:ok, state}
   end
 
+  # we threw the limit tag on here so it wouldn't time out - we might want to eventually turn this
+  # into an async call at some point though
   @limit 10_000
   @impl true
   def handle_call({:search_origins, user, term, opts}, _from, state) do
@@ -41,6 +42,7 @@ defmodule Datum.Search do
     # first pull all the origins we want to search across
     origins = DataOrigin.list_data_orgins_user(user, exclude)
 
+    # we iterate through the origins, running the search on each
     statuses =
       Task.Supervisor.async_stream_nolink(
         Datum.TaskSupervisor,

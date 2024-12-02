@@ -2,8 +2,7 @@ defmodule Datum.Agent do
   @moduledoc """
   Agent is a GenServer (https://hexdocs.pm/elixir/GenServer.html) which is in charge of running the
   AI Assistant for Datum. Each instance of the GenServer is an individual agent, interacting with one
-  single individual user. Whoever is using this agent _should_ use a supervisor - as the agent code can
-  be finnicky and crashes can go unnoticed if you're waiting for a response.
+  single individual user.
 
   Also, _all_ interacts with this genserver should be done asynchronously so that we avoid the application
   hanging while waiting for an agent's response, as those could be time consuming depending on hardware and

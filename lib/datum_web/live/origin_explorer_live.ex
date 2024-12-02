@@ -16,6 +16,7 @@ defmodule DatumWeb.OriginExplorerLive do
   alias Datum.Common
   alias Datum.DataOrigin
 
+  @impl true
   def render(assigns) do
     ~H"""
     <div>
@@ -149,6 +150,7 @@ defmodule DatumWeb.OriginExplorerLive do
     """
   end
 
+  @impl true
   def mount(
         _params,
         %{
@@ -221,6 +223,7 @@ defmodule DatumWeb.OriginExplorerLive do
     end
   end
 
+  @impl true
   def handle_event("home_navigate", _params, socket) do
     user = socket.assigns.current_user
 
@@ -235,6 +238,7 @@ defmodule DatumWeb.OriginExplorerLive do
   end
 
   # select the origin, set it, and load the initial root files
+  @impl true
   def handle_event("select_origin", %{"origin_id" => origin_id}, socket) do
     origin = DataOrigin.get_data_orgins_user(socket.assigns.current_user, origin_id)
     root_items = DataOrigin.list_roots(origin)
@@ -249,6 +253,7 @@ defmodule DatumWeb.OriginExplorerLive do
 
   # select an item from the list, adding it to the breadcrumbs and updating
   # state
+  @impl true
   def handle_event("select_item", %{"item_id" => item_id}, socket) do
     data = DataOrigin.get_data_user(socket.assigns.origin, socket.assigns.current_user, item_id)
 
@@ -278,6 +283,7 @@ defmodule DatumWeb.OriginExplorerLive do
      |> update_state()}
   end
 
+  @impl true
   def handle_event("path_item_navigate", %{"id" => id}, socket) do
     path_items =
       socket.assigns.path_items
@@ -300,11 +306,13 @@ defmodule DatumWeb.OriginExplorerLive do
      socket |> assign(:path_items, path_items) |> assign(:items, items) |> update_state()}
   end
 
+  @impl true
   def handle_event("close_tab", _unsigned_params, socket) do
     notify_parent({:close_tab, socket.assigns.tab.id}, socket.assigns.parent)
     {:noreply, socket}
   end
 
+  @impl true
   def handle_event("open_graph", _params, socket) do
     notify_parent(
       {:open_tab, DatumWeb.GraphExplorerLive,

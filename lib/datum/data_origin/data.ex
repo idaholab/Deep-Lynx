@@ -1,11 +1,13 @@
 defmodule Datum.DataOrigin.Data do
   @moduledoc """
-  Data is the actual stored data for an origin, typically represents a file or directory.
+  Data is the actual stored data for an origin, typically represents a file or directory,
+  but more types are supported and will be supported as time continues.
   """
   alias Datum.DataOrigin.Origin
   use Ecto.Schema
   import Ecto.Changeset
 
+  # this is how to tell the json encoder what fields to encode
   @derive {Jason.Encoder,
            only: [
              :id,
@@ -24,12 +26,13 @@ defmodule Datum.DataOrigin.Data do
 
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "data" do
+    # virtual fields are those added by various queries, just simplifies working with this data structure
     field :row_num, :integer, virtual: true
     field :count, :integer, virtual: true
     field :description_snippet, :string, virtual: true
     field :natural_language_properties_snippet, :string, virtual: true
 
-    field :in_compliance, :boolean, virtual: true, default: nil
+    field :in_compliance, :boolean, default: false
     field :path, :string
     field :original_path, :string
     field :type, Ecto.Enum, values: [:directory, :file, :root_directory, :organization, :person]

@@ -1,6 +1,7 @@
 defmodule Datum.Common do
   @moduledoc """
-  The Common context.
+  The Common context. Dealing with the models that don't fit nicely into other
+  contexts, such as the explorer tab context.
   """
 
   import Ecto.Query, warn: false

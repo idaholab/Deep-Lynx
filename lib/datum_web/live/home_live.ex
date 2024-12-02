@@ -9,6 +9,7 @@ defmodule DatumWeb.HomeLive do
 
   alias Datum.Common
 
+  @impl true
   def render(assigns) do
     ~H"""
     <div>
@@ -231,6 +232,7 @@ defmodule DatumWeb.HomeLive do
     """
   end
 
+  @impl true
   def mount(_params, _session, socket) do
     # get a list of open tabs on the user, fetch from the DB - no sorting necessary
     open_tabs = socket.assigns.current_user.open_explorer_tabs
@@ -247,11 +249,12 @@ defmodule DatumWeb.HomeLive do
      |> assign(:selected_tabs, List.duplicate(nil, Enum.count(tabs)))}
   end
 
+  @impl true
   def handle_params(%{"selected_tabs" => selected_tabs}, _uri, socket) do
     if selected_tabs == "" do
       {:noreply, socket}
     else
-      # if the IDs don't exist in the tabs, it won't error out it'll just pick on
+      # if the IDs don't exist in the tabs, it won't error out it'll just pick one
       {selected_tabs, _remainders} =
         String.split(selected_tabs, ",")
         |> Enum.map(fn selected -> Integer.parse(selected) end)
@@ -269,11 +272,15 @@ defmodule DatumWeb.HomeLive do
   end
 
   # we need this here as a fallback in case of badly formatted params as well as handling already open tabs
+  # eventually we will want to build functionality that parses the parameters and passes it to a relevant tab
+  # allowing the nested liveviews to run patch operations
+  @impl true
   def handle_params(_params, _uri, socket) do
     {:noreply, socket}
   end
 
-  # switch out the active tab - push patch handles re-rendering the live views
+  # switch out the active tab
+  @impl true
   def handle_event("open_tab", %{"tab" => tab_id, "group-index" => group_index}, socket) do
     {group_index, _} = Integer.parse(group_index)
     {tab_id, _} = Integer.parse(tab_id)
@@ -298,6 +305,8 @@ defmodule DatumWeb.HomeLive do
      |> assign(:selected_tabs, selected_tabs)}
   end
 
+  # this handles when a tab has been drug from one pane and dropped into another, or the same one
+  @impl true
   def handle_event(
         "tab_dropped",
         %{
@@ -347,12 +356,14 @@ defmodule DatumWeb.HomeLive do
     end
   end
 
+  @impl true
   def handle_event("new_pane", _unsigned_params, socket) do
     tabs = socket.assigns.tabs ++ [[]]
     save_tabs(tabs, socket)
     {:noreply, socket |> assign(:tabs, tabs)}
   end
 
+  @impl true
   def handle_event("close_pane", %{"group-index" => group_index}, socket) do
     {group_index, _r} = Integer.parse(group_index)
     {closed, tabs} = List.pop_at(socket.assigns.tabs, group_index)
@@ -369,6 +380,7 @@ defmodule DatumWeb.HomeLive do
     end
   end
 
+  @impl true
   def handle_event("add_tab", %{"group" => group_index}, socket) do
     {group_index, _r} = Integer.parse(group_index)
 
@@ -383,11 +395,13 @@ defmodule DatumWeb.HomeLive do
      |> assign(:selected_tabs, selected_tabs)}
   end
 
+  @impl true
   def handle_event("close_tab", %{"tab-id" => tab_id}, socket) do
     {tab_id, _r} = Integer.parse(tab_id)
     close_tab(tab_id, socket)
   end
 
+  @impl true
   def handle_event("open_tab", %{"group" => group_index, "tab" => tab_module}, socket) do
     {group_index, _r} = Integer.parse(group_index)
     tab_module = String.to_existing_atom(tab_module)
@@ -426,15 +440,18 @@ defmodule DatumWeb.HomeLive do
 
   # handles a call from one of the tabs to close it - we will take it out of the tabs list
   # and update that on the user to avoid re-opening
+  @impl true
   def handle_info({:close_tab, tab_id}, socket) do
     close_tab(tab_id, socket)
   end
 
+  @impl true
   def handle_info({:tab_updated, tab_id}, socket) do
     {:noreply, socket |> replace_tab(Common.get_user_tab!(socket.assigns.current_user, tab_id))}
   end
 
   # handles a call from a module who wants to open a module in a new tab but different grouping
+  @impl true
   def handle_info({:open_tab, tab_module, state, group_index}, socket) do
     group_index =
       if group_index > 0 do
