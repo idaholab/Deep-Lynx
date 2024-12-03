@@ -60,7 +60,8 @@ export default async function ContainerSelect() {
                         <div className="text-sm text-black p-2 text-pretty">{item.description}</div>
                         <div className="flex flex-wrap justify-center mt-4">
                           <button className="btn btn-outline bg-white border-cherenkov text-cherenkov lowercase m-2 w-full md:w-auto">More Info</button>
-                          <button className="btn btn-primary bg-cherenkov text-white lowercase m-2 w-full md:w-auto">Enter Container</button>
+                          <button className="btn btn-primary bg-cherenkov text-white lowercase m-2 w-full md:w-auto">
+                            <a className="link no-underline link-neutral" href={`/containers/${item.id}`}>Enter Container</a></button>
                         </div>
                       </div>
                     </div>

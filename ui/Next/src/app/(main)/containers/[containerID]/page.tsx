@@ -17,11 +17,7 @@ const ContainerDashboard = () => {
   return (
     <>
      <Wireframe/>
-      <Container className={classes.container}>
-        {container ? (
-          <Typography variant="h2">{container.name} Dashboard</Typography>
-        ) : null}
-      </Container>
+
     </>
   );
 };

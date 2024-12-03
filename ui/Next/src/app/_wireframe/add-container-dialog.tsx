@@ -36,21 +36,21 @@ export default function FormDialog() {
 
             if (response.ok) {
                 const data = await response.json();
-                window.location.href = `http://localhost:8090/containers/${data.value[0].id}`;
+                window.location.href = `http://localhost:3000/containers/${data.value[0].id}`;
             } else {
                 const errorData = await response.json();
                 const detailedError = JSON.parse(errorData.error);
                 setError(true);
                 console.log(JSON.stringify(detailedError.error.detail), 'Key (name, created_by)=(maybe, 1) already exists.')
-                if (detailedError.error.detail == "Key (name, created_by)=(maybe, 1) already exists."){
-                    
+                if (detailedError.error.detail == "Key (name, created_by)=(maybe, 1) already exists.") {
+
                     setErrorMessage('Container name already exists');
                 } else {
                     setErrorMessage(detailedError.error.detail);
                 }
-               
+
             }
-            
+
         } catch (err) {
             setError(true);
             setErrorMessage('An unexpected error occurred.');
