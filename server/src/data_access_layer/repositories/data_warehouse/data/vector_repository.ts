@@ -4,7 +4,7 @@ import VectorData, { TextResult } from "../../../../domain_objects/data_warehous
 
 export default class VectorRepository {
     #mapper: VectorMapper = VectorMapper.Instance;
-    public async copyFromJson(embeddings: VectorData[]): Promise<Result<boolean>> {
+    public async uploadFromJson(embeddings: VectorData[]): Promise<Result<boolean>> {
         for (const e of embeddings) {
             const errors = await e.validationErrors();
             if (errors) {
@@ -12,7 +12,7 @@ export default class VectorRepository {
                 return Promise.resolve(Result.Failure(`some embeddings do not pass validation: ${readableErrors.join(', ')}`));
             }
         }
-        return this.#mapper.CopyFromJson(embeddings);
+        return this.#mapper.UploadFromJson(embeddings);
     }
 
     // TODO: add method and limit

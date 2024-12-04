@@ -23,7 +23,7 @@ export default class VectorMapper extends Mapper {
     }
 
     // takes a JSON set of embedding data and inserts into embedding table
-    public async CopyFromJson(embeddingData: VectorData[]): Promise<Result<boolean>> {
+    public async UploadFromJson(embeddingData: VectorData[]): Promise<Result<boolean>> {
         return new Promise((resolve, reject) => {
             PostgresAdapter.Instance.Pool.connect((err: Error, client: PoolClient, done: any) => {
                 if (err) {

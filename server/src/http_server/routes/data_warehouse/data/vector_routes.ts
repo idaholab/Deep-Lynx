@@ -10,7 +10,7 @@ const JSONStream = require('JSONStream');
 export default class VectorRoutes {
     public static mount(app: Application, middleware: any[]) {
         // insert vectors via json. TODO: better encoding for this?
-        app.post('/vectors/copy', ...middleware, this.uploadVectors);
+        app.post('/vectors/upload', ...middleware, this.uploadVectors);
         // vector comparison (similarity search)
         app.post('/vectors/search', ...middleware, this.similaritySearch);
     }
@@ -26,7 +26,7 @@ export default class VectorRoutes {
             } else {
                 embeddings = [plainToClass(VectorData, req.body as object)];
             }
-            repo.copyFromJson(embeddings)
+            repo.uploadFromJson(embeddings)
                 .then((result) => {
                     if (result.isError) {
                         res.status(500).json(result);
@@ -69,7 +69,7 @@ export default class VectorRoutes {
                 });
 
                 stream.on('end', () => {
-                    repo.copyFromJson(embeddings)
+                    repo.uploadFromJson(embeddings)
                         .then((result) => {
                             if (result.isError) {
                                 res.status(500).json(result);
