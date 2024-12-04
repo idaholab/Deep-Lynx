@@ -116,7 +116,7 @@ export default class VectorRoutes {
             } else {
                 embedding = req.body['embedding']
             }
-            repo.similaritySearch(embedding)
+            repo.similaritySearch(embedding, req.query.topK ? +req.query.topK : undefined)
                 .then((result) => {
                     if (result.isError) {
                         res.status(500).json(result);
@@ -153,7 +153,7 @@ export default class VectorRoutes {
                 });
 
                 stream.on('end', () => {
-                    repo.similaritySearch(embedding)
+                    repo.similaritySearch(embedding, req.query.topK ? +req.query.topK : undefined)
                         .then((result) => {
                             if (result.isError) {
                                 res.status(500).json(result);

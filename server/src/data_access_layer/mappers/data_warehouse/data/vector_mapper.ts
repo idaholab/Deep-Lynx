@@ -66,13 +66,6 @@ export default class VectorMapper extends Mapper {
         );
     }
 
-    public async SearchByCosine(embedding: number[], limit: number): Promise<Result<TextResult[]>> {
-        return super.rows(
-            this.searchByCosineDistance(embedding, limit),
-            {resultClass: TextResult}
-        );
-    }
-
     // write lines to stream- helper function copied from pgvector documentation:
     // https://github.com/pgvector/pgvector-node/blob/master/examples/loading/example.js#L23
     private copyRow(stream: CopyStreamQuery, line: string): Promise<void> {
@@ -91,14 +84,6 @@ export default class VectorMapper extends Mapper {
         return {
             text: `SELECT textual_data FROM bdsis_vectors
                 ORDER BY embedding <-> $1 ASC LIMIT $2`,
-            values: [pgvector.toSql(embedding), limit]
-        }
-    }
-
-    private searchByCosineDistance(embedding: number[], limit: number): QueryConfig {
-        return {
-            text: `SELECT textual_data FROM bdsis_vectors
-                ORDER BY 1 = (embedding <=> $1) DESC LIMIT $2`,
             values: [pgvector.toSql(embedding), limit]
         }
     }

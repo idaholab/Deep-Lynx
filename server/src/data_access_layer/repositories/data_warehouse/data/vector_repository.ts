@@ -15,26 +15,18 @@ export default class VectorRepository {
         return this.#mapper.UploadFromJson(embeddings);
     }
 
-    // TODO: add method and limit
     // we use "any" instead of number in case the embedding is a deeply nested array
-    public async similaritySearch(embedding: any[]): Promise<Result<TextResult[]>> {
+    public async similaritySearch(embedding: any[], limit?: number): Promise<Result<TextResult[]>> {
         // TODO: figure out why this is so many layers deeply nested
-        let oldData = embedding;
-        while (oldData.length === 1) {
-            const newData = oldData[0];
-            oldData = newData;
+        let searchData = embedding;
+        while (searchData.length === 1) {
+            const innerData = searchData[0];
+            searchData = innerData;
         }
+        console.log(limit);
+    
+        const searchLimit = limit ? limit : 5
 
-        // setting this manually for now, TODO replace later with a param
-        const method = 'distance';
-        if (method === 'distance') {
-            // TODO replace later with a manual limit
-            return this.#mapper.SearchByDistance(oldData, 5);
-        } else if (method === 'cosine') {
-            return this.#mapper.SearchByCosine(oldData, 5);
-        }
-
-        // default statement if invalid method is chosen
-        return Promise.resolve(Result.Failure('unable to execute query, use either distance or cosine search'));
+        return this.#mapper.SearchByDistance(searchData, searchLimit);
     }
 }
