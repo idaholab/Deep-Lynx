@@ -4,6 +4,8 @@ import MultiSelect from './multi-select';
 import { ContainerT } from '@/lib/types/deeplynx';
 import { useState } from 'react';
 import Error from './error';
+import { useRouter } from 'next/navigation'
+
 
 const dataSources = ["standard", "http", "aveva", "p6", "timeseries", "custom"];
 const token = process.env.DEEPLYNX_TOKEN;
@@ -14,15 +16,23 @@ export default function FormDialog() {
     const [file, setFile] = useState('');
     const [url, setURL] = useState('');
     const [versioning, setVersioning] = useState('');
-    const [dataSourceArray, setDataSources] = useState([''])
+    const [dataSourceArray, setDataSources] = useState<string[]>([]);
     const [error, setError] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const router = useRouter()
 
+    const handleCheckboxChange = (e: any, option: string) => {
+        if (e.target.checked) {
+            setDataSources([...dataSourceArray, option]);
+        } else {
+            setDataSources(dataSourceArray.filter(item => item !== option));
+        }
+    };
 
     const handleSubmit = async (e: any) => {
         e.preventDefault();
         try {
-            const data = { name, description, config: { versioning, enabled_data_sources: dataSources } };
+            const data = { name, description, config: { versioning, enabled_data_sources: dataSourceArray } };
 
             const response = await fetch('http://localhost:8090/containers', {
                 method: 'POST',
@@ -36,14 +46,12 @@ export default function FormDialog() {
 
             if (response.ok) {
                 const data = await response.json();
-                window.location.href = `http://localhost:3000/containers/${data.value[0].id}`;
+                router.push(`/containers/${data.value[0].id}`);
             } else {
                 const errorData = await response.json();
                 const detailedError = JSON.parse(errorData.error);
                 setError(true);
-                console.log(JSON.stringify(detailedError.error.detail), 'Key (name, created_by)=(maybe, 1) already exists.')
                 if (detailedError.error.detail == "Key (name, created_by)=(maybe, 1) already exists.") {
-
                     setErrorMessage('Container name already exists');
                 } else {
                     setErrorMessage(detailedError.error.detail);
@@ -148,7 +156,31 @@ export default function FormDialog() {
                         </div>
                     </div>
                     <div className='p-4 flex items-center'>
-                        <MultiSelect options={dataSources} />
+                        < details className="dropdown dropdown-top" >
+                            <summary className="btn m-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
+                                    <path fillRule="evenodd" d="M11.47 4.72a.75.75 0 0 1 1.06 0l3.75 3.75a.75.75 0 0 1-1.06 1.06L12 6.31 8.78 9.53a.75.75 0 0 1-1.06-1.06l3.75-3.75Zm-3.75 9.75a.75.75 0 0 1 1.06 0L12 17.69l3.22-3.22a.75.75 0 1 1 1.06 1.06l-3.75 3.75a.75.75 0 0 1-1.06 0l-3.75-3.75a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+                                </svg>
+
+                            </summary>
+                            <ul className="menu dropdown-content bg-base-100 rounded-box z-[1] w-52 drop-shadow-lg">
+                                {dataSources.map((option, index) => (
+                                    <li key={index}>
+                                        <a>
+                                            <label className="label cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    className="checkbox border-solid border-strokeGray [--chkbg:theme(colors.cherenkov)]"
+                                                    onChange={(e) => handleCheckboxChange(e, option)}
+                                                    checked={dataSourceArray.includes(option)}
+                                                />
+                                                <span className="label-text capitalize pl-2">{option}</span>
+                                            </label>
+                                        </a>
+                                    </li>
+                                ))}
+                            </ul>
+                        </details>
                         <span className=''>Select Enabled Data Source Types</span>
                     </div>
                     <div className='text-sm p-4 pb-1 font-normal'>Need Help? Details on creating or updating a container via an ontology file can be found on our <a href='https://github.com/idaholab/Deep-Lynx/wiki/'>Wiki</a></div>
