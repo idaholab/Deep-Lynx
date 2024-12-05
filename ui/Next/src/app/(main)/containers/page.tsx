@@ -22,17 +22,14 @@ export default async function ContainerSelect() {
     <>
       <div>
         <div>
-          <Navbar2 />
+          <Navbar2/>
           <BasicSidebar2>
-
             {/* Top */}
             <div className="flex flex-row justify-between pl-9 pr-9">
               <div className="text-2xl p-5 text-black">Your Containers</div>
               <input type="text" placeholder="Search..." className="input input-bordered  max-w-xs bg-white mb-3 border-black caret-black" />
             </div>
             <hr className="mt-0.5 mb-5" />
-
-            {/* Grid */}
             <div className="flex-grow">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 p-9">
                 {containers.map((item: any, index: number) => (
