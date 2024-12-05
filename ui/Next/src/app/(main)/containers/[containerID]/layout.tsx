@@ -1,18 +1,16 @@
-"use client";
-import { Container } from "@mui/material";
-
 // Providers
-import ContainerProvider from "@/lib/context/ContainerProvider";
+import Wireframe from "@/app/_wireframe/wireframe";
+import { ReactNode } from "react";
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  /**
-   * This layout is presented after the user has selected a container,
-   * and as such, wraps the UX in the application's contexts,
-   * and the wireframe (sidebar and navbar)
-   */
-  return <ContainerProvider>{children}</ContainerProvider>;
+interface Props {
+  children?: ReactNode}
+
+
+
+export default async function RootLayout({children}: Props) {
+    
+  return (
+    <Wireframe>{children}</Wireframe>
+  )
 }
+

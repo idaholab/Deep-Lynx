@@ -10,19 +10,19 @@ import { uxActions } from "@/lib/store/features/ux/uxSlice";
 // Components
 import Sidebar from "./sidebar";
 import Navbar from "./navbar2";
+import { ReactNode } from "react";
 
-export default function Wireframe(props: any) {
-  const container = useAppSelector((state) => state.container.container);
-  const drawer: boolean = useAppSelector((state) => state.ux.drawer);
-  const path = usePathname();
+interface Props {
+  children: ReactNode;
+}
 
-  const storeDispatch = useAppDispatch();
+export default function Wireframe({children}: Props) {
 
   return (
     <>
       <Navbar/>
-      <Sidebar/>
-      {props.children}
+      <Sidebar>{children}</Sidebar>
+    
     </>
   );
 }
