@@ -27,7 +27,7 @@
 
 - Might need to fix your Zig install for Burrito - https://ziggit.dev/t/what-to-fix-this-related-libsystem-build-error/5387/3
 - Behind a corporate firewall you might need to set your CA certificate for Mix. 
-    1. Set the env var `HEX_CACERT_PATH` - point to your certs
+    1. Set the env var `HEX_CACERTS_PATH` - point to your certs
     2. Uncomment the top line in the `mix.exs` file and change the path to reflect the path to your cert
     3. In your `config/config.exs` file - add a comma to lines 44 and 57, then add `cacerts_path: "PATH TO YOUR CERT"` to lines 45 and 58.
 
