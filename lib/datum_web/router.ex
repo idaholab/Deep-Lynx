@@ -43,7 +43,6 @@ defmodule DatumWeb.Router do
   end
 
   ## Authentication routes
-
   scope "/", DatumWeb do
     pipe_through [:browser, :redirect_if_user_is_authenticated]
 
@@ -78,6 +77,9 @@ defmodule DatumWeb.Router do
       on_mount: [{DatumWeb.UserAuth, :mount_current_user}] do
       live "/users/confirm/:token", UserConfirmationLive, :edit
       live "/users/confirm", UserConfirmationInstructionsLive, :new
+
+      live "/wiki", WikiLive, :home
+      live "/wiki/:page", WikiLive, :page
     end
   end
 end
