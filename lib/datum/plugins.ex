@@ -36,7 +36,15 @@ defmodule Datum.Plugins do
     query =
       from p in Plugin,
         where: p.enabled == true,
-        select: [p.id, p.name, p.filetypes, p.plugin_type]
+        select: %Plugin{
+          id: p.id,
+          name: p.name,
+          filetypes: p.filetypes,
+          plugin_type: p.plugin_type,
+          path: p.path,
+          module_name: p.module_name,
+          enabled: p.enabled
+        }
 
     Repo.all(query)
   end

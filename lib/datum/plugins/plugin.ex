@@ -8,6 +8,8 @@ defmodule Datum.Plugins.Plugin do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @derive {Jason.Encoder,
+           only: [:id, :name, :path, :module_name, :enabled, :plugin_type, :filetypes]}
   schema "plugins" do
     # either store the raw plugin in BLOB or its path, not both - defaults to path first
     field :module, :binary
