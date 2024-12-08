@@ -56,7 +56,12 @@ You also need to modify the configuration file in `config/config.exs`, adding `c
 ## The File Structure
 The majority of development will be done in the lib folder with tests written in the aptly named test folder. Within lib, the datum_web folder is where the front-end views as well as their respective controller code reside, in addition to the front end router. The regular datum folder holds backend models and typically hosts business logic and business domain as well as DB interactions. 
 
+
+- Might need to fix your Zig install for Burrito - https://ziggit.dev/t/what-to-fix-this-related-libsystem-build-error/5387/3
+- 
+
 ## Useful Links
+
 
 ### Documentation
 
