@@ -30,11 +30,11 @@ defmodule DatumWeb.AgentLive do
       <div :for={message <- @messages} id={message.id}>
         <div :if={message.origin == :ai} class="chat chat-start">
           <div class="chat-bubble chat-bubble-primary">
-            <%= message.message %>
+            {message.message}
           </div>
         </div>
         <div :if={message.origin == :user} class="chat chat-end">
-          <div class="chat-bubble"><%= message.message %></div>
+          <div class="chat-bubble">{message.message}</div>
         </div>
       </div>
       <span :if={@waiting} class="loading loading-bars loading-lg"></span>

@@ -60,7 +60,7 @@ defmodule DatumWeb.HomeLive do
               class={"tab tooltip tooltip-bottom #{if Enum.member?(@selected_tabs, tab) do "tab-active" else "hover:bg-neutral" end}"}
               data-tip="Click to open or Drag to move"
             >
-              <%= Map.get(tab.state, "name", tab.module.display_name()) %>
+              {Map.get(tab.state, "name", tab.module.display_name())}
             </a>
             <a
               role="tab"
@@ -75,7 +75,7 @@ defmodule DatumWeb.HomeLive do
 
           <%= if List.first(Enum.filter(tab_group, fn tab -> Enum.member?(@selected_tabs, tab) end))do %>
             <div class="divider p-0 m-0"></div>
-            <%= live_render(
+            {live_render(
               @socket,
               Enum.find(tab_group, fn tab -> Enum.member?(@selected_tabs, tab) end).module,
               id:
@@ -85,7 +85,7 @@ defmodule DatumWeb.HomeLive do
                 "parent" => self(),
                 "tab_id" => Enum.find(tab_group, fn tab -> Enum.member?(@selected_tabs, tab) end).id
               }
-            ) %>
+            )}
           <% end %>
           <div :if={closed_tabs(group_index, @selected_tabs, @tabs)}>
             <div class="divide-y divide-accent overflow-hidden rounded-lg bg-base-100 shadow sm:grid sm:grid-cols-2 sm:gap-px sm:divide-y-0">
@@ -103,13 +103,13 @@ defmodule DatumWeb.HomeLive do
                 <div class="mt-8">
                   <h3 class="text-base font-semibold leading-6 text-primary-content">
                     <a class="focus:outline-none">
-                      <span class="absolute inset-0" aria-hidden="true"></span> <%= gettext(
+                      <span class="absolute inset-0" aria-hidden="true"></span> {gettext(
                         "Explore Data Origins"
-                      ) %>
+                      )}
                     </a>
                   </h3>
                   <p class="mt-2 text-sm text-primary-content">
-                    <%= gettext("Explore Data Origins Description") %>
+                    {gettext("Explore Data Origins Description")}
                   </p>
                 </div>
 
@@ -136,11 +136,11 @@ defmodule DatumWeb.HomeLive do
                 <div class="mt-8">
                   <h3 class="text-base font-semibold leading-6 text-primary-content">
                     <a href="#" class="focus:outline-none">
-                      <span class="absolute inset-0" aria-hidden="true"></span> <%= gettext("Search") %>
+                      <span class="absolute inset-0" aria-hidden="true"></span> {gettext("Search")}
                     </a>
                   </h3>
                   <p class="mt-2 text-sm text-primary-content">
-                    <%= gettext("Search Description") %>
+                    {gettext("Search Description")}
                   </p>
                 </div>
 
@@ -168,13 +168,13 @@ defmodule DatumWeb.HomeLive do
                 <div class="mt-8">
                   <h3 class="text-base font-semibold leading-6 text-primary-content">
                     <a href="#" class="focus:outline-none">
-                      <span class="absolute inset-0" aria-hidden="true"></span> <%= gettext(
+                      <span class="absolute inset-0" aria-hidden="true"></span> {gettext(
                         "Chat with an AI Assistant"
-                      ) %>
+                      )}
                     </a>
                   </h3>
                   <p class="mt-2 text-sm text-primary-content">
-                    <%= gettext("Chat with an AI Assistant Description") %>
+                    {gettext("Chat with an AI Assistant Description")}
                   </p>
                 </div>
                 <span
