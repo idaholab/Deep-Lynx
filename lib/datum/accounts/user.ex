@@ -10,7 +10,7 @@ defmodule Datum.Accounts.User do
     field :current_password, :string, virtual: true, redact: true
     field :confirmed_at, :utc_datetime
     # lets us keep track of opened tabs in order to restore sessions
-    field :open_explorer_tabs, {:array, {:array, :integer}}
+    field :open_explorer_tabs, {:array, {:array, :integer}}, default: []
 
     timestamps(type: :utc_datetime)
   end
