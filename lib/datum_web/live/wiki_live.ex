@@ -14,12 +14,12 @@ defmodule DatumWeb.WikiLive do
       <div class="flex-auto w-6"></div>
       <div class="flex-auto w-64 ">
         <article class="prose">
-          <div :if={@content}><%= @content |> raw() %></div>
+          <div :if={@content}>{@content |> raw()}</div>
         </article>
       </div>
       <div class="flex-auto w-10 justify-items-end">
         <ul class="menu bg-base-200 rounded-box w-56 mt-10">
-          <%= @toc |> raw() %>
+          {@toc |> raw()}
         </ul>
       </div>
     </div>
