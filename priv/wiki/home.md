@@ -8,7 +8,6 @@ This wiki endeavors to be a comprehensive look at DeepLynx. If after reading you
 
 DeepLynx is a open-source data warehouse focused on enabling complex projects to embrace digital engineering. It accomplishes bringing digital thread and digital twins to these projects with integrations to a large collection of software systems across a project's lifecycle.
 
-Data is stored in a graph-like format following a user-defined domain ontology. Using the provided GraphQL interface, users and applications can request exactly the data they need by using client side defined queries. This aids finding relationships between complex datasets enabling data science efforts and AI/ML.
 
 ## Why Embrace Digital Engineering and DeepLynx?
 
