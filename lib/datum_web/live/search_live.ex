@@ -28,57 +28,52 @@ defmodule DatumWeb.SearchLive do
           </span>
           <li>
             <a phx-click="home_navigate">
-              <.icon name="hero-magnifying-glass" class="mr-1 h-3 w-3" /><%= gettext("Search") %>
+              <.icon name="hero-magnifying-glass" class="mr-1 h-3 w-3" />{gettext("Search")}
             </a>
           </li>
           <li :if={@results != []}>
             <a phx-click="select_results">
-              <.icon name="hero-list-bullet" class="mr-1 h-3 w-3" /><%= gettext("Results") %>
+              <.icon name="hero-list-bullet" class="mr-1 h-3 w-3" />{gettext("Results")}
             </a>
           </li>
           <li :if={@selected}>
             <span>
               <.icon name="hero-document" class="mr-1 h-3 w-3" />
             </span>
-            <%= Map.get(@selected, :path, gettext("Result Item")) %>
+            {Map.get(@selected, :path, gettext("Result Item"))}
           </li>
         </ul>
-      </div>
-      <div>
-        <.simple_form for={@form} phx-change="search">
-          <.input field={@form[:query]} label="Search Term(s)" type="search" />
-        </.simple_form>
       </div>
 
       <div class="mx-auto max-w-md sm:max-w-3xl">
         <div>
-          <form class="mt-6 sm:flex sm:items-center" action="#">
-            <label for="emails" class="sr-only">Email addresses</label>
+          <.simple_form for={@form} class="mt-6 sm:flex sm:items-center" phx-submit="search">
             <div class="grid grid-cols-1 sm:flex-auto">
-              <input
-                type="text"
-                name="emails"
-                id="emails"
-                class="peer relative col-start-1 row-start-1 border-0 bg-transparent py-1.5 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm/6"
-                placeholder="Enter an email"
-              />
+              <.input field={@form[:query]} label="Search Term(s)" type="search" />
+
               <div
                 class="col-start-1 col-end-3 row-start-1 rounded-md shadow-sm ring-1 ring-inset ring-gray-300 peer-focus:ring-2 peer-focus:ring-indigo-600"
                 aria-hidden="true"
               >
               </div>
+              <!--
+
+              Going to comment this out so we can use it later once we get filters or options. We can use this
+              to add some functionality and make it look prettier
+
               <div class="col-start-2 row-start-1 flex items-center">
                 <span class="h-4 w-px flex-none bg-gray-200" aria-hidden="true"></span>
                 <label for="role" class="sr-only">Role</label>
                 <select
                   id="role"
                   name="role"
-                  class="rounded-md border-0 bg-transparent py-1.5 pl-4 pr-7 text-gray-900 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm/6"
+                  class="rounded-md border-0 bg-transparent py-1.5 pl-4 pr-7 text-white sm:text-sm/6"
                 >
                   <option>Can edit</option>
                   <option>Can view</option>
                 </select>
               </div>
+            -->
             </div>
             <div class="mt-3 sm:ml-4 sm:mt-0 sm:shrink-0">
               <button
@@ -88,13 +83,13 @@ defmodule DatumWeb.SearchLive do
                 Search
               </button>
             </div>
-          </form>
+          </.simple_form>
         </div>
       </div>
 
       <div class="divider">Results</div>
 
-      <div class="text-center">
+      <div :if={@results == []} class="text-center">
         <svg
           class="mx-auto size-12 text-gray-400"
           fill="none"
@@ -172,37 +167,37 @@ defmodule DatumWeb.SearchLive do
                   <span :if={data.type == :organization}>
                     <.icon name="hero-user-group" class="mr-1 h-3 w-3" />
                   </span>
-                  <span class="truncate"><%= data.path %></span>
+                  <span class="truncate">{data.path}</span>
                   <span class="text-gray-400">/</span>
-                  <span class="whitespace-nowrap"><%= data.origin.name %></span>
+                  <span class="whitespace-nowrap">{data.origin.name}</span>
                   <span class="absolute inset-0"></span>
                 </a>
               </h2>
             </div>
             <div class="mt-3 flex items-center gap-x-2.5 text-xs/5 text-gray-400">
-              <p :if={data.description} class="truncate"><%= data.description %></p>
+              <p :if={data.description} class="truncate">{data.description}</p>
               <p :if={!data.description} class="truncate">
-                <%= gettext("Data has no description") %>
+                {gettext("Data has no description")}
               </p>
               <svg viewBox="0 0 2 2" class="size-0.5 flex-none fill-gray-300">
                 <circle cx="1" cy="1" r="1" />
               </svg>
               <p class="whitespace-nowrap">
-                <%= "#{data.inserted_at.month}/#{data.inserted_at.day}/#{data.inserted_at.year}" %>
+                {"#{data.inserted_at.month}/#{data.inserted_at.day}/#{data.inserted_at.year}"}
               </p>
             </div>
           </div>
           <span :if={data.tags}>
             <div :for={tag <- Enum.take(data.tags, 4)}>
               <div class="flex-none rounded-full bg-gray-400/10 my-2 px-2 py-1 text-xs font-medium text-gray-400 ring-1 ring-inset ring-gray-400/20">
-                <%= tag %>
+                {tag}
               </div>
             </div>
           </span>
           <span :if={data.domains}>
             <div :for={domain <- Enum.take(data.domains, 4)}>
               <div class="flex-none rounded-full bg-indigo-400/10 px-2 py-1 my-2 text-xs font-medium text-indigo-400 ring-1 ring-inset ring-indigo-400/30">
-                <%= domain %>
+                {domain}
               </div>
             </div>
           </span>
@@ -230,16 +225,16 @@ defmodule DatumWeb.SearchLive do
           options={[25, 50, 100]}
         >
           <div class="join col-span-6 ml-5">
-            <button :if={@page > 1} class="join-item btn"><%= @page - 1 %></button>
-            <button class="join-item btn btn-active"><%= @page %></button>
+            <button :if={@page > 1} class="join-item btn">{@page - 1}</button>
+            <button class="join-item btn btn-active">{@page}</button>
             <button :if={@results_max > @page * @page_size && @page > 1} class="join-item btn">
-              <%= @page + 1 %>
+              {@page + 1}
             </button>
             <button :if={@page > 1} class="join-item btn" disabled>...</button>
             <button :if={@page > 1} class="join-item btn">
-              <%= (@results_max /
-                     @page_size)
-              |> floor() %>
+              {(@results_max /
+                  @page_size)
+              |> floor()}
             </button>
           </div>
         </.input>

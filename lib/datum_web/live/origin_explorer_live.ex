@@ -32,12 +32,12 @@ defmodule DatumWeb.OriginExplorerLive do
           </span>
           <li>
             <a phx-click="home_navigate">
-              <.icon name="hero-home" class="mr-1 h-3 w-3" /><%= gettext("Home") %>
+              <.icon name="hero-home" class="mr-1 h-3 w-3" />{gettext("Home")}
             </a>
           </li>
           <li :if={@origin}>
             <a phx-click="select_origin" phx-value-origin_id={@origin.id}>
-              <.icon name="hero-server-stack" class="mr-1 h-3 w-3" /><%= @origin.name %>
+              <.icon name="hero-server-stack" class="mr-1 h-3 w-3" />{@origin.name}
             </a>
           </li>
           <%= for item <- @path_items do %>
@@ -46,7 +46,7 @@ defmodule DatumWeb.OriginExplorerLive do
                 <span :if={item.type == :directory || item.type == :root_directory}>
                   <.icon name="hero-folder" class="mr-1 h-3 w-3" />
                 </span>
-                <%= item.path %>
+                {item.path}
               </a>
             </li>
           <% end %>
@@ -61,9 +61,9 @@ defmodule DatumWeb.OriginExplorerLive do
             row_click={fn r -> JS.push("select_origin", value: %{"origin_id" => r.id}) end}
           >
             <:col><.icon name="hero-server-stack" /></:col>
-            <:col :let={origin} label={gettext("Name")}><%= origin.name %></:col>
+            <:col :let={origin} label={gettext("Name")}>{origin.name}</:col>
             <:col :let={origin} label={gettext("Date Created")}>
-              <%= "#{origin.inserted_at.month}/#{origin.inserted_at.day}/#{origin.inserted_at.year}" %>
+              {"#{origin.inserted_at.month}/#{origin.inserted_at.day}/#{origin.inserted_at.year}"}
             </:col>
 
             <:action>
@@ -103,9 +103,9 @@ defmodule DatumWeb.OriginExplorerLive do
                 <.icon name="hero-user-group" />
               </span>
             </:col>
-            <:col :let={data} label={gettext("Name")}><%= data.path %></:col>
+            <:col :let={data} label={gettext("Name")}>{data.path}</:col>
             <:col :let={data} label={gettext("Date Created")}>
-              <%= "#{data.inserted_at.month}/#{data.inserted_at.day}/#{data.inserted_at.year}" %>
+              {"#{data.inserted_at.month}/#{data.inserted_at.day}/#{data.inserted_at.year}"}
             </:col>
 
             <:action :let={data}>
