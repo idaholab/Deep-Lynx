@@ -58,7 +58,7 @@ defmodule Datum.Agent do
 
     # TODO: this function setup probably needs a lot of work. Either we need to update the elixir lang package
     # with ollama function support directly, or we need to handle weird edge cases better
-    function =
+    search_function =
       Function.new!(%{
         name: "search",
         parameters: [
@@ -77,15 +77,33 @@ defmodule Datum.Agent do
         end
       })
 
+    # TODO: this is a temporary function - as we will definitely outgrow the ability to send the entire wiki
+    # as context. We will need to build a way to chunk and do relevant text to the LLM from the wiki
+    wiki_function =
+      Function.new!(%{
+        name: "wiki",
+        parameters: [],
+        description:
+          "Returns all text in the wiki. Useful for when users want to know how to do something in the application.",
+        function: fn _args, _context ->
+          # This uses the user_id provided through the context to call our Elixir function.
+          {:ok, Jason.encode!(combine_text(Path.join(Application.app_dir(:datum), "priv/wiki")))}
+        end
+      })
+
     # tweak this system prompt as needed
     system_message =
-      Message.new_system!(~s(You are a helpful assistant.))
+      Message.new_system!(~s(You are a helpful assistant. Your answers must be brief and correct.
+      Brief and short. Do not repeat vast amounts of information unlesss specifically asked and tasked
+      to do so.If you are uncertain about something, never make up possible information, instead state
+      and admit that you do not know the thing. If I ask a question about the application, only give me
+      answers you get from tools you can use.))
 
     chain =
       %{llm: chat_model, verbose: true}
       |> LLMChain.new!()
       |> LLMChain.add_messages([system_message])
-      |> LLMChain.add_tools([function])
+      |> LLMChain.add_tools([search_function, wiki_function])
 
     {:ok, state |> Map.put(:chain, chain)}
   end
@@ -124,5 +142,22 @@ defmodule Datum.Agent do
   @impl true
   def handle_cast({:send_context, _context, _opts}, state) do
     {:noreply, state}
+  end
+
+  @doc """
+  Reads all files in the specified directory,
+  combines their contents into one string, and returns it.
+  """
+  def combine_text(directory) when is_binary(directory) do
+    File.ls!(directory)
+    |> Enum.reduce("", fn file, acc ->
+      case File.read(Path.join(directory, file)) do
+        {:ok, content} ->
+          content <> acc
+
+        _ ->
+          acc
+      end
+    end)
   end
 end

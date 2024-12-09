@@ -96,6 +96,7 @@ defmodule Datum.MixProject do
       {:langchain, "~> 0.3.0-rc.0"},
       {:tdms_parser, git: "https://github.com/DnOberon/tdms-parser", branch: "master"},
       {:sobelow, "~> 0.13", only: [:dev, :test], runtime: false},
+      {:earmark, "~> 1.4"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end

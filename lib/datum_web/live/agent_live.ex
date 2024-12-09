@@ -83,7 +83,7 @@ defmodule DatumWeb.AgentLive do
        %{
          id: UUID.uuid4(),
          message:
-           "I am Datum's friendly AI assistant! Please feel free to ask me any questions about your data.",
+           "I am DeepLynxs's friendly AI assistant! Please feel free to ask me any questions about your data.",
          origin: :ai
        }
      ])
