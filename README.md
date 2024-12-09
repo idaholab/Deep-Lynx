@@ -7,6 +7,7 @@
     - Windows: Use the appropriate installer found [here](https://elixir-lang.org/install.html#windows). If installing via exe, choose the `Elixir 1.17.3 on Erlang 27` option
 - Erlang 27.0 (should come with Elixir installation)
 - [Zig](https://ziglang.org/download/) : used for binary compilation, install using the link or on Mac via `brew install zig`
+    - You might run into a case where you need to fix your Zig install for Burrito - https://ziggit.dev/t/what-to-fix-this-related-libsystem-build-error/5387/3
 - [Node.js and NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm): used for UI libraries
 - Mix (should come with Elixir installation installed)
 - **optional**: [asdf](https://asdf-vm.com/guide/getting-started.html): version manager for Elixir, not available on Windows
@@ -39,29 +40,31 @@ Uncomment the top line in the `mix.exs` file and change the path to reflect the 
 
 You also need to modify the configuration file in `config/config.exs`, adding `cacerts_path: "/path/to/YOUR_COMPANY_CERT"` to the following lines like so: ![alt text](assets/README/configexs.png)
 
-## Running the CLI
-1. To run the CLI you must first get and compile the dependencies - `mix deps.get && mix deps.compile`.
+## Server Initialization
+1. To run the application, you must first get and compile the dependencies - `mix deps.get && mix deps.compile`.
 2. Run `mix setup` this will remove any old databases and rebuild the Operations Sqlite3 database, as well as run its migrations, should cover everything else like fetching sqlite3 and required plugins
-3. To run the CLI you must typically provide an argument, no argument will run the server. In order to provide an argument and run the CLI you must use `mix run -- argument`. e.g `mix run -- init`. 
+    1. You may have to run `brew install coreutils` on Mac if you encounter the following error: `sha256sum: command not found; Checksum fail!`
+
+## Running the CLI
+To run the CLI you must typically provide an argument, no argument will run the server. In order to provide an argument and run the CLI you must use `mix run -- argument`. e.g `mix run -- init`. 
 
 ## Running the webserver
-1. Run `mix deps.get && mix deps.compile`: this should fetch and compile project dependencies
-2. Run `mix setup`: this will remove any old databases and rebuild the Operations Sqlite3 database, as well as run its migrations, should cover everything else like fetching sqlite3 and required plugins
-3. Run `mix phx.server`: this should now just....work - no further configuration should be necessary, but be sure to at least peruse `config/dev.exs`
+1. To run the webserver, use the command `mix phx.server`. this should now just....work - no further configuration should be necessary, but be sure to at least peruse `config/dev.exs` which contains relative configuration settings.
+2. You will be greeted by a login screen. Instead of registering a new user, for local development it is recommended to use the default admin account:
+    - username: `admin@admin.com`
+    - password: `xxxxxxxxxxxx` (12 x's)
 
 ## Running the tests
-1. Run `mix deps.get && mix deps.compile`: this should fetch and compile project dependencies
-2. Run `mix test`
+To run tests, use the command `mix test`. If all have run correctly, you should see something like the following at the bottom of your terminal:
+```
+Finished in 1.9 seconds (0.00s async, 1.9s sync)
+172 tests, 0 failures
+```
 
 ## The File Structure
 The majority of development will be done in the lib folder with tests written in the aptly named test folder. Within lib, the datum_web folder is where the front-end views as well as their respective controller code reside, in addition to the front end router. The regular datum folder holds backend models and typically hosts business logic and business domain as well as DB interactions. 
 
-
-- Might need to fix your Zig install for Burrito - https://ziggit.dev/t/what-to-fix-this-related-libsystem-build-error/5387/3
-- 
-
 ## Useful Links
-
 
 ### Documentation
 
