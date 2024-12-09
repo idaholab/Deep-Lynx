@@ -19,30 +19,7 @@ export default class VectorRoutes {
         const repo = new VectorRepository();
         let embeddings: VectorData[] = [];
 
-        // if we have a json body, ignore anything else and simply use the json
-        if (req.headers['content-type']?.includes('application/json')) {
-            if (Array.isArray(req.body)) {
-                embeddings = plainToClass(VectorData, req.body);
-            } else {
-                embeddings = [plainToClass(VectorData, req.body as object)];
-            }
-            repo.uploadFromJson(embeddings)
-                .then((result) => {
-                    if (result.isError) {
-                        res.status(500).json(result);
-                        next();
-                        return;
-                    }
-
-                    res.status(200).json(result);
-                    next();
-                    return;
-                })
-                .catch((e) => {
-                    Result.Failure(`error parsing body: ${(e as Error).message}`).asResponse(res);
-                    return;
-                });
-        } else if (req.headers['content-type']) {
+        if (req.headers['content-type']) {
             const busboy = Busboy({headers: req.headers});
 
             busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, info: FileInfo) => {
@@ -110,29 +87,7 @@ export default class VectorRoutes {
         const repo = new VectorRepository();
         let embedding: number[] = [];
 
-        if (req.headers['content-type']?.includes('application/json')) {
-            if (Array.isArray(req.body)) {
-                embedding = req.body[0]['ebmedding']
-            } else {
-                embedding = req.body['embedding']
-            }
-            repo.similaritySearch(embedding, req.query.topK ? +req.query.topK : undefined)
-                .then((result) => {
-                    if (result.isError) {
-                        res.status(500).json(result);
-                        next();
-                        return;
-                    }
-
-                    res.status(200).json(result);
-                    next();
-                    return;
-                })
-                .catch((e) => {
-                    Result.Failure(`error parsing body: ${(e as Error).message}`).asResponse(res);
-                    return;
-                });
-        } else if (req.headers['content-type']) {
+        if (req.headers['content-type']) {
             const busboy = Busboy({headers: req.headers});
 
             busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, info: FileInfo) => {
