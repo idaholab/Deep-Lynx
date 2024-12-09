@@ -46,7 +46,14 @@ defmodule DatumWeb.ConnCase do
   """
   def register_and_log_in_user(%{conn: conn}) do
     user = Datum.AccountsFixtures.user_fixture()
-    %{conn: log_in_user(conn, user), user: user}
+    conn = log_in_user(conn, user)
+    token = conn |> Plug.Conn.get_session(:user_api_token)
+
+    conn =
+      conn
+      |> Plug.Conn.put_req_header("authorization", "Bearer #{token}")
+
+    %{conn: conn, user: user, token: token}
   end
 
   @doc """
@@ -56,9 +63,12 @@ defmodule DatumWeb.ConnCase do
   """
   def log_in_user(conn, user) do
     token = Datum.Accounts.generate_user_session_token(user)
+    api_token = Phoenix.Token.sign(DatumWeb.Endpoint, "personal_access_token", user.id)
 
     conn
     |> Phoenix.ConnTest.init_test_session(%{})
     |> Plug.Conn.put_session(:user_token, token)
+    |> Plug.Conn.put_session(:user_api_token, api_token)
+    |> DatumWeb.UserAuth.fetch_current_user([])
   end
 end

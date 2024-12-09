@@ -14,7 +14,8 @@ defmodule Datum.PluginsFixtures do
         filetypes: ["option1", "option2"],
         module: "some module",
         name: "some name",
-        path: "some path"
+        path: "some path",
+        enabled: true
       })
       |> Datum.Plugins.create_plugin()
 
