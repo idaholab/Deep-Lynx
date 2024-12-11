@@ -6,6 +6,9 @@ Date: 2024-12-11
 
 Accepted
 
+## Original Requirement
+> The application shall enable a multi-tenant architecture where multiple teams can use the same deployment. 
+
 ## Context
 The original DeepLynx had a surface level multi-tenancy system in that everything was done in the context of a `container` (though at the database level everything was in the same tables and schema). While we want to be able to do groupings of data and users based on projects, we don't think that its wise to attempt the same methodology of having the same context bounds for every operation. Also, because the data origins are separate databases already, separation of data is no longer a major concern. We also plan on adopting the least-privilege principal, meaning that new users don't have access to any data unless granted that access by the owners or parties with permission to do so. This will allow us data separation without having to a multi-tenant system.
 
