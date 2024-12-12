@@ -179,4 +179,27 @@ export default class LargeObjectImpl implements BlobStorage {
                 .catch((e) => reject(e));
         });
     }
+
+    renameFile?(file: File): Promise<Result<boolean>> {
+        throw new Error('Method not implemented.');
+    }
+
+    uploadPart(
+        filepath: string,
+        filename: string,
+        fileUUID: string,
+        part_id: string,
+        part: Readable | null,
+    ): Promise<Result<string>> {
+        throw new Error('Method not implemented.');
+    }
+    commitParts(
+        filepath: string,
+        filename: string,
+        fileUUID: string,
+        parts: string[],
+        options?: BlobUploadOptions
+    ): Promise<Result<BlobUploadResponse>> {
+        throw new Error('Method not implemented.');
+    }
 }

@@ -200,6 +200,7 @@ export default class ImportRoutes {
         }
     }
 
+    // todo: add support to pass a ReceiveDataOptions { has_files = true, file_ids = [] }, and get back an importID
     // createManualImport will accept either a file or a raw JSON body
     private static createManualImport(req: Request, res: Response, next: NextFunction) {
         if (req.dataSource) {

@@ -200,6 +200,18 @@ export default class FileFunctions {
         return req.pipe(busboy);
     }
 
+    public static updateMetadata(req: Request, res: Response, next: NextFunction) {
+        if (!req.dataSource) {
+            Result.Failure(`unable to find data source`, 404).asResponse(res);
+            next();
+            return;
+        }
+
+        // todo: use createManualImport here to get the fileID,
+        // then call updateMetadata and send in the new data
+        // note: I keep messing this up
+    }
+
     public static downloadFile(req: Request, res: Response, next: NextFunction) {
         fileRepo
             .findByIDAndContainer(req.params.fileID, req.params.containerID)
@@ -433,6 +445,55 @@ export default class FileFunctions {
         });
 
         return req.pipe(busboy);
+    }
+
+    public static uploadPartial(req: Request, res: Response, next: NextFunction) {
+        const fileRepo = new FileRepository();
+        // could pass as headers or query params
+        if (req.params.action) {
+            if (req.query.action === 'createMultipartUpload') {
+                // todo/note: I might be able to just do this on the ingest side rather than over here?
+                Result.Success(fileRepo.createMultipartUpload()).asResponse(res);
+            } else if (req.query.action === 'uploadPart') {
+                // key is the file_uuid
+                // block_id is the base64 id for identifying partial objects/blobs
+                // body for uploadPart is the raw file data part
+                fileRepo.uploadFilePart(
+                    req.params.containerID,
+                    req.params.sourceID,
+                    'filename', // todo: get filename via param or header
+                    req.query.key as string,
+                    req.query.block_id as string,
+                    req.body
+                )
+                    .then((result) => {
+                        Result.Success(result).asResponse(res);
+                        next();
+                        return;
+                    }).catch((e) => {
+                        Result.Error(e).asResponse(res);
+                        return;
+                    });
+            } else if (req.query.action === 'commitParts') {
+                // body for commitParts is a json array of strings
+                // todo: get filename via param or header
+                fileRepo.commitFileParts(req.params.containerID, req.params.sourceID, 'filename', req.query.key as string, req.body, req.currentUser!)
+                    .then((result) => {
+                        Result.Success(result).asResponse(res);
+                        next();
+                        return;
+                    }).catch((e) => {
+                        Result.Error(e).asResponse(res);
+                        return;
+                    });
+            } else {
+                Result.Failure(`invalid upload action: ${req.query.action}`, 500).asResponse(res);
+                next();
+            }
+        } else {
+            Result.Failure(`no upload action specified`, 500).asResponse(res);
+            next();
+        }
     }
 
     public static listFilesForContainer(req: Request, res: Response, next: NextFunction) {

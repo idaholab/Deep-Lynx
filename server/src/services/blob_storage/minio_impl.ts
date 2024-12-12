@@ -5,7 +5,7 @@ import {BlobServiceClient, ContainerClient, RestError} from '@azure/storage-blob
 import Logger from './../logger';
 import File from '../../domain_objects/data_warehouse/data/file';
 import {Client} from 'minio';
-const Minio = require('minio');
+import minio from 'minio';
 const short = require('short-uuid');
 const digestStream = require('digest-stream');
 import Config from '../config';
@@ -116,6 +116,77 @@ export default class MinioBlobImpl implements BlobStorage {
         return Promise.resolve(Result.Failure('must provide a valid Readable stream'));
     }
 
+    // put_block at the blob, return block id
+    // https://min.io/docs/minio/linux/developers/javascript/API.html#putObject
+    async uploadPart(
+        filepath: string,
+        filename: string,
+        fileUUID: string,
+        part_id: string,
+        part: Readable | null,
+    ): Promise<Result<string>> {
+        // don't need the filename or uuid because s3/minio does it differently from azure
+        if (part) {
+            try {
+                await this._client.putObject(Config.minio_bucket_name, `${filepath}${part_id}`, part);
+
+                return Promise.resolve(
+                    Result.Success(part_id)
+                );
+            } catch (e: any) {
+                return Promise.resolve(Result.Error(e));
+            }
+        }
+
+        return Promise.resolve(Result.Failure('must provide a valid Readable stream'));
+    }
+
+    // put_block_list to commit block list to blob
+    // https://min.io/docs/minio/linux/developers/javascript/API.html#composeObject
+    async commitParts(
+        filepath: string,
+        filename: string,
+        fileUUID: string,
+        parts: string[],
+        options?: BlobUploadOptions
+    ): Promise<Result<BlobUploadResponse>> {
+        const parts_destination = new minio.CopyDestinationOptions({
+            Bucket: filepath,
+            Object: `${fileUUID}${filename}`,
+        });
+
+        let source_parts: minio.CopySourceOptions[] = [];
+        parts.forEach((p) => {
+            source_parts.push(
+                new minio.CopySourceOptions({
+                    Bucket: filepath,
+                    Object: p,
+                }))
+        });
+
+        try {
+            await this._client.composeObject(parts_destination, source_parts);
+
+            return Promise.resolve(
+                Result.Success({
+                    filepath,
+                    filename: `${fileUUID}${filename}`,
+                    size: 0,
+                    md5hash: '',
+                    metadata: {
+                        contentType: null,
+                        encoding: null,
+                        canAppend: options?.canAppend,
+                    },
+                    adapter_name: this.name(),
+                    short_uuid: fileUUID,
+                }),
+            );
+        } catch (e: any) {
+            return Promise.resolve(Result.Error(e));
+        }
+    }
+
     async downloadStream(f: File): Promise<Readable | undefined> {
         let filePath;
         if (f.timeseries === true) {
@@ -136,5 +207,9 @@ export default class MinioBlobImpl implements BlobStorage {
                 return Promise.reject(e);
             }
         }
+    }
+
+    renameFile?(file: File): Promise<Result<boolean>> {
+        throw new Error('Method not implemented.');
     }
 }

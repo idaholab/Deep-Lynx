@@ -1,5 +1,5 @@
 import Result from '../../common_classes/result';
-import {Readable} from 'stream';
+import { Readable } from 'stream';
 import Config from '../config';
 import AzureBlobImpl from './azure_blob_impl';
 import Filesystem from './filesystem_impl';
@@ -20,6 +20,24 @@ export interface BlobStorage {
         encoding?: string,
         options?: BlobUploadOptions,
     ): Promise<Result<BlobUploadResponse>>;
+
+    // for cloud blob providers that support partial file uploads
+    // chunk id should come in as a query param from the user/caller
+    uploadPart(
+        filepath: string,
+        filename: string,
+        fileUUID: string,
+        part_id: string,
+        part: Readable | null,
+    ): Promise<Result<string>>;
+    commitParts(
+        filepath: string,
+        filename: string,
+        fileUUID: string,
+        parts: string[],
+        options?: BlobUploadOptions
+    ): Promise<Result<BlobUploadResponse>>;
+
     appendPipe(file: File, stream: Readable | null): Promise<Result<boolean>>;
     deleteFile(file: File): Promise<Result<boolean>>;
     renameFile?(file: File): Promise<Result<boolean>>;

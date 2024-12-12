@@ -235,6 +235,78 @@ export default class FileRepository extends Repository implements RepositoryInte
         return Promise.resolve(Result.Success(file));
     }
 
+    createMultipartUpload(): Promise<Result<string>> {
+        return Promise.resolve(Result.Success(short.generate()));
+    }
+
+    // upload the data to the path in the blob storage provider
+    async uploadFilePart(
+        container_id: string,
+        data_source_id: string,
+        filename: string,
+        fileUUID: string,
+        part_id: string,
+        part: Readable
+    ): Promise<Result<string>> {
+        const provider = BlobStorageProvider();
+
+        if (!provider) return Promise.resolve(Result.Failure('no storage provider set'));
+
+        const result = await provider.uploadPart(`containers/${container_id}/datasources/${data_source_id}/`, filename, fileUUID, part_id, part);
+        if (result.isError) return Promise.resolve(Result.Pass(result));
+
+        return Promise.resolve(Result.Success(part_id));
+    }
+
+    // commit parts and create the file as it will appear in deeplynx
+    async commitFileParts(container_id: string, data_source_id: string, filename: string, fileUUID: string, parts: string[], user: User) {
+        const provider = BlobStorageProvider();
+
+        if (!provider) return Promise.resolve(Result.Failure('no storage provider set'));
+
+        const result = await provider.commitParts(`containers/${container_id}/datasources/${data_source_id}/`, filename, fileUUID, parts);
+        if (result.isError) return Promise.resolve(Result.Pass(result));
+
+        const ext = filename.split('.').pop()?.toLowerCase();
+
+        const file = new File({
+            file_name: filename,
+            file_size: result.value.size,
+            md5hash: result.value.md5hash,
+            adapter_file_path: result.value.filepath,
+            adapter: provider.name(),
+            metadata: result.value.metadata,
+            container_id,
+            data_source_id,
+            short_uuid: fileUUID,
+            timeseries: (ext === 'csv' || ext === 'json') ? true : false
+        });
+
+        const saved = await this.save(file, user);
+        if (saved.isError) return Promise.resolve(Result.Pass(saved));
+
+        return Promise.resolve(Result.Success(file));
+    }
+
+    async updateMetadata(fileID: string, containerID: string, user: User, metadata: {[key: string]: any}, dataSourceID?: string) {
+        // todo: pass in or figure out the missing fields from Ingest
+
+        const file = new File({
+            id: fileID,
+            file_name,
+            file_size,
+            md5hash,
+            adapter_file_path,
+            adapter,
+            metadata,
+            container_id: containerID,
+            data_source_id: dataSourceID,
+            short_uuid,
+        });
+
+        // todo: save metadata in a db transaction -> use updateStatement
+    }
+
     async updateFile(fileID: string, containerID: string, user: User, filename: string, stream: Readable, dataSourceID?: string): Promise<Result<File>> {
         const provider = BlobStorageProvider();
 

@@ -1,6 +1,6 @@
-import {BlobStorage, BlobUploadOptions, BlobUploadResponse} from './blob_storage';
+import { BlobStorage, BlobUploadOptions, BlobUploadResponse } from './blob_storage';
 import Result from '../../common_classes/result';
-import {Readable} from 'stream';
+import { Readable } from 'stream';
 import * as fs from 'fs';
 import Logger from './../logger';
 import File from '../../domain_objects/data_warehouse/data/file';
@@ -65,7 +65,7 @@ export default class Filesystem implements BlobStorage {
         if (this._isWindows) filepath = filepath.replace(new RegExp('/', 'g'), `\\`);
 
         if (!fs.existsSync(`${this._directory}${filepath}`)) {
-            fs.mkdirSync(`${this._directory}${filepath}`, {recursive: true});
+            fs.mkdirSync(`${this._directory}${filepath}`, { recursive: true });
         }
 
         let filePath;
@@ -75,7 +75,7 @@ export default class Filesystem implements BlobStorage {
             filePath = `${this._directory}${filepath}${filename}${shortUUID}`;
         }
 
-        const writeStream = fs.createWriteStream(filePath, {flags: 'w'});
+        const writeStream = fs.createWriteStream(filePath, { flags: 'w' });
 
         stream?.on('error', (err: Error) => {
             Logger.error(`error saving file to filesystem ${err}`);
@@ -120,7 +120,7 @@ export default class Filesystem implements BlobStorage {
         // Windows directories use backslashes instead of forward slashes in unix like systems
 
         if (!fs.existsSync(file.adapter_file_path!)) {
-            fs.mkdirSync(file.adapter_file_path!, {recursive: true});
+            fs.mkdirSync(file.adapter_file_path!, { recursive: true });
         }
 
         let filePath;
@@ -130,7 +130,7 @@ export default class Filesystem implements BlobStorage {
             filePath = `${file.adapter_file_path}${file.file_name}${file.short_uuid}`;
         }
 
-        const writeStream = fs.createWriteStream(filePath, {flags: 'a'});
+        const writeStream = fs.createWriteStream(filePath, { flags: 'a' });
 
         stream?.on('error', (err: Error) => {
             Logger.error(`error saving file to filesystem ${err}`);
@@ -161,7 +161,7 @@ export default class Filesystem implements BlobStorage {
     constructor(directory: string, isWindows?: boolean) {
         if (!fs.existsSync(directory)) {
             try {
-                fs.mkdirSync(directory, {recursive: true});
+                fs.mkdirSync(directory, { recursive: true });
             } catch (err) {
                 Logger.error(`error creating directory ${err}`);
             }
@@ -183,7 +183,7 @@ export default class Filesystem implements BlobStorage {
                 `${f.adapter_file_path}${f.short_uuid}${f.file_name}`,
                 (err) => {
                     if (err) throw err;
-            });
+                });
 
             if (rename_res === null || rename_res === undefined) {
                 return Promise.resolve(Result.Success(true));
@@ -194,5 +194,24 @@ export default class Filesystem implements BlobStorage {
         }
 
         return Promise.resolve(Result.Success(false));
+    }
+
+    uploadPart(
+        filepath: string,
+        filename: string,
+        fileUUID: string,
+        part_id: string,
+        part: Readable | null,
+    ): Promise<Result<string>> {
+        throw new Error('Method not implemented.');
+    }
+    commitParts(
+        filepath: string,
+        filename: string,
+        fileUUID: string,
+        parts: string[],
+        options?: BlobUploadOptions
+    ): Promise<Result<BlobUploadResponse>> {
+        throw new Error('Method not implemented.');
     }
 }

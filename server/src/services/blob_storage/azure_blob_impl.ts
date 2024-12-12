@@ -1,11 +1,11 @@
-import {BlobStorage, BlobUploadOptions, BlobUploadResponse} from './blob_storage';
+import { BlobStorage, BlobUploadOptions, BlobUploadResponse } from './blob_storage';
 import Result from '../../common_classes/result';
-import {Readable} from 'stream';
-import {BlobServiceClient, ContainerClient, RestError} from '@azure/storage-blob';
+import { Readable } from 'stream';
+import { BlobServiceClient, ContainerClient, RestError } from '@azure/storage-blob';
 import Logger from './../logger';
 import File from '../../domain_objects/data_warehouse/data/file';
-import {buffer} from 'stream/consumers';
-const short = require('short-uuid');
+import { buffer } from 'stream/consumers';
+import short from 'short-uuid';
 const digestStream = require('digest-stream');
 
 /*
@@ -195,6 +195,61 @@ export default class AzureBlobImpl implements BlobStorage {
                     Logger.error(`unable to create new azure container - ${e}`);
                 }
             });
+    }
+
+    // put_block at the blob, return block id
+    // https://learn.microsoft.com/en-us/javascript/api/%40azure/storage-blob/blockblobclient?view=azure-node-latest#@azure-storage-blob-blockblobclient-stageblock
+    async uploadPart(
+        filepath: string,
+        filename: string,
+        fileUUID: string,
+        part_id: string,
+        part: Readable | null,
+    ): Promise<Result<string>> {
+        let blob_client = this._ContainerClient.getBlockBlobClient(`${filepath}${fileUUID}${filename}`);
+        let len = part?.readableLength ? part?.readableLength : 0;
+
+        let result = await blob_client.stageBlock(part_id, part, len);
+
+        if (result.errorCode) {
+            return Promise.resolve(Result.Failure(`${result.errorCode} on part_id: ${part_id}`));
+        }
+
+        return Promise.resolve(Result.Success(part_id));
+    }
+
+    // put_block_list to commit block list to blob
+    // https://learn.microsoft.com/en-us/javascript/api/%40azure/storage-blob/blockblobclient?view=azure-node-latest#@azure-storage-blob-blockblobclient-commitblocklist
+    async commitParts(
+        filepath: string,
+        filename: string,
+        fileUUID: string,
+        parts: string[],
+        options?: BlobUploadOptions
+    ): Promise<Result<BlobUploadResponse>> {
+        let blob_client = this._ContainerClient.getBlockBlobClient(`${filepath}${fileUUID}${filename}`);
+
+        let result = await blob_client.commitBlockList(parts);
+
+        if (result.errorCode) {
+            return Promise.resolve(Result.Failure(`Failed to commit uploaded parts for ${filepath}${filename} to it's blob in Azure`));
+        }
+
+        return Promise.resolve(
+            Result.Success({
+                filepath,
+                filename,
+                size: 0,
+                md5hash: '',
+                metadata: {
+                    contentType: null,
+                    encoding: null,
+                    canAppend: options?.canAppend,
+                },
+                adapter_name: this.name(),
+                short_uuid: fileUUID,
+            }),
+        );
     }
 
     async downloadStream(f: File): Promise<Readable | undefined> {
