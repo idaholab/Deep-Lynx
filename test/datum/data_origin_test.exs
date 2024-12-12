@@ -21,10 +21,12 @@ defmodule Datum.DataOriginTest do
     end
 
     test "create_origin/1 with valid data creates a origin" do
-      valid_attrs = %{name: "some name"}
+      valid_attrs = %{name: "some name", type: :s3, config: %{"key" => "value"}}
 
       assert {:ok, %Origin{} = origin} = DataOrigin.create_origin(valid_attrs)
       assert origin.name == "some name"
+      assert origin.type == :s3
+      assert origin.config == %{"key" => "value"}
     end
 
     test "create_origin/1 with invalid data returns error changeset" do

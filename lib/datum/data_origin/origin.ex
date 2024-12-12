@@ -29,13 +29,19 @@ defmodule Datum.DataOrigin.Origin do
     field :tags, {:array, :string}
     field :domains, {:array, :string}
 
+    field :type, Ecto.Enum, values: [:s3, :default], default: :default
+    # stores the raw configuration values for the type of origin this is
+    # if nil, we assume we don't have direct connection to the origin and
+    # therefore it's metadata only
+    field :config, :map, default: nil
+
     timestamps(type: :utc_datetime)
   end
 
   @doc false
   def changeset(origin, attrs) do
     origin
-    |> cast(attrs, [:name, :owned_by, :classifications, :tags, :domains])
+    |> cast(attrs, [:name, :owned_by, :classifications, :tags, :domains, :type, :config])
     |> validate_required([:name])
   end
 end
