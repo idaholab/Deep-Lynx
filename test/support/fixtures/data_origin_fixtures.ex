@@ -11,7 +11,15 @@ defmodule Datum.DataOriginFixtures do
     {:ok, origin} =
       attrs
       |> Enum.into(%{
-        name: "some name"
+        name: "some name",
+        type: :filesystem,
+        config: %{
+          "path" => "/some/nonexistent/path/two",
+          "description" => "keyword description",
+          "tags" => ["tag", "hello"],
+          "domains" => ["domain"],
+          "type" => "file"
+        }
       })
       |> Datum.DataOrigin.create_origin()
 
