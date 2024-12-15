@@ -81,6 +81,13 @@ defmodule Datum.Accounts do
   end
 
   @doc """
+  Used mainly by the CLI - input directly into the database without validation
+  """
+  def insert_user(user) do
+    Repo.insert(user)
+  end
+
+  @doc """
   Returns an `%Ecto.Changeset{}` for tracking user changes.
 
   ## Examples

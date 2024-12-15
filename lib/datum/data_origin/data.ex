@@ -19,6 +19,8 @@ defmodule Datum.DataOrigin.Data do
              :owned_by,
              :origin_id,
              :tags,
+             :checksum_type,
+             :checksum,
              :domains,
              :incoming_relationships,
              :outgoing_relationships
@@ -36,6 +38,12 @@ defmodule Datum.DataOrigin.Data do
     field :path, :string
     field :original_path, :string
     field :type, Ecto.Enum, values: [:directory, :file, :root_directory, :organization, :person]
+
+    field :checksum_type, Ecto.Enum,
+      values: [:crc32, :crc64_nvme, :md5, :sha256, :none],
+      default: :none
+
+    field :checksum, :string, default: nil
     field :file_type, {:array, :string}
     field :description, :string
     field :natural_language_properties, :string
@@ -79,6 +87,8 @@ defmodule Datum.DataOrigin.Data do
       :owned_by,
       :incoming_relationships,
       :outgoing_relationships,
+      :checksum,
+      :checksum_type,
       :description
     ])
     |> validate_required([:path])

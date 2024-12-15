@@ -35,7 +35,7 @@ defmodule DatumWeb.Client do
   Lists all Plugins from the database user has access to - *does not* return the actual plugin
   """
   def list_plugins(%__MODULE__{} = client) do
-    Req.get("#{client.endpoint}", auth: set_auth(client), plug: client.plug)
+    Req.get("#{client.endpoint}/api/v1/plugins", auth: set_auth(client), plug: client.plug)
     |> format_response()
   end
 
@@ -44,9 +44,28 @@ defmodule DatumWeb.Client do
   """
   def list_plugins!(%__MODULE__{} = client) do
     %{status: 200, body: plugins} =
-      Req.get!("#{client.endpoint}", auth: set_auth(client), plug: client.plug)
+      Req.get!("#{client.endpoint}/api/v1/plugins", auth: set_auth(client), plug: client.plug)
 
     plugins
+  end
+
+  @doc """
+  Gets current user information for supplied token - we only provide id and email here, we don't want people
+  token fishing.
+  """
+  def current_user_info(%__MODULE__{} = client) do
+    Req.get("#{client.endpoint}/api/v1/user", auth: set_auth(client), plug: client.plug)
+    |> format_response()
+  end
+
+  @doc """
+  Same as current_user_info/1 but throws an exception on error
+  """
+  def current_user_info!(%__MODULE__{} = client) do
+    %{status: 200, body: user} =
+      Req.get!("#{client.endpoint}/api/v1/user", auth: set_auth(client), plug: client.plug)
+
+    user
   end
 
   # just an easy way to wrap our response and give back a tuple with
