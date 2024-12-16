@@ -42,7 +42,7 @@ defmodule Datum.DuckdbTest do
       assert Duckdb.handle_call({:receive_result, ref}, self(), %{}) != []
     end
 
-    test "can add a paquet file as table" do
+    test "can add a parquet file as table" do
       user = user_fixture()
 
       # we call the callbacks directly here, instead of standing up the genserver. Pay attention to the state
@@ -59,6 +59,22 @@ defmodule Datum.DuckdbTest do
                )
 
       Duckdb.handle_cast({:send_query, "SELECT COUNT(*) FROM table2;", []}, state)
+
+      assert_receive {:query_response, %{result_reference: ref} = _msg}, 3000
+      # we just want to make sure we're getting some results back here
+      assert Duckdb.handle_call({:receive_result, ref}, self(), %{}) != []
+
+      # let's check we can combine files - doesn't matter that they're the same
+      assert {:reply, :ok, _state} =
+               Duckdb.handle_call(
+                 {:add_data, %Datum.DataOrigin.Origin.FilesystemConfig{},
+                  ["#{__DIR__}/test_files/iris.parquet", "#{__DIR__}/test_files/iris.parquet"],
+                  [extension: :parquet, table_name: "table2_multiple"]},
+                 self(),
+                 state
+               )
+
+      Duckdb.handle_cast({:send_query, "SELECT COUNT(*) FROM table2_multiple;", []}, state)
 
       assert_receive {:query_response, %{result_reference: ref} = _msg}, 3000
       # we just want to make sure we're getting some results back here

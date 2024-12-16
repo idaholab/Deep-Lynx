@@ -92,7 +92,7 @@ end
 
 defmodule Datum.DataOrigin.Origin.AzureConfig do
   @moduledoc """
-  R2 Configuration for Data Origins
+  Azure Blob Configuration for Data Origins
   """
   use Ecto.Schema
   import Ecto.Changeset

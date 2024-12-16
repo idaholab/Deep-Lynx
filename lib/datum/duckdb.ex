@@ -91,7 +91,7 @@ defmodule Datum.Duckdb do
   #
   # you can pass in a specific file extension by sending an optional param
   # :extension - this will short-circuit automatic detection and load the requested
-  # duckdb extension, currently supported :parquet, :csv
+  # duckdb extension, currently supported :parquet, :csv, and :json
   # NOTE: if including multiple locations, you must make sure they're all the same
   # kind of files
   @impl true
