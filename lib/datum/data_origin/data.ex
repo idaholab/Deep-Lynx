@@ -36,7 +36,7 @@ defmodule Datum.DataOrigin.Data do
     field :path, :string
     field :original_path, :string
     field :type, Ecto.Enum, values: [:directory, :file, :root_directory, :organization, :person]
-    field :file_type, :string, default: nil
+    field :file_type, {:array, :string}
     field :description, :string
     field :natural_language_properties, :string
     field :properties, :map
@@ -62,8 +62,8 @@ defmodule Datum.DataOrigin.Data do
   end
 
   @doc false
-  def changeset(origin, attrs) do
-    origin
+  def changeset(data, attrs) do
+    data
     |> cast(attrs, [
       :path,
       :tags,
@@ -97,7 +97,7 @@ defmodule Datum.DataOrigin.DataSearch do
     field :id, :binary_id
     field :path, :string
     field :original_path, :string
-    field :file_type, :string
+    field :file_type, {:array, :string}
     field :description, :string
     field :natural_language_properties, :string
     field :tags, {:array, :string}

@@ -10,6 +10,9 @@ defmodule Datum.Repo.Migrations.CreateDataOrigins do
       add :tags, {:array, :string}
       add :domains, {:array, :string}
 
+      add :type, :string
+      add :config, :map
+
       timestamps(type: :utc_datetime)
     end
 
