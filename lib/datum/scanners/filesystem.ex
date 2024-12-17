@@ -12,12 +12,12 @@ defmodule Datum.Scanners.Filesystem do
   alias Datum.DataOrigin.Data
   alias Datum.Plugins.Extractor
 
-  def scan_directory(%Origin{} = origin, root_path, user_id \\ nil) do
+  def scan_directory(%Origin{} = origin, root_path, opts \\ []) do
     {:ok, parent} =
       DataOrigin.add_data(origin, %{
         path: root_path,
         type: :directory,
-        owned_by: user_id
+        owned_by: Keyword.get(opts, :user_id)
       })
 
     ## we have to make the original leaf node
@@ -28,12 +28,14 @@ defmodule Datum.Scanners.Filesystem do
       full_path = Path.join(root_path, entry)
 
       if File.dir?(full_path),
-        do: scan_directory(origin, full_path, user_id),
-        else: act_on_file(origin, parent, full_path, user_id)
+        do: scan_directory(origin, full_path, opts),
+        else: act_on_file(origin, parent, full_path, opts)
     end)
   end
 
-  defp act_on_file(%Origin{} = origin, %Data{} = parent, path, user_id) do
+  defp act_on_file(%Origin{} = origin, %Data{} = parent, path, opts) do
+    generate_checksum = Keyword.get(opts, :generate_checksum, false)
+    user_id = Keyword.get(opts, :user_id)
     extensions = MIME.from_path(path) |> MIME.extensions()
 
     # This works because the Scan CLI process will build a local copy of the
@@ -51,10 +53,11 @@ defmodule Datum.Scanners.Filesystem do
           end
         end,
         on_timeout: :kill_task,
+        timeout: 30_000,
         ordered: false,
         max_concurrency: 8
       )
-      |> Stream.map(fn
+      |> Enum.map(fn
         {:ok, metadata} -> {:ok, metadata}
         {:exit, reason} -> {:error, "plugin run task exited: #{Exception.format_exit(reason)}"}
       end)
@@ -65,14 +68,30 @@ defmodule Datum.Scanners.Filesystem do
 
     {_s, metadatas} = statuses |> Enum.filter(&match?({:ok, _}, &1)) |> Enum.unzip()
 
+    {checksum_type, checksum} =
+      if generate_checksum do
+        generate_checksum(path)
+      else
+        {:none, nil}
+      end
+
     {:ok, child} =
       DataOrigin.add_data(origin, %{
         path: path,
         type: :file,
         metadata: %{plugin_generated_metadata: metadatas},
-        owned_by: user_id
+        owned_by: user_id,
+        checksum: checksum,
+        checksum_type: checksum_type
       })
 
     DataOrigin.connect_data(origin, parent, child)
+  end
+
+  defp generate_checksum(path) do
+    {:crc32,
+     File.stream!(path, 2048, [])
+     |> Enum.reduce(0, fn line, acc -> :crc32cer.nif(acc, line) end)
+     |> to_string()}
   end
 end

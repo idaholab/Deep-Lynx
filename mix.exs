@@ -97,6 +97,7 @@ defmodule Datum.MixProject do
       {:sobelow, "~> 0.13", only: [:dev, :test], runtime: false},
       {:earmark, "~> 1.4"},
       {:duckdbex, "~> 0.3.8"},
+      {:crc32cer, "~> 0.1.11"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end

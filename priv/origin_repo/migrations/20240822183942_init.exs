@@ -8,6 +8,8 @@ defmodule Datum.DataOrigin.OriginRepo.Migrations.Init do
       add :path, :string
       add :original_path, :string
       add :type, :string
+      add :checksum_type, :string
+      add :checksum, :string
       add :file_type, :string
       add :properties, :jsonb
       add :description, :string

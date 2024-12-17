@@ -15,7 +15,7 @@ defmodule Datum.ScannerTest do
       valid_attrs = %{name: "some name"}
 
       assert {:ok, %Origin{} = origin} = DataOrigin.create_origin(valid_attrs)
-      Filesystem.scan_directory(origin, test_path)
+      Filesystem.scan_directory(origin, test_path, generate_checksum: true)
       teardown()
     end
   end
