@@ -218,8 +218,7 @@ defmodule Datum.Duckdb do
              conn,
              "CREATE TABLE #{table_name} AS SELECT * FROM read_csv([#{Enum.map_join(locations, ",", fn location -> ~s("#{location}") end)}]);"
            ),
-         # it's weird, but this is what DUCKDB should return for csv - nothing
-         [~c"\v"] <- Duckdbex.fetch_all(result_ref) do
+         [[_count]] <- Duckdbex.fetch_all(result_ref) do
       :ok
     else
       error -> {:error, error}
