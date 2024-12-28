@@ -17,6 +17,7 @@ defmodule Datum.DuckdbTest do
 
       assert_receive {:query_response, %{result_reference: ref} = _msg}, 3000
       # we just want to make sure we're getting some results back here
+
       assert Duckdb.handle_call({:receive_result, ref}, self(), %{}) != []
     end
 
