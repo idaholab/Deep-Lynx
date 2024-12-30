@@ -12,9 +12,9 @@ defmodule DatumWeb.WikiLive do
     ~H"""
     <div class="flex">
       <div class="flex-auto w-6"></div>
-      <div class="flex-auto w-64 ">
-        <article class="prose">
-          <div :if={@content}>{@content |> raw()}</div>
+      <div class="flex-auto w-1/3">
+        <article :if={@content} class="prose max-w-none prose-invert">
+          {@content |> raw()}
         </article>
       </div>
       <div class="flex-auto w-10 justify-items-end">
