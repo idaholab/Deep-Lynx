@@ -35,7 +35,7 @@ When a new tab, a LiveView, is initialized and `mount/3` is called - you should 
 An example of how we use message passing is when the `DatumWeb.OriginExplorerLive` requests that the `HomeLive`, or home screen, opens a new `DatumWeb.GraphExplorerLive` tab with data it sends to visualize. The `HomeLive` module receives this message and opens a new tab with the requested data.
 
 
-Tabs can't easily communicate with each other - unless they have the process ID of the tab they're hoping to respond to. It's easier then, to send a message from a tab to `HomeLive` with the tab's ID - and let `HomeLive` sort out what process ID matches that tab and then sending the requested message back down. It becomes a broker and we avoid any unforeseen side affects.
+Tabs can't easily communicate with each other - unless they have the process ID of the tab they're hoping to respond to. It's easier then, to send a message from a tab to `HomeLive` with the tab's ID - and let `HomeLive` sort out what process ID matches that tab and then sending the requested message back down. It becomes a broker and we avoid any unforeseen side affects. We use the [Registry](https://hexdocs.pm/elixir/1.18.1/Registry.html#content) module to register all live tabs by their IDs. Then we can dispatch messages to those tabs by their ID's, without having to know their PIDs. This gets us around having to communicate a PID back up the chain - we only ever need to communicate downwards.
 
 
 ## Gotcha's
@@ -44,7 +44,7 @@ Tabs can't easily communicate with each other - unless they have the process ID 
 
 Because this function relies on the LiveView calling it being mounted at the router, it will not work when in a nested LiveView. While you can still call `Phoenix.LiveView.push_patch/2` in a nested LiveView to trigger state update without re-rendering, that patch should be handled by `HomeLive` - and propagated downwards as a message.
 
-**Solution**: You can call `Phoenix.LiveView.push_patch/3` at any point as long as you make sure the URL supplied is mounted like below on the router. The HomeLive module will propagate your patch and parameters downwards to the proper tab as a message.
+**Solution**: You can call `Phoenix.LiveView.push_patch/3` at any point as long as you make sure the URL supplied is mounted like below on the router. The HomeLive module will propagate your patch and parameters downwards to the proper tab as a message. Handle that message with the `Phoenix.LiveView.handle_info/2` callback. The message pattern for patches is `{:patch, params, uri}`.
 
 ```elixir
 # The HomeLive view's handle_params/3 function will propagate all patches downwards to the enclosed tab

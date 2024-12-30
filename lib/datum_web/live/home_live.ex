@@ -216,6 +216,25 @@ defmodule DatumWeb.HomeLive do
      |> assign(:selected_tabs, List.duplicate(nil, Enum.count(tabs)))}
   end
 
+  # this handle_params/3 will propagate a patch downwards to the tab by id. This allows us to trigger changes on
+  # child liveviews without having to rerender them - and without having access to their own handle_params/3 function
+  # for more information see the wiki - /wiki/home_liveview_and_tab_system
+  #
+  # this will be sent as a message to the child LiveView with the body of {:patch, params, uri}
+  @impl true
+  def handle_params(%{"tab_id" => tab_id} = params, uri, socket) do
+    {tab_id, _r} = Integer.parse(tab_id)
+
+    # we're going to use Registry.dispatch/4 instead of just a lookup for the PID  - this is safer and will provide a no-op 
+    # path of the tab_id doesn't exist - basically sends the patch message and propagates the params and uri downwards to the tab
+    # if it exists
+    Registry.dispatch(DatumWeb.TabRegistry, tab_id, fn entries ->
+      for {pid, _module} <- entries, do: send(pid, {:patch, params, uri})
+    end)
+
+    {:noreply, socket}
+  end
+
   # we need this here as a fallback in case of badly formatted params as well as handling already open tabs
   # eventually we will want to build functionality that parses the parameters and passes it to a relevant tab
   # allowing the nested liveviews to run patch operations
