@@ -1,4 +1,5 @@
 defmodule Datum.Duckdb do
+  @dialyzer {:nowarn_function, init: 1}
   @moduledoc """
   DuckDB is a GenServer (https://hexdocs.pm/elixir/GenServer.html) which is in charge of running any queries on
   CSV and Parquet files currently. Each instance of this GenServer is an individual DB, interacting with a single
@@ -36,14 +37,17 @@ defmodule Datum.Duckdb do
   def init(%{parent: _parent_pid} = state) do
     # open a connection to the db when you need to use it, connections are
     # native OS threads - not processes!
-    {:ok, db} =
-      Duckdbex.open(":memory:", %Duckdbex.Config{
-        allow_community_extensions: true,
-        autoload_known_extensions: true,
-        use_temporary_directory: true
-      })
+    case Duckdbex.open(%Duckdbex.Config{
+           allow_community_extensions: true,
+           autoload_known_extensions: true,
+           use_temporary_directory: true
+         }) do
+      {:ok, db} ->
+        {:ok, state |> Map.put(:db, db)}
 
-    {:ok, state |> Map.put(:db, db)}
+      _ ->
+        {:stop, "unable to open DuckDB"}
+    end
   end
 
   @impl true

@@ -82,7 +82,7 @@ defmodule Datum.Scan do
          {:ok, user} <-
            Datum.Accounts.insert_user(%Datum.Accounts.User{id: id, email: email}) do
       # load the plugins into the local operations DB - we'll fetch them again in the next step
-      [_statuses, plugins] =
+      {_statuses, plugins} =
         plugins_info
         |> Enum.map(fn plugin -> Datum.Plugins.create_plugin(plugin) end)
         |> Enum.unzip()
