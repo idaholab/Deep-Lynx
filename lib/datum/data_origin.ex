@@ -102,8 +102,16 @@ defmodule Datum.DataOrigin do
              data_origin_id: origin.id,
              user_id: origin.owned_by,
              permission_type: :readwrite
+           }),
+         {:ok, updated_origin} <-
+           update_origin(origin, %{
+             database_path:
+               Path.join(
+                 Application.get_env(:datum, :origin_db_path),
+                 "#{ShortUUID.encode!(origin.id)}.db"
+               )
            }) do
-      {:ok, origin}
+      {:ok, updated_origin}
     else
       err -> err
     end

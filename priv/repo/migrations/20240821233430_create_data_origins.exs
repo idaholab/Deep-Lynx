@@ -5,6 +5,7 @@ defmodule Datum.Repo.Migrations.CreateDataOrigins do
     create table(:data_origins, primary_key: false) do
       add :id, :binary_id, primary_key: true
       add :name, :string
+      add :database_path, :string
       add :owned_by, references(:users, on_delete: :nothing, type: :binary_id)
       add :classifications, {:array, :string}
       add :tags, {:array, :string}

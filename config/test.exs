@@ -9,7 +9,7 @@ config :argon2_elixir, t_cost: 1, m_cost: 8
 # to provide built-in test partitioning in CI environment.
 # Run `mix help test` for more information.
 config :datum, Datum.Repo,
-  database: "./databases/operations_test",
+  database: Path.join([System.user_home(), "/.datum_databases", "operations_test.db"]),
   journal_mode: :wal,
   auto_vacuum: :incremental,
   datetime_type: :iso8601,

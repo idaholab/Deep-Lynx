@@ -41,7 +41,6 @@ defmodule Datum.Scan do
     # start a supervised task for each of the paths passed in from the args
     # logging will inform the user of any issues etc. It should be it's own
     # origin - but one origin that contains each of these paths as :root_directory
-    # TODO: we need add support for different scanners based on the root paths or passed in args
     Task.Supervisor.async_stream_nolink(
       Datum.TaskSupervisor,
       directories,
