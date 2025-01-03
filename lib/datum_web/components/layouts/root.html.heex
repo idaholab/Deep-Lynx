@@ -11,7 +11,7 @@
     <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
     </script>
   </head>
-  <body class=" antialiased h-full">
+  <body class="">
     <div class="navbar bg-base-100">
       <div class="flex-1">
         <a class="btn btn-ghost text-xl" href={~p"/"}>
@@ -83,5 +83,21 @@
       </div>
     </div>
     {@inner_content}
+    <footer aria-labelledby="footer-heading" class="relative">
+      <h2 id="footer-heading" class="sr-only">Footer</h2>
+      <div class="mx-auto max-w-7xl px-6 pb-8 pt-4 lg:px-8">
+        <div class="border-t border-white/10 pt-8 md:flex md:items-center md:justify-between">
+          <div class="flex space-x-6 md:order-2"></div>
+          <p class="mt-8 text-xs leading-3 text-gray-400 md:order-1 md:mt-0">
+            © 2025 Idaho National Laboratory, All rights reserved.
+          </p>
+          <div class="mt-8 text-xs leading-3 text-gray-400 md:order-2 md:mt-0">
+            <a target="_blank" href="https://doe.responsibledisclosure.com/hc/en-us">
+              Vulnerability Disclosure Program
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
   </body>
 </html>
