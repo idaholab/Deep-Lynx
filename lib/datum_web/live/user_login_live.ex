@@ -5,7 +5,7 @@ defmodule DatumWeb.UserLoginLive do
   def render(assigns) do
     ~H"""
     <div class="mx-auto max-w-sm">
-      <div class="card bg-stone-750 p-4 text-primary-content w-96 shadow-xl">
+      <div class="card p-4 text-primary-content w-96 shadow-xl">
         <.header class="text-center text-white">
           Log in to account
           <:subtitle>
