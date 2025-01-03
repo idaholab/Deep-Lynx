@@ -10,6 +10,8 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        cherenkov: "#07519E", // INL Dark Blue
+        electricity: "#2BA8E0", // INL Light Blue
         brand: "#FD4F00",
       },
     },
