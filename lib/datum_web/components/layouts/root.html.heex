@@ -19,67 +19,53 @@
         </a>
       </div>
       <div class="flex-none gap-2">
-        <div class="dropdown dropdown-end">
-          <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="feather feather-user"
+        <%= if @current_user do %>
+          <div class="dropdown dropdown-end">
+            <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="feather feather-user"
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+
+            <ul
+              tabindex="0"
+              class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
             >
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-          </div>
-          <ul
-            tabindex="0"
-            class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
-          >
-            <%= if @current_user do %>
               <li class="text-[0.8125rem] leading-6 ml-3">{@current_user.email}</li>
-            <% else %>
+
               <li>
                 <.link
-                  href={~p"/users/register"}
-                  class="text-[0.8125rem] leading-6 font-semibold hover:text-gray-500"
-                >
-                  Register
-                </.link>
-              </li>
-              <li>
-                <.link
-                  href={~p"/users/log_in"}
+                  href={~p"/users/settings"}
                   class="text-[0.8125rem] leading-6  font-semibold hover:text-gray-500"
                 >
-                  Log in
+                  Settings
                 </.link>
               </li>
-            <% end %>
-            <li>
-              <.link
-                href={~p"/users/settings"}
-                class="text-[0.8125rem] leading-6  font-semibold hover:text-gray-500"
-              >
-                Settings
-              </.link>
-            </li>
-            <li>
-              <.link
-                href={~p"/users/log_out"}
-                method="delete"
-                class="text-[0.8125rem] leading-6 font-semibold hover:text-gray-500"
-              >
-                Logout
-              </.link>
-            </li>
-          </ul>
-        </div>
+              <li>
+                <.link
+                  href={~p"/users/log_out"}
+                  method="delete"
+                  class="text-[0.8125rem] leading-6 font-semibold hover:text-gray-500"
+                >
+                  Logout
+                </.link>
+              </li>
+            </ul>
+          </div>
+        <% else %>
+        <% end %>
       </div>
     </div>
     {@inner_content}
