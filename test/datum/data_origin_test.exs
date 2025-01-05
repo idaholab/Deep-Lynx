@@ -7,6 +7,7 @@ defmodule Datum.DataOriginTest do
     alias Datum.DataOrigin.Origin
 
     import Datum.DataOriginFixtures
+    import Datum.AccountsFixtures
 
     @invalid_attrs %{name: nil}
 
@@ -56,6 +57,19 @@ defmodule Datum.DataOriginTest do
     test "change_origin/1 returns a origin changeset" do
       origin = origin_fixture()
       assert %Ecto.Changeset{} = DataOrigin.change_origin(origin)
+    end
+
+    test "user can lock an origin they have :readwrite permissions to" do
+      user = user_fixture()
+      origin = origin_fixture(%{owned_by: user.id})
+      origin_not_owned = origin_fixture()
+
+      assert {:ok, _lock} = DataOrigin.lock_origin(origin, user)
+      # verify the lock happened
+      assert {:error, :resource_locked} = DataOrigin.lock_origin(origin, user)
+
+      # ensure we can't lock something we don't own
+      assert {:error, :unauthorized} = DataOrigin.lock_origin(origin_not_owned, user)
     end
   end
 end

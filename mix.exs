@@ -98,6 +98,7 @@ defmodule Datum.MixProject do
       {:earmark, "~> 1.4"},
       {:duckdbex, "~> 0.3.8"},
       {:crc32cer, "~> 0.1.11"},
+      {:oban, "~> 2.18"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end
@@ -134,7 +135,7 @@ defmodule Datum.MixProject do
       ],
       # sqlite fetch _should_ handle getting all the required extensions we need and install them locally
       "sqlite.fetch": [
-        "cmd cd priv/sqlite_extensions && curl -L https://github.com/asg017/sqlite-vec/releases/download/v0.1.3/install.sh | sh",
+        "cmd cd priv/sqlite_extensions && curl -o install_vec.sh https://github.com/asg017/sqlite-vec/releases/download/v0.1.6/install.sh | sh",
         "cmd cd priv/sqlite_extensions && sh install.sh"
       ]
     ]

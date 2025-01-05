@@ -23,6 +23,13 @@ defmodule Datum.DataOriginFixtures do
       })
       |> Datum.DataOrigin.create_origin()
 
+    {:ok, _perm} =
+      Datum.Permissions.create_data_origin(%{
+        data_origin_id: origin.id,
+        user_id: origin.owned_by,
+        permission_type: :readwrite
+      })
+
     origin
   end
 
