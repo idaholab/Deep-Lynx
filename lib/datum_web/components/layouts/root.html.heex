@@ -14,12 +14,9 @@
   <body class="">
     <div class="navbar bg-base-100">
       <div class="flex-1">
-        <a class="btn btn-ghost text-xl" href={~p"/"}>
-          <img class="w-auto h-10" src="/images/lynx-white.png" />
+        <a class="btn btn-ghost" href={~p"/"}>
+          <img class="w-auto h-12" src="/images/lynx-white.png" />
         </a>
-        <div> 
-         <a href={~p"/wiki"}> Wiki </a> 
-        </div>
       </div>
       <div class="flex-none gap-2">
         <%= if @current_user do %>
@@ -47,6 +44,14 @@
               class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
             >
               <li class="text-[0.8125rem] leading-6 ml-3">{@current_user.email}</li>
+              <li>
+                <.link
+                  href={~p"/wiki"}
+                  class="text-[0.8125rem] leading-6  font-semibold hover:text-gray-500"
+                >
+                  Wiki
+                </.link>
+              </li>
 
               <li>
                 <.link
