@@ -25,6 +25,9 @@ defmodule Datum.DataOrigin.Origin do
     field :name, :string
     belongs_to :owner, User, type: :binary_id, foreign_key: :owned_by
 
+    # the absolute path as to where the database is located
+    # defaults to "~./.datum_databases/origins/{short_form_of_id}"
+    field :database_path, :string
     field :classifications, {:array, :string}
     field :tags, {:array, :string}
     field :domains, {:array, :string}
@@ -41,7 +44,16 @@ defmodule Datum.DataOrigin.Origin do
   @doc false
   def changeset(origin, attrs) do
     origin
-    |> cast(attrs, [:name, :owned_by, :classifications, :tags, :domains, :type, :config])
+    |> cast(attrs, [
+      :name,
+      :owned_by,
+      :classifications,
+      :tags,
+      :domains,
+      :type,
+      :config,
+      :database_path
+    ])
     |> validate_required([:name])
   end
 end

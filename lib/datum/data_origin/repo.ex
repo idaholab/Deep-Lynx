@@ -30,7 +30,7 @@ defmodule Datum.DataOrigin.OriginRepo do
 
     start_opts = [
       name: name,
-      database: "./databases/origins/#{short_uuid}",
+      database: origin.database_path,
       journal_mode: :wal,
       mode: mode,
       binary_id_type: :binary,

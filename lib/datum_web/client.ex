@@ -35,7 +35,10 @@ defmodule DatumWeb.Client do
   Lists all Plugins from the database user has access to - *does not* return the actual plugin
   """
   def list_plugins(%__MODULE__{} = client) do
-    Req.get("#{client.endpoint}/api/v1/plugins", auth: set_auth(client), plug: client.plug)
+    Req.get(client.endpoint |> URI.append_path("/api/v1/plugins"),
+      auth: set_auth(client),
+      plug: client.plug
+    )
     |> format_response()
   end
 
@@ -44,7 +47,10 @@ defmodule DatumWeb.Client do
   """
   def list_plugins!(%__MODULE__{} = client) do
     %{status: 200, body: plugins} =
-      Req.get!("#{client.endpoint}/api/v1/plugins", auth: set_auth(client), plug: client.plug)
+      Req.get!(client.endpoint |> URI.append_path("/api/v1/plugins"),
+        auth: set_auth(client),
+        plug: client.plug
+      )
 
     plugins
   end
@@ -54,7 +60,10 @@ defmodule DatumWeb.Client do
   token fishing.
   """
   def current_user_info(%__MODULE__{} = client) do
-    Req.get("#{client.endpoint}/api/v1/user", auth: set_auth(client), plug: client.plug)
+    Req.get(client.endpoint |> URI.append_path("/api/v1/user"),
+      auth: set_auth(client),
+      plug: client.plug
+    )
     |> format_response()
   end
 
@@ -63,9 +72,38 @@ defmodule DatumWeb.Client do
   """
   def current_user_info!(%__MODULE__{} = client) do
     %{status: 200, body: user} =
-      Req.get!("#{client.endpoint}/api/v1/user", auth: set_auth(client), plug: client.plug)
+      Req.get!(client.endpoint |> URI.append_path("/api/v1/user"),
+        auth: set_auth(client),
+        plug: client.plug
+      )
 
     user
+  end
+
+  @doc """
+  Uploads a local DataOrigin database file to the central server. 
+  """
+  def upload_data_origin(%__MODULE__{} = client, origin_db_path) do
+    Req.post(client.endpoint |> URI.append_path("/api/v1/data_origins"),
+      auth: set_auth(client),
+      plug: client.plug,
+      form_multipart: [database: File.stream!(origin_db_path)]
+    )
+    |> format_response()
+  end
+
+  @doc """
+  Same as upload_data_origin/2 but raises if there is an error
+  """
+  def upload_data_origin!(%__MODULE__{} = client, origin_db_path) do
+    %{status: 200} =
+      Req.post!(client.endpoint |> URI.append_path("/api/v1/data_origins"),
+        auth: set_auth(client),
+        plug: client.plug,
+        form_multipart: [database: File.stream!(origin_db_path)]
+      )
+
+    :ok
   end
 
   # just an easy way to wrap our response and give back a tuple with
