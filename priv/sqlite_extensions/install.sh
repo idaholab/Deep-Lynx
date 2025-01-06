@@ -103,16 +103,16 @@ main() {
 
     case "$target-$type" in
     "macos-x86_64-loadable")
-      url="https://github.com/nalgeon/sqlean/releases/download/0.27.0/sqlean-macos-x86.zip"
+      url="https://github.com/nalgeon/sqlean/releases/download/0.27.1/sqlean-macos-x86.zip"
       ;;
     "windows-x86_64-loadable")
-      url="https://github.com/nalgeon/sqlean/releases/download/0.27.0/sqlean-win-x86.zip"
+      url="https://github.com/nalgeon/sqlean/releases/download/0.27.1/sqlean-win-x86.zip"
       ;;
     "linux-x86_64-loadable")
-      url="https://github.com/nalgeon/sqlean/releases/download/0.27.0/sqlean-linux-x86.zip"
+      url="https://github.com/nalgeon/sqlean/releases/download/0.27.1/sqlean-linux-x86.zip"
       ;;
     "macos-aarch64-loadable")
-      url="https://github.com/nalgeon/sqlean/releases/download/0.27.0/sqlean-macos-arm64.zip"
+      url="https://github.com/nalgeon/sqlean/releases/download/0.27.1/sqlean-macos-arm64.zip"
       ;;
     *)
       echo "Unsupported platform $target" 1>&2
@@ -120,24 +120,13 @@ main() {
       ;;
     esac
 
-    extension="\${url##*.}"
-
-    if [ "$extension" = "zip" ]; then
-      tmpfile="$prefix/tmp.zip"
-    else
-      tmpfile="$prefix/tmp.tar.gz"
-    fi
+    tmpfile="$prefix/tmp.zip"
 
     curl --fail --location --progress-bar --output "$tmpfile" "$url"
 
-    if [ "$extension" = "zip" ]; then
-      unzip "$tmpfile" -d $prefix
-      rm $tmpfile
-    else
-      tar -xzf "$tmpfile" -C $prefix
-      rm $tmpfile
-    fi
-
+    unzip "$tmpfile" -d $prefix
+    rm $tmpfile
+   
     echo "✅ $target $type binaries installed at $prefix."
 }
 
