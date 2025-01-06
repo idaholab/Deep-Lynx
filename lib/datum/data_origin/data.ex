@@ -116,3 +116,76 @@ defmodule Datum.DataOrigin.DataSearch do
     field :rank, :float, virtual: true
   end
 end
+
+defmodule Datum.DataOrigin.DataHistory do
+  @moduledoc """
+  This structure is populated automatically in the database when data is inserted. Keeping the schema
+  separate allows us to know when we're working with historical data.
+  """
+  alias Datum.DataOrigin.Origin
+  use Ecto.Schema
+
+  # this is how to tell the json encoder what fields to encode
+  @derive {Jason.Encoder,
+           only: [
+             :id,
+             :path,
+             :type,
+             :file_type,
+             :description,
+             :properties,
+             :owned_by,
+             :origin_id,
+             :tags,
+             :checksum_type,
+             :checksum,
+             :domains,
+             :incoming_relationships,
+             :outgoing_relationships
+           ]}
+
+  @primary_key {:id, :binary_id, autogenerate: true}
+  schema "data" do
+    # virtual fields are those added by various queries, just simplifies working with this data structure
+    field :row_num, :integer, virtual: true
+    field :count, :integer, virtual: true
+    field :description_snippet, :string, virtual: true
+    field :natural_language_properties_snippet, :string, virtual: true
+
+    field :in_compliance, :boolean, default: false
+    field :path, :string
+    field :original_path, :string
+    field :type, Ecto.Enum, values: [:directory, :file, :root_directory, :organization, :person]
+
+    field :checksum_type, Ecto.Enum,
+      values: [:crc32, :crc64_nvme, :md5, :sha256, :none],
+      default: :none
+
+    field :checksum, :string, default: nil
+    field :file_type, {:array, :string}
+    field :description, :string
+    field :natural_language_properties, :string
+    field :properties, :map
+
+    # owned_by can't be foreign key since it's referring to the ops db
+    field :owned_by, :binary_id
+    # we need to reference the origin - while this could be a virtual field, then
+    # we have to set it correctly in each set. Also this lets us combine origin results
+    belongs_to :origin, Origin, type: :binary_id, foreign_key: :origin_id
+
+    field :tags, {:array, :string}, default: []
+    field :domains, {:array, :string}, default: []
+
+    # we are storing relationships as a sparse adjacency list - this means that each piece of data contains the information
+    # on the data it is directly connected to within the graph, with no additional information as to other ancestors
+    # this allows us to store a graph relatively cheaply and works well with BFS/DFS algorithms and since we're most likely
+    # not going to have a more relationships than data, this _should_ work well.
+    # format should be {data_id, origin_id, type (optional)}
+    field :incoming_relationships, {:array, {:array, :string}}, default: []
+    field :outgoing_relationships, {:array, {:array, :string}}, default: []
+
+    field :inserted_at, :utc_datetime
+    field :updated_at, :utc_datetime
+    field :deleted_at, :utc_datetime, default: nil
+  end
+end
