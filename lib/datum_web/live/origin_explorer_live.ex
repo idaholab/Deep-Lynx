@@ -170,6 +170,13 @@ defmodule DatumWeb.OriginExplorerLive do
     if !user.id || !tab do
       {:error, socket}
     else
+      # now that we're a true tab and we're not going to crash out - let's make sure we register with the TabRegistry
+      # this allows the HomeLive view to dispatch and receieve messages _without_ us having to pass our PID back up the
+      # chain or to have anything other than the parent process - https://hexdocs.pm/elixir/1.18.1/Registry.html#register/3 
+      #
+      # we throw away the error because this shouldnt' kill anything
+      Registry.register(DatumWeb.TabRegistry, tab_id, DatumWeb.OriginExplorerLive)
+
       origin =
         if Map.get(tab.state, "origin_id") do
           DataOrigin.get_data_orgins_user(
@@ -308,20 +315,29 @@ defmodule DatumWeb.OriginExplorerLive do
 
   @impl true
   def handle_event("close_tab", _unsigned_params, socket) do
-    notify_parent({:close_tab, socket.assigns.tab.id}, socket.assigns.parent)
+    send(socket.assigns.parent, {:close_tab, socket.assigns.tab.id})
     {:noreply, socket}
   end
 
   @impl true
   def handle_event("open_graph", _params, socket) do
-    notify_parent(
+    send(
+      socket.assigns.parent,
       {:open_tab, DatumWeb.GraphExplorerLive,
        %{
          items: Enum.map(socket.assigns.items, fn item -> [item.id, socket.assigns.origin.id] end)
-       }, socket.assigns.group_index},
-      socket.assigns.parent
+       }, socket.assigns.group_index}
     )
 
+    {:noreply, socket}
+  end
+
+  # we use the callback version of handle_info so we can update the socket with any changed state
+  # note this doesn't actually do anything - but you will need it so the view doesn't crash if sent
+  # the message. If you want to actually handle params, make a new function ABOVE this with the 
+  # same params you'd do a normal handle_params/3 with
+  @impl true
+  def handle_info({:patch, _params, _uri}, socket) do
     {:noreply, socket}
   end
 
@@ -353,9 +369,7 @@ defmodule DatumWeb.OriginExplorerLive do
         }
       })
 
-    notify_parent({:tab_updated, socket.assigns.tab.id}, socket.assigns.parent)
+    send(socket.assigns.parent, {:tab_updated, socket.assigns.tab.id})
     socket
   end
-
-  defp notify_parent(msg, process), do: send(process, msg)
 end

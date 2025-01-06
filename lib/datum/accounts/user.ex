@@ -1,6 +1,9 @@
 defmodule Datum.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
+
+  # right now we're only sending user details over the wire when needed, so hide everything uncessary
+  @derive {Jason.Encoder, only: [:id, :email]}
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "users" do

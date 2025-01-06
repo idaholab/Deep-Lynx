@@ -31,7 +31,7 @@ defmodule Mix.Tasks.Wiki.Gen do
       toc_path
       |> File.write(
         """
-        * [#{Enum.join(args, " ")}](wiki/#{filename})
+        * [#{Enum.join(args, " ")}](/wiki/#{filename})
         """,
         [:write, :append]
       )

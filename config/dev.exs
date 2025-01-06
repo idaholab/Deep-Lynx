@@ -2,7 +2,7 @@ import Config
 
 # Configure your database
 config :datum, Datum.Repo,
-  database: "./databases/operations",
+  database: Path.join([System.user_home(), "/.datum_databases", "operations.db"]),
   journal_mode: :wal,
   auto_vacuum: :incremental,
   datetime_type: :iso8601,

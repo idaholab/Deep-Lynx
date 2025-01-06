@@ -93,4 +93,17 @@ defmodule DatumWeb.UserSessionControllerTest do
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Logged out successfully"
     end
   end
+
+  describe "UserController API calls" do
+    setup :register_and_log_in_user
+
+    test "get current user info", %{conn: conn, user: user} do
+      conn =
+        conn
+        |> get(~p"/api/v1/user")
+
+      assert r_user = json_response(conn, 200)
+      assert r_user["id"] == user.id
+    end
+  end
 end

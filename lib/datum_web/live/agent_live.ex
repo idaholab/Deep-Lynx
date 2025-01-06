@@ -83,7 +83,7 @@ defmodule DatumWeb.AgentLive do
        %{
          id: UUID.uuid4(),
          message:
-           "I am DeepLynxs's friendly AI assistant! Please feel free to ask me any questions about your data.",
+           "I am DeepLynx's friendly AI assistant! Please feel free to ask me any questions about your data.",
          origin: :ai
        }
      ])
@@ -140,6 +140,4 @@ defmodule DatumWeb.AgentLive do
   end
 
   defp notify_parent(msg, process), do: send(process, msg)
-
-  # TODO: we need to include the update state functionality in this module at some point
 end

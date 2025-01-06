@@ -203,6 +203,4 @@ defmodule DatumWeb.GraphExplorerLive do
 
     {items ++ additional_items, links ++ addtional_links}
   end
-
-  # TODO: we need to include the update state functionality in this module at some point
 end

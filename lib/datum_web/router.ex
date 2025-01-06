@@ -23,6 +23,8 @@ defmodule DatumWeb.Router do
     pipe_through :api
 
     get "/plugins", PluginsController, :list_info
+
+    get "/user", UserSessionController, :user_details
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
@@ -62,9 +64,24 @@ defmodule DatumWeb.Router do
 
     live_session :require_authenticated_user,
       on_mount: [{DatumWeb.UserAuth, :ensure_authenticated}] do
-      live "/", HomeLive, :index
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
+
+      # The HomeLive  is the root of the entire Datum project. Most other interactions with the application
+      # happen at this level, within enclosed "tabs". Each "tab" is a separate LiveView process, which while
+      # great for process isolation, can make it difficult to follow some patterns seen in other applications
+      # 
+      # The HomeLive view's handle_params/3 function will propagate all patchs downwards to the enclosed tab
+      # IF a parameter is provided called :tab_id and that tab is available to send messages to. This method
+      # allows us to use patches and avoid full re-renders of the screen without having to do a lot of Javascrip
+      # magic at each LiveView
+      #
+      # Note: tab LiveViews cannnot use the handle_params/3 callback - instead use the handle_cast/3 callback
+      # see OriginExplorerLive for a sample
+      live "/", HomeLive, :index
+
+      # note how we preface the patch calls with the type of tab that should be handling it - helps keep this understandable
+      live "/origin_explorer/:tab_id/test", HomeLive, :origin_explorer_test
     end
   end
 

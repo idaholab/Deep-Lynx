@@ -33,8 +33,11 @@ defmodule Datum.Application do
 
         # we played around with making this part of the supervisor, but it needs the Repo process started
         # before it can interact with its local database
-        Datum.Scan.run(args)
-        IO.puts("Filescanner has completed its run")
+        {parsed, _rest, _invalid} =
+          args |> OptionParser.parse(switches: [generate_checksum: :boolean])
+
+        Datum.Scan.run(args, parsed)
+        IO.puts("Scan has completed its run")
         System.halt(0)
 
       ["server" | _args] ->
@@ -50,7 +53,9 @@ defmodule Datum.Application do
           # {Datum.Worker, arg},
           # Start to serve requests, typically the last entry
           DatumWeb.Endpoint,
-          {Task.Supervisor, name: Datum.TaskSupervisor}
+          {Task.Supervisor, name: Datum.TaskSupervisor},
+          # this registry lets DatumWeb.HomeLive act as a broker and handle message passing between tabs
+          {Registry, keys: :unique, name: DatumWeb.TabRegistry}
         ]
 
         # See https://hexdocs.pm/elixir/Supervisor.html
@@ -73,7 +78,9 @@ defmodule Datum.Application do
           # {Datum.Worker, arg},
           # Start to serve requests, typically the last entry
           DatumWeb.Endpoint,
-          {Task.Supervisor, name: Datum.TaskSupervisor}
+          {Task.Supervisor, name: Datum.TaskSupervisor},
+          # this registry lets DatumWeb.HomeLive act as a broker and handle message passing between tabs
+          {Registry, keys: :unique, name: DatumWeb.TabRegistry}
         ]
 
         # See https://hexdocs.pm/elixir/Supervisor.html
@@ -105,7 +112,7 @@ defmodule Datum.Application do
       if endpoint do
         endpoint
       else
-        Prompt.text("Please enter the URL for the central Datum server you wish to use:")
+        Prompt.text("Please enter the URL for the central Datum server you wish to use")
       end
 
     token =
@@ -115,12 +122,12 @@ defmodule Datum.Application do
       if token do
         token
       else
-        Prompt.text("Please enter your Personal Access Token (PAT):")
+        Prompt.text("Please enter your Personal Access Token (PAT)")
       end
 
     :ok =
       File.write(
-        Path.join(System.user_home(), ".datum-config"),
+        Path.join(System.user_home(), ".datum_config"),
         Ymlr.document!(%{endpoint: endpoint, token: token})
       )
 

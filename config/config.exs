@@ -11,7 +11,8 @@ config :gettext, :default_locale, "en"
 
 config :datum,
   ecto_repos: [Datum.Repo],
-  generators: [timestamp_type: :utc_datetime]
+  generators: [timestamp_type: :utc_datetime],
+  origin_db_path: Path.join([System.user_home(), "/.datum_databases", "origins"])
 
 # Configures the endpoint
 config :datum, DatumWeb.Endpoint,
