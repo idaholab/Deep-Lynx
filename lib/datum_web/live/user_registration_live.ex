@@ -7,38 +7,42 @@ defmodule DatumWeb.UserRegistrationLive do
   def render(assigns) do
     ~H"""
     <div class="mx-auto max-w-sm">
-      <.header class="text-center text-white">
-        Register for an account
-        <:subtitle>
-          Already registered?
-          <.link navigate={~p"/users/log_in"} class="font-semibold text-brand hover:underline">
-            Log in
-          </.link>
-          to your account now.
-        </:subtitle>
-      </.header>
+      <div class="card p-4 text-primary-content w-96 shadow-xl">
+        <.header class="text-center text-white">
+          Register for an account
+          <:subtitle>
+            Already registered?
+            <.link navigate={~p"/users/log_in"} class="font-semibold text-brand hover:underline">
+              Log in
+            </.link>
+            to your account now.
+          </:subtitle>
+        </.header>
 
-      <.simple_form
-        for={@form}
-        id="registration_form"
-        phx-submit="save"
-        phx-change="validate"
-        phx-trigger-action={@trigger_submit}
-        action={~p"/users/log_in?_action=registered"}
-        method="post"
-        class="mt-10"
-      >
-        <.error :if={@check_errors}>
-          Oops, something went wrong! Please check the errors below.
-        </.error>
+        <.simple_form
+          for={@form}
+          id="registration_form"
+          phx-submit="save"
+          phx-change="validate"
+          phx-trigger-action={@trigger_submit}
+          action={~p"/users/log_in?_action=registered"}
+          method="post"
+          class="mt-6"
+        >
+          <.error :if={@check_errors}>
+            Oops, something went wrong! Please check the errors below.
+          </.error>
+          <.input field={@form[:email]} type="email" label="Email" required />
+          <div class="pt-4"></div>
 
-        <.input field={@form[:email]} type="email" label="Email" required />
-        <.input field={@form[:password]} type="password" label="Password" required />
-
-        <:actions>
-          <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>
-        </:actions>
-      </.simple_form>
+          <.input field={@form[:password]} type="password" label="Password" required />
+          <:actions>
+            <.button phx-disable-with="Creating account..." class="w-full mt-4">
+              Create an account
+            </.button>
+          </:actions>
+        </.simple_form>
+      </div>
     </div>
     """
   end

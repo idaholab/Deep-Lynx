@@ -4,69 +4,86 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
-    <.live_title suffix=" · Phoenix Framework">
+    <.live_title suffix=" · Data Catalog">
       {assigns[:page_title] || "Datum"}
     </.live_title>
     <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
     <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
     </script>
   </head>
-  <body class=" antialiased h-full">
-    <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
-      <li>
-        <.link href={~p"/"} class="text-[0.8125rem] leading-6  font-semibold hover:text-gray-500">
-          Home
-        </.link>
-      </li>
-      <%= if @current_user do %>
-        <li class="text-[0.8125rem] leading-6">
-          {@current_user.email}
-        </li>
-        <li>
-          <.link
-            href={~p"/users/settings"}
-            class="text-[0.8125rem] leading-6  font-semibold hover:text-gray-500"
-          >
-            Settings
-          </.link>
-        </li>
-        <li>
-          <.link
-            href={~p"/users/log_out"}
-            method="delete"
-            class="text-[0.8125rem] leading-6 font-semibold hover:text-gray-500"
-          >
-            Log out
-          </.link>
-        </li>
-      <% else %>
-        <li>
-          <.link
-            href={~p"/users/register"}
-            class="text-[0.8125rem] leading-6 font-semibold hover:text-gray-500"
-          >
-            Register
-          </.link>
-        </li>
-        <li>
-          <.link
-            href={~p"/users/log_in"}
-            class="text-[0.8125rem] leading-6  font-semibold hover:text-gray-500"
-          >
-            Log in
-          </.link>
-        </li>
-      <% end %>
+  <body class="">
+    <div class="navbar bg-base-100">
+      <div class="flex-1">
+        <a class="btn btn-ghost text-xl" href={~p"/"}>
+          <img class="w-auto h-10" src="/images/lynx-white.png" />
+        </a>
+      </div>
+      <div class="flex-none gap-2">
+        <%= if @current_user do %>
+          <div class="dropdown dropdown-end">
+            <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="feather feather-user"
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
 
-      <li>
-        <.link
-          href={~p"/wiki"}
-          class="text-[0.8125rem] leading-6  font-semibold hover:text-gray-500"
-        >
-          Wiki
-        </.link>
-      </li>
-    </ul>
+            <ul
+              tabindex="0"
+              class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
+            >
+              <li class="text-[0.8125rem] leading-6 ml-3">{@current_user.email}</li>
+
+              <li>
+                <.link
+                  href={~p"/users/settings"}
+                  class="text-[0.8125rem] leading-6  font-semibold hover:text-gray-500"
+                >
+                  Settings
+                </.link>
+              </li>
+              <li>
+                <.link
+                  href={~p"/users/log_out"}
+                  method="delete"
+                  class="text-[0.8125rem] leading-6 font-semibold hover:text-gray-500"
+                >
+                  Logout
+                </.link>
+              </li>
+            </ul>
+          </div>
+        <% else %>
+        <% end %>
+      </div>
+    </div>
     {@inner_content}
+    <footer aria-labelledby="footer-heading" class="relative">
+      <h2 id="footer-heading" class="sr-only">Footer</h2>
+      <div class="mx-auto max-w-7xl px-6 pb-8 pt-4 lg:px-8">
+        <div class="border-t border-white/10 pt-8 md:flex md:items-center md:justify-between">
+          <div class="flex space-x-6 md:order-2"></div>
+          <p class="mt-8 text-xs leading-3 text-gray-400 md:order-1 md:mt-0">
+            © 2025 Idaho National Laboratory, All rights reserved.
+          </p>
+          <div class="mt-8 text-xs leading-3 text-gray-400 md:order-2 md:mt-0">
+            <a target="_blank" href="https://doe.responsibledisclosure.com/hc/en-us">
+              Vulnerability Disclosure Program
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
   </body>
 </html>
