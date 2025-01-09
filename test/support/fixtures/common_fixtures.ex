@@ -18,8 +18,4 @@ defmodule Datum.CommonFixtures do
 
     explorer_tabs
   end
-
-  @doc """
-  Generate a resource_locks.
-  """
 end
