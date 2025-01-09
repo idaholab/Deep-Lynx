@@ -1,6 +1,6 @@
 {
     "name": "deeplynx",
-    "version": "1.7.0",
+    "version": "1.7.1",
     "main": "index.js",
     "types": "index.d.ts",
     "napi": {

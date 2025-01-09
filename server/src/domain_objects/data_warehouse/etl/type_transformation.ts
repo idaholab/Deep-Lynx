@@ -413,6 +413,25 @@ export default class TypeTransformation extends BaseDomainClass {
         let results: Node[] | Edge[] = [];
         // if no root array, act normally
         if (!this.root_array) {
+
+            let valid = false;
+
+            // no conditions immediately equals true
+            if (!this.conditions || this.conditions.length === 0) valid = true;
+
+            if (this.conditions) {
+                for (const condition of this.conditions) {
+                    const isValid = TypeTransformation.validTransformationCondition(condition, data.data as {[key: string]: any});
+                    if (isValid) {
+                        valid = true;
+                        break;
+                    }
+                }
+            }
+ 
+            // we don't error out on a non-matching condition, simply pass the transformation by
+            if (!valid) return new Promise((resolve) => resolve(Result.Success([])));
+
             const results = await this.generateResults(data);
 
             if (results.isError) {
@@ -790,6 +809,7 @@ export default class TypeTransformation extends BaseDomainClass {
         const value = this.getNestedValue(condition.key!, payload, index);
 
         if (!value) return false;
+
         let rootExpressionResult = TypeTransformation.compare(condition.operator!, value, condition.value);
 
         // handle subexpressions
@@ -823,8 +843,7 @@ export default class TypeTransformation extends BaseDomainClass {
             }
 
             case 'in': {
-                const expectedValues = expected.split(',');
-
+                const expectedValues = expected.split(',').map((item: string) => item.trim()); //split by comma and trim whitespace
                 return expectedValues.includes(value);
             }
 
