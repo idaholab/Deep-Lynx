@@ -490,40 +490,6 @@ defmodule Datum.DataOrigin do
     |> Repo.preload(:origin)
   end
 
-  @doc """
-  Locks the selected DataOrigin to the user and returns the ResourceLock - though the lock
-  is exclusive regardless of user, we want to track _who_ locked it - and who knows, maybe
-  in the future we might have resource locks per use for certain resources?
-
-      ## Examples
-
-      iex> lock_origin(origin, user)
-      {:ok, %ResourceLocks{}}
-
-
-      iex> lock_origin(origin, user)
-      {:error, :resource_locked (or string message)}
-  """
-  def lock_origin(%Origin{} = origin, %User{} = user, _opts \\ []) do
-    query =
-      from o in Origin,
-        distinct: true,
-        left_join: p in Datum.Permissions.DataOrigin,
-        on: o.id == p.data_origin_id,
-        where:
-          (p.user_id == ^user.id or
-             p.group_id in subquery(
-               from g in UserGroup, where: g.user_id == ^user.id, select: g.group_id
-             )) and p.permission_type in [:readwrite] and o.id == ^origin.id,
-        select: o
-
-    if Repo.one(query) do
-      Datum.Common.lock_resource(:data_origin, origin.id, user)
-    else
-      {:error, :unauthorized}
-    end
-  end
-
   alias Datum.DataOrigin.ExtractedMetadata
 
   @doc """

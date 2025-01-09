@@ -22,8 +22,8 @@ defmodule DatumWeb.Router do
   scope "/api/v1", DatumWeb do
     pipe_through :api
 
+    # CLI ROUTES
     get "/plugins", PluginsController, :list_info
-
     get "/user", UserSessionController, :user_details
   end
 

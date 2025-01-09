@@ -96,7 +96,7 @@ defmodule Datum.Scan do
     else
       _ ->
         IO.puts(
-          "Unable to fetch or sync either the current user for the token, or plugins - scan will proceed by will not be synced and functionality will be degraded"
+          "Unable to fetch or sync either the current user for the token, or plugins - scan will proceed but will not be synced and functionality will be degraded"
         )
 
         {%Accounts.User{id: UUID.uuid4()}, []}
