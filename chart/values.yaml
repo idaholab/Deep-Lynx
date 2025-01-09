@@ -121,8 +121,6 @@ airflow:
       # whether to load example DAGs
       load_examples: true
 
-datahub:
-  enabled: false
 
 mlflow:
   enabled: false

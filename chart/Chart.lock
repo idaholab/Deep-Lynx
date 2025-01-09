@@ -17,11 +17,8 @@ dependencies:
 - name: airflow
   repository: https://airflow.apache.org/
   version: 1.14.0
-- name: datahub
-  repository: https://helm.datahubproject.io
-  version: 0.4.19
 - name: mlflow
   repository: https://charts.bitnami.com/bitnami
   version: 1.4.16
-digest: sha256:6ce3b5cc3d2fdd19e247e70adf8b7938a34f095cda2aaa3b99f395ff24298f0c
-generated: "2024-08-02T11:23:31.972755-06:00"
+digest: sha256:0ec882cefcbc92ee4533948bd6002e8e95f9d80d36c1143a53f5e568baf58599
+generated: "2024-11-07T16:11:17.37458-07:00"
