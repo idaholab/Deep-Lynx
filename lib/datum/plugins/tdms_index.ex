@@ -1,3 +1,9 @@
+require Protocol
+Protocol.derive(Jason.Encoder, TDMS.File)
+Protocol.derive(Jason.Encoder, TDMS.Property)
+Protocol.derive(Jason.Encoder, TDMS.Channel)
+Protocol.derive(Jason.Encoder, TDMS.Group)
+
 defmodule Datum.Plugins.TdmsIndex do
   @moduledoc """
   General metadata extraction for TDMS index files

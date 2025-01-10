@@ -43,10 +43,24 @@ dir_one =
     owned_by: admin.id
   })
 
+# build the TDMS update 
+
+{:ok, %Datum.Plugins.Plugin{} = plugin} =
+  Datum.Plugins.create_plugin(%{
+    name: "tdms index extractor_elixir",
+    module_name: Datum.Plugins.TdmsIndex,
+    filetypes: [".tdms_index"],
+    plugin_type: :extractor
+  })
+
+{:ok, json} =
+  Datum.Plugins.Extractor.extract_with_plugin(plugin, "#{__DIR__}/doe.tdms_index")
+
 file_one =
   DataOrigin.add_data!(origin, %{
-    path: "test.txt",
-    original_path: "/Users/darrjw/home/test.txt",
+    path: "test.tdms",
+    original_path: "/Users/darrjw/home/test.tdms",
+    properties: json,
     type: :file,
     tags: ["sensor data"],
     domains: ["geomagentic"],
