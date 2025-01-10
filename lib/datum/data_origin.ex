@@ -96,7 +96,7 @@ defmodule Datum.DataOrigin do
     with {:ok, origin} <-
            %Origin{}
            |> Origin.changeset(attrs)
-           |> Repo.insert(),
+           |> Repo.insert(on_conflict: :nothing),
          {:ok, _perm} <-
            Datum.Permissions.create_data_origin(%{
              data_origin_id: origin.id,

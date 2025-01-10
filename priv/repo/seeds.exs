@@ -180,3 +180,6 @@ file_two =
   })
 
 {:ok, _user} = Accounts.update_user_open_tabs(admin, [[tab_one.id, tab_two.id], [tab_three.id]])
+
+admin_token = Phoenix.Token.sign(DatumWeb.Endpoint, "personal_access_token", admin.id)
+IO.puts("ADMIN PAT: #{admin_token}")

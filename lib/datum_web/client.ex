@@ -56,6 +56,50 @@ defmodule DatumWeb.Client do
   end
 
   @doc """
+  Lists all DataOrigins from the database user has access to 
+  """
+  def list_origins(%__MODULE__{} = client) do
+    Req.get(client.endpoint |> URI.append_path("/api/v1/origins"),
+      auth: set_auth(client),
+      plug: client.plug
+    )
+    |> format_response()
+  end
+
+  @doc """
+    Same as list_origins/1 but raises an exception on unexpected response or error
+  """
+  def list_origins!(%__MODULE__{} = client) do
+    %{status: 200, body: origins} =
+      Req.get!(client.endpoint |> URI.append_path("/api/v1/origins"),
+        auth: set_auth(client),
+        plug: client.plug
+      )
+
+    origins
+  end
+
+  def create_origin(%__MODULE__{} = client, params) do
+    Req.put(client.endpoint |> URI.append_path("/api/v1/origins"),
+      json: params,
+      auth: set_auth(client),
+      plug: client.plug
+    )
+    |> format_response(expected_status_code: 201)
+  end
+
+  def create_origin!(%__MODULE__{} = client, params) do
+    %{status: 201, body: origin} =
+      Req.put!(client.endpoint |> URI.append_path("/api/v1/origins"),
+        json: params,
+        auth: set_auth(client),
+        plug: client.plug
+      )
+
+    origin
+  end
+
+  @doc """
   Gets current user information for supplied token - we only provide id and email here, we don't want people
   token fishing.
   """
