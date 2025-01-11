@@ -18,7 +18,7 @@ defmodule Datum.SearchTest do
 
       assert {:ok, data1} =
                origin1
-               |> DataOrigin.add_data(%{
+               |> DataOrigin.add_data(user, %{
                  path: "/some/nonexistent/path",
                  tags: ["data one"],
                  domain: ["mathematics"],
@@ -27,7 +27,7 @@ defmodule Datum.SearchTest do
 
       assert {:ok, data2} =
                origin2
-               |> DataOrigin.add_data(%{
+               |> DataOrigin.add_data(user, %{
                  path: "/a/new/path",
                  tags: ["data two"],
                  domain: ["science"],

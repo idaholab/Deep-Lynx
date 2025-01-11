@@ -1,42 +1,57 @@
 defmodule Datum.Scan do
   @moduledoc """
-  This is the process in charge of scanning - called almost exclusively from the CLI. If
-  you are wanting the server or other processes to run scanning - prefer using the scanner you
+  This is a GenServer in charge of running scan processes from the CLI.  
+  If you are wanting the server or other processes to run scanning - prefer using the scanner you
   need directly.
   """
+  use GenServer
   require Logger
   alias DatumWeb.Client
-  alias Datum.DataOrigin
-  alias Datum.Accounts
 
-  @doc """
-  run/2 will run the packaged scanners against the provided directories, currently only
-  local or mounted network storage locations are supported. Options refer to the various
-  options that the scanners have.
+  def start_link(%{endpoint: _endpoint, token: _token} = state) do
+    GenServer.start_link(
+      __MODULE__,
+      state,
+      name: __MODULE__
+    )
+  end
 
-  FilesystemScanner - :generate_checksum -> bool - automatically generate a crc32 checksum of the scanned files
-  """
-  def run(directories, opts \\ []) do
-    generate_checksum = Keyword.get(opts, :generate_checksum, false)
+  def scan(dirs, opts \\ []) do
+    GenServer.call(__MODULE__, {:scan, dirs, opts})
+  end
+
+  # Server
+  @impl true
+  def init(
+        %{
+          endpoint: endpoint,
+          token: token
+        } = state
+      ) do
     # run the migrations and open a read/write connection to local ops db
     # this is needed in case there are any updates to the CLI and ops central db
-    IO.puts("Running migrations for operations database")
     {:ok, _, _} = Ecto.Migrator.with_repo(Datum.Repo, &Ecto.Migrator.run(&1, :up, all: true))
-    IO.puts("Migrations complete")
 
-    # sync the local operations database with the cloud one
-    # by pulling the user record, and download the shared plugins
-
-    # pull the config file first so we can build a client
-    {:ok, %{"endpoint" => endpoint, "token" => token} = _config} =
-      YamlElixir.read_from_file(Path.join(System.user_home(), ".datum_config"))
+    # sync the local operations database with the cloud one for the records we need
+    # The reason we're building a local ops db at all is primarily for using plugins
+    # this allows us to reuse a bunch of code easily
 
     # the plug environment lets us override where the scan gets its data when testing
     {:ok, client} =
       Client.new(endpoint, token: token, plug: Application.get_env(:datum, :scan_plug))
 
-    {user, _plugins} = load_remote_db(client)
-    {:ok, origin} = load_or_create_origin(user)
+    # connect the websocket client, don't need the PID because we register locally by module name
+    {:ok, _pid} = DatumWeb.SocketClient.start_link(%{endpoint: endpoint, token: token})
+
+    # fetch the current set of plugins 
+    load_plugins(client)
+
+    {:ok, state |> Map.put(:client, client)}
+  end
+
+  @impl true
+  def handle_call({:scan, directories, opts}, _from, state) do
+    {:ok, origin} = load_or_create_origin(state.client)
 
     # start a supervised task for each of the paths passed in from the args
     # logging will inform the user of any issues etc. It should be it's own
@@ -45,9 +60,12 @@ defmodule Datum.Scan do
       Datum.TaskSupervisor,
       directories,
       fn dir ->
-        Datum.Scanners.Filesystem.scan_directory(origin, dir,
-          user_id: user.id,
-          generate_checksum: generate_checksum
+        Datum.Scanners.Filesystem.scan_directory(
+          origin,
+          Client.current_user_info!(state.client),
+          dir,
+          user_id: %Datum.Accounts.User{}.id,
+          generate_checksum: Keyword.get(opts, :generate_checksum)
         )
       end,
       timeout: :infinity,
@@ -56,30 +74,38 @@ defmodule Datum.Scan do
     )
     |> Enum.each(fn _result -> IO.puts("Finished scan") end)
 
-    # TODO: now that the scan has finished, we need to upload the new(ish) origin
-
-    :ok
+    {:reply, :ok, state}
   end
 
-  defp load_or_create_origin(user) do
-    origin = Datum.DataOrigin.list_data_orgins_user(user) |> List.first()
+  defp load_or_create_origin(client) do
+    origins = Client.list_origins!(client)
 
-    if origin do
-      {:ok, origin}
-    else
+    if origins == [] do
+      IO.puts("No existing Data Origins found, creating...")
+
       origin_name = Prompt.text("Name the Data Origin which should be created")
 
-      DataOrigin.create_origin(%{name: origin_name})
+      Client.create_origin(client, %{name: origin_name})
+    else
+      case Prompt.select("Please select a Data Origin to upload this data to:", [
+             {"Create New", :new}
+             | Enum.map(origins, fn origin -> {origin["name"], origin} end)
+           ]) do
+        :new ->
+          origin_name = Prompt.text("Name the Data Origin which should be created")
+          Client.create_origin(client, %{name: origin_name})
+
+        origin ->
+          Client.create_origin(client, origin)
+      end
     end
   end
 
-  # this loads the user and plugins from the remote database - this is currently non-idempotent, meaning
+  # this loads the plugins from the remote database - this is currently non-idempotent, meaning
   # if you run it twice it will error out on attempting to insert records that already exist
-  defp load_remote_db(client) do
-    with {:ok, %{"id" => id, "email" => email} = _user} <- Client.current_user_info(client),
-         {:ok, plugins_info} <- Client.list_plugins(client),
-         {:ok, user} <-
-           Datum.Accounts.insert_user(%Datum.Accounts.User{id: id, email: email}) do
+  defp load_plugins(client) do
+    with {:ok, plugins_info} <-
+           Client.list_plugins(client) do
       # load the plugins into the local operations DB - we'll fetch them again in the next step
       {_statuses, plugins} =
         plugins_info
@@ -91,15 +117,11 @@ defmodule Datum.Scan do
           "Not all plugins could be loaded from the remote server. Functionality may be degraded"
         )
       end
-
-      {user, plugins}
     else
       _ ->
         IO.puts(
           "Unable to fetch or sync either the current user for the token, or plugins - scan will proceed but will not be synced and functionality will be degraded"
         )
-
-        {%Accounts.User{id: UUID.uuid4()}, []}
     end
   end
 end

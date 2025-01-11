@@ -164,38 +164,59 @@ defmodule Datum.DataOrigin do
     Origin.changeset(origin, attrs)
   end
 
-  def add_data(%Origin{} = origin, attrs \\ %{}) do
+  def add_data(%Origin{} = origin, %User{} = user, attrs \\ %{}) do
     OriginRepo.with_dynamic_repo(origin, fn ->
       with {:ok, data} <-
              %Data{}
              |> Data.changeset(Map.put(attrs, :origin_id, origin.id))
-             |> OriginRepo.insert(),
+             |> OriginRepo.insert(
+               on_conflict:
+                 {:replace,
+                  [
+                    :properties,
+                    :owned_by,
+                    :checksum_type,
+                    :checksum
+                  ]},
+               returning: true
+             ),
            {:ok, _perm} <-
              %Datum.Permissions.Data{}
              |> Datum.Permissions.Data.changeset(%{
                data_id: data.id,
-               user_id: data.owned_by,
+               user_id: user.id,
                permission_type: :readwrite
              })
              |> OriginRepo.insert() do
         {:ok, data}
       else
-        err -> {:error, err}
+        err ->
+          {:error, err}
       end
     end)
   end
 
-  def add_data!(%Origin{} = origin, attrs \\ %{}) do
+  def add_data!(%Origin{} = origin, %User{} = user, attrs \\ %{}) do
     OriginRepo.with_dynamic_repo(origin, fn ->
       with %Data{} = data <-
              %Data{}
              |> Data.changeset(Map.put(attrs, :origin_id, origin.id))
-             |> OriginRepo.insert!(),
+             |> OriginRepo.insert!(
+               on_conflict:
+                 {:replace_all_except,
+                  [
+                    :id,
+                    :tags,
+                    :domains,
+                    :incoming_relationships,
+                    :outgoing_relationships
+                  ]}
+             ),
            %Datum.Permissions.Data{} = _perm <-
              %Datum.Permissions.Data{}
              |> Datum.Permissions.Data.changeset(%{
                data_id: data.id,
-               user_id: data.owned_by,
+               user_id: user.id,
                permission_type: :readwrite
              })
              |> OriginRepo.insert!() do

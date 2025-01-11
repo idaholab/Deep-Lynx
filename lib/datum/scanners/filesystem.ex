@@ -11,10 +11,16 @@ defmodule Datum.Scanners.Filesystem do
   alias Datum.DataOrigin.Origin
   alias Datum.DataOrigin.Data
   alias Datum.Plugins.Extractor
+  alias Datum.Accounts.User
 
-  def scan_directory(%Origin{} = origin, root_path, opts \\ []) do
+  @doc """
+  This version of scan_directory accepts an Origin record and assumes
+  that, because it's not just an Origin ID - that we're running this 
+  on the server and have direct access to the filesystem in question
+  """
+  def scan_directory(%Origin{} = origin, %User{} = user, root_path, opts \\ []) do
     {:ok, parent} =
-      DataOrigin.add_data(origin, %{
+      DataOrigin.add_data(origin, user, %{
         path: root_path,
         type: :directory,
         owned_by: Keyword.get(opts, :user_id)
@@ -28,12 +34,12 @@ defmodule Datum.Scanners.Filesystem do
       full_path = Path.join(root_path, entry)
 
       if File.dir?(full_path),
-        do: scan_directory(origin, full_path, opts),
-        else: act_on_file(origin, parent, full_path, opts)
+        do: scan_directory(origin, user, full_path, opts),
+        else: act_on_file(origin, user, parent, full_path, opts)
     end)
   end
 
-  defp act_on_file(%Origin{} = origin, %Data{} = parent, path, opts) do
+  defp act_on_file(%Origin{} = origin, %User{} = user, %Data{} = parent, path, opts) do
     generate_checksum = Keyword.get(opts, :generate_checksum, false)
     user_id = Keyword.get(opts, :user_id)
     extensions = MIME.from_path(path) |> MIME.extensions()
@@ -76,7 +82,7 @@ defmodule Datum.Scanners.Filesystem do
       end
 
     {:ok, child} =
-      DataOrigin.add_data(origin, %{
+      DataOrigin.add_data(origin, user, %{
         path: path,
         type: :file,
         metadata: %{plugin_generated_metadata: metadatas},

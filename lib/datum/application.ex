@@ -34,10 +34,34 @@ defmodule Datum.Application do
         # we played around with making this part of the supervisor, but it needs the Repo process started
         # before it can interact with its local database
         {parsed, _rest, _invalid} =
-          args |> OptionParser.parse(switches: [generate_checksum: :boolean])
+          args |> OptionParser.parse(switches: [generate_checksum: :boolean, watch: :boolean])
 
-        Datum.Scan.run(args, parsed)
-        IO.puts("Scan has completed its run")
+        {:ok, %{"endpoint" => endpoint, "token" => token} = _config} =
+          YamlElixir.read_from_file(Path.join(System.user_home(), ".datum_config"))
+
+        {:ok, pid} =
+          Datum.Scan.start_link(%{endpoint: endpoint, token: token})
+
+        # run the initial scan - this is run regardless of watch status so that
+        # we always start from the latest version of the origin before we start sending
+        # any updates
+        Datum.Scan.scan(args, parsed)
+
+        if Keyword.get(parsed, :watch) do
+          # monitor allows us to keep the CLI running while the scanning is taken place
+          #
+          # https://hexdocs.pm/elixir/1.18.1/Process.html#monitor/1
+          IO.puts("Starting monitor")
+          Process.monitor(pid)
+
+          receive do
+            {:DOWN, _ref, :process, object, _reason} ->
+              if object == pid do
+                System.halt(0)
+              end
+          end
+        end
+
         System.halt(0)
 
       ["server" | _args] ->

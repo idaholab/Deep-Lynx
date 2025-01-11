@@ -9,13 +9,15 @@ defmodule Datum.ScannerTest do
 
   describe "scanners" do
     import Datum.ScannerFixtures
+    import Datum.AccountsFixtures
 
     test "filesystem scanner can accurately scan/no plugins" do
+      user = user_fixture()
       test_path = setup()
       valid_attrs = %{name: "some name"}
 
       assert {:ok, %Origin{} = origin} = DataOrigin.create_origin(valid_attrs)
-      Filesystem.scan_directory(origin, test_path, generate_checksum: true)
+      Filesystem.scan_directory(origin, user, test_path, generate_checksum: true)
       teardown()
     end
   end

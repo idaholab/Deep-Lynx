@@ -41,5 +41,6 @@ defmodule Datum.DataOrigin.OriginRepo.Migrations.Init do
     end
 
     create index(:data, [:path])
+    create index(:data, [:path, :type], unique: true)
   end
 end
