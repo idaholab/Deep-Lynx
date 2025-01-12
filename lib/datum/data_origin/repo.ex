@@ -25,7 +25,7 @@ defmodule Datum.DataOrigin.OriginRepo do
         # note that you can ONLY write to origin databases through these connections,
         # not through the attached dbs on the operations db
         :readwrite -> {:global, String.to_atom("origindb_#{short_uuid}")}
-        _ -> nil
+        _ -> String.to_atom("origindb_#{short_uuid}")
       end
 
     start_opts = [
