@@ -4,6 +4,7 @@ defmodule Datum.Application do
   @moduledoc false
 
   use Application
+  alias DatumWeb.Client
 
   @impl true
   def start(_type, _args) do
@@ -31,23 +32,45 @@ defmodule Datum.Application do
         {:ok, _pid} =
           Supervisor.start_link(children, strategy: :one_for_one, name: Datum.Supervisor)
 
-        # we played around with making this part of the supervisor, but it needs the Repo process started
-        # before it can interact with its local database
-        {parsed, _rest, _invalid} =
+        # run the migrations and open a read/write connection to local ops db
+        # this is needed in case there are any updates to the CLI and ops central db
+        {:ok, _, _} = Ecto.Migrator.with_repo(Datum.Repo, &Ecto.Migrator.run(&1, :up, all: true))
+
+        # fetch the directories from the args, and options
+        {options, directories, _invalid} =
           args |> OptionParser.parse(switches: [generate_checksum: :boolean, watch: :boolean])
 
+        # read the configuration file
         {:ok, %{"endpoint" => endpoint, "token" => token} = _config} =
           YamlElixir.read_from_file(Path.join(System.user_home(), ".datum_config"))
 
+        # sync the local operations database with the cloud one for the records we need
+        # The reason we're building a local ops db at all is primarily for using plugins
+        # this allows us to reuse a bunch of code easily
+
+        # connect the HTTP client
+        {:ok, client} =
+          Client.new(endpoint, token: token)
+
+        # connect the websocket client, don't need the PID because we register locally by module name
+        {:ok, _pid} = DatumWeb.SocketClient.start_link(%{endpoint: endpoint, token: token})
+
+        # fetch the current set of plugins 
+        load_plugins(client)
+
+        # figure out what Origin we're working with
+        {:ok, origin} = load_or_create_origin(client)
+
+        # start the scanning GenServer
         {:ok, pid} =
-          Datum.Scan.start_link(%{endpoint: endpoint, token: token})
+          Datum.Scanner.start_link(%{})
 
         # run the initial scan - this is run regardless of watch status so that
         # we always start from the latest version of the origin before we start sending
         # any updates
-        Datum.Scan.scan(args, parsed)
+        Datum.Scanner.scan(origin, directories, options)
 
-        if Keyword.get(parsed, :watch) do
+        if Keyword.get(options, :watch) do
           # monitor allows us to keep the CLI running while the scanning is taken place
           #
           # https://hexdocs.pm/elixir/1.18.1/Process.html#monitor/1
@@ -186,6 +209,54 @@ defmodule Datum.Application do
         the configuration will be written to your home directory in the '.datum-config' file and used for all
         subsequent invocations.
         """)
+    end
+  end
+
+  defp load_or_create_origin(client) do
+    origins = Client.list_origins!(client)
+
+    if origins == [] do
+      IO.puts("No existing Data Origins found, creating...")
+
+      origin_name = Prompt.text("Name the Data Origin which should be created")
+
+      Client.create_origin(client, %{name: origin_name})
+    else
+      case Prompt.select("Please select a Data Origin to upload this data to:", [
+             {"Create New", :new}
+             | Enum.map(origins, fn origin -> {origin["name"], origin} end)
+           ]) do
+        :new ->
+          origin_name = Prompt.text("Name the Data Origin which should be created")
+          Client.create_origin(client, %{name: origin_name})
+
+        origin ->
+          Client.create_origin(client, origin)
+      end
+    end
+  end
+
+  # this loads the plugins from the remote database - this is currently non-idempotent, meaning
+  # if you run it twice it will error out on attempting to insert records that already exist
+  defp load_plugins(client) do
+    with {:ok, plugins_info} <-
+           Client.list_plugins(client) do
+      # load the plugins into the local operations DB - we'll fetch them again in the next step
+      {_statuses, plugins} =
+        plugins_info
+        |> Enum.map(fn plugin -> Datum.Plugins.create_plugin(plugin) end)
+        |> Enum.unzip()
+
+      if plugins |> Enum.count(fn plugin -> plugin == %Ecto.Changeset{} end) > 0 do
+        IO.puts(
+          "Not all plugins could be loaded from the remote server. Functionality may be degraded"
+        )
+      end
+    else
+      _ ->
+        IO.puts(
+          "Unable to fetch or sync either the current user for the token, or plugins - scan will proceed but will not be synced and functionality will be degraded"
+        )
     end
   end
 end
