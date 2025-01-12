@@ -92,13 +92,9 @@ defmodule Datum.DataOrigin do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_origin(attrs \\ %{}, opts \\ []) do
-    path = Keyword.get(opts, :path, Application.get_env(:datum, :origin_db_path))
-
+  def create_origin(attrs \\ %{}) do
     with {:ok, origin} <-
-           %Origin{
-             database_path: path
-           }
+           %Origin{}
            |> Origin.changeset(attrs)
            |> Repo.insert(on_conflict: :nothing),
          {:ok, _perm} <-
