@@ -124,7 +124,7 @@ main() {
 
     curl --fail --location --progress-bar --output "$tmpfile" "$url"
 
-    unzip "$tmpfile" -d $prefix
+    unzip -o "$tmpfile" -d $prefix
     rm $tmpfile
    
     echo "✅ $target $type binaries installed at $prefix."

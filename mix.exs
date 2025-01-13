@@ -99,6 +99,8 @@ defmodule Datum.MixProject do
       {:duckdbex, "~> 0.3.8"},
       {:crc32cer, "~> 0.1.11"},
       {:oban, "~> 2.18"},
+      {:file_system, "~> 1.1"},
+      {:slipstream, "~> 1.1"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end
@@ -121,7 +123,7 @@ defmodule Datum.MixProject do
       translations: ["gettext.extract", "gettext.merge priv/gettext --locale en"],
       "ecto.setup": ["database.clean", "ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
+      test: ["database.clean", "ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.setup": [
         "cmd cd assets && npm install",
         "tailwind.install --if-missing",

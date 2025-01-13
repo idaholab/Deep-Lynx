@@ -22,9 +22,10 @@ defmodule DatumWeb.Router do
   scope "/api/v1", DatumWeb do
     pipe_through :api
 
-    # CLI ROUTES
     get "/plugins", PluginsController, :list_info
     get "/user", UserSessionController, :user_details
+    get "/origins", OriginController, :list
+    put "/origins", OriginController, :create
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

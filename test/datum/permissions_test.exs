@@ -40,19 +40,17 @@ defmodule Datum.PermissionsTest do
 
       # we're also testing that on data creation the permissions are set
       {:ok, owned} =
-        DataOrigin.add_data(origin, %{
+        DataOrigin.add_data(origin, user, %{
           path: "test_file",
           type: :file,
-          metadata: %{},
-          owned_by: user.id
+          metadata: %{}
         })
 
       {:ok, not_owned} =
-        DataOrigin.add_data(origin, %{
-          path: "test_file",
+        DataOrigin.add_data(origin, tested_user, %{
+          path: "test_file_unowned",
           type: :file,
-          metadata: %{},
-          owned_by: tested_user.id
+          metadata: %{}
         })
 
       assert DataOrigin.get_data_user(origin, user, owned.id) == owned
@@ -71,40 +69,40 @@ defmodule Datum.PermissionsTest do
 
       # build a simple nested directory
       dir_one =
-        DataOrigin.add_data!(origin, %{
+        DataOrigin.add_data!(origin, admin, %{
           path: "root",
           original_path: "/Users/darrjw/home",
-          type: :root_directory,
-          owned_by: admin.id
+          type: :root_directory
         })
 
       file_one =
-        DataOrigin.add_data!(origin, %{
-          path: "test.txt",
-          original_path: "/Users/darrjw/home/test.txt",
-          type: :file,
-          owned_by: admin.id
-        })
+        DataOrigin.add_data!(
+          origin,
+          admin,
+          %{
+            path: "test.txt",
+            original_path: "/Users/darrjw/home/test.txt",
+            type: :file
+          }
+        )
 
       {:ok, _} = DataOrigin.connect_data(origin, dir_one, dir_one)
       {:ok, _} = DataOrigin.connect_data(origin, dir_one, file_one)
 
       dir_two =
-        DataOrigin.add_data!(origin, %{
+        DataOrigin.add_data!(origin, admin, %{
           path: "second",
           original_path: "/Users/darrjw/home/second",
-          type: :directory,
-          owned_by: admin.id
+          type: :directory
         })
 
       {:ok, _} = DataOrigin.connect_data(origin, dir_one, dir_two)
 
       file_two =
-        DataOrigin.add_data!(origin, %{
+        DataOrigin.add_data!(origin, not_admin, %{
           path: "picture.png",
           original_path: "/Users/darrjw/home/second/picture.png",
-          type: :file,
-          owned_by: not_admin.id
+          type: :file
         })
 
       {:ok, _} = DataOrigin.connect_data(origin, dir_two, file_two)
@@ -125,40 +123,36 @@ defmodule Datum.PermissionsTest do
 
       # build a simple nested directory
       dir_one =
-        DataOrigin.add_data!(origin, %{
+        DataOrigin.add_data!(origin, admin, %{
           path: "root",
           original_path: "/Users/darrjw/home",
-          type: :root_directory,
-          owned_by: admin.id
+          type: :root_directory
         })
 
       file_one =
-        DataOrigin.add_data!(origin, %{
+        DataOrigin.add_data!(origin, admin, %{
           path: "test.txt",
           original_path: "/Users/darrjw/home/test.txt",
-          type: :file,
-          owned_by: admin.id
+          type: :file
         })
 
       {:ok, _} = DataOrigin.connect_data(origin, dir_one, dir_one)
       {:ok, _} = DataOrigin.connect_data(origin, dir_one, file_one)
 
       dir_two =
-        DataOrigin.add_data!(origin, %{
+        DataOrigin.add_data!(origin, admin, %{
           path: "second",
           original_path: "/Users/darrjw/home/second",
-          type: :directory,
-          owned_by: admin.id
+          type: :directory
         })
 
       {:ok, _} = DataOrigin.connect_data(origin, dir_one, dir_two)
 
       file_two =
-        DataOrigin.add_data!(origin, %{
+        DataOrigin.add_data!(origin, not_admin, %{
           path: "picture.png",
           original_path: "/Users/darrjw/home/second/picture.png",
-          type: :file,
-          owned_by: not_admin.id
+          type: :file
         })
 
       {:ok, _} = DataOrigin.connect_data(origin, dir_two, file_two)

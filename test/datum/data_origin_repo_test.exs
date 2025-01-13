@@ -32,6 +32,7 @@ defmodule Datum.DataOriginRepoTest do
     end
 
     test "can add data to an origin" do
+      user = user_fixture()
       valid_attrs = %{name: "some name"}
 
       assert {:ok, %Origin{} = origin} = DataOrigin.create_origin(valid_attrs)
@@ -39,11 +40,50 @@ defmodule Datum.DataOriginRepoTest do
 
       assert {:ok, _d} =
                origin
-               |> DataOrigin.add_data(%{
+               |> DataOrigin.add_data(user, %{
                  path: "/some/nonexistent/path",
                  properties: %{plugin_generated_metadata: [%{test: "Test"}]},
                  type: :file
                })
+    end
+
+    test "can upsert data to an origin" do
+      user = user_fixture()
+      valid_attrs = %{name: "some name"}
+
+      assert {:ok, %Origin{} = origin} = DataOrigin.create_origin(valid_attrs)
+      assert origin.name == "some name"
+
+      assert {:ok, _d} =
+               origin
+               |> DataOrigin.add_data(
+                 user,
+                 %{
+                   path: "/some/nonexistent/path",
+                   properties: %{plugin_generated_metadata: [%{test: "Test"}]},
+                   type: :file,
+                   # we set a tag so that we can check to make sure upserting doesn't remove it
+                   tags: ["test"]
+                 }
+               )
+
+      assert {:ok, d} =
+               origin
+               |> DataOrigin.add_data(
+                 user,
+                 %{
+                   path: "/some/nonexistent/path",
+                   properties: %{plugin_generated_metadata: [%{test: "Test"}]},
+                   type: :file,
+                   # we set a tag so that we can check to make sure upserting doesn't remove it
+                   tags: ["bad"]
+                 }
+               )
+
+      data = DataOrigin.get_data!(origin, d.id)
+
+      assert data.tags == ["test"]
+      assert data.inserted_at == d.inserted_at
     end
 
     test "can search data in an origin" do
@@ -58,11 +98,14 @@ defmodule Datum.DataOriginRepoTest do
 
       assert {:ok, d} =
                origin
-               |> DataOrigin.add_data(%{
-                 path: "/some/nonexistent/path",
-                 description: "keyword description",
-                 type: :file
-               })
+               |> DataOrigin.add_data(
+                 user,
+                 %{
+                   path: "/some/nonexistent/path",
+                   description: "keyword description",
+                   type: :file
+                 }
+               )
 
       d = %{d | row_num: 1}
 
@@ -75,13 +118,16 @@ defmodule Datum.DataOriginRepoTest do
       # lets make sure tags and domains work
       assert {:ok, t} =
                origin
-               |> DataOrigin.add_data(%{
-                 path: "/some/nonexistent/path/two",
-                 description: "keyword description",
-                 tags: ["tag", "hello"],
-                 domains: ["domain"],
-                 type: :file
-               })
+               |> DataOrigin.add_data(
+                 user,
+                 %{
+                   path: "/some/nonexistent/path/two",
+                   description: "keyword description",
+                   tags: ["tag", "hello"],
+                   domains: ["domain"],
+                   type: :file
+                 }
+               )
 
       t = %{t | row_num: 1}
 
@@ -98,11 +144,14 @@ defmodule Datum.DataOriginRepoTest do
       # lets make sure properties work
       assert {:ok, j} =
                origin
-               |> DataOrigin.add_data(%{
-                 path: "/some/nonexistent/path/three",
-                 properties: %{"json field one" => "json value one"},
-                 type: :file
-               })
+               |> DataOrigin.add_data(
+                 user,
+                 %{
+                   path: "/some/nonexistent/path/three",
+                   properties: %{"json field one" => "json value one"},
+                   type: :file
+                 }
+               )
 
       j = %{j | row_num: 1}
 
@@ -116,6 +165,8 @@ defmodule Datum.DataOriginRepoTest do
     end
 
     test "can connect two pieces of data" do
+      user = user_fixture()
+
       valid_attrs = %{name: "some name"}
 
       assert {:ok, %Origin{} = origin} = DataOrigin.create_origin(valid_attrs)
@@ -123,14 +174,14 @@ defmodule Datum.DataOriginRepoTest do
 
       assert {:ok, parent} =
                origin
-               |> DataOrigin.add_data(%{
+               |> DataOrigin.add_data(user, %{
                  path: "/some/nonexistent/path",
                  type: :directory
                })
 
       assert {:ok, child} =
                origin
-               |> DataOrigin.add_data(%{
+               |> DataOrigin.add_data(user, %{
                  path: "/some/nonexistent/path/child",
                  type: :file
                })
@@ -139,6 +190,7 @@ defmodule Datum.DataOriginRepoTest do
     end
 
     test "can create a relationship between two pieces of data" do
+      user = user_fixture()
       valid_attrs = %{name: "some name"}
 
       assert {:ok, %Origin{} = origin} = DataOrigin.create_origin(valid_attrs)
@@ -146,24 +198,33 @@ defmodule Datum.DataOriginRepoTest do
 
       assert {:ok, data1} =
                origin
-               |> DataOrigin.add_data(%{
-                 path: "/some/nonexistent/path",
-                 type: :directory
-               })
+               |> DataOrigin.add_data(
+                 user,
+                 %{
+                   path: "/some/nonexistent/path",
+                   type: :directory
+                 }
+               )
 
       assert {:ok, data2} =
                origin
-               |> DataOrigin.add_data(%{
-                 path: "/some/nonexistent/path/child",
-                 type: :file
-               })
+               |> DataOrigin.add_data(
+                 user,
+                 %{
+                   path: "/some/nonexistent/path/child",
+                   type: :file
+                 }
+               )
 
       assert {:ok, data3} =
                origin2
-               |> DataOrigin.add_data(%{
-                 path: "/some/nonexistent/path/child",
-                 type: :file
-               })
+               |> DataOrigin.add_data(
+                 user,
+                 %{
+                   path: "/some/nonexistent/path/child",
+                   type: :file
+                 }
+               )
 
       # first we make sure we can make a relationship in the same origin
       {:ok, _r} = DataOrigin.add_relationship({data1, origin}, {data2, origin})
