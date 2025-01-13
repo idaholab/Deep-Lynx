@@ -644,6 +644,50 @@ defmodule DatumWeb.CoreComponents do
   end
 
   @doc """
+  Renders information about a file
+  """
+  def file_page(assigns) do
+    ~H"""
+      <div>
+        <!-- Name and Description -->
+        <div class="flex justify-between space-x-4 mb-4">
+          <div class="card card-compact flex-1 bg-base-200 shadow-xl">
+            <div class="card-body">
+              <h2 class="card-title">File Name: <%= @file_name %></h2>
+              <p><%= if @description do @description else "No description for this file" end %></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tags and Domains -->
+        <div class="flex justify-between space-x-4">
+          <div class="card card-compact flex-1 bg-base-200 shadow-xl">
+            <div class="card-body">
+              <h2 class="card-title">Tags</h2>
+              <div>
+                <%= for tag <- @tags do %>
+                  <div class="badge badge-outline"><%= tag %></div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+
+          <div class="card card-compact flex-1 bg-base-200 shadow-xl">
+            <div class="card-body">
+              <h2 class="card-title">Domains</h2>
+              <div>
+                <%= for domain <- @domains do %>
+                  <div class="badge badge-outline"><%= domain %></div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    """
+  end
+
+  @doc """
   Renders a data list.
 
   ## Examples
