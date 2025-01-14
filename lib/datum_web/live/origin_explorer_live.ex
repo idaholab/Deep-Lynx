@@ -209,6 +209,13 @@ defmodule DatumWeb.OriginExplorerLive do
           []
         end
 
+      file_item =
+        if Map.get(tab.state, "file_id") do
+          DataOrigin.get_data_user(origin, user, Map.get(tab.state, "file_id"))
+        else
+          nil
+        end
+
       # the descendants of the last item in the path items should be what fills the screen now
       items =
         if path_items != [] do
@@ -229,7 +236,7 @@ defmodule DatumWeb.OriginExplorerLive do
        |> assign(:items, items)
        |> assign(:path_items, path_items)
        |> assign(:origin, origin)
-       |> assign(:file_item, nil) # what should this be assigned to initially?
+       |> assign(:file_item, file_item)
        |> assign(:parent, parent_pid)
        |> assign(:current_user, user)
        |> assign(:tab, tab)
@@ -376,6 +383,10 @@ defmodule DatumWeb.OriginExplorerLive do
           path_items:
             if socket.assigns.path_items do
               Enum.map(socket.assigns.path_items, fn item -> item.id end)
+            end,
+          file_id:
+            if socket.assigns.file_item do
+              socket.assigns.file_item.id
             end,
           name:
             if socket.assigns.path_items != [] do
