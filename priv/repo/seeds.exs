@@ -43,7 +43,7 @@ dir_one =
     owned_by: admin.id
   })
 
-# build the TDMS update 
+# build the TDMS update
 
 {:ok, %Datum.Plugins.Plugin{} = plugin} =
   Datum.Plugins.create_plugin(%{
@@ -62,7 +62,7 @@ file_one =
     original_path: "/Users/darrjw/home/test.tdms",
     properties: json,
     type: :file,
-    tags: ["sensor data"],
+    tags: ["sensor data", "test file"],
     domains: ["geomagentic"],
     owned_by: admin.id
   })

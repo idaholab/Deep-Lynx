@@ -83,7 +83,16 @@ defmodule DatumWeb.OriginExplorerLive do
           </.file_table>
         </div>
 
-        <div :if={@items && @origin}>
+        <div :if={@file_item && @origin}>
+          <.file_page
+            file_name={@file_item.path}
+            description={@file_item.description}
+            tags={@file_item.tags}
+            domains={@file_item.domains}
+          />
+        </div>
+
+        <div :if={@items && @origin && !@file_item}>
           <.file_table
             id={"origins_#{@tab.id}"}
             rows={@items}
@@ -172,7 +181,7 @@ defmodule DatumWeb.OriginExplorerLive do
     else
       # now that we're a true tab and we're not going to crash out - let's make sure we register with the TabRegistry
       # this allows the HomeLive view to dispatch and receieve messages _without_ us having to pass our PID back up the
-      # chain or to have anything other than the parent process - https://hexdocs.pm/elixir/1.18.1/Registry.html#register/3 
+      # chain or to have anything other than the parent process - https://hexdocs.pm/elixir/1.18.1/Registry.html#register/3
       #
       # we throw away the error because this shouldnt' kill anything
       Registry.register(DatumWeb.TabRegistry, tab_id, DatumWeb.OriginExplorerLive)
@@ -200,6 +209,13 @@ defmodule DatumWeb.OriginExplorerLive do
           []
         end
 
+      file_item =
+        if Map.get(tab.state, "file_id") do
+          DataOrigin.get_data_user(origin, user, Map.get(tab.state, "file_id"))
+        else
+          nil
+        end
+
       # the descendants of the last item in the path items should be what fills the screen now
       items =
         if path_items != [] do
@@ -213,13 +229,14 @@ defmodule DatumWeb.OriginExplorerLive do
         end
 
       # set what we can here and common practice is to set all your used variables in the socket as
-      # nil or empty so we don't cause rendeing errors - actually load them in the params OR load them
+      # nil or empty so we don't cause rendering errors - actually load them in the params OR load them
       # here with async assigns
       {:ok,
        socket
        |> assign(:items, items)
        |> assign(:path_items, path_items)
        |> assign(:origin, origin)
+       |> assign(:file_item, file_item)
        |> assign(:parent, parent_pid)
        |> assign(:current_user, user)
        |> assign(:tab, tab)
@@ -238,6 +255,7 @@ defmodule DatumWeb.OriginExplorerLive do
      socket
      |> assign(:items, [])
      |> assign(:path_items, [])
+     |> assign(:file_item, nil)
      |> assign(:origin, nil)
      |> assign_async(:origins, fn ->
        {:ok, %{origins: Datum.DataOrigin.list_data_orgins_user(user)}}
@@ -264,6 +282,8 @@ defmodule DatumWeb.OriginExplorerLive do
   def handle_event("select_item", %{"item_id" => item_id}, socket) do
     data = DataOrigin.get_data_user(socket.assigns.origin, socket.assigns.current_user, item_id)
 
+    file_item = if data.type == :file, do: data, else: nil
+
     items =
       if data.type == :directory || data.type == :root_directory do
         DataOrigin.list_data_descendants_user(
@@ -285,6 +305,7 @@ defmodule DatumWeb.OriginExplorerLive do
     {:noreply,
      socket
      # update the path_items with the selected piece of data
+     |> assign(:file_item, file_item)
      |> assign(:path_items, path_items)
      |> assign(:items, items)
      |> update_state()}
@@ -298,6 +319,9 @@ defmodule DatumWeb.OriginExplorerLive do
 
     data = DataOrigin.get_data_user(socket.assigns.origin, socket.assigns.current_user, id)
 
+    file_item =
+      if data.type == :file, do: data, else: nil
+
     items =
       if data.type == :directory || data.type == :root_directory do
         DataOrigin.list_data_descendants_user(
@@ -310,7 +334,11 @@ defmodule DatumWeb.OriginExplorerLive do
       end
 
     {:noreply,
-     socket |> assign(:path_items, path_items) |> assign(:items, items) |> update_state()}
+     socket
+     |> assign(:file_item, file_item)
+     |> assign(:path_items, path_items)
+     |> assign(:items, items)
+     |> update_state()}
   end
 
   @impl true
@@ -334,7 +362,7 @@ defmodule DatumWeb.OriginExplorerLive do
 
   # we use the callback version of handle_info so we can update the socket with any changed state
   # note this doesn't actually do anything - but you will need it so the view doesn't crash if sent
-  # the message. If you want to actually handle params, make a new function ABOVE this with the 
+  # the message. If you want to actually handle params, make a new function ABOVE this with the
   # same params you'd do a normal handle_params/3 with
   @impl true
   def handle_info({:patch, _params, _uri}, socket) do
@@ -355,6 +383,10 @@ defmodule DatumWeb.OriginExplorerLive do
           path_items:
             if socket.assigns.path_items do
               Enum.map(socket.assigns.path_items, fn item -> item.id end)
+            end,
+          file_id:
+            if socket.assigns.file_item do
+              socket.assigns.file_item.id
             end,
           name:
             if socket.assigns.path_items != [] do
