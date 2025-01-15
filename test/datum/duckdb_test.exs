@@ -16,9 +16,12 @@ defmodule Datum.DuckdbTest do
       Duckdb.handle_cast({:send_query, "SELECT * FROM duckdb_settings();", []}, state)
 
       assert_receive {:query_response, %{result_reference: ref} = _msg}, 3000
-      # we just want to make sure we're getting some results back here
 
-      assert Duckdb.handle_call({:receive_result, ref}, self(), %{}) != []
+      # we just want to make sure we're getting some results back here
+      assert {:reply, %{columns: columns, results: results}, %{}} =
+               Duckdb.handle_call({:receive_result, ref}, self(), %{})
+
+      assert results != []
     end
 
     test "can add a csv file as table" do
@@ -40,7 +43,10 @@ defmodule Datum.DuckdbTest do
 
       assert_receive {:query_response, %{result_reference: ref} = _msg}, 3000
       # we just want to make sure we're getting some results back here
-      assert Duckdb.handle_call({:receive_result, ref}, self(), %{}) != []
+      assert {:reply, %{columns: columns, results: results}, %{}} =
+               Duckdb.handle_call({:receive_result, ref}, self(), %{})
+
+      assert results != []
     end
 
     test "can add a parquet file as table" do
@@ -63,7 +69,10 @@ defmodule Datum.DuckdbTest do
 
       assert_receive {:query_response, %{result_reference: ref} = _msg}, 3000
       # we just want to make sure we're getting some results back here
-      assert Duckdb.handle_call({:receive_result, ref}, self(), %{}) != []
+      assert {:reply, %{columns: columns, results: results}, %{}} =
+               Duckdb.handle_call({:receive_result, ref}, self(), %{})
+
+      assert results != []
 
       # let's check we can combine files - doesn't matter that they're the same
       assert {:reply, :ok, _state} =
@@ -79,7 +88,10 @@ defmodule Datum.DuckdbTest do
 
       assert_receive {:query_response, %{result_reference: ref} = _msg}, 3000
       # we just want to make sure we're getting some results back here
-      assert Duckdb.handle_call({:receive_result, ref}, self(), %{}) != []
+      assert {:reply, %{columns: columns, results: results}, %{}} =
+               Duckdb.handle_call({:receive_result, ref}, self(), %{})
+
+      assert results != []
     end
 
     test "can add a json file as table" do
@@ -101,7 +113,10 @@ defmodule Datum.DuckdbTest do
 
       assert_receive {:query_response, %{result_reference: ref} = _msg}, 3000
       # we just want to make sure we're getting some results back here
-      assert Duckdb.handle_call({:receive_result, ref}, self(), %{}) != []
+      assert {:reply, %{columns: columns, results: results}, %{}} =
+               Duckdb.handle_call({:receive_result, ref}, self(), %{})
+
+      assert results != []
     end
   end
 end

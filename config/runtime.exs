@@ -32,7 +32,7 @@ if config_env() == :prod do
         System.get_env("OPENAI_ENDPOINT", "http://localhost:11434/v1/chat/completions"),
       openai_key: System.get_env("OPENAI_KEY", "ollama"),
       openai_model: System.get_env("OPENAI_MODEL", "llama3.2"),
-      openai_temp: System.get_env("OPENAI_TEMP", 0)
+      openai_temp: System.get_env("OPENAI_TEMP", "0")
     },
     smtp:
       if System.get_env("USE_SMTP_MAILER", "FALSE") |> String.upcase() == "TRUE" do
