@@ -113,16 +113,17 @@ defmodule Datum.Agent do
     case state.chain
          |> LLMChain.add_message(Message.new_user!(message))
          |> LLMChain.run(mode: :while_needs_response) do
-      {:ok, updated_chain, response} ->
+      {:ok, updated_chain} ->
         send(
           state.parent,
-          {:new_message, %{id: UUID.uuid4(), message: "#{response.content}", origin: :ai}}
+          {:new_message,
+           %{id: UUID.uuid4(), message: "#{updated_chain.last_message.content}", origin: :ai}}
         )
 
         {:noreply, %{state | chain: updated_chain}}
 
-      {:error, updated_chain, message} ->
-        Logger.error("error in LLM agent #{message.content}")
+      {:error, updated_chain, error} ->
+        Logger.error("error in LLM agent #{error.message}")
 
         send(
           state.parent,

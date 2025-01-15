@@ -39,6 +39,7 @@ current_target() {
   "Darwin x86_64") target=macos-x86_64 ;;
   "Darwin arm64") target=macos-aarch64 ;;
   "Linux x86_64") target=linux-x86_64 ;;
+  "Linux aarch64") target=linux-arm64 ;;
   *) target=$(uname -sm);;
   esac
 }
@@ -111,6 +112,9 @@ main() {
     "linux-x86_64-loadable")
       url="https://github.com/nalgeon/sqlean/releases/download/0.27.1/sqlean-linux-x86.zip"
       ;;
+    "linux-arm64-loadable")
+      url="https://github.com/nalgeon/sqlean/releases/download/0.27.1/sqlean-linux-x86.zip"
+      ;;
     "macos-aarch64-loadable")
       url="https://github.com/nalgeon/sqlean/releases/download/0.27.1/sqlean-macos-arm64.zip"
       ;;
@@ -124,7 +128,7 @@ main() {
 
     curl --fail --location --progress-bar --output "$tmpfile" "$url"
 
-    unzip "$tmpfile" -d $prefix
+    unzip -o "$tmpfile" -d $prefix
     rm $tmpfile
    
     echo "✅ $target $type binaries installed at $prefix."

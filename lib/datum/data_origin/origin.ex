@@ -19,6 +19,18 @@ defmodule Datum.DataOrigin.Origin do
 
   alias Datum.Accounts.User
 
+  @derive {Jason.Encoder,
+           only: [
+             :id,
+             :name,
+             :owned_by,
+             :classifications,
+             :tags,
+             :domains,
+             :type,
+             :inserted_at,
+             :updated_at
+           ]}
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "data_origins" do
@@ -32,7 +44,7 @@ defmodule Datum.DataOrigin.Origin do
     field :tags, {:array, :string}
     field :domains, {:array, :string}
 
-    field :type, Ecto.Enum, values: [:s3, :filesystem], default: :filesystem
+    field :type, Ecto.Enum, values: [:s3, :filesystem, :default], default: :filesystem
     # stores the raw configuration values for the type of origin this is
     # if nil, we assume we don't have direct connection to the origin and
     # therefore it's metadata only
@@ -45,6 +57,7 @@ defmodule Datum.DataOrigin.Origin do
   def changeset(origin, attrs) do
     origin
     |> cast(attrs, [
+      :id,
       :name,
       :owned_by,
       :classifications,

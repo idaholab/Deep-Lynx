@@ -36,19 +36,33 @@ alias Datum.DataOrigin
 
 # build a simple nested directory
 dir_one =
-  DataOrigin.add_data!(origin, %{
+  DataOrigin.add_data!(origin, admin, %{
     path: "root",
     original_path: "/Users/darrjw/home",
     type: :root_directory,
     owned_by: admin.id
   })
 
+# build the TDMS update
+
+{:ok, %Datum.Plugins.Plugin{} = plugin} =
+  Datum.Plugins.create_plugin(%{
+    name: "tdms index extractor_elixir",
+    module_name: Datum.Plugins.TdmsIndex,
+    filetypes: [".tdms_index"],
+    plugin_type: :extractor
+  })
+
+{:ok, json} =
+  Datum.Plugins.Extractor.extract_with_plugin(plugin, "#{__DIR__}/doe.tdms_index")
+
 file_one =
-  DataOrigin.add_data!(origin, %{
-    path: "test.txt",
-    original_path: "/Users/darrjw/home/test.txt",
+  DataOrigin.add_data!(origin, admin, %{
+    path: "test.tdms",
+    original_path: "/Users/darrjw/home/test.tdms",
+    properties: json,
     type: :file,
-    tags: ["sensor data"],
+    tags: ["sensor data", "test file"],
     domains: ["geomagentic"],
     owned_by: admin.id
   })
@@ -57,7 +71,7 @@ file_one =
 {:ok, _} = DataOrigin.connect_data(origin, dir_one, file_one)
 
 dir_two =
-  DataOrigin.add_data!(origin, %{
+  DataOrigin.add_data!(origin, admin, %{
     path: "second",
     original_path: "/Users/darrjw/home/second",
     type: :directory,
@@ -67,7 +81,7 @@ dir_two =
 {:ok, _} = DataOrigin.connect_data(origin, dir_one, dir_two)
 
 file_two =
-  DataOrigin.add_data!(origin, %{
+  DataOrigin.add_data!(origin, admin, %{
     path: "picture.png",
     original_path: "/Users/darrjw/home/second/picture.png",
     tags: ["selfies"],
@@ -77,7 +91,7 @@ file_two =
   })
 
 person =
-  DataOrigin.add_data!(origin, %{
+  DataOrigin.add_data!(origin, admin, %{
     path: "James Holden",
     original_path: "/Users/darrjw/home/second/picture.png",
     type: :person,
@@ -85,7 +99,7 @@ person =
   })
 
 org =
-  DataOrigin.add_data!(origin, %{
+  DataOrigin.add_data!(origin, admin, %{
     path: "OPA",
     original_path: "/Users/darrjw/home/second/picture.png",
     type: :organization,
@@ -103,7 +117,7 @@ org =
 # now do the same for the other origin, eventually we can do specific things
 # build a simple nested directory
 dir_one =
-  DataOrigin.add_data!(origin2, %{
+  DataOrigin.add_data!(origin2, admin, %{
     path: "root",
     original_path: "/Users/darrjw/home",
     type: :root_directory,
@@ -111,7 +125,7 @@ dir_one =
   })
 
 file_one =
-  DataOrigin.add_data!(origin2, %{
+  DataOrigin.add_data!(origin2, admin, %{
     path: "test.txt",
     original_path: "/Users/darrjw/home/test.txt",
     type: :file,
@@ -124,7 +138,7 @@ file_one =
 {:ok, _} = DataOrigin.add_relationship({person, origin}, {dir_one, origin2})
 
 dir_two =
-  DataOrigin.add_data!(origin2, %{
+  DataOrigin.add_data!(origin2, admin, %{
     path: "second",
     original_path: "/Users/darrjw/home/second",
     type: :directory,
@@ -134,7 +148,7 @@ dir_two =
 {:ok, _} = DataOrigin.connect_data(origin2, dir_one, dir_two)
 
 file_two =
-  DataOrigin.add_data!(origin2, %{
+  DataOrigin.add_data!(origin2, admin, %{
     path: "picture.png",
     original_path: "/Users/darrjw/home/second/picture.png",
     type: :file,
@@ -166,3 +180,6 @@ file_two =
   })
 
 {:ok, _user} = Accounts.update_user_open_tabs(admin, [[tab_one.id, tab_two.id], [tab_three.id]])
+
+admin_token = Phoenix.Token.sign(DatumWeb.Endpoint, "personal_access_token", admin.id)
+IO.puts("ADMIN PAT: #{admin_token}")

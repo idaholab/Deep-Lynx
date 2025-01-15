@@ -64,18 +64,6 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
-config :datum, Oban,
-  engine: Oban.Engines.Lite,
-  queues: [scheduled: 10],
-  repo: Datum.Repo,
-  plugins: [
-    {Oban.Plugins.Cron,
-     crontab: [
-       # runs this worker hourly to prune expired resource locks
-       {"0 * * * *", Datum.Common.PruneResourceLockJob}
-     ]}
-  ]
-
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"

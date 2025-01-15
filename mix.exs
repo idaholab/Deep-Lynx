@@ -19,14 +19,13 @@ defmodule Datum.MixProject do
 
   def releases do
     [
-      # this is for the Burrito single binary output
       datum: [
         steps: [:assemble, &Burrito.wrap/1],
         burrito: [
           targets: [
             macos: [os: :darwin, cpu: :aarch64],
-            linux: [os: :linux, cpu: :x86_64]
-            # windows: [os: :windows, cpu: :x86_64] uncomment once we figure out how to build for windows on macos
+            linux: [os: :linux, cpu: :x86_64],
+            windows: [os: :windows, cpu: :x86_64]
           ]
         ]
       ]
@@ -52,6 +51,7 @@ defmodule Datum.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:educkdb, "~> 0.9.8"},
       {:argon2_elixir, "~> 3.0"},
       {:phoenix, "~> 1.7.14"},
       {:phoenix_ecto, "~> 4.5"},
@@ -80,25 +80,26 @@ defmodule Datum.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.5"},
-      {:burrito, "~> 1.1"},
+      {:burrito, "~> 1.2.0"},
       {:shortuuid, "~> 3.0"},
-      {:elixir_uuid, "~> 1.2"},
+      {:uuid, "~> 1.1.8"},
       {:wasmex, "~> 0.9.2"},
       {:rustler, "~> 0.35.0", override: true},
       {:closure_table, "~> 2.0"},
       {:yaml_elixir, "~> 2.11"},
       {:gen_smtp, "~> 1.1"},
       {:prompt, "~> 0.10.0"},
-      {:explorer, "~> 0.10.0"},
+      {:explorer, "~> 0.10.1"},
       {:ymlr, "~> 5.1"},
       {:mix_audit, "~> 2.1"},
       {:langchain, "~> 0.3.0-rc.0"},
       {:tdms_parser, git: "https://github.com/DnOberon/tdms-parser", branch: "master"},
       {:sobelow, "~> 0.13", only: [:dev, :test], runtime: false},
       {:earmark, "~> 1.4"},
-      {:duckdbex, "~> 0.3.8"},
       {:crc32cer, "~> 0.1.11"},
       {:oban, "~> 2.18"},
+      {:file_system, "~> 1.0"},
+      {:slipstream, "~> 1.1"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end
@@ -121,7 +122,7 @@ defmodule Datum.MixProject do
       translations: ["gettext.extract", "gettext.merge priv/gettext --locale en"],
       "ecto.setup": ["database.clean", "ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
+      test: ["database.clean", "ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.setup": [
         "cmd cd assets && npm install",
         "tailwind.install --if-missing",

@@ -77,7 +77,6 @@ defmodule Datum.DataOrigin.Data do
       :tags,
       :in_compliance,
       :domains,
-      :id,
       :type,
       :file_type,
       :natural_language_properties,

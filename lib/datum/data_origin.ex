@@ -96,7 +96,7 @@ defmodule Datum.DataOrigin do
     with {:ok, origin} <-
            %Origin{}
            |> Origin.changeset(attrs)
-           |> Repo.insert(),
+           |> Repo.insert(on_conflict: :nothing),
          {:ok, _perm} <-
            Datum.Permissions.create_data_origin(%{
              data_origin_id: origin.id,
@@ -166,38 +166,59 @@ defmodule Datum.DataOrigin do
     Origin.changeset(origin, attrs)
   end
 
-  def add_data(%Origin{} = origin, attrs \\ %{}) do
+  def add_data(%Origin{} = origin, %User{} = user, attrs \\ %{}) do
     OriginRepo.with_dynamic_repo(origin, fn ->
       with {:ok, data} <-
              %Data{}
              |> Data.changeset(Map.put(attrs, :origin_id, origin.id))
-             |> OriginRepo.insert(),
+             |> OriginRepo.insert(
+               on_conflict:
+                 {:replace,
+                  [
+                    :properties,
+                    :owned_by,
+                    :checksum_type,
+                    :checksum
+                  ]},
+               returning: true
+             ),
            {:ok, _perm} <-
              %Datum.Permissions.Data{}
              |> Datum.Permissions.Data.changeset(%{
                data_id: data.id,
-               user_id: data.owned_by,
+               user_id: user.id,
                permission_type: :readwrite
              })
              |> OriginRepo.insert() do
         {:ok, data}
       else
-        err -> {:error, err}
+        err ->
+          {:error, err}
       end
     end)
   end
 
-  def add_data!(%Origin{} = origin, attrs \\ %{}) do
+  def add_data!(%Origin{} = origin, %User{} = user, attrs \\ %{}) do
     OriginRepo.with_dynamic_repo(origin, fn ->
       with %Data{} = data <-
              %Data{}
              |> Data.changeset(Map.put(attrs, :origin_id, origin.id))
-             |> OriginRepo.insert!(),
+             |> OriginRepo.insert!(
+               on_conflict:
+                 {:replace_all_except,
+                  [
+                    :id,
+                    :tags,
+                    :domains,
+                    :incoming_relationships,
+                    :outgoing_relationships
+                  ]}
+             ),
            %Datum.Permissions.Data{} = _perm <-
              %Datum.Permissions.Data{}
              |> Datum.Permissions.Data.changeset(%{
                data_id: data.id,
-               user_id: data.owned_by,
+               user_id: user.id,
                permission_type: :readwrite
              })
              |> OriginRepo.insert!() do
@@ -490,40 +511,6 @@ defmodule Datum.DataOrigin do
     )
     # allows us to use the operational repo and load the results origins in one call
     |> Repo.preload(:origin)
-  end
-
-  @doc """
-  Locks the selected DataOrigin to the user and returns the ResourceLock - though the lock
-  is exclusive regardless of user, we want to track _who_ locked it - and who knows, maybe
-  in the future we might have resource locks per use for certain resources?
-
-      ## Examples
-
-      iex> lock_origin(origin, user)
-      {:ok, %ResourceLocks{}}
-
-
-      iex> lock_origin(origin, user)
-      {:error, :resource_locked (or string message)}
-  """
-  def lock_origin(%Origin{} = origin, %User{} = user, _opts \\ []) do
-    query =
-      from o in Origin,
-        distinct: true,
-        left_join: p in Datum.Permissions.DataOrigin,
-        on: o.id == p.data_origin_id,
-        where:
-          (p.user_id == ^user.id or
-             p.group_id in subquery(
-               from g in UserGroup, where: g.user_id == ^user.id, select: g.group_id
-             )) and p.permission_type in [:readwrite] and o.id == ^origin.id,
-        select: o
-
-    if Repo.one(query) do
-      Datum.Common.lock_resource(:data_origin, origin.id, user)
-    else
-      {:error, :unauthorized}
-    end
   end
 
   alias Datum.DataOrigin.ExtractedMetadata
