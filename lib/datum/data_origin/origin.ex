@@ -44,7 +44,7 @@ defmodule Datum.DataOrigin.Origin do
     field :tags, {:array, :string}
     field :domains, {:array, :string}
 
-    field :type, Ecto.Enum, values: [:s3, :filesystem], default: :filesystem
+    field :type, Ecto.Enum, values: [:s3, :filesystem, :default], default: :filesystem
     # stores the raw configuration values for the type of origin this is
     # if nil, we assume we don't have direct connection to the origin and
     # therefore it's metadata only

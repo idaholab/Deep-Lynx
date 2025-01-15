@@ -88,6 +88,8 @@ defmodule Datum.Application do
         System.halt(0)
 
       ["server" | _args] ->
+        Datum.Release.migrate()
+
         children = [
           DatumWeb.Telemetry,
           Datum.Repo,
@@ -113,6 +115,8 @@ defmodule Datum.Application do
       # for now, fallback to the default setup for the testing environment or if
       # they run with no arguments
       _ ->
+        Datum.Release.migrate()
+
         children = [
           DatumWeb.Telemetry,
           Datum.Repo,
