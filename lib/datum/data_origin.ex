@@ -112,6 +112,8 @@ defmodule Datum.DataOrigin do
                )
            }) do
       {:ok, updated_origin}
+      Datum.DataOrigin.OriginRepo.with_dynamic_repo(updated_origin, fn -> {} end,
+      mode: :readwrite)
     else
       err -> err
     end
