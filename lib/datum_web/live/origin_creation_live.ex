@@ -28,14 +28,14 @@ defmodule DatumWeb.OriginCreationLive do
         </ul>
         <div>
         <.simple_form for={@form} phx-submit="create_origin">
-          <.input
+          <%!-- <.input
             disabled
             type="select"
             field={@form[:data_origin_type]}
             options={[{gettext("S3"), "S3"}, {gettext("Azure Blob"), "Azure Blob"}, {gettext("File system"), "File system"}]}
             label={gettext("Select Data Origin Type - Coming Soon!")}
             class="form-select"
-          />
+          /> --%>
           <.input
             type="text"
             field={@form[:data_origin_name]}
@@ -44,10 +44,10 @@ defmodule DatumWeb.OriginCreationLive do
           />
 
             <button :if={!@waiting} type="submit" class="btn btn-wide mt-5">
-              <%= gettext("Send") %>
+              <%= gettext("Create") %>
             </button>
             <button :if={@waiting} type="submit" class="btn btn-wide mt-5" disabled>
-              <%= gettext("Send") %>
+              <%= gettext("Create") %>
             </button>
         </.simple_form>
       </div>
@@ -59,7 +59,7 @@ defmodule DatumWeb.OriginCreationLive do
   @impl true
   def mount(
         _params,
-        %{"tab_id" => tab_id, "user_token" => user_token, "parent" => parent_pid} = _session,
+        %{"tab_id" => tab_id, "user_token" => user_token, "parent" => parent_pid, "group_index" => group_index} = _session,
         socket
       ) do
     user = Datum.Accounts.get_user_by_session_token(user_token)
@@ -75,7 +75,39 @@ defmodule DatumWeb.OriginCreationLive do
         Logger.error("unable to start an agent: #{reason}")
         nil
     end
+    origin =
+        if Map.get(tab.state, "origin_id") do
+          DataOrigin.get_data_orgins_user(
+            user,
+            Map.get(tab.state, "origin_id")
+          )
+        else
+          nil
+        end
 
+      path_items = Map.get(tab.state, "path_items", [])
+
+      path_items =
+        if origin && path_items != [] do
+          data = DataOrigin.list_data_user(origin, user, only_ids: path_items)
+
+          path_items
+          |> Enum.map(fn p -> Enum.find(data, fn d -> d.id == p end) end)
+          |> Enum.filter(fn i -> i end)
+        else
+          []
+        end
+    # the descendants of the last item in the path items should be what fills the screen now
+    items =
+    if path_items != [] do
+      DataOrigin.list_data_descendants_user(origin, user, List.last(path_items).id)
+    else
+      if origin do
+        DataOrigin.list_roots(origin)
+      else
+        []
+      end
+    end
 
     {:ok,
      socket
@@ -87,6 +119,8 @@ defmodule DatumWeb.OriginCreationLive do
            "Create data origin config"
        }
      ])
+     |> assign(:items, items)
+     |> assign(:group_index, group_index)
      |> assign(:parent, parent_pid)
      |> assign(:current_user, user)
      |> assign(:waiting, false)
@@ -128,6 +162,15 @@ defmodule DatumWeb.OriginCreationLive do
       name: name,
       owned_by: socket.assigns.current_user.id
     }))
+
+    send(
+      socket.assigns.parent,
+      {:open_tab, DatumWeb.OriginExplorerLive,
+       %{
+         items: Enum.map(socket.assigns.items, fn item -> [item.id, socket.assigns.origin.id] end)
+       }, socket.assigns.group_index}
+    )
+
     {:noreply, socket}
   end
 
