@@ -139,7 +139,7 @@ defmodule DatumWeb.OriginCreationLive do
   end
 
   defp assign_form(socket, %Ecto.Changeset{} = changeset) do
-    assign(socket, :project_form, to_form(changeset))
+    assign(socket, :data_origin_name, to_form(changeset))
   end
 
   defp notify_parent(msg, process), do: send(process, msg)
