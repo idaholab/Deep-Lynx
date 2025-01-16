@@ -6,7 +6,7 @@ defmodule DatumWeb.OriginCreationLive do
   use Gettext, backend: DatumWeb.Gettext
   require Logger
 
-  def display_name, do: gettext("Add Data")
+  def display_name, do: gettext("Add Data Origin")
   alias Datum.Common
   alias Datum.DataOrigin.Origin
 
@@ -27,7 +27,11 @@ defmodule DatumWeb.OriginCreationLive do
           </span>
         </ul>
         <div>
-        <.simple_form for={@form} phx-submit="create_origin">
+        <.simple_form
+        for={@form}
+        phx-submit="create_origin"
+        phx-change="validate"
+        >
           <%!-- <.input
             disabled
             type="select"
@@ -43,10 +47,10 @@ defmodule DatumWeb.OriginCreationLive do
 
           />
 
-            <button :if={!@waiting} type="submit" class="btn btn-wide mt-5">
+            <button :if={!@create_result || @create_result.ok?} type="submit" class="btn btn-wide mt-5">
               <%= gettext("Create") %>
             </button>
-            <button :if={@waiting} type="submit" class="btn btn-wide mt-5" disabled>
+            <button :if={@create_result && @create_result.loading} type="submit" class="btn btn-wide mt-5" disabled>
               <%= gettext("Create") %>
             </button>
         </.simple_form>
@@ -59,55 +63,15 @@ defmodule DatumWeb.OriginCreationLive do
   @impl true
   def mount(
         _params,
-        %{"tab_id" => tab_id, "user_token" => user_token, "parent" => parent_pid, "group_index" => group_index} = _session,
+        %{"tab_id" => tab_id,
+        "user_token" => user_token,
+        "parent" => parent_pid,
+        "group_index" => group_index}
+        = _session,
         socket
       ) do
     user = Datum.Accounts.get_user_by_session_token(user_token)
     tab = Common.get_user_tab(user, tab_id)
-    case GenServer.start_link(Datum.Agent, %{parent: self(), user: user}, name: {:global, tab_id}) do
-      {:ok, pid} ->
-        pid
-
-      {:error, {:already_started, pid}} ->
-        pid
-
-      {:error, reason} ->
-        Logger.error("unable to start an agent: #{reason}")
-        nil
-    end
-    origin =
-        if Map.get(tab.state, "origin_id") do
-          DataOrigin.get_data_orgins_user(
-            user,
-            Map.get(tab.state, "origin_id")
-          )
-        else
-          nil
-        end
-
-      path_items = Map.get(tab.state, "path_items", [])
-
-      path_items =
-        if origin && path_items != [] do
-          data = DataOrigin.list_data_user(origin, user, only_ids: path_items)
-
-          path_items
-          |> Enum.map(fn p -> Enum.find(data, fn d -> d.id == p end) end)
-          |> Enum.filter(fn i -> i end)
-        else
-          []
-        end
-    # the descendants of the last item in the path items should be what fills the screen now
-    items =
-    if path_items != [] do
-      DataOrigin.list_data_descendants_user(origin, user, List.last(path_items).id)
-    else
-      if origin do
-        DataOrigin.list_roots(origin)
-      else
-        []
-      end
-    end
 
     {:ok,
      socket
@@ -119,11 +83,11 @@ defmodule DatumWeb.OriginCreationLive do
            "Create data origin config"
        }
      ])
-     |> assign(:items, items)
+
      |> assign(:group_index, group_index)
      |> assign(:parent, parent_pid)
      |> assign(:current_user, user)
-     |> assign(:waiting, false)
+     |> assign(:create_result, nil)
     #  |> assign(:form, to_form(%{"data_origin_type" => nil}))
      |> assign(:form, to_form(%{"data_origin_name" => nil}))
      |> assign(:tab, tab)
@@ -137,41 +101,45 @@ defmodule DatumWeb.OriginCreationLive do
     {:noreply, socket}
   end
 
+  def handle_event("validate", %{"data_origin_name" => data_origin_name}, socket) do
+    changeset = Datum.DataOrigin.change_origin(%Origin{}, %{name: data_origin_name})
+    {:noreply, assign_form(socket, Map.put(changeset, :action, :validate))}
+  end
+
   # this sends the user's input to the create a data origin
   @impl true
   def handle_event("create_origin", %{"data_origin_name" => name}, socket) do
     if !name do
       {:noreply, socket |> put_flash(:error, gettext("Please type data origin type"))}
     else
-      Process.send_after(self(), {:create_origin, name}, 100)
+      # Compiler doesn't like including these full socket.assigns in the assign_async
+      user_id = socket.assigns.current_user.id
+      parent_id = socket.assigns.parent
+      group_index = socket.assigns.group_index
 
       {:noreply,
        socket
-       |> assign(:waiting, true)
-       |> assign(:form, to_form(%{"data_origin_name" => nil}, action: :reset))
+       |> assign_async(:create_result, fn -> {:ok, %{create_result:
+        Datum.DataOrigin.create_origin((%{
+          name: name,
+          owned_by: user_id
+        })), create_result:
+        send(
+          parent_id,
+          {:open_tab, DatumWeb.OriginExplorerLive, %{}, group_index}
+        )
+        }} end)
+      #  |> assign(:form, to_form(%{"data_origin_name" => nil}, action: :reset))
        |> assign(
          :messages,
          socket.assigns.messages ++ [%{id: UUID.uuid4(), message: "Submit create"}]
        )}
+
     end
   end
 
-  @impl true
-  def handle_info({:create_origin, name}, socket) do
-    Datum.DataOrigin.create_origin((%{
-      name: name,
-      owned_by: socket.assigns.current_user.id
-    }))
-
-    send(
-      socket.assigns.parent,
-      {:open_tab, DatumWeb.OriginExplorerLive,
-       %{
-         items: Enum.map(socket.assigns.items, fn item -> [item.id, socket.assigns.origin.id] end)
-       }, socket.assigns.group_index}
-    )
-
-    {:noreply, socket}
+  defp assign_form(socket, %Ecto.Changeset{} = changeset) do
+    assign(socket, :project_form, to_form(changeset))
   end
 
   defp notify_parent(msg, process), do: send(process, msg)
