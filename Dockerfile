@@ -24,7 +24,7 @@ RUN apk add --no-cache build-base musl-dev openssl openssl-dev
 RUN apk update add --update nodejs=21.7.3
 RUN apk add --update npm
 RUN npm config set strict-ssl false
-RUN npm install -g @napi-rs/cli # this is needed for the Rust/Node library interopt
+RUN npm install -g corepack @napi-rs/cli # this is needed for the Rust/Node library interopt
 RUN npm install npm@latest --location=global
 RUN npm update --location=global
 RUN npm install cargo-cp-artifact --location=global
