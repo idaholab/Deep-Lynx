@@ -11,6 +11,52 @@ defmodule DatumWeb.OriginController do
     |> json(Datum.DataOrigin.list_data_orgins_user(conn.assigns.current_user))
   end
 
+  def fetch(conn, %{"origin_id" => origin_id} = _params) do
+    origin = DataOrigin.get_data_orgins_user(conn.assigns.current_user, origin_id)
+
+    if origin do
+      conn
+      |> put_status(200)
+      |> json(origin)
+    else
+      conn
+      |> put_status(404)
+    end
+  end
+
+  def fetch_data(conn, %{"origin_id" => origin_id, "data_id" => data_id} = _params) do
+    origin = DataOrigin.get_data_orgins_user(conn.assigns.current_user, origin_id)
+
+    if origin do
+      conn
+      |> put_status(200)
+      |> json(DataOrigin.get_data_user(origin, conn.assigns.current_user, data_id))
+    else
+      conn
+      |> put_status(404)
+    end
+  end
+
+  def root_directory(conn, %{"origin_id" => origin_id} = _params) do
+    origin = DataOrigin.get_data_orgins_user(conn.assigns.current_user, origin_id)
+
+    if origin do
+      conn
+      |> put_status(200)
+      |> json(
+        origin
+        |> DataOrigin.list_roots()
+        |> Enum.map(
+          &DataOrigin.list_data_descendants_user(origin, conn.assigns.current_user, &1.id)
+        )
+        |> List.flatten()
+      )
+    else
+      conn
+      |> put_status(404)
+    end
+  end
+
   def create(conn, params) do
     with {:ok, %DataOrigin.Origin{} = origin} <-
            DataOrigin.create_origin(
@@ -24,12 +70,16 @@ defmodule DatumWeb.OriginController do
   end
 
   def create_data(conn, params) do
-    with {:ok, %DataOrigin.Data{} = data} <-
-           DataOrigin.add_data(
-             DataOrigin.get_origin!(params["origin_id"]),
-             conn.assigns.current_user,
-             params
-           ) do
+    user = conn.assigns.current_user
+    origin = DataOrigin.get_origin!(params["origin_id"])
+
+    with {:ok, data} <- DataOrigin.add_data(origin, user, params),
+         {:ok, dir} <-
+           DataOrigin.add_data(origin, user, %{
+             path: Path.dirname(data.path),
+             type: :directory
+           }),
+         {:ok, _p} <- DataOrigin.connect_data(origin, dir, data) do
       conn
       |> put_status(:created)
       |> json(data)

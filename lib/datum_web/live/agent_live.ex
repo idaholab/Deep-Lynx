@@ -41,12 +41,10 @@ defmodule DatumWeb.AgentLive do
       <div>
         <.simple_form for={@form} phx-submit="send_message">
           <.input field={@form[:user_input]} type="textarea" />
-          <button :if={!@waiting} type="submit" class="btn btn-wide mt-5"> <%= gettext(
-                        "Send"
-                      ) %></button>
-          <button :if={@waiting} type="submit" class="btn btn-wide mt-5" disabled> <%= gettext(
-                        "Send"
-                      ) %></button>
+          <button :if={!@waiting} type="submit" class="btn btn-wide mt-5">{gettext("Send")}</button>
+          <button :if={@waiting} type="submit" class="btn btn-wide mt-5" disabled>
+            {gettext("Send")}
+          </button>
         </.simple_form>
       </div>
     </div>

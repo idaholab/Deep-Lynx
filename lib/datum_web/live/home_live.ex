@@ -162,19 +162,17 @@ defmodule DatumWeb.HomeLive do
               >
                 <div>
                   <span class="inline-flex rounded-lg bg-base-300 p-3 text-white ring-4 ring-base-400">
-                  <.icon name="hero-plus-circle" class="size-xs" />
+                    <.icon name="hero-plus-circle" class="size-xs" />
                   </span>
                 </div>
                 <div class="mt-8">
                   <h3 class="text-base font-semibold leading-6 text-primary-content">
                     <a href="#" class="focus:outline-none">
-                      <span class="absolute inset-0" aria-hidden="true"></span> <%= gettext(
-                        "Add Data"
-                      ) %>
+                      <span class="absolute inset-0" aria-hidden="true"></span> {gettext("Add Data")}
                     </a>
                   </h3>
                   <p class="mt-2 text-sm text-primary-content">
-                    <%= gettext("Create new data origin") %>
+                    {gettext("Create new data origin")}
                   </p>
                 </div>
                 <span
@@ -220,7 +218,6 @@ defmodule DatumWeb.HomeLive do
                 </span>
               </div>
             </div>
-
           </div>
         </div>
       </div>

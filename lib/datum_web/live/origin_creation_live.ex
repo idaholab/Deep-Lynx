@@ -12,7 +12,6 @@ defmodule DatumWeb.OriginCreationLive do
 
   @impl true
   def render(assigns) do
-
     ~H"""
     <div>
       <div class="breadcrumbs text-sm">
@@ -27,26 +26,26 @@ defmodule DatumWeb.OriginCreationLive do
           </span>
         </ul>
         <div>
-        <.simple_form
-        for={@form}
-        phx-submit="create_origin"
-        phx-change="validate"
-        >
-          <.input
-            type="text"
-            field={@form[:data_origin_name]}
-            label={gettext("Data Origin Name")}
+          <.simple_form for={@form} phx-submit="create_origin" phx-change="validate">
+            <.input type="text" field={@form[:data_origin_name]} label={gettext("Data Origin Name")} />
 
-          />
-
-            <button :if={!@create_result || @create_result.ok?} type="submit" class="btn btn-wide mt-5">
-              <%= gettext("Create") %>
+            <button
+              :if={!@create_result || @create_result.ok?}
+              type="submit"
+              class="btn btn-wide mt-5"
+            >
+              {gettext("Create")}
             </button>
-            <button :if={@create_result && @create_result.loading} type="submit" class="btn btn-wide mt-5" disabled>
-              <%= gettext("Create") %>
+            <button
+              :if={@create_result && @create_result.loading}
+              type="submit"
+              class="btn btn-wide mt-5"
+              disabled
+            >
+              {gettext("Create")}
             </button>
-        </.simple_form>
-      </div>
+          </.simple_form>
+        </div>
       </div>
     </div>
     """
@@ -55,11 +54,13 @@ defmodule DatumWeb.OriginCreationLive do
   @impl true
   def mount(
         _params,
-        %{"tab_id" => tab_id,
-        "user_token" => user_token,
-        "parent" => parent_pid,
-        "group_index" => group_index}
-        = _session,
+        %{
+          "tab_id" => tab_id,
+          "user_token" => user_token,
+          "parent" => parent_pid,
+          "group_index" => group_index
+        } =
+          _session,
         socket
       ) do
     user = Datum.Accounts.get_user_by_session_token(user_token)
@@ -71,19 +72,16 @@ defmodule DatumWeb.OriginCreationLive do
      |> assign(:messages, [
        %{
          id: UUID.uuid4(),
-         message:
-           "Create data origin config"
+         message: "Create data origin config"
        }
      ])
-
      |> assign(:group_index, group_index)
      |> assign(:parent, parent_pid)
      |> assign(:current_user, user)
      |> assign(:create_result, nil)
      |> assign(:form, to_form(%{"data_origin_name" => nil}))
      |> assign(:tab, tab)
-     |> assign(:id, user.id)
-    }
+     |> assign(:id, user.id)}
   end
 
   @impl true
@@ -110,22 +108,25 @@ defmodule DatumWeb.OriginCreationLive do
 
       {:noreply,
        socket
-       |> assign_async(:create_result, fn -> {:ok, %{create_result:
-        Datum.DataOrigin.create_origin((%{
-          name: name,
-          owned_by: user_id
-        })), create_result:
-        send(
-          parent_id,
-          {:open_tab, DatumWeb.OriginExplorerLive, %{}, group_index}
-        )
-        }} end)
-      #  |> assign(:form, to_form(%{"data_origin_name" => nil}, action: :reset))
+       |> assign_async(:create_result, fn ->
+         {:ok,
+          %{
+            create_result:
+              Datum.DataOrigin.create_origin(%{
+                name: name,
+                owned_by: user_id
+              }),
+            create_result_send:
+              send(
+                parent_id,
+                {:open_tab, DatumWeb.OriginExplorerLive, %{}, group_index}
+              )
+          }}
+       end)
        |> assign(
          :messages,
          socket.assigns.messages ++ [%{id: UUID.uuid4(), message: "Submit create"}]
        )}
-
     end
   end
 
@@ -134,5 +135,4 @@ defmodule DatumWeb.OriginCreationLive do
   end
 
   defp notify_parent(msg, process), do: send(process, msg)
-
 end
