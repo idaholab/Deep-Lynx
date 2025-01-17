@@ -40,7 +40,6 @@ defmodule Datum.DataOrigin.OriginRepo.Migrations.Init do
       timestamps(type: :utc_datetime)
     end
 
-    create index(:data, [:path])
-    create index(:data, [:path, :type], unique: true)
+    create index(:data, [:path], unique: true)
   end
 end

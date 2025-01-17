@@ -83,6 +83,33 @@ defmodule DatumWeb.ClientTest do
                |> DatumWeb.Client.create_origin!(body)
     end
 
+    test "creates new data on origin", %{conn: conn, user: user} do
+      origin = origin_fixture()
+
+      params = %{
+        "origin_id" => origin.id,
+        "path" => "some/path",
+        "type" => :file
+      }
+
+      Req.Test.stub(DatumWeb.OriginControllerStub, fn _c ->
+        # we override the provided connection because we want the test case supplied one
+        DatumWeb.OriginController.create_data(conn, params)
+      end)
+
+      client =
+        DatumWeb.Client.new!(Plug.Conn.request_url(conn),
+          plug: {Req.Test, DatumWeb.OriginControllerStub}
+        )
+
+      assert {:ok, data} =
+               client
+               |> DatumWeb.Client.create_data(origin.id, %{
+                 "path" => "some/path",
+                 "type" => :file
+               })
+    end
+
     test "gets current user info", %{conn: conn, user: user} do
       Req.Test.stub(DatumWeb.UserSessionControllerStub, fn _c ->
         # we override the provided connection because we want the test case supplied one

@@ -46,5 +46,21 @@ defmodule DatumWeb.OriginsControllerTest do
       conn = conn |> get(~p"/api/v1/origins")
       assert json_response(conn, 200) != []
     end
+
+    test "creates data on origin", %{conn: conn, token: token, user: user} do
+      origin =
+        origin_fixture(%{
+          owned_by: user.id
+        })
+
+      conn =
+        conn
+        |> put(~p"/api/v1/origins/#{origin}/data", %{
+          path: "some/path",
+          type: :file
+        })
+
+      assert json_response(conn, 201)
+    end
   end
 end

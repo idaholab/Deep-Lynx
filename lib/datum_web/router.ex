@@ -26,6 +26,7 @@ defmodule DatumWeb.Router do
     get "/user", UserSessionController, :user_details
     get "/origins", OriginController, :list
     put "/origins", OriginController, :create
+    put "/origins/:origin_id/data", OriginController, :create_data
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

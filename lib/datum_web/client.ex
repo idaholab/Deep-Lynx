@@ -99,6 +99,26 @@ defmodule DatumWeb.Client do
     origin
   end
 
+  def create_data(%__MODULE__{} = client, origin_id, params) do
+    Req.put(client.endpoint |> URI.append_path("/api/v1/origins/#{origin_id}/data"),
+      json: params,
+      auth: set_auth(client),
+      plug: client.plug
+    )
+    |> format_response(expected_status_code: 201)
+  end
+
+  def create_data!(%__MODULE__{} = client, origin_id, params) do
+    %{status: 201, body: data} =
+      Req.put!(client.endpoint |> URI.append_path("/api/v1/origins/#{origin_id}/data"),
+        json: params,
+        auth: set_auth(client),
+        plug: client.plug
+      )
+
+    data
+  end
+
   @doc """
   Gets current user information for supplied token - we only provide id and email here, we don't want people
   token fishing.
