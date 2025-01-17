@@ -40,8 +40,6 @@ defmodule Datum.Application do
         {options, directories, _invalid} =
           args |> OptionParser.parse(switches: [checksum: :boolean, watch: :boolean])
 
-        dbg(options)
-
         # read the configuration file
         {:ok, %{"endpoint" => endpoint, "token" => token} = _config} =
           YamlElixir.read_from_file(Path.join(System.user_home(), ".datum_config"))
