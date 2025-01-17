@@ -32,14 +32,6 @@ defmodule DatumWeb.OriginCreationLive do
         phx-submit="create_origin"
         phx-change="validate"
         >
-          <%!-- <.input
-            disabled
-            type="select"
-            field={@form[:data_origin_type]}
-            options={[{gettext("S3"), "S3"}, {gettext("Azure Blob"), "Azure Blob"}, {gettext("File system"), "File system"}]}
-            label={gettext("Select Data Origin Type - Coming Soon!")}
-            class="form-select"
-          /> --%>
           <.input
             type="text"
             field={@form[:data_origin_name]}
@@ -88,7 +80,6 @@ defmodule DatumWeb.OriginCreationLive do
      |> assign(:parent, parent_pid)
      |> assign(:current_user, user)
      |> assign(:create_result, nil)
-    #  |> assign(:form, to_form(%{"data_origin_type" => nil}))
      |> assign(:form, to_form(%{"data_origin_name" => nil}))
      |> assign(:tab, tab)
      |> assign(:id, user.id)
