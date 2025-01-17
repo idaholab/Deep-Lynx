@@ -1,7 +1,8 @@
 version: "3.9"
 services:
   deep-lynx:
-    image: "idaholab/deeplynx:latest"
+    build:
+      dockerfile: Dockerfile
     restart: on-failure
     depends_on:
       - postgres
