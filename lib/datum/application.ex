@@ -38,7 +38,7 @@ defmodule Datum.Application do
 
         # fetch the directories from the args, and options
         {options, directories, _invalid} =
-          args |> OptionParser.parse(switches: [generate_checksum: :boolean, watch: :boolean])
+          args |> OptionParser.parse(switches: [checksum: :boolean, watch: :boolean])
 
         # read the configuration file
         {:ok, %{"endpoint" => endpoint, "token" => token} = _config} =
@@ -53,7 +53,11 @@ defmodule Datum.Application do
           Client.new(endpoint, token: token)
 
         # connect the websocket client, don't need the PID because we register locally by module name
-        {:ok, _pid} = DatumWeb.SocketClient.start_link(%{endpoint: endpoint, token: token})
+        {:ok, _pid} =
+          DatumWeb.SocketClient.start_link(%{
+            endpoint: endpoint,
+            token: token
+          })
 
         # fetch the current set of plugins 
         load_plugins(client)
@@ -62,8 +66,8 @@ defmodule Datum.Application do
         {:ok, origin} = load_or_create_origin(client)
 
         # start the scanning GenServer
-        {:ok, pid} =
-          Datum.Scanner.start_link(%{})
+        {:ok, _pid} =
+          Datum.Scanner.start_link(%{client: client, user: Client.current_user_info!(client)})
 
         # run the initial scan - this is run regardless of watch status so that
         # we always start from the latest version of the origin before we start sending
@@ -71,10 +75,15 @@ defmodule Datum.Application do
         Datum.Scanner.scan(origin, directories, options)
 
         if Keyword.get(options, :watch) do
-          # monitor allows us to keep the CLI running while the scanning is taken place
+          # monitor allows us to keep the CLI running while the monitor is taking place
+          # we monitor not the genserver - but the PID returned from the filewatcher
+          # representing the watcher service - that way if the watch dies we die
           #
           # https://hexdocs.pm/elixir/1.18.1/Process.html#monitor/1
-          IO.puts("Starting monitor")
+
+          pid = Datum.Scanner.watch(origin, directories, options)
+
+          IO.puts("Starting filesystem watcher for #{directories}")
           Process.monitor(pid)
 
           receive do

@@ -80,7 +80,7 @@ defmodule Datum.Plugins do
   def create_plugin(attrs \\ %{}) do
     %Plugin{}
     |> Plugin.changeset(attrs)
-    |> Repo.insert()
+    |> Repo.insert(on_conflict: :nothing)
   end
 
   @doc """

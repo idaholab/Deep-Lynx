@@ -13,5 +13,7 @@ defmodule Datum.Repo.Migrations.CreatePlugins do
 
       timestamps(type: :utc_datetime)
     end
+
+    create index(:plugins, [:module_name, :path, :module], unique: true)
   end
 end

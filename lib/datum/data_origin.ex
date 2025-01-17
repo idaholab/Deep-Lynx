@@ -170,7 +170,8 @@ defmodule Datum.DataOrigin do
     OriginRepo.with_dynamic_repo(origin, fn ->
       with {:ok, data} <-
              %Data{}
-             |> Data.changeset(Map.put(attrs, :origin_id, origin.id))
+             |> Data.changeset(attrs)
+             |> Ecto.Changeset.put_change(:origin_id, origin.id)
              |> OriginRepo.insert(
                on_conflict:
                  {:replace,
@@ -276,6 +277,31 @@ defmodule Datum.DataOrigin do
     )
   end
 
+  def delete_data(%Origin{} = origin, data) do
+    OriginRepo.with_dynamic_repo(
+      origin,
+      fn ->
+        OriginRepo.delete(data)
+      end,
+      mode: :readwrite
+    )
+  end
+
+  def get_data_by_path!(%Origin{} = origin, path) do
+    OriginRepo.with_dynamic_repo(
+      origin,
+      fn ->
+        query =
+          from d in Data,
+            where: d.path == ^path,
+            select: d
+
+        OriginRepo.one(query)
+      end,
+      mode: :readonly
+    )
+  end
+
   # add relationship will attempt to update the data record on both supplied origins with
   # information about the other, creating a linkagae between the two. Options are available
   # for supplying a type to the relationship and eventually, hopefully, validating it against
@@ -373,6 +399,25 @@ defmodule Datum.DataOrigin do
           else
             query
           end
+
+        OriginRepo.all(query)
+      end,
+      mode: :readonly
+    )
+  end
+
+  def list_data_descendants(%Origin{} = origin, data_id) do
+    OriginRepo.with_dynamic_repo(
+      origin,
+      fn ->
+        query =
+          from d in Data,
+            join: p in DataTreePath,
+            as: :tree,
+            on: d.id == p.descendant,
+            where: p.ancestor == ^data_id and p.descendant != p.ancestor,
+            order_by: [asc: p.depth],
+            select: d.id
 
         OriginRepo.all(query)
       end,
