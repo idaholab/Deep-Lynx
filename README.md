@@ -22,6 +22,10 @@ Visual Studio Code with a few extensions is primarily recommended as the editor 
 
 ## Working Under Enterprise CA (Dealing with Cert Errors)
 
+You will need to add a file for rebar3. If it does not already exist, create the directory ~/.config/rebar3. Then create the file `rebar.config` with the following text modified for the path to your cert. 
+
+`{ssl_cacerts_path, ["/path/to/YOUR_COMPANY_CERT"]}.`
+
 ### Modifying Environment Variables
 
 Hex uses an environment variable called `HEX_CACERTS_PATH` set to your certificate bundle. This will resemble the following: 

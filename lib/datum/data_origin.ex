@@ -111,7 +111,9 @@ defmodule Datum.DataOrigin do
                  "#{ShortUUID.encode!(origin.id)}.db"
                )
            }) do
-      {:ok, updated_origin}
+      # connecting to data origin record to establish database
+      Datum.DataOrigin.OriginRepo.with_dynamic_repo(updated_origin, fn -> {:ok, updated_origin} end,
+      mode: :readwrite)
     else
       err -> err
     end
