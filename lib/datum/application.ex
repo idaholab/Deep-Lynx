@@ -19,6 +19,27 @@ defmodule Datum.Application do
         init(args)
         System.halt(0)
 
+      ["seed" | args] ->
+        children = [
+          Datum.Repo,
+          # we have to include the endpoint so we can generate the admin PAT required for
+          # some of the seeds
+          DatumWeb.Endpoint
+        ]
+
+        # See https://hexdocs.pm/elixir/Supervisor.html
+        # for other strategies and supported options
+        {:ok, _pid} =
+          Supervisor.start_link(children, strategy: :one_for_one, name: Datum.Supervisor)
+
+        {options, _rest, _invalid} =
+          args |> OptionParser.parse(strict: [name: :string])
+
+        Datum.Release.migrate()
+        Datum.Release.seed_db(Keyword.get(options, :name, "default"))
+        IO.puts("System Migrated")
+        System.halt(0)
+
       ["scan" | args] ->
         children = [
           Datum.Repo,
