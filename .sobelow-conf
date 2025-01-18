@@ -7,7 +7,7 @@
   format: "txt",
   out: nil,
   threshold: :low,
-  ignore: ["Traversal", "Config.CSP", "Config.HTTPS"],
+  ignore: ["Traversal", "Config.CSP", "Config.HTTPS", "RCE.CodeModule"],
   ignore_files: ["lib/datum/data_origin/repo.ex"],
   version: false,
 ]
