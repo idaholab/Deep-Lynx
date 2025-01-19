@@ -80,7 +80,7 @@ defmodule DatumWeb.HomeLive do
               Enum.find(tab_group, fn tab -> Enum.member?(@selected_tabs, tab) end).module,
               id:
                 "explorer_tab_#{List.first(Enum.filter(tab_group, fn tab -> Enum.member?(@selected_tabs, tab) end)).id}",
-              sticky: true,
+              sticky: false,
               session: %{
                 "group_index" => group_index,
                 "parent" => self(),
@@ -255,11 +255,26 @@ defmodule DatumWeb.HomeLive do
   def handle_params(%{"tab_id" => tab_id} = params, uri, socket) do
     {tab_id, _r} = Integer.parse(tab_id)
 
+    socket =
+      if !Enum.any?(socket.assigns.selected_tabs, fn selected ->
+           selected && selected.id == tab_id
+         end) do
+        {:noreply, socket} =
+          handle_event("open_tab", %{"tab" => "#{tab_id}", "group-index" => "0"}, socket)
+
+        socket
+      else
+        socket
+      end
+
     # we're going to use Registry.dispatch/4 instead of just a lookup for the PID  - this is safer and will provide a no-op 
     # path of the tab_id doesn't exist - basically sends the patch message and propagates the params and uri downwards to the tab
     # if it exists
     Registry.dispatch(DatumWeb.TabRegistry, tab_id, fn entries ->
-      for {pid, _module} <- entries, do: send(pid, {:patch, params, uri})
+      for {pid, _module} <- entries do
+        GenServer.cast(pid, {:patch, params, uri, socket.assigns.live_action})
+        send(pid, {:patch, params, uri, socket.assigns.live_action})
+      end
     end)
 
     {:noreply, socket}
@@ -269,7 +284,19 @@ defmodule DatumWeb.HomeLive do
   # eventually we will want to build functionality that parses the parameters and passes it to a relevant tab
   # allowing the nested liveviews to run patch operations
   @impl true
-  def handle_params(_params, _uri, socket) do
+  def handle_params(params, uri, socket) do
+    # we have to propagate the patch to all tabs if it's a general patch request
+    # not just a single one (else it'd match above)
+    Enum.map(
+      List.flatten(socket.assigns.tabs),
+      &Registry.dispatch(DatumWeb.TabRegistry, &1.id, fn entries ->
+        for {pid, _module} <- entries do
+          GenServer.cast(pid, {:patch, params, uri, socket.assigns.live_action})
+          send(pid, {:patch, params, uri, socket.assigns.live_action})
+        end
+      end)
+    )
+
     {:noreply, socket}
   end
 
@@ -280,7 +307,7 @@ defmodule DatumWeb.HomeLive do
     {group_index, _} = Integer.parse(group_index)
     {tab_id, _} = Integer.parse(tab_id)
 
-    new_tab = Enum.find(Enum.at(socket.assigns.tabs, group_index), fn t -> t.id == tab_id end)
+    new_tab = Enum.find(List.flatten(socket.assigns.tabs), fn t -> t.id == tab_id end)
 
     selected_tabs =
       case Enum.count(socket.assigns.selected_tabs) do
@@ -445,6 +472,13 @@ defmodule DatumWeb.HomeLive do
     close_tab(tab_id, socket)
   end
 
+  # we need a way to have child live views initiate a patch since that doesn't exist when 
+  # not mounted at the router
+  @impl true
+  def handle_info({:patch, to}, socket) do
+    {:noreply, socket |> push_patch(to: to)}
+  end
+
   # updates the tab on the socket by fetching the latest from the database - in case we want
   @impl true
   def handle_info({:tab_updated, tab_id}, socket) do
@@ -495,6 +529,11 @@ defmodule DatumWeb.HomeLive do
        List.replace_at(socket.assigns.selected_tabs, group_index, new_tab)
      )
      |> push_patch(to: ~p"/")}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_call({:patch, to}, _tuple, socket) do
+    {:reply, %{}, socket |> push_patch(to: to)}
   end
 
   # easy function for replacing the tab with an updated version in the socket

@@ -29,8 +29,10 @@ Hooks.DraggableTab = {
   mounted() {
     let tab_id = this.el.dataset.tab;
     let group_index = this.el.dataset.group;
+    let record_type = "tab";
     this.el.addEventListener("dragstart", (e) => {
       e.dataTransfer.setData("tab", tab_id);
+      e.dataTransfer.setData("record_type", record_type);
       e.dataTransfer.setData("group", group_index);
     });
   },
@@ -40,16 +42,62 @@ Hooks.DraggableDropZone = {
   mounted() {
     let target_group_index = this.el.dataset.group;
     this.el.addEventListener("drop", (e) => {
-      let tab_id = e.dataTransfer.getData("tab");
-      let group_index = e.dataTransfer.getData("group");
+      let record_type = e.dataTransfer.getData("record_type");
 
-      this.pushEvent("tab_dropped", {
-        tab: tab_id,
-        target_group_index: target_group_index,
+      if (record_type == "tab") {
+        let tab_id = e.dataTransfer.getData("tab");
+
+        this.pushEvent("tab_dropped", {
+          tab: tab_id,
+          target_group_index: target_group_index,
+        });
+      }
+    });
+  },
+};
+
+// This allows us to drag data records around and drop them on other data
+// records - useful for creating connections between data. If you need just
+// to be a target use the hook right below this
+Hooks.DraggableDataRecord = {
+  mounted() {
+    let data_id = this.el.dataset.data;
+    let origin_id = this.el.dataset.origin;
+    let record_type = "data";
+    this.el.addEventListener("dragstart", (e) => {
+      e.dataTransfer.setData("data", data_id);
+      e.dataTransfer.setData("record_type", record_type);
+      e.dataTransfer.setData("origin", origin_id);
+    });
+
+    this.el.addEventListener("drop", (e) => {
+      let incoming_data_id = e.dataTransfer.getData("data");
+      let incoming_origin_id = e.dataTransfer.getData("origin");
+
+      this.pushEvent("data_record_dropped", {
+        data: data_id,
+        origin: origin_id,
+        incoming_data_id: incoming_data_id,
+        incoming_origin_id: incoming_origin_id
       });
     });
   },
 };
+
+Hooks.DraggableDataRecordDropZone = {
+  mounted() {
+    this.el.addEventListener("drop", (e) => {
+      let incoming_data_id = e.dataTransfer.getData("data");
+      let origin_id = e.dataTransfer.getData("origin");
+
+      this.pushEvent("data_record_dropped", {
+        incoming_data_id: incoming_data_id,
+        incoming_origin_id: origin_id
+      });
+    });
+  },
+};
+
 
 Hooks.GraphView = graphHook
 

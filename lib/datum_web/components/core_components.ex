@@ -47,6 +47,7 @@ defmodule DatumWeb.CoreComponents do
       id={@id}
       phx-mounted={@show && show_modal(@id)}
       phx-remove={hide_modal(@id)}
+      phx-click-away={@on_cancel}
       data-cancel={JS.exec(@on_cancel, "phx-remove")}
       class="relative z-50 hidden"
     >
@@ -60,7 +61,7 @@ defmodule DatumWeb.CoreComponents do
         tabindex="0"
       >
         <div class="flex min-h-full items-center justify-center">
-          <div class="w-full max-w-3xl p-4 sm:p-6 lg:py-8">
+          <div class="w-full max-w-7xl p-4 sm:p-6 lg:py-8">
             <.focus_wrap
               id={"#{@id}-container"}
               phx-window-keydown={JS.exec("data-cancel", to: "##{@id}")}
@@ -345,7 +346,7 @@ defmodule DatumWeb.CoreComponents do
       <select
         id={@id}
         name={@name}
-        class="mt-2 block  rounded-md border border-gray-300 bg-white shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm"
+        class="mt-2 block  rounded-md border border-gray-300 bg-white shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm w-full"
         multiple={@multiple}
         {@rest}
       >
@@ -617,26 +618,31 @@ defmodule DatumWeb.CoreComponents do
           </tr>
         </thead>
         <tbody id={@id} phx-update={match?(%Phoenix.LiveView.LiveStream{}, @rows) && "stream"}>
-          <tr
-            :for={row <- @rows}
-            id={@row_id && @row_id.(row)}
-            class="hover:bg-base-200 hover:cursor-pointer"
-          >
-            <td
-              :for={{col, i} <- Enum.with_index(@col)}
-              phx-click={@row_click && @row_click.(row)}
-              class={[@row_click && "hover:cursor-pointer", i <= 0 && "w-2"]}
+          <div :for={row <- @rows} id={@row_id && @row_id.(row)}>
+            <tr
+              id={"drag-#{Map.get(row, :id)}"}
+              phx-hook="DraggableDataRecord"
+              draggable="true"
+              data-data={Map.get(row, :id)}
+              data-origin={Map.get(row, :origin_id)}
+              class="hover:bg-base-200 hover:cursor-pointer"
             >
-              {render_slot(col, @row_item.(row))}
-            </td>
-            <td :for={action <- @action} :if={@action != []}>
-              <div>
-                <span class="relative  font-semibold leading-6 text-zinc-900 hover:text-zinc-700">
-                  {render_slot(action, @row_item.(row))}
-                </span>
-              </div>
-            </td>
-          </tr>
+              <td
+                :for={{col, i} <- Enum.with_index(@col)}
+                phx-click={@row_click && @row_click.(row)}
+                class={[@row_click && "hover:cursor-pointer", i <= 0 && "w-2"]}
+              >
+                {render_slot(col, @row_item.(row))}
+              </td>
+              <td :for={action <- @action} :if={@action != []}>
+                <div>
+                  <span class="relative  font-semibold leading-6 text-zinc-900 hover:text-zinc-700">
+                    {render_slot(action, @row_item.(row))}
+                  </span>
+                </div>
+              </td>
+            </tr>
+          </div>
         </tbody>
       </table>
     </div>

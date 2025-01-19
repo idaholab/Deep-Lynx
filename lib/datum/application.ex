@@ -134,7 +134,7 @@ defmodule Datum.Application do
           DatumWeb.Endpoint,
           {Task.Supervisor, name: Datum.TaskSupervisor},
           # this registry lets DatumWeb.HomeLive act as a broker and handle message passing between tabs
-          {Registry, keys: :unique, name: DatumWeb.TabRegistry}
+          {Registry, keys: :duplicate, name: DatumWeb.TabRegistry}
         ]
 
         # See https://hexdocs.pm/elixir/Supervisor.html
