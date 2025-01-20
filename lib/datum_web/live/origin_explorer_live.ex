@@ -156,23 +156,23 @@ defmodule DatumWeb.OriginExplorerLive do
           </.file_table>
         </div>
       </div>
-      HERE {@live_action}
       <.modal
         :if={@live_action in [:origin_explorer_connect]}
         id="data_connect_modal"
         show
-        on_cancel={JS.patch(~p"/")}
+        on_cancel={JS.patch(~p"/origin_explorer/#{@tab}")}
       >
         <.live_component
           live_action={@live_action}
           target_data={@target_data}
           target_origin={@target_origin}
-          incoming_data{@incoming_data}
-          incoming_origin{@incoming_origin}
+          incoming_data={@incoming_data}
+          incoming_origin={@incoming_origin}
           module={DatumWeb.LiveComponent.ConnectData}
           id="data-connect-modal-component"
           current_user={@current_user}
-          patch={~p"/"}
+          parent={@parent}
+          patch={~p"/origin_explorer/#{@tab}"}
         />
       </.modal>
     </div>
@@ -405,7 +405,7 @@ defmodule DatumWeb.OriginExplorerLive do
      |> patch(~p"/origin_explorer/#{socket.assigns.tab}/connect")}
   end
 
-  # we use the callback version of handle_info so we can update the socket with any changed state
+  # we use the callback version of handle_info and handle_cast so we can update the socket with any changed state
   # note this doesn't actually do anything - but you will need it so the view doesn't crash if sent
   # the message. If you want to actually handle params, make a new function ABOVE this with the
   # same params you'd do a normal handle_params/3 with
@@ -417,8 +417,15 @@ defmodule DatumWeb.OriginExplorerLive do
 
   @impl Phoenix.LiveView
   def handle_info({:patch, _params, _uri, live_action}, socket) do
-    dbg(live_action)
     {:noreply, socket |> assign(:live_action, live_action)}
+  end
+
+  @doc """
+  Handles a flash request from components and propagates it up the chain.
+  """
+  @impl Phoenix.LiveView
+  def handle_info({:flash, type, message}, socket) do
+    {:noreply, socket |> flash(type, message)}
   end
 
   # pull the common assigns from socket and update the tab's state with them
@@ -459,6 +466,11 @@ defmodule DatumWeb.OriginExplorerLive do
 
   def patch(socket, to) do
     GenServer.call(socket.assigns.parent, {:patch, to})
+    socket
+  end
+
+  def flash(socket, type, message) do
+    GenServer.call(socket.assigns.parent, {:flash, type, message})
     socket
   end
 end

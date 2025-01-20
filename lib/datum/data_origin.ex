@@ -32,7 +32,9 @@ defmodule Datum.DataOrigin do
   Returns a list of data_origins for a user - taking into account
   their groups and permissions for said origins.
   """
-  def list_data_orgins_user(%User{} = user, exclude \\ []) do
+  def list_data_orgins_user(%User{} = user, exclude \\ [], opts \\ []) do
+    permissions = Keyword.get(opts, :permissions, [:read, :readwrite])
+
     query =
       from o in Origin,
         distinct: true,
@@ -42,13 +44,15 @@ defmodule Datum.DataOrigin do
           (p.user_id == ^user.id or
              p.group_id in subquery(
                from g in UserGroup, where: g.user_id == ^user.id, select: g.group_id
-             )) and p.permission_type in [:read, :readwrite] and o.id not in ^exclude,
+             )) and p.permission_type in ^permissions and o.id not in ^exclude,
         select: o
 
     Repo.all(query)
   end
 
-  def get_data_orgins_user(%User{} = user, origin_id) do
+  def get_data_orgins_user(%User{} = user, origin_id, opts \\ []) when not is_nil(origin_id) do
+    permissions = Keyword.get(opts, :permissions, [:read, :readwrite])
+
     query =
       from o in Origin,
         distinct: true,
@@ -58,7 +62,7 @@ defmodule Datum.DataOrigin do
           (p.user_id == ^user.id or
              p.group_id in subquery(
                from g in UserGroup, where: g.user_id == ^user.id, select: g.group_id
-             )) and p.permission_type in [:read, :readwrite] and o.id == ^origin_id,
+             )) and p.permission_type in ^permissions and o.id == ^origin_id,
         select: o
 
     Repo.one(query)
@@ -242,7 +246,9 @@ defmodule Datum.DataOrigin do
     end)
   end
 
-  def get_data_user(%Origin{} = origin, %User{} = user, data_id) do
+  def get_data_user(%Origin{} = origin, %User{} = user, data_id, opts \\ []) do
+    permissions = Keyword.get(opts, :permissions, [:read, :readwrite])
+
     groups =
       Repo.all(
         from g in UserGroup,
@@ -260,7 +266,7 @@ defmodule Datum.DataOrigin do
             on: d.id == p.data_id,
             where:
               (p.user_id == ^user.id or
-                 p.group_id in ^groups) and p.permission_type in [:read, :readwrite] and
+                 p.group_id in ^groups) and p.permission_type in ^permissions and
                 d.id == ^data_id,
             select: d
 
@@ -375,6 +381,7 @@ defmodule Datum.DataOrigin do
 
   def list_data_user(%Origin{} = origin, %User{} = user, opts \\ []) do
     only_ids = Keyword.get(opts, :only_ids)
+    permissions = Keyword.get(opts, :permissions, [:read, :readwrite])
 
     groups =
       Repo.all(
@@ -393,7 +400,7 @@ defmodule Datum.DataOrigin do
             on: d.id == p.data_id,
             where:
               (p.user_id == ^user.id or
-                 p.group_id in ^groups) and p.permission_type in [:read, :readwrite],
+                 p.group_id in ^groups) and p.permission_type in ^permissions,
             select: d
 
         query =
@@ -428,7 +435,9 @@ defmodule Datum.DataOrigin do
     )
   end
 
-  def list_data_descendants_user(%Origin{} = origin, %User{} = user, data_id) do
+  def list_data_descendants_user(%Origin{} = origin, %User{} = user, data_id, opts \\ []) do
+    permissions = Keyword.get(opts, :permissions, [:read, :readwrite])
+
     groups =
       Repo.all(
         from g in UserGroup,
@@ -455,7 +464,7 @@ defmodule Datum.DataOrigin do
             on: d.id == p.data_id,
             where:
               (p.user_id == ^user.id or
-                 p.group_id in ^groups) and p.permission_type in [:read, :readwrite] and
+                 p.group_id in ^groups) and p.permission_type in ^permissions and
                 d.id in subquery(subquery),
             order_by: [asc: d.type],
             select: d
@@ -485,6 +494,8 @@ defmodule Datum.DataOrigin do
   @page_size 10_000
 
   def search_origin(%Origin{} = origin, %Datum.Accounts.User{} = user, search_term, opts \\ []) do
+    permissions = Keyword.get(opts, :permissions, [:read, :readwrite])
+
     groups =
       Repo.all(
         from g in Datum.Accounts.UserGroup,
@@ -512,7 +523,7 @@ defmodule Datum.DataOrigin do
               on: d.id == p.data_id,
               where:
                 ((p.user_id == ^user.id or
-                    p.group_id in ^groups) and p.permission_type in [:read, :readwrite]) or
+                    p.group_id in ^groups) and p.permission_type in ^permissions) or
                   is_nil(p.user_id),
               select: d.id
 

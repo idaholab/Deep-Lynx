@@ -84,6 +84,9 @@ Hooks.DraggableDataRecord = {
   },
 };
 
+// Turns the element into a dropzone for data records dragged from the OriginExplorer LiveView
+// this is how you can add file awareness to other tabs - for example: allowing users to drag
+// files into the AI assistant or eventually the timeseries query component
 Hooks.DraggableDataRecordDropZone = {
   mounted() {
     this.el.addEventListener("drop", (e) => {

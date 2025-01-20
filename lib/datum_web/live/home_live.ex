@@ -536,6 +536,15 @@ defmodule DatumWeb.HomeLive do
     {:reply, %{}, socket |> push_patch(to: to)}
   end
 
+  @doc """
+  This handles calls from tabs wanting to put flashes to the socket - useful as we can't
+  patch or put_flash/3 from inside the child live view
+  """
+  @impl Phoenix.LiveView
+  def handle_call({:flash, type, message}, _tuple, socket) do
+    {:reply, %{}, socket |> put_flash(type, message)}
+  end
+
   # easy function for replacing the tab with an updated version in the socket
   defp replace_tab(socket, tab) do
     tabs =
