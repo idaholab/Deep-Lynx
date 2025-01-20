@@ -60,6 +60,7 @@ file_one =
   DataOrigin.add_data!(origin, admin, %{
     path: "test.tdms",
     original_path: "/Users/darrjw/home/test.tdms",
+    description: "A simple test TDMS file",
     properties: json,
     type: :file,
     tags: ["sensor data", "test file"],
@@ -84,6 +85,7 @@ file_two =
   DataOrigin.add_data!(origin, admin, %{
     path: "picture.png",
     original_path: "/Users/darrjw/home/second/picture.png",
+    description: "A simple picture file",
     tags: ["selfies"],
     domain: ["individualisim"],
     type: :file,

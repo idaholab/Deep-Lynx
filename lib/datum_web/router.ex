@@ -87,7 +87,8 @@ defmodule DatumWeb.Router do
       live "/", HomeLive, :index
 
       # note how we preface the patch calls with the type of tab that should be handling it - helps keep this understandable
-      live "/origin_explorer/:tab_id/test", HomeLive, :origin_explorer_test
+      live "/origin_explorer/:tab_id", HomeLive, :origin_explorer_index
+      live "/origin_explorer/:tab_id/connect", HomeLive, :origin_explorer_connect
     end
   end
 

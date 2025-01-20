@@ -58,6 +58,7 @@ defmodule DatumWeb.OriginExplorerLive do
           <.file_table
             id={"origins_#{@tab.id}"}
             rows={origins}
+            row_id={fn row -> row.id end}
             row_click={fn r -> JS.push("select_origin", value: %{"origin_id" => r.id}) end}
           >
             <:col><.icon name="hero-server-stack" /></:col>
@@ -155,6 +156,25 @@ defmodule DatumWeb.OriginExplorerLive do
           </.file_table>
         </div>
       </div>
+      <.modal
+        :if={@live_action in [:origin_explorer_connect]}
+        id="data_connect_modal"
+        show
+        on_cancel={JS.patch(~p"/origin_explorer/#{@tab}")}
+      >
+        <.live_component
+          live_action={@live_action}
+          target_data={@target_data}
+          target_origin={@target_origin}
+          incoming_data={@incoming_data}
+          incoming_origin={@incoming_origin}
+          module={DatumWeb.LiveComponent.ConnectData}
+          id="data-connect-modal-component"
+          current_user={@current_user}
+          parent={@parent}
+          patch={~p"/origin_explorer/#{@tab}"}
+        />
+      </.modal>
     </div>
     """
   end
@@ -184,7 +204,7 @@ defmodule DatumWeb.OriginExplorerLive do
       # chain or to have anything other than the parent process - https://hexdocs.pm/elixir/1.18.1/Registry.html#register/3
       #
       # we throw away the error because this shouldnt' kill anything
-      Registry.register(DatumWeb.TabRegistry, tab_id, DatumWeb.OriginExplorerLive)
+      Registry.register(DatumWeb.TabRegistry, tab_id, %{})
 
       origin =
         if Map.get(tab.state, "origin_id") do
@@ -241,6 +261,11 @@ defmodule DatumWeb.OriginExplorerLive do
        |> assign(:current_user, user)
        |> assign(:tab, tab)
        |> assign(:group_index, group_index)
+       # assigns for the modal, just set to nil so we don't error renders
+       |> assign(:target_data, nil)
+       |> assign(:target_origin, nil)
+       |> assign(:incoming_data, nil)
+       |> assign(:incoming_origin, nil)
        |> assign_async(:origins, fn ->
          {:ok, %{origins: Datum.DataOrigin.list_data_orgins_user(user)}}
        end)}
@@ -360,13 +385,47 @@ defmodule DatumWeb.OriginExplorerLive do
     {:noreply, socket}
   end
 
-  # we use the callback version of handle_info so we can update the socket with any changed state
+  @impl true
+  def handle_event(
+        "data_record_dropped",
+        %{
+          "incoming_data_id" => incoming_data_id,
+          "incoming_origin_id" => incoming_origin_id,
+          "data" => data_id,
+          "origin" => origin_id
+        } = _params,
+        socket
+      ) do
+    {:noreply,
+     socket
+     |> assign(:target_data, data_id)
+     |> assign(:target_origin, origin_id)
+     |> assign(:incoming_data, incoming_data_id)
+     |> assign(:incoming_origin, incoming_origin_id)
+     |> patch(~p"/origin_explorer/#{socket.assigns.tab}/connect")}
+  end
+
+  # we use the callback version of handle_info and handle_cast so we can update the socket with any changed state
   # note this doesn't actually do anything - but you will need it so the view doesn't crash if sent
   # the message. If you want to actually handle params, make a new function ABOVE this with the
   # same params you'd do a normal handle_params/3 with
-  @impl true
-  def handle_info({:patch, _params, _uri}, socket) do
-    {:noreply, socket}
+  @impl Phoenix.LiveView
+  def handle_cast({:patch, _params, _uri, live_action}, socket) do
+    dbg(live_action)
+    {:noreply, socket |> assign(:live_action, live_action)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_info({:patch, _params, _uri, live_action}, socket) do
+    {:noreply, socket |> assign(:live_action, live_action)}
+  end
+
+  @doc """
+  Handles a flash request from components and propagates it up the chain.
+  """
+  @impl Phoenix.LiveView
+  def handle_info({:flash, type, message}, socket) do
+    {:noreply, socket |> flash(type, message)}
   end
 
   # pull the common assigns from socket and update the tab's state with them
@@ -402,6 +461,16 @@ defmodule DatumWeb.OriginExplorerLive do
       })
 
     send(socket.assigns.parent, {:tab_updated, socket.assigns.tab.id})
+    socket
+  end
+
+  def patch(socket, to) do
+    GenServer.call(socket.assigns.parent, {:patch, to})
+    socket
+  end
+
+  def flash(socket, type, message) do
+    GenServer.call(socket.assigns.parent, {:flash, type, message})
     socket
   end
 end
