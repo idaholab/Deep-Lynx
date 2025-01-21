@@ -19,10 +19,8 @@ defmodule DatumWeb.LiveComponent.TDMSMetadata do
             phx-value-item={@file_name}
             phx-value-type="file"
           >
-            <a
-              class={"#{if @selected_item == @file_name do "bg-primary" else "hover:bg-neutral" end}"}
-            >
-              {gettext("File Name:")} <%= @file_name %>
+            <a class={"#{if @selected_item == @file_name do "bg-primary" else "hover:bg-neutral" end}"}>
+              {gettext("File Name:")} {@file_name}
             </a>
             <ul>
               <%= for group <- Map.get(@properties, "groups", []) do %>
@@ -32,10 +30,8 @@ defmodule DatumWeb.LiveComponent.TDMSMetadata do
                   phx-value-item={group["name"]}
                   phx-value-type="group"
                 >
-                  <a
-                    class={"#{if @selected_item == group["name"] do "bg-primary" else "hover:bg-neutral" end}"}
-                  >
-                    {gettext("Group:")} <%= group["name"] %>
+                  <a class={"#{if @selected_item == group["name"] do "bg-primary" else "hover:bg-neutral" end}"}>
+                    {gettext("Group:")} {group["name"]}
                   </a>
                   <ul>
                     <%= for channel <- Map.get(group, "channels", []) do %>
@@ -45,10 +41,8 @@ defmodule DatumWeb.LiveComponent.TDMSMetadata do
                         phx-value-item={channel["name"]}
                         phx-value-type="channel"
                       >
-                        <a
-                          class={"#{if @selected_item == channel["name"] do "bg-primary" else "hover:bg-neutral" end}"}
-                        >
-                          {gettext("Channel:")} <%= channel["name"] %>
+                        <a class={"#{if @selected_item == channel["name"] do "bg-primary" else "hover:bg-neutral" end}"}>
+                          {gettext("Channel:")} {channel["name"]}
                         </a>
                       </li>
                     <% end %>
@@ -59,21 +53,21 @@ defmodule DatumWeb.LiveComponent.TDMSMetadata do
           </li>
         </ul>
       </div>
-
-      <!-- Divider -->
-      <div class="divider divider-horizontal"/>
-
-      <!-- Main content -->
+      
+    <!-- Divider -->
+      <div class="divider divider-horizontal" />
+      
+    <!-- Main content -->
       <div class="card-body w-3/4">
         <h2 class="card-title">{@selected_type} `{@selected_item}` {gettext("Properties")}</h2>
-
-        <!-- Properties Table -->
-        <.table id="data-table" rows={@selected_properties} row_id={&(&1["name"])}>
+        
+    <!-- Properties Table -->
+        <.table id="data-table" rows={@selected_properties} row_id={& &1["name"]}>
           <:col :let={row} label="Property Name">
-            <%= row["name"] %>
+            {row["name"]}
           </:col>
           <:col :let={row} label="Property Value">
-            <%= row["value"] %>
+            {row["value"]}
           </:col>
         </.table>
       </div>
@@ -83,9 +77,20 @@ defmodule DatumWeb.LiveComponent.TDMSMetadata do
 
   @impl true
   def handle_event("select_item", %{"item" => item, "type" => type}, socket) do
-    type_atom = String.to_atom(type)
-    properties = find_properties(item, type_atom, socket.assigns.properties)
-    {:noreply, assign(socket, selected_type: String.capitalize(type), selected_item: item, selected_properties: properties)}
+    if type in Enum.map([:file, :group, :channel], &Atom.to_string/1) do
+      type_atom = String.to_existing_atom(type)
+      properties = find_properties(item, type_atom, socket.assigns.properties)
+
+      {:noreply,
+       assign(
+         socket,
+         selected_type: String.capitalize(type),
+         selected_item: item,
+         selected_properties: properties
+       )}
+    else
+      {:noreply, socket}
+    end
   end
 
   # various overrides of the find_properties method to handle property

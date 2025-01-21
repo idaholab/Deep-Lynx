@@ -545,7 +545,7 @@ defmodule DatumWeb.CoreComponents do
               >
                 {render_slot(col, @row_item.(row))}
               </td>
-              <td :if={@action != []} :for={action <- @action}>
+              <td :for={action <- @action} :if={@action != []}>
                 <div>
                   <span class="relative font-semibold leading-6 text-zinc-900 hover:text-zinc-700">
                     {render_slot(action, @row_item.(row))}
@@ -663,13 +663,19 @@ defmodule DatumWeb.CoreComponents do
             <!-- Only basic content for non-TDMS files  -->
             <div class="card-body w-3/4">
               <h2 class="card-title">{gettext("File Name:")} {@file_name}</h2>
-              <p>{if @description do @description else "No description for this file" end}</p>
+              <p>
+                {if @description do
+                  @description
+                else
+                  "No description for this file"
+                end}
+              </p>
             </div>
           <% end %>
         </div>
       </div>
-
-      <!-- Tags and Domains -->
+      
+    <!-- Tags and Domains -->
       <div class="flex justify-between space-x-4">
         <div class="card card-compact flex-1 bg-base-200 shadow-xl">
           <div class="card-body">
