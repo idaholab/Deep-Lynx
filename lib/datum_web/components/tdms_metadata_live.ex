@@ -64,11 +64,18 @@ defmodule DatumWeb.LiveComponent.TDMSMetadata do
       <div class="divider divider-horizontal"/>
 
       <!-- Main content -->
-      <div class="card-body w-3/4 overflow-y-auto">
-        <p>{gettext("Selected Type:")} <%= @selected_type %></p>
-        <p>{gettext("Selected Name:")} <%= @selected_item %></p>
-        <p>{gettext("Selected Properties:")}</p>
-        <p><%= Jason.encode!(@selected_properties) %></p>
+      <div class="card-body w-3/4">
+        <h2 class="card-title">{@selected_type} `{@selected_item}` {gettext("Properties")}</h2>
+
+        <!-- Properties Table -->
+        <.table id="data-table" rows={@selected_properties} row_id={&(&1["name"])}>
+          <:col :let={row} label="Property Name">
+            <%= row["name"] %>
+          </:col>
+          <:col :let={row} label="Property Value">
+            <%= row["value"] %>
+          </:col>
+        </.table>
       </div>
     </div>
     """
@@ -78,13 +85,13 @@ defmodule DatumWeb.LiveComponent.TDMSMetadata do
   def handle_event("select_item", %{"item" => item, "type" => type}, socket) do
     type_atom = String.to_atom(type)
     properties = find_properties(item, type_atom, socket.assigns.properties)
-    {:noreply, assign(socket, selected_type: type, selected_item: item, selected_properties: properties)}
+    {:noreply, assign(socket, selected_type: String.capitalize(type), selected_item: item, selected_properties: properties)}
   end
 
   # various overrides of the find_properties method to handle property
   # fetching for the various data types within the tdms metadata
   defp find_properties(_, :file, properties) do
-    Map.get(properties, "properties")
+    properties["properties"]
   end
 
   defp find_properties(item, :group, properties) do
