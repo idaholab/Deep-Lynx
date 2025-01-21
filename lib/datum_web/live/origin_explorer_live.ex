@@ -67,7 +67,7 @@ defmodule DatumWeb.OriginExplorerLive do
               {"#{origin.inserted_at.month}/#{origin.inserted_at.day}/#{origin.inserted_at.year}"}
             </:col>
 
-            <:action>
+            <:action :let={origin}>
               <details class="dropdown">
                 <summary class="hero-bars-3 text-primary-content ">open or close</summary>
                 <div
@@ -76,7 +76,7 @@ defmodule DatumWeb.OriginExplorerLive do
                 >
                   <ul class="menu menu-xs bg-base-400 rounded-box ">
                     <li><a>Permissions</a></li>
-                    <li><a>Delete</a></li>
+                    <li><a phx-click="delete_origin" phx-value-origin_id={origin.id}>Delete</a></li>
                   </ul>
                 </div>
               </details>
@@ -299,6 +299,21 @@ defmodule DatumWeb.OriginExplorerLive do
      |> assign(:items, root_items)
      |> assign(:origin, origin)
      |> update_state()}
+  end
+
+  # delete selected origin
+  @impl true
+  def handle_event("delete_origin", %{"origin_id" => origin_id}, socket) do
+    user = socket.assigns.current_user
+    origin = DataOrigin.get_origin!(origin_id)
+    File.rm!(origin.database_path)
+    DataOrigin.delete_origin(origin)
+    {:noreply,
+    socket
+    |> assign_async(:origins, fn ->
+      {:ok, %{origins: Datum.DataOrigin.list_data_orgins_user(user)}}
+    end)
+    }
   end
 
   # select an item from the list, adding it to the breadcrumbs and updating
