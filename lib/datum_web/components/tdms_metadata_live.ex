@@ -9,9 +9,9 @@ defmodule DatumWeb.LiveComponent.TDMSMetadata do
   @impl true
   def render(assigns) do
     ~H"""
-    <div>
+    <div class="flex w-full">
       <!-- Sidebar for navigating TDMS metadata -->
-      <div class="w-1/4 bg-base-200 text-base-content p-4">
+      <div class="card-body w-1/4 bg-base-200 text-base-content p-4 overflow-y-auto">
         <ul class="menu">
           <li
             phx-click="select_item"
@@ -19,7 +19,11 @@ defmodule DatumWeb.LiveComponent.TDMSMetadata do
             phx-value-item={@file_name}
             phx-value-type="file"
           >
-            {gettext("File Name:")} <%= @file_name %>
+            <a
+              class={"#{if @selected_item == @file_name do "bg-primary" else "hover:bg-neutral" end}"}
+            >
+              {gettext("File Name:")} <%= @file_name %>
+            </a>
             <ul>
               <%= for group <- Map.get(@properties, "groups", []) do %>
                 <li
@@ -28,7 +32,11 @@ defmodule DatumWeb.LiveComponent.TDMSMetadata do
                   phx-value-item={group["name"]}
                   phx-value-type="group"
                 >
-                  {gettext("Group:")} <%= group["name"] %>
+                  <a
+                    class={"#{if @selected_item == group["name"] do "bg-primary" else "hover:bg-neutral" end}"}
+                  >
+                    {gettext("Group:")} <%= group["name"] %>
+                  </a>
                   <ul>
                     <%= for channel <- Map.get(group, "channels", []) do %>
                       <li
@@ -37,7 +45,11 @@ defmodule DatumWeb.LiveComponent.TDMSMetadata do
                         phx-value-item={channel["name"]}
                         phx-value-type="channel"
                       >
-                        {gettext("Channel:")} <%= channel["name"] %>
+                        <a
+                          class={"#{if @selected_item == channel["name"] do "bg-primary" else "hover:bg-neutral" end}"}
+                        >
+                          {gettext("Channel:")} <%= channel["name"] %>
+                        </a>
                       </li>
                     <% end %>
                   </ul>
@@ -49,10 +61,10 @@ defmodule DatumWeb.LiveComponent.TDMSMetadata do
       </div>
 
       <!-- Divider -->
-      <div class="divider divider-horizontal"></div>
+      <div class="divider divider-horizontal"/>
 
       <!-- Main content -->
-      <div class="card-body w-3/4">
+      <div class="card-body w-3/4 overflow-y-auto">
         <p>{gettext("Selected Type:")} <%= @selected_type %></p>
         <p>{gettext("Selected Name:")} <%= @selected_item %></p>
         <p>{gettext("Selected Properties:")}</p>

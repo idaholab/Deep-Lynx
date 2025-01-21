@@ -659,6 +659,7 @@ defmodule DatumWeb.CoreComponents do
       <div class="flex justify-between space-x-4 mb-4">
         <div class="card card-compact flex-1 bg-base-200 shadow-xl flex">
           <%= if @properties do %>
+            <!-- use the TDMS metadata viewer if appropriate -->
             <.live_component
               id="tdms_metadata_component"
               file_name={@file_name}
