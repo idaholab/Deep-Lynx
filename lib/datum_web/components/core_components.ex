@@ -657,25 +657,33 @@ defmodule DatumWeb.CoreComponents do
     <div>
       <!-- Name and Description -->
       <div class="flex justify-between space-x-4 mb-4">
-        <div class="card card-compact flex-1 bg-base-200 shadow-xl">
-          <div class="card-body">
-            <h2 class="card-title">File Name: {@file_name}</h2>
-            <p>
-              {if @description do
-                @description
-              else
-                "No description for this file"
-              end}
-            </p>
-          </div>
+        <div class="card card-compact flex-1 bg-base-200 shadow-xl flex">
+          <%= if @properties do %>
+            <.live_component
+              id="tdms_metadata_component"
+              file_name={@file_name}
+              properties={@properties}
+              description={@description}
+              module={DatumWeb.LiveComponent.TDMSMetadata}
+              selected_type="file"
+              selected_item={@file_name}
+              selected_properties={Map.get(@properties, "properties")}
+            />
+          <% else %>
+            <!-- Only basic content for non-TDMS files  -->
+            <div class="card-body w-3/4">
+              <h2 class="card-title">{gettext("File Name:")} {@file_name}</h2>
+              <p>{if @description do @description else "No description for this file" end}</p>
+            </div>
+          <% end %>
         </div>
       </div>
-      
-    <!-- Tags and Domains -->
+
+      <!-- Tags and Domains -->
       <div class="flex justify-between space-x-4">
         <div class="card card-compact flex-1 bg-base-200 shadow-xl">
           <div class="card-body">
-            <h2 class="card-title">Tags</h2>
+            <h2 class="card-title">{gettext("Tags")}</h2>
             <div>
               <%= for tag <- @tags do %>
                 <div class="badge badge-outline">{tag}</div>
@@ -686,7 +694,7 @@ defmodule DatumWeb.CoreComponents do
 
         <div class="card card-compact flex-1 bg-base-200 shadow-xl">
           <div class="card-body">
-            <h2 class="card-title">Domains</h2>
+            <h2 class="card-title">{gettext("Domains")}</h2>
             <div>
               <%= for domain <- @domains do %>
                 <div class="badge badge-outline">{domain}</div>
