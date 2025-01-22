@@ -14,16 +14,20 @@ defmodule DatumWeb.LiveComponent.DeleteOrigin do
     ~H"""
     <div>
       <div class="text-center text-black">
-    {gettext("Deleting a data origin will not affect your data. However, it will remove the stored connection configurations and metadata.
+        {gettext(
+          "Deleting a data origin will not affect your data. However, it will remove the stored connection configurations and metadata.
 
-    ")}      </div>
+    "
+        )}
+      </div>
       <div class="pt-4">
         <.button
           type="submit"
           class="absolute bottom-6 right-5"
           phx-click="delete_origin_modal"
           phx-value-origin_id={@origin_id}
-        > Delete Origin
+        >
+          Delete Origin
         </.button>
       </div>
     </div>

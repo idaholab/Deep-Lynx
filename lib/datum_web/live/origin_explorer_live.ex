@@ -76,12 +76,11 @@ defmodule DatumWeb.OriginExplorerLive do
                 >
                   <ul class="menu menu-xs bg-base-400 rounded-box ">
                     <li><a>Permissions</a></li>
-                    <li><a phx-click="delete_origin" phx-value-origin_id={origin.id} >Delete</a></li>
+                    <li><a phx-click="delete_origin" phx-value-origin_id={origin.id}>Delete</a></li>
                   </ul>
                 </div>
               </details>
             </:action>
-
           </.file_table>
         </div>
 
@@ -182,11 +181,11 @@ defmodule DatumWeb.OriginExplorerLive do
         show
         on_cancel={JS.patch(~p"/origin_explorer/#{@tab}")}
       >
-      <.live_component
+        <.live_component
           live_action={@live_action}
           module={DatumWeb.LiveComponent.DeleteOrigin}
           id="delete-origin-modal-component"
-          origin_id = {@origin_id}
+          origin_id={@origin_id}
           patch={~p"/origin_explorer/#{@tab}"}
         />
       </.modal>

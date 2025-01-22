@@ -670,7 +670,7 @@ defmodule DatumWeb.CoreComponents do
           </div>
         </div>
       </div>
-
+      
     <!-- Tags and Domains -->
       <div class="flex justify-between space-x-4">
         <div class="card card-compact flex-1 bg-base-200 shadow-xl">

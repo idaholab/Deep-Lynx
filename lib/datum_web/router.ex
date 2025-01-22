@@ -90,7 +90,6 @@ defmodule DatumWeb.Router do
       live "/origin_explorer/:tab_id", HomeLive, :origin_explorer_index
       live "/origin_explorer/:tab_id/connect", HomeLive, :origin_explorer_connect
       live "/origin_explorer/:tab_id/:origin_id/delete", HomeLive, :origin_explorer_delete
-
     end
   end
 
