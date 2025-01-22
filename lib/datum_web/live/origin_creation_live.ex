@@ -79,6 +79,7 @@ defmodule DatumWeb.OriginCreationLive do
      |> assign(:parent, parent_pid)
      |> assign(:current_user, user)
      |> assign(:create_result, nil)
+     |> assign(:create_result_send, nil)
      |> assign(:form, to_form(%{"data_origin_name" => nil}))
      |> assign(:tab, tab)
      |> assign(:id, user.id)}
