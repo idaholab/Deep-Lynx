@@ -431,6 +431,13 @@ defmodule DatumWeb.OriginExplorerLive do
   end
 
   @impl true
+  def handle_event("close_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> patch(~p"/origin_explorer/#{socket.assigns.tab}")}
+  end
+
+  @impl true
   def handle_event(
         "data_record_dropped",
         %{
