@@ -76,11 +76,12 @@ defmodule DatumWeb.OriginExplorerLive do
                 >
                   <ul class="menu menu-xs bg-base-400 rounded-box ">
                     <li><a>Permissions</a></li>
-                    <li><a phx-click="delete_origin" phx-value-origin_id={origin.id}>Delete</a></li>
+                    <li><a phx-click="delete_origin" phx-value-origin_id={origin.id} >Delete</a></li>
                   </ul>
                 </div>
               </details>
             </:action>
+
           </.file_table>
         </div>
 
@@ -175,6 +176,20 @@ defmodule DatumWeb.OriginExplorerLive do
           patch={~p"/origin_explorer/#{@tab}"}
         />
       </.modal>
+      <.modal
+        :if={@live_action in [:origin_explorer_delete]}
+        id="delete_origin"
+        show
+        on_cancel={JS.patch(~p"/origin_explorer/#{@tab}")}
+      >
+      <.live_component
+          live_action={@live_action}
+          module={DatumWeb.LiveComponent.DeleteOrigin}
+          id="delete-origin-modal-component"
+          origin_id = {@origin_id}
+          patch={~p"/origin_explorer/#{@tab}"}
+        />
+      </.modal>
     </div>
     """
   end
@@ -262,6 +277,7 @@ defmodule DatumWeb.OriginExplorerLive do
        |> assign(:tab, tab)
        |> assign(:group_index, group_index)
        # assigns for the modal, just set to nil so we don't error renders
+       |> assign(:origin_id, nil)
        |> assign(:target_data, nil)
        |> assign(:target_origin, nil)
        |> assign(:incoming_data, nil)
@@ -299,21 +315,6 @@ defmodule DatumWeb.OriginExplorerLive do
      |> assign(:items, root_items)
      |> assign(:origin, origin)
      |> update_state()}
-  end
-
-  # delete selected origin
-  @impl true
-  def handle_event("delete_origin", %{"origin_id" => origin_id}, socket) do
-    user = socket.assigns.current_user
-    origin = DataOrigin.get_origin!(origin_id)
-    File.rm!(origin.database_path)
-    DataOrigin.delete_origin(origin)
-    {:noreply,
-    socket
-    |> assign_async(:origins, fn ->
-      {:ok, %{origins: Datum.DataOrigin.list_data_orgins_user(user)}}
-    end)
-    }
   end
 
   # select an item from the list, adding it to the breadcrumbs and updating
@@ -398,6 +399,36 @@ defmodule DatumWeb.OriginExplorerLive do
     )
 
     {:noreply, socket}
+  end
+
+  # delete selected origin
+  @impl true
+  def handle_event("delete_origin_modal", %{"origin_id" => origin_id}, socket) do
+    user = socket.assigns.current_user
+    origin = Datum.DataOrigin.get_origin!(origin_id)
+    File.rm!(origin.database_path)
+    Datum.DataOrigin.delete_origin(origin)
+
+    {:noreply,
+     socket
+     |> assign_async(:origins, fn ->
+       {:ok, %{origins: Datum.DataOrigin.list_data_orgins_user(user)}}
+     end)
+     |> patch(~p"/origin_explorer/#{socket.assigns.tab}")}
+  end
+
+  @impl true
+  def handle_event(
+        "delete_origin",
+        %{
+          "origin_id" => origin_id
+        } = _params,
+        socket
+      ) do
+    {:noreply,
+     socket
+     |> assign(:origin_id, origin_id)
+     |> patch(~p"/origin_explorer/#{socket.assigns.tab}/#{origin_id}/delete")}
   end
 
   @impl true
