@@ -76,7 +76,7 @@ defmodule DatumWeb.CoreComponents do
                   class="-m-3 flex-none p-3 opacity-20 hover:opacity-40"
                   aria-label={gettext("close")}
                 >
-                  <.icon name="hero-x-mark-solid" class="h-5 w-5" />
+                  <.icon name="hero-x-mark-solid text-black" class="h-5 w-5" />
                 </button>
               </div>
               <div id={"#{@id}-content"}>
@@ -670,7 +670,7 @@ defmodule DatumWeb.CoreComponents do
           </div>
         </div>
       </div>
-      
+
     <!-- Tags and Domains -->
       <div class="flex justify-between space-x-4">
         <div class="card card-compact flex-1 bg-base-200 shadow-xl">
