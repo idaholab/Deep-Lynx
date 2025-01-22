@@ -88,6 +88,7 @@ defmodule DatumWeb.OriginExplorerLive do
           <.file_page
             file_name={@file_item.path}
             description={@file_item.description}
+            properties={@file_item.properties}
             tags={@file_item.tags}
             domains={@file_item.domains}
           />
