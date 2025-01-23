@@ -52,7 +52,7 @@ defmodule DatumWeb.LiveComponent.DeleteOrigin do
     Datum.DataOrigin.delete_origin(origin)
 
     # Send a message to the parent LiveView/LiveComponent to update origins
-    send(self(), {:refresh_after_delete, nil})
+    send(self(), {:patch, nil, nil, socket.assigns.live_action})
 
     {:noreply,
      socket

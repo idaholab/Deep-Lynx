@@ -416,17 +416,6 @@ defmodule DatumWeb.OriginExplorerLive do
   end
 
   @impl true
-  def handle_info({:refresh_after_delete, _params}, socket) do
-    user = socket.assigns.current_user
-
-    {:noreply,
-     socket
-     |> assign_async(:origins, fn ->
-       {:ok, %{origins: Datum.DataOrigin.list_data_orgins_user(user)}}
-     end)}
-  end
-
-  @impl true
   def handle_event(
         "data_record_dropped",
         %{
@@ -460,7 +449,14 @@ defmodule DatumWeb.OriginExplorerLive do
   # same params you'd do a normal handle_params/3 with
   @impl Phoenix.LiveView
   def handle_cast({:patch, _params, _uri, live_action}, socket) do
-    {:noreply, socket |> assign(:live_action, live_action)}
+    user = socket.assigns.current_user
+
+    {:noreply,
+     socket
+     |> assign(:live_action, live_action)
+     |> assign_async(:origins, fn ->
+       {:ok, %{origins: Datum.DataOrigin.list_data_orgins_user(user)}}
+     end)}
   end
 
   @impl Phoenix.LiveView
