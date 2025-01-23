@@ -187,6 +187,9 @@ defmodule DatumWeb.OriginExplorerLive do
           module={DatumWeb.LiveComponent.DeleteOrigin}
           id="delete-origin-modal-component"
           origin_id={@origin_id}
+          origins={@origins}
+          parent={@parent}
+          current_user={@current_user}
           patch={~p"/origin_explorer/#{@tab}"}
         />
       </.modal>
@@ -401,41 +404,26 @@ defmodule DatumWeb.OriginExplorerLive do
     {:noreply, socket}
   end
 
-  # delete selected origin
   @impl true
-  def handle_event("delete_origin_modal", %{"origin_id" => origin_id}, socket) do
+  def handle_event(
+        "delete_origin",
+        %{"origin_id" => origin_id} = _params,
+        socket
+      ) do
+    {:noreply,
+     socket
+     |> patch(~p"/origin_explorer/#{socket.assigns.tab}/#{origin_id}/delete")}
+  end
+
+  @impl true
+  def handle_info({:refresh_after_delete, _params}, socket) do
     user = socket.assigns.current_user
-    origin = Datum.DataOrigin.get_origin!(origin_id)
-    File.rm!(origin.database_path)
-    Datum.DataOrigin.delete_origin(origin)
 
     {:noreply,
      socket
      |> assign_async(:origins, fn ->
        {:ok, %{origins: Datum.DataOrigin.list_data_orgins_user(user)}}
-     end)
-     |> patch(~p"/origin_explorer/#{socket.assigns.tab}")}
-  end
-
-  @impl true
-  def handle_event(
-        "delete_origin",
-        %{
-          "origin_id" => origin_id
-        } = _params,
-        socket
-      ) do
-    {:noreply,
-     socket
-     |> assign(:origin_id, origin_id)
-     |> patch(~p"/origin_explorer/#{socket.assigns.tab}/#{origin_id}/delete")}
-  end
-
-  @impl true
-  def handle_event("close_modal", _params, socket) do
-    {:noreply,
-     socket
-     |> patch(~p"/origin_explorer/#{socket.assigns.tab}")}
+     end)}
   end
 
   @impl true
@@ -458,13 +446,20 @@ defmodule DatumWeb.OriginExplorerLive do
      |> patch(~p"/origin_explorer/#{socket.assigns.tab}/connect")}
   end
 
+  @impl Phoenix.LiveView
+  def handle_cast({:patch, %{"origin_id" => origin_id} = _params, _uri, live_action}, socket) do
+    {:noreply,
+     socket
+     |> assign(:live_action, live_action)
+     |> assign(:origin_id, origin_id)}
+  end
+
   # we use the callback version of handle_info and handle_cast so we can update the socket with any changed state
   # note this doesn't actually do anything - but you will need it so the view doesn't crash if sent
   # the message. If you want to actually handle params, make a new function ABOVE this with the
   # same params you'd do a normal handle_params/3 with
   @impl Phoenix.LiveView
   def handle_cast({:patch, _params, _uri, live_action}, socket) do
-    dbg(live_action)
     {:noreply, socket |> assign(:live_action, live_action)}
   end
 

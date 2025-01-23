@@ -168,11 +168,11 @@ defmodule DatumWeb.HomeLive do
                 <div class="mt-8">
                   <h3 class="text-base font-semibold leading-6 text-primary-content">
                     <a href="#" class="focus:outline-none">
-                      <span class="absolute inset-0" aria-hidden="true"></span> {gettext("Add Data")}
+                      <span class="absolute inset-0" aria-hidden="true"></span> {gettext("Add Data Origin")}
                     </a>
                   </h3>
                   <p class="mt-2 text-sm text-primary-content">
-                    {gettext("Create new data origin")}
+                    {gettext("Create and configure a new data origin.")}
                   </p>
                 </div>
                 <span
@@ -267,7 +267,7 @@ defmodule DatumWeb.HomeLive do
         socket
       end
 
-    # we're going to use Registry.dispatch/4 instead of just a lookup for the PID  - this is safer and will provide a no-op 
+    # we're going to use Registry.dispatch/4 instead of just a lookup for the PID  - this is safer and will provide a no-op
     # path of the tab_id doesn't exist - basically sends the patch message and propagates the params and uri downwards to the tab
     # if it exists
     Registry.dispatch(DatumWeb.TabRegistry, tab_id, fn entries ->
@@ -472,7 +472,7 @@ defmodule DatumWeb.HomeLive do
     close_tab(tab_id, socket)
   end
 
-  # we need a way to have child live views initiate a patch since that doesn't exist when 
+  # we need a way to have child live views initiate a patch since that doesn't exist when
   # not mounted at the router
   @impl true
   def handle_info({:patch, to}, socket) do
