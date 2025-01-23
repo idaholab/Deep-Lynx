@@ -40,7 +40,25 @@ The modal component receives the example_assign as an assign and renders it.
 
 In the event handler, the patch function can be used to update the browser's URL without a full page reload and trigger updates to the LiveView state. 
 
-If you want to send updated data from the modal back to the LiveView, you can use phx-submit, phx-click, or other events to trigger updates. After processing, you can use patch to reflect the changes in the URL.
+If you want to send updated data from the modal back to the LiveView, you can use phx-submit, phx-click, or other events to trigger updates. You can also use send a message to self(). This sends a message from the LiveComponent to the parent Liveview that can be directed to a 
+
+##### LiveComponent 
+```
+send(self(), {:patch, params})
+```
+
+##### parent LiveView
+
+```
+ @impl Phoenix.LiveView
+  def handle_info({:patch, _params}, socket) do
+    {:noreply, socket
+    |> assign_async(:update, fn ->
+       {:ok, %{update: getUpdate()}}
+     end))
+    }
+  end
+```
 
 #### Summary
 
