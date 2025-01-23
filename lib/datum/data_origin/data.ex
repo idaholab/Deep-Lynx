@@ -37,7 +37,9 @@ defmodule Datum.DataOrigin.Data do
     field :in_compliance, :boolean, default: false
     field :path, :string
     field :original_path, :string
-    field :type, Ecto.Enum, values: [:directory, :file, :root_directory, :organization, :person]
+
+    field :type, Ecto.Enum,
+      values: [:directory, :file, :root_directory, :organization, :person, :table]
 
     field :checksum_type, Ecto.Enum,
       values: [:crc32, :crc64_nvme, :md5, :sha256, :none],

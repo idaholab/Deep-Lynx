@@ -57,6 +57,7 @@ defmodule Datum.MixProject do
       {:phoenix_ecto, "~> 4.5"},
       {:ecto_sql, "~> 3.10"},
       {:ecto_sqlite3, "~> 0.16.0"},
+      {:exqlite, "0.22.0"},
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 1.0.0", override: true},
@@ -91,6 +92,8 @@ defmodule Datum.MixProject do
       {:prompt, "~> 0.10.0"},
       {:explorer, "~> 0.10.1"},
       {:ymlr, "~> 5.1"},
+      {:vega_lite, "~> 0.1.11"},
+      {:erlport, "~> 0.11.0"},
       {:mix_audit, "~> 2.1"},
       {:langchain, "~> 0.3.0-rc.0"},
       {:tdms_parser, git: "https://github.com/DnOberon/tdms-parser", branch: "master"},
@@ -122,7 +125,12 @@ defmodule Datum.MixProject do
       translations: ["gettext.extract", "gettext.merge priv/gettext --locale en"],
       "ecto.setup": ["database.clean", "ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      test: ["database.clean", "ecto.create --quiet", "ecto.migrate --quiet", "test"],
+      test: [
+        "database.clean",
+        "ecto.create --quiet",
+        "ecto.migrate --quiet",
+        "test --exclude tdms"
+      ],
       "assets.setup": [
         "cmd cd assets && npm install",
         "tailwind.install --if-missing",
