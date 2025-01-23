@@ -158,6 +158,7 @@ defmodule Datum.DataOrigin do
   """
   def delete_origin(%Origin{} = origin) do
     Repo.delete(origin)
+    File.rm!(origin.database_path)
   end
 
   @doc """

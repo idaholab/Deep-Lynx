@@ -48,7 +48,6 @@ defmodule DatumWeb.LiveComponent.DeleteOrigin do
   @impl true
   def handle_event("delete_origin_modal", %{"origin_id" => origin_id}, socket) do
     origin = Datum.DataOrigin.get_origin!(origin_id)
-    File.rm!(origin.database_path)
     Datum.DataOrigin.delete_origin(origin)
 
     # Send a message to the parent LiveView/LiveComponent to update origins
