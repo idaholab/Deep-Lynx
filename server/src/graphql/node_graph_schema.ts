@@ -15,13 +15,13 @@ import {
 } from 'graphql';
 import Result from '../common_classes/result';
 import GraphQLJSON from 'graphql-type-json';
-import {stringToValidPropertyName, valueCompare} from '../services/utilities';
+import { stringToValidPropertyName, valueCompare } from '../services/utilities';
 import NodeRepository from '../data_access_layer/repositories/data_warehouse/data/node_repository';
 import Logger from '../services/logger';
 import Config from '../services/config';
 import DataSourceRepository from "../data_access_layer/repositories/data_warehouse/import/data_source_repository";
-import {DataSource} from "../interfaces_and_impl/data_warehouse/import/data_source";
-import {TimeseriesDataSourceConfig} from "../domain_objects/data_warehouse/import/data_source";
+import { DataSource } from "../interfaces_and_impl/data_warehouse/import/data_source";
+import { TimeseriesDataSourceConfig } from "../domain_objects/data_warehouse/import/data_source";
 import NodeMapper from "../data_access_layer/mappers/data_warehouse/data/node_mapper";
 
 // GraphQLSchemaGenerator takes a container and generates a valid GraphQL schema for all contained metatypes. This will
@@ -34,42 +34,42 @@ export default class NodeGraphQLSchemaGenerator {
     recordInputType = new GraphQLInputObjectType({
         name: 'record_input',
         fields: {
-            limit: {type: GraphQLInt, defaultValue: Config.limit_default},
-            page: {type: GraphQLInt},
-            sortBy: {type: GraphQLString},
-            sortDesc: {type: GraphQLBoolean},
+            limit: { type: GraphQLInt, defaultValue: Config.limit_default },
+            page: { type: GraphQLInt },
+            sortBy: { type: GraphQLString },
+            sortDesc: { type: GraphQLBoolean },
         },
     });
 
     recordInfo = new GraphQLObjectType({
         name: 'recordInfo',
         fields: {
-            nodes: {type: new GraphQLList(GraphQLString)},
-            metadata: {type: GraphQLJSON},
-            count: {type: GraphQLInt},
-            page: {type: GraphQLInt},
+            nodes: { type: new GraphQLList(GraphQLString) },
+            metadata: { type: GraphQLJSON },
+            count: { type: GraphQLInt },
+            page: { type: GraphQLInt },
         },
     });
 
     fileInfo = new GraphQLObjectType({
         name: 'fileInfo',
         fields: {
-            id: {type: GraphQLString},
-            file_name: {type: GraphQLString},
-            file_size: {type: GraphQLFloat},
-            md5hash: {type: GraphQLString},
-            metadata: {type: GraphQLJSON},
-            url: {type: GraphQLString},
+            id: { type: GraphQLString },
+            file_name: { type: GraphQLString },
+            file_size: { type: GraphQLFloat },
+            md5hash: { type: GraphQLString },
+            metadata: { type: GraphQLJSON },
+            url: { type: GraphQLString },
         },
     });
 
     histogramInputType = new GraphQLInputObjectType({
         name: 'histogram_input',
         fields: {
-            column: {type: GraphQLString},
-            min: {type: GraphQLInt},
-            max: {type: GraphQLInt},
-            nbuckets: {type: GraphQLInt},
+            column: { type: GraphQLString },
+            min: { type: GraphQLInt },
+            max: { type: GraphQLInt },
+            nbuckets: { type: GraphQLInt },
         },
     });
 
@@ -99,62 +99,62 @@ export default class NodeGraphQLSchemaGenerator {
         // there might be a better, and closer to the sql way of doing this - but for now there won't be so many data sources
         // that pulling and looping through them is going to cause issues
         const matchedDataSources = dataSources.value.filter(source => {
-            if(!source) return false
+            if (!source) return false
 
             const config = source.DataSourceRecord!.config as TimeseriesDataSourceConfig
-            for(const parameter of config.attachment_parameters) {
+            for (const parameter of config.attachment_parameters) {
                 // if we don't match this filter then we can assume we fail the rest as it's only AND conjunction at
                 // this time
-                switch(parameter.type) {
-                    case 'data_source' : {
+                switch (parameter.type) {
+                    case 'data_source': {
                         try {
                             return valueCompare(parameter.operator!, node.value.data_source_id, parameter.value)
-                        } catch(e) {
+                        } catch (e) {
                             Logger.error(`error comparing values for data source attachment parameters`)
                             return false
                         }
                     }
-                    case 'metatype_id' : {
+                    case 'metatype_id': {
                         try {
                             return valueCompare(parameter.operator!, node.value.metatype_id, parameter.value)
-                        } catch(e) {
+                        } catch (e) {
                             Logger.error(`error comparing values for metatype id attachment parameters`)
                             return false
                         }
                     }
 
-                    case 'metatype_name' : {
+                    case 'metatype_name': {
                         try {
                             return valueCompare(parameter.operator!, node.value.metatype_name, parameter.value)
-                        } catch(e) {
+                        } catch (e) {
                             Logger.error(`error comparing values for metatype name attachment parameters`)
                             return false
                         }
                     }
 
-                    case 'original_id' : {
+                    case 'original_id': {
                         try {
                             return valueCompare(parameter.operator!, node.value.original_data_id, parameter.value)
-                        } catch(e) {
+                        } catch (e) {
                             Logger.error(`error comparing values for original id attachment parameters`)
                             return false
                         }
                     }
 
-                    case 'property' : {
+                    case 'property': {
                         try {
                             type ObjectKey = keyof typeof node.value.properties;
                             return valueCompare(parameter.operator!, node.value.properties[parameter.key as ObjectKey], parameter.value)
-                        } catch(e) {
+                        } catch (e) {
                             Logger.error(`error comparing values for property attachment parameters`)
                             return false
                         }
                     }
 
-                    case 'id' : {
+                    case 'id': {
                         try {
                             return valueCompare(parameter.operator!, node.value.id, parameter.value)
-                        } catch(e) {
+                        } catch (e) {
                             Logger.error(`error comparing values for id attachment parameters`)
                             return false
                         }
@@ -193,24 +193,24 @@ export default class NodeGraphQLSchemaGenerator {
         );
     }
 
-    graphQLObjectsForDataSources(sources: (DataSource |undefined)[], options: ResolverOptions): {[key:string]: any} {
-        const dataSourceGraphQLObjects: {[key: string]: any} = {};
+    graphQLObjectsForDataSources(sources: (DataSource | undefined)[], options: ResolverOptions): { [key: string]: any } {
+        const dataSourceGraphQLObjects: { [key: string]: any } = {};
 
-        sources.forEach((source,index) => {
-            if(!source || !source.DataSourceRecord) return;
+        sources.forEach((source, index) => {
+            if (!source || !source.DataSourceRecord) return;
 
             let name = source.DataSourceRecord.name
             if (!name) {
                 name = `y_${source.DataSourceRecord.id}`
             }
 
-            if(dataSourceGraphQLObjects[stringToValidPropertyName(name)]) {
+            if (dataSourceGraphQLObjects[stringToValidPropertyName(name)]) {
                 name = `${name}_${index}`
             }
 
             dataSourceGraphQLObjects[stringToValidPropertyName(name)] = {
                 args: {
-                    _record:  {type: this.recordInputType},
+                    _record: { type: this.recordInputType },
                     ...this.inputFieldsForDataSource(source)
                 },
                 description: `Timeseries data from the data source ${name}`,
@@ -222,8 +222,8 @@ export default class NodeGraphQLSchemaGenerator {
                         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                         // @ts-ignore
                         fields: () => {
-                            const output: {[key: string]: {[key: string]: GraphQLNamedType | GraphQLList<any>}} = {};
-                            output._record = {type: this.recordInfo};
+                            const output: { [key: string]: { [key: string]: GraphQLNamedType | GraphQLList<any> } } = {};
+                            output._record = { type: this.recordInfo };
 
                             (source.DataSourceRecord!.config as TimeseriesDataSourceConfig).columns.forEach((column) => {
                                 // if we're not a column mapping we need to skip to so we don't pollute the object
@@ -249,6 +249,8 @@ export default class NodeGraphQLSchemaGenerator {
                                         break;
                                     }
 
+
+                                    // @ts-expect-error TS2872
                                     case 'number64' || 'float64': {
                                         output[propertyName] = {
                                             type: GraphQLString,
@@ -263,6 +265,8 @@ export default class NodeGraphQLSchemaGenerator {
                                         break;
                                     }
 
+
+                                    // @ts-expect-error TS2872
                                     case 'string' || 'date' || 'file': {
                                         output[propertyName] = {
                                             type: GraphQLString,
@@ -289,8 +293,8 @@ export default class NodeGraphQLSchemaGenerator {
         return dataSourceGraphQLObjects
     }
 
-    inputFieldsForDataSource(source: DataSource): {[key: string]: any} {
-        const fields: {[key: string]: any} = {};
+    inputFieldsForDataSource(source: DataSource): { [key: string]: any } {
+        const fields: { [key: string]: any } = {};
         const config = source.DataSourceRecord!.config as TimeseriesDataSourceConfig
 
         config.columns.forEach((column) => {
@@ -306,8 +310,8 @@ export default class NodeGraphQLSchemaGenerator {
                         type: new GraphQLInputObjectType({
                             name: stringToValidPropertyName(`y_${source.DataSourceRecord!.id}` + column.column_name),
                             fields: {
-                                operator: {type: GraphQLString},
-                                value: {type: new GraphQLList(GraphQLInt)},
+                                operator: { type: GraphQLString },
+                                value: { type: new GraphQLList(GraphQLInt) },
                             },
                         }),
                     };
@@ -319,8 +323,8 @@ export default class NodeGraphQLSchemaGenerator {
                         type: new GraphQLInputObjectType({
                             name: stringToValidPropertyName(`y_${source.DataSourceRecord!.id}` + column.column_name),
                             fields: {
-                                operator: {type: GraphQLString},
-                                value: {type: new GraphQLList(GraphQLFloat)},
+                                operator: { type: GraphQLString },
+                                value: { type: new GraphQLList(GraphQLFloat) },
                             },
                         }),
                     };
@@ -332,22 +336,22 @@ export default class NodeGraphQLSchemaGenerator {
                         type: new GraphQLInputObjectType({
                             name: stringToValidPropertyName(`y_${source.DataSourceRecord!.id}` + column.column_name),
                             fields: {
-                                operator: {type: GraphQLString},
-                                value: {type: new GraphQLList(GraphQLBoolean)},
+                                operator: { type: GraphQLString },
+                                value: { type: new GraphQLList(GraphQLBoolean) },
                             },
                         }),
                     };
                     break;
                 }
 
-                case 'json' : {
+                case 'json': {
                     fields[propertyName] = {
                         type: new GraphQLInputObjectType({
                             name: stringToValidPropertyName(`y_${source.DataSourceRecord!.id}` + column.column_name),
                             fields: {
-                                operator: {type: GraphQLString},
-                                key: {type: GraphQLString},
-                                value: {type: new GraphQLList(GraphQLString)},
+                                operator: { type: GraphQLString },
+                                key: { type: GraphQLString },
+                                value: { type: new GraphQLList(GraphQLString) },
                             },
                         }),
                     };
@@ -358,8 +362,8 @@ export default class NodeGraphQLSchemaGenerator {
                         type: new GraphQLInputObjectType({
                             name: stringToValidPropertyName(`y_${source.DataSourceRecord!.id}` + column.column_name),
                             fields: {
-                                operator: {type: GraphQLString},
-                                value: {type: new GraphQLList(GraphQLString)},
+                                operator: { type: GraphQLString },
+                                value: { type: new GraphQLList(GraphQLString) },
                             },
                         }),
                     };
@@ -370,8 +374,8 @@ export default class NodeGraphQLSchemaGenerator {
         return fields;
     }
 
-    resolverForNode(source: DataSource, options?: ResolverOptions): (_: any, {input}: {input: any}) => any {
-        return async (_, input: {[key: string]: any}) => {
+    resolverForNode(source: DataSource, options?: ResolverOptions): (_: any, { input }: { input: any }) => any {
+        return async (_, input: { [key: string]: any }) => {
             let repo: DataSourceRepository;
             const config = source.DataSourceRecord?.config as TimeseriesDataSourceConfig
 
@@ -444,7 +448,7 @@ export default class NodeGraphQLSchemaGenerator {
                 return new Promise(
                     (resolve, reject) =>
                         void repo
-                            .listTimeseriesToFile(source.DataSourceRecord!.id!,{
+                            .listTimeseriesToFile(source.DataSourceRecord!.id!, {
                                 file_type: options && options.returnFileType ? options.returnFileType : 'json',
                                 file_name: `${source.DataSourceRecord?.name}-${new Date().toDateString()}`,
                                 containerID: source.DataSourceRecord!.container_id!,
@@ -477,7 +481,7 @@ export default class NodeGraphQLSchemaGenerator {
                                     resolve([]);
                                 }
 
-                                const output: {[key: string]: any}[] = [];
+                                const output: { [key: string]: any }[] = [];
 
                                 results.value.forEach((entry) => {
                                     let nodes: any;
@@ -495,7 +499,7 @@ export default class NodeGraphQLSchemaGenerator {
 
                                     output.push({
                                         ...entry,
-                                        _record: {nodes, metadata},
+                                        _record: { nodes, metadata },
                                     });
                                 });
 

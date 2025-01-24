@@ -40,7 +40,7 @@ module.exports = {
                 ignoreUrls: true,
             },
         ],
-        'no-tabs': ['error', {allowIndentationTabs: true}],
+        'no-tabs': ['error', { allowIndentationTabs: true }],
         '@typescript-eslint/adjacent-overload-signatures': 'error',
         '@typescript-eslint/array-type': [
             'error',
@@ -48,6 +48,7 @@ module.exports = {
                 default: 'array',
             },
         ],
+        '@typescript-eslint/prefer-nullish-coalescing': 'off',
         '@typescript-eslint/ban-types': [
             'error',
             {

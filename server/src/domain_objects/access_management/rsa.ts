@@ -1,10 +1,11 @@
-import {NakedDomainClass} from '../../common_classes/base_domain_class';
-import {IsArray, IsBoolean, IsObject, IsOptional, IsString, ValidateNested} from 'class-validator';
-import {Type} from 'class-transformer';
-import {v4 as uuidv4} from 'uuid';
+import { NakedDomainClass } from '../../common_classes/base_domain_class';
+import { IsArray, IsBoolean, IsObject, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+import { v4 as uuidv4 } from 'uuid';
 
 export class SubjectCredentials extends NakedDomainClass {
     @IsString()
+    // @ts-expect-error TS2872
     methodId?: string = 'SECURID' || 'SECURID_NEXT_TOKENCODE';
 
     @IsArray()
@@ -15,6 +16,7 @@ export class SubjectCredentials extends NakedDomainClass {
 
 export class CollectedInput extends NakedDomainClass {
     @IsString()
+    // @ts-expect-error TS2872
     name? = 'SECURID' || 'SECURID_NEXT_TOKENCODE';
 
     @IsString()
@@ -53,7 +55,7 @@ export class RSARequest extends NakedDomainClass {
     @Type(() => RSAContext)
     context?: RSAContext;
 
-    constructor(input: {clientID?: string; subjectName?: string; securID?: string; authnAttemptId?: string; inResponseTo?: string; methodId?: string}) {
+    constructor(input: { clientID?: string; subjectName?: string; securID?: string; authnAttemptId?: string; inResponseTo?: string; methodId?: string }) {
         super();
 
         if (input) {
@@ -92,8 +94,8 @@ export class RSAResponse extends NakedDomainClass {
     challengeMethods: {
         challenges: Challenge[];
     } = {
-        challenges: [new Challenge()],
-    };
+            challenges: [new Challenge()],
+        };
 
     @IsArray()
     @ValidateNested()

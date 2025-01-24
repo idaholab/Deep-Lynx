@@ -16,13 +16,13 @@ import {
 } from 'graphql';
 import Result from '../common_classes/result';
 import GraphQLJSON from 'graphql-type-json';
-import {stringToValidPropertyName} from '../services/utilities';
+import { stringToValidPropertyName } from '../services/utilities';
 import Logger from '../services/logger';
 import Config from '../services/config';
 import DataSourceRepository from '../data_access_layer/repositories/data_warehouse/import/data_source_repository';
-import {DataSource} from '../interfaces_and_impl/data_warehouse/import/data_source';
-import {TimeseriesDataSourceConfig} from '../domain_objects/data_warehouse/import/data_source';
-import {ResolverOptions} from './node_graph_schema';
+import { DataSource } from '../interfaces_and_impl/data_warehouse/import/data_source';
+import { TimeseriesDataSourceConfig } from '../domain_objects/data_warehouse/import/data_source';
+import { ResolverOptions } from './node_graph_schema';
 
 // GraphQLSchemaGenerator takes a container and generates a valid GraphQL schema for all contained metatypes. This will
 // allow users to query and filter data found within their custom timeseries data source
@@ -32,41 +32,41 @@ export default class DataSourceGraphQLSchemaGenerator {
     recordInputType = new GraphQLInputObjectType({
         name: 'record_input',
         fields: {
-            limit: {type: GraphQLInt, defaultValue: Config.limit_default},
-            page: {type: GraphQLInt},
-            sortBy: {type: GraphQLString},
-            sortDesc: {type: GraphQLBoolean},
+            limit: { type: GraphQLInt, defaultValue: Config.limit_default },
+            page: { type: GraphQLInt },
+            sortBy: { type: GraphQLString },
+            sortDesc: { type: GraphQLBoolean },
         },
     });
 
     recordInfo = new GraphQLObjectType({
         name: 'recordInfo',
         fields: {
-            metadata: {type: GraphQLJSON},
-            count: {type: GraphQLInt},
-            page: {type: GraphQLInt},
+            metadata: { type: GraphQLJSON },
+            count: { type: GraphQLInt },
+            page: { type: GraphQLInt },
         },
     });
 
     fileInfo = new GraphQLObjectType({
         name: 'fileInfo',
         fields: {
-            id: {type: GraphQLString},
-            file_name: {type: GraphQLString},
-            file_size: {type: GraphQLFloat},
-            md5hash: {type: GraphQLString},
-            metadata: {type: GraphQLJSON},
-            url: {type: GraphQLString},
+            id: { type: GraphQLString },
+            file_name: { type: GraphQLString },
+            file_size: { type: GraphQLFloat },
+            md5hash: { type: GraphQLString },
+            metadata: { type: GraphQLJSON },
+            url: { type: GraphQLString },
         },
     });
 
     histogramInputType = new GraphQLInputObjectType({
         name: 'histogram_input',
         fields: {
-            column: {type: GraphQLString},
-            min: {type: GraphQLInt},
-            max: {type: GraphQLInt},
-            nbuckets: {type: GraphQLInt},
+            column: { type: GraphQLString },
+            min: { type: GraphQLInt },
+            max: { type: GraphQLInt },
+            nbuckets: { type: GraphQLInt },
         },
     });
 
@@ -99,94 +99,98 @@ export default class DataSourceGraphQLSchemaGenerator {
         );
     }
 
-    graphQLObjectsForDataSource(source: DataSource, options: ResolverOptions): {[key: string]: any} {
-        const dataSourceGrapQLObjects: {[key: string]: any} = {};
+    graphQLObjectsForDataSource(source: DataSource, options: ResolverOptions): { [key: string]: any } {
+        const dataSourceGrapQLObjects: { [key: string]: any } = {};
 
         const name = 'Timeseries';
 
         dataSourceGrapQLObjects[stringToValidPropertyName(name)] = {
             args: {
-                _record: {type: this.recordInputType},
+                _record: { type: this.recordInputType },
                 ...this.inputFieldsForDataSource(source),
             },
             description: `Timeseries data from the data source ${source.DataSourceRecord!.name}`,
             type: options.returnFile
                 ? this.fileInfo
                 : new GraphQLList(
-                      new GraphQLObjectType({
-                          name: stringToValidPropertyName(name),
-                          // needed because the return type accepts an object, but throws a fit about it
-                          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                          // @ts-ignore
-                          fields: () => {
-                              const output: {[key: string]: {[key: string]: GraphQLNamedType | GraphQLList<any>}} = {};
-                              output._record = {type: this.recordInfo};
+                    new GraphQLObjectType({
+                        name: stringToValidPropertyName(name),
+                        // needed because the return type accepts an object, but throws a fit about it
+                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                        // @ts-ignore
+                        fields: () => {
+                            const output: { [key: string]: { [key: string]: GraphQLNamedType | GraphQLList<any> } } = {};
+                            output._record = { type: this.recordInfo };
 
-                              (source.DataSourceRecord!.config as TimeseriesDataSourceConfig).columns.forEach((column) => {
-                                  // if it's not a column mapping, skip so we don't pollute the object
-                                  if (!column.column_name || !column.type) {
-                                      return;
-                                  }
+                            (source.DataSourceRecord!.config as TimeseriesDataSourceConfig).columns.forEach((column) => {
+                                // if it's not a column mapping, skip so we don't pollute the object
+                                if (!column.column_name || !column.type) {
+                                    return;
+                                }
 
-                                  const propertyName = stringToValidPropertyName(column.column_name);
-                                  switch (column.type) {
-                                      // because we have no specification on our internal number type,
-                                      // we must set this as a float for now
-                                      case 'number': {
-                                          output[propertyName] = {
-                                              type: GraphQLInt,
-                                          };
-                                          break;
-                                      }
+                                const propertyName = stringToValidPropertyName(column.column_name);
+                                switch (column.type) {
+                                    // because we have no specification on our internal number type,
+                                    // we must set this as a float for now
+                                    case 'number': {
+                                        output[propertyName] = {
+                                            type: GraphQLInt,
+                                        };
+                                        break;
+                                    }
 
-                                      case 'float': {
-                                          output[propertyName] = {
-                                              type: GraphQLFloat,
-                                          };
-                                          break;
-                                      }
+                                    case 'float': {
+                                        output[propertyName] = {
+                                            type: GraphQLFloat,
+                                        };
+                                        break;
+                                    }
 
-                                      case 'number64' || 'float64': {
-                                          output[propertyName] = {
-                                              type: GraphQLString,
-                                          };
-                                          break;
-                                      }
 
-                                      case 'boolean': {
-                                          output[propertyName] = {
-                                              type: GraphQLBoolean,
-                                          };
-                                          break;
-                                      }
+                                    // @ts-expect-error TS2872
+                                    case 'number64' || 'float64': {
+                                        output[propertyName] = {
+                                            type: GraphQLString,
+                                        };
+                                        break;
+                                    }
 
-                                      case 'string' || 'date' || 'file': {
-                                          output[propertyName] = {
-                                              type: GraphQLString,
-                                          };
-                                          break;
-                                      }
+                                    case 'boolean': {
+                                        output[propertyName] = {
+                                            type: GraphQLBoolean,
+                                        };
+                                        break;
+                                    }
 
-                                      default: {
-                                          output[propertyName] = {
-                                              type: GraphQLJSON,
-                                          };
-                                      }
-                                  }
-                              });
 
-                              return output;
-                          },
-                      }),
-                  ),
+                                    // @ts-expect-error TS2872
+                                    case 'string' || 'date' || 'file': {
+                                        output[propertyName] = {
+                                            type: GraphQLString,
+                                        };
+                                        break;
+                                    }
+
+                                    default: {
+                                        output[propertyName] = {
+                                            type: GraphQLJSON,
+                                        };
+                                    }
+                                }
+                            });
+
+                            return output;
+                        },
+                    }),
+                ),
             resolve: this.resolverForDataSource(source, options),
         };
 
         return dataSourceGrapQLObjects;
     }
 
-    inputFieldsForDataSource(source: DataSource): {[key: string]: any} {
-        const fields: {[key: string]: any} = {};
+    inputFieldsForDataSource(source: DataSource): { [key: string]: any } {
+        const fields: { [key: string]: any } = {};
         const config = source.DataSourceRecord!.config as TimeseriesDataSourceConfig;
 
         config.columns.forEach((column) => {
@@ -202,8 +206,8 @@ export default class DataSourceGraphQLSchemaGenerator {
                         type: new GraphQLInputObjectType({
                             name: stringToValidPropertyName(`y_${source.DataSourceRecord!.id}` + column.column_name),
                             fields: {
-                                operator: {type: GraphQLString},
-                                value: {type: new GraphQLList(GraphQLInt)},
+                                operator: { type: GraphQLString },
+                                value: { type: new GraphQLList(GraphQLInt) },
                             },
                         }),
                     };
@@ -215,8 +219,8 @@ export default class DataSourceGraphQLSchemaGenerator {
                         type: new GraphQLInputObjectType({
                             name: stringToValidPropertyName(`y_${source.DataSourceRecord!.id}` + column.column_name),
                             fields: {
-                                operator: {type: GraphQLString},
-                                value: {type: new GraphQLList(GraphQLFloat)},
+                                operator: { type: GraphQLString },
+                                value: { type: new GraphQLList(GraphQLFloat) },
                             },
                         }),
                     };
@@ -228,8 +232,8 @@ export default class DataSourceGraphQLSchemaGenerator {
                         type: new GraphQLInputObjectType({
                             name: stringToValidPropertyName(`y_${source.DataSourceRecord!.id}` + column.column_name),
                             fields: {
-                                operator: {type: GraphQLString},
-                                value: {type: new GraphQLList(GraphQLBoolean)},
+                                operator: { type: GraphQLString },
+                                value: { type: new GraphQLList(GraphQLBoolean) },
                             },
                         }),
                     };
@@ -241,9 +245,9 @@ export default class DataSourceGraphQLSchemaGenerator {
                         type: new GraphQLInputObjectType({
                             name: stringToValidPropertyName(`y_${source.DataSourceRecord!.id}` + column.column_name),
                             fields: {
-                                operator: {type: GraphQLString},
-                                key: {type: GraphQLString},
-                                value: {type: new GraphQLList(GraphQLString)},
+                                operator: { type: GraphQLString },
+                                key: { type: GraphQLString },
+                                value: { type: new GraphQLList(GraphQLString) },
                             },
                         }),
                     };
@@ -254,8 +258,8 @@ export default class DataSourceGraphQLSchemaGenerator {
                         type: new GraphQLInputObjectType({
                             name: stringToValidPropertyName(`y_${source.DataSourceRecord!.id}` + column.column_name),
                             fields: {
-                                operator: {type: GraphQLString},
-                                value: {type: new GraphQLList(GraphQLString)},
+                                operator: { type: GraphQLString },
+                                value: { type: new GraphQLList(GraphQLString) },
                             },
                         }),
                     };
@@ -266,8 +270,8 @@ export default class DataSourceGraphQLSchemaGenerator {
         return fields;
     }
 
-    resolverForDataSource(source: DataSource, options?: ResolverOptions): (_: any, {input}: {input: any}) => any {
-        return async (_, input: {[key: string]: any}) => {
+    resolverForDataSource(source: DataSource, options?: ResolverOptions): (_: any, { input }: { input: any }) => any {
+        return async (_, input: { [key: string]: any }) => {
             let repo: DataSourceRepository;
             const config = source.DataSourceRecord?.config as TimeseriesDataSourceConfig;
 
@@ -360,7 +364,7 @@ export default class DataSourceGraphQLSchemaGenerator {
                                 resolve([]);
                             }
 
-                            const output: {[key: string]: any}[] = [];
+                            const output: { [key: string]: any }[] = [];
 
                             results.value.forEach((entry) => {
                                 output.push({
