@@ -24,10 +24,7 @@ defmodule Datum.Application do
           args |> OptionParser.parse(strict: [name: :string, generate_secret: :boolean])
 
         children = [
-          Datum.Repo,
-          # we have to include the endpoint so we can generate the admin PAT required for
-          # some of the seeds
-          DatumWeb.Endpoint
+          Datum.Repo
         ]
 
         # See https://hexdocs.pm/elixir/Supervisor.html

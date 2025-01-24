@@ -34,6 +34,15 @@ alias Datum.DataOrigin
     owned_by: admin.id
   })
 
+{:ok, sensor_db_origin} =
+  DataOrigin.create_origin(%{
+    name: "Twin DB",
+    owned_by: admin.id,
+    config: %DataOrigin.Origin.DuckDBConfig{
+      path: Path.join("#{__MODULE__}", "test_db.duckdb")
+    }
+  })
+
 # build a simple nested directory to store the equipment data in
 equipment_root_dir =
   DataOrigin.add_data!(equipment_origin, admin, %{
@@ -115,5 +124,11 @@ Enum.map(
   end
 )
 
-admin_token = Phoenix.Token.sign(DatumWeb.Endpoint, "personal_access_token", admin.id)
+admin_token =
+  Phoenix.Token.sign(
+    Keyword.get(Application.get_env(:datum, DatumWeb.Endpoint), :secret_key_base),
+    "personal_access_token",
+    admin.id
+  )
+
 IO.puts(:stdio, "ADMIN PAT: #{admin_token}")

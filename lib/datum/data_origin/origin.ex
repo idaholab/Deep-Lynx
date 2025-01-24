@@ -156,25 +156,26 @@ defmodule Datum.DataOrigin.Origin.FilesystemConfig do
     |> cast(attrs, [:root_path, :network_user, :network_user_password])
     |> validate_required([:root_path])
   end
+end
 
-  defmodule Datum.DataOrigin.Origin.DuckDBConfig do
-    @moduledoc """
-    DuckDB Configuration for Data Origins
-    """
-    use Ecto.Schema
-    import Ecto.Changeset
+defmodule Datum.DataOrigin.Origin.DuckDBConfig do
+  @derive {Jason.Encoder, only: [:path, :network_user, :network_user_password]}
+  @moduledoc """
+  DuckDB Configuration for Data Origins
+  """
+  use Ecto.Schema
+  import Ecto.Changeset
 
-    embedded_schema do
-      field :path, :string
-      field :network_user, :string, default: nil
-      field :network_user_password, :string, default: nil
-    end
+  embedded_schema do
+    field :path, :string
+    field :network_user, :string, default: nil
+    field :network_user_password, :string, default: nil
+  end
 
-    @doc false
-    def changeset(config, attrs) do
-      config
-      |> cast(attrs, [:path, :network_user, :network_user_password])
-      |> validate_required([:path])
-    end
+  @doc false
+  def changeset(config, attrs) do
+    config
+    |> cast(attrs, [:path, :network_user, :network_user_password])
+    |> validate_required([:path])
   end
 end

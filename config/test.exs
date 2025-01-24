@@ -8,8 +8,11 @@ config :argon2_elixir, t_cost: 1, m_cost: 8
 # The MIX_TEST_PARTITION environment variable can be used
 # to provide built-in test partitioning in CI environment.
 # Run `mix help test` for more information.
+config :datum,
+  origin_db_path: Path.join([System.user_home(), "/.datum_test_databases", "origins"])
+
 config :datum, Datum.Repo,
-  database: Path.join([System.user_home(), "/.datum_databases", "operations_test.db"]),
+  database: Path.join([System.user_home(), "/.datum_test_databases", "operations_test.db"]),
   journal_mode: :wal,
   auto_vacuum: :incremental,
   datetime_type: :iso8601,
