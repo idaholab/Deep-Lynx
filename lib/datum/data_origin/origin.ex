@@ -65,7 +65,8 @@ defmodule Datum.DataOrigin.Origin do
       :domains,
       :type,
       :config,
-      :database_path
+      :database_path,
+      :config
     ])
     |> validate_required([:name])
   end

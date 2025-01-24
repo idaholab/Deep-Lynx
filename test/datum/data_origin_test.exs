@@ -58,5 +58,28 @@ defmodule Datum.DataOriginTest do
       origin = origin_fixture()
       assert %Ecto.Changeset{} = DataOrigin.change_origin(origin)
     end
+
+    test "query_origin_sync/3 can query a duckdb data origin" do
+      # need to create the db first - because the query opens it in readonly mode and will error if it doesn't exist
+      path = "#{__DIR__}/test_files/open_test.duckdb"
+
+      {:ok, _state} =
+        Datum.Duckdb.init(%{parent: self(), path: path})
+
+      valid_attrs = %{
+        name: "some name",
+        type: :duckdb,
+        config: %{"path" => path}
+      }
+
+      assert {:ok, %Origin{} = origin} = DataOrigin.create_origin(valid_attrs)
+      assert origin.name == "some name"
+      assert origin.type == :duckdb
+
+      assert {:ok, %Explorer.DataFrame{} = _df} =
+               DataOrigin.query_origin_sync(origin, "select * from duckdb_settings();")
+
+      File.rm(path)
+    end
   end
 end

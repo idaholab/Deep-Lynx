@@ -577,6 +577,30 @@ defmodule Datum.DataOrigin do
     |> Repo.preload(:origin)
   end
 
+  @doc """
+  This allows users to run queries on the data origin itself if they support it - such as
+  running SQL queries on DuckDB backed origins, or exposed commands on the file system.
+
+
+  Note - this only functions if the origin is a supported type _and_ its config field is not
+  nil, indicating that it's a data backed origin we have connection info on
+  """
+  def query_origin_sync(origin, query, opts \\ [])
+
+  #  WE DO NOT CARE ABOUT SQL INJECTION HERE....YET
+  def query_origin_sync(%Origin{type: :duckdb} = origin, query, _opts)
+      when is_map(origin.config) do
+    case Datum.Duckdb.start_link(%{path: origin.config["path"], access_mode: :read_only}) do
+      {:ok, pid} -> Datum.Duckdb.run_query_sync(pid, query)
+      {:error, {:already_started, pid}} -> Datum.Duckdb.run_query_sync(pid, query)
+      {:error, message} -> {:error, message}
+    end
+  end
+
+  def query_origin_sync(_origin, _query, _opts) do
+    {:error, :unsupported}
+  end
+
   alias Datum.DataOrigin.ExtractedMetadata
 
   @doc """

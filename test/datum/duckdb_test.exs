@@ -20,6 +20,10 @@ defmodule Datum.DuckdbTest do
       # we just want to make sure we're getting some results back here
       assert {:reply, %Explorer.DataFrame{} = _df, %{}} =
                Duckdb.handle_call({:receive_result, ref}, self(), %{})
+
+      # let's make sure we can run a sync query too
+      {:reply, %Explorer.DataFrame{} = _df, state} =
+        Duckdb.handle_call({:run_query, "select * from duckdb_settings();"}, self(), state)
     end
 
     test "can run an extensions query" do
@@ -129,14 +133,15 @@ defmodule Datum.DuckdbTest do
 
     test "can open an actual db file vs memory only" do
       user = user_fixture()
+      path = "#{__DIR__}/test_files/open_test.duckdb"
 
       # we call the callbacks directly here, instead of standing up the genserver. Pay attention to the state
       # make sure we can open a file 
       {:ok, _state} =
-        Duckdb.init(%{parent: self(), user: user, path: "#{__DIR__}/test_files/open_test.duckdb"})
+        Duckdb.init(%{parent: self(), user: user, path: path})
 
-      assert File.exists?("#{__DIR__}/test_files/open_test.duckdb")
-      File.rm!("#{__DIR__}/test_files/open_test.duckdb")
+      assert File.exists?(path)
+      File.rm(path)
     end
   end
 end

@@ -17,10 +17,9 @@ defmodule Datum.Duckdb do
   use GenServer
   require Logger
 
-  # Client - we need a name on the start_link so we can register it properly
   # parent is required as the communication is async
-  def start_link(%{parent: _parent_pid, name: name} = default) do
-    GenServer.start_link(__MODULE__, default, name: name)
+  def start_link(default, opts \\ []) do
+    GenServer.start_link(__MODULE__, default, opts)
   end
 
   @doc """
@@ -32,15 +31,19 @@ defmodule Datum.Duckdb do
     GenServer.cast(pid, {:send_query, message, opts})
   end
 
+  def run_query_sync(pid, message) do
+    GenServer.call(pid, {:run_query, message}, :infinity)
+  end
+
   # Server
   @impl true
-  def init(%{parent: _parent_pid} = state) do
+  def init(state) do
     path = Map.get(state, :path, ":memory:")
 
     access_mode =
       case Map.get(state, :access_mode, :read_write) do
         :read_write -> ~c"READ_WRITE"
-        :read -> ~c"READ_ONLY"
+        :read_only -> ~c"READ_ONLY"
       end
 
     # open a connection to the db when you need to use it, connections are
@@ -87,6 +90,36 @@ defmodule Datum.Duckdb do
     end
 
     {:noreply, state}
+  end
+
+  @impl true
+  def handle_call({:run_query, query}, _from, state) do
+    with {:ok, conn} <- :educkdb.connect(state.db),
+         {:ok, result_ref} <- :educkdb.query(conn, query),
+         column_names <- :educkdb.column_names(result_ref),
+         chunks <- :educkdb.get_chunks(result_ref) do
+      results =
+        Enum.map(chunks, fn chunk ->
+          :educkdb.chunk_columns(chunk)
+        end)
+
+      results =
+        for chunk <- Enum.zip(results) do
+          chunk
+          |> Tuple.to_list()
+          |> List.flatten()
+        end
+
+      df =
+        Enum.zip_with(column_names, results, fn c, r -> {c, Explorer.Series.from_list(r)} end)
+        |> Explorer.DataFrame.new()
+
+      :educkdb.disconnect(conn)
+
+      {:reply, {:ok, df}, state}
+    else
+      error -> {:reply, {:error, error}, state}
+    end
   end
 
   @impl true
