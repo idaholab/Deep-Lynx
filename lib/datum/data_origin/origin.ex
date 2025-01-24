@@ -44,7 +44,7 @@ defmodule Datum.DataOrigin.Origin do
     field :tags, {:array, :string}
     field :domains, {:array, :string}
 
-    field :type, Ecto.Enum, values: [:s3, :filesystem, :default], default: :filesystem
+    field :type, Ecto.Enum, values: [:s3, :filesystem, :default, :duckdb], default: :filesystem
     # stores the raw configuration values for the type of origin this is
     # if nil, we assume we don't have direct connection to the origin and
     # therefore it's metadata only
@@ -155,5 +155,26 @@ defmodule Datum.DataOrigin.Origin.FilesystemConfig do
     config
     |> cast(attrs, [:root_path, :network_user, :network_user_password])
     |> validate_required([:root_path])
+  end
+
+  defmodule Datum.DataOrigin.Origin.DuckDBConfig do
+    @moduledoc """
+    DuckDB Configuration for Data Origins
+    """
+    use Ecto.Schema
+    import Ecto.Changeset
+
+    embedded_schema do
+      field :path, :string
+      field :network_user, :string, default: nil
+      field :network_user_password, :string, default: nil
+    end
+
+    @doc false
+    def changeset(config, attrs) do
+      config
+      |> cast(attrs, [:path, :network_user, :network_user_password])
+      |> validate_required([:path])
+    end
   end
 end

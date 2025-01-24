@@ -35,11 +35,20 @@ defmodule Datum.Duckdb do
   # Server
   @impl true
   def init(%{parent: _parent_pid} = state) do
+    path = Map.get(state, :path, ":memory:")
+
+    access_mode =
+      case Map.get(state, :access_mode, :read_write) do
+        :read_write -> ~c"READ_WRITE"
+        :read -> ~c"READ_ONLY"
+      end
+
     # open a connection to the db when you need to use it, connections are
     # native OS threads - not processes!
-    case :educkdb.open(~c":memory:", %{
+    case :educkdb.open(~c"#{path}", %{
            allow_community_extensions: ~c"TRUE",
-           autoload_known_extensions: ~c"TRUE"
+           autoload_known_extensions: ~c"TRUE",
+           access_mode: access_mode
          }) do
       {:ok, db} ->
         {:ok, state |> Map.put(:db, db)}
@@ -92,7 +101,18 @@ defmodule Datum.Duckdb do
         :educkdb.chunk_columns(chunk)
       end)
 
-    {:reply, %{columns: column_names, results: results}, state}
+    results =
+      for chunk <- Enum.zip(results) do
+        chunk
+        |> Tuple.to_list()
+        |> List.flatten()
+      end
+
+    df =
+      Enum.zip_with(column_names, results, fn c, r -> {c, Explorer.Series.from_list(r)} end)
+      |> Explorer.DataFrame.new()
+
+    {:reply, df, state}
   end
 
   # adding files as a table in the current duckdb instance - the origin will be
