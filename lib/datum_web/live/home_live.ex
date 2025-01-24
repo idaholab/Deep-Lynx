@@ -168,7 +168,9 @@ defmodule DatumWeb.HomeLive do
                 <div class="mt-8">
                   <h3 class="text-base font-semibold leading-6 text-primary-content">
                     <a href="#" class="focus:outline-none">
-                      <span class="absolute inset-0" aria-hidden="true"></span> {gettext("Add Data Origin")}
+                      <span class="absolute inset-0" aria-hidden="true"></span> {gettext(
+                        "Add Data Origin"
+                      )}
                     </a>
                   </h3>
                   <p class="mt-2 text-sm text-primary-content">

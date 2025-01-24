@@ -7,22 +7,22 @@ defmodule DatumWeb.LiveComponent.DeleteOrigin do
   use DatumWeb, :live_component
   use Gettext, backend: DatumWeb.Gettext
 
-  alias Datum.DataOrigin
-
   @impl true
   def render(assigns) do
     ~H"""
     <div>
       <div class="text-center text-black">
-        {gettext("Deleting a data origin will not affect your data. However, it will remove the stored connection configurations and metadata.")}
+        {gettext(
+          "Deleting a data origin will not affect your data. However, it will remove the stored connection configurations and metadata."
+        )}
       </div>
       <div class="pt-4">
-      <.button
+        <.button
           type="submit"
           class="absolute bottom-6 left-5"
           phx-click="close_modal"
           phx-target={@myself}
-          >
+        >
           {gettext("Cancel")}
         </.button>
         <.button
@@ -30,7 +30,8 @@ defmodule DatumWeb.LiveComponent.DeleteOrigin do
           class="absolute bottom-6 right-5"
           phx-click="delete_origin_modal"
           phx-value-origin_id={@origin_id}
-          phx-target={@myself}>
+          phx-target={@myself}
+        >
           {gettext("Delete Origin")}
         </.button>
       </div>
