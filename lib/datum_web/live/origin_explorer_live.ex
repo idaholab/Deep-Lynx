@@ -67,7 +67,7 @@ defmodule DatumWeb.OriginExplorerLive do
               {"#{origin.inserted_at.month}/#{origin.inserted_at.day}/#{origin.inserted_at.year}"}
             </:col>
 
-            <:action>
+            <:action :let={origin}>
               <details class="dropdown">
                 <summary class="hero-bars-3 text-primary-content ">open or close</summary>
                 <div
@@ -76,7 +76,7 @@ defmodule DatumWeb.OriginExplorerLive do
                 >
                   <ul class="menu menu-xs bg-base-400 rounded-box ">
                     <li><a>Permissions</a></li>
-                    <li><a>Delete</a></li>
+                    <li><a phx-click="delete_origin" phx-value-origin_id={origin.id}>Delete</a></li>
                   </ul>
                 </div>
               </details>
@@ -176,6 +176,23 @@ defmodule DatumWeb.OriginExplorerLive do
           patch={~p"/origin_explorer/#{@tab}"}
         />
       </.modal>
+      <.modal
+        :if={@live_action in [:origin_explorer_delete]}
+        id="delete_origin"
+        show
+        on_cancel={JS.patch(~p"/origin_explorer/#{@tab}")}
+      >
+        <.live_component
+          live_action={@live_action}
+          module={DatumWeb.LiveComponent.DeleteOrigin}
+          id="delete-origin-modal-component"
+          origin_id={@origin_id}
+          origins={@origins}
+          parent={@parent}
+          current_user={@current_user}
+          patch={~p"/origin_explorer/#{@tab}"}
+        />
+      </.modal>
     </div>
     """
   end
@@ -263,6 +280,7 @@ defmodule DatumWeb.OriginExplorerLive do
        |> assign(:tab, tab)
        |> assign(:group_index, group_index)
        # assigns for the modal, just set to nil so we don't error renders
+       |> assign(:origin_id, nil)
        |> assign(:target_data, nil)
        |> assign(:target_origin, nil)
        |> assign(:incoming_data, nil)
@@ -388,6 +406,17 @@ defmodule DatumWeb.OriginExplorerLive do
 
   @impl true
   def handle_event(
+        "delete_origin",
+        %{"origin_id" => origin_id} = _params,
+        socket
+      ) do
+    {:noreply,
+     socket
+     |> patch(~p"/origin_explorer/#{socket.assigns.tab}/#{origin_id}/delete")}
+  end
+
+  @impl true
+  def handle_event(
         "data_record_dropped",
         %{
           "incoming_data_id" => incoming_data_id,
@@ -406,14 +435,28 @@ defmodule DatumWeb.OriginExplorerLive do
      |> patch(~p"/origin_explorer/#{socket.assigns.tab}/connect")}
   end
 
+  @impl Phoenix.LiveView
+  def handle_cast({:patch, %{"origin_id" => origin_id} = _params, _uri, live_action}, socket) do
+    {:noreply,
+     socket
+     |> assign(:live_action, live_action)
+     |> assign(:origin_id, origin_id)}
+  end
+
   # we use the callback version of handle_info and handle_cast so we can update the socket with any changed state
   # note this doesn't actually do anything - but you will need it so the view doesn't crash if sent
   # the message. If you want to actually handle params, make a new function ABOVE this with the
   # same params you'd do a normal handle_params/3 with
   @impl Phoenix.LiveView
   def handle_cast({:patch, _params, _uri, live_action}, socket) do
-    dbg(live_action)
-    {:noreply, socket |> assign(:live_action, live_action)}
+    user = socket.assigns.current_user
+
+    {:noreply,
+     socket
+     |> assign(:live_action, live_action)
+     |> assign_async(:origins, fn ->
+       {:ok, %{origins: Datum.DataOrigin.list_data_orgins_user(user)}}
+     end)}
   end
 
   @impl Phoenix.LiveView
