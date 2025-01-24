@@ -157,9 +157,9 @@ defmodule Datum.DataOrigin do
 
   """
   def delete_origin(%Origin{} = origin) do
-    with {:ok, %Origin{}} <- File.rm(origin.database_path),
+    with {:ok, _} <- File.rm(origin.database_path),
          {:ok, %Origin{}} <- Repo.delete(origin) do
-      :ok
+      {:ok, %Origin{}}
     else
       _ -> :error
     end
