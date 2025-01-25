@@ -42,17 +42,17 @@ defmodule Datum.Duckdb do
 
     access_mode =
       case Map.get(state, :access_mode, :read_write) do
-        :read_write -> ~c"READ_WRITE"
-        :read_only -> ~c"READ_ONLY"
+        :read_write -> "READ_WRITE"
+        :read_only -> "READ_ONLY"
       end
 
     # open a connection to the db when you need to use it, connections are
     # native OS threads - not processes!
-    case :educkdb.open(~c"#{path}", %{
-           allow_community_extensions: ~c"TRUE",
-           autoload_known_extensions: ~c"TRUE",
+    case Adbc.Database.start_link(
+           driver: :duckdb,
+           path: "#{path}",
            access_mode: access_mode
-         }) do
+         ) do
       {:ok, db} ->
         {:ok, state |> Map.put(:db, db)}
 
@@ -62,21 +62,21 @@ defmodule Datum.Duckdb do
   end
 
   @impl true
-  def handle_cast({:send_query, query, opts}, state) do
+  def handle_cast({:run_query, query, opts}, state) do
     msg_id = Keyword.get(opts, :id, UUID.uuid4())
 
-    with {:ok, conn} <- :educkdb.connect(state.db),
-         {:ok, result_ref} <- :educkdb.query(conn, query) do
+    with {:ok, conn} <- Adbc.Connection.start_link(database: state.db),
+         {:ok, result} <- Adbc.Connection.query(conn, query) do
       send(
         state.parent,
         {:query_response,
          %{
            id: msg_id,
-           result_reference: result_ref
+           result: result
          }}
       )
 
-      :educkdb.disconnect(conn)
+      GenServer.stop(conn, :normal)
     else
       error ->
         send(
@@ -94,58 +94,18 @@ defmodule Datum.Duckdb do
 
   @impl true
   def handle_call({:run_query, query}, _from, state) do
-    with {:ok, conn} <- :educkdb.connect(state.db),
-         {:ok, result_ref} <- :educkdb.query(conn, query),
-         column_names <- :educkdb.column_names(result_ref),
-         chunks <- :educkdb.get_chunks(result_ref) do
-      results =
-        Enum.map(chunks, fn chunk ->
-          :educkdb.chunk_columns(chunk)
-        end)
-
-      results =
-        for chunk <- Enum.zip(results) do
-          chunk
-          |> Tuple.to_list()
-          |> List.flatten()
-        end
-
+    with {:ok, conn} <- Adbc.Connection.start_link(database: state.db),
+         {:ok, result} <- Adbc.Connection.query(conn, query) do
       df =
-        Enum.zip_with(column_names, results, fn c, r -> {c, Explorer.Series.from_list(r)} end)
+        result
         |> Explorer.DataFrame.new()
 
-      :educkdb.disconnect(conn)
+      GenServer.stop(conn, :normal)
 
       {:reply, {:ok, df}, state}
     else
       error -> {:reply, {:error, error}, state}
     end
-  end
-
-  @impl true
-  def handle_call({:receive_result, result_reference}, _from, state) do
-    column_names = :educkdb.column_names(result_reference)
-
-    # fetch all chunks
-    chunks = :educkdb.get_chunks(result_reference)
-
-    results =
-      Enum.map(chunks, fn chunk ->
-        :educkdb.chunk_columns(chunk)
-      end)
-
-    results =
-      for chunk <- Enum.zip(results) do
-        chunk
-        |> Tuple.to_list()
-        |> List.flatten()
-      end
-
-    df =
-      Enum.zip_with(column_names, results, fn c, r -> {c, Explorer.Series.from_list(r)} end)
-      |> Explorer.DataFrame.new()
-
-    {:reply, df, state}
   end
 
   # adding files as a table in the current duckdb instance - the origin will be

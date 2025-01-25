@@ -46,6 +46,7 @@ defmodule Datum.Release do
     IO.puts("Pass")
 
     IO.puts("Testing DuckDB")
+    File.rm("#{Path.join([Application.app_dir(:datum), "priv", "test_db.duckdb"])}")
 
     {:ok, _state} =
       Datum.Duckdb.init(%{parent: self()})
