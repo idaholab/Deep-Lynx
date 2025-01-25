@@ -107,6 +107,36 @@ defmodule DatumWeb.OriginsControllerTest do
       assert fetched == data
     end
 
+    test "explores a duckdb origin", %{conn: conn, token: token, user: user} do
+      # need to create the db first - because the query opens it in readonly mode and will error if it doesn't exist
+      path = "#{__DIR__}/open_test.duckdb"
+
+      {:ok, _state} =
+        Datum.Duckdb.init(%{parent: self(), path: path})
+
+      conn =
+        conn
+        |> put(~p"/api/v1/origins", %{
+          name: "some name",
+          type: :duckdb,
+          config: %{
+            "path" => path
+          }
+        })
+
+      assert origin = json_response(conn, 201)
+
+      conn =
+        conn
+        |> post(~p"/api/v1/origins/#{origin["id"]}/explore", %{
+          query: "select * from duckdb_settings() LIMIT 1;"
+        })
+
+      IO.inspect(conn.resp_body)
+
+      assert data = json_response(conn, 200)
+    end
+
     test "can list root directories", %{conn: conn, token: token, user: user} do
       origin =
         origin_fixture(%{

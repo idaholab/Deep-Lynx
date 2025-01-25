@@ -12,23 +12,7 @@ defmodule Datum.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps(),
-      releases: releases()
-    ]
-  end
-
-  def releases do
-    [
-      datum: [
-        steps: [:assemble, &Burrito.wrap/1],
-        burrito: [
-          targets: [
-            macos: [os: :darwin, cpu: :aarch64],
-            linux: [os: :linux, cpu: :x86_64],
-            windows: [os: :windows, cpu: :x86_64]
-          ]
-        ]
-      ]
+      deps: deps()
     ]
   end
 
@@ -37,7 +21,7 @@ defmodule Datum.MixProject do
   # Type `mix help compile.app` for more information.
   def application do
     [
-      mod: {Datum.Application, ["server"]},
+      mod: {Datum.Application, []},
       extra_applications: [:logger, :runtime_tools]
     ]
   end
@@ -51,7 +35,7 @@ defmodule Datum.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:educkdb, "~> 0.9.8"},
+      {:adbc, "~> 0.7.3"},
       {:argon2_elixir, "~> 3.0"},
       {:phoenix, "~> 1.7.14"},
       {:phoenix_ecto, "~> 4.5"},
@@ -81,7 +65,6 @@ defmodule Datum.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.5"},
-      {:burrito, "~> 1.2.0"},
       {:shortuuid, "~> 3.0"},
       {:uuid, "~> 1.1.8"},
       {:wasmex, "~> 0.9.2"},
@@ -93,6 +76,7 @@ defmodule Datum.MixProject do
       {:explorer, "~> 0.10.1"},
       {:ymlr, "~> 5.1"},
       {:vega_lite, "~> 0.1.11"},
+      {:vega_lite_convert, "~> 1.0"},
       {:erlport, "~> 0.11.0"},
       {:mix_audit, "~> 2.1"},
       {:langchain, "~> 0.3.0-rc.0"},

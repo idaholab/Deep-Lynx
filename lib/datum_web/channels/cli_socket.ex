@@ -38,7 +38,6 @@ defmodule DatumWeb.CLISocket do
     # max_age: 1209600 is equivalent to two weeks in seconds
     case Phoenix.Token.verify(socket, "personal_access_token", token, max_age: 1_209_600) do
       {:ok, user_id} ->
-        dbg("CONNECTED")
         {:ok, assign(socket, :current_user, Datum.Accounts.get_user!(user_id))}
 
       {:error, _reason} ->
