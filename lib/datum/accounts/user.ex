@@ -75,7 +75,7 @@ defmodule Datum.Accounts.User do
       changeset
       # Hashing could be done with `Ecto.Changeset.prepare_changes/2`, but that
       # would keep the database transaction open longer and hurt performance.
-      |> put_change(:hashed_password, Argon2.hash_pwd_salt(password))
+      |> put_change(:hashed_password, Bcrypt.hash_pwd_salt(password))
       |> delete_change(:password)
     else
       changeset
