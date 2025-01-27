@@ -161,6 +161,8 @@ defmodule Datum.Release do
     {:ok, _pid} =
       Supervisor.start_link(children, strategy: :one_for_one, name: Datum.Supervisor)
 
+    Plug.Crypto.Application.start(:normal, [])
+
     __MODULE__.seed_db(Keyword.get(options, :name, "default"))
     IO.puts("System Migrated")
   end
