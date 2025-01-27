@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.36.1">
+    <meta name="project" content="DeepLynx v0.0.1">
+
+
+    <title>API Reference — DeepLynx v0.0.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-QYVRUQZX.css" />
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-C0206226.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-HJ5ACJPS.js"></script>
+
+  </head>
+  <body class="sidebar-closed">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+        <a href="https://inlsoftware.inl.gov/product/deep-lynx" class="sidebar-projectImage">
+          <img src="assets/logo.png" alt="DeepLynx" />
+        </a>
+
+      <div>
+        <a href="https://inlsoftware.inl.gov/product/deep-lynx" class="sidebar-projectName" translate="no">
+DeepLynx
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.0.1
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+Pages
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<output role="status" id="toast"></output>
+
+<main class="content page-extra" id="main" data-type="extras">
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of DeepLynx</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search" tabindex="-1">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <h1>
+
+
+    <span>API Reference <small class="app-vsn">DeepLynx v0.0.1</small></span>
+  </h1>
+
+
+  <section class="details-list">
+    <h2 id="modules" class="section-heading">
+  <a href="#modules" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Modules</span>
+</h2>
+
+    <div class="summary">
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.html" translate="no">Datum</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Datum keeps the contexts that define your domain
+and business logic.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.Accounts.html" translate="no">Datum.Accounts</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>The Accounts context.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.Accounts.Group.html" translate="no">Datum.Accounts.Group</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Groups are user or system defined groupings of users. Groups do
+not inherently have any permissions in the system - they are only
+used to group users together when setting permissions in other systems.
+end</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.Accounts.User.html" translate="no">Datum.Accounts.User</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.Accounts.UserGroup.html" translate="no">Datum.Accounts.UserGroup</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>User Groups are just the collection of membership for a particular group.
+At time of creation, there are currently no plans to have roles inside the groups.
+end</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.Accounts.UserNotifier.html" translate="no">Datum.Accounts.UserNotifier</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.Accounts.UserToken.html" translate="no">Datum.Accounts.UserToken</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.Agent.html" translate="no">Datum.Agent</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Agent is a GenServer (<a href="https://hexdocs.pm/elixir/GenServer.html">https://hexdocs.pm/elixir/GenServer.html</a>) which is in charge of running the
+AI Assistant for Datum. Each instance of the GenServer is an individual agent, interacting with one
+single individual user.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.Common.html" translate="no">Datum.Common</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>The Common context. Dealing with the models that don't fit nicely into other
+contexts, such as the explorer tab context.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.Common.ExplorerTabs.html" translate="no">Datum.Common.ExplorerTabs</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>ExplorerTabs are the representation of an open viewing tab in the data explorer home.
+This system allows us to easily save and restore a user's workspaces without having to use
+javascript or local storage garbage. Sqlite is more than fast enough, especially with LiveView
+to handle restore/close options.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.DataOrigin.html" translate="no">Datum.DataOrigin</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>The DataOrigin context. See data_origin/Origin.ex for information on what a DataOrigin is
+and how it slots into the bigger picture of Datum.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.DataOrigin.CT.html" translate="no">Datum.DataOrigin.CT</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Needed for the closure_table library. NOTE: You MUST call this only after you've done put_dynamic_repo, either
+yourself or through the function above. If not, you're potentially writing a previous connection's database. I know,
+it's potentially dangerous - but so is breathing.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.DataOrigin.Data.html" translate="no">Datum.DataOrigin.Data</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Data is the actual stored data for an origin, typically represents a file or directory,
+but more types are supported and will be supported as time continues.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.DataOrigin.DataHistory.html" translate="no">Datum.DataOrigin.DataHistory</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>This structure is populated automatically in the database when data is inserted. Keeping the schema
+separate allows us to know when we're working with historical data.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.DataOrigin.DataSearch.html" translate="no">Datum.DataOrigin.DataSearch</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Reflects the virtual table for FTS5 searching.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.DataOrigin.DataTreePath.html" translate="no">Datum.DataOrigin.DataTreePath</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>DataTreePath is for use with the closure_tables library. It's needed to hold
+the relationship information for us modeling a filesystem</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.DataOrigin.Documentation.html" translate="no">Datum.DataOrigin.Documentation</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Documenation for a piece of data. It's stored in a separate table vs.
+embedded schema so that we can do things like semantic search on it since
+there will often be more than one piece of documentation.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.DataOrigin.ExtractedMetadata.html" translate="no">Datum.DataOrigin.ExtractedMetadata</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Playing around with this currently - we're thinking that we need the extracted metadata to be
+decomposed or normalized into the database structure so that we can do semantic search either via
+FTS5 or vector search. Definitely a work in progress structure.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.DataOrigin.Origin.html" translate="no">Datum.DataOrigin.Origin</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Represents a point of origin for data. Typically we view these as file systems, network drives,
+HPC clusters etc. It's a logical, hierarchical separation of data that is representive of a filesystem.
+Origins should contain a lot of data - but if they start to grow too large we'll need to look at separating them
+or figuring how to handle splitting the underlying Sqlite3 database. That's right - each Origin has it's OWN Sqlite3
+databased stored at the configured filesystem point.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.DataOrigin.Origin.AzureConfig.html" translate="no">Datum.DataOrigin.Origin.AzureConfig</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Azure Blob Configuration for Data Origins</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.DataOrigin.Origin.DuckDBConfig.html" translate="no">Datum.DataOrigin.Origin.DuckDBConfig</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>DuckDB Configuration for Data Origins</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.DataOrigin.Origin.FilesystemConfig.html" translate="no">Datum.DataOrigin.Origin.FilesystemConfig</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Filesystem configuration - not necessarily needed if the filesystem is local, but
+if it's a networked location - we need the information to make connections.
+Note: that we can't actually easily make that connection from within Erlang itself.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.DataOrigin.Origin.R2Config.html" translate="no">Datum.DataOrigin.Origin.R2Config</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>R2 Configuration for Data Origins</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.DataOrigin.Origin.S3Config.html" translate="no">Datum.DataOrigin.Origin.S3Config</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>S3 Configuration for Data Origins</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.DataOrigin.OriginRepo.html" translate="no">Datum.DataOrigin.OriginRepo</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>  This is the repo for interacting with DataOrigin's Sqlite3 databases.
+  Each Data Origin will have it's own, separate Sqlite3 database and so
+  we will use dynamic repositories to work with it.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.Duckdb.html" translate="no">Datum.Duckdb</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>DuckDB is a GenServer (<a href="https://hexdocs.pm/elixir/GenServer.html">https://hexdocs.pm/elixir/GenServer.html</a>) which is in charge of running any queries on
+CSV and Parquet files currently. Each instance of this GenServer is an individual DB, interacting with a single
+user through a LiveView.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.Mailer.html" translate="no">Datum.Mailer</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.ModuleName.html" translate="no">Datum.ModuleName</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>  This is how we store and restore Elixir module names in our
+  application. Typically used for our explorer window panes or plugin names.
+  This type is used by Ecto to safely store and restore Strings to Atoms.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.Permissions.html" translate="no">Datum.Permissions</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>The Permissions context. See the permissions folder for information.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.Permissions.Data.html" translate="no">Datum.Permissions.Data</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Permissions table for Data in a DataOrigin- reference this table whenever you're loading
+data. Try to do so as part of the query itself, not a separate call.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.Permissions.DataOrigin.html" translate="no">Datum.Permissions.DataOrigin</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Permissions table for DataOrigins - reference this table whenever you're loading
+origins. Try to do so as part of the query itself, not a separate call.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.Plugins.html" translate="no">Datum.Plugins</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>The Plugins context. See the plugins/Plugin.ex file for information on what a plugin is.
+These are all the functions for interacting with the Plugin model in the database</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.Plugins.CSV.html" translate="no">Datum.Plugins.CSV</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>General metadata extraction for Parquet files</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.Plugins.Extractor.html" translate="no">Datum.Plugins.Extractor</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Extractor module for running either the plugin system for extracting metadata
+or native elixir code to do the same.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.Plugins.Parquet.html" translate="no">Datum.Plugins.Parquet</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>General metadata extraction for Parquet files</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.Plugins.Plugin.html" translate="no">Datum.Plugins.Plugin</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Plugin represents a plugin supplied either by the system or by the user.
+These plugins are typically used for file system scanning and metadata extraction.
+Plugins can be WASM modules, either raw binary or on disk, or Elixir modules implementing
+the correct plugin type behavior.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.Plugins.TdmsIndex.html" translate="no">Datum.Plugins.TdmsIndex</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>General metadata extraction for TDMS index files</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.Release.html" translate="no">Datum.Release</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Used for executing DB release tasks when run in production without Mix
+installed.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.Repo.html" translate="no">Datum.Repo</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>This is meant to be the &quot;operations&quot; repo. This should hold user information, information on
+permissions, plugins, metadata models, maybe some pointers to data platforms - BUT NOT THE DATA ITSELF.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.Scanner.html" translate="no">Datum.Scanner</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>This is a GenServer in charge of running scan processes from the CLI.<br/>If you are wanting the server or other processes to run scanning - prefer using the scanner you
+need directly.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.Scanners.Filesystem.html" translate="no">Datum.Scanners.Filesystem</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Filesystem scanner is the primary scanning tool used by the CLI when on a local
+system. Feed it the root path and it will recursively run through the contained
+folders/files and run all enabled plugins on them.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Datum.Search.html" translate="no">Datum.Search</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Search is a GenServer (<a href="https://hexdocs.pm/elixir/GenServer.html">https://hexdocs.pm/elixir/GenServer.html</a>) which is in charge of dispatching
+a user search across all the data origins - because each origin is it's own database we had a few
+ways of approaching this - from attaching and combining tables in a single sqlite3 db, to doing this
+concurrent search. We chose the concurrent search because there might be hundreds or more data origins
+and that could easily break an SQL query, not to mention potentially swamp a single database.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.html" translate="no">DatumWeb</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>The entrypoint for defining your web interface, such
+as controllers, components, channels, and so on.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.AgentLive.html" translate="no">DatumWeb.AgentLive</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>This is the tab for interacting with an AI agent, if the integration is enabled and
+a suitable configuration (like Ollama) is present. Currently we do only support OpenAI
+enabled endpoints (which Ollama supports).</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.CLIChannel.html" translate="no">DatumWeb.CLIChannel</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.CLISocket.html" translate="no">DatumWeb.CLISocket</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.Client.html" translate="no">DatumWeb.Client</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>This is the HTTP client for the application.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.CoreComponents.html" translate="no">DatumWeb.CoreComponents</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Provides core UI components.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.Endpoint.html" translate="no">DatumWeb.Endpoint</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.ErrorHTML.html" translate="no">DatumWeb.ErrorHTML</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>This module is invoked by your endpoint in case of errors on HTML requests.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.ErrorJSON.html" translate="no">DatumWeb.ErrorJSON</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>This module is invoked by your endpoint in case of errors on JSON requests.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.Gettext.html" translate="no">DatumWeb.Gettext</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>A module providing Internationalization with a gettext-based API.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.GraphExplorerLive.html" translate="no">DatumWeb.GraphExplorerLive</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>This is the live component for exploring data in a graph like manner. Typically started
+with either one or a group of a data. This component allows users to traverse their data
+in a graph and make connections between pieces of data manually (planned, not currently implemented)</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.HomeLive.html" translate="no">DatumWeb.HomeLive</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>This is the main navigation area after a user logs in. Consists of multiple panes of tabs, each
+tab should be its own separate live_view. Try to do as little as possible on this page, though it
+will probably get more complicated as we add inter-view communication.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.Layouts.html" translate="no">DatumWeb.Layouts</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>This module holds different layouts used by your application.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.LiveComponent.ConnectData.html" translate="no">DatumWeb.LiveComponent.ConnectData</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>This is used to connect two pieces of data, even between separate origins. This is used
+to create connections in the relationships field of %Data{} not connecting in the directory/file
+paradigm</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.LiveComponent.DeleteOrigin.html" translate="no">DatumWeb.LiveComponent.DeleteOrigin</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>This is used to delete a data origin</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.LiveComponent.TDMSMetadata.html" translate="no">DatumWeb.LiveComponent.TDMSMetadata</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>This is used to display TDMS metadata, if present, within the File Viewer
+on the Data Origin Explorer.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.OriginController.html" translate="no">DatumWeb.OriginController</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>The json endpoints for working with Data Origins</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.OriginCreationLive.html" translate="no">DatumWeb.OriginCreationLive</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>This is the tab for adding data.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.OriginExplorerLive.html" translate="no">DatumWeb.OriginExplorerLive</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>This is our primary way of exploring a Data Origin. It is very similar
+to a file explorer, as it needs to represent directories and the files
+in those directories.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.PageController.html" translate="no">DatumWeb.PageController</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.PageHTML.html" translate="no">DatumWeb.PageHTML</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>This module contains pages rendered by PageController.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.PluginsController.html" translate="no">DatumWeb.PluginsController</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>The json endpoints for handling pluging information and binary module
+retrieval. Typically used by the CLI tool to sync for local use.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.Router.html" translate="no">DatumWeb.Router</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.SearchLive.html" translate="no">DatumWeb.SearchLive</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>This is our tab for running searches across the entirety of the Datum ecosystem.
+If state exists, only hold the state of the query itself and filters.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.SocketClient.html" translate="no">DatumWeb.SocketClient</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>This is a SlipStream websocket client designed for the CLI to interact
+with the central server.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.Telemetry.html" translate="no">DatumWeb.Telemetry</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.UserAuth.html" translate="no">DatumWeb.UserAuth</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>This module contains mostly user authentication middleware needed by various routes</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.UserConfirmationInstructionsLive.html" translate="no">DatumWeb.UserConfirmationInstructionsLive</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.UserConfirmationLive.html" translate="no">DatumWeb.UserConfirmationLive</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.UserForgotPasswordLive.html" translate="no">DatumWeb.UserForgotPasswordLive</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.UserLoginLive.html" translate="no">DatumWeb.UserLoginLive</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.UserRegistrationLive.html" translate="no">DatumWeb.UserRegistrationLive</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.UserResetPasswordLive.html" translate="no">DatumWeb.UserResetPasswordLive</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.UserSessionController.html" translate="no">DatumWeb.UserSessionController</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.UserSettingsLive.html" translate="no">DatumWeb.UserSettingsLive</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DatumWeb.WikiLive.html" translate="no">DatumWeb.WikiLive</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>This is the live view for rendering the internal Wiki. The wiki lives in /priv/wiki.
+The wiki requires a <code class="inline">home.md</code> and <code class="inline">table_of_contents.md</code> to function correctly. Pages
+are rendered by treating the url after <code class="inline">wiki/</code> as a param representing the wiki pages
+file name. So in order to work, you must have a wiki page who's file name is URL formatted.</p></div>
+
+</div>
+
+    </div>
+  </section>
+
+
+  <section class="details-list">
+    <h2 id="mix-tasks" class="section-heading">
+  <a href="#mix-tasks" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Mix Tasks</span>
+</h2>
+
+    <div class="summary">
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Mix.Tasks.Database.Clean.html" translate="no">mix database.clean</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Cleans the local database files.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Mix.Tasks.Wiki.Gen.html" translate="no">mix wiki.gen</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Generates a new wiki page and adds to the table of contents. Name should be
+the full, captilized name of the post - e.g Table of Contents</p></div>
+
+</div>
+
+    </div>
+  </section>
+
+</div>
+
+<div class="bottom-actions" id="bottom-actions">
+  <div class="bottom-actions-item">
+
+  </div>
+  <div class="bottom-actions-item">
+
+      <a href="readme.html" class="bottom-actions-button" rel="next">
+        <span class="subheader">
+          Next Page →
+        </span>
+        <span class="title">
+DeepLynx Elixir Setup
+        </span>
+      </a>
+
+  </div>
+</div>
+    <footer class="footer">
+      <p>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="DeepLynx.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.36.1) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+
+  </body>
+</html>

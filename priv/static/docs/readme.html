@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.36.1">
+    <meta name="project" content="DeepLynx v0.0.1">
+
+
+    <title>DeepLynx Elixir Setup — DeepLynx v0.0.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-QYVRUQZX.css" />
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-C0206226.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-HJ5ACJPS.js"></script>
+
+  </head>
+  <body class="sidebar-closed">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+        <a href="https://inlsoftware.inl.gov/product/deep-lynx" class="sidebar-projectImage">
+          <img src="assets/logo.png" alt="DeepLynx" />
+        </a>
+
+      <div>
+        <a href="https://inlsoftware.inl.gov/product/deep-lynx" class="sidebar-projectName" translate="no">
+DeepLynx
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.0.1
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+Pages
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<output role="status" id="toast"></output>
+
+<main class="content page-extra" id="main" data-type="extras">
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of DeepLynx</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search" tabindex="-1">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <h1>
+
+
+    <span>DeepLynx Elixir Setup</span>
+  </h1>
+
+<h2 id="requirements" class="section-heading">
+  <a href="#requirements" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Requirements</span>
+</h2>
+<ul><li>Elixir 1.17-otp-27 <ul><li>Mac: run <code class="inline">brew install elixir</code></li><li>Windows: Use the appropriate installer found <a href="https://elixir-lang.org/install.html#windows">here</a>. If installing via exe, choose the <code class="inline">Elixir 1.17.3 on Erlang 27</code> option</li></ul></li><li>Erlang 27.0 (should come with Elixir installation)</li><li><a href="https://docs.npmjs.com/downloading-and-installing-node-js-and-npm">Node.js and NPM</a>: used for UI libraries</li><li>Mix (should come with Elixir installation installed)</li><li><strong>optional</strong>: <a href="https://asdf-vm.com/guide/getting-started.html">asdf</a>: version manager for Elixir, not available on Windows</li></ul><h3 id="vscode-extensions" class="section-heading">
+  <a href="#vscode-extensions" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">VSCode Extensions</span>
+</h3>
+<p>Visual Studio Code with a few extensions is primarily recommended as the editor of choice for Elixir/Phoenix. Extensions are available through the extensions tab on the left column of VS Code and typed into the search bar. These extensions help with linting and coding hints to ease the development experience. <strong>Note</strong>: Users of IntelliJ should be aware that there is no support for Phx HEEx templates and that it is recommended to use VSC or at least Zed or Neovim instead. </p><ul><li>Credo: a static code analysis tool providing code annotations which include best practices and warnings or errors before being compiled to the BEAM. The main extension is by pantajoe. <img src="assets/README/credo.png" alt="alt text"/></li><li>Lexical: the base for the new language server that the Elixir team is funding. <img src="assets/README/lexical.png" alt="alt text"/></li><li>Phoenix Framework extension: recommended for the web application. <img src="assets/README/phx.png" alt="alt text"/></li></ul><h2 id="working-under-enterprise-ca-dealing-with-cert-errors" class="section-heading">
+  <a href="#working-under-enterprise-ca-dealing-with-cert-errors" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Working Under Enterprise CA (Dealing with Cert Errors)</span>
+</h2>
+<p>You will need to add a file for rebar3. If it does not already exist, create the directory ~/.config/rebar3. Then create the file <code class="inline">rebar.config</code> with the following text modified for the path to your cert. </p><p><code class="inline">{ssl_cacerts_path, [&quot;/path/to/YOUR_COMPANY_CERT&quot;]}.</code></p><h3 id="modifying-environment-variables" class="section-heading">
+  <a href="#modifying-environment-variables" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Modifying Environment Variables</span>
+</h3>
+<p>Hex uses an environment variable called <code class="inline">HEX_CACERTS_PATH</code> set to your certificate bundle. This will resemble the following: </p><pre><code class="makeup sh" translate="no"><span class="">export HEX_CACERTS_PATH=/path/to/YOUR_COMPANY_CERT.crt
+</span></code></pre><p>and be added to a .bash_profile or preferred environment variable configuration. Failure to do this will result in an SSL error.</p><p>After adding this variable to your profile, be sure to either close and reopen your terminal, or run <code class="inline">source ~/.bash_profile</code> (replacing bash_profile with your preferred env config file) to load the environment variable into your current terminal.</p><h3 id="modifying-mix-esx" class="section-heading">
+  <a href="#modifying-mix-esx" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Modifying <code class="inline">mix.esx</code></span>
+</h3>
+<p>Uncomment the top line in the <code class="inline">mix.exs</code> file and change the path to reflect the path to your cert. <img src="assets/README/mixexs.png" alt="alt text"/></p><h3 id="modifying-config-config-exs" class="section-heading">
+  <a href="#modifying-config-config-exs" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Modifying <code class="inline">config/config.exs</code></span>
+</h3>
+<p>You also need to modify the configuration file in <code class="inline">config/config.exs</code>, adding <code class="inline">cacerts_path: &quot;/path/to/YOUR_COMPANY_CERT&quot;</code> to the following lines like so: <img src="assets/README/configexs.png" alt="alt text"/></p><h2 id="server-initialization" class="section-heading">
+  <a href="#server-initialization" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Server Initialization</span>
+</h2>
+<ol><li>To run the application, you must first get and compile the dependencies - <code class="inline">mix deps.get &amp;&amp; mix deps.compile</code>.</li><li>Run <code class="inline">mix setup</code> this will remove any old databases and rebuild the Operations Sqlite3 database, as well as run its migrations, should cover everything else like fetching sqlite3 and required plugins<ol><li>You may have to run <code class="inline">brew install coreutils</code> on Mac if you encounter the following error: <code class="inline">sha256sum: command not found; Checksum fail!</code></li></ol></li></ol><h2 id="running-the-cli" class="section-heading">
+  <a href="#running-the-cli" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Running the CLI</span>
+</h2>
+<ol><li>Scripts are provided in the <code class="inline">rel</code> folder for running the various CLI functions. These are bundled into the final release and used as either bash or windows batch scripts to run the relevant command.</li></ol><h2 id="running-the-webserver" class="section-heading">
+  <a href="#running-the-webserver" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Running the webserver</span>
+</h2>
+<ol><li>To run the webserver, use the command <a href="https://hexdocs.pm/phoenix/1.7.18/Mix.Tasks.Phx.Server.html"><code class="inline">mix phx.server</code></a>. this should now just....work - no further configuration should be necessary, but be sure to at least peruse <code class="inline">config/dev.exs</code> which contains relative configuration settings.</li><li>You will be greeted by a login screen. Instead of registering a new user, for local development it is recommended to use the default admin account:<ul><li>username: <code class="inline">admin@admin.com</code></li><li>password: <code class="inline">xxxxxxxxxxxx</code> (12 x's)</li></ul></li></ol><h2 id="running-the-tests" class="section-heading">
+  <a href="#running-the-tests" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Running the tests</span>
+</h2>
+<p>To run tests, use the command <a href="https://hexdocs.pm/mix/Mix.Tasks.Test.html"><code class="inline">mix test</code></a>. If all have run correctly, you should see something like the following at the bottom of your terminal:</p><pre><code class="makeup elixir" translate="no"><span class="nc">Finished</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="mf">1.9</span><span class="w"> </span><span class="n">seconds</span><span class="w"> </span><span class="p" data-group-id="8964264930-1">(</span><span class="mf">0.00</span><span class="n">s</span><span class="w"> </span><span class="n">async</span><span class="p">,</span><span class="w"> </span><span class="mf">1.9</span><span class="n">s</span><span class="w"> </span><span class="n">sync</span><span class="p" data-group-id="8964264930-1">)</span><span class="w">
+</span><span class="mi">172</span><span class="w"> </span><span class="n">tests</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="n">failures</span></code></pre><h2 id="the-file-structure" class="section-heading">
+  <a href="#the-file-structure" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">The File Structure</span>
+</h2>
+<p>The majority of development will be done in the lib folder with tests written in the aptly named test folder. Within lib, the datum_web folder is where the front-end views as well as their respective controller code reside, in addition to the front end router. The regular datum folder holds backend models and typically hosts business logic and business domain as well as DB interactions. </p><h2 id="useful-links" class="section-heading">
+  <a href="#useful-links" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Useful Links</span>
+</h2>
+<h3 id="documentation" class="section-heading">
+  <a href="#documentation" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Documentation</span>
+</h3>
+<ul><li><a href="https://hexdocs.pm/elixir/1.17.3/Kernel.html">Elixir Docs</a></li><li><a href="https://hexdocs.pm/mix/1.17.3/Mix.html">Mix Docs</a></li><li><a href="https://hexdocs.pm/phoenix/Phoenix.html">Phoenix Docs</a></li><li><a href="https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html">LiveView Docs</a></li><li><a href="https://hexdocs.pm/flame/FLAME.html">Flame Docs</a></li></ul><h3 id="guides-training" class="section-heading">
+  <a href="#guides-training" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Guides &amp; Training</span>
+</h3>
+<ul><li><a href="https://elixir-lang.org/learning.html">Elixir Learning</a></li><li><a href="https://exercism.org/tracks/elixir">Exercism Track</a></li><li><a href="https://github.com/elixirkoans/elixir-koans">Elixir Koans</a></li><li><a href="https://hexdocs.pm/elixir/pattern-matching.html">Pattern Matching in Elixir</a></li><li><a href="https://elixir-lang.org/blog/2023/09/20/strong-arrows-gradual-typing/">Strong arrows blog post: Elixir's path to a type system</a></li></ul>
+</div>
+
+<div class="bottom-actions" id="bottom-actions">
+  <div class="bottom-actions-item">
+
+      <a href="api-reference.html" class="bottom-actions-button" rel="prev">
+        <span class="subheader">
+          ← Previous Page
+        </span>
+        <span class="title">
+API Reference
+        </span>
+      </a>
+
+  </div>
+  <div class="bottom-actions-item">
+
+  </div>
+</div>
+    <footer class="footer">
+      <p>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="DeepLynx.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.36.1) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+
+  </body>
+</html>

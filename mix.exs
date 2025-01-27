@@ -6,13 +6,16 @@ defmodule Datum.MixProject do
 
   def project do
     [
+      name: "DeepLynx",
+      homepage_url: "https://inlsoftware.inl.gov/product/deep-lynx",
       app: :datum,
       version: "0.0.1",
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      docs: &docs/0
     ]
   end
 
@@ -26,6 +29,16 @@ defmodule Datum.MixProject do
     ]
   end
 
+  defp docs do
+    [
+      # The main page in the docs
+      main: "Datum",
+      logo: "priv/static/images/lynx_logo.png",
+      extras: ["README.md"],
+      output: "priv/static/docs"
+    ]
+  end
+
   # Specifies which paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
@@ -35,6 +48,7 @@ defmodule Datum.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:ex_doc, "~> 0.34", only: :dev, runtime: false},
       {:adbc, "~> 0.7.3"},
       {:bcrypt_elixir, "~> 3.2"},
       {:phoenix, "~> 1.7.14"},

@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.36.1">
+    <meta name="project" content="DeepLynx v0.0.1">
+
+
+    <title>Datum.Accounts.UserToken — DeepLynx v0.0.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-QYVRUQZX.css" />
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-C0206226.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-HJ5ACJPS.js"></script>
+
+  </head>
+  <body class="sidebar-closed">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+        <a href="https://inlsoftware.inl.gov/product/deep-lynx" class="sidebar-projectImage">
+          <img src="assets/logo.png" alt="DeepLynx" />
+        </a>
+
+      <div>
+        <a href="https://inlsoftware.inl.gov/product/deep-lynx" class="sidebar-projectName" translate="no">
+DeepLynx
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.0.1
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+Pages
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<output role="status" id="toast"></output>
+
+<main class="content page-module" id="main" data-type="modules">
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of DeepLynx</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search" tabindex="-1">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <h1>
+
+    <span translate="no">Datum.Accounts.UserToken</span> 
+    <small class="app-vsn" translate="no">(DeepLynx v0.0.1)</small>
+
+  </h1>
+
+
+</div>
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Summary</span>
+    </h1>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#build_email_token/2" data-no-tooltip translate="no">build_email_token(user, context)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Builds a token and its hash to be delivered to the user's email.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#build_session_token/1" data-no-tooltip translate="no">build_session_token(user)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Generates a token that will be stored in a signed place,
+such as session or cookie. As they are signed, those
+tokens do not need to be hashed.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#by_token_and_context_query/2" data-no-tooltip translate="no">by_token_and_context_query(token, context)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns the token struct for the given token value and context.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#by_user_and_contexts_query/2" data-no-tooltip translate="no">by_user_and_contexts_query(user, contexts)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Gets all tokens for the given user for the given contexts.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#verify_change_email_token_query/2" data-no-tooltip translate="no">verify_change_email_token_query(token, context)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Checks if the token is valid and returns its underlying lookup query.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#verify_email_token_query/2" data-no-tooltip translate="no">verify_email_token_query(token, context)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Checks if the token is valid and returns its underlying lookup query.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#verify_session_token_query/1" data-no-tooltip translate="no">verify_session_token_query(token)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Checks if the token is valid and returns its underlying lookup query.</p></div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Functions</span>
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="build_email_token/2">
+
+  <div class="detail-header">
+    <a href="#build_email_token/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">build_email_token(user, context)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Builds a token and its hash to be delivered to the user's email.</p><p>The non-hashed token is sent to the user email while the
+hashed part is stored in the database. The original token cannot be reconstructed,
+which means anyone with read-only access to the database cannot directly use
+the token in the application to gain access. Furthermore, if the user changes
+their email in the system, the tokens sent to the previous email are no longer
+valid.</p><p>Users can easily adapt the existing code to provide other types of delivery methods,
+for example, by phone numbers.</p>
+  </section>
+</section>
+<section class="detail" id="build_session_token/1">
+
+  <div class="detail-header">
+    <a href="#build_session_token/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">build_session_token(user)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Generates a token that will be stored in a signed place,
+such as session or cookie. As they are signed, those
+tokens do not need to be hashed.</p><p>The reason why we store session tokens in the database, even
+though Phoenix already provides a session cookie, is because
+Phoenix' default session cookies are not persisted, they are
+simply signed and potentially encrypted. This means they are
+valid indefinitely, unless you change the signing/encryption
+salt.</p><p>Therefore, storing them allows individual user
+sessions to be expired. The token system can also be extended
+to store additional data, such as the device used for logging in.
+You could then use this information to display all valid sessions
+and devices in the UI and allow users to explicitly expire any
+session they deem invalid.</p>
+  </section>
+</section>
+<section class="detail" id="by_token_and_context_query/2">
+
+  <div class="detail-header">
+    <a href="#by_token_and_context_query/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">by_token_and_context_query(token, context)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Returns the token struct for the given token value and context.</p>
+  </section>
+</section>
+<section class="detail" id="by_user_and_contexts_query/2">
+
+  <div class="detail-header">
+    <a href="#by_user_and_contexts_query/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">by_user_and_contexts_query(user, contexts)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Gets all tokens for the given user for the given contexts.</p>
+  </section>
+</section>
+<section class="detail" id="verify_change_email_token_query/2">
+
+  <div class="detail-header">
+    <a href="#verify_change_email_token_query/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">verify_change_email_token_query(token, context)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Checks if the token is valid and returns its underlying lookup query.</p><p>The query returns the user found by the token, if any.</p><p>This is used to validate requests to change the user
+email. It is different from <a href="#verify_email_token_query/2"><code class="inline">verify_email_token_query/2</code></a> precisely because
+<a href="#verify_email_token_query/2"><code class="inline">verify_email_token_query/2</code></a> validates the email has not changed, which is
+the starting point by this function.</p><p>The given token is valid if it matches its hashed counterpart in the
+database and if it has not expired (after @change_email_validity_in_days).
+The context must always start with &quot;change:&quot;.</p>
+  </section>
+</section>
+<section class="detail" id="verify_email_token_query/2">
+
+  <div class="detail-header">
+    <a href="#verify_email_token_query/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">verify_email_token_query(token, context)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Checks if the token is valid and returns its underlying lookup query.</p><p>The query returns the user found by the token, if any.</p><p>The given token is valid if it matches its hashed counterpart in the
+database and the user email has not changed. This function also checks
+if the token is being used within a certain period, depending on the
+context. The default contexts supported by this function are either
+&quot;confirm&quot;, for account confirmation emails, and &quot;reset_password&quot;,
+for resetting the password. For verifying requests to change the email,
+see <a href="#verify_change_email_token_query/2"><code class="inline">verify_change_email_token_query/2</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="verify_session_token_query/1">
+
+  <div class="detail-header">
+    <a href="#verify_session_token_query/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">verify_session_token_query(token)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Checks if the token is valid and returns its underlying lookup query.</p><p>The query returns the user found by the token, if any.</p><p>The token is valid if it matches the value in the database and it has
+not expired (after @session_validity_in_days).</p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+    <footer class="footer">
+      <p>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="DeepLynx.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.36.1) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+
+  </body>
+</html>
