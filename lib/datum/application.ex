@@ -7,8 +7,6 @@ defmodule Datum.Application do
 
   @impl true
   def start(_type, _args) do
-    Datum.Release.migrate()
-
     children = [
       DatumWeb.Telemetry,
       Datum.Repo,
