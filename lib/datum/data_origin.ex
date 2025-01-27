@@ -587,7 +587,7 @@ defmodule Datum.DataOrigin do
   """
   def query_origin_sync(origin, query, opts \\ [])
 
-  #  WE DO NOT CARE ABOUT SQL INJECTION HERE....YET
+  #  WE DO NOT CARE ABOUT SQL INJECTION HERE BECAUSE WE'RE READ_ONLY
   def query_origin_sync(%Origin{type: :duckdb} = origin, query, _opts)
       when is_map(origin.config) do
     case Datum.Duckdb.start_link(%{path: origin.config["path"], access_mode: :read_only}) do
