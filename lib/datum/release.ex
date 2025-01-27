@@ -143,6 +143,10 @@ defmodule Datum.Release do
   end
 
   def seed(args) do
+    load_app()
+
+    __MODULE__.migrate()
+
     {options, _rest, _invalid} =
       args
       |> String.split(" ")
@@ -157,7 +161,6 @@ defmodule Datum.Release do
     {:ok, _pid} =
       Supervisor.start_link(children, strategy: :one_for_one, name: Datum.Supervisor)
 
-    __MODULE__.migrate()
     __MODULE__.seed_db(Keyword.get(options, :name, "default"))
     IO.puts("System Migrated")
   end
