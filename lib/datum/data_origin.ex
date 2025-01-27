@@ -591,8 +591,8 @@ defmodule Datum.DataOrigin do
   def query_origin_sync(%Origin{type: :duckdb} = origin, query, _opts)
       when is_map(origin.config) do
     case Datum.Duckdb.start_link(%{path: origin.config["path"], access_mode: :read_only}) do
-      {:ok, pid} -> Datum.Duckdb.run_query_sync(pid, query)
-      {:error, {:already_started, pid}} -> Datum.Duckdb.run_query_sync(pid, query)
+      {:ok, pid} -> Datum.Duckdb.query_sync(pid, query)
+      {:error, {:already_started, pid}} -> Datum.Duckdb.query_sync(pid, query)
       {:error, message} -> {:error, message}
     end
   end

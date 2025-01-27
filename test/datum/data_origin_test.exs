@@ -76,7 +76,7 @@ defmodule Datum.DataOriginTest do
       assert origin.name == "some name"
       assert origin.type == :duckdb
 
-      assert {:ok, %Explorer.DataFrame{} = _df} =
+      assert {:ok, %Adbc.Result{} = _df} =
                DataOrigin.query_origin_sync(origin, "select * from duckdb_settings();")
 
       File.rm(path)

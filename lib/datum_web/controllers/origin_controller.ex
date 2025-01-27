@@ -92,6 +92,8 @@ defmodule DatumWeb.OriginController do
     if origin do
       case DataOrigin.query_origin_sync(origin, query) do
         {:ok, df} ->
+          df = Adbc.Result.materialize(df) |> Adbc.Result.to_map() |> Explorer.DataFrame.new()
+
           out =
             "[#{Explorer.DataFrame.dump_ndjson!(df) |> String.trim() |> String.split("\n") |> Enum.map(&to_charlist/1) |> Enum.join(",")}]"
 

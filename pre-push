@@ -1,0 +1,37 @@
+#!/bin/sh
+# Mock environment variables for unit tests
+export MIX_ENV=test
+
+# compiles without warnings
+mix compile --warnings-as-errors
+
+if [ $? -ne 0 ]; then
+ echo “compilation has errors or warnings, correct and recommit”
+ exit 1
+fi
+
+# check formatting
+mix format --check-formatted
+
+if [ $? -ne 0 ]; then
+ echo “running the formatter, you will need to recommit”
+ mix format
+ exit 1
+fi
+
+
+# run unit tests 
+mix test
+
+if [ $? -ne 0 ]; then
+ echo “unit tests failed”
+ exit 1
+fi
+
+# run sobelow unit tests
+mix sobelow --config
+
+if [ $? -ne 0 ]; then
+ echo “static code analysis has found errors, correct and recommit”
+ exit 1
+fi

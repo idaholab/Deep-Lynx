@@ -143,15 +143,15 @@ defmodule Datum.Accounts.User do
   Verifies the password.
 
   If there is no user or the user doesn't have a password, we call
-  `Argon2.no_user_verify/0` to avoid timing attacks.
+  `Bcrypt.no_user_verify/0` to avoid timing attacks.
   """
   def valid_password?(%Datum.Accounts.User{hashed_password: hashed_password}, password)
       when is_binary(hashed_password) and byte_size(password) > 0 do
-    Argon2.verify_pass(password, hashed_password)
+    Bcrypt.verify_pass(password, hashed_password)
   end
 
   def valid_password?(_, _) do
-    Argon2.no_user_verify()
+    Bcrypt.no_user_verify()
     false
   end
 
