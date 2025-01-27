@@ -35,7 +35,7 @@ defmodule Datum.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:adbc, "0.7.3"},
+      {:adbc, "~> 0.7.3"},
       {:bcrypt_elixir, "~> 3.2"},
       {:phoenix, "~> 1.7.14"},
       {:phoenix_ecto, "~> 4.5"},
