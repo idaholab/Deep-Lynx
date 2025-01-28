@@ -27,8 +27,11 @@ defmodule DatumWeb.Router do
     get "/origins", OriginController, :list
     put "/origins", OriginController, :create
     get "/origins/:origin_id", OriginController, :fetch
+
     get "/origins/:origin_id/data", OriginController, :root_directory
     put "/origins/:origin_id/data", OriginController, :create_data
+
+    post "/origins/:origin_id/explore", OriginController, :explore
 
     get "/origins/:origin_id/data/:data_id", OriginController, :fetch_data
   end

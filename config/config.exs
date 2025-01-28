@@ -9,6 +9,8 @@ import Config
 
 config :gettext, :default_locale, "en"
 
+config :adbc, :drivers, [:sqlite, :duckdb]
+
 config :datum,
   ecto_repos: [Datum.Repo],
   generators: [timestamp_type: :utc_datetime],

@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.36.1">
+    <meta name="project" content="DeepLynx v0.0.1">
+
+
+    <title>DatumWeb.Client — DeepLynx v0.0.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-QYVRUQZX.css" />
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-C0206226.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-HJ5ACJPS.js"></script>
+
+  </head>
+  <body class="sidebar-closed">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+        <a href="https://inlsoftware.inl.gov/product/deep-lynx" class="sidebar-projectImage">
+          <img src="assets/logo.png" alt="DeepLynx" />
+        </a>
+
+      <div>
+        <a href="https://inlsoftware.inl.gov/product/deep-lynx" class="sidebar-projectName" translate="no">
+DeepLynx
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.0.1
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+Pages
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<output role="status" id="toast"></output>
+
+<main class="content page-module" id="main" data-type="modules">
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of DeepLynx</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search" tabindex="-1">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <h1>
+
+    <span translate="no">DatumWeb.Client</span> 
+    <small class="app-vsn" translate="no">(DeepLynx v0.0.1)</small>
+
+  </h1>
+
+
+    <section id="moduledoc">
+<p>This is the HTTP client for the application.</p>
+    </section>
+
+</div>
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Summary</span>
+    </h1>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#create_data/3" data-no-tooltip translate="no">create_data(client, origin_id, params)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#create_data!/3" data-no-tooltip translate="no">create_data!(client, origin_id, params)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#create_origin/2" data-no-tooltip translate="no">create_origin(client, params)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#create_origin!/2" data-no-tooltip translate="no">create_origin!(client, params)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#current_user_info/1" data-no-tooltip translate="no">current_user_info(client)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Gets current user information for supplied token - we only provide id and email here, we don't want people
+token fishing.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#current_user_info!/1" data-no-tooltip translate="no">current_user_info!(client)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Same as current_user_info/1 but throws an exception on error</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#list_origins/1" data-no-tooltip translate="no">list_origins(client)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Lists all DataOrigins from the database user has access to </p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#list_origins!/1" data-no-tooltip translate="no">list_origins!(client)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>  Same as list_origins/1 but raises an exception on unexpected response or error</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#list_plugins/1" data-no-tooltip translate="no">list_plugins(client)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Lists all Plugins from the database user has access to - <em>does not</em> return the actual plugin</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#list_plugins!/1" data-no-tooltip translate="no">list_plugins!(client)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>  Same as list_plugins/1 but raises an exception on unexpected response or error</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#new/2" data-no-tooltip translate="no">new(endpoint, opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Options contain things like the token for Bearer authentication.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#new!/2" data-no-tooltip translate="no">new!(endpoint, opts \\ [])</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#upload_data_origin/2" data-no-tooltip translate="no">upload_data_origin(client, origin_db_path)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Uploads a local DataOrigin database file to the central server. </p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#upload_data_origin!/2" data-no-tooltip translate="no">upload_data_origin!(client, origin_db_path)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Same as upload_data_origin/2 but raises if there is an error</p></div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Functions</span>
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="create_data/3">
+
+  <div class="detail-header">
+    <a href="#create_data/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">create_data(client, origin_id, params)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="create_data!/3">
+
+  <div class="detail-header">
+    <a href="#create_data!/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">create_data!(client, origin_id, params)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="create_origin/2">
+
+  <div class="detail-header">
+    <a href="#create_origin/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">create_origin(client, params)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="create_origin!/2">
+
+  <div class="detail-header">
+    <a href="#create_origin!/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">create_origin!(client, params)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="current_user_info/1">
+
+  <div class="detail-header">
+    <a href="#current_user_info/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">current_user_info(client)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Gets current user information for supplied token - we only provide id and email here, we don't want people
+token fishing.</p>
+  </section>
+</section>
+<section class="detail" id="current_user_info!/1">
+
+  <div class="detail-header">
+    <a href="#current_user_info!/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">current_user_info!(client)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Same as current_user_info/1 but throws an exception on error</p>
+  </section>
+</section>
+<section class="detail" id="list_origins/1">
+
+  <div class="detail-header">
+    <a href="#list_origins/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">list_origins(client)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Lists all DataOrigins from the database user has access to </p>
+  </section>
+</section>
+<section class="detail" id="list_origins!/1">
+
+  <div class="detail-header">
+    <a href="#list_origins!/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">list_origins!(client)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>  Same as list_origins/1 but raises an exception on unexpected response or error</p>
+  </section>
+</section>
+<section class="detail" id="list_plugins/1">
+
+  <div class="detail-header">
+    <a href="#list_plugins/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">list_plugins(client)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Lists all Plugins from the database user has access to - <em>does not</em> return the actual plugin</p>
+  </section>
+</section>
+<section class="detail" id="list_plugins!/1">
+
+  <div class="detail-header">
+    <a href="#list_plugins!/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">list_plugins!(client)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>  Same as list_plugins/1 but raises an exception on unexpected response or error</p>
+  </section>
+</section>
+<section class="detail" id="new/2">
+
+    <span id="new/1"></span>
+
+  <div class="detail-header">
+    <a href="#new/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">new(endpoint, opts \\ [])</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Options contain things like the token for Bearer authentication.</p>
+  </section>
+</section>
+<section class="detail" id="new!/2">
+
+    <span id="new!/1"></span>
+
+  <div class="detail-header">
+    <a href="#new!/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">new!(endpoint, opts \\ [])</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="upload_data_origin/2">
+
+  <div class="detail-header">
+    <a href="#upload_data_origin/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">upload_data_origin(client, origin_db_path)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Uploads a local DataOrigin database file to the central server. </p>
+  </section>
+</section>
+<section class="detail" id="upload_data_origin!/2">
+
+  <div class="detail-header">
+    <a href="#upload_data_origin!/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">upload_data_origin!(client, origin_db_path)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Same as upload_data_origin/2 but raises if there is an error</p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+    <footer class="footer">
+      <p>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="DeepLynx.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.36.1) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+
+  </body>
+</html>

@@ -6,6 +6,8 @@ defmodule Datum.MixProject do
 
   def project do
     [
+      name: "DeepLynx",
+      homepage_url: "https://inlsoftware.inl.gov/product/deep-lynx",
       app: :datum,
       version: "0.0.1",
       elixir: "~> 1.14",
@@ -13,22 +15,7 @@ defmodule Datum.MixProject do
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
-      releases: releases()
-    ]
-  end
-
-  def releases do
-    [
-      datum: [
-        steps: [:assemble, &Burrito.wrap/1],
-        burrito: [
-          targets: [
-            macos: [os: :darwin, cpu: :aarch64],
-            linux: [os: :linux, cpu: :x86_64],
-            windows: [os: :windows, cpu: :x86_64]
-          ]
-        ]
-      ]
+      docs: &docs/0
     ]
   end
 
@@ -37,8 +24,18 @@ defmodule Datum.MixProject do
   # Type `mix help compile.app` for more information.
   def application do
     [
-      mod: {Datum.Application, ["server"]},
+      mod: {Datum.Application, []},
       extra_applications: [:logger, :runtime_tools]
+    ]
+  end
+
+  defp docs do
+    [
+      # The main page in the docs
+      main: "Datum",
+      logo: "priv/static/images/lynx_logo.png",
+      extras: ["README.md"],
+      output: "priv/static/docs"
     ]
   end
 
@@ -51,8 +48,9 @@ defmodule Datum.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:educkdb, "~> 0.9.8"},
-      {:argon2_elixir, "~> 3.0"},
+      {:ex_doc, "~> 0.34", only: :dev, runtime: false},
+      {:adbc, "~> 0.7.3"},
+      {:bcrypt_elixir, "~> 3.2"},
       {:phoenix, "~> 1.7.14"},
       {:phoenix_ecto, "~> 4.5"},
       {:ecto_sql, "~> 3.10"},
@@ -81,7 +79,6 @@ defmodule Datum.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.5"},
-      {:burrito, "~> 1.2.0"},
       {:shortuuid, "~> 3.0"},
       {:uuid, "~> 1.1.8"},
       {:wasmex, "~> 0.9.2"},
@@ -93,6 +90,7 @@ defmodule Datum.MixProject do
       {:explorer, "~> 0.10.1"},
       {:ymlr, "~> 5.1"},
       {:vega_lite, "~> 0.1.11"},
+      {:vega_lite_convert, "~> 1.0"},
       {:erlport, "~> 0.11.0"},
       {:mix_audit, "~> 2.1"},
       {:langchain, "~> 0.3.0-rc.0"},

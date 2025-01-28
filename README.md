@@ -6,8 +6,6 @@
     - Mac: run `brew install elixir`
     - Windows: Use the appropriate installer found [here](https://elixir-lang.org/install.html#windows). If installing via exe, choose the `Elixir 1.17.3 on Erlang 27` option
 - Erlang 27.0 (should come with Elixir installation)
-- [Zig](https://ziglang.org/download/) : used for binary compilation, install using the link or on Mac via `brew install zig`
-    - You might run into a case where you need to fix your Zig install for Burrito - https://ziggit.dev/t/what-to-fix-this-related-libsystem-build-error/5387/3
 - [Node.js and NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm): used for UI libraries
 - Mix (should come with Elixir installation installed)
 - **optional**: [asdf](https://asdf-vm.com/guide/getting-started.html): version manager for Elixir, not available on Windows
@@ -50,7 +48,7 @@ You also need to modify the configuration file in `config/config.exs`, adding `c
     1. You may have to run `brew install coreutils` on Mac if you encounter the following error: `sha256sum: command not found; Checksum fail!`
 
 ## Running the CLI
-To run the CLI you must typically provide an argument, no argument will run the server. In order to provide an argument and run the CLI you must use `mix run -- argument`. e.g `mix run -- init`. 
+1. Scripts are provided in the `rel` folder for running the various CLI functions. These are bundled into the final release and used as either bash or windows batch scripts to run the relevant command.
 
 ## Running the webserver
 1. To run the webserver, use the command `mix phx.server`. this should now just....work - no further configuration should be necessary, but be sure to at least peruse `config/dev.exs` which contains relative configuration settings.

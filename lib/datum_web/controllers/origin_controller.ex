@@ -85,4 +85,32 @@ defmodule DatumWeb.OriginController do
       |> json(data)
     end
   end
+
+  def explore(conn, %{"origin_id" => origin_id, "query" => query} = _params) do
+    origin = DataOrigin.get_data_orgins_user(conn.assigns.current_user, origin_id)
+
+    if origin do
+      case DataOrigin.query_origin_sync(origin, query) do
+        {:ok, df} ->
+          df = Adbc.Result.materialize(df) |> Adbc.Result.to_map() |> Explorer.DataFrame.new()
+
+          out =
+            "[#{Explorer.DataFrame.dump_ndjson!(df) |> String.trim() |> String.split("\n") |> Enum.map(&to_charlist/1) |> Enum.join(",")}]"
+
+          conn
+          # we have to set the header manually since we're sending raw json
+          |> put_resp_content_type("application/json")
+          |> send_resp(
+            200,
+            out
+          )
+
+        {:error, message} ->
+          conn |> put_status(500) |> text(message)
+      end
+    else
+      conn
+      |> put_status(404)
+    end
+  end
 end

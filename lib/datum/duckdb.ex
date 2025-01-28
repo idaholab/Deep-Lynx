@@ -17,10 +17,9 @@ defmodule Datum.Duckdb do
   use GenServer
   require Logger
 
-  # Client - we need a name on the start_link so we can register it properly
   # parent is required as the communication is async
-  def start_link(%{parent: _parent_pid, name: name} = default) do
-    GenServer.start_link(__MODULE__, default, name: name)
+  def start_link(default, opts \\ []) do
+    GenServer.start_link(__MODULE__, default, opts)
   end
 
   @doc """
@@ -28,19 +27,32 @@ defmodule Datum.Duckdb do
   the database connection. This is an async task - replies should be listened for.
   Provide a reference so that you know what reply a message is for
   """
-  def send_query(pid, message, opts \\ []) do
-    GenServer.cast(pid, {:send_query, message, opts})
+  def query(pid, message, opts \\ []) do
+    GenServer.cast(pid, {:query, message, opts})
+  end
+
+  def query_sync(pid, message) do
+    GenServer.call(pid, {:query, message}, :infinity)
   end
 
   # Server
   @impl true
-  def init(%{parent: _parent_pid} = state) do
+  def init(state) do
+    path = Map.get(state, :path, ":memory:")
+
+    access_mode =
+      case Map.get(state, :access_mode, :read_write) do
+        :read_write -> "READ_WRITE"
+        :read_only -> "READ_ONLY"
+      end
+
     # open a connection to the db when you need to use it, connections are
     # native OS threads - not processes!
-    case :educkdb.open(~c":memory:", %{
-           allow_community_extensions: ~c"TRUE",
-           autoload_known_extensions: ~c"TRUE"
-         }) do
+    case Adbc.Database.start_link(
+           driver: :duckdb,
+           path: "#{path}",
+           access_mode: access_mode
+         ) do
       {:ok, db} ->
         {:ok, state |> Map.put(:db, db)}
 
@@ -50,21 +62,21 @@ defmodule Datum.Duckdb do
   end
 
   @impl true
-  def handle_cast({:send_query, query, opts}, state) do
+  def handle_cast({:query, query, opts}, state) do
     msg_id = Keyword.get(opts, :id, UUID.uuid4())
 
-    with {:ok, conn} <- :educkdb.connect(state.db),
-         {:ok, result_ref} <- :educkdb.query(conn, query) do
+    with {:ok, conn} <- Adbc.Connection.start_link(database: state.db),
+         {:ok, result} <- Adbc.Connection.query(conn, query) do
       send(
         state.parent,
         {:query_response,
          %{
            id: msg_id,
-           result_reference: result_ref
+           result: result
          }}
       )
 
-      :educkdb.disconnect(conn)
+      GenServer.stop(conn, :normal)
     else
       error ->
         send(
@@ -81,18 +93,15 @@ defmodule Datum.Duckdb do
   end
 
   @impl true
-  def handle_call({:receive_result, result_reference}, _from, state) do
-    column_names = :educkdb.column_names(result_reference)
+  def handle_call({:query, query}, _from, state) do
+    with {:ok, conn} <- Adbc.Connection.start_link(database: state.db),
+         {:ok, result} <- Adbc.Connection.query(conn, query) do
+      GenServer.stop(conn, :normal)
 
-    # fetch all chunks
-    chunks = :educkdb.get_chunks(result_reference)
-
-    results =
-      Enum.map(chunks, fn chunk ->
-        :educkdb.chunk_columns(chunk)
-      end)
-
-    {:reply, %{columns: column_names, results: results}, state}
+      {:reply, {:ok, result}, state}
+    else
+      error -> {:reply, {:error, error}, state}
+    end
   end
 
   # adding files as a table in the current duckdb instance - the origin will be
@@ -164,8 +173,8 @@ defmodule Datum.Duckdb do
     );
     """
 
-    with {:ok, conn} <- :educkdb.connect(db),
-         {:ok, _result} <- :educkdb.query(conn, query) do
+    with {:ok, conn} <- Adbc.Connection.start_link(database: db),
+         {:ok, _result} <- Adbc.Connection.query(conn, query) do
       :ok
     else
       error -> {:error, error}
@@ -183,10 +192,10 @@ defmodule Datum.Duckdb do
     );
     """
 
-    with {:ok, conn} <- :educkdb.connect(db),
-         {:ok, _} <- :educkdb.query(conn, "INSTALL 'httpfs';"),
-         {:ok, _} <- :educkdb.query(conn, "LOAD 'httpfs';"),
-         {:ok, _result} <- :educkdb.query(conn, query) do
+    with {:ok, conn} <- Adbc.Connection.start_link(database: db),
+         {:ok, _} <- Adbc.Connection.query(conn, "INSTALL 'httpfs';"),
+         {:ok, _} <- Adbc.Connection.query(conn, "LOAD 'httpfs';"),
+         {:ok, _result} <- Adbc.Connection.query(conn, query) do
       :ok
     else
       error -> {:error, error}
@@ -203,10 +212,10 @@ defmodule Datum.Duckdb do
     );
     """
 
-    with {:ok, conn} <- :educkdb.connect(db),
-         {:ok, _} <- :educkdb.query(conn, "INSTALL 'azure';"),
-         {:ok, _} <- :educkdb.query(conn, "LOAD 'azure';"),
-         {:ok, _result} <- :educkdb.query(conn, query) do
+    with {:ok, conn} <- Adbc.Connection.start_link(database: db),
+         {:ok, _} <- Adbc.Connection.query(conn, "INSTALL 'azure';"),
+         {:ok, _} <- Adbc.Connection.query(conn, "LOAD 'azure';"),
+         {:ok, _result} <- Adbc.Connection.query(conn, query) do
       :ok
     else
       error -> {:error, error}
@@ -221,9 +230,9 @@ defmodule Datum.Duckdb do
   # these are the functions for actually loading the files at tables - the final option
   # is for running the statement without the specific read statements - might not work
   defp load_files(:csv, locations, table_name, db) do
-    with {:ok, conn} <- :educkdb.connect(db),
+    with {:ok, conn} <- Adbc.Connection.start_link(database: db),
          {:ok, _result} <-
-           :educkdb.query(
+           Adbc.Connection.query(
              conn,
              "CREATE TABLE #{table_name} AS SELECT * FROM read_csv([#{Enum.map_join(locations, ",", fn location -> ~s("#{location}") end)}]);"
            ) do
@@ -234,11 +243,11 @@ defmodule Datum.Duckdb do
   end
 
   defp load_files(:parquet, locations, table_name, db) do
-    with {:ok, conn} <- :educkdb.connect(db),
-         {:ok, _} <- :educkdb.query(conn, "INSTALL 'parquet';"),
-         {:ok, _} <- :educkdb.query(conn, "LOAD 'parquet';"),
+    with {:ok, conn} <- Adbc.Connection.start_link(database: db),
+         {:ok, _} <- Adbc.Connection.query(conn, "INSTALL 'parquet';"),
+         {:ok, _} <- Adbc.Connection.query(conn, "LOAD 'parquet';"),
          {:ok, _result} <-
-           :educkdb.query(
+           Adbc.Connection.query(
              conn,
              "CREATE TABLE #{table_name} AS SELECT * FROM read_parquet([#{Enum.map_join(locations, ",", fn location -> ~s("#{location}") end)}]);"
            ) do
@@ -249,11 +258,11 @@ defmodule Datum.Duckdb do
   end
 
   defp load_files(:json, locations, table_name, db) do
-    with {:ok, conn} <- :educkdb.connect(db),
-         {:ok, _} <- :educkdb.query(conn, "INSTALL 'json';"),
-         {:ok, _} <- :educkdb.query(conn, "LOAD 'json';"),
+    with {:ok, conn} <- Adbc.Connection.start_link(database: db),
+         {:ok, _} <- Adbc.Connection.query(conn, "INSTALL 'json';"),
+         {:ok, _} <- Adbc.Connection.query(conn, "LOAD 'json';"),
          {:ok, _result} <-
-           :educkdb.query(
+           Adbc.Connection.query(
              conn,
              "CREATE TABLE #{table_name} AS SELECT * FROM read_json([#{Enum.map_join(locations, ",", fn location -> ~s("#{location}") end)}]);"
            ) do
@@ -268,9 +277,9 @@ defmodule Datum.Duckdb do
     if Enum.count(locations) > 1 do
       {:error, "too many files for extension type"}
     else
-      with {:ok, conn} <- :educkdb.connect(db),
+      with {:ok, conn} <- Adbc.Connection.start_link(database: db),
            {:ok, _result} <-
-             :educkdb.query(
+             Adbc.Connection.query(
                conn,
                "CREATE TABLE #{table_name} AS SELECT * FROM '#{List.first(locations)}';"
              ) do
