@@ -11,16 +11,20 @@ defmodule Datum.Plugins.Plugin do
   @derive {Jason.Encoder,
            only: [:id, :name, :path, :module_name, :enabled, :plugin_type, :filetypes]}
   schema "plugins" do
+    field :name, :string
+    field :module_type, Ecto.Enum, values: [:wasm, :elixir, :python]
+
     # either store the raw plugin in BLOB or its path, not both - defaults to path first
     field :module, :binary
-    field :name, :string
     field :path, :string
 
     # note that the module _must_ implement the callback behavior dictated in Datum.Extractor or others
     field :module_name, Datum.ModuleName
+
     field :enabled, :boolean, default: false
     field :plugin_type, Ecto.Enum, values: [:extractor, :sampler]
     field :filetypes, {:array, :string}
+    field :config, :map
 
     timestamps(type: :utc_datetime)
   end
@@ -29,7 +33,16 @@ defmodule Datum.Plugins.Plugin do
   def changeset(plugin, attrs) do
     changeset =
       plugin
-      |> cast(attrs, [:name, :filetypes, :path, :module, :enabled, :module_name])
+      |> cast(attrs, [
+        :name,
+        :filetypes,
+        :path,
+        :module,
+        :enabled,
+        :module_name,
+        :config,
+        :module_type
+      ])
       |> validate_required([:name, :filetypes])
 
     if field_missing?(changeset, :path) && field_missing?(changeset, :module) &&

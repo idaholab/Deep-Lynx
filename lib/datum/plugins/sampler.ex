@@ -1,23 +1,28 @@
-defmodule Datum.Plugins.Extractor do
+defmodule Datum.Plugins.Sampler do
   @moduledoc """
-  Extractor module for running either the plugin system for extracting metadata
-  or native elixir code to do the same.
+  Sampler module for running either the plugin system for extracting metadata 
+  or native elixir code for doing the same.
   """
 
   alias Datum.Plugins.Plugin
 
   @doc """
-  Extract with plugin is in charge of loading the WASM or Elixir modules from the Plugin schema and
+  Sample with plugin is in charge of loading the WASM or Elixir modules from the Plugin schema and
   running the WASI runtime. Keep in mind that we should try and limit how
   often we compile the module, but we still need to start a genserver each time
   in order to limit file visibility to the directory where the file is at.
 
   In time the pipeline running this should be intelligent enough to run all loaded scanners
   for the directory instead of recompiling for each one.
-  """
-  def plugin_extract(type, plugin, path, opts \\ [])
 
-  def plugin_extract(:wasm, %Plugin{} = plugin, path, _opts) do
+  """
+  def plugin_sample(type, plugin, path, opts \\ [])
+
+  def plugin_sample(:elixir, %Plugin{} = plugin, path, opts) do
+    apply(String.to_existing_atom(plugin.module_name), :sample, [path, opts])
+  end
+
+  def plugin_sample(:wasm, %Plugin{} = plugin, path, _opts) do
     {:ok, stderr} = Wasmex.Pipe.new()
     {:ok, stdout} = Wasmex.Pipe.new()
 
@@ -44,7 +49,7 @@ defmodule Datum.Plugins.Extractor do
       end
 
     with {:ok, pid} <- Wasmex.start_link(%{bytes: bytes, wasi: wasi_options}),
-         {:ok, []} <- Wasmex.call_function(pid, :extract, []) do
+         {:ok, []} <- Wasmex.call_function(pid, :sample, []) do
       Wasmex.Pipe.seek(stdout, 0)
 
       # works fairly well, malformed data won't be read and therefore cannot break out of the system easily
@@ -56,15 +61,9 @@ defmodule Datum.Plugins.Extractor do
     end
   end
 
-  def plugin_extract(:elixir, %Plugin{} = plugin, path, opts) do
-    # check out apply/3 documentation - module_name should be being returned as an atom representing a module
-    # which has been compiled as part of the main application
-    apply(String.to_existing_atom(plugin.module_name), :extract, [path, opts])
-  end
-
   @doc """
-  The extract behavior that each Elixir based extractor should implement
+  The sample behavior that each Elixir based sampler should implement
   """
-  @callback extract(path :: String.t(), opts :: Keyword.t()) ::
+  @callback sample(path :: String.t(), opts :: Keyword.t()) ::
               {:ok, %{}} | {:error, Exception.t()}
 end
