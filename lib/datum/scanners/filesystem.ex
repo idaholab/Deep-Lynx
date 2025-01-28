@@ -80,7 +80,7 @@ defmodule Datum.Scanners.Filesystem do
         plugins,
         fn plugin ->
           case plugin.type do
-            :extractor -> Extractor.plugin_extract(plugin.type, plugin, path)
+            :extractor -> Extractor.plugin_extract(plugin, path)
             :sampler -> {:error, "sampler plugins not yet supported"}
           end
         end,
@@ -134,7 +134,7 @@ defmodule Datum.Scanners.Filesystem do
         plugins,
         fn plugin ->
           case plugin.type do
-            :extractor -> Extractor.plugin_extract(plugin.type, plugin, path)
+            :extractor -> Extractor.plugin_extract(plugin, path)
             :sampler -> {:error, "sampler plugins not yet supported"}
           end
         end,

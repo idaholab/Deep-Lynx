@@ -15,9 +15,9 @@ defmodule Datum.Plugins.Extractor do
   In time the pipeline running this should be intelligent enough to run all loaded scanners
   for the directory instead of recompiling for each one.
   """
-  def plugin_extract(type, plugin, path, opts \\ [])
+  def plugin_extract(plugin, path, opts \\ [])
 
-  def plugin_extract(:wasm, %Plugin{} = plugin, path, _opts) do
+  def plugin_extract(%Plugin{module_type: :wasm} = plugin, path, _opts) do
     {:ok, stderr} = Wasmex.Pipe.new()
     {:ok, stdout} = Wasmex.Pipe.new()
 
@@ -56,7 +56,7 @@ defmodule Datum.Plugins.Extractor do
     end
   end
 
-  def plugin_extract(:elixir, %Plugin{} = plugin, path, opts) do
+  def plugin_extract(%Plugin{module_type: :elixir} = plugin, path, opts) do
     # check out apply/3 documentation - module_name should be being returned as an atom representing a module
     # which has been compiled as part of the main application
     apply(String.to_existing_atom(plugin.module_name), :extract, [path, opts])

@@ -54,7 +54,7 @@ dir_one =
   })
 
 {:ok, json} =
-  Datum.Plugins.Extractor.plugin_extract(:elixir, plugin, "#{__DIR__}/doe.tdms_index")
+  Datum.Plugins.Extractor.plugin_extract(plugin, "#{__DIR__}/doe.tdms_index")
 
 file_one =
   DataOrigin.add_data!(origin, admin, %{
