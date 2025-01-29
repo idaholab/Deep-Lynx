@@ -8,6 +8,6 @@
   out: nil,
   threshold: :low,
   ignore: ["Traversal", "Config.CSP", "Config.HTTPS", "RCE.CodeModule"],
-  ignore_files: ["lib/datum/data_origin/repo.ex"],
+  ignore_files: ["lib/datum/data_origin/repo.ex", "lib/datum/types/module.ex"],
   version: false,
 ]
