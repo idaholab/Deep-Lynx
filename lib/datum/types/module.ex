@@ -25,7 +25,7 @@ defmodule Datum.ModuleName do
   end
 
   def load(bin) when is_binary(bin) do
-    # always use to_existing_atom when possible to avoid atom overflow attacks
-    {:ok, String.to_existing_atom(bin)}
+    # we should be ok using to_atom here because this isn't user input without approval 
+    {:ok, String.to_atom(bin)}
   end
 end

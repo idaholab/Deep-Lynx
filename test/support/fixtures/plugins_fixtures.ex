@@ -12,6 +12,7 @@ defmodule Datum.PluginsFixtures do
       attrs
       |> Enum.into(%{
         filetypes: ["option1", "option2"],
+        module_type: :elixir,
         module: "some module",
         name: "some name",
         path: "some path",

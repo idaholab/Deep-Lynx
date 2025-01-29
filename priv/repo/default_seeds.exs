@@ -14,6 +14,7 @@
 {:ok, %Datum.Plugins.Plugin{} = _plugin} =
   Datum.Plugins.create_plugin(%{
     name: "TDMS Metadata",
+    module_type: :elixir,
     module_name: Datum.Plugins.TdmsIndex,
     filetypes: [".tdms_index", ".tdms"],
     plugin_type: :extractor
@@ -22,6 +23,7 @@
 {:ok, %Datum.Plugins.Plugin{} = _plugin} =
   Datum.Plugins.create_plugin(%{
     name: "CSV Extractor",
+    module_type: :elixir,
     module_name: Datum.Plugins.CSV,
     filetypes: [".csv", "text/csv"],
     plugin_type: :extractor
@@ -30,6 +32,7 @@
 {:ok, %Datum.Plugins.Plugin{} = _plugin} =
   Datum.Plugins.create_plugin(%{
     name: "Parquet Extractor",
+    module_type: :elixir,
     module_name: Datum.Plugins.Parquet,
     filetypes: [".pqt", "parquet", "application/vnd.apache.parquet"],
     plugin_type: :extractor
