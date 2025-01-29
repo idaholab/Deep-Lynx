@@ -96,8 +96,7 @@ defmodule Datum.Agent do
       Message.new_system!(~s(You are a helpful assistant. Your answers must be brief and correct.
       Brief and short. Do not repeat vast amounts of information unlesss specifically asked and tasked
       to do so.If you are uncertain about something, never make up possible information, instead state
-      and admit that you do not know the thing. If I ask a question about the application, only give me
-      answers you get from tools you can use.))
+      and admit that you do not know the thing.))
 
     chain =
       %{llm: chat_model, verbose: true}

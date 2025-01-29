@@ -6,6 +6,7 @@ defmodule Datum.PluginsRunTest do
   describe "plugins" do
     alias Datum.Plugins.Plugin
     alias Datum.Plugins.Extractor
+    alias Datum.Plugins.Sampler
 
     test "can run the default csv wasm plugin" do
       valid_attrs = %{
@@ -58,6 +59,27 @@ defmodule Datum.PluginsRunTest do
 
       {:ok, json} =
         Extractor.plugin_extract(plugin, "#{__DIR__}/test_files/doe.tdms_index")
+
+      assert is_map(json)
+    end
+
+    @tag :python
+    test "can run the test python sampler plugin" do
+      valid_attrs = %{
+        name: "python sampler",
+        module_type: :python,
+        module_name: :csv_sample,
+        filetypes: [".csv", "text/csv"],
+        plugin_type: :sampler,
+        path: "#{__DIR__}/python_plugins/csv_sample.py"
+      }
+
+      assert {:ok, %Plugin{} = plugin} = Plugins.create_plugin(valid_attrs)
+      assert plugin.name == "python sampler"
+      assert plugin.filetypes == [".csv", "text/csv"]
+
+      {:ok, json} =
+        Sampler.plugin_sample(plugin, "#{__DIR__}/test_files/smallpop.csv")
 
       assert is_map(json)
     end

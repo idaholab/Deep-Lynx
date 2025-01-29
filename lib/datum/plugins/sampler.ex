@@ -7,22 +7,35 @@ defmodule Datum.Plugins.Sampler do
   alias Datum.Plugins.Plugin
 
   @doc """
-  Sample with plugin is in charge of loading the WASM or Elixir modules from the Plugin schema and
+  Sample with plugin is in charge of loading the WASM,Elixir, or Python modules from the Plugin schema and
   running the WASI runtime. Keep in mind that we should try and limit how
   often we compile the module, but we still need to start a genserver each time
   in order to limit file visibility to the directory where the file is at.
 
-  In time the pipeline running this should be intelligent enough to run all loaded scanners
-  for the directory instead of recompiling for each one.
-
   """
-  def plugin_sample(type, plugin, path, opts \\ [])
+  def plugin_sample(plugin, path, opts \\ [])
 
-  def plugin_sample(:elixir, %Plugin{} = plugin, path, opts) do
+  def plugin_sample(%Plugin{module_type: :elixir} = plugin, path, opts) do
     apply(String.to_existing_atom(plugin.module_name), :sample, [path, opts])
   end
 
-  def plugin_sample(:wasm, %Plugin{} = plugin, path, _opts) do
+  def plugin_sample(%Plugin{module_type: :python} = plugin, path, _opts) do
+    # fairly simple workflow, load the module, call it - and then the process will be garabage
+    # collected
+    with {:ok, python} <- :python.start([{:cd, ~c"#{Path.dirname(plugin.path)}"}]),
+         result <-
+           :python.call(python, String.to_existing_atom(plugin.module_name), :sample, [
+             path
+           ]) do
+      # because the result could be a string or raw bytes, decode is our best bet as it can handle both without
+      # worrying
+      Jason.decode(result)
+    else
+      err -> {:error, err}
+    end
+  end
+
+  def plugin_sample(%Plugin{module_type: :wasm} = plugin, path, _opts) do
     {:ok, stderr} = Wasmex.Pipe.new()
     {:ok, stdout} = Wasmex.Pipe.new()
 
