@@ -11,6 +11,7 @@ defmodule Datum.Scanners.Filesystem do
   alias Datum.DataOrigin.Origin
   alias Datum.DataOrigin.Data
   alias Datum.Plugins.Extractor
+  alias Datum.Plugins.Sampler
   alias Datum.Accounts.User
 
   def scan_directory(origin, user, root_path, opts \\ [])
@@ -81,7 +82,7 @@ defmodule Datum.Scanners.Filesystem do
         fn plugin ->
           case plugin.type do
             :extractor -> Extractor.plugin_extract(plugin, path)
-            :sampler -> {:error, "sampler plugins not yet supported"}
+            :sampler -> Sampler.plugin_sample(plugin, path)
           end
         end,
         on_timeout: :kill_task,
