@@ -8,6 +8,9 @@ import Config
 # The block below contains prod specific runtime configuration.
 config :datum, DatumWeb.Endpoint, server: true
 
+config :datum, DatumWeb.Endpoint,
+  origin_db_path: Path.join([System.user_home(), "/.datum_databases", "origins"])
+
 if config_env() == :prod do
   config_file_path =
     System.user_home() |> Path.join(".config") |> Path.join(".datum_config.yaml")
