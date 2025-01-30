@@ -86,7 +86,7 @@ if config_env() == :prod do
   config :datum, DatumWeb.Endpoint,
     url: [host: vars.host, port: 443, scheme: "https"],
     http: [
-      ip: {0, 0, 0, 0, 0, 0, 0, 0},
+      ip: {0, 0, 0, 0},
       port: vars.port
     ],
     secret_key_base: vars.secret_key_base
