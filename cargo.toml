@@ -1,0 +1,4 @@
+[workspace]
+members = ["native/hdf5_extractor"]
+
+resolver = "2"

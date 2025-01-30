@@ -1,0 +1,201 @@
+{
+  "datasets": {
+    "/data/0/meshes/B/z": [
+      "position",
+      "unitSI"
+    ],
+    "/data/0/meshes/E/x": [
+      "position",
+      "unitSI"
+    ],
+    "/data/0/meshes/E/y": [
+      "position",
+      "unitSI"
+    ],
+    "/data/0/meshes/E/z": [
+      "position",
+      "unitSI"
+    ],
+    "/data/0/meshes/rho": [
+      "axisLabels",
+      "comment",
+      "dataOrder",
+      "fieldSmoothing",
+      "geometry",
+      "geometryParameters",
+      "gridGlobalOffset",
+      "gridSpacing",
+      "gridUnitSI",
+      "position",
+      "timeOffset",
+      "unitDimension",
+      "unitSI"
+    ],
+    "/data/0/particles/electrons/momentum/x": [
+      "unitSI"
+    ],
+    "/data/0/particles/electrons/momentum/y": [
+      "unitSI"
+    ],
+    "/data/0/particles/electrons/momentum/z": [
+      "unitSI"
+    ],
+    "/data/0/particles/electrons/particlePatches/extent/x": [
+      "unitSI"
+    ],
+    "/data/0/particles/electrons/particlePatches/numParticles": [],
+    "/data/0/particles/electrons/particlePatches/numParticlesOffset": [],
+    "/data/0/particles/electrons/particlePatches/offset/x": [
+      "unitSI"
+    ],
+    "/data/0/particles/electrons/position/x": [
+      "unitSI"
+    ],
+    "/data/0/particles/electrons/position/y": [
+      "unitSI"
+    ],
+    "/data/0/particles/electrons/position/z": [
+      "unitSI"
+    ],
+    "/data/0/particles/electrons/weighting": [
+      "macroWeighted",
+      "timeOffset",
+      "unitDimension",
+      "unitSI",
+      "weightingPower"
+    ]
+  },
+  "groups": {
+    "/data": [],
+    "/data/0": [
+      "dt",
+      "time",
+      "timeUnitSI"
+    ],
+    "/data/0/meshes": [
+      "chargeCorrection",
+      "currentSmoothing",
+      "currentSmoothingParameters",
+      "fieldBoundary",
+      "fieldSolver",
+      "particleBoundary"
+    ],
+    "/data/0/meshes/B": [
+      "axisLabels",
+      "dataOrder",
+      "fieldSmoothing",
+      "geometry",
+      "gridGlobalOffset",
+      "gridSpacing",
+      "gridUnitSI",
+      "timeOffset",
+      "unitDimension"
+    ],
+    "/data/0/meshes/B/x": [
+      "position",
+      "shape",
+      "unitSI",
+      "value"
+    ],
+    "/data/0/meshes/B/y": [
+      "position",
+      "shape",
+      "unitSI",
+      "value"
+    ],
+    "/data/0/meshes/E": [
+      "axisLabels",
+      "dataOrder",
+      "fieldSmoothing",
+      "geometry",
+      "gridGlobalOffset",
+      "gridSpacing",
+      "gridUnitSI",
+      "timeOffset",
+      "unitDimension"
+    ],
+    "/data/0/particles": [],
+    "/data/0/particles/electrons": [
+      "comment",
+      "currentDeposition",
+      "particleInterpolation",
+      "particlePush",
+      "particleShape",
+      "particleSmoothing"
+    ],
+    "/data/0/particles/electrons/charge": [
+      "macroWeighted",
+      "shape",
+      "timeOffset",
+      "unitDimension",
+      "unitSI",
+      "value",
+      "weightingPower"
+    ],
+    "/data/0/particles/electrons/mass": [
+      "macroWeighted",
+      "shape",
+      "timeOffset",
+      "unitDimension",
+      "unitSI",
+      "value",
+      "weightingPower"
+    ],
+    "/data/0/particles/electrons/momentum": [
+      "macroWeighted",
+      "timeOffset",
+      "unitDimension",
+      "weightingPower"
+    ],
+    "/data/0/particles/electrons/particlePatches": [],
+    "/data/0/particles/electrons/particlePatches/extent": [],
+    "/data/0/particles/electrons/particlePatches/extent/y": [
+      "shape",
+      "unitSI",
+      "value"
+    ],
+    "/data/0/particles/electrons/particlePatches/extent/z": [
+      "shape",
+      "unitSI",
+      "value"
+    ],
+    "/data/0/particles/electrons/particlePatches/offset": [],
+    "/data/0/particles/electrons/particlePatches/offset/y": [
+      "shape",
+      "unitSI",
+      "value"
+    ],
+    "/data/0/particles/electrons/particlePatches/offset/z": [
+      "shape",
+      "unitSI",
+      "value"
+    ],
+    "/data/0/particles/electrons/position": [
+      "macroWeighted",
+      "timeOffset",
+      "unitDimension",
+      "weightingPower"
+    ],
+    "/data/0/particles/electrons/positionOffset": [
+      "macroWeighted",
+      "timeOffset",
+      "unitDimension",
+      "weightingPower"
+    ],
+    "/data/0/particles/electrons/positionOffset/x": [
+      "shape",
+      "unitSI",
+      "value"
+    ],
+    "/data/0/particles/electrons/positionOffset/y": [
+      "shape",
+      "unitSI",
+      "value"
+    ],
+    "/data/0/particles/electrons/positionOffset/z": [
+      "shape",
+      "unitSI",
+      "value"
+    ]
+  }
+}

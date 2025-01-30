@@ -83,5 +83,25 @@ defmodule Datum.PluginsRunTest do
 
       assert is_map(json)
     end
+
+    @tag :rust
+    test "can run the default hdf5 rust plugin" do
+      valid_attrs = %{
+        name: "hdf5 extractor",
+        module_type: :elixir,
+        module_name: Datum.Plugins.HDF5,
+        filetypes: [".h5"],
+        plugin_type: :extractor
+      }
+
+      assert {:ok, %Plugin{} = plugin} = Plugins.create_plugin(valid_attrs)
+      assert plugin.name == "hdf5 extractor"
+      assert plugin.filetypes == [".h5"]
+
+      {:ok, json} =
+        Extractor.plugin_extract(plugin, "#{__DIR__}/test_files/structure.h5")
+
+      assert is_map(json)
+    end
   end
 end
