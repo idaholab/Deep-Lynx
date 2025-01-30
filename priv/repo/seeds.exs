@@ -50,6 +50,7 @@ dir_one =
     name: "tdms index extractor_elixir",
     module_name: Datum.Plugins.TdmsIndex,
     filetypes: [".tdms_index"],
+    module_type: :elixir,
     plugin_type: :extractor
   })
 
