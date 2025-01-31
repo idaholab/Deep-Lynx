@@ -9,6 +9,7 @@
 - [Node.js and NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm): used for UI libraries
 - Mix (should come with Elixir installation installed)
 - Rust: Required for building native plugins. Follow the installation instructions from [here](https://www.rust-lang.org/tools/install).
+- HDF5: Required for building certain plugins - can use native package manager or download from [here](https://www.hdfgroup.org/download-hdf5/)
 - **optional**: [asdf](https://asdf-vm.com/guide/getting-started.html): version manager for Elixir, not available on Windows
 
 ### VSCode Extensions

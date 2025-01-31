@@ -18,36 +18,19 @@ Please select the relevant option(s):
 - [ ] Refactoring
 - [ ] Performance improvement
 
+
+## Dependencies
+
+List any dependencies that this PR introduces or removes:
+
 ## Testing
-
-Please describe the tests you've conducted:
-
-- Unit tests completed: Yes/No
-- Integration tests completed: Yes/No
-- Manual testing completed: Yes/No
 
 Describe any specific test scenarios that reviewers should verify:
 
-1.
-2.
 
 ## Screenshots/Videos
 
 If applicable, add screenshots or videos to demonstrate the changes.
-
-## Dependencies
-
-## List any dependencies that this PR introduces or removes:
-
-## Documentation Updates
-
-- [ ] README updates required
-- [ ] API documentation updates required
-- [ ] Internal documentation updates required
-
-## Deployment Notes
-
-## Please describe any deployment considerations or steps required:
 
 ## Security Considerations
 
@@ -66,6 +49,8 @@ If applicable, add screenshots or videos to demonstrate the changes.
 - [ ] New and existing unit tests pass locally
 - [ ] Any dependent changes have been merged and published
 
-## Additional Notes
 
-Add any additional information that would be helpful for reviewers.
+## Deployment Notes
+
+## Please describe any deployment considerations or steps required:
+

@@ -43,6 +43,10 @@ defmodule Datum.MixProject do
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 
+  def cli do
+    [preferred_envs: ["commit.prepare": :test]]
+  end
+
   # Specifies your project dependencies.
   #
   # Type `mix help deps` for examples and options.
@@ -144,6 +148,13 @@ defmodule Datum.MixProject do
       "sqlite.fetch": [
         "cmd cd priv/sqlite_extensions && curl -o install_vec.sh https://github.com/asg017/sqlite-vec/releases/download/v0.1.6/install.sh | sh",
         "cmd cd priv/sqlite_extensions && sh install.sh"
+      ],
+      "commit.prepare": [
+        "format",
+        "deps.compile",
+        "compile --warnings-as-errors",
+        "test --exclude tdms,python ",
+        "sobelow --config"
       ]
     ]
   end
