@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+
+cd -P -- "$(dirname -- "$0")"
+
+exec ./datum eval Datum.Release.migrate
+
+PHX_SERVER=true exec ./datum start

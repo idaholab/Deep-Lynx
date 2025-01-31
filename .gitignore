@@ -38,6 +38,9 @@ npm-debug.log
 # Ignore the sqlite extensions
 /priv/sqlite_extensions/*.dylib
 
+# Ignore outputs of the so
+/priv/native/
+
 # Ignore databases
 /databases/
 
