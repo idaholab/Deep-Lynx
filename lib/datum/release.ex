@@ -142,15 +142,10 @@ defmodule Datum.Release do
     end
   end
 
-  def seed(args) do
+  def seed(seed_file) do
     load_app()
 
     __MODULE__.migrate()
-
-    {options, _rest, _invalid} =
-      args
-      |> String.split(" ")
-      |> OptionParser.parse(strict: [name: :string, generate_secret: :boolean])
 
     children = [
       Datum.Repo
@@ -163,7 +158,7 @@ defmodule Datum.Release do
 
     Plug.Crypto.Application.start(:normal, [])
 
-    __MODULE__.seed_db(Keyword.get(options, :name, "default"))
+    __MODULE__.seed_db(seed_file)
     IO.puts("System Migrated")
   end
 

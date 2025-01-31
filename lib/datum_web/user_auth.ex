@@ -221,7 +221,7 @@ defmodule DatumWeb.UserAuth do
       conn
       |> get_req_header("authorization")
 
-    case(Phoenix.Token.verify(conn, "personal_access_token", token, max_age: 7_776_000)) do
+    case(Phoenix.Token.verify(conn, "personal_access_token", token)) do
       # TODO: add a revoked token check...once we can revoke tokens
       {:ok, userid} -> assign(conn, :current_user, Accounts.get_user!(userid))
       _ -> conn |> put_status(401) |> halt()

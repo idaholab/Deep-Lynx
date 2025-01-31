@@ -15,6 +15,7 @@ alias Datum.DataOrigin
 
 {:ok, admin} =
   Accounts.register_user(%{
+    id: "dd9ed86c-9be6-4c37-a5d0-6996dc11af40",
     email: "admin@inl.gov",
     password: "xxxxxxxxxxxx",
     name: "INL Administrator"
@@ -128,7 +129,8 @@ admin_token =
   Phoenix.Token.sign(
     Keyword.get(Application.get_env(:datum, DatumWeb.Endpoint), :secret_key_base),
     "personal_access_token",
-    admin.id
+    admin.id,
+    max_age: 31_556_952
   )
 
 IO.puts(:stdio, "ADMIN PAT: #{admin_token}")
