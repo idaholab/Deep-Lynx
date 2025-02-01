@@ -94,6 +94,32 @@ nas_sensor_dir =
 
 {:ok, _} = DataOrigin.connect_data(nas_origin, nas_dir, nas_sensor_dir)
 
+nas_sensor_chart =
+  DataOrigin.add_data!(nas_origin, admin, %{
+    path: "NAS/Sensors/SensorA/freqplot.png",
+    original_path: Path.join("#{__MODULE__}", "freqplot.png"),
+    type: :file,
+    owned_by: admin.id
+  })
+
+{:ok, _} = DataOrigin.connect_data(nas_origin, nas_sensor_dir, nas_sensor_chart)
+
+db_table =
+  DataOrigin.add_data!(sensor_db_origin, admin, %{
+    path: "daq1",
+    original_path: "daq1",
+    type: :table,
+    owned_by: admin.id,
+    properties: %{
+      columns: [
+        %{
+          type: "DOUBLE",
+          name: "first__channel"
+        }
+      ]
+    }
+  })
+
 Enum.map(
   [
     "Across International IHL70",
@@ -119,8 +145,8 @@ Enum.map(
     {:ok, _} = DataOrigin.connect_data(equipment_origin, equipment_dir, e)
 
     {:ok, _} =
-      DataOrigin.add_relationship({e, equipment_origin}, {nas_sensor_dir, nas_origin},
-        type: "sensor"
+      DataOrigin.add_relationship({e, equipment_origin}, {db_table, sensor_db_origin},
+        type: "first__channel"
       )
   end
 )
