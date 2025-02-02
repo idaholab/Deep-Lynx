@@ -26,8 +26,6 @@ RUN apt-get update -y && apt-get install -y build-essential git cmake \
 WORKDIR /app
 COPY native ./
 RUN cd hdf5_extractor && cargo rustc --release 
-RUN ls
-RUN cd hdf5_extractor && ls
 
 FROM ${BUILDER_IMAGE} as builder
 
@@ -68,7 +66,7 @@ RUN cd assets && npm ci --progress=false --no-audit --loglevel=error
 
 RUN mkdir priv/native
 
-COPY --from=rust /app/priv/native/hdf5_extractor.so priv/native/hdf5_extractor.so
+COPY --from=rust /app/hdf5_extractor/target/release/hdf5_extractor.so priv/native/hdf5_extractor.so
 
 # Compile the release
 RUN mix compile
