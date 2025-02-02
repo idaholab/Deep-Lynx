@@ -40,7 +40,9 @@ jobs:
         run: mix deps.get 
       - name: Remove compiled application files
         run: mix clean
-      - name: Compile & lint dependencies
+      - name: Compile dependencies
+        run: mix deps.compile
+      - name: Compile & lint
         run: mix compile --warnings-as-errors
       - name: Run tests
         run: mix test
