@@ -1,0 +1,47 @@
+name: "Test/Format/Security Check"
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+
+env:
+  CI: true
+  MIX_ENV: "test"
+
+  
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    name: Test - OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}} / ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        otp: ['27.2.1']
+        elixir: ['1.18.2']
+        rebar3: ['3.24.0']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{matrix.otp}}
+          elixir-version: ${{matrix.elixir}}
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: startsWith(${{matrix.os}}, 'windows')
+        with:
+          arch: x64
+      - name: Install dependencies
+        run: mix deps.get 
+      - name: Remove compiled application files
+        run: mix clean
+      - name: Compile & lint dependencies
+        run: mix compile --warnings-as-errors
+      - name: Run tests
+        run: mix test
+      - name: Check Formatting
+        run: mix format --check-formatted
+      - name: Check Security
+        run: mix sobelow --config
+
