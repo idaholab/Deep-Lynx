@@ -64,7 +64,9 @@ COPY assets assets
 
 RUN cd assets && npm ci --progress=false --no-audit --loglevel=error
 
-COPY --from=rust /app/priv/native/hdf5_extractor.so priv/native/hdf5_extractor.so
+MKDIR priv/native
+
+COPY --from=rust /app/hdf5_extractor/target/release/hdf5_extractor.so priv/native/hdf5_extractor.so
 
 # Compile the release
 RUN mix compile
