@@ -78,7 +78,7 @@ RUN apt-get update -y && \
 
 # we will need these particular packages for the default python plugins
 COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txt
+RUN pip3 install -r requirements.txt
 
 # Set the locale
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
