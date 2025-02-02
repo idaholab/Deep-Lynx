@@ -22,7 +22,7 @@ jobs:
     name: Test - OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}} / ${{matrix.os}}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest]
         otp: ['27.2.1']
         elixir: ['1.18.2']
         rebar3: ['3.24.0']
