@@ -21,7 +21,7 @@ ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 FROM ${BUILDER_IMAGE} as builder
 
 # install build dependencies
-RUN apt-get update -y && apt-get install -y build-essential git \
+RUN apt-get update -y && apt-get install -y build-essential git nodejs npm \
   && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 # install Rust for our custom Rustler deps
@@ -55,6 +55,8 @@ COPY priv priv
 COPY lib lib
 
 COPY assets assets
+
+RUN cd assets && npm ci --progress=false --no-audit --loglevel=error
 
 # compile assets
 RUN mix assets.deploy
