@@ -26,6 +26,8 @@ RUN apt-get update -y && apt-get install -y build-essential git cmake \
 WORKDIR /app
 COPY native ./
 RUN cd hdf5_extractor && cargo rustc --release 
+RUN ls
+RUN cd hdf5_extractor && ls
 
 FROM ${BUILDER_IMAGE} as builder
 
