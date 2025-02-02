@@ -2,7 +2,11 @@ name: "Test/Format/Security Check"
 on:
   workflow_dispatch:
   pull_request:
+    branches:
+      - "2.0/**"
   push:
+    branches:
+      - "2.0/**"
 
 env:
   CI: true
