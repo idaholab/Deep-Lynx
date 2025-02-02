@@ -21,13 +21,13 @@ ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 FROM ${BUILDER_IMAGE} as builder
 
 # install build dependencies
-RUN apt-get update -y && apt-get install -y build-essential git nodejs npm cargo \
+RUN apt-get update -y && apt-get install -y build-essential git nodejs npm \
   && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 # install Rust for our custom Rustler deps
 RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
 
-ENV PATH="/root/.cargo/bin:${PATH}"
+RUN echo 'source /root/.cargo/env' >> $HOME/.bashrc
 
 # prepare build dir
 WORKDIR /app
