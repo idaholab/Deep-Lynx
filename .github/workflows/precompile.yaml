@@ -15,6 +15,7 @@ permissions:
 
 jobs:
   precompile:
+    runs-on: ${{ matrix.os }}
     name: OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}} / OS ${{matrix.os}}
     strategy:
       matrix:
