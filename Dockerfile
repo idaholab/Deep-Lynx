@@ -76,9 +76,7 @@ RUN apt-get update -y && \
   apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates python3 python3-pip \
   && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
-# we will need these particular packages for the default python plugins
-COPY requirements.txt requirements.txt
-RUN pip3 install -r requirements.txt
+RUN python3 -m pip install -U matplotlib duckdb fastparquet npTDMS numpy pandas polars scipy
 
 # Set the locale
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
