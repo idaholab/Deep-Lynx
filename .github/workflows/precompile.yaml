@@ -15,8 +15,7 @@ permissions:
 
 jobs:
   precompile:
-    runs-on: ubuntu-latest # should have rust toolchain installed as well as cmake etc.
-    name: OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}}
+    name: OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}} / OS ${{matrix.os}}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
