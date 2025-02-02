@@ -25,7 +25,7 @@ RUN apt-get update -y && apt-get install -y build-essential git nodejs npm \
   && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 # install Rust for our custom Rustler deps
-RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y --default-toolchain stable
 
 ENV PATH="/root/.cargo/bin:${PATH}"
 
