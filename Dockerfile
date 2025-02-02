@@ -54,6 +54,8 @@ RUN mix deps.compile
 
 COPY priv priv
 
+COPY native native
+
 COPY lib lib
 
 COPY assets assets
