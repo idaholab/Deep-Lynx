@@ -16,7 +16,7 @@ permissions:
 jobs:
   precompile:
     runs-on: ${{ matrix.os }}
-    name: OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}} / OS ${{matrix.os}}
+    name: OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}} / ${{matrix.os}}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -29,6 +29,10 @@ jobs:
         with:
           otp-version: ${{matrix.otp}}
           elixir-version: ${{matrix.elixir}}
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: startsWith(${{matrix.os}}, 'windows')
+        with:
+          arch: x64
       - run: mix deps.get
       - run: mix deps.compile
       - run: mix release
