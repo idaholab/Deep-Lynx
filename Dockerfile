@@ -25,9 +25,9 @@ RUN apt-get update -y && apt-get install -y build-essential git nodejs npm \
   && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 # install Rust for our custom Rustler deps
-RUN curl https://sh.rustup.rs -sSf | bash -s -- -y --default-toolchain stable
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
 
-ENV PATH="/root/.cargo/bin:${PATH}"
+ENV PATH="${HOME}/.cargo/bin:${PATH}"
 
 # prepare build dir
 WORKDIR /app
@@ -53,8 +53,6 @@ COPY config/config.exs config/${MIX_ENV}.exs config/
 RUN mix deps.compile
 
 COPY priv priv
-
-COPY native native
 
 COPY lib lib
 
