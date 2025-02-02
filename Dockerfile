@@ -18,18 +18,20 @@ ARG DEBIAN_VERSION=bullseye-20240701-slim
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
 ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 
+FROM rust:latest as rust
+# install build dependencies
+RUN apt-get update -y && apt-get install -y build-essential git \
+  && apt-get clean && rm -f /var/lib/apt/lists/*_*
+
+WORKDIR /app
+COPY native ./
+RUN cd hdf5_extractor && cargo rustc --release 
+
 FROM ${BUILDER_IMAGE} as builder
 
 # install build dependencies
 RUN apt-get update -y && apt-get install -y build-essential git nodejs npm \
   && apt-get clean && rm -f /var/lib/apt/lists/*_*
-
-# install Rust for our custom Rustler deps
-RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
-
-ENV RUSTUP_HOME=/root/.rustup \
-  CARGO_HOME=/root/.cargo  \
-  PATH="/root/.cargo/bin:$PATH"
 
 # prepare build dir
 WORKDIR /app
@@ -61,6 +63,8 @@ COPY lib lib
 COPY assets assets
 
 RUN cd assets && npm ci --progress=false --no-audit --loglevel=error
+
+COPY --from=rust /app/hdf5_extractor/target/release/hdf5_extractor.so priv/native/hdf5_extractor.so
 
 # Compile the release
 RUN mix compile
