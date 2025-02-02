@@ -68,6 +68,24 @@ defmodule Datum.DataOrigin do
     Repo.one(query)
   end
 
+  def get_data_orgins_user!(%User{} = user, origin_id, opts \\ []) when not is_nil(origin_id) do
+    permissions = Keyword.get(opts, :permissions, [:read, :readwrite])
+
+    query =
+      from o in Origin,
+        distinct: true,
+        left_join: p in Datum.Permissions.DataOrigin,
+        on: o.id == p.data_origin_id,
+        where:
+          (p.user_id == ^user.id or
+             p.group_id in subquery(
+               from g in UserGroup, where: g.user_id == ^user.id, select: g.group_id
+             )) and p.permission_type in ^permissions and o.id == ^origin_id,
+        select: o
+
+    Repo.one!(query)
+  end
+
   @doc """
   Gets a single origin.
 
@@ -276,6 +294,36 @@ defmodule Datum.DataOrigin do
             select: d
 
         OriginRepo.one(query)
+      end,
+      mode: :readonly
+    )
+  end
+
+  def get_data_user!(%Origin{} = origin, %User{} = user, data_id, opts \\ []) do
+    permissions = Keyword.get(opts, :permissions, [:read, :readwrite])
+
+    groups =
+      Repo.all(
+        from g in UserGroup,
+          where: g.user_id == ^user.id,
+          select: g.group_id
+      )
+
+    OriginRepo.with_dynamic_repo(
+      origin,
+      fn ->
+        query =
+          from d in Data,
+            distinct: true,
+            left_join: p in Datum.Permissions.Data,
+            on: d.id == p.data_id,
+            where:
+              (p.user_id == ^user.id or
+                 p.group_id in ^groups) and p.permission_type in ^permissions and
+                d.id == ^data_id,
+            select: d
+
+        OriginRepo.one!(query)
       end,
       mode: :readonly
     )

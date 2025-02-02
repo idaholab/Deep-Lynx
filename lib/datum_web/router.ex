@@ -34,6 +34,7 @@ defmodule DatumWeb.Router do
     post "/origins/:origin_id/explore", OriginController, :explore
 
     get "/origins/:origin_id/data/:data_id", OriginController, :fetch_data
+    get "/origins/:origin_id/data/:data_id/download", OriginController, :download_data
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

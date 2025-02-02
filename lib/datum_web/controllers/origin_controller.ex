@@ -4,6 +4,7 @@ defmodule DatumWeb.OriginController do
   """
   use DatumWeb, :controller
   alias Datum.DataOrigin
+  alias Datum.DataOrigin.Origin
 
   def list(conn, _params) do
     conn
@@ -37,6 +38,22 @@ defmodule DatumWeb.OriginController do
     end
   end
 
+  # currently this only works for local fileystem files - we'll work on it!
+  def download_data(conn, %{"origin_id" => origin_id, "data_id" => data_id} = _params) do
+    origin = DataOrigin.get_data_orgins_user(conn.assigns.current_user, origin_id)
+
+    if origin do
+      data = DataOrigin.get_data_user!(origin, conn.assigns.current_user, data_id)
+
+      conn
+      |> put_status(200)
+      |> send_download({:file, data.original_path})
+    else
+      conn
+      |> put_status(404)
+    end
+  end
+
   def root_directory(conn, %{"origin_id" => origin_id} = _params) do
     origin = DataOrigin.get_data_orgins_user(conn.assigns.current_user, origin_id)
 
@@ -58,7 +75,7 @@ defmodule DatumWeb.OriginController do
   end
 
   def create(conn, params) do
-    with {:ok, %DataOrigin.Origin{} = origin} <-
+    with {:ok, %Origin{} = origin} <-
            DataOrigin.create_origin(
              params
              |> Map.put("owned_by", conn.assigns.current_user.id)
