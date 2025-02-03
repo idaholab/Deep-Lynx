@@ -5,6 +5,7 @@
 # issue on GitHub: https://github.com/rrrene/credo/issues
 #
 %{
+
   #
   # You can have as many configs as you like in the `configs:` field.
   configs: [
