@@ -18,16 +18,20 @@ ARG DEBIAN_VERSION=bullseye-20240701-slim
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
 ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 
+FROM rust:latest as rust
+# install build dependencies
+RUN apt-get update -y && apt-get install -y build-essential git cmake \
+  && apt-get clean && rm -f /var/lib/apt/lists/*_*
+
+WORKDIR /app
+COPY native ./
+RUN cd hdf5_extractor && cargo rustc --release 
+
 FROM ${BUILDER_IMAGE} as builder
 
 # install build dependencies
-RUN apt-get update -y && apt-get install -y build-essential git hdf5 \
+RUN apt-get update -y && apt-get install -y build-essential git nodejs npm \
   && apt-get clean && rm -f /var/lib/apt/lists/*_*
-
-# install Rust for our custom Rustler deps
-RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
-
-RUN echo 'source $HOME/.cargo/env' >> $HOME/.bashrc
 
 # prepare build dir
 WORKDIR /app
@@ -38,10 +42,13 @@ RUN mix local.hex --force && \
 
 # set build ENV
 ENV MIX_ENV="prod"
+ENV CI="true"
 
 # install mix dependencies
 COPY mix.exs mix.lock ./
 RUN mix deps.get --only $MIX_ENV
+RUN mix deps.compile
+
 RUN mkdir config
 
 # copy compile-time config files before we compile dependencies
@@ -56,11 +63,17 @@ COPY lib lib
 
 COPY assets assets
 
-# compile assets
-RUN mix assets.deploy
+RUN cd assets && npm ci --progress=false --no-audit --loglevel=error
+
+RUN mkdir priv/native
+
+COPY --from=rust /app/hdf5_extractor/target/release/libhdf5_extractor.so priv/native/libhdf5_extractor.so
 
 # Compile the release
 RUN mix compile
+
+# compile assets
+RUN mix assets.deploy
 
 # Changes to config/runtime.exs don't require recompiling the code
 COPY config/runtime.exs config/
@@ -73,12 +86,10 @@ RUN mix release
 FROM ${RUNNER_IMAGE}
 
 RUN apt-get update -y && \
-  apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates python3 \
+  apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates python3 python3-pip \
   && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
-# we will need these particular packages for the default python plugins
-COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txt
+RUN python3 -m pip install -U matplotlib duckdb fastparquet npTDMS numpy pandas polars scipy
 
 # Set the locale
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen

@@ -32,7 +32,7 @@ config :datum, DatumWeb.Endpoint,
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
-  secret_key_base: "wxlPJjJbd4NPxfcAjS8f1CrK4OmeEzOiGLygZ69Ty1SKcq+GkpCU67hl7w6FiDMG",
+  secret_key_base: "",
   watchers: [
     esbuild: {Esbuild, :install_and_run, [:datum, ~w(--sourcemap=inline --watch)]},
     tailwind: {Tailwind, :install_and_run, [:datum, ~w(--watch)]}

@@ -18,5 +18,12 @@ config :swoosh, local: false
 # Do not print debug messages in production
 config :logger, level: :info
 
+if System.get_env("CI", "FALSE") |> String.upcase() == "TRUE" do
+  config :datum, Datum.Plugins.HDF5,
+    crate: :hdf5_extractor,
+    skip_compilation?: true,
+    load_from: {:datum, "priv/native/libhdf5_extractor"}
+end
+
 # Runtime production configuration, including reading
 # of environment variables, is done on config/runtime.exs.
