@@ -18,7 +18,7 @@ config :swoosh, local: false
 # Do not print debug messages in production
 config :logger, level: :info
 
-if System.get_env("CI", "FALSE") |> String.upcase() == "TRUE" do
+if System.get_env("DOCKER_BUILD", "FALSE") |> String.upcase() == "TRUE" do
   config :datum, Datum.Plugins.HDF5,
     crate: :hdf5_extractor,
     skip_compilation?: true,
