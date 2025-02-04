@@ -39,6 +39,7 @@ alias Datum.DataOrigin
   DataOrigin.create_origin(%{
     name: "Twin DB",
     owned_by: admin.id,
+    type: :duckdb,
     config: %DataOrigin.Origin.DuckDBConfig{
       path: Path.join("#{__MODULE__}", "test_db.duckdb")
     }
