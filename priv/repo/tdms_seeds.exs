@@ -41,7 +41,7 @@ alias Datum.DataOrigin
     owned_by: admin.id,
     type: :duckdb,
     config: %DataOrigin.Origin.DuckDBConfig{
-      path: Path.join("#{__MODULE__}", "test_db.duckdb")
+      path: Path.join("#{__DIR__}", "test_db.duckdb")
     }
   })
 
