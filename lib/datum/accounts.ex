@@ -58,6 +58,7 @@ defmodule Datum.Accounts do
       ** (Ecto.NoResultsError)
 
   """
+  def get_user(id), do: Repo.get(User, id)
   def get_user!(id), do: Repo.get!(User, id)
 
   ## User registration
@@ -157,6 +158,12 @@ defmodule Datum.Accounts do
     else
       _ -> :error
     end
+  end
+
+  def set_admin(user) do
+    user = Ecto.Changeset.change(user, role: :admin)
+
+    Datum.Repo.update(user)
   end
 
   defp user_email_multi(user, email, context) do

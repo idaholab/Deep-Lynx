@@ -25,6 +25,7 @@ defmodule Datum.Scanners.Filesystem do
     {:ok, parent} =
       DataOrigin.add_data(origin, user, %{
         path: root_path,
+        original_path: Path.absname(root_path),
         type: :directory,
         owned_by: Keyword.get(opts, :user_id)
       })
@@ -46,6 +47,7 @@ defmodule Datum.Scanners.Filesystem do
     {:ok, parent} =
       DatumWeb.SocketClient.send_data(origin_id, user_id, %Data{
         path: root_path,
+        original_path: Path.absname(root_path),
         type: :directory
       })
 
@@ -67,7 +69,7 @@ defmodule Datum.Scanners.Filesystem do
   """
   def scan_file(origin, user, parent, path, opts \\ [])
 
-  def scan_file(%Origin{} = origin, %User{} = user, %Data{} = parent, path, opts) do
+  def scan_file(%Origin{} = origin, %User{} = user, parent, path, opts) do
     generate_checksum = Keyword.get(opts, :generate_checksum, false)
     extensions = MIME.from_path(path) |> MIME.extensions()
 
@@ -118,7 +120,17 @@ defmodule Datum.Scanners.Filesystem do
         checksum_type: checksum_type
       })
 
-    DataOrigin.connect_data(origin, parent, child)
+    if parent do
+      DataOrigin.connect_data(origin, parent, child)
+    else
+      {:ok, dir} =
+        DataOrigin.add_data(origin, user, %{
+          path: Path.dirname(path),
+          type: :directory
+        })
+
+      DataOrigin.connect_data(origin, dir, child)
+    end
   end
 
   def scan_file(origin_id, user_id, _parent, path, opts) do
@@ -127,7 +139,7 @@ defmodule Datum.Scanners.Filesystem do
 
     # This works because the Scan CLI process will build a local copy of the
     # operations database with the plugins owned by the user
-    plugins = Plugins.list_plugins_by_extensions(extensions)
+    plugins = Plugins.list_plugins_by_extensions([Path.extname(path) | extensions])
 
     statuses =
       Task.Supervisor.async_stream_nolink(
@@ -165,12 +177,17 @@ defmodule Datum.Scanners.Filesystem do
     {:ok, _child} =
       DatumWeb.SocketClient.send_data(origin_id, user_id, %Data{
         path: path,
+        original_path: Path.absname(path),
         type: :file,
         properties: %{plugin_generated_metadata: metadatas},
         owned_by: user_id,
         checksum: checksum,
         checksum_type: checksum_type
       })
+
+    # we run a check to see if we can convert this to a duckdb DataOrigin 
+    if Path.extname(path) in [".duckdb", "duck", "duck_db"] do
+    end
   end
 
   defp generate_checksum(path) do

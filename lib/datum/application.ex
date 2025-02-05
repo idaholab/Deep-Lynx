@@ -20,6 +20,7 @@ defmodule Datum.Application do
       # Start to serve requests, typically the last entry
       DatumWeb.Endpoint,
       {Task.Supervisor, name: Datum.TaskSupervisor},
+      {Datum.DataOrigin.Supervisor, strategy: :one_for_one, name: Datum.DataOrigin.Supervisor},
       # this registry lets DatumWeb.HomeLive act as a broker and handle message passing between tabs
       {Registry, keys: :unique, name: DatumWeb.TabRegistry}
     ]

@@ -218,12 +218,14 @@ defmodule Datum.Release do
 
     # start the scanning GenServer
     {:ok, _pid} =
-      Datum.Scanner.start_link(%{client: client, user: Client.current_user_info!(client)})
+      Datum.Scanner.start_link(%{client: client, user: Client.current_user_info!(client)["id"]},
+        name: Datum.Scanner
+      )
 
     # run the initial scan - this is run regardless of watch status so that
     # we always start from the latest version of the origin before we start sending
     # any updates
-    Datum.Scanner.scan(origin, directories, options)
+    Datum.Scanner.scan(origin["id"], directories, options)
 
     if Keyword.get(options, :watch) do
       # monitor allows us to keep the CLI running while the monitor is taking place
@@ -232,7 +234,7 @@ defmodule Datum.Release do
       #
       # https://hexdocs.pm/elixir/1.18.1/Process.html#monitor/1
 
-      pid = Datum.Scanner.watch(origin, directories, options)
+      pid = Datum.Scanner.watch(origin["id"], directories, options)
 
       IO.puts("Starting filesystem watcher for #{directories}")
       Process.monitor(pid)

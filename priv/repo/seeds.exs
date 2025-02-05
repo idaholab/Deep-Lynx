@@ -20,12 +20,32 @@ alias Datum.DataOrigin
     name: "Administrator"
   })
 
+Accounts.set_admin(admin)
+
+{:ok, _user} =
+  Accounts.register_user(%{
+    email: "user@user.com",
+    password: "xxxxxxxxxxxx",
+    name: "User"
+  })
+
 # note that the origin db won't be created here if it doesn't exist
 # that doesn't happen until we use it
 {:ok, origin} =
   DataOrigin.create_origin(%{
     name: "Test Origin",
     owned_by: admin.id
+  })
+
+{:ok, _priv_origin} =
+  DataOrigin.create_origin(%{
+    name: "Priv Folder Origin",
+    owned_by: admin.id,
+    type: :filesystem,
+    config: %{
+      path: __DIR__,
+      watch: true
+    }
   })
 
 {:ok, origin2} =

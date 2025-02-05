@@ -9,7 +9,6 @@
 #
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
-alias Datum.Common
 alias Datum.Accounts
 alias Datum.DataOrigin
 
@@ -104,6 +103,16 @@ nas_sensor_chart =
   })
 
 {:ok, _} = DataOrigin.connect_data(nas_origin, nas_sensor_dir, nas_sensor_chart)
+
+nas_duckdb_file =
+  DataOrigin.add_data!(nas_origin, admin, %{
+    path: "NAS/Sensors/SensorA/test_db.duckdb",
+    original_path: Path.join("#{__DIR__}", "test_db.duckdb"),
+    type: :file,
+    owned_by: admin.id
+  })
+
+{:ok, _} = DataOrigin.connect_data(nas_origin, nas_sensor_dir, nas_duckdb_file)
 
 db_table =
   DataOrigin.add_data!(sensor_db_origin, admin, %{
