@@ -1,8 +1,8 @@
 defmodule Datum.Scanner do
   @moduledoc """
-  This is a GenServer in charge of running scan processes from the CLI.  
-  If you are wanting the server or other processes to run scanning - prefer using the scanner you
-  need directly.
+  This is a GenServer in charge of running scan processes against a DataOrigin. Currently
+  works with :filesystem origins and can work either being started by the server or the CLI 
+  depending on the data structures pushed into it.
   """
   use GenServer
   require Logger
