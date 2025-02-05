@@ -5,6 +5,7 @@ defmodule Datum.Repo.Migrations.CreateUsersAuthTables do
     create table(:users, primary_key: false) do
       add :id, :binary_id, primary_key: true
       add :email, :citext, null: false, collate: :nocase
+      add :role, :string, default: "user"
       add :hashed_password, :string, null: false
       add :confirmed_at, :utc_datetime
       add :open_explorer_tabs, {:array, {:array, :integer}}

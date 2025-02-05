@@ -44,7 +44,7 @@ defmodule Datum.DataOrigin.Origin do
     field :tags, {:array, :string}
     field :domains, {:array, :string}
 
-    field :type, Ecto.Enum, values: [:s3, :filesystem, :default, :duckdb], default: :filesystem
+    field :type, Ecto.Enum, values: [:s3, :filesystem, :default, :duckdb], default: :default
     # stores the raw configuration values for the type of origin this is
     # if nil, we assume we don't have direct connection to the origin and
     # therefore it's metadata only
@@ -138,7 +138,7 @@ end
 
 defmodule Datum.DataOrigin.Origin.FilesystemConfig do
   @moduledoc """
-  Filesystem configuration - not necessarily needed if the filesystem is local, but
+  Filesystem configuration - needed to indicated this is a local filesystem and potentially should be scanned
   if it's a networked location - we need the information to make connections.
   Note: that we can't actually easily make that connection from within Erlang itself.
   """
@@ -146,7 +146,8 @@ defmodule Datum.DataOrigin.Origin.FilesystemConfig do
   import Ecto.Changeset
 
   embedded_schema do
-    field :root_path, :string
+    field :path, :string
+    field :watch, :boolean, default: false
     field :network_user, :string, default: nil
     field :network_user_password, :string, default: nil
   end
