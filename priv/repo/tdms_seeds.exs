@@ -121,6 +121,11 @@ db_table =
     }
   })
 
+{:ok, _} =
+  DataOrigin.add_relationship({db_table, sensor_db_origin}, {nas_sensor_chart, nas_origin},
+    type: "first__channel"
+  )
+
 Enum.map(
   [
     "Across International IHL70",
