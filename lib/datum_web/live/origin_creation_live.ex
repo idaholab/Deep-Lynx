@@ -43,14 +43,14 @@ defmodule DatumWeb.OriginCreationLive do
                   {"DuckDB Database", :duckdb}
                 ]}
               />
-
+              <%!-- <%= if @type == "filesystem" do %> --%>
               <div class="pt-2">
                 <.input type="text" field={@form[:path]} label={gettext("Filesystem Path")} />
                 <div class="pt-2">
                 <.input type="checkbox" field={@form[:watch]} label={gettext("Watch data origin?")} />
                 </div>
               </div>
-
+            <%!-- <% end %> --%>
 
             <button
               :if={!@create_result || @create_result.ok?}
@@ -103,8 +103,9 @@ defmodule DatumWeb.OriginCreationLive do
      |> assign(:current_user, user)
      |> assign(:create_result, nil)
      |> assign(:create_result_send, nil)
-     |> assign(:form, to_form(%{"data_origin_name" => nil}))
+     |> assign(:form, to_form(%{"data_origin_name" => nil, "type" => nil}))
      |> assign(:tab, tab)
+     |> assign(:type, nil)
      |> assign(:id, user.id)}
   end
 
@@ -131,7 +132,10 @@ defmodule DatumWeb.OriginCreationLive do
         config: %{path: path, watch: watch}
       })
 
-    {:noreply, assign_form(socket, Map.put(changeset, :action, :validate))}
+    {:noreply,
+     socket
+     |> assign(:type, type)
+     |> assign_form(Map.put(changeset, :action, :validate))}
   end
 
   # this sends the user's input to the create a data origin
@@ -163,6 +167,7 @@ defmodule DatumWeb.OriginCreationLive do
               Datum.DataOrigin.create_origin(%{
                 name: name,
                 type: type,
+                owned_by: user_id,
                 config: %{path: path, watch: watch}
               }),
             create_result_send:
