@@ -20,6 +20,42 @@ alias Datum.DataOrigin
     name: "INL Administrator"
   })
 
+{:ok, %Datum.Plugins.Plugin{} = _plugin} =
+  Datum.Plugins.create_plugin(%{
+    name: "TDMS Metadata",
+    module_type: :elixir,
+    module_name: Datum.Plugins.TdmsIndex,
+    filetypes: [".tdms_index"],
+    plugin_type: :extractor
+  })
+
+{:ok, %Datum.Plugins.Plugin{} = _plugin} =
+  Datum.Plugins.create_plugin(%{
+    name: "CSV Extractor",
+    module_type: :elixir,
+    module_name: Datum.Plugins.CSV,
+    filetypes: [".csv", "text/csv"],
+    plugin_type: :extractor
+  })
+
+{:ok, %Datum.Plugins.Plugin{} = _plugin} =
+  Datum.Plugins.create_plugin(%{
+    name: "Parquet Extractor",
+    module_type: :elixir,
+    module_name: Datum.Plugins.Parquet,
+    filetypes: [".pqt", "parquet", "application/vnd.apache.parquet"],
+    plugin_type: :extractor
+  })
+
+{:ok, %Datum.Plugins.Plugin{} = _plugin} =
+  Datum.Plugins.create_plugin(%{
+    name: "Python TDMS Sampler with Plotter",
+    module_type: :python,
+    module_path: Path.join(__DIR__, "sensor_plotting.py"),
+    filetypes: [".tdms", "tdms"],
+    plugin_type: :sampler
+  })
+
 # note that the origin db won't be created here if it doesn't exist
 # that doesn't happen until we use it
 {:ok, equipment_origin} =
@@ -97,7 +133,7 @@ nas_sensor_dir =
 nas_sensor_chart =
   DataOrigin.add_data!(nas_origin, admin, %{
     path: "NAS/Sensors/SensorA/freqplot.png",
-    original_path: Path.join("#{__MODULE__}", "freqplot.png"),
+    original_path: Path.join("#{__DIR__}", "freqplot.png"),
     type: :file,
     owned_by: admin.id
   })
