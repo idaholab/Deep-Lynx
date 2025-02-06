@@ -31,7 +31,7 @@ defmodule DatumWeb.OriginCreationLive do
             type="text"
             field={@form[:data_origin_name]}
             label={gettext("Data Origin Name")} />
-            <div class="sm:col-span-4">
+
               <.input
                 label={gettext("Data Origin Type")}
                 type="select"
@@ -44,11 +44,13 @@ defmodule DatumWeb.OriginCreationLive do
                 ]}
               />
 
-              <div>
+              <div class="pt-2">
                 <.input type="text" field={@form[:path]} label={gettext("Filesystem Path")} />
+                <div class="pt-2">
                 <.input type="checkbox" field={@form[:watch]} label={gettext("Watch data origin?")} />
+                </div>
               </div>
-          </div>
+
 
             <button
               :if={!@create_result || @create_result.ok?}
@@ -115,14 +117,20 @@ defmodule DatumWeb.OriginCreationLive do
   def handle_event(
         "validate",
         %{
-          "data_origin_name" => data_origin_name,
+          "data_origin_name" => name,
           "type" => type,
           "path" => path,
           "watch" => watch
         },
         socket
       ) do
-    changeset = Datum.DataOrigin.change_origin(%Origin{}, %{name: data_origin_name})
+    changeset =
+      Datum.DataOrigin.change_origin(%Origin{}, %{
+        name: name,
+        type: type,
+        config: %{path: path, watch: watch}
+      })
+
     {:noreply, assign_form(socket, Map.put(changeset, :action, :validate))}
   end
 
