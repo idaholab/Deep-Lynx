@@ -51,7 +51,7 @@ alias Datum.DataOrigin
   Datum.Plugins.create_plugin(%{
     name: "Python TDMS Sampler with Plotter",
     module_type: :python,
-    module_path: Path.join(__DIR__, "sensor_plotting.py"),
+    path: Path.join(__DIR__, "sensor_plotting.py"),
     filetypes: [".tdms", "tdms"],
     plugin_type: :sampler
   })
