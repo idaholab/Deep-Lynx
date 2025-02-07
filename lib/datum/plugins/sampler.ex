@@ -24,7 +24,7 @@ defmodule Datum.Plugins.Sampler do
     # collected
     with {:ok, python} <- :python.start([{:cd, ~c"#{Path.dirname(plugin.path)}"}]),
          result <-
-           :python.call(python, String.to_existing_atom(plugin.module_name), :sample, [
+           :python.call(python, String.to_atom(plugin.module_name), :sample, [
              path
            ]) do
       # because the result could be a string or raw bytes, decode is our best bet as it can handle both without
