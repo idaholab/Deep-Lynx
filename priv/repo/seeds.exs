@@ -68,7 +68,7 @@ dir_one =
 {:ok, %Datum.Plugins.Plugin{} = plugin} =
   Datum.Plugins.create_plugin(%{
     name: "tdms index extractor_elixir",
-    module_name: Datum.Plugins.TdmsIndex,
+    module_name: Datum.Plugins.Tdms,
     filetypes: [".tdms_index"],
     module_type: :elixir,
     plugin_type: :extractor

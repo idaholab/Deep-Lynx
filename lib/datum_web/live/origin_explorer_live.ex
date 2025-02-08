@@ -333,7 +333,7 @@ defmodule DatumWeb.OriginExplorerLive do
   def handle_event("select_item", %{"item_id" => item_id}, socket) do
     data = DataOrigin.get_data_user(socket.assigns.origin, socket.assigns.current_user, item_id)
 
-    file_item = if data.type == :file, do: data, else: nil
+    file_item = if data.type in [:file, :table], do: data, else: nil
 
     items =
       if data.type == :directory || data.type == :root_directory do

@@ -16,7 +16,7 @@ def sample(path):
         db_name = os.path.join(dirname, "deeplynx", "duckdbs", "general.duckdb")
 
         if "_th" in path:
-            db_name = os.path.join(dirname, "deeplynx", "duckdbs", "dh.duckdb")
+            db_name = os.path.join(dirname, "deeplynx", "duckdbs", "th.duckdb")
         elif "_acc" in path:
             db_name = os.path.join(dirname, "deeplynx", "duckdbs", "acc.duckdb")
         elif "_eh" in path:

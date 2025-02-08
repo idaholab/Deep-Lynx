@@ -24,7 +24,7 @@ alias Datum.DataOrigin
   Datum.Plugins.create_plugin(%{
     name: "TDMS Metadata",
     module_type: :elixir,
-    module_name: Datum.Plugins.TdmsIndex,
+    module_name: Datum.Plugins.Tdms,
     filetypes: [".tdms_index"],
     plugin_type: :extractor
   })
@@ -91,6 +91,50 @@ alias Datum.DataOrigin
     type: :duckdb,
     config: %DataOrigin.Origin.DuckDBConfig{
       path: Path.join("#{__DIR__}", "test_db.duckdb")
+    }
+  })
+
+{:ok, sensor_db_origin} =
+  DataOrigin.create_origin(%{
+    name: "General Data DB",
+    owned_by: admin.id,
+    type: :duckdb,
+    config: %DataOrigin.Origin.DuckDBConfig{
+      path: Path.join(System.user_home(), "deeplynx", "duckdbs", "general.duckdb"),
+      watch: true
+    }
+  })
+
+{:ok, sensor_db_origin} =
+  DataOrigin.create_origin(%{
+    name: "Electromagnetic Data DB",
+    owned_by: admin.id,
+    type: :duckdb,
+    config: %DataOrigin.Origin.DuckDBConfig{
+      path: Path.join(System.user_home(), "deeplynx", "duckdbs", "eh.duckdb"),
+      watch: true
+    }
+  })
+
+{:ok, sensor_db_origin} =
+  DataOrigin.create_origin(%{
+    name: "Thermocouple Data DB",
+    owned_by: admin.id,
+    type: :duckdb,
+    config: %DataOrigin.Origin.DuckDBConfig{
+      path: Path.join(System.user_home(), "deeplynx", "duckdbs", "th.duckdb"),
+      watch: true
+    }
+  })
+
+{:ok, sensor_db_origin} =
+  DataOrigin.create_origin(%{
+    name: "Accelerometer Data DB",
+    owned_by: admin.id,
+    type: :duckdb,
+    config: %DataOrigin.Origin.DuckDBConfig{
+      path: Path.join(System.user_home(), "deeplynx", "duckdbs", "acc.duckdb"),
+      watch: true
     }
   })
 

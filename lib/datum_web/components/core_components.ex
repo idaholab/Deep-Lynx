@@ -680,6 +680,18 @@ defmodule DatumWeb.CoreComponents do
               />
             </div>
           <% end %>
+
+          <div :if={@data.type == :table && @origin.type == :duckdb} class="card-body w-3/4">
+            <h2 class="card-title">{gettext("Table Information")}: {@data.path}</h2>
+            <.table id={"#{@data.path}-table"} rows={@data.properties["columns"]}>
+              <:col :let={data} label={gettext("Column Name")}>
+                {data["column_name"]}
+              </:col>
+              <:col :let={data} label={gettext("Column Type")}>
+                {data["data_type"]}
+              </:col>
+            </.table>
+          </div>
         </div>
       </div>
       

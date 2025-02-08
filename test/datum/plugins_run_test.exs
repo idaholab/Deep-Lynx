@@ -48,7 +48,7 @@ defmodule Datum.PluginsRunTest do
       valid_attrs = %{
         name: "tdms index extractor_elixir",
         module_type: :elixir,
-        module_name: Datum.Plugins.TdmsIndex,
+        module_name: Datum.Plugins.Tdms,
         filetypes: [".tdms_index"],
         plugin_type: :extractor
       }
