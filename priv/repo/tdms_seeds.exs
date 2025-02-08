@@ -78,7 +78,10 @@ alias Datum.DataOrigin
 {:ok, nas_origin} =
   DataOrigin.create_origin(%{
     name: "NAS",
-    owned_by: admin.id
+    owned_by: admin.id,
+    config: %DataOrigin.Origin.FilesystemConfig{
+      path: "#{__DIR__}"
+    }
   })
 
 {:ok, sensor_db_origin} =

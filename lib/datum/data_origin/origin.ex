@@ -73,6 +73,7 @@ defmodule Datum.DataOrigin.Origin do
 end
 
 defmodule Datum.DataOrigin.Origin.S3Config do
+  @derive {Jason.Encoder, only: [:endpoint, :access_key_id, :secret_access_key, :bucket, :region]}
   @moduledoc """
   S3 Configuration for Data Origins
   """
@@ -96,6 +97,7 @@ defmodule Datum.DataOrigin.Origin.S3Config do
 end
 
 defmodule Datum.DataOrigin.Origin.R2Config do
+  @derive {Jason.Encoder, only: [:key_id, :secret, :account_id]}
   @moduledoc """
   R2 Configuration for Data Origins
   """
@@ -117,6 +119,7 @@ defmodule Datum.DataOrigin.Origin.R2Config do
 end
 
 defmodule Datum.DataOrigin.Origin.AzureConfig do
+  @derive {Jason.Encoder, only: [:connection_string, :container]}
   @moduledoc """
   Azure Blob Configuration for Data Origins
   """
@@ -137,6 +140,7 @@ defmodule Datum.DataOrigin.Origin.AzureConfig do
 end
 
 defmodule Datum.DataOrigin.Origin.FilesystemConfig do
+  @derive {Jason.Encoder, only: [:path, :network_user, :network_user_password, :watch]}
   @moduledoc """
   Filesystem configuration - needed to indicated this is a local filesystem and potentially should be scanned
   if it's a networked location - we need the information to make connections.
@@ -161,7 +165,7 @@ defmodule Datum.DataOrigin.Origin.FilesystemConfig do
 end
 
 defmodule Datum.DataOrigin.Origin.DuckDBConfig do
-  @derive {Jason.Encoder, only: [:path, :network_user, :network_user_password]}
+  @derive {Jason.Encoder, only: [:path, :network_user, :network_user_password, :watch]}
   @moduledoc """
   DuckDB Configuration for Data Origins
   """
@@ -170,6 +174,7 @@ defmodule Datum.DataOrigin.Origin.DuckDBConfig do
 
   embedded_schema do
     field :path, :string
+    field :watch, :boolean, default: false
     field :network_user, :string, default: nil
     field :network_user_password, :string, default: nil
   end

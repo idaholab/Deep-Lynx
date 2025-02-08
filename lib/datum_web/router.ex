@@ -72,6 +72,9 @@ defmodule DatumWeb.Router do
   scope "/", DatumWeb do
     pipe_through [:browser, :require_authenticated_user]
 
+    # a simple preview endpoint for origin's data who we have a config for
+    get "/origin/:origin_id/data/:data_id/preview", OriginController, :preview_data
+
     live_session :require_authenticated_user,
       on_mount: [{DatumWeb.UserAuth, :ensure_authenticated}] do
       live "/users/settings", UserSettingsLive, :edit

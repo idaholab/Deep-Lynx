@@ -528,6 +528,22 @@ defmodule Datum.DataOrigin do
     )
   end
 
+  def list_roots(%Origin{type: :duckdb} = origin) do
+    OriginRepo.with_dynamic_repo(
+      origin,
+      fn ->
+        query =
+          from d in Data,
+            distinct: true,
+            ## this marks a root file system in CTE
+            where: d.type == :table
+
+        OriginRepo.all(query)
+      end,
+      mode: :readonly
+    )
+  end
+
   def list_roots(%Origin{} = origin) do
     OriginRepo.with_dynamic_repo(
       origin,
