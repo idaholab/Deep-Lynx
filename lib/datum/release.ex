@@ -234,7 +234,7 @@ defmodule Datum.Release do
       #
       # https://hexdocs.pm/elixir/1.18.1/Process.html#monitor/1
 
-      pid = Datum.Scanner.watch(origin["id"], directories, options)
+      pid = Datum.Scanner.watch(origin["id"], options |> Keyword.put(:directories, directories))
 
       IO.puts("Starting filesystem watcher for #{directories}")
       Process.monitor(pid)

@@ -35,6 +35,10 @@ defmodule Datum.Duckdb do
     GenServer.call(pid, {:query, query}, :infinity)
   end
 
+  def result_to_df(result) do
+    Adbc.Result.materialize(result) |> Adbc.Result.to_map() |> Explorer.DataFrame.new()
+  end
+
   # Server
   @impl true
   def init(state) do

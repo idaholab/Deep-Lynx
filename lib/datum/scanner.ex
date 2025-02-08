@@ -30,11 +30,34 @@ defmodule Datum.Scanner do
     GenServer.call(Keyword.get(opts, :name, __MODULE__), {:scan, origin, dirs, opts})
   end
 
-  def watch(origin, dirs, opts \\ []) do
-    GenServer.call(Keyword.get(opts, :name, __MODULE__), {:watch, origin, dirs, opts})
+  def watch(origin, opts \\ []) do
+    GenServer.call(Keyword.get(opts, :name, __MODULE__), {:watch, origin, opts})
   end
 
   # Server
+  @doc """
+  Initialize function for the scanning of a DuckDB origin.
+  """
+  @impl true
+  def init(%{origin: %Origin{type: :duckdb} = origin} = state) do
+    if Map.get(state, :scan_on_start) do
+      Datum.Scanners.DuckDB.scan(origin)
+      IO.puts("Scan Finished")
+    end
+
+    if Map.get(state, :watch) do
+      {:ok, pid} = FileSystem.start_link(dirs: [origin.config["path"]])
+      FileSystem.subscribe(pid)
+
+      {:ok,
+       state
+       |> Map.put(:watcher_pid, pid)}
+    else
+      {:ok, state}
+    end
+  end
+
+  # init for fallback origins or filesystem scanner origins
   @impl true
   def init(state) do
     if Map.get(state, :scan_on_start) do
@@ -79,9 +102,30 @@ defmodule Datum.Scanner do
     end
   end
 
+  @doc """
+  The handler for a duckdb watcher - just a different way to get what path to watch out
+  """
   @impl true
-  def handle_call({:watch, origin, directories, opts}, _from, state) do
-    {:ok, pid} = FileSystem.start_link(dirs: directories)
+  def handle_call({:watch, %Origin{type: :duckdb} = origin, opts}, _from, state) do
+    {:ok, pid} =
+      FileSystem.start_link(
+        dirs: [Keyword.get(opts, :directories, origin.config["path"] |> Path.dirname())]
+      )
+
+    FileSystem.subscribe(pid)
+
+    {:reply, pid,
+     state
+     |> Map.put(:watcher_pid, pid)
+     |> Map.put(:origin, origin)
+     |> Map.put(:opts, opts)}
+  end
+
+  @impl true
+  def handle_call({:watch, origin, opts}, _from, state) do
+    {:ok, pid} =
+      FileSystem.start_link(dirs: Keyword.get(opts, :directories, [origin["config"]["path"]]))
+
     FileSystem.subscribe(pid)
 
     {:reply, pid,
@@ -157,6 +201,21 @@ defmodule Datum.Scanner do
     |> Enum.each(fn _result -> IO.puts("Finished scan") end)
 
     {:reply, :ok, state}
+  end
+
+  @impl true
+  def handle_info(
+        {:file_event, watcher_pid, {_path, events}},
+        %{watcher_pid: watcher_pid, origin: %Origin{type: :duckdb} = origin} = state
+      ) do
+    cond do
+      Enum.any?(events, &(&1 == :created || &1 == :modified || &1 == :moved_to || &1 == :closed)) ->
+        Datum.Scanners.DuckDB.scan(origin)
+        {:noreply, state}
+
+      Enum.any?(events, &(&1 == :deleted || &1 == :moved_to)) ->
+        {:stop, :database_deleted_or_moved, state}
+    end
   end
 
   @impl true
