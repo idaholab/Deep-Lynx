@@ -27,7 +27,7 @@ defmodule Datum.Scanners.Filesystem do
         path: root_path,
         original_path: Path.absname(root_path),
         type: :directory,
-        owned_by: Keyword.get(opts, :user_id)
+        owned_by: user.id
       })
 
     ## we have to make the original leaf node
