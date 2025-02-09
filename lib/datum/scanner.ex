@@ -40,20 +40,26 @@ defmodule Datum.Scanner do
   """
   @impl true
   def init(%{origin: %Origin{type: :duckdb} = origin} = state) do
-    if Map.get(state, :scan_on_start) do
-      Datum.Scanners.DuckDB.scan(origin)
-      IO.puts("Scan Finished")
-    end
-
-    if Map.get(state, :watch) do
-      {:ok, pid} = FileSystem.start_link(dirs: [origin.config["path"]])
-      FileSystem.subscribe(pid)
-
-      {:ok,
-       state
-       |> Map.put(:watcher_pid, pid)}
+    # if we can't find the file, we don't want to crash the supervisor - so we instead
+    # return :ignore so that we simply don't start the watchers or scans or anything
+    if !File.exists?(origin.config["path"]) do
+      :ignore
     else
-      {:ok, state}
+      if Map.get(state, :scan_on_start) do
+        Datum.Scanners.DuckDB.scan(origin)
+        IO.puts("Scan Finished")
+      end
+
+      if Map.get(state, :watch) do
+        {:ok, pid} = FileSystem.start_link(dirs: [Path.dirname(origin.config["path"])])
+        FileSystem.subscribe(pid)
+
+        {:ok,
+         state
+         |> Map.put(:watcher_pid, pid)}
+      else
+        {:ok, state}
+      end
     end
   end
 

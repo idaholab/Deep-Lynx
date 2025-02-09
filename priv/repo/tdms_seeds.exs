@@ -20,6 +20,8 @@ alias Datum.DataOrigin
     name: "INL Administrator"
   })
 
+Accounts.set_admin(admin)
+
 {:ok, %Datum.Plugins.Plugin{} = _plugin} =
   Datum.Plugins.create_plugin(%{
     name: "TDMS Metadata",
@@ -100,7 +102,7 @@ alias Datum.DataOrigin
     owned_by: admin.id,
     type: :duckdb,
     config: %DataOrigin.Origin.DuckDBConfig{
-      path: Path.join(System.user_home(), "deeplynx", "duckdbs", "general.duckdb"),
+      path: Path.join([System.user_home(), "deeplynx", "duckdbs", "general.duckdb"]),
       watch: true
     }
   })
@@ -111,7 +113,7 @@ alias Datum.DataOrigin
     owned_by: admin.id,
     type: :duckdb,
     config: %DataOrigin.Origin.DuckDBConfig{
-      path: Path.join(System.user_home(), "deeplynx", "duckdbs", "eh.duckdb"),
+      path: Path.join([System.user_home(), "deeplynx", "duckdbs", "eh.duckdb"]),
       watch: true
     }
   })
@@ -122,7 +124,7 @@ alias Datum.DataOrigin
     owned_by: admin.id,
     type: :duckdb,
     config: %DataOrigin.Origin.DuckDBConfig{
-      path: Path.join(System.user_home(), "deeplynx", "duckdbs", "th.duckdb"),
+      path: Path.join([System.user_home(), "deeplynx", "duckdbs", "th.duckdb"]),
       watch: true
     }
   })
@@ -133,7 +135,7 @@ alias Datum.DataOrigin
     owned_by: admin.id,
     type: :duckdb,
     config: %DataOrigin.Origin.DuckDBConfig{
-      path: Path.join(System.user_home(), "deeplynx", "duckdbs", "acc.duckdb"),
+      path: Path.join([System.user_home(), "deeplynx", "duckdbs", "acc.duckdb"]),
       watch: true
     }
   })

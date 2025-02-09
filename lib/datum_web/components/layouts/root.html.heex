@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
     <.live_title suffix=" · Data Catalog">
-      {assigns[:page_title] || "Datum"}
+      {assigns[:page_title] || "DeepLynx"}
     </.live_title>
     <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
     <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
@@ -15,7 +15,7 @@
     <div class="navbar bg-base-100">
       <div class="flex-1">
         <a class="btn btn-ghost" href={~p"/"}>
-          <img class="w-auto h-12" src="/images/lynx-white.png" />
+          <.logo class="w-auto h-12" />
         </a>
       </div>
       <div class="flex-none gap-2">
@@ -96,6 +96,20 @@
             </a>
           </div>
         </div>
+      </div>
+      <div>
+        <img
+          :if={
+            File.exists?(
+              Application.app_dir(
+                :datum,
+                Path.join(["priv", "static", "images", "custom_logo.png"])
+              )
+            )
+          }
+          src="/images/lynx-white.png"
+          class="mx-auto w-auto h-12"
+        />
       </div>
     </footer>
   </body>

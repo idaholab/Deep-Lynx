@@ -50,7 +50,8 @@ defmodule Datum.DataOrigin.Supervisor do
              },
              [name: String.to_atom(ShortUUID.encode!(origin.id))]
            ]},
-        id: ShortUUID.encode!(origin.id)
+        id: ShortUUID.encode!(origin.id),
+        restart: :transient
       }
     ]
   end

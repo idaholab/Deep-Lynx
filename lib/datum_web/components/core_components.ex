@@ -877,4 +877,23 @@ defmodule DatumWeb.CoreComponents do
   def translate_errors(errors, field) when is_list(errors) do
     for {^field, {msg, opts}} <- errors, do: translate_error({msg, opts})
   end
+
+  attr :class, :string, default: "w-auto h-12"
+
+  def logo(assigns) do
+    ~H"""
+    <img
+      class={@class}
+      src={
+        if File.exists?(
+             Application.app_dir(:datum, Path.join(["priv", "static", "images", "custom_logo.png"]))
+           ) do
+          "/images/custom_logo.png"
+        else
+          "/images/lynx-white.png"
+        end
+      }
+    />
+    """
+  end
 end

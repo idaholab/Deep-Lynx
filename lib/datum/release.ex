@@ -248,6 +248,19 @@ defmodule Datum.Release do
     end
   end
 
+  @doc """
+  This allows users to upload a custom PNG logo to be used in place of the DeepLynx logo in the upper left hand corner of the
+  app and the login screens.
+  """
+  def load_custom_logo(logo_location) do
+    if File.exists?(logo_location) do
+      File.cp(
+        logo_location,
+        Application.app_dir(@app, Path.join(["priv", "static", "images", "custom_logo.png"]))
+      )
+    end
+  end
+
   defp load_or_create_origin(client) do
     origins = Client.list_origins!(client)
 
