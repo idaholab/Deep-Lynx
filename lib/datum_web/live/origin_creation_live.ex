@@ -27,29 +27,26 @@ defmodule DatumWeb.OriginCreationLive do
         </ul>
         <div>
           <.simple_form for={@form} phx-submit="create_origin" phx-change="validate">
-          <.input
-            type="text"
-            field={@form[:data_origin_name]}
-            label={gettext("Data Origin Name")} />
+            <.input type="text" field={@form[:data_origin_name]} label={gettext("Data Origin Name")} />
 
-              <.input
-                label={gettext("Data Origin Type")}
-                type="select"
-                field={@form[:type]}
-                options={[
-                  {"AWS S3", :s3},
-                  {"File system", :filesystem},
-                  {"Default", :default},
-                  {"DuckDB Database", :duckdb}
-                ]}
-              />
-              <%!-- <%= if @type == "filesystem" do %> --%>
+            <.input
+              label={gettext("Data Origin Type")}
+              type="select"
+              field={@form[:type]}
+              options={[
+                {"AWS S3", :s3},
+                {"File system", :filesystem},
+                {"Default", :default},
+                {"DuckDB Database", :duckdb}
+              ]}
+            />
+            <%!-- <%= if @type == "filesystem" do %> --%>
+            <div class="pt-2">
+              <.input type="text" field={@form[:path]} label={gettext("Filesystem Path")} />
               <div class="pt-2">
-                <.input type="text" field={@form[:path]} label={gettext("Filesystem Path")} />
-                <div class="pt-2">
                 <.input type="checkbox" field={@form[:watch]} label={gettext("Watch data origin?")} />
-                </div>
               </div>
+            </div>
             <%!-- <% end %> --%>
 
             <button
