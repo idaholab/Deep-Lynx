@@ -9,7 +9,7 @@
 - [Node.js and NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm): used for UI libraries
 - Mix (should come with Elixir installation installed)
 - Rust: Required for building native plugins. Follow the installation instructions from [here](https://www.rust-lang.org/tools/install).
-- HDF5: Required for building certain plugins - can use native package manager or download from [here](https://www.hdfgroup.org/download-hdf5/)
+- `cmake`: Required for rust builds. For mac users, this can easily be installed by running `brew install cmake`. You can check out alternative download options [here](https://cmake.org/download/).
 - **optional**: [asdf](https://asdf-vm.com/guide/getting-started.html): version manager for Elixir, not available on Windows
 
 ### VSCode Extensions
@@ -46,6 +46,12 @@ Uncomment the top line in the `mix.exs` file and change the path to reflect the 
 
 You also need to modify the configuration file in `config/config.exs`, adding `cacerts_path: "/path/to/YOUR_COMPANY_CERT"` to the following lines like so: ![alt text](assets/README/configexs.png)
 
+### Modifying `config/dev.exs`
+
+You will also need to update your `secret_key_base` environment variable. To generate a new secret, type `mix phx.gen.secret` at the command line. Paste the resulting output into `secret_key_base` in `dev.exs` (full image cropped for security reasons):
+
+![alt text](assets/README/secret_key_base.png)
+
 ## Server Initialization
 
 1. To run the application, you must first get and compile the dependencies - `mix deps.get && mix deps.compile`.
@@ -75,26 +81,6 @@ Finished in 1.9 seconds (0.00s async, 1.9s sync)
 ## The File Structure
 
 The majority of development will be done in the lib folder with tests written in the aptly named test folder. Within lib, the datum_web folder is where the front-end views as well as their respective controller code reside, in addition to the front end router. The regular datum folder holds backend models and typically hosts business logic and business domain as well as DB interactions.
-
-## Troubleshooting
-
-### Rust NIF Compile Error
-
-Try installing cmake with `brew install cmake`. Then, rebuild the app with:
-- `mix deps.clean --all`
-- `mix deps.get && mix deps.compile`
-- `mix setup`
-
-### ArgumentError at GET /
-
-You will need to update your `secret_key_base` environment variable. To generate a new secret, type `mix phx.gen.secret` at the command line. Paste the resulting output into `secret_key_base` in `dev.exs` (full image cropped for security reasons):
-
-![alt text](assets/README/secret_key_base.png)
-
-Then, rebuild the app with:
-- `mix database.clean`
-- `mix setup`
-- `mix phx.server`
 
 ## Useful Links
 
