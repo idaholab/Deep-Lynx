@@ -122,7 +122,8 @@ defmodule Datum.MixProject do
         "ecto.setup",
         "assets.setup",
         "assets.build",
-        "sqlite.fetch"
+        "sqlite.fetch",
+        "docs"
       ],
       translations: ["gettext.extract", "gettext.merge priv/gettext --locale en"],
       "ecto.setup": ["database.clean", "ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
