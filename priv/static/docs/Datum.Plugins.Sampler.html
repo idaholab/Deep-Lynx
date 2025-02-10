@@ -8,7 +8,7 @@
     <meta name="project" content="DeepLynx v0.0.1">
 
 
-    <title>DatumWeb.UserSettingsLive — DeepLynx v0.0.1</title>
+    <title>Datum.Plugins.Sampler — DeepLynx v0.0.1</title>
 
     <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
 
@@ -51,7 +51,7 @@ DeepLynx
 
 <output role="status" id="toast"></output>
 
-<main class="content page-module" id="main" data-type="modules">
+<main class="content page-behaviour" id="main" data-type="modules">
   <div id="content" class="content-inner">
     <div class="top-search">
       <div class="search-settings">
@@ -79,13 +79,18 @@ DeepLynx
 <div id="top-content">
   <div class="heading-with-actions top-heading">
     <h1>
-      <span translate="no">DatumWeb.UserSettingsLive</span> 
+      <span translate="no">Datum.Plugins.Sampler</span> <small>behaviour</small>
       <small class="app-vsn" translate="no">(DeepLynx v0.0.1)</small>
 
     </h1>
 
   </div>
 
+
+    <section id="moduledoc">
+<p>Sampler module for running either the plugin system for extracting metadata 
+or native elixir code for doing the same.</p>
+    </section>
 
 </div>
 
@@ -96,6 +101,22 @@ DeepLynx
       </a>
       <span class="text">Summary</span>
     </h1>
+<div class="summary-callbacks summary">
+  <h2>
+    <a href="#callbacks">Callbacks</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#c:sample/2" data-no-tooltip="" translate="no">sample(path, opts)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The sample behavior that each Elixir based sampler should implement</p></div>
+
+    </div>
+
+</div>
 <div class="summary-functions summary">
   <h2>
     <a href="#functions">Functions</a>
@@ -103,31 +124,14 @@ DeepLynx
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#handle_event/3" data-no-tooltip="" translate="no">handle_event(binary, params, socket)</a>
+        <a href="#plugin_sample/3" data-no-tooltip="" translate="no">plugin_sample(plugin, path, opts \\ [])</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.0.4/Phoenix.LiveView.html#c:handle_event/3"><code class="inline">Phoenix.LiveView.handle_event/3</code></a>.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#mount/3" data-no-tooltip="" translate="no">mount(arg1, session, socket)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.0.4/Phoenix.LiveView.html#c:mount/3"><code class="inline">Phoenix.LiveView.mount/3</code></a>.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#render/1" data-no-tooltip="" translate="no">render(assigns)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.0.4/Phoenix.LiveView.html#c:render/1"><code class="inline">Phoenix.LiveView.render/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Sample with plugin is in charge of loading the WASM,Elixir, or Python modules from the Plugin schema and
+running the WASI runtime. Keep in mind that we should try and limit how
+often we compile the module, but we still need to start a genserver each time
+in order to limit file visibility to the directory where the file is at.</p></div>
 
     </div>
 
@@ -135,6 +139,43 @@ DeepLynx
 
   </section>
 
+
+  <section id="callbacks" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#callbacks">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Callbacks</span>
+    </h1>
+    <div class="callbacks-list">
+<section class="detail" id="c:sample/2">
+
+  <div class="detail-header">
+    <a href="#c:sample/2" class="detail-link" data-no-tooltip="" aria-label="Link to this callback">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">sample(path, opts)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@callback</span> sample(path :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), opts :: <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) ::
+  {:ok, %{}} | {:error, <a href="https://hexdocs.pm/elixir/Exception.html#t:t/0">Exception.t</a>()}</pre>
+
+      </div>
+
+<p>The sample behavior that each Elixir based sampler should implement</p>
+  </section>
+</section>
+
+    </div>
+  </section>
 
   <section id="functions" class="details-list">
     <h1 class="section-heading">
@@ -144,14 +185,16 @@ DeepLynx
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="handle_event/3">
+<section class="detail" id="plugin_sample/3">
+
+    <span id="plugin_sample/2"></span>
 
   <div class="detail-header">
-    <a href="#handle_event/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#plugin_sample/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">handle_event(binary, params, socket)</h1>
+      <h1 class="signature" translate="no">plugin_sample(plugin, path, opts \\ [])</h1>
 
 
     </div>
@@ -159,43 +202,10 @@ DeepLynx
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.0.4/Phoenix.LiveView.html#c:handle_event/3"><code class="inline">Phoenix.LiveView.handle_event/3</code></a>.</p>
-  </section>
-</section>
-<section class="detail" id="mount/3">
-
-  <div class="detail-header">
-    <a href="#mount/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">mount(arg1, session, socket)</h1>
-
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.0.4/Phoenix.LiveView.html#c:mount/3"><code class="inline">Phoenix.LiveView.mount/3</code></a>.</p>
-  </section>
-</section>
-<section class="detail" id="render/1">
-
-  <div class="detail-header">
-    <a href="#render/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">render(assigns)</h1>
-
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.0.4/Phoenix.LiveView.html#c:render/1"><code class="inline">Phoenix.LiveView.render/1</code></a>.</p>
+<p>Sample with plugin is in charge of loading the WASM,Elixir, or Python modules from the Plugin schema and
+running the WASI runtime. Keep in mind that we should try and limit how
+often we compile the module, but we still need to start a genserver each time
+in order to limit file visibility to the directory where the file is at.</p>
   </section>
 </section>
 

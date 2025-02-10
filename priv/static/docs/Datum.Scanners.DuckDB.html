@@ -8,7 +8,7 @@
     <meta name="project" content="DeepLynx v0.0.1">
 
 
-    <title>DatumWeb.UserSettingsLive — DeepLynx v0.0.1</title>
+    <title>Datum.Scanners.DuckDB — DeepLynx v0.0.1</title>
 
     <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
 
@@ -79,13 +79,20 @@ DeepLynx
 <div id="top-content">
   <div class="heading-with-actions top-heading">
     <h1>
-      <span translate="no">DatumWeb.UserSettingsLive</span> 
+      <span translate="no">Datum.Scanners.DuckDB</span> 
       <small class="app-vsn" translate="no">(DeepLynx v0.0.1)</small>
 
     </h1>
 
   </div>
 
+
+    <section id="moduledoc">
+<p>These are the functions for scanning a DuckDB origins or file and outputting a cohesive list of tables
+and columns. Like the Filesystem Scanner, you will need to handle a use case in which the Origin is one
+we have direct access to the database to manage - as well as the use case in which we are sending updates
+over the client socket (or just returning the data to the caller).</p>
+    </section>
 
 </div>
 
@@ -103,31 +110,12 @@ DeepLynx
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#handle_event/3" data-no-tooltip="" translate="no">handle_event(binary, params, socket)</a>
+        <a href="#scan/2" data-no-tooltip="" translate="no">scan(origin, opts \\ [])</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.0.4/Phoenix.LiveView.html#c:handle_event/3"><code class="inline">Phoenix.LiveView.handle_event/3</code></a>.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#mount/3" data-no-tooltip="" translate="no">mount(arg1, session, socket)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.0.4/Phoenix.LiveView.html#c:mount/3"><code class="inline">Phoenix.LiveView.mount/3</code></a>.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#render/1" data-no-tooltip="" translate="no">render(assigns)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.0.4/Phoenix.LiveView.html#c:render/1"><code class="inline">Phoenix.LiveView.render/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>This version of scan assumes we're working with an Origin record on the server itself. Returns a list
+of tables with their columns and data types.</p></div>
 
     </div>
 
@@ -144,14 +132,16 @@ DeepLynx
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="handle_event/3">
+<section class="detail" id="scan/2">
+
+    <span id="scan/1"></span>
 
   <div class="detail-header">
-    <a href="#handle_event/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#scan/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">handle_event(binary, params, socket)</h1>
+      <h1 class="signature" translate="no">scan(origin, opts \\ [])</h1>
 
 
     </div>
@@ -159,43 +149,8 @@ DeepLynx
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.0.4/Phoenix.LiveView.html#c:handle_event/3"><code class="inline">Phoenix.LiveView.handle_event/3</code></a>.</p>
-  </section>
-</section>
-<section class="detail" id="mount/3">
-
-  <div class="detail-header">
-    <a href="#mount/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">mount(arg1, session, socket)</h1>
-
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.0.4/Phoenix.LiveView.html#c:mount/3"><code class="inline">Phoenix.LiveView.mount/3</code></a>.</p>
-  </section>
-</section>
-<section class="detail" id="render/1">
-
-  <div class="detail-header">
-    <a href="#render/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">render(assigns)</h1>
-
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.0.4/Phoenix.LiveView.html#c:render/1"><code class="inline">Phoenix.LiveView.render/1</code></a>.</p>
+<p>This version of scan assumes we're working with an Origin record on the server itself. Returns a list
+of tables with their columns and data types.</p>
   </section>
 </section>
 

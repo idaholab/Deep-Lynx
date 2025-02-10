@@ -8,7 +8,7 @@
     <meta name="project" content="DeepLynx v0.0.1">
 
 
-    <title>DatumWeb.UserSettingsLive — DeepLynx v0.0.1</title>
+    <title>Datum.Plugins.HDF5 — DeepLynx v0.0.1</title>
 
     <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
 
@@ -79,13 +79,26 @@ DeepLynx
 <div id="top-content">
   <div class="heading-with-actions top-heading">
     <h1>
-      <span translate="no">DatumWeb.UserSettingsLive</span> 
+      <span translate="no">Datum.Plugins.HDF5</span> 
       <small class="app-vsn" translate="no">(DeepLynx v0.0.1)</small>
 
     </h1>
 
   </div>
 
+
+    <section id="moduledoc">
+<p>General metadata extraction for HDF5 files.</p><p>This module provides functionality to extract metadata from HDF5 files,
+leveraging Rust. HDF5 (Hierarchical Data Format version 5)
+is a file format and set of tools for managing complex data. This module
+aims to facilitate the extraction of metadata such as dataset names,
+group names, attributes and other information from HDF5 files.</p><p>The extraction functionality is implemented using the <code class="inline">hdf5-rust</code> library,
+which is a wrapper around the HDF5 C library. This allows efficient
+interaction with HDF5 files. The <code class="inline">rustler</code> library is used to enable
+integration between Rust and Elixir, providing the necessary
+bindings to call Rust functions from Elixir code.</p><p><a href="https://github.com/rusterlium/rustler">https://github.com/rusterlium/rustler</a></p><p>Extract metadata from an HDF5 file
+metadata = Datum.Plugins.HDF5.extract(&quot;path/to/file.h5&quot;, [])</p>
+    </section>
 
 </div>
 
@@ -103,31 +116,9 @@ DeepLynx
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#handle_event/3" data-no-tooltip="" translate="no">handle_event(binary, params, socket)</a>
+        <a href="#extract/2" data-no-tooltip="" translate="no">extract(file_path, opts)</a>
 
       </div>
-
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.0.4/Phoenix.LiveView.html#c:handle_event/3"><code class="inline">Phoenix.LiveView.handle_event/3</code></a>.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#mount/3" data-no-tooltip="" translate="no">mount(arg1, session, socket)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.0.4/Phoenix.LiveView.html#c:mount/3"><code class="inline">Phoenix.LiveView.mount/3</code></a>.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#render/1" data-no-tooltip="" translate="no">render(assigns)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.0.4/Phoenix.LiveView.html#c:render/1"><code class="inline">Phoenix.LiveView.render/1</code></a>.</p></div>
 
     </div>
 
@@ -144,14 +135,14 @@ DeepLynx
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="handle_event/3">
+<section class="detail" id="extract/2">
 
   <div class="detail-header">
-    <a href="#handle_event/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#extract/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">handle_event(binary, params, socket)</h1>
+      <h1 class="signature" translate="no">extract(file_path, opts)</h1>
 
 
     </div>
@@ -159,43 +150,7 @@ DeepLynx
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.0.4/Phoenix.LiveView.html#c:handle_event/3"><code class="inline">Phoenix.LiveView.handle_event/3</code></a>.</p>
-  </section>
-</section>
-<section class="detail" id="mount/3">
 
-  <div class="detail-header">
-    <a href="#mount/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">mount(arg1, session, socket)</h1>
-
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.0.4/Phoenix.LiveView.html#c:mount/3"><code class="inline">Phoenix.LiveView.mount/3</code></a>.</p>
-  </section>
-</section>
-<section class="detail" id="render/1">
-
-  <div class="detail-header">
-    <a href="#render/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">render(assigns)</h1>
-
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.0.4/Phoenix.LiveView.html#c:render/1"><code class="inline">Phoenix.LiveView.render/1</code></a>.</p>
   </section>
 </section>
 

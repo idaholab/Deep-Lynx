@@ -4,34 +4,22 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.36.1">
+    <meta name="generator" content="ExDoc v0.37.0">
     <meta name="project" content="DeepLynx v0.0.1">
 
 
     <title>DatumWeb.Client — DeepLynx v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-QYVRUQZX.css" />
 
-    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-C0206226.js"></script>
-    <script src="docs_config.js"></script>
-    <script async src="dist/html-HJ5ACJPS.js"></script>
+    <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
+
+    <script defer src="dist/sidebar_items-A987CEBA.js"></script>
+    <script defer src="docs_config.js"></script>
+    <script defer src="dist/html-6VTPNSGQ.js"></script>
 
   </head>
-  <body class="sidebar-closed">
-    <script>
-
-      try {
-        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
-
-        if (settings.theme === 'dark' ||
-           ((settings.theme === 'system' || settings.theme == null) &&
-             window.matchMedia('(prefers-color-scheme: dark)').matches)
-           ) {
-          document.body.classList.add('dark')
-        }
-      } catch (error) { }
-    </script>
+  <body>
+    <script>(()=>{var t="ex_doc:settings",e="dark";var o="dark",s="light";var E="sidebar_state",n="closed";var r="sidebar_width";var a="sidebar-open";var i=new URLSearchParams(window.location.search),S=i.get("theme")||JSON.parse(localStorage.getItem(t)||"{}").theme;(S===o||S!==s&&window.matchMedia("(prefers-color-scheme: dark)").matches)&&document.body.classList.add(e);var d=sessionStorage.getItem(E),A=d!==n&&!window.matchMedia(`screen and (max-width: ${768}px)`).matches;document.body.classList.toggle(a,A);var c=sessionStorage.getItem(r);c&&document.body.style.setProperty("--sidebarWidth",`${c}px`);var p=/(Macintosh|iPhone|iPad|iPod)/.test(window.navigator.userAgent);document.documentElement.classList.toggle("apple-os",p);})();
+</script>
 
 <div class="body-wrapper">
 
@@ -57,42 +45,8 @@ DeepLynx
         </div>
       </div>
     </div>
-    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist">
-      <li>
-        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
-Pages
-        </button>
-      </li>
-
-        <li>
-          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
-            Modules
-          </button>
-        </li>
-
-
-        <li>
-          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
-            <span translate="no">Mix</span> Tasks
-          </button>
-        </li>
-
-    </ul>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras=""></ul>
   </div>
-
-  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
-    <ul id="extras-full-list" class="full-list"></ul>
-  </div>
-
-    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
-      <ul id="modules-full-list" class="full-list"></ul>
-    </div>
-
-
-    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
-      <ul id="tasks-full-list" class="full-list"></ul>
-    </div>
-
 </nav>
 
 <output role="status" id="toast"></output>
@@ -123,12 +77,14 @@ Pages
     </div>
 
 <div id="top-content">
-  <h1>
+  <div class="heading-with-actions top-heading">
+    <h1>
+      <span translate="no">DatumWeb.Client</span> 
+      <small class="app-vsn" translate="no">(DeepLynx v0.0.1)</small>
 
-    <span translate="no">DatumWeb.Client</span> 
-    <small class="app-vsn" translate="no">(DeepLynx v0.0.1)</small>
+    </h1>
 
-  </h1>
+  </div>
 
 
     <section id="moduledoc">
@@ -151,7 +107,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#create_data/3" data-no-tooltip translate="no">create_data(client, origin_id, params)</a>
+        <a href="#create_data/3" data-no-tooltip="" translate="no">create_data(client, origin_id, params)</a>
 
       </div>
 
@@ -159,7 +115,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#create_data!/3" data-no-tooltip translate="no">create_data!(client, origin_id, params)</a>
+        <a href="#create_data!/3" data-no-tooltip="" translate="no">create_data!(client, origin_id, params)</a>
 
       </div>
 
@@ -167,7 +123,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#create_origin/2" data-no-tooltip translate="no">create_origin(client, params)</a>
+        <a href="#create_origin/2" data-no-tooltip="" translate="no">create_origin(client, params)</a>
 
       </div>
 
@@ -175,7 +131,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#create_origin!/2" data-no-tooltip translate="no">create_origin!(client, params)</a>
+        <a href="#create_origin!/2" data-no-tooltip="" translate="no">create_origin!(client, params)</a>
 
       </div>
 
@@ -183,7 +139,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#current_user_info/1" data-no-tooltip translate="no">current_user_info(client)</a>
+        <a href="#current_user_info/1" data-no-tooltip="" translate="no">current_user_info(client)</a>
 
       </div>
 
@@ -194,7 +150,7 @@ token fishing.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#current_user_info!/1" data-no-tooltip translate="no">current_user_info!(client)</a>
+        <a href="#current_user_info!/1" data-no-tooltip="" translate="no">current_user_info!(client)</a>
 
       </div>
 
@@ -204,7 +160,7 @@ token fishing.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#list_origins/1" data-no-tooltip translate="no">list_origins(client)</a>
+        <a href="#list_origins/1" data-no-tooltip="" translate="no">list_origins(client)</a>
 
       </div>
 
@@ -214,7 +170,7 @@ token fishing.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#list_origins!/1" data-no-tooltip translate="no">list_origins!(client)</a>
+        <a href="#list_origins!/1" data-no-tooltip="" translate="no">list_origins!(client)</a>
 
       </div>
 
@@ -224,7 +180,7 @@ token fishing.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#list_plugins/1" data-no-tooltip translate="no">list_plugins(client)</a>
+        <a href="#list_plugins/1" data-no-tooltip="" translate="no">list_plugins(client)</a>
 
       </div>
 
@@ -234,7 +190,7 @@ token fishing.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#list_plugins!/1" data-no-tooltip translate="no">list_plugins!(client)</a>
+        <a href="#list_plugins!/1" data-no-tooltip="" translate="no">list_plugins!(client)</a>
 
       </div>
 
@@ -244,7 +200,7 @@ token fishing.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#new/2" data-no-tooltip translate="no">new(endpoint, opts \\ [])</a>
+        <a href="#new/2" data-no-tooltip="" translate="no">new(endpoint, opts \\ [])</a>
 
       </div>
 
@@ -254,7 +210,7 @@ token fishing.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#new!/2" data-no-tooltip translate="no">new!(endpoint, opts \\ [])</a>
+        <a href="#new!/2" data-no-tooltip="" translate="no">new!(endpoint, opts \\ [])</a>
 
       </div>
 
@@ -262,7 +218,7 @@ token fishing.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#upload_data_origin/2" data-no-tooltip translate="no">upload_data_origin(client, origin_db_path)</a>
+        <a href="#upload_data_origin/2" data-no-tooltip="" translate="no">upload_data_origin(client, origin_db_path)</a>
 
       </div>
 
@@ -272,7 +228,7 @@ token fishing.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#upload_data_origin!/2" data-no-tooltip translate="no">upload_data_origin!(client, origin_db_path)</a>
+        <a href="#upload_data_origin!/2" data-no-tooltip="" translate="no">upload_data_origin!(client, origin_db_path)</a>
 
       </div>
 
@@ -296,12 +252,14 @@ token fishing.</p></div>
 <section class="detail" id="create_data/3">
 
   <div class="detail-header">
-    <a href="#create_data/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#create_data/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">create_data(client, origin_id, params)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">create_data(client, origin_id, params)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -312,12 +270,14 @@ token fishing.</p></div>
 <section class="detail" id="create_data!/3">
 
   <div class="detail-header">
-    <a href="#create_data!/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#create_data!/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">create_data!(client, origin_id, params)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">create_data!(client, origin_id, params)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -328,12 +288,14 @@ token fishing.</p></div>
 <section class="detail" id="create_origin/2">
 
   <div class="detail-header">
-    <a href="#create_origin/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#create_origin/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">create_origin(client, params)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">create_origin(client, params)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -344,12 +306,14 @@ token fishing.</p></div>
 <section class="detail" id="create_origin!/2">
 
   <div class="detail-header">
-    <a href="#create_origin!/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#create_origin!/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">create_origin!(client, params)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">create_origin!(client, params)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -360,12 +324,14 @@ token fishing.</p></div>
 <section class="detail" id="current_user_info/1">
 
   <div class="detail-header">
-    <a href="#current_user_info/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#current_user_info/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">current_user_info(client)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">current_user_info(client)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -377,12 +343,14 @@ token fishing.</p>
 <section class="detail" id="current_user_info!/1">
 
   <div class="detail-header">
-    <a href="#current_user_info!/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#current_user_info!/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">current_user_info!(client)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">current_user_info!(client)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -393,12 +361,14 @@ token fishing.</p>
 <section class="detail" id="list_origins/1">
 
   <div class="detail-header">
-    <a href="#list_origins/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#list_origins/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">list_origins(client)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">list_origins(client)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -409,12 +379,14 @@ token fishing.</p>
 <section class="detail" id="list_origins!/1">
 
   <div class="detail-header">
-    <a href="#list_origins!/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#list_origins!/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">list_origins!(client)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">list_origins!(client)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -425,12 +397,14 @@ token fishing.</p>
 <section class="detail" id="list_plugins/1">
 
   <div class="detail-header">
-    <a href="#list_plugins/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#list_plugins/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">list_plugins(client)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">list_plugins(client)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -441,12 +415,14 @@ token fishing.</p>
 <section class="detail" id="list_plugins!/1">
 
   <div class="detail-header">
-    <a href="#list_plugins!/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#list_plugins!/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">list_plugins!(client)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">list_plugins!(client)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -459,12 +435,14 @@ token fishing.</p>
     <span id="new/1"></span>
 
   <div class="detail-header">
-    <a href="#new/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#new/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">new(endpoint, opts \\ [])</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">new(endpoint, opts \\ [])</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -477,12 +455,14 @@ token fishing.</p>
     <span id="new!/1"></span>
 
   <div class="detail-header">
-    <a href="#new!/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#new!/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">new!(endpoint, opts \\ [])</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">new!(endpoint, opts \\ [])</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -493,12 +473,14 @@ token fishing.</p>
 <section class="detail" id="upload_data_origin/2">
 
   <div class="detail-header">
-    <a href="#upload_data_origin/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#upload_data_origin/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">upload_data_origin(client, origin_db_path)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">upload_data_origin(client, origin_db_path)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -509,12 +491,14 @@ token fishing.</p>
 <section class="detail" id="upload_data_origin!/2">
 
   <div class="detail-header">
-    <a href="#upload_data_origin!/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#upload_data_origin!/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">upload_data_origin!(client, origin_db_path)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">upload_data_origin!(client, origin_db_path)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -543,7 +527,7 @@ token fishing.</p>
 
       <p class="built-using">
         Built using
-        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.36.1) for the
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.37.0) for the
 
           <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 

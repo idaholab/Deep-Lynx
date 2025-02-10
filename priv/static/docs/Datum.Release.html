@@ -4,34 +4,22 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.36.1">
+    <meta name="generator" content="ExDoc v0.37.0">
     <meta name="project" content="DeepLynx v0.0.1">
 
 
     <title>Datum.Release — DeepLynx v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-QYVRUQZX.css" />
 
-    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-C0206226.js"></script>
-    <script src="docs_config.js"></script>
-    <script async src="dist/html-HJ5ACJPS.js"></script>
+    <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
+
+    <script defer src="dist/sidebar_items-A987CEBA.js"></script>
+    <script defer src="docs_config.js"></script>
+    <script defer src="dist/html-6VTPNSGQ.js"></script>
 
   </head>
-  <body class="sidebar-closed">
-    <script>
-
-      try {
-        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
-
-        if (settings.theme === 'dark' ||
-           ((settings.theme === 'system' || settings.theme == null) &&
-             window.matchMedia('(prefers-color-scheme: dark)').matches)
-           ) {
-          document.body.classList.add('dark')
-        }
-      } catch (error) { }
-    </script>
+  <body>
+    <script>(()=>{var t="ex_doc:settings",e="dark";var o="dark",s="light";var E="sidebar_state",n="closed";var r="sidebar_width";var a="sidebar-open";var i=new URLSearchParams(window.location.search),S=i.get("theme")||JSON.parse(localStorage.getItem(t)||"{}").theme;(S===o||S!==s&&window.matchMedia("(prefers-color-scheme: dark)").matches)&&document.body.classList.add(e);var d=sessionStorage.getItem(E),A=d!==n&&!window.matchMedia(`screen and (max-width: ${768}px)`).matches;document.body.classList.toggle(a,A);var c=sessionStorage.getItem(r);c&&document.body.style.setProperty("--sidebarWidth",`${c}px`);var p=/(Macintosh|iPhone|iPad|iPod)/.test(window.navigator.userAgent);document.documentElement.classList.toggle("apple-os",p);})();
+</script>
 
 <div class="body-wrapper">
 
@@ -57,42 +45,8 @@ DeepLynx
         </div>
       </div>
     </div>
-    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist">
-      <li>
-        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
-Pages
-        </button>
-      </li>
-
-        <li>
-          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
-            Modules
-          </button>
-        </li>
-
-
-        <li>
-          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
-            <span translate="no">Mix</span> Tasks
-          </button>
-        </li>
-
-    </ul>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras=""></ul>
   </div>
-
-  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
-    <ul id="extras-full-list" class="full-list"></ul>
-  </div>
-
-    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
-      <ul id="modules-full-list" class="full-list"></ul>
-    </div>
-
-
-    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
-      <ul id="tasks-full-list" class="full-list"></ul>
-    </div>
-
 </nav>
 
 <output role="status" id="toast"></output>
@@ -123,12 +77,14 @@ Pages
     </div>
 
 <div id="top-content">
-  <h1>
+  <div class="heading-with-actions top-heading">
+    <h1>
+      <span translate="no">Datum.Release</span> 
+      <small class="app-vsn" translate="no">(DeepLynx v0.0.1)</small>
 
-    <span translate="no">Datum.Release</span> 
-    <small class="app-vsn" translate="no">(DeepLynx v0.0.1)</small>
+    </h1>
 
-  </h1>
+  </div>
 
 
     <section id="moduledoc">
@@ -152,7 +108,7 @@ installed.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#help/1" data-no-tooltip translate="no">help(args)</a>
+        <a href="#help/1" data-no-tooltip="" translate="no">help(args)</a>
 
       </div>
 
@@ -160,7 +116,7 @@ installed.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#init/1" data-no-tooltip translate="no">init(args)</a>
+        <a href="#init/1" data-no-tooltip="" translate="no">init(args)</a>
 
       </div>
 
@@ -168,7 +124,18 @@ installed.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#migrate/0" data-no-tooltip translate="no">migrate()</a>
+        <a href="#load_custom_logo/1" data-no-tooltip="" translate="no">load_custom_logo(logo_location)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>This allows users to upload a custom PNG logo to be used in place of the DeepLynx logo in the upper left hand corner of the
+app and the login screens.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#migrate/0" data-no-tooltip="" translate="no">migrate()</a>
 
       </div>
 
@@ -176,7 +143,7 @@ installed.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#rollback/2" data-no-tooltip translate="no">rollback(repo, version)</a>
+        <a href="#rollback/2" data-no-tooltip="" translate="no">rollback(repo, version)</a>
 
       </div>
 
@@ -184,7 +151,7 @@ installed.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#scan/1" data-no-tooltip translate="no">scan(args)</a>
+        <a href="#scan/1" data-no-tooltip="" translate="no">scan(args)</a>
 
       </div>
 
@@ -192,7 +159,7 @@ installed.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#seed/1" data-no-tooltip translate="no">seed(args)</a>
+        <a href="#seed/1" data-no-tooltip="" translate="no">seed(seed_file)</a>
 
       </div>
 
@@ -200,7 +167,7 @@ installed.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#seed_db/1" data-no-tooltip translate="no">seed_db(arg1)</a>
+        <a href="#seed_db/1" data-no-tooltip="" translate="no">seed_db(arg1)</a>
 
       </div>
 
@@ -208,7 +175,7 @@ installed.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#system_test/0" data-no-tooltip translate="no">system_test()</a>
+        <a href="#system_test/0" data-no-tooltip="" translate="no">system_test()</a>
 
       </div>
 
@@ -230,12 +197,14 @@ installed.</p>
 <section class="detail" id="help/1">
 
   <div class="detail-header">
-    <a href="#help/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#help/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">help(args)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">help(args)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -246,12 +215,14 @@ installed.</p>
 <section class="detail" id="init/1">
 
   <div class="detail-header">
-    <a href="#init/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#init/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">init(args)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">init(args)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -259,15 +230,36 @@ installed.</p>
 
   </section>
 </section>
+<section class="detail" id="load_custom_logo/1">
+
+  <div class="detail-header">
+    <a href="#load_custom_logo/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">load_custom_logo(logo_location)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>This allows users to upload a custom PNG logo to be used in place of the DeepLynx logo in the upper left hand corner of the
+app and the login screens.</p>
+  </section>
+</section>
 <section class="detail" id="migrate/0">
 
   <div class="detail-header">
-    <a href="#migrate/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#migrate/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">migrate()</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">migrate()</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -278,12 +270,14 @@ installed.</p>
 <section class="detail" id="rollback/2">
 
   <div class="detail-header">
-    <a href="#rollback/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#rollback/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">rollback(repo, version)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">rollback(repo, version)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -294,12 +288,14 @@ installed.</p>
 <section class="detail" id="scan/1">
 
   <div class="detail-header">
-    <a href="#scan/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#scan/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">scan(args)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">scan(args)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -310,12 +306,14 @@ installed.</p>
 <section class="detail" id="seed/1">
 
   <div class="detail-header">
-    <a href="#seed/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#seed/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">seed(args)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">seed(seed_file)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -326,12 +324,14 @@ installed.</p>
 <section class="detail" id="seed_db/1">
 
   <div class="detail-header">
-    <a href="#seed_db/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#seed_db/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">seed_db(arg1)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">seed_db(arg1)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -342,12 +342,14 @@ installed.</p>
 <section class="detail" id="system_test/0">
 
   <div class="detail-header">
-    <a href="#system_test/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#system_test/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">system_test()</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">system_test()</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -376,7 +378,7 @@ installed.</p>
 
       <p class="built-using">
         Built using
-        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.36.1) for the
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.37.0) for the
 
           <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
