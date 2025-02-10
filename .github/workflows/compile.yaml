@@ -39,6 +39,8 @@ jobs:
           arch: x64
       - run: mix deps.get
       - run: mix deps.compile
+      - run: cd assets && npm ci --progress=false --no-audit --loglevel=error
+      - run: mix assets.deploy
       - run: mix release
       - run: tar -czvf deeplynx-${{matrix.os}}-${{github.run_number}}.tar.gz _build/prod/rel/datum
       - uses: actions/upload-artifact@v4

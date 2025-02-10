@@ -30,7 +30,7 @@ defmodule Datum.DataOrigin.Supervisor do
 
   # create a new function for each data origin type - or it will default to nothing, which will get
   # ignored by the supervisor
-  def child_spec_from_origin(%DataOrigin.Origin{type: :filesystem} = origin) do
+  def child_spec_from_origin(origin) when origin.type in [:filesystem, :duckdb] do
     # we start the scanner under the permissions of the owner 
     user = Accounts.get_user(origin.owned_by)
 
@@ -50,7 +50,8 @@ defmodule Datum.DataOrigin.Supervisor do
              },
              [name: String.to_atom(ShortUUID.encode!(origin.id))]
            ]},
-        id: ShortUUID.encode!(origin.id)
+        id: ShortUUID.encode!(origin.id),
+        restart: :transient
       }
     ]
   end

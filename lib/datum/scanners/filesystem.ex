@@ -27,7 +27,7 @@ defmodule Datum.Scanners.Filesystem do
         path: root_path,
         original_path: Path.absname(root_path),
         type: :directory,
-        owned_by: Keyword.get(opts, :user_id)
+        owned_by: user.id
       })
 
     ## we have to make the original leaf node
@@ -117,7 +117,8 @@ defmodule Datum.Scanners.Filesystem do
         properties: %{plugin_generated_metadata: metadatas},
         owned_by: user.id,
         checksum: checksum,
-        checksum_type: checksum_type
+        checksum_type: checksum_type,
+        original_path: Path.absname(path)
       })
 
     if parent do
@@ -126,7 +127,8 @@ defmodule Datum.Scanners.Filesystem do
       {:ok, dir} =
         DataOrigin.add_data(origin, user, %{
           path: Path.dirname(path),
-          type: :directory
+          type: :directory,
+          original_path: Path.absname(path)
         })
 
       DataOrigin.connect_data(origin, dir, child)

@@ -15,8 +15,8 @@
   Datum.Plugins.create_plugin(%{
     name: "TDMS Metadata",
     module_type: :elixir,
-    module_name: Datum.Plugins.TdmsIndex,
-    filetypes: [".tdms_index", ".tdms"],
+    module_name: Datum.Plugins.Tdms,
+    filetypes: [".tdms"],
     plugin_type: :extractor
   })
 

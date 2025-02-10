@@ -641,37 +641,57 @@ defmodule DatumWeb.CoreComponents do
   @doc """
   Renders information about a file
   """
+  attr :data, :map
+  attr :origin, :map
+
   def file_page(assigns) do
     ~H"""
     <div>
       <!-- Name and Description -->
       <div class="flex justify-between space-x-4 mb-4">
         <div class="card card-compact flex-1 bg-base-200 shadow-xl flex">
-          <%= if @properties do %>
+          <%= if @data.properties && @data.path|> Path.extname() == ".tdms" do %>
             <!-- use the TDMS metadata viewer if appropriate -->
             <.live_component
               id="tdms_metadata_component"
-              file_name={@file_name}
-              properties={@properties}
-              description={@description}
+              file_name={@data.path}
+              properties={@data.properties}
+              description={@data.description}
               module={DatumWeb.LiveComponent.TDMSMetadata}
               selected_type="File"
-              selected_item={@file_name}
-              selected_properties={Map.get(@properties, "properties")}
+              selected_item={@data.path}
+              selected_properties={Map.get(@data.properties, "properties")}
             />
           <% else %>
             <!-- Only basic content for non-TDMS files  -->
             <div class="card-body w-3/4">
-              <h2 class="card-title">{gettext("File Name:")} {@file_name}</h2>
+              <h2 class="card-title">{gettext("File Name:")} {@data.path}</h2>
               <p>
-                {if @description do
-                  @description
+                {if @data.description do
+                  @data.description
                 else
-                  "No description for this file"
+                  gettext("No description for this file")
                 end}
               </p>
+
+              <img
+                :if={@data.original_path && Path.extname(@data.path) in [".png", "png"]}
+                src={"/origin/#{@origin.id}/data/#{@data.id}/preview"}
+              />
             </div>
           <% end %>
+
+          <div :if={@data.type == :table && @origin.type == :duckdb} class="card-body w-3/4">
+            <h2 class="card-title">{gettext("Table Information")}: {@data.path}</h2>
+            <.table id={"#{@data.path}-table"} rows={@data.properties["columns"]}>
+              <:col :let={data} label={gettext("Column Name")}>
+                {data["column_name"]}
+              </:col>
+              <:col :let={data} label={gettext("Column Type")}>
+                {data["data_type"]}
+              </:col>
+            </.table>
+          </div>
         </div>
       </div>
       
@@ -681,7 +701,7 @@ defmodule DatumWeb.CoreComponents do
           <div class="card-body">
             <h2 class="card-title">{gettext("Tags")}</h2>
             <div>
-              <%= for tag <- @tags do %>
+              <%= for tag <- @data.tags do %>
                 <div class="badge badge-outline">{tag}</div>
               <% end %>
             </div>
@@ -692,7 +712,7 @@ defmodule DatumWeb.CoreComponents do
           <div class="card-body">
             <h2 class="card-title">{gettext("Domains")}</h2>
             <div>
-              <%= for domain <- @domains do %>
+              <%= for domain <- @data.domains do %>
                 <div class="badge badge-outline">{domain}</div>
               <% end %>
             </div>
@@ -856,5 +876,24 @@ defmodule DatumWeb.CoreComponents do
   """
   def translate_errors(errors, field) when is_list(errors) do
     for {^field, {msg, opts}} <- errors, do: translate_error({msg, opts})
+  end
+
+  attr :class, :string, default: "w-auto h-12"
+
+  def logo(assigns) do
+    ~H"""
+    <img
+      class={@class}
+      src={
+        if File.exists?(
+             Application.app_dir(:datum, Path.join(["priv", "static", "images", "custom_logo.png"]))
+           ) do
+          "/images/custom_logo.png"
+        else
+          "/images/lynx-white.png"
+        end
+      }
+    />
+    """
   end
 end

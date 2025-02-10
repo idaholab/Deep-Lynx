@@ -234,7 +234,7 @@ defmodule Datum.Release do
       #
       # https://hexdocs.pm/elixir/1.18.1/Process.html#monitor/1
 
-      pid = Datum.Scanner.watch(origin["id"], directories, options)
+      pid = Datum.Scanner.watch(origin["id"], options |> Keyword.put(:directories, directories))
 
       IO.puts("Starting filesystem watcher for #{directories}")
       Process.monitor(pid)
@@ -245,6 +245,19 @@ defmodule Datum.Release do
             System.halt(0)
           end
       end
+    end
+  end
+
+  @doc """
+  This allows users to upload a custom PNG logo to be used in place of the DeepLynx logo in the upper left hand corner of the
+  app and the login screens.
+  """
+  def load_custom_logo(logo_location) do
+    if File.exists?(logo_location) do
+      File.cp(
+        logo_location,
+        Application.app_dir(@app, Path.join(["priv", "static", "images", "custom_logo.png"]))
+      )
     end
   end
 

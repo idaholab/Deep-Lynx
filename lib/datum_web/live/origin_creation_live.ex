@@ -29,6 +29,26 @@ defmodule DatumWeb.OriginCreationLive do
           <.simple_form for={@form} phx-submit="create_origin" phx-change="validate">
             <.input type="text" field={@form[:data_origin_name]} label={gettext("Data Origin Name")} />
 
+            <.input
+              label={gettext("Data Origin Type")}
+              type="select"
+              field={@form[:type]}
+              options={[
+                {"AWS S3", :s3},
+                {"File system", :filesystem},
+                {"Default", :default},
+                {"DuckDB Database", :duckdb}
+              ]}
+            />
+            <%!-- <%= if @type == "filesystem" do %> --%>
+            <div class="pt-2">
+              <.input type="text" field={@form[:path]} label={gettext("Filesystem Path")} />
+              <div class="pt-2">
+                <.input type="checkbox" field={@form[:watch]} label={gettext("Watch data origin?")} />
+              </div>
+            </div>
+            <%!-- <% end %> --%>
+
             <button
               :if={!@create_result || @create_result.ok?}
               type="submit"
@@ -80,8 +100,9 @@ defmodule DatumWeb.OriginCreationLive do
      |> assign(:current_user, user)
      |> assign(:create_result, nil)
      |> assign(:create_result_send, nil)
-     |> assign(:form, to_form(%{"data_origin_name" => nil}))
+     |> assign(:form, to_form(%{"data_origin_name" => nil, "type" => nil}))
      |> assign(:tab, tab)
+     |> assign(:type, nil)
      |> assign(:id, user.id)}
   end
 
@@ -91,14 +112,41 @@ defmodule DatumWeb.OriginCreationLive do
     {:noreply, socket}
   end
 
-  def handle_event("validate", %{"data_origin_name" => data_origin_name}, socket) do
-    changeset = Datum.DataOrigin.change_origin(%Origin{}, %{name: data_origin_name})
-    {:noreply, assign_form(socket, Map.put(changeset, :action, :validate))}
+  def handle_event(
+        "validate",
+        %{
+          "data_origin_name" => name,
+          "type" => type,
+          "path" => path,
+          "watch" => watch
+        },
+        socket
+      ) do
+    changeset =
+      Datum.DataOrigin.change_origin(%Origin{}, %{
+        name: name,
+        type: type,
+        config: %{path: path, watch: watch}
+      })
+
+    {:noreply,
+     socket
+     |> assign(:type, type)
+     |> assign_form(Map.put(changeset, :action, :validate))}
   end
 
   # this sends the user's input to the create a data origin
   @impl true
-  def handle_event("create_origin", %{"data_origin_name" => name}, socket) do
+  def handle_event(
+        "create_origin",
+        %{
+          "data_origin_name" => name,
+          "type" => type,
+          "path" => path,
+          "watch" => watch
+        },
+        socket
+      ) do
     if !name do
       {:noreply, socket |> put_flash(:error, gettext("Please type data origin type"))}
     else
@@ -115,7 +163,9 @@ defmodule DatumWeb.OriginCreationLive do
             create_result:
               Datum.DataOrigin.create_origin(%{
                 name: name,
-                owned_by: user_id
+                type: type,
+                owned_by: user_id,
+                config: %{path: path, watch: watch}
               }),
             create_result_send:
               send(

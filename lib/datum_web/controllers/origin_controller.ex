@@ -38,6 +38,26 @@ defmodule DatumWeb.OriginController do
     end
   end
 
+  @doc """
+  Note that this doesn't work for all data types - only certain extensions
+  """
+  def preview_data(conn, %{"origin_id" => origin_id, "data_id" => data_id} = _params) do
+    origin = DataOrigin.get_data_orgins_user(conn.assigns.current_user, origin_id)
+    data = DataOrigin.get_data_user(origin, conn.assigns.current_user, data_id)
+
+    if origin.config && Path.extname(data.path) in [".png"] do
+      conn
+      |> put_resp_content_type("image/png")
+      |> send_resp(
+        200,
+        File.read!(data.original_path)
+      )
+    else
+      conn
+      |> put_status(404)
+    end
+  end
+
   # currently this only works for local fileystem files - we'll work on it!
   def download_data(conn, %{"origin_id" => origin_id, "data_id" => data_id} = _params) do
     origin = DataOrigin.get_data_orgins_user(conn.assigns.current_user, origin_id)

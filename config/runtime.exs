@@ -16,6 +16,7 @@ if config_env() == :prod do
     System.user_home() |> Path.join(".config") |> Path.join(".datum_config.yaml")
 
   vars = %{
+    log_level: System.get_env("LOG_LEVEL", "INFO"),
     server_ssl: System.get_env("SERVER_SSL", "FALSE") |> String.upcase() == "TRUE",
     force_ssl: System.get_env("FORCE_SSL", "FALSE") |> String.upcase() == "TRUE",
     database_path:
@@ -93,6 +94,17 @@ if config_env() == :prod do
       port: vars.port
     ],
     secret_key_base: vars.secret_key_base
+
+  log_level =
+    case vars.log_level do
+      "INFO" -> :info
+      "DEBUG" -> :debug
+      "WARN" -> :warn
+      "ERROR" -> :error
+      _ -> :info
+    end
+
+  config :logger, level: log_level
 
   if vars.ai do
     config :datum,

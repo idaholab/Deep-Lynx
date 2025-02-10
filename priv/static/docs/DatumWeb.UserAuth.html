@@ -4,34 +4,22 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.36.1">
+    <meta name="generator" content="ExDoc v0.37.0">
     <meta name="project" content="DeepLynx v0.0.1">
 
 
     <title>DatumWeb.UserAuth — DeepLynx v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-QYVRUQZX.css" />
 
-    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-C0206226.js"></script>
-    <script src="docs_config.js"></script>
-    <script async src="dist/html-HJ5ACJPS.js"></script>
+    <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
+
+    <script defer src="dist/sidebar_items-A987CEBA.js"></script>
+    <script defer src="docs_config.js"></script>
+    <script defer src="dist/html-6VTPNSGQ.js"></script>
 
   </head>
-  <body class="sidebar-closed">
-    <script>
-
-      try {
-        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
-
-        if (settings.theme === 'dark' ||
-           ((settings.theme === 'system' || settings.theme == null) &&
-             window.matchMedia('(prefers-color-scheme: dark)').matches)
-           ) {
-          document.body.classList.add('dark')
-        }
-      } catch (error) { }
-    </script>
+  <body>
+    <script>(()=>{var t="ex_doc:settings",e="dark";var o="dark",s="light";var E="sidebar_state",n="closed";var r="sidebar_width";var a="sidebar-open";var i=new URLSearchParams(window.location.search),S=i.get("theme")||JSON.parse(localStorage.getItem(t)||"{}").theme;(S===o||S!==s&&window.matchMedia("(prefers-color-scheme: dark)").matches)&&document.body.classList.add(e);var d=sessionStorage.getItem(E),A=d!==n&&!window.matchMedia(`screen and (max-width: ${768}px)`).matches;document.body.classList.toggle(a,A);var c=sessionStorage.getItem(r);c&&document.body.style.setProperty("--sidebarWidth",`${c}px`);var p=/(Macintosh|iPhone|iPad|iPod)/.test(window.navigator.userAgent);document.documentElement.classList.toggle("apple-os",p);})();
+</script>
 
 <div class="body-wrapper">
 
@@ -57,42 +45,8 @@ DeepLynx
         </div>
       </div>
     </div>
-    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist">
-      <li>
-        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
-Pages
-        </button>
-      </li>
-
-        <li>
-          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
-            Modules
-          </button>
-        </li>
-
-
-        <li>
-          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
-            <span translate="no">Mix</span> Tasks
-          </button>
-        </li>
-
-    </ul>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras=""></ul>
   </div>
-
-  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
-    <ul id="extras-full-list" class="full-list"></ul>
-  </div>
-
-    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
-      <ul id="modules-full-list" class="full-list"></ul>
-    </div>
-
-
-    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
-      <ul id="tasks-full-list" class="full-list"></ul>
-    </div>
-
 </nav>
 
 <output role="status" id="toast"></output>
@@ -123,12 +77,14 @@ Pages
     </div>
 
 <div id="top-content">
-  <h1>
+  <div class="heading-with-actions top-heading">
+    <h1>
+      <span translate="no">DatumWeb.UserAuth</span> 
+      <small class="app-vsn" translate="no">(DeepLynx v0.0.1)</small>
 
-    <span translate="no">DatumWeb.UserAuth</span> 
-    <small class="app-vsn" translate="no">(DeepLynx v0.0.1)</small>
+    </h1>
 
-  </h1>
+  </div>
 
 
     <section id="moduledoc">
@@ -151,7 +107,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#fetch_current_user/2" data-no-tooltip translate="no">fetch_current_user(conn, opts)</a>
+        <a href="#fetch_current_user/2" data-no-tooltip="" translate="no">fetch_current_user(conn, opts)</a>
 
       </div>
 
@@ -162,7 +118,7 @@ and remember me token.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#log_in_user/3" data-no-tooltip translate="no">log_in_user(conn, user, params \\ %{})</a>
+        <a href="#log_in_user/3" data-no-tooltip="" translate="no">log_in_user(conn, user, params \\ %{})</a>
 
       </div>
 
@@ -172,7 +128,7 @@ and remember me token.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#log_out_user/1" data-no-tooltip translate="no">log_out_user(conn)</a>
+        <a href="#log_out_user/1" data-no-tooltip="" translate="no">log_out_user(conn)</a>
 
       </div>
 
@@ -182,7 +138,7 @@ and remember me token.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#on_mount/4" data-no-tooltip translate="no">on_mount(atom, params, session, socket)</a>
+        <a href="#on_mount/4" data-no-tooltip="" translate="no">on_mount(atom, params, session, socket)</a>
 
       </div>
 
@@ -192,7 +148,7 @@ and remember me token.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#redirect_if_user_is_authenticated/2" data-no-tooltip translate="no">redirect_if_user_is_authenticated(conn, opts)</a>
+        <a href="#redirect_if_user_is_authenticated/2" data-no-tooltip="" translate="no">redirect_if_user_is_authenticated(conn, opts)</a>
 
       </div>
 
@@ -202,7 +158,17 @@ and remember me token.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#require_authenticated_token/2" data-no-tooltip translate="no">require_authenticated_token(conn, opts)</a>
+        <a href="#require_admin/2" data-no-tooltip="" translate="no">require_admin(conn, opts)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Require that a user be an administrator of the application to continue past this plug.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#require_authenticated_token/2" data-no-tooltip="" translate="no">require_authenticated_token(conn, opts)</a>
 
       </div>
 
@@ -210,7 +176,7 @@ and remember me token.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#require_authenticated_user/2" data-no-tooltip translate="no">require_authenticated_user(conn, opts)</a>
+        <a href="#require_authenticated_user/2" data-no-tooltip="" translate="no">require_authenticated_user(conn, opts)</a>
 
       </div>
 
@@ -234,12 +200,14 @@ and remember me token.</p></div>
 <section class="detail" id="fetch_current_user/2">
 
   <div class="detail-header">
-    <a href="#fetch_current_user/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#fetch_current_user/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">fetch_current_user(conn, opts)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">fetch_current_user(conn, opts)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -253,12 +221,14 @@ and remember me token.</p>
     <span id="log_in_user/2"></span>
 
   <div class="detail-header">
-    <a href="#log_in_user/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#log_in_user/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">log_in_user(conn, user, params \\ %{})</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">log_in_user(conn, user, params \\ %{})</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -274,12 +244,14 @@ if you are not using LiveView.</p>
 <section class="detail" id="log_out_user/1">
 
   <div class="detail-header">
-    <a href="#log_out_user/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#log_out_user/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">log_out_user(conn)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">log_out_user(conn)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -290,12 +262,14 @@ if you are not using LiveView.</p>
 <section class="detail" id="on_mount/4">
 
   <div class="detail-header">
-    <a href="#on_mount/4" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#on_mount/4" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">on_mount(atom, params, session, socket)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">on_mount(atom, params, session, socket)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -319,25 +293,27 @@ Redirects to signed_in_path if there's a logged user.</p></li></ul><h2 id="on_mo
   <span class="text">Examples</span>
 </h2>
 <p>Use the <code class="inline">on_mount</code> lifecycle macro in LiveViews to mount or authenticate
-the current_user:</p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">DatumWeb.PageLive</span><span class="w"> </span><span class="k" data-group-id="5045825165-1">do</span><span class="w">
+the current_user:</p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">DatumWeb.PageLive</span><span class="w"> </span><span class="k" data-group-id="8593087483-1">do</span><span class="w">
   </span><span class="kn">use</span><span class="w"> </span><span class="nc">DatumWeb</span><span class="p">,</span><span class="w"> </span><span class="ss">:live_view</span><span class="w">
 
-  </span><span class="n">on_mount</span><span class="w"> </span><span class="p" data-group-id="5045825165-2">{</span><span class="nc">DatumWeb.UserAuth</span><span class="p">,</span><span class="w"> </span><span class="ss">:mount_current_user</span><span class="p" data-group-id="5045825165-2">}</span><span class="w">
+  </span><span class="n">on_mount</span><span class="w"> </span><span class="p" data-group-id="8593087483-2">{</span><span class="nc">DatumWeb.UserAuth</span><span class="p">,</span><span class="w"> </span><span class="ss">:mount_current_user</span><span class="p" data-group-id="8593087483-2">}</span><span class="w">
   </span><span class="n">...</span><span class="w">
-</span><span class="k" data-group-id="5045825165-1">end</span></code></pre><p>Or use the <code class="inline">live_session</code> of your router to invoke the on_mount callback:</p><pre><code class="makeup elixir" translate="no"><span class="n">live_session</span><span class="w"> </span><span class="ss">:authenticated</span><span class="p">,</span><span class="w"> </span><span class="ss">on_mount</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6431153013-1">[</span><span class="p" data-group-id="6431153013-2">{</span><span class="nc">DatumWeb.UserAuth</span><span class="p">,</span><span class="w"> </span><span class="ss">:ensure_authenticated</span><span class="p" data-group-id="6431153013-2">}</span><span class="p" data-group-id="6431153013-1">]</span><span class="w"> </span><span class="k" data-group-id="6431153013-3">do</span><span class="w">
+</span><span class="k" data-group-id="8593087483-1">end</span></code></pre><p>Or use the <code class="inline">live_session</code> of your router to invoke the on_mount callback:</p><pre><code class="makeup elixir" translate="no"><span class="n">live_session</span><span class="w"> </span><span class="ss">:authenticated</span><span class="p">,</span><span class="w"> </span><span class="ss">on_mount</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4987466914-1">[</span><span class="p" data-group-id="4987466914-2">{</span><span class="nc">DatumWeb.UserAuth</span><span class="p">,</span><span class="w"> </span><span class="ss">:ensure_authenticated</span><span class="p" data-group-id="4987466914-2">}</span><span class="p" data-group-id="4987466914-1">]</span><span class="w"> </span><span class="k" data-group-id="4987466914-3">do</span><span class="w">
   </span><span class="n">live</span><span class="w"> </span><span class="s">&quot;/profile&quot;</span><span class="p">,</span><span class="w"> </span><span class="nc">ProfileLive</span><span class="p">,</span><span class="w"> </span><span class="ss">:index</span><span class="w">
-</span><span class="k" data-group-id="6431153013-3">end</span></code></pre>
+</span><span class="k" data-group-id="4987466914-3">end</span></code></pre>
   </section>
 </section>
 <section class="detail" id="redirect_if_user_is_authenticated/2">
 
   <div class="detail-header">
-    <a href="#redirect_if_user_is_authenticated/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#redirect_if_user_is_authenticated/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">redirect_if_user_is_authenticated(conn, opts)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">redirect_if_user_is_authenticated(conn, opts)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -345,15 +321,35 @@ the current_user:</p><pre><code class="makeup elixir" translate="no"><span class
 <p>Used for routes that require the user to not be authenticated.</p>
   </section>
 </section>
+<section class="detail" id="require_admin/2">
+
+  <div class="detail-header">
+    <a href="#require_admin/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">require_admin(conn, opts)</h1>
+
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+<p>Require that a user be an administrator of the application to continue past this plug.</p>
+  </section>
+</section>
 <section class="detail" id="require_authenticated_token/2">
 
   <div class="detail-header">
-    <a href="#require_authenticated_token/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#require_authenticated_token/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">require_authenticated_token(conn, opts)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">require_authenticated_token(conn, opts)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -364,12 +360,14 @@ the current_user:</p><pre><code class="makeup elixir" translate="no"><span class
 <section class="detail" id="require_authenticated_user/2">
 
   <div class="detail-header">
-    <a href="#require_authenticated_user/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#require_authenticated_user/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">require_authenticated_user(conn, opts)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">require_authenticated_user(conn, opts)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -399,7 +397,7 @@ they use the application at all, here would be a good place.</p>
 
       <p class="built-using">
         Built using
-        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.36.1) for the
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.37.0) for the
 
           <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 

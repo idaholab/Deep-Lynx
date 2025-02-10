@@ -37,21 +37,18 @@ defmodule DatumWeb.Router do
     get "/origins/:origin_id/data/:data_id/download", OriginController, :download_data
   end
 
-  # Enable LiveDashboard and Swoosh mailbox preview in development
-  if Application.compile_env(:datum, :dev_routes) do
-    # If you want to use the LiveDashboard in production, you should put
-    # it behind authentication and allow only admins to access it.
-    # If your application does not have an admins-only section yet,
-    # you can use Plug.BasicAuth to set up some basic authentication
-    # as long as you are also using SSL (which you should anyway).
-    import Phoenix.LiveDashboard.Router
+  # If you want to use the LiveDashboard in production, you should put
+  # it behind authentication and allow only admins to access it.
+  # If your application does not have an admins-only section yet,
+  # you can use Plug.BasicAuth to set up some basic authentication
+  # as long as you are also using SSL (which you should anyway).
+  import Phoenix.LiveDashboard.Router
 
-    scope "/dev" do
-      pipe_through :browser
+  scope "/dev" do
+    pipe_through [:browser, :require_authenticated_user, :require_admin]
 
-      live_dashboard "/dashboard", metrics: DatumWeb.Telemetry
-      forward "/mailbox", Plug.Swoosh.MailboxPreview
-    end
+    live_dashboard "/dashboard", metrics: DatumWeb.Telemetry
+    forward "/mailbox", Plug.Swoosh.MailboxPreview
   end
 
   ## Authentication routes
@@ -71,6 +68,9 @@ defmodule DatumWeb.Router do
 
   scope "/", DatumWeb do
     pipe_through [:browser, :require_authenticated_user]
+
+    # a simple preview endpoint for origin's data who we have a config for
+    get "/origin/:origin_id/data/:data_id/preview", OriginController, :preview_data
 
     live_session :require_authenticated_user,
       on_mount: [{DatumWeb.UserAuth, :ensure_authenticated}] do

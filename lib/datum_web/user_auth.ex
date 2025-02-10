@@ -177,6 +177,21 @@ defmodule DatumWeb.UserAuth do
     end
   end
 
+  def on_mount(:ensure_admin, _params, session, socket) do
+    socket = mount_current_user(socket, session)
+
+    if socket.assigns.current_user && socket.assigns.current_user.roles == :admin do
+      {:cont, socket}
+    else
+      socket =
+        socket
+        |> Phoenix.LiveView.put_flash(:error, "You must log in to access this page.")
+        |> Phoenix.LiveView.redirect(to: ~p"/users/log_in")
+
+      {:halt, socket}
+    end
+  end
+
   defp mount_current_user(socket, session) do
     Phoenix.Component.assign_new(socket, :current_user, fn ->
       if user_token = session["user_token"] do
@@ -195,6 +210,21 @@ defmodule DatumWeb.UserAuth do
       |> halt()
     else
       conn
+    end
+  end
+
+  @doc """
+  Require that a user be an administrator of the application to continue past this plug.
+  """
+  def require_admin(conn, _opts) do
+    if conn.assigns[:current_user] && conn.assigns[:current_user].role == :admin do
+      conn
+    else
+      conn
+      |> put_flash(:error, "You do not have the required permissions to access this page.")
+      |> maybe_store_return_to()
+      |> redirect(to: ~p"/users/log_in")
+      |> halt()
     end
   end
 

@@ -7,7 +7,7 @@ import Config
 # before starting your production server.
 config :datum, DatumWeb.Endpoint,
   cache_static_manifest: "priv/static/cache_manifest.json",
-  origin_db_path: Path.join([System.user_home(), "/.datum_databases", "origins"])
+  origin_db_path: Path.join([System.user_home(), ".datum_databases", "origins"])
 
 # Configures Swoosh API Client
 config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: Datum.Finch

@@ -27,12 +27,16 @@ defmodule Datum.Duckdb do
   the database connection. This is an async task - replies should be listened for.
   Provide a reference so that you know what reply a message is for
   """
-  def query(pid, message, opts \\ []) do
-    GenServer.cast(pid, {:query, message, opts})
+  def query(pid, query, opts \\ []) do
+    GenServer.cast(pid, {:query, query, opts})
   end
 
-  def query_sync(pid, message) do
-    GenServer.call(pid, {:query, message}, :infinity)
+  def query_sync(pid, query) do
+    GenServer.call(pid, {:query, query}, :infinity)
+  end
+
+  def result_to_df(result) do
+    Adbc.Result.materialize(result) |> Adbc.Result.to_map() |> Explorer.DataFrame.new()
   end
 
   # Server

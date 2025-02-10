@@ -85,13 +85,7 @@ defmodule DatumWeb.OriginExplorerLive do
         </div>
 
         <div :if={@file_item && @origin}>
-          <.file_page
-            file_name={@file_item.path}
-            description={@file_item.description}
-            properties={@file_item.properties}
-            tags={@file_item.tags}
-            domains={@file_item.domains}
-          />
+          <.file_page data={@file_item} origin={@origin} />
         </div>
 
         <div :if={@items && @origin && !@file_item}>
@@ -102,16 +96,29 @@ defmodule DatumWeb.OriginExplorerLive do
           >
             <:col :let={data}>
               <span :if={data.type in [:directory, :root_directory]}>
-                <.icon name="hero-folder" />
+                <span class="tooltip tooltip-bottom" data-tip={gettext("Directory")}>
+                  <.icon name="hero-folder" />
+                </span>
               </span>
               <span :if={data.type == :file}>
-                <.icon name="hero-document" />
+                <span class="tooltip tooltip-bottom" data-tip={gettext("File")}>
+                  <.icon name="hero-document" />
+                </span>
               </span>
               <span :if={data.type == :person}>
-                <.icon name="hero-user" />
+                <span class="tooltip tooltip-bottom" data-tip={gettext("User")}>
+                  <.icon name="hero-user" />
+                </span>
               </span>
               <span :if={data.type == :organization}>
-                <.icon name="hero-user-group" />
+                <span class="tooltip tooltip-bottom" data-tip={gettext("Group")}>
+                  <.icon name="hero-user-group" />
+                </span>
+              </span>
+              <span :if={data.type == :table}>
+                <span class="tooltip tooltip-bottom" data-tip={gettext("Table")}>
+                  <.icon name="hero-table-cells" />
+                </span>
               </span>
             </:col>
             <:col :let={data} label={gettext("Name")}>{data.path}</:col>
@@ -326,7 +333,7 @@ defmodule DatumWeb.OriginExplorerLive do
   def handle_event("select_item", %{"item_id" => item_id}, socket) do
     data = DataOrigin.get_data_user(socket.assigns.origin, socket.assigns.current_user, item_id)
 
-    file_item = if data.type == :file, do: data, else: nil
+    file_item = if data.type in [:file, :table], do: data, else: nil
 
     items =
       if data.type == :directory || data.type == :root_directory do

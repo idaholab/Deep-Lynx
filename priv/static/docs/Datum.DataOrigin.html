@@ -4,34 +4,22 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.36.1">
+    <meta name="generator" content="ExDoc v0.37.0">
     <meta name="project" content="DeepLynx v0.0.1">
 
 
     <title>Datum.DataOrigin — DeepLynx v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-QYVRUQZX.css" />
 
-    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-C0206226.js"></script>
-    <script src="docs_config.js"></script>
-    <script async src="dist/html-HJ5ACJPS.js"></script>
+    <link rel="stylesheet" href="dist/html-elixir-6X3L5KMG.css" />
+
+    <script defer src="dist/sidebar_items-A987CEBA.js"></script>
+    <script defer src="docs_config.js"></script>
+    <script defer src="dist/html-6VTPNSGQ.js"></script>
 
   </head>
-  <body class="sidebar-closed">
-    <script>
-
-      try {
-        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
-
-        if (settings.theme === 'dark' ||
-           ((settings.theme === 'system' || settings.theme == null) &&
-             window.matchMedia('(prefers-color-scheme: dark)').matches)
-           ) {
-          document.body.classList.add('dark')
-        }
-      } catch (error) { }
-    </script>
+  <body>
+    <script>(()=>{var t="ex_doc:settings",e="dark";var o="dark",s="light";var E="sidebar_state",n="closed";var r="sidebar_width";var a="sidebar-open";var i=new URLSearchParams(window.location.search),S=i.get("theme")||JSON.parse(localStorage.getItem(t)||"{}").theme;(S===o||S!==s&&window.matchMedia("(prefers-color-scheme: dark)").matches)&&document.body.classList.add(e);var d=sessionStorage.getItem(E),A=d!==n&&!window.matchMedia(`screen and (max-width: ${768}px)`).matches;document.body.classList.toggle(a,A);var c=sessionStorage.getItem(r);c&&document.body.style.setProperty("--sidebarWidth",`${c}px`);var p=/(Macintosh|iPhone|iPad|iPod)/.test(window.navigator.userAgent);document.documentElement.classList.toggle("apple-os",p);})();
+</script>
 
 <div class="body-wrapper">
 
@@ -57,42 +45,8 @@ DeepLynx
         </div>
       </div>
     </div>
-    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist">
-      <li>
-        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
-Pages
-        </button>
-      </li>
-
-        <li>
-          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
-            Modules
-          </button>
-        </li>
-
-
-        <li>
-          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
-            <span translate="no">Mix</span> Tasks
-          </button>
-        </li>
-
-    </ul>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras=""></ul>
   </div>
-
-  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
-    <ul id="extras-full-list" class="full-list"></ul>
-  </div>
-
-    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
-      <ul id="modules-full-list" class="full-list"></ul>
-    </div>
-
-
-    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
-      <ul id="tasks-full-list" class="full-list"></ul>
-    </div>
-
 </nav>
 
 <output role="status" id="toast"></output>
@@ -123,12 +77,14 @@ Pages
     </div>
 
 <div id="top-content">
-  <h1>
+  <div class="heading-with-actions top-heading">
+    <h1>
+      <span translate="no">Datum.DataOrigin</span> 
+      <small class="app-vsn" translate="no">(DeepLynx v0.0.1)</small>
 
-    <span translate="no">Datum.DataOrigin</span> 
-    <small class="app-vsn" translate="no">(DeepLynx v0.0.1)</small>
+    </h1>
 
-  </h1>
+  </div>
 
 
     <section id="moduledoc">
@@ -152,7 +108,7 @@ and how it slots into the bigger picture of Datum.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#add_data/3" data-no-tooltip translate="no">add_data(origin, user, attrs \\ %{})</a>
+        <a href="#add_data/3" data-no-tooltip="" translate="no">add_data(origin, user, attrs \\ %{})</a>
 
       </div>
 
@@ -160,7 +116,7 @@ and how it slots into the bigger picture of Datum.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#add_data!/3" data-no-tooltip translate="no">add_data!(origin, user, attrs \\ %{})</a>
+        <a href="#add_data!/3" data-no-tooltip="" translate="no">add_data!(origin, user, attrs \\ %{})</a>
 
       </div>
 
@@ -168,7 +124,7 @@ and how it slots into the bigger picture of Datum.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#add_relationship/3" data-no-tooltip translate="no">add_relationship(origin, destination, opts \\ [])</a>
+        <a href="#add_relationship/3" data-no-tooltip="" translate="no">add_relationship(origin, destination, opts \\ [])</a>
 
       </div>
 
@@ -176,7 +132,7 @@ and how it slots into the bigger picture of Datum.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#change_extracted_metadata/2" data-no-tooltip translate="no">change_extracted_metadata(extracted_metadata, attrs \\ %{})</a>
+        <a href="#change_extracted_metadata/2" data-no-tooltip="" translate="no">change_extracted_metadata(extracted_metadata, attrs \\ %{})</a>
 
       </div>
 
@@ -186,7 +142,7 @@ and how it slots into the bigger picture of Datum.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#change_origin/2" data-no-tooltip translate="no">change_origin(origin, attrs \\ %{})</a>
+        <a href="#change_origin/2" data-no-tooltip="" translate="no">change_origin(origin, attrs \\ %{})</a>
 
       </div>
 
@@ -196,7 +152,7 @@ and how it slots into the bigger picture of Datum.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#connect_data/3" data-no-tooltip translate="no">connect_data(origin, ancestor, leaf)</a>
+        <a href="#connect_data/3" data-no-tooltip="" translate="no">connect_data(origin, ancestor, leaf)</a>
 
       </div>
 
@@ -204,7 +160,7 @@ and how it slots into the bigger picture of Datum.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#create_extracted_metadata/1" data-no-tooltip translate="no">create_extracted_metadata(attrs \\ %{})</a>
+        <a href="#create_extracted_metadata/1" data-no-tooltip="" translate="no">create_extracted_metadata(attrs \\ %{})</a>
 
       </div>
 
@@ -214,7 +170,7 @@ and how it slots into the bigger picture of Datum.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#create_origin/1" data-no-tooltip translate="no">create_origin(attrs \\ %{})</a>
+        <a href="#create_origin/1" data-no-tooltip="" translate="no">create_origin(attrs \\ %{})</a>
 
       </div>
 
@@ -224,7 +180,7 @@ and how it slots into the bigger picture of Datum.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#delete_data/2" data-no-tooltip translate="no">delete_data(origin, data)</a>
+        <a href="#delete_data/2" data-no-tooltip="" translate="no">delete_data(origin, data)</a>
 
       </div>
 
@@ -232,7 +188,7 @@ and how it slots into the bigger picture of Datum.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#delete_extracted_metadata/1" data-no-tooltip translate="no">delete_extracted_metadata(extracted_metadata)</a>
+        <a href="#delete_extracted_metadata/1" data-no-tooltip="" translate="no">delete_extracted_metadata(extracted_metadata)</a>
 
       </div>
 
@@ -242,7 +198,7 @@ and how it slots into the bigger picture of Datum.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#delete_origin/1" data-no-tooltip translate="no">delete_origin(origin)</a>
+        <a href="#delete_origin/1" data-no-tooltip="" translate="no">delete_origin(origin)</a>
 
       </div>
 
@@ -252,7 +208,7 @@ and how it slots into the bigger picture of Datum.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_data!/2" data-no-tooltip translate="no">get_data!(origin, data_id)</a>
+        <a href="#get_data!/2" data-no-tooltip="" translate="no">get_data!(origin, data_id)</a>
 
       </div>
 
@@ -260,7 +216,7 @@ and how it slots into the bigger picture of Datum.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_data_by_path!/2" data-no-tooltip translate="no">get_data_by_path!(origin, path)</a>
+        <a href="#get_data_by_path!/2" data-no-tooltip="" translate="no">get_data_by_path!(origin, path)</a>
 
       </div>
 
@@ -268,7 +224,7 @@ and how it slots into the bigger picture of Datum.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_data_orgins_user/3" data-no-tooltip translate="no">get_data_orgins_user(user, origin_id, opts \\ [])</a>
+        <a href="#get_data_orgins_user/3" data-no-tooltip="" translate="no">get_data_orgins_user(user, origin_id, opts \\ [])</a>
 
       </div>
 
@@ -276,7 +232,7 @@ and how it slots into the bigger picture of Datum.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_data_user/4" data-no-tooltip translate="no">get_data_user(origin, user, data_id, opts \\ [])</a>
+        <a href="#get_data_orgins_user!/3" data-no-tooltip="" translate="no">get_data_orgins_user!(user, origin_id, opts \\ [])</a>
 
       </div>
 
@@ -284,7 +240,23 @@ and how it slots into the bigger picture of Datum.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_extracted_metadata!/1" data-no-tooltip translate="no">get_extracted_metadata!(id)</a>
+        <a href="#get_data_user/4" data-no-tooltip="" translate="no">get_data_user(origin, user, data_id, opts \\ [])</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_data_user!/4" data-no-tooltip="" translate="no">get_data_user!(origin, user, data_id, opts \\ [])</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_extracted_metadata!/1" data-no-tooltip="" translate="no">get_extracted_metadata!(id)</a>
 
       </div>
 
@@ -294,7 +266,7 @@ and how it slots into the bigger picture of Datum.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_origin!/1" data-no-tooltip translate="no">get_origin!(id)</a>
+        <a href="#get_origin!/1" data-no-tooltip="" translate="no">get_origin!(id)</a>
 
       </div>
 
@@ -304,7 +276,7 @@ and how it slots into the bigger picture of Datum.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#list_data_descendants/2" data-no-tooltip translate="no">list_data_descendants(origin, data_id)</a>
+        <a href="#list_data_descendants/2" data-no-tooltip="" translate="no">list_data_descendants(origin, data_id)</a>
 
       </div>
 
@@ -312,7 +284,7 @@ and how it slots into the bigger picture of Datum.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#list_data_descendants_user/4" data-no-tooltip translate="no">list_data_descendants_user(origin, user, data_id, opts \\ [])</a>
+        <a href="#list_data_descendants_user/4" data-no-tooltip="" translate="no">list_data_descendants_user(origin, user, data_id, opts \\ [])</a>
 
       </div>
 
@@ -320,7 +292,7 @@ and how it slots into the bigger picture of Datum.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#list_data_orgins_user/3" data-no-tooltip translate="no">list_data_orgins_user(user, exclude \\ [], opts \\ [])</a>
+        <a href="#list_data_orgins_user/3" data-no-tooltip="" translate="no">list_data_orgins_user(user, exclude \\ [], opts \\ [])</a>
 
       </div>
 
@@ -331,7 +303,7 @@ their groups and permissions for said origins.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#list_data_origins/0" data-no-tooltip translate="no">list_data_origins()</a>
+        <a href="#list_data_origins/0" data-no-tooltip="" translate="no">list_data_origins()</a>
 
       </div>
 
@@ -341,7 +313,7 @@ their groups and permissions for said origins.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#list_data_user/3" data-no-tooltip translate="no">list_data_user(origin, user, opts \\ [])</a>
+        <a href="#list_data_user/3" data-no-tooltip="" translate="no">list_data_user(origin, user, opts \\ [])</a>
 
       </div>
 
@@ -349,7 +321,7 @@ their groups and permissions for said origins.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#list_extracted_metadatas/0" data-no-tooltip translate="no">list_extracted_metadatas()</a>
+        <a href="#list_extracted_metadatas/0" data-no-tooltip="" translate="no">list_extracted_metadatas()</a>
 
       </div>
 
@@ -359,7 +331,7 @@ their groups and permissions for said origins.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#list_roots/1" data-no-tooltip translate="no">list_roots(origin)</a>
+        <a href="#list_roots/1" data-no-tooltip="" translate="no">list_roots(origin)</a>
 
       </div>
 
@@ -367,7 +339,7 @@ their groups and permissions for said origins.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#query_origin_sync/3" data-no-tooltip translate="no">query_origin_sync(origin, query, opts \\ [])</a>
+        <a href="#query_origin_sync/3" data-no-tooltip="" translate="no">query_origin_sync(origin, query, opts \\ [])</a>
 
       </div>
 
@@ -378,7 +350,7 @@ running SQL queries on DuckDB backed origins, or exposed commands on the file sy
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#search_origin/4" data-no-tooltip translate="no">search_origin(origin, user, search_term, opts \\ [])</a>
+        <a href="#search_origin/4" data-no-tooltip="" translate="no">search_origin(origin, user, search_term, opts \\ [])</a>
 
       </div>
 
@@ -386,7 +358,7 @@ running SQL queries on DuckDB backed origins, or exposed commands on the file sy
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#update_extracted_metadata/2" data-no-tooltip translate="no">update_extracted_metadata(extracted_metadata, attrs)</a>
+        <a href="#update_extracted_metadata/2" data-no-tooltip="" translate="no">update_extracted_metadata(extracted_metadata, attrs)</a>
 
       </div>
 
@@ -396,7 +368,7 @@ running SQL queries on DuckDB backed origins, or exposed commands on the file sy
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#update_origin/2" data-no-tooltip translate="no">update_origin(origin, attrs)</a>
+        <a href="#update_origin/2" data-no-tooltip="" translate="no">update_origin(origin, attrs)</a>
 
       </div>
 
@@ -422,12 +394,14 @@ running SQL queries on DuckDB backed origins, or exposed commands on the file sy
     <span id="add_data/2"></span>
 
   <div class="detail-header">
-    <a href="#add_data/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#add_data/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">add_data(origin, user, attrs \\ %{})</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">add_data(origin, user, attrs \\ %{})</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -440,12 +414,14 @@ running SQL queries on DuckDB backed origins, or exposed commands on the file sy
     <span id="add_data!/2"></span>
 
   <div class="detail-header">
-    <a href="#add_data!/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#add_data!/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">add_data!(origin, user, attrs \\ %{})</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">add_data!(origin, user, attrs \\ %{})</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -458,12 +434,14 @@ running SQL queries on DuckDB backed origins, or exposed commands on the file sy
     <span id="add_relationship/2"></span>
 
   <div class="detail-header">
-    <a href="#add_relationship/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#add_relationship/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">add_relationship(origin, destination, opts \\ [])</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">add_relationship(origin, destination, opts \\ [])</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -476,12 +454,14 @@ running SQL queries on DuckDB backed origins, or exposed commands on the file sy
     <span id="change_extracted_metadata/1"></span>
 
   <div class="detail-header">
-    <a href="#change_extracted_metadata/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#change_extracted_metadata/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">change_extracted_metadata(extracted_metadata, attrs \\ %{})</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">change_extracted_metadata(extracted_metadata, attrs \\ %{})</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -492,8 +472,8 @@ running SQL queries on DuckDB backed origins, or exposed commands on the file sy
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">change_extracted_metadata</span><span class="p" data-group-id="3835677563-1">(</span><span class="n">extracted_metadata</span><span class="p" data-group-id="3835677563-1">)</span><span class="w">
-</span><span class="p" data-group-id="3835677563-2">%</span><span class="nc" data-group-id="3835677563-2">Ecto.Changeset</span><span class="p" data-group-id="3835677563-2">{</span><span class="ss">data</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3835677563-3">%</span><span class="nc" data-group-id="3835677563-3">ExtractedMetadata</span><span class="p" data-group-id="3835677563-3">{</span><span class="p" data-group-id="3835677563-3">}</span><span class="p" data-group-id="3835677563-2">}</span></code></pre>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">change_extracted_metadata</span><span class="p" data-group-id="5502852367-1">(</span><span class="n">extracted_metadata</span><span class="p" data-group-id="5502852367-1">)</span><span class="w">
+</span><span class="p" data-group-id="5502852367-2">%</span><span class="nc" data-group-id="5502852367-2">Ecto.Changeset</span><span class="p" data-group-id="5502852367-2">{</span><span class="ss">data</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5502852367-3">%</span><span class="nc" data-group-id="5502852367-3">ExtractedMetadata</span><span class="p" data-group-id="5502852367-3">{</span><span class="p" data-group-id="5502852367-3">}</span><span class="p" data-group-id="5502852367-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="change_origin/2">
@@ -501,12 +481,14 @@ running SQL queries on DuckDB backed origins, or exposed commands on the file sy
     <span id="change_origin/1"></span>
 
   <div class="detail-header">
-    <a href="#change_origin/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#change_origin/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">change_origin(origin, attrs \\ %{})</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">change_origin(origin, attrs \\ %{})</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -517,19 +499,21 @@ running SQL queries on DuckDB backed origins, or exposed commands on the file sy
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">change_origin</span><span class="p" data-group-id="9481518192-1">(</span><span class="n">origin</span><span class="p" data-group-id="9481518192-1">)</span><span class="w">
-</span><span class="p" data-group-id="9481518192-2">%</span><span class="nc" data-group-id="9481518192-2">Ecto.Changeset</span><span class="p" data-group-id="9481518192-2">{</span><span class="ss">data</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="9481518192-3">%</span><span class="nc" data-group-id="9481518192-3">Origin</span><span class="p" data-group-id="9481518192-3">{</span><span class="p" data-group-id="9481518192-3">}</span><span class="p" data-group-id="9481518192-2">}</span></code></pre>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">change_origin</span><span class="p" data-group-id="5194651026-1">(</span><span class="n">origin</span><span class="p" data-group-id="5194651026-1">)</span><span class="w">
+</span><span class="p" data-group-id="5194651026-2">%</span><span class="nc" data-group-id="5194651026-2">Ecto.Changeset</span><span class="p" data-group-id="5194651026-2">{</span><span class="ss">data</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5194651026-3">%</span><span class="nc" data-group-id="5194651026-3">Origin</span><span class="p" data-group-id="5194651026-3">{</span><span class="p" data-group-id="5194651026-3">}</span><span class="p" data-group-id="5194651026-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="connect_data/3">
 
   <div class="detail-header">
-    <a href="#connect_data/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#connect_data/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">connect_data(origin, ancestor, leaf)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">connect_data(origin, ancestor, leaf)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -542,12 +526,14 @@ running SQL queries on DuckDB backed origins, or exposed commands on the file sy
     <span id="create_extracted_metadata/0"></span>
 
   <div class="detail-header">
-    <a href="#create_extracted_metadata/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#create_extracted_metadata/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">create_extracted_metadata(attrs \\ %{})</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">create_extracted_metadata(attrs \\ %{})</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -558,11 +544,11 @@ running SQL queries on DuckDB backed origins, or exposed commands on the file sy
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">create_extracted_metadata</span><span class="p" data-group-id="2077715144-1">(</span><span class="p" data-group-id="2077715144-2">%{</span><span class="ss">field</span><span class="p">:</span><span class="w"> </span><span class="n">value</span><span class="p" data-group-id="2077715144-2">}</span><span class="p" data-group-id="2077715144-1">)</span><span class="w">
-</span><span class="p" data-group-id="2077715144-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2077715144-4">%</span><span class="nc" data-group-id="2077715144-4">ExtractedMetadata</span><span class="p" data-group-id="2077715144-4">{</span><span class="p" data-group-id="2077715144-4">}</span><span class="p" data-group-id="2077715144-3">}</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">create_extracted_metadata</span><span class="p" data-group-id="5366982730-1">(</span><span class="p" data-group-id="5366982730-2">%{</span><span class="ss">field</span><span class="p">:</span><span class="w"> </span><span class="n">value</span><span class="p" data-group-id="5366982730-2">}</span><span class="p" data-group-id="5366982730-1">)</span><span class="w">
+</span><span class="p" data-group-id="5366982730-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5366982730-4">%</span><span class="nc" data-group-id="5366982730-4">ExtractedMetadata</span><span class="p" data-group-id="5366982730-4">{</span><span class="p" data-group-id="5366982730-4">}</span><span class="p" data-group-id="5366982730-3">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">create_extracted_metadata</span><span class="p" data-group-id="2077715144-5">(</span><span class="p" data-group-id="2077715144-6">%{</span><span class="ss">field</span><span class="p">:</span><span class="w"> </span><span class="n">bad_value</span><span class="p" data-group-id="2077715144-6">}</span><span class="p" data-group-id="2077715144-5">)</span><span class="w">
-</span><span class="p" data-group-id="2077715144-7">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2077715144-8">%</span><span class="nc" data-group-id="2077715144-8">Ecto.Changeset</span><span class="p" data-group-id="2077715144-8">{</span><span class="p" data-group-id="2077715144-8">}</span><span class="p" data-group-id="2077715144-7">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="n">create_extracted_metadata</span><span class="p" data-group-id="5366982730-5">(</span><span class="p" data-group-id="5366982730-6">%{</span><span class="ss">field</span><span class="p">:</span><span class="w"> </span><span class="n">bad_value</span><span class="p" data-group-id="5366982730-6">}</span><span class="p" data-group-id="5366982730-5">)</span><span class="w">
+</span><span class="p" data-group-id="5366982730-7">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5366982730-8">%</span><span class="nc" data-group-id="5366982730-8">Ecto.Changeset</span><span class="p" data-group-id="5366982730-8">{</span><span class="p" data-group-id="5366982730-8">}</span><span class="p" data-group-id="5366982730-7">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="create_origin/1">
@@ -570,12 +556,14 @@ running SQL queries on DuckDB backed origins, or exposed commands on the file sy
     <span id="create_origin/0"></span>
 
   <div class="detail-header">
-    <a href="#create_origin/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#create_origin/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">create_origin(attrs \\ %{})</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">create_origin(attrs \\ %{})</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -586,22 +574,24 @@ running SQL queries on DuckDB backed origins, or exposed commands on the file sy
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">create_origin</span><span class="p" data-group-id="4004435749-1">(</span><span class="p" data-group-id="4004435749-2">%{</span><span class="ss">field</span><span class="p">:</span><span class="w"> </span><span class="n">value</span><span class="p" data-group-id="4004435749-2">}</span><span class="p" data-group-id="4004435749-1">)</span><span class="w">
-</span><span class="p" data-group-id="4004435749-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4004435749-4">%</span><span class="nc" data-group-id="4004435749-4">Origin</span><span class="p" data-group-id="4004435749-4">{</span><span class="p" data-group-id="4004435749-4">}</span><span class="p" data-group-id="4004435749-3">}</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">create_origin</span><span class="p" data-group-id="5075304299-1">(</span><span class="p" data-group-id="5075304299-2">%{</span><span class="ss">field</span><span class="p">:</span><span class="w"> </span><span class="n">value</span><span class="p" data-group-id="5075304299-2">}</span><span class="p" data-group-id="5075304299-1">)</span><span class="w">
+</span><span class="p" data-group-id="5075304299-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5075304299-4">%</span><span class="nc" data-group-id="5075304299-4">Origin</span><span class="p" data-group-id="5075304299-4">{</span><span class="p" data-group-id="5075304299-4">}</span><span class="p" data-group-id="5075304299-3">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">create_origin</span><span class="p" data-group-id="4004435749-5">(</span><span class="p" data-group-id="4004435749-6">%{</span><span class="ss">field</span><span class="p">:</span><span class="w"> </span><span class="n">bad_value</span><span class="p" data-group-id="4004435749-6">}</span><span class="p" data-group-id="4004435749-5">)</span><span class="w">
-</span><span class="p" data-group-id="4004435749-7">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4004435749-8">%</span><span class="nc" data-group-id="4004435749-8">Ecto.Changeset</span><span class="p" data-group-id="4004435749-8">{</span><span class="p" data-group-id="4004435749-8">}</span><span class="p" data-group-id="4004435749-7">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="n">create_origin</span><span class="p" data-group-id="5075304299-5">(</span><span class="p" data-group-id="5075304299-6">%{</span><span class="ss">field</span><span class="p">:</span><span class="w"> </span><span class="n">bad_value</span><span class="p" data-group-id="5075304299-6">}</span><span class="p" data-group-id="5075304299-5">)</span><span class="w">
+</span><span class="p" data-group-id="5075304299-7">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5075304299-8">%</span><span class="nc" data-group-id="5075304299-8">Ecto.Changeset</span><span class="p" data-group-id="5075304299-8">{</span><span class="p" data-group-id="5075304299-8">}</span><span class="p" data-group-id="5075304299-7">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="delete_data/2">
 
   <div class="detail-header">
-    <a href="#delete_data/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#delete_data/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">delete_data(origin, data)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">delete_data(origin, data)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -612,12 +602,14 @@ running SQL queries on DuckDB backed origins, or exposed commands on the file sy
 <section class="detail" id="delete_extracted_metadata/1">
 
   <div class="detail-header">
-    <a href="#delete_extracted_metadata/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#delete_extracted_metadata/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">delete_extracted_metadata(extracted_metadata)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">delete_extracted_metadata(extracted_metadata)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -628,22 +620,24 @@ running SQL queries on DuckDB backed origins, or exposed commands on the file sy
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">delete_extracted_metadata</span><span class="p" data-group-id="5111008091-1">(</span><span class="n">extracted_metadata</span><span class="p" data-group-id="5111008091-1">)</span><span class="w">
-</span><span class="p" data-group-id="5111008091-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5111008091-3">%</span><span class="nc" data-group-id="5111008091-3">ExtractedMetadata</span><span class="p" data-group-id="5111008091-3">{</span><span class="p" data-group-id="5111008091-3">}</span><span class="p" data-group-id="5111008091-2">}</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">delete_extracted_metadata</span><span class="p" data-group-id="4121489739-1">(</span><span class="n">extracted_metadata</span><span class="p" data-group-id="4121489739-1">)</span><span class="w">
+</span><span class="p" data-group-id="4121489739-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4121489739-3">%</span><span class="nc" data-group-id="4121489739-3">ExtractedMetadata</span><span class="p" data-group-id="4121489739-3">{</span><span class="p" data-group-id="4121489739-3">}</span><span class="p" data-group-id="4121489739-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">delete_extracted_metadata</span><span class="p" data-group-id="5111008091-4">(</span><span class="n">extracted_metadata</span><span class="p" data-group-id="5111008091-4">)</span><span class="w">
-</span><span class="p" data-group-id="5111008091-5">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5111008091-6">%</span><span class="nc" data-group-id="5111008091-6">Ecto.Changeset</span><span class="p" data-group-id="5111008091-6">{</span><span class="p" data-group-id="5111008091-6">}</span><span class="p" data-group-id="5111008091-5">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="n">delete_extracted_metadata</span><span class="p" data-group-id="4121489739-4">(</span><span class="n">extracted_metadata</span><span class="p" data-group-id="4121489739-4">)</span><span class="w">
+</span><span class="p" data-group-id="4121489739-5">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4121489739-6">%</span><span class="nc" data-group-id="4121489739-6">Ecto.Changeset</span><span class="p" data-group-id="4121489739-6">{</span><span class="p" data-group-id="4121489739-6">}</span><span class="p" data-group-id="4121489739-5">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="delete_origin/1">
 
   <div class="detail-header">
-    <a href="#delete_origin/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#delete_origin/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">delete_origin(origin)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">delete_origin(origin)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -654,22 +648,24 @@ running SQL queries on DuckDB backed origins, or exposed commands on the file sy
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">delete_origin</span><span class="p" data-group-id="4930579062-1">(</span><span class="n">origin</span><span class="p" data-group-id="4930579062-1">)</span><span class="w">
-</span><span class="p" data-group-id="4930579062-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4930579062-3">%</span><span class="nc" data-group-id="4930579062-3">Origin</span><span class="p" data-group-id="4930579062-3">{</span><span class="p" data-group-id="4930579062-3">}</span><span class="p" data-group-id="4930579062-2">}</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">delete_origin</span><span class="p" data-group-id="4982843451-1">(</span><span class="n">origin</span><span class="p" data-group-id="4982843451-1">)</span><span class="w">
+</span><span class="p" data-group-id="4982843451-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4982843451-3">%</span><span class="nc" data-group-id="4982843451-3">Origin</span><span class="p" data-group-id="4982843451-3">{</span><span class="p" data-group-id="4982843451-3">}</span><span class="p" data-group-id="4982843451-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">delete_origin</span><span class="p" data-group-id="4930579062-4">(</span><span class="n">origin</span><span class="p" data-group-id="4930579062-4">)</span><span class="w">
-</span><span class="p" data-group-id="4930579062-5">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4930579062-6">%</span><span class="nc" data-group-id="4930579062-6">Ecto.Changeset</span><span class="p" data-group-id="4930579062-6">{</span><span class="p" data-group-id="4930579062-6">}</span><span class="p" data-group-id="4930579062-5">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="n">delete_origin</span><span class="p" data-group-id="4982843451-4">(</span><span class="n">origin</span><span class="p" data-group-id="4982843451-4">)</span><span class="w">
+</span><span class="p" data-group-id="4982843451-5">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4982843451-6">%</span><span class="nc" data-group-id="4982843451-6">Ecto.Changeset</span><span class="p" data-group-id="4982843451-6">{</span><span class="p" data-group-id="4982843451-6">}</span><span class="p" data-group-id="4982843451-5">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="get_data!/2">
 
   <div class="detail-header">
-    <a href="#get_data!/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#get_data!/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">get_data!(origin, data_id)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get_data!(origin, data_id)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -680,12 +676,14 @@ running SQL queries on DuckDB backed origins, or exposed commands on the file sy
 <section class="detail" id="get_data_by_path!/2">
 
   <div class="detail-header">
-    <a href="#get_data_by_path!/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#get_data_by_path!/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">get_data_by_path!(origin, path)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get_data_by_path!(origin, path)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -698,12 +696,34 @@ running SQL queries on DuckDB backed origins, or exposed commands on the file sy
     <span id="get_data_orgins_user/2"></span>
 
   <div class="detail-header">
-    <a href="#get_data_orgins_user/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#get_data_orgins_user/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">get_data_orgins_user(user, origin_id, opts \\ [])</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get_data_orgins_user(user, origin_id, opts \\ [])</h1>
 
 
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="get_data_orgins_user!/3">
+
+    <span id="get_data_orgins_user!/2"></span>
+
+  <div class="detail-header">
+    <a href="#get_data_orgins_user!/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get_data_orgins_user!(user, origin_id, opts \\ [])</h1>
+
+
+    </div>
   </div>
 
   <section class="docstring">
@@ -716,12 +736,34 @@ running SQL queries on DuckDB backed origins, or exposed commands on the file sy
     <span id="get_data_user/3"></span>
 
   <div class="detail-header">
-    <a href="#get_data_user/4" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#get_data_user/4" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">get_data_user(origin, user, data_id, opts \\ [])</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get_data_user(origin, user, data_id, opts \\ [])</h1>
 
 
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="get_data_user!/4">
+
+    <span id="get_data_user!/3"></span>
+
+  <div class="detail-header">
+    <a href="#get_data_user!/4" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get_data_user!(origin, user, data_id, opts \\ [])</h1>
+
+
+    </div>
   </div>
 
   <section class="docstring">
@@ -732,12 +774,14 @@ running SQL queries on DuckDB backed origins, or exposed commands on the file sy
 <section class="detail" id="get_extracted_metadata!/1">
 
   <div class="detail-header">
-    <a href="#get_extracted_metadata!/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#get_extracted_metadata!/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">get_extracted_metadata!(id)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get_extracted_metadata!(id)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -748,22 +792,24 @@ running SQL queries on DuckDB backed origins, or exposed commands on the file sy
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">get_extracted_metadata!</span><span class="p" data-group-id="4455132442-1">(</span><span class="mi">123</span><span class="p" data-group-id="4455132442-1">)</span><span class="w">
-</span><span class="p" data-group-id="4455132442-2">%</span><span class="nc" data-group-id="4455132442-2">ExtractedMetadata</span><span class="p" data-group-id="4455132442-2">{</span><span class="p" data-group-id="4455132442-2">}</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">get_extracted_metadata!</span><span class="p" data-group-id="7786904255-1">(</span><span class="mi">123</span><span class="p" data-group-id="7786904255-1">)</span><span class="w">
+</span><span class="p" data-group-id="7786904255-2">%</span><span class="nc" data-group-id="7786904255-2">ExtractedMetadata</span><span class="p" data-group-id="7786904255-2">{</span><span class="p" data-group-id="7786904255-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">get_extracted_metadata!</span><span class="p" data-group-id="4455132442-3">(</span><span class="mi">456</span><span class="p" data-group-id="4455132442-3">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">get_extracted_metadata!</span><span class="p" data-group-id="7786904255-3">(</span><span class="mi">456</span><span class="p" data-group-id="7786904255-3">)</span><span class="w">
 </span><span class="gt">** (Ecto.NoResultsError)</span></code></pre>
   </section>
 </section>
 <section class="detail" id="get_origin!/1">
 
   <div class="detail-header">
-    <a href="#get_origin!/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#get_origin!/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">get_origin!(id)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get_origin!(id)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -774,22 +820,24 @@ running SQL queries on DuckDB backed origins, or exposed commands on the file sy
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">get_origin!</span><span class="p" data-group-id="1913131500-1">(</span><span class="mi">123</span><span class="p" data-group-id="1913131500-1">)</span><span class="w">
-</span><span class="p" data-group-id="1913131500-2">%</span><span class="nc" data-group-id="1913131500-2">Origin</span><span class="p" data-group-id="1913131500-2">{</span><span class="p" data-group-id="1913131500-2">}</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">get_origin!</span><span class="p" data-group-id="0332526600-1">(</span><span class="mi">123</span><span class="p" data-group-id="0332526600-1">)</span><span class="w">
+</span><span class="p" data-group-id="0332526600-2">%</span><span class="nc" data-group-id="0332526600-2">Origin</span><span class="p" data-group-id="0332526600-2">{</span><span class="p" data-group-id="0332526600-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">get_origin!</span><span class="p" data-group-id="1913131500-3">(</span><span class="mi">456</span><span class="p" data-group-id="1913131500-3">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">get_origin!</span><span class="p" data-group-id="0332526600-3">(</span><span class="mi">456</span><span class="p" data-group-id="0332526600-3">)</span><span class="w">
 </span><span class="gt">** (Ecto.NoResultsError)</span></code></pre>
   </section>
 </section>
 <section class="detail" id="list_data_descendants/2">
 
   <div class="detail-header">
-    <a href="#list_data_descendants/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#list_data_descendants/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">list_data_descendants(origin, data_id)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">list_data_descendants(origin, data_id)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -802,12 +850,14 @@ running SQL queries on DuckDB backed origins, or exposed commands on the file sy
     <span id="list_data_descendants_user/3"></span>
 
   <div class="detail-header">
-    <a href="#list_data_descendants_user/4" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#list_data_descendants_user/4" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">list_data_descendants_user(origin, user, data_id, opts \\ [])</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">list_data_descendants_user(origin, user, data_id, opts \\ [])</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -822,12 +872,14 @@ running SQL queries on DuckDB backed origins, or exposed commands on the file sy
     <span id="list_data_orgins_user/2"></span>
 
   <div class="detail-header">
-    <a href="#list_data_orgins_user/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#list_data_orgins_user/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">list_data_orgins_user(user, exclude \\ [], opts \\ [])</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">list_data_orgins_user(user, exclude \\ [], opts \\ [])</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -839,12 +891,14 @@ their groups and permissions for said origins.</p>
 <section class="detail" id="list_data_origins/0">
 
   <div class="detail-header">
-    <a href="#list_data_origins/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#list_data_origins/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">list_data_origins()</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">list_data_origins()</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -855,8 +909,8 @@ their groups and permissions for said origins.</p>
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list_data_origins</span><span class="p" data-group-id="9346144954-1">(</span><span class="p" data-group-id="9346144954-1">)</span><span class="w">
-</span><span class="p" data-group-id="9346144954-2">[</span><span class="p" data-group-id="9346144954-3">%</span><span class="nc" data-group-id="9346144954-3">Origin</span><span class="p" data-group-id="9346144954-3">{</span><span class="p" data-group-id="9346144954-3">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="9346144954-2">]</span></code></pre>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list_data_origins</span><span class="p" data-group-id="2066597886-1">(</span><span class="p" data-group-id="2066597886-1">)</span><span class="w">
+</span><span class="p" data-group-id="2066597886-2">[</span><span class="p" data-group-id="2066597886-3">%</span><span class="nc" data-group-id="2066597886-3">Origin</span><span class="p" data-group-id="2066597886-3">{</span><span class="p" data-group-id="2066597886-3">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="2066597886-2">]</span></code></pre>
   </section>
 </section>
 <section class="detail" id="list_data_user/3">
@@ -864,12 +918,14 @@ their groups and permissions for said origins.</p>
     <span id="list_data_user/2"></span>
 
   <div class="detail-header">
-    <a href="#list_data_user/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#list_data_user/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">list_data_user(origin, user, opts \\ [])</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">list_data_user(origin, user, opts \\ [])</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -880,12 +936,14 @@ their groups and permissions for said origins.</p>
 <section class="detail" id="list_extracted_metadatas/0">
 
   <div class="detail-header">
-    <a href="#list_extracted_metadatas/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#list_extracted_metadatas/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">list_extracted_metadatas()</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">list_extracted_metadatas()</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -896,19 +954,21 @@ their groups and permissions for said origins.</p>
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list_extracted_metadatas</span><span class="p" data-group-id="1174451618-1">(</span><span class="p" data-group-id="1174451618-1">)</span><span class="w">
-</span><span class="p" data-group-id="1174451618-2">[</span><span class="p" data-group-id="1174451618-3">%</span><span class="nc" data-group-id="1174451618-3">ExtractedMetadata</span><span class="p" data-group-id="1174451618-3">{</span><span class="p" data-group-id="1174451618-3">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="1174451618-2">]</span></code></pre>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">list_extracted_metadatas</span><span class="p" data-group-id="2971373314-1">(</span><span class="p" data-group-id="2971373314-1">)</span><span class="w">
+</span><span class="p" data-group-id="2971373314-2">[</span><span class="p" data-group-id="2971373314-3">%</span><span class="nc" data-group-id="2971373314-3">ExtractedMetadata</span><span class="p" data-group-id="2971373314-3">{</span><span class="p" data-group-id="2971373314-3">}</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="2971373314-2">]</span></code></pre>
   </section>
 </section>
 <section class="detail" id="list_roots/1">
 
   <div class="detail-header">
-    <a href="#list_roots/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#list_roots/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">list_roots(origin)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">list_roots(origin)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -921,12 +981,14 @@ their groups and permissions for said origins.</p>
     <span id="query_origin_sync/2"></span>
 
   <div class="detail-header">
-    <a href="#query_origin_sync/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#query_origin_sync/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">query_origin_sync(origin, query, opts \\ [])</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">query_origin_sync(origin, query, opts \\ [])</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -941,12 +1003,14 @@ nil, indicating that it's a data backed origin we have connection info on</p>
     <span id="search_origin/3"></span>
 
   <div class="detail-header">
-    <a href="#search_origin/4" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#search_origin/4" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">search_origin(origin, user, search_term, opts \\ [])</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">search_origin(origin, user, search_term, opts \\ [])</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -957,12 +1021,14 @@ nil, indicating that it's a data backed origin we have connection info on</p>
 <section class="detail" id="update_extracted_metadata/2">
 
   <div class="detail-header">
-    <a href="#update_extracted_metadata/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#update_extracted_metadata/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">update_extracted_metadata(extracted_metadata, attrs)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">update_extracted_metadata(extracted_metadata, attrs)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -973,22 +1039,24 @@ nil, indicating that it's a data backed origin we have connection info on</p>
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">update_extracted_metadata</span><span class="p" data-group-id="9844579334-1">(</span><span class="n">extracted_metadata</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9844579334-2">%{</span><span class="ss">field</span><span class="p">:</span><span class="w"> </span><span class="n">new_value</span><span class="p" data-group-id="9844579334-2">}</span><span class="p" data-group-id="9844579334-1">)</span><span class="w">
-</span><span class="p" data-group-id="9844579334-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9844579334-4">%</span><span class="nc" data-group-id="9844579334-4">ExtractedMetadata</span><span class="p" data-group-id="9844579334-4">{</span><span class="p" data-group-id="9844579334-4">}</span><span class="p" data-group-id="9844579334-3">}</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">update_extracted_metadata</span><span class="p" data-group-id="1091685416-1">(</span><span class="n">extracted_metadata</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1091685416-2">%{</span><span class="ss">field</span><span class="p">:</span><span class="w"> </span><span class="n">new_value</span><span class="p" data-group-id="1091685416-2">}</span><span class="p" data-group-id="1091685416-1">)</span><span class="w">
+</span><span class="p" data-group-id="1091685416-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1091685416-4">%</span><span class="nc" data-group-id="1091685416-4">ExtractedMetadata</span><span class="p" data-group-id="1091685416-4">{</span><span class="p" data-group-id="1091685416-4">}</span><span class="p" data-group-id="1091685416-3">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">update_extracted_metadata</span><span class="p" data-group-id="9844579334-5">(</span><span class="n">extracted_metadata</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9844579334-6">%{</span><span class="ss">field</span><span class="p">:</span><span class="w"> </span><span class="n">bad_value</span><span class="p" data-group-id="9844579334-6">}</span><span class="p" data-group-id="9844579334-5">)</span><span class="w">
-</span><span class="p" data-group-id="9844579334-7">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9844579334-8">%</span><span class="nc" data-group-id="9844579334-8">Ecto.Changeset</span><span class="p" data-group-id="9844579334-8">{</span><span class="p" data-group-id="9844579334-8">}</span><span class="p" data-group-id="9844579334-7">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="n">update_extracted_metadata</span><span class="p" data-group-id="1091685416-5">(</span><span class="n">extracted_metadata</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1091685416-6">%{</span><span class="ss">field</span><span class="p">:</span><span class="w"> </span><span class="n">bad_value</span><span class="p" data-group-id="1091685416-6">}</span><span class="p" data-group-id="1091685416-5">)</span><span class="w">
+</span><span class="p" data-group-id="1091685416-7">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1091685416-8">%</span><span class="nc" data-group-id="1091685416-8">Ecto.Changeset</span><span class="p" data-group-id="1091685416-8">{</span><span class="p" data-group-id="1091685416-8">}</span><span class="p" data-group-id="1091685416-7">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="update_origin/2">
 
   <div class="detail-header">
-    <a href="#update_origin/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#update_origin/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">update_origin(origin, attrs)</h1>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">update_origin(origin, attrs)</h1>
 
 
+    </div>
   </div>
 
   <section class="docstring">
@@ -999,11 +1067,11 @@ nil, indicating that it's a data backed origin we have connection info on</p>
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">update_origin</span><span class="p" data-group-id="8197801922-1">(</span><span class="n">origin</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8197801922-2">%{</span><span class="ss">field</span><span class="p">:</span><span class="w"> </span><span class="n">new_value</span><span class="p" data-group-id="8197801922-2">}</span><span class="p" data-group-id="8197801922-1">)</span><span class="w">
-</span><span class="p" data-group-id="8197801922-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8197801922-4">%</span><span class="nc" data-group-id="8197801922-4">Origin</span><span class="p" data-group-id="8197801922-4">{</span><span class="p" data-group-id="8197801922-4">}</span><span class="p" data-group-id="8197801922-3">}</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">update_origin</span><span class="p" data-group-id="0873057678-1">(</span><span class="n">origin</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0873057678-2">%{</span><span class="ss">field</span><span class="p">:</span><span class="w"> </span><span class="n">new_value</span><span class="p" data-group-id="0873057678-2">}</span><span class="p" data-group-id="0873057678-1">)</span><span class="w">
+</span><span class="p" data-group-id="0873057678-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0873057678-4">%</span><span class="nc" data-group-id="0873057678-4">Origin</span><span class="p" data-group-id="0873057678-4">{</span><span class="p" data-group-id="0873057678-4">}</span><span class="p" data-group-id="0873057678-3">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">update_origin</span><span class="p" data-group-id="8197801922-5">(</span><span class="n">origin</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8197801922-6">%{</span><span class="ss">field</span><span class="p">:</span><span class="w"> </span><span class="n">bad_value</span><span class="p" data-group-id="8197801922-6">}</span><span class="p" data-group-id="8197801922-5">)</span><span class="w">
-</span><span class="p" data-group-id="8197801922-7">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8197801922-8">%</span><span class="nc" data-group-id="8197801922-8">Ecto.Changeset</span><span class="p" data-group-id="8197801922-8">{</span><span class="p" data-group-id="8197801922-8">}</span><span class="p" data-group-id="8197801922-7">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="n">update_origin</span><span class="p" data-group-id="0873057678-5">(</span><span class="n">origin</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0873057678-6">%{</span><span class="ss">field</span><span class="p">:</span><span class="w"> </span><span class="n">bad_value</span><span class="p" data-group-id="0873057678-6">}</span><span class="p" data-group-id="0873057678-5">)</span><span class="w">
+</span><span class="p" data-group-id="0873057678-7">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0873057678-8">%</span><span class="nc" data-group-id="0873057678-8">Ecto.Changeset</span><span class="p" data-group-id="0873057678-8">{</span><span class="p" data-group-id="0873057678-8">}</span><span class="p" data-group-id="0873057678-7">}</span></code></pre>
   </section>
 </section>
 
@@ -1027,7 +1095,7 @@ nil, indicating that it's a data backed origin we have connection info on</p>
 
       <p class="built-using">
         Built using
-        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.36.1) for the
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.37.0) for the
 
           <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
