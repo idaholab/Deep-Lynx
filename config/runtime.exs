@@ -22,7 +22,7 @@ if config_env() == :prod do
     database_path:
       System.get_env(
         "DATABASE_PATH",
-        Path.join([System.user_home(), "/.datum_databases", "operations.db"])
+        Path.join([System.user_home(), ".datum_databases", "operations.db"])
       ),
     secret_key_base: System.get_env("SECRET_KEY_BASE"),
     host: System.get_env("PHX_HOST"),
