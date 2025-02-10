@@ -41,6 +41,9 @@ npm-debug.log
 # Ignore outputs of the so
 /priv/native/
 
+# Ignore docs output
+/priv/static/docs/
+
 # Ignore databases
 /databases/
 
