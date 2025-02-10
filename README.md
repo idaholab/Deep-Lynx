@@ -76,6 +76,26 @@ Finished in 1.9 seconds (0.00s async, 1.9s sync)
 
 The majority of development will be done in the lib folder with tests written in the aptly named test folder. Within lib, the datum_web folder is where the front-end views as well as their respective controller code reside, in addition to the front end router. The regular datum folder holds backend models and typically hosts business logic and business domain as well as DB interactions.
 
+## Troubleshooting
+
+### Rust NIF Compile Error
+
+Try installing cmake with `brew install cmake`. Then, rebuild the app with:
+- `mix deps.clean --all`
+- `mix deps.get && mix deps.compile`
+- `mix setup`
+
+### ArgumentError at GET /
+
+You will need to update your `secret_key_base` environment variable. To generate a new secret, type `mix phx.gen.secret` at the command line. Paste the resulting output into `secret_key_base` in `dev.exs` (full image cropped for security reasons):
+
+![alt text](assets/README/secret_key_base.png)
+
+Then, rebuild the app with:
+- `mix database.clean`
+- `mix setup`
+- `mix phx.server`
+
 ## Useful Links
 
 ### Documentation
