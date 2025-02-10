@@ -9,7 +9,7 @@ import Config
 config :datum, DatumWeb.Endpoint, server: true
 
 config :datum, DatumWeb.Endpoint,
-  origin_db_path: Path.join([System.user_home(), "/.datum_databases", "origins"])
+  origin_db_path: Path.join([System.user_home(), ".datum_databases", "origins"])
 
 if config_env() == :prod do
   config_file_path =
