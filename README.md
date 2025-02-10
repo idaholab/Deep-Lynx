@@ -9,7 +9,7 @@
 - [Node.js and NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm): used for UI libraries
 - Mix (should come with Elixir installation installed)
 - Rust: Required for building native plugins. Follow the installation instructions from [here](https://www.rust-lang.org/tools/install).
-- HDF5: Required for building certain plugins - can use native package manager or download from [here](https://www.hdfgroup.org/download-hdf5/)
+- `cmake`: Required for rust builds. For mac users, this can easily be installed by running `brew install cmake`. You can check out alternative download options [here](https://cmake.org/download/).
 - **optional**: [asdf](https://asdf-vm.com/guide/getting-started.html): version manager for Elixir, not available on Windows
 
 ### VSCode Extensions
@@ -45,6 +45,12 @@ Uncomment the top line in the `mix.exs` file and change the path to reflect the 
 ### Modifying `config/config.exs`
 
 You also need to modify the configuration file in `config/config.exs`, adding `cacerts_path: "/path/to/YOUR_COMPANY_CERT"` to the following lines like so: ![alt text](assets/README/configexs.png)
+
+### Modifying `config/dev.exs`
+
+You will also need to update your `secret_key_base` environment variable. To generate a new secret, type `mix phx.gen.secret` at the command line. Paste the resulting output into `secret_key_base` in `dev.exs` (full image cropped for security reasons):
+
+![alt text](assets/README/secret_key_base.png)
 
 ## Server Initialization
 
