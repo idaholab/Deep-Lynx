@@ -52,7 +52,7 @@ defmodule Datum.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:ex_doc, "~> 0.34", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.34", runtime: false},
       {:adbc, "~> 0.7.3"},
       {:bcrypt_elixir, "~> 3.2"},
       {:phoenix, "~> 1.7.14"},
