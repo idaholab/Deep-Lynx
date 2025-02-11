@@ -27,7 +27,7 @@ defmodule Datum.Plugins do
       from(p in Plugin)
 
     Enum.reduce(extensions, query, fn name, query ->
-      where(query, [p], ^name in p.filetypes)
+      or_where(query, [p], ^name in p.filetypes)
     end)
     |> Repo.all()
   end
