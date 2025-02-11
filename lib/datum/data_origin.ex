@@ -490,6 +490,7 @@ defmodule Datum.DataOrigin do
 
   def list_data_descendants_user(%Origin{} = origin, %User{} = user, data_id, opts \\ []) do
     permissions = Keyword.get(opts, :permissions, [:read, :readwrite])
+    depth = Keyword.get(opts, :depth, 1)
 
     groups =
       Repo.all(
@@ -506,7 +507,7 @@ defmodule Datum.DataOrigin do
             join: p in DataTreePath,
             as: :tree,
             on: d.id == p.descendant,
-            where: p.ancestor == ^data_id and p.descendant != p.ancestor and p.depth <= 1,
+            where: p.ancestor == ^data_id and p.descendant != p.ancestor and p.depth <= ^depth,
             order_by: [asc: p.depth],
             select: d.id
 

@@ -84,7 +84,9 @@ defmodule DatumWeb.OriginController do
         origin
         |> DataOrigin.list_roots()
         |> Enum.map(
-          &DataOrigin.list_data_descendants_user(origin, conn.assigns.current_user, &1.id)
+          &DataOrigin.list_data_descendants_user(origin, conn.assigns.current_user, &1.id,
+            depth: 1000
+          )
         )
         |> List.flatten()
       )
