@@ -85,7 +85,7 @@ defmodule Datum.Scanners.Filesystem do
             Datum.TaskSupervisor,
             plugins,
             fn plugin ->
-              case plugin.type do
+              case plugin.plugin_type do
                 :extractor -> Extractor.plugin_extract(plugin, path)
                 :sampler -> Sampler.plugin_sample(plugin, path)
               end

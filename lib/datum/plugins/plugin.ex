@@ -40,6 +40,7 @@ defmodule Datum.Plugins.Plugin do
         :module,
         :enabled,
         :module_name,
+        :plugin_type,
         :config,
         :module_type
       ])
