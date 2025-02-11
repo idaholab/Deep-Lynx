@@ -91,7 +91,7 @@ defmodule Datum.Scanners.Filesystem do
               end
             end,
             on_timeout: :kill_task,
-            timeout: 30_000,
+            timeout: 300_000,
             ordered: false,
             max_concurrency: 8
           )
