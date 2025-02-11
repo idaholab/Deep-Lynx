@@ -78,7 +78,7 @@ defmodule Datum.Scanners.Filesystem do
       if !skip_plugins do
         # This works because the Scan CLI process will build a local copy of the
         # operations database with the plugins owned by the user
-        plugins = Plugins.list_plugins_by_extensions(extensions)
+        plugins = Plugins.list_plugins_by_extensions([Path.extname(path) | extensions])
 
         statuses =
           Task.Supervisor.async_stream_nolink(
