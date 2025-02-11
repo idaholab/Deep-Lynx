@@ -85,8 +85,10 @@ defmodule Datum.Scanner do
           Datum.Scanners.Filesystem.scan_directory(
             state.origin,
             state.user,
+            parent,
             dir,
-            generate_checksum: Map.get(state, :checksum)
+            generate_checksum: false,
+            skip_plugins: true
           )
         end,
         timeout: :infinity,
@@ -165,6 +167,7 @@ defmodule Datum.Scanner do
         Datum.Scanners.Filesystem.scan_directory(
           origin,
           state.user,
+          parent,
           dir,
           generate_checksum: Keyword.get(opts, :checksum)
         )
@@ -188,14 +191,16 @@ defmodule Datum.Scanner do
       directories,
       fn dir ->
         # we need to for sure create the root_directory so we get the data attached to the right thing
-        DatumWeb.Client.create_data!(state.client, origin, %Datum.DataOrigin.Data{
-          path: dir,
-          type: :root_directory
-        })
+        {:ok, root} =
+          DatumWeb.Client.create_data!(state.client, origin, %Datum.DataOrigin.Data{
+            path: dir,
+            type: :root_directory
+          })
 
         Datum.Scanners.Filesystem.scan_directory(
           origin,
           state.user,
+          root,
           dir,
           generate_checksum: Keyword.get(opts, :checksum)
         )
@@ -229,7 +234,7 @@ defmodule Datum.Scanner do
     cond do
       Enum.any?(events, &(&1 == :isdir)) &&
           Enum.any?(events, &(&1 == :created || &1 == :modified || &1 == :moved_to)) ->
-        Filesystem.scan_directory(state.origin, state.user, path)
+        Filesystem.scan_directory(state.origin, state.user, nil, path)
 
       Enum.any?(events, &(&1 == :created || &1 == :modified || &1 == :moved_to || &1 == :closed)) ->
         Filesystem.scan_file(state.origin, state.user, nil, path)

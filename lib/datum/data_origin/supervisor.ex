@@ -46,7 +46,7 @@ defmodule Datum.DataOrigin.Supervisor do
                  if origin.config do
                    Map.get(origin.config, "watch", false)
                  end,
-               scan_on_start: false
+               scan_on_start: true
              },
              [name: String.to_atom(ShortUUID.encode!(origin.id))]
            ]},

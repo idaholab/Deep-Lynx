@@ -14,14 +14,14 @@ defmodule Datum.Scanners.Filesystem do
   alias Datum.Plugins.Sampler
   alias Datum.Accounts.User
 
-  def scan_directory(origin, user, root_path, opts \\ [])
+  def scan_directory(origin, user, parent, root_path, opts \\ [])
 
   @doc """
   This version of scan_directory accepts an Origin record and assumes
   that, because it's not just an Origin ID - that we're running this 
   on the server and have direct access to the filesystem in question
   """
-  def scan_directory(%Origin{} = origin, %User{} = user, root_path, opts) do
+  def scan_directory(%Origin{} = origin, %User{} = user, dir_parent, root_path, opts) do
     {:ok, parent} =
       DataOrigin.add_data(origin, user, %{
         path: root_path,
@@ -31,19 +31,19 @@ defmodule Datum.Scanners.Filesystem do
       })
 
     ## we have to make the original leaf node
-    DataOrigin.connect_data(origin, parent, parent)
+    DataOrigin.connect_data(origin, dir_parent, parent)
 
     File.ls!(root_path)
     |> Enum.each(fn entry ->
       full_path = Path.join(root_path, entry)
 
       if File.dir?(full_path),
-        do: scan_directory(origin, user, full_path, opts),
+        do: scan_directory(origin, user, parent, full_path, opts),
         else: scan_file(origin, user, parent, full_path, opts)
     end)
   end
 
-  def scan_directory(origin_id, user_id, root_path, opts) do
+  def scan_directory(origin_id, user_id, _parent, root_path, opts) do
     {:ok, parent} =
       DatumWeb.SocketClient.send_data(origin_id, user_id, %Data{
         path: root_path,
@@ -71,37 +71,46 @@ defmodule Datum.Scanners.Filesystem do
 
   def scan_file(%Origin{} = origin, %User{} = user, parent, path, opts) do
     generate_checksum = Keyword.get(opts, :generate_checksum, false)
+    skip_plugins = Keyword.get(opts, :skip_plugins, false)
     extensions = MIME.from_path(path) |> MIME.extensions()
 
-    # This works because the Scan CLI process will build a local copy of the
-    # operations database with the plugins owned by the user
-    plugins = Plugins.list_plugins_by_extensions(extensions)
+    metadatas =
+      if !skip_plugins do
+        # This works because the Scan CLI process will build a local copy of the
+        # operations database with the plugins owned by the user
+        plugins = Plugins.list_plugins_by_extensions(extensions)
 
-    statuses =
-      Task.Supervisor.async_stream_nolink(
-        Datum.TaskSupervisor,
-        plugins,
-        fn plugin ->
-          case plugin.type do
-            :extractor -> Extractor.plugin_extract(plugin, path)
-            :sampler -> Sampler.plugin_sample(plugin, path)
-          end
-        end,
-        on_timeout: :kill_task,
-        timeout: 30_000,
-        ordered: false,
-        max_concurrency: 8
-      )
-      |> Enum.map(fn
-        {:ok, metadata} -> {:ok, metadata}
-        {:exit, reason} -> {:error, "plugin run task exited: #{Exception.format_exit(reason)}"}
-      end)
+        statuses =
+          Task.Supervisor.async_stream_nolink(
+            Datum.TaskSupervisor,
+            plugins,
+            fn plugin ->
+              case plugin.type do
+                :extractor -> Extractor.plugin_extract(plugin, path)
+                :sampler -> Sampler.plugin_sample(plugin, path)
+              end
+            end,
+            on_timeout: :kill_task,
+            timeout: 30_000,
+            ordered: false,
+            max_concurrency: 8
+          )
+          |> Enum.map(fn
+            {:ok, metadata} ->
+              {:ok, metadata}
 
-    statuses
-    |> Enum.filter(&match?({:error, _}, &1))
-    |> Enum.each(fn {:error, message} -> Logger.error(message) end)
+            {:exit, reason} ->
+              {:error, "plugin run task exited: #{Exception.format_exit(reason)}"}
+          end)
 
-    {_s, metadatas} = statuses |> Enum.filter(&match?({:ok, _}, &1)) |> Enum.unzip()
+        statuses
+        |> Enum.filter(&match?({:error, _}, &1))
+        |> Enum.each(fn {:error, message} -> Logger.error(message) end)
+
+        {_s, metadatas} = statuses |> Enum.filter(&match?({:ok, _}, &1)) |> Enum.unzip()
+
+        metadatas
+      end
 
     {checksum_type, checksum} =
       if generate_checksum do

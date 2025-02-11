@@ -506,7 +506,7 @@ defmodule Datum.DataOrigin do
             join: p in DataTreePath,
             as: :tree,
             on: d.id == p.descendant,
-            where: p.ancestor == ^data_id and p.descendant != p.ancestor,
+            where: p.ancestor == ^data_id and p.descendant != p.ancestor and p.depth <= 1,
             order_by: [asc: p.depth],
             select: d.id
 
