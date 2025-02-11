@@ -28,7 +28,8 @@ Accounts.set_admin(admin)
     module_type: :elixir,
     module_name: Datum.Plugins.Tdms,
     filetypes: [".tdms_index"],
-    plugin_type: :extractor
+    plugin_type: :extractor,
+    enabled: true
   })
 
 {:ok, %Datum.Plugins.Plugin{} = _plugin} =
@@ -37,7 +38,8 @@ Accounts.set_admin(admin)
     module_type: :elixir,
     module_name: Datum.Plugins.CSV,
     filetypes: [".csv", "text/csv"],
-    plugin_type: :extractor
+    plugin_type: :extractor,
+    enabled: true
   })
 
 {:ok, %Datum.Plugins.Plugin{} = _plugin} =
@@ -46,7 +48,8 @@ Accounts.set_admin(admin)
     module_type: :elixir,
     module_name: Datum.Plugins.Parquet,
     filetypes: [".pqt", "parquet", "application/vnd.apache.parquet"],
-    plugin_type: :extractor
+    plugin_type: :extractor,
+    enabled: true
   })
 
 {:ok, %Datum.Plugins.Plugin{} = _plugin} =
@@ -56,7 +59,8 @@ Accounts.set_admin(admin)
     module_name: "sensor_plotting",
     path: Path.join(__DIR__, "sensor_plotting.py"),
     filetypes: [".tdms", "tdms"],
-    plugin_type: :sampler
+    plugin_type: :sampler,
+    enabled: true
   })
 
 {:ok, %Datum.Plugins.Plugin{} = plugin} =
@@ -66,7 +70,8 @@ Accounts.set_admin(admin)
     module_name: "tdms_duckdb",
     path: Path.join(__DIR__, "tdms_duckdb.py"),
     filetypes: [".tdms", "tdms"],
-    plugin_type: :sampler
+    plugin_type: :sampler,
+    enabled: true
   })
 
 # note that the origin db won't be created here if it doesn't exist
