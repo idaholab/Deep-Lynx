@@ -101,7 +101,7 @@ Accounts.set_admin(admin)
     }
   })
 
-{:ok, sensor_db_origin} =
+{:ok, _sensor_db_origin} =
   DataOrigin.create_origin(%{
     name: "General Data DB",
     owned_by: admin.id,
@@ -112,7 +112,7 @@ Accounts.set_admin(admin)
     }
   })
 
-{:ok, sensor_db_origin} =
+{:ok, _sensor_db_origin} =
   DataOrigin.create_origin(%{
     name: "Electromagnetic Data DB",
     owned_by: admin.id,
@@ -123,7 +123,7 @@ Accounts.set_admin(admin)
     }
   })
 
-{:ok, sensor_db_origin} =
+{:ok, _sensor_db_origin} =
   DataOrigin.create_origin(%{
     name: "Thermocouple Data DB",
     owned_by: admin.id,
@@ -134,7 +134,7 @@ Accounts.set_admin(admin)
     }
   })
 
-{:ok, sensor_db_origin} =
+{:ok, _sensor_db_origin} =
   DataOrigin.create_origin(%{
     name: "Accelerometer Data DB",
     owned_by: admin.id,
