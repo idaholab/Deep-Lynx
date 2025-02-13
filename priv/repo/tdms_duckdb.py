@@ -5,7 +5,7 @@ import json
 
 
 def sample(path):
-    path = path.decode("utf8")
+    path = path.decode("utf-8")
     dirname = os.path.expanduser("~")
 
     with nptdms.TdmsFile.open(path) as tdms_file:

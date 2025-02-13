@@ -205,7 +205,7 @@ def electromagnetic_freq_plot(
 
 
 def sample(path):
-    path = path.decode("utf8")
+    path = path.decode("utf-8")
     dirname = os.path.expanduser("~")
     time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
