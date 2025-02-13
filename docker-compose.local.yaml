@@ -1,0 +1,24 @@
+version: "3.9"
+services:
+  deep-lynx:
+    build:
+      dockerfile: Dockerfile
+    restart: on-failure
+    depends_on:
+      - postgres
+    ports:
+      - "8090:8090"
+    env_file:
+      - "./.docker-env"
+  postgres:
+    environment:
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=deep_lynx_dev
+    image: "library/postgres:16.3"
+    ports:
+      - "5432:5432"
+  redis:
+    image: "redis/redis-stack:6.2.6-v9"
+    ports:
+      - "6379:6379"
+      - "8001:8001"
