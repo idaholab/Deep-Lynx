@@ -6,10 +6,6 @@ mod shapehasher_tests;
 
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use serde::{Deserialize, Serialize};
-//use serde_json::{Value, Map};
-use serde::de; // You need this to use de::Error::custom
-
-//use sha2::{Sha256, Digest};
 
 use base64;
 use serde_json::{self, Map, Value};
