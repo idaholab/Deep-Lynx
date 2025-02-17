@@ -35,7 +35,7 @@ RUN mkdir -p /srv/deeplynx
 WORKDIR /srv/deeplynx
 
 COPY . .
-COPY ./server/package.json /srv/deeplynx/server/package.json
+RUN ls /server
 
 # triple check we're not pulling in node_modules from the host system
 RUN rm -rf /srv/deeplynx/server/node_modules
