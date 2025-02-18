@@ -487,7 +487,11 @@ export class Repository {
                 break;
             }
             case 'like': {
-                this._query.WHERE?.push(format(`->> '%s') ILIKE %L`, finalKey, value));
+                this._query.WHERE?.push(format(`->> '%s') ILIKE %L`, finalKey, `%${value}%`));
+                break;
+            }
+            case '%': {
+                this._query.WHERE?.push(format(`->> '%s') %% %L`, finalKey, `%${value}%`));
                 break;
             }
             case 'in': {
@@ -584,7 +588,7 @@ export class Repository {
                 break;
             }
             case 'like': {
-                this._query.WHERE?.push(format(`%s ILIKE %L`, fieldName, value));
+                this._query.WHERE?.push(format(`%s ILIKE %L`, fieldName, `%${value}%`));
                 break;
             }
             case '<': {
@@ -608,7 +612,7 @@ export class Repository {
                 if (Array.isArray(value)) {
                     this._query.WHERE?.push(format(`%s %% %L`, fieldName, value.join('|')));
                 } else {
-                    this._query.WHERE?.push(format(`%s %% %L`, fieldName, value));
+                    this._query.WHERE?.push(format(`%s %% %L`, fieldName, `%${value}%`));
                 }
                 break;
             }
