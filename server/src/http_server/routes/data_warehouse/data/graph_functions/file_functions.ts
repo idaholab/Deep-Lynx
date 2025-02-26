@@ -25,7 +25,7 @@ import {Readable} from 'stream';
 import {FileInfo} from 'busboy';
 import Logger from '../../../../../services/logger';
 import Config from '../../../../../services/config';
-import ReportQueryRepository from '../../../../../data_access_layer/repositories/data_warehouse/data/report_query_repository';
+// import ReportQueryRepository from '../../../../../data_access_layer/repositories/data_warehouse/data/report_query_repository';
 const Busboy = require('busboy');
 const csv = require('csvtojson');
 const xmlToJson = require('xml-2-json-streaming');
@@ -372,26 +372,26 @@ export default class FileFunctions {
                             });
                     }
 
-                    if (options && options.describe) {
-                        // kick off a file describe if specified
-                        const request = new TimeseriesInitialRequest({
-                            query: `DESCRIBE table;`,
-                            file_ids: results.map(r => r.value.id!)
-                        });
+                    // if (options && options.describe) {
+                    //     // kick off a file describe if specified
+                    //     const request = new TimeseriesInitialRequest({
+                    //         query: `DESCRIBE table;`,
+                    //         file_ids: results.map(r => r.value.id!)
+                    //     });
 
-                        const queryRepo = new ReportQueryRepository();
-                        void queryRepo.initiateQuery(req.params.containerID, req.params.sourceID, request, req.currentUser!, true)
-                            .then((result) => {
-                                if (result.isError) {
-                                    Logger.error(`error describing files ${result.error?.error}`);
-                                } else {
-                                    Logger.debug(`file description request successfully initiated`);
-                                }
-                            })
-                            .catch((e) => {
-                                Logger.error(`error describing files ${e}`);
-                            })
-                    }
+                    //     const queryRepo = new ReportQueryRepository();
+                    //     void queryRepo.initiateQuery(req.params.containerID, req.params.sourceID, request, req.currentUser!, true)
+                    //         .then((result) => {
+                    //             if (result.isError) {
+                    //                 Logger.error(`error describing files ${result.error?.error}`);
+                    //             } else {
+                    //                 Logger.debug(`file description request successfully initiated`);
+                    //             }
+                    //         })
+                    //         .catch((e) => {
+                    //             Logger.error(`error describing files ${e}`);
+                    //         })
+                    // }
 
                     if (metadataFieldCount === 0) {
                         Result.Success(results).asResponse(res);

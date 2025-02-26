@@ -29,8 +29,8 @@ import EventActionRepository from '../data_access_layer/repositories/event_syste
 import EventActionStatusRepository from '../data_access_layer/repositories/event_system/event_action_status_repository';
 import OntologyVersionRepository from '../data_access_layer/repositories/data_warehouse/ontology/versioning/ontology_version_repository';
 import Result from '../common_classes/result';
-import ReportRepository from '../data_access_layer/repositories/data_warehouse/data/report_repository';
-import ReportQueryRepository from '../data_access_layer/repositories/data_warehouse/data/report_query_repository';
+// import ReportRepository from '../data_access_layer/repositories/data_warehouse/data/report_repository';
+// import ReportQueryRepository from '../data_access_layer/repositories/data_warehouse/data/report_query_repository';
 
 // authRequest is used to manage user authorization against resources, optional param for declaring domain
 export function authRequest(action: 'read' | 'write', resource: string, domainParam?: string) {
@@ -852,65 +852,65 @@ export function fileContext(): any {
     };
 }
 
-// report context will attempt to fetch a report by id specified by the
-// id query param. If one is fetched it will pass it on in request context.
-// Route must contain the param labeled "reportID"
-export function reportContext(): any {
-    return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
-        // if we don't have an ID, don't fail, just pass without action
-        if (!req.params.reportID) {
-            next();
-            return;
-        }
+// // report context will attempt to fetch a report by id specified by the
+// // id query param. If one is fetched it will pass it on in request context.
+// // Route must contain the param labeled "reportID"
+// export function reportContext(): any {
+//     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
+//         // if we don't have an ID, don't fail, just pass without action
+//         if (!req.params.reportID) {
+//             next();
+//             return;
+//         }
 
-        const repo = new ReportRepository();
+//         const repo = new ReportRepository();
 
-        repo.findByID(req.params.reportID)
-            .then((result) => {
-                if (result.isError) {
-                    resp.status(result.error?.errorCode!).json(result);
-                    return;
-                }
+//         repo.findByID(req.params.reportID)
+//             .then((result) => {
+//                 if (result.isError) {
+//                     resp.status(result.error?.errorCode!).json(result);
+//                     return;
+//                 }
 
-                req.report = result.value;
-                next();
-            })
-            .catch((error) => {
-                resp.status(500).json(error);
-                return;
-            });
-    }
-}
+//                 req.report = result.value;
+//                 next();
+//             })
+//             .catch((error) => {
+//                 resp.status(500).json(error);
+//                 return;
+//             });
+//     }
+// }
 
-// reportQuery context will attempt to fetch a reportQuery by id specified by the
-// id query param. If one is fetched it will pass it on in request context.
-// Route must contain the param labeled "reportQueryID"
-export function reportQueryContext(): any {
-    return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
-        // if we don't have an ID, don't fail, just pass without action
-        if (!req.params.reportQueryID) {
-            next();
-            return;
-        }
+// // reportQuery context will attempt to fetch a reportQuery by id specified by the
+// // id query param. If one is fetched it will pass it on in request context.
+// // Route must contain the param labeled "reportQueryID"
+// export function reportQueryContext(): any {
+//     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
+//         // if we don't have an ID, don't fail, just pass without action
+//         if (!req.params.reportQueryID) {
+//             next();
+//             return;
+//         }
 
-        const repo = new ReportQueryRepository();
+//         const repo = new ReportQueryRepository();
 
-        repo.findByID(req.params.reportQueryID)
-            .then((result) => {
-                if (result.isError) {
-                    resp.status(result.error?.errorCode!).json(result);
-                    return;
-                }
+//         repo.findByID(req.params.reportQueryID)
+//             .then((result) => {
+//                 if (result.isError) {
+//                     resp.status(result.error?.errorCode!).json(result);
+//                     return;
+//                 }
 
-                req.reportQuery = result.value;
-                next();
-            })
-            .catch((error) => {
-                resp.status(500).json(error);
-                return;
-            })
-    }
-}
+//                 req.reportQuery = result.value;
+//                 next();
+//             })
+//             .catch((error) => {
+//                 resp.status(500).json(error);
+//                 return;
+//             })
+//     }
+// }
 
 // tagContext will attempt to fetch a tag by id specified by the
 // id query parameter. If one is fetched it will pass it on in request context.

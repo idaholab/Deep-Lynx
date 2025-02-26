@@ -40,8 +40,8 @@ import {
     serviceUserContext,
     activeOntologyVersionContext,
     authRequest,
-    reportContext,
-    reportQueryContext,
+    // reportContext,
+    // reportQueryContext,
 } from '../middleware';
 import ContainerRoutes from './data_warehouse/ontology/container_routes';
 import MetatypeRoutes from './data_warehouse/ontology/metatype_routes';
@@ -74,7 +74,7 @@ import ServalRoutes from './serval_routes';
 import OntologyVersionRoutes from './data_warehouse/ontology/versioning/ontology_version_routes';
 import StatsMapper from '../../data_access_layer/mappers/stats_mapper';
 import Result from '../../common_classes/result';
-import ReportRoutes from './data_warehouse/data/report_routes';
+// import ReportRoutes from './data_warehouse/data/report_routes';
 
 const winston = require('winston');
 const expressWinston = require('express-winston');
@@ -194,7 +194,7 @@ export class Router {
             metatypeContext(),
             currentUser(),
         ]);
-        ReportRoutes.mount(this.app, [authenticateRoute(), containerContext(), dataSourceContext(), fileContext(), reportContext(), reportQueryContext(), currentUser()]);
+        // ReportRoutes.mount(this.app, [authenticateRoute(), containerContext(), dataSourceContext(), fileContext(), reportContext(), reportQueryContext(), currentUser()]);
         EventRoutes.mount(this.app, [authenticateRoute(), containerContext(), eventActionContext(), eventActionStatusContext(), currentUser()]);
         DataQueryRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
         TaskRoutes.mount(this.app, [authenticateRoute(), containerContext(), taskContext(), currentUser()]);
