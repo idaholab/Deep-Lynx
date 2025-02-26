@@ -122,25 +122,25 @@ impl SnapshotGenerator {
       metatype_uuid.push(n.metatype_uuid);
     }
 
-    let ids: Series = Series::new("id", ids);
-    let container_ids: Series = Series::new("container_id", container_ids);
-    let metatype_ids: Series = Series::new("metatype_id", metatype_ids);
-    let datasource_ids: Series = Series::new("data_source_id", data_source_ids);
-    let original_data_ids: Series = Series::new("original_data_id", original_data_ids);
-    let properties: Series = Series::new("properties", properties);
-    let metatype_names: Series = Series::new("metatype_name", metatype_name);
-    let metatype_uuid: Series = Series::new("metatype_uuid", metatype_uuid);
+    let ids: Series = Series::new("id".into(), ids);
+    let container_ids: Series = Series::new("container_id".into(), container_ids);
+    let metatype_ids: Series = Series::new("metatype_id".into(), metatype_ids);
+    let datasource_ids: Series = Series::new("data_source_id".into(), data_source_ids);
+    let original_data_ids: Series = Series::new("original_data_id".into(), original_data_ids);
+    let properties: Series = Series::new("properties".into(), properties);
+    let metatype_names: Series = Series::new("metatype_name".into(), metatype_name);
+    let metatype_uuid: Series = Series::new("metatype_uuid".into(), metatype_uuid);
 
     // build the actual dataframe
     let df = DataFrame::new(vec![
-      ids,
-      container_ids,
-      metatype_ids,
-      datasource_ids,
-      original_data_ids,
-      properties,
-      metatype_names,
-      metatype_uuid,
+      ids.into(),
+      container_ids.into(),
+      metatype_ids.into(),
+      datasource_ids.into(),
+      original_data_ids.into(),
+      properties.into(),
+      metatype_names.into(),
+      metatype_uuid.into(),
     ])?;
 
     // sort the frame in place, so we have faster lookups on common fields
