@@ -50,14 +50,14 @@ polars = { version = "0.46.0", features = [
     "sql",
 ] }
 arrow = { version = "51.0.0" }
-object_store = { version = "0.10.2", features = ["azure"] }
+# object_store = { version = "0.10.2", features = ["azure"] }
 url = "2.5.2"
-datafusion = { version = "41.0.0" }
-short-uuid = "0.1.2"
+# datafusion = { version = "41.0.0" }
+# short-uuid = "0.1.2"
 dotenvy = "0.15.7"
-connection-string = "0.2.0"
-azure_storage_blobs = "0.20.0"
-azure_storage = "0.20.0"
+# connection-string = "0.2.0"
+# azure_storage_blobs = "0.20.0"
+# azure_storage = "0.20.0"
 
 [build-dependencies]
 napi-build = "2.1.3"

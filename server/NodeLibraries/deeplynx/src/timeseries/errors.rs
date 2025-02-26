@@ -47,18 +47,18 @@ pub enum ValidationError {
 pub enum QueryError {
   #[error(transparent)]
   Napi(#[from] napi::Error),
-  #[error("datafusion error {0}")]
-  DataFusion(#[from] datafusion::error::DataFusionError),
-  #[error("connection string error {0}")]
-  ConnectionString(#[from] connection_string::Error),
+  // #[error("datafusion error {0}")]
+  // DataFusion(#[from] datafusion::error::DataFusionError),
+  // #[error("connection string error {0}")]
+  // ConnectionString(#[from] connection_string::Error),
   #[error("received null required parameter in request {msg}")]
   ReceivedNullDataInRequest { msg: String },
   #[error("incorrect data provided in request {0}")]
   BadData(String),
-  #[error("azure builder error {0}")]
-  AzureBuilder(#[from] object_store::Error),
-  #[error("azure blob storage sdk error {0}")]
-  AzureSDK(#[from] azure_storage::Error),
+  // #[error("azure builder error {0}")]
+  // AzureBuilder(#[from] object_store::Error),
+  // #[error("azure blob storage sdk error {0}")]
+  // AzureSDK(#[from] azure_storage::Error),
   #[error("serde json error {0}")]
   Json(#[from] serde_json::Error),
   #[error("dotenvy error {0}")]
@@ -81,14 +81,14 @@ impl From<QueryError> for napi::Error {
   }
 }
 
-#[derive(Error, Debug)]
-pub enum TestError {
-  #[error("data error {0}")]
-  DataError(#[from] TimeseriesError),
-  #[error("sqlx error {0}")]
-  SqlX(#[from] sqlx::Error),
-  #[error("sqlx error {0}")]
-  SqlXMigration(#[from] sqlx::migrate::MigrateError),
-  #[error("system IO error: {0}")]
-  IO(#[from] std::io::Error),
-}
+// #[derive(Error, Debug)]
+// pub enum TestError {
+//   #[error("data error {0}")]
+//   DataError(#[from] TimeseriesError),
+//   #[error("sqlx error {0}")]
+//   SqlX(#[from] sqlx::Error),
+//   #[error("sqlx error {0}")]
+//   SqlXMigration(#[from] sqlx::migrate::MigrateError),
+//   #[error("system IO error: {0}")]
+//   IO(#[from] std::io::Error),
+// }

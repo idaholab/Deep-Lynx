@@ -1,10 +1,10 @@
-mod azure_object_store;
+// mod azure_object_store;
 mod bucket_repository;
 mod data_types;
-mod datafusion_session;
+// mod datafusion_session;
 mod errors;
-mod file_metadata;
+// mod file_metadata;
 mod ingestion;
-mod query;
+// mod query;
 mod repository;
-mod tests;
+// mod tests;
