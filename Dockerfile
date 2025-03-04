@@ -19,6 +19,18 @@ ENV RUN_JOBS=false
 # set the default db to the one we'd see in the docker compose
 ENV CORE_DB_CONNECTION_STRING=postgresql://postgres:root@postgres:5432/deep_lynx_dev
 
+# Add missing packages
+RUN apk --no-check-certificate add wget ca-certificates
+
+# Configure INL certs and environment variables
+RUN wget -q -P /usr/local/share/ca-certificates/ http://certstore.inl.gov/pki/CAINLROOT_B64.crt
+RUN /usr/sbin/update-ca-certificates
+ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+ENV SSL_CERT_DIR=/etc/ssl/certs/
+
 RUN apk update
 RUN apk add --no-cache build-base musl-dev openssl openssl-dev
 RUN apk update add --update nodejs=21.7.3
@@ -35,7 +47,8 @@ RUN mkdir -p /srv/deeplynx
 WORKDIR /srv/deeplynx
 
 COPY . .
-RUN ls /server
+RUN ls /srv/deeplynx/server
+RUN echo $(ls -1 /srv/deeplynx/) >> env_file.txt
 
 # triple check we're not pulling in node_modules from the host system
 RUN rm -rf /srv/deeplynx/server/node_modules
@@ -46,19 +59,31 @@ WORKDIR /srv/deeplynx/server
 RUN yarn install;
 RUN yarn run build;
 
-FROM node:alpine as production
-ENV DEVELOPMENT_MODE=false
+# FROM node:alpine as production
+# ENV DEVELOPMENT_MODE=false
 
-RUN apk update && apk add --no-cache supervisor openssl
-RUN mkdir -p /srv/deeplynx/server
+# # Add missing packages
+# RUN apk --no-check-certificate add wget ca-certificates
 
-# need pm2 to run legacy server
-RUN npm install npm@latest --location=global
-RUN npm update --location=global
-RUN npm install pm2 --location=global
+# # Configure INL certs and environment variables
+# RUN wget -q -P /usr/local/share/ca-certificates/ http://certstore.inl.gov/pki/CAINLROOT_B64.crt
+# RUN /usr/sbin/update-ca-certificates
+# ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+# ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+# ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+# ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+# ENV SSL_CERT_DIR=/etc/ssl/certs/
 
-COPY --from=build /srv/deeplynx/server /srv/deeplynx/server
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+# RUN apk update && apk add --no-cache supervisor openssl
+# RUN mkdir -p /srv/deeplynx/server
 
-EXPOSE 8090
-CMD /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+# # need pm2 to run legacy server
+# RUN npm install npm@latest --location=global
+# RUN npm update --location=global
+# RUN npm install pm2 --location=global
+
+# COPY --from=build /srv/deeplynx/server /srv/deeplynx/server
+# COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# EXPOSE 8090
+# CMD /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
