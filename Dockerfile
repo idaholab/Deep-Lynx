@@ -46,9 +46,8 @@ RUN corepack enable # enables the yarn commands
 RUN mkdir -p /srv/deeplynx
 WORKDIR /srv/deeplynx
 
+# Must be specific for dedicated agent pool to find files
 COPY /Deep-Lynx /srv/deeplynx
-# RUN ls /srv/deeplynx/server
-# RUN echo $(ls -1 /srv/deeplynx/) >> env_file.txt
 
 # triple check we're not pulling in node_modules from the host system
 RUN rm -rf /srv/deeplynx/server/node_modules
@@ -59,31 +58,31 @@ WORKDIR /srv/deeplynx/server
 RUN yarn install;
 RUN yarn run build;
 
-# FROM node:alpine as production
-# ENV DEVELOPMENT_MODE=false
+FROM node:alpine as production
+ENV DEVELOPMENT_MODE=false
 
-# # Add missing packages
-# RUN apk --no-check-certificate add wget ca-certificates
+# Add missing packages
+RUN apk --no-check-certificate add wget ca-certificates
 
-# # Configure INL certs and environment variables
-# RUN wget -q -P /usr/local/share/ca-certificates/ http://certstore.inl.gov/pki/CAINLROOT_B64.crt
-# RUN /usr/sbin/update-ca-certificates
-# ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
-# ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
-# ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
-# ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
-# ENV SSL_CERT_DIR=/etc/ssl/certs/
+# Configure INL certs and environment variables
+RUN wget -q -P /usr/local/share/ca-certificates/ http://certstore.inl.gov/pki/CAINLROOT_B64.crt
+RUN /usr/sbin/update-ca-certificates
+ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+ENV SSL_CERT_DIR=/etc/ssl/certs/
 
-# RUN apk update && apk add --no-cache supervisor openssl
-# RUN mkdir -p /srv/deeplynx/server
+RUN apk update && apk add --no-cache supervisor openssl
+RUN mkdir -p /srv/deeplynx/server
 
-# # need pm2 to run legacy server
-# RUN npm install npm@latest --location=global
-# RUN npm update --location=global
-# RUN npm install pm2 --location=global
+# need pm2 to run legacy server
+RUN npm install npm@latest --location=global
+RUN npm update --location=global
+RUN npm install pm2 --location=global
 
-# COPY --from=build /srv/deeplynx/server /srv/deeplynx/server
-# COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY --from=build /srv/deeplynx/server /srv/deeplynx/server
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# EXPOSE 8090
-# CMD /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+EXPOSE 8090
+CMD /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
