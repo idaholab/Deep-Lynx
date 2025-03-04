@@ -46,9 +46,9 @@ RUN corepack enable # enables the yarn commands
 RUN mkdir -p /srv/deeplynx
 WORKDIR /srv/deeplynx
 
-COPY . .
-RUN ls /srv/deeplynx/server
-RUN echo $(ls -1 /srv/deeplynx/) >> env_file.txt
+COPY . /srv/deeplynx
+# RUN ls /srv/deeplynx/server
+# RUN echo $(ls -1 /srv/deeplynx/) >> env_file.txt
 
 # triple check we're not pulling in node_modules from the host system
 RUN rm -rf /srv/deeplynx/server/node_modules
