@@ -46,7 +46,7 @@ RUN corepack enable # enables the yarn commands
 RUN mkdir -p /srv/deeplynx
 WORKDIR /srv/deeplynx
 
-COPY . /srv/deeplynx
+COPY /Deep-Lynx /srv/deeplynx
 # RUN ls /srv/deeplynx/server
 # RUN echo $(ls -1 /srv/deeplynx/) >> env_file.txt
 
