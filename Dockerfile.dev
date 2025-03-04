@@ -19,6 +19,12 @@ ENV RUN_JOBS=false
 # set the default db to the one we'd see in the docker compose
 ENV CORE_DB_CONNECTION_STRING=postgresql://postgres:root@postgres:5432/deep_lynx_dev
 
+# Add missing packages
+RUN apk --no-check-certificate add wget ca-certificates
+
+# Configure certs below
+
+
 RUN apk update
 RUN apk add --no-cache build-base musl-dev openssl openssl-dev
 RUN apk update add --update nodejs=21.7.3
@@ -34,8 +40,8 @@ RUN corepack enable # enables the yarn commands
 RUN mkdir -p /srv/deeplynx
 WORKDIR /srv/deeplynx
 
-# Must be specific for dedicated agent pool to find files
-COPY /Deep-Lynx /srv/deeplynx
+
+COPY . .
 
 # triple check we're not pulling in node_modules from the host system
 RUN rm -rf /srv/deeplynx/server/node_modules
@@ -49,6 +55,12 @@ RUN yarn run build;
 FROM node:alpine as production
 ENV DEVELOPMENT_MODE=false
 
+# Add missing packages
+RUN apk --no-check-certificate add wget ca-certificates
+
+# Configure certs below
+
+
 RUN apk update && apk add --no-cache supervisor openssl
 RUN mkdir -p /srv/deeplynx/server
 
@@ -58,7 +70,7 @@ RUN npm update --location=global
 RUN npm install pm2 --location=global
 
 COPY --from=build /srv/deeplynx/server /srv/deeplynx/server
-COPY Deep-Lynx/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 EXPOSE 8090
 CMD /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
