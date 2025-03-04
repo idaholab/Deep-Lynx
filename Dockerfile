@@ -82,7 +82,7 @@ RUN npm update --location=global
 RUN npm install pm2 --location=global
 
 COPY --from=build /srv/deeplynx/server /srv/deeplynx/server
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY Deep-Lynx/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 EXPOSE 8090
 CMD /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
