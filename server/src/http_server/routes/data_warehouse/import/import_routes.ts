@@ -491,11 +491,6 @@ export default class ImportRoutes {
 
         if (req.query.action) {
             if (req.query.action === 'uploadPart') {
-                Logger.debug("✨got to uploadPart✨");
-
-                Logger.debug(`body type: ${typeof(req.body)}`);
-                Logger.debug(`REQ BODY: ${req.body}`);
-
                 // key is the file_uuid
                 // block_id is the base64 id for identifying partial objects/blobs
                 // body for uploadPart is the raw file data part
