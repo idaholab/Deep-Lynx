@@ -70,7 +70,6 @@ export default class GraphRoutes {
         );
 
         // File Routes
-        app.put('/containers/:containerID/import/datasources/:sourceID/files', ...middleware, authInContainer('write', 'data'), FileFunctions.uploadPartial);
         app.post('/containers/:containerID/import/datasources/:sourceID/files', ...middleware, authInContainer('write', 'data'), FileFunctions.uploadFile);
         app.get(
             '/containers/:containerID/files/:fileID',
@@ -85,10 +84,6 @@ export default class GraphRoutes {
             authInContainer('write', 'data'),
             FileFunctions.updateFile,
         );
-        app.put('/containers/:containerID/import/datasources/:sourceID/:fileID/metadata',
-            ...middleware,
-            authInContainer('write', 'data'),
-            FileFunctions.updateMetadata,);
         app.get(
             '/containers/:containerID/files/:fileID/download',
             ...middleware,

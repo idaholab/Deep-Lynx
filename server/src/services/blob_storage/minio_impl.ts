@@ -120,15 +120,14 @@ export default class MinioBlobImpl implements BlobStorage {
     // https://min.io/docs/minio/linux/developers/javascript/API.html#putObject
     async uploadPart(
         filepath: string,
-        filename: string,
         fileUUID: string,
         part_id: string,
         part: Readable | null,
     ): Promise<Result<string>> {
-        // don't need the filename or uuid because s3/minio does it differently from azure
+        // don't need the uuid because s3/minio does it differently from azure
         if (part) {
             try {
-                await this._client.putObject(Config.minio_bucket_name, `${filepath}${part_id}`, part);
+                await this._client.putObject(Config.minio_bucket_name, `${filepath}${fileUUID}_${part_id}`, part);
 
                 return Promise.resolve(
                     Result.Success(part_id)
@@ -152,7 +151,7 @@ export default class MinioBlobImpl implements BlobStorage {
     ): Promise<Result<BlobUploadResponse>> {
         const parts_destination = new minio.CopyDestinationOptions({
             Bucket: filepath,
-            Object: `${fileUUID}${filename}`,
+            Object: `ingest_upload${fileUUID}`,
         });
 
         let source_parts: minio.CopySourceOptions[] = [];
@@ -170,7 +169,7 @@ export default class MinioBlobImpl implements BlobStorage {
             return Promise.resolve(
                 Result.Success({
                     filepath,
-                    filename: `${fileUUID}${filename}`,
+                    filename: `ingest_upload${fileUUID}`,
                     size: 0,
                     md5hash: '',
                     metadata: {

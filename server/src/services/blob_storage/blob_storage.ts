@@ -25,7 +25,6 @@ export interface BlobStorage {
     // chunk id should come in as a query param from the user/caller
     uploadPart(
         filepath: string,
-        filename: string,
         fileUUID: string,
         part_id: string,
         part: Readable | null,

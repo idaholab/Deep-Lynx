@@ -186,7 +186,6 @@ export default class LargeObjectImpl implements BlobStorage {
 
     uploadPart(
         filepath: string,
-        filename: string,
         fileUUID: string,
         part_id: string,
         part: Readable | null,

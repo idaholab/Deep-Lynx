@@ -14,6 +14,7 @@ import Config from '../../../../services/config';
 
 import express from 'express';
 import {FileInfo} from 'busboy';
+import FileRepository from '../../../../data_access_layer/repositories/data_warehouse/data/file_repository';
 const csv = require('csvtojson');
 const Busboy = require('busboy');
 const stagingRepo = new DataStagingRepository();
@@ -96,6 +97,18 @@ export default class ImportRoutes {
             authInContainer('read', 'data'),
             this.getImportEnd,
         );
+
+        // todo: ensure .text() is what I want
+        app.put('/containers/:containerID/import/datasources/:sourceID/files',
+            ...middleware,
+            express.raw({limit: `${Config.max_request_body_size}mb`}),
+            authInContainer('write', 'data'),
+            this.uploadPartial);
+        app.put('/containers/:containerID/import/datasources/:sourceID/:fileID/metadata',
+            ...middleware,
+            express.raw({limit: `${Config.max_request_body_size}mb`}),
+            authInContainer('write', 'data'),
+            this.updateMetadata,);
     }
 
     private static createImport(req: Request, res: Response, next: NextFunction) {
@@ -455,5 +468,96 @@ export default class ImportRoutes {
             Result.Failure(`unable to find data source or import`, 404).asResponse(res);
             next();
         }
+    }
+
+    // Remembering what I did before (should've committed instead of restoring... 😭):
+    //
+    // I had discovered that I can't just get the body so easily.
+    // I need to do some getting and converting for the raw body data.
+    // look for other places that access the body.
+    // pass as a string to the fileRepo functions.
+    // I think it's the express.raw() or express.text().
+    // If I put the key or block_id in the body, maybe express.json() could work.
+    //
+    // I need to make sure the filename is set properly.
+    //
+    // should I add the name, key, and block_id to the body or nah?
+    //
+    // what was still not working at that point?
+    //
+    // would a script that kinda does ingest's thing work better?
+    public static uploadPartial(req: Request, res: Response, next: NextFunction) {
+        const fileRepo = new FileRepository();
+
+        if (req.query.action) {
+            if (req.query.action === 'uploadPart') {
+                Logger.debug("✨got to uploadPart✨");
+
+                Logger.debug(`body type: ${typeof(req.body)}`);
+                Logger.debug(`REQ BODY: ${req.body}`);
+
+                // key is the file_uuid
+                // block_id is the base64 id for identifying partial objects/blobs
+                // body for uploadPart is the raw file data part
+                fileRepo.uploadFilePart(
+                    req.params.containerID,
+                    req.params.sourceID,
+                    req.query.key as string,
+                    req.query.block_id as string,
+                    req.body
+                )
+                    .then((result) => {
+                        Result.Success(result).asResponse(res);
+                        next();
+                        return;
+                    }).catch((e) => {
+                        Result.Error(e).asResponse(res);
+                        return;
+                    });
+            } else if (req.query.action === 'commitParts') {
+                Logger.debug("✨got to commitParts✨");
+                // body for commitParts is a json array of strings
+                // todo: get filename via param or header
+                fileRepo.commitFileParts(
+                    req.params.containerID,
+                    req.params.sourceID,
+                    req.query.filename as string,
+                    req.query.key as string,
+                    req.body,
+                    req.currentUser!
+                )
+                    .then((result) => {
+                        // return the file id
+                        Result.Success(result.value).asResponse(res);
+                        next();
+                        return;
+                    }).catch((e) => {
+                        Result.Error(e).asResponse(res);
+                        return;
+                    });
+            } else {
+                Logger.debug(`invalid upload action: ${req.query.action}`);
+                Result.Failure(
+                    `invalid upload action: ${req.query.action}`,
+                    500
+                ).asResponse(res);
+                next();
+            }
+        } else {
+            Logger.debug("No upload action specified");
+            Result.Failure(`no upload action specified`, 500).asResponse(res);
+            next();
+        }
+    }
+
+    public static updateMetadata(req: Request, res: Response, next: NextFunction) {
+        if (!req.dataSource) {
+            Result.Failure(`unable to find data source`, 404).asResponse(res);
+            next();
+            return;
+        }
+
+        // todo: use createManualImport here to get the fileID,
+        // then call updateMetadata and send in the new data
     }
 }

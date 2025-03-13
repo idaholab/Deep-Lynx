@@ -1,6 +1,6 @@
 import { BlobStorage, BlobUploadOptions, BlobUploadResponse } from './blob_storage';
 import Result from '../../common_classes/result';
-import { Readable } from 'stream';
+import { Readable, PassThrough } from 'stream';
 import { BlobServiceClient, ContainerClient, RestError } from '@azure/storage-blob';
 import Logger from './../logger';
 import File from '../../domain_objects/data_warehouse/data/file';
@@ -201,18 +201,50 @@ export default class AzureBlobImpl implements BlobStorage {
     // https://learn.microsoft.com/en-us/javascript/api/%40azure/storage-blob/blockblobclient?view=azure-node-latest#@azure-storage-blob-blockblobclient-stageblock
     async uploadPart(
         filepath: string,
-        filename: string,
         fileUUID: string,
         part_id: string,
         part: Readable | null,
     ): Promise<Result<string>> {
-        let blob_client = this._ContainerClient.getBlockBlobClient(`${filepath}${fileUUID}${filename}`);
-        let len = part?.readableLength ? part?.readableLength : 0;
+        const blob_client = this._ContainerClient.getBlockBlobClient(`${filepath}${fileUUID}_${part_id}`);
 
-        let result = await blob_client.stageBlock(part_id, part, len);
+        Logger.debug("staging block...");
+
+        const part_passthrough = new PassThrough();
+        let totalLen = 0;
+        const chunks: Buffer[] = [];
+
+        Logger.debug("PassThrough begin");
+        part_passthrough.on("data", (chunk: Buffer) => {
+            chunks.push(chunk);
+            totalLen += chunk.length;
+        });
+
+        Logger.debug("pipe the part");
+        // Logger.debug(`part: ${part}`); // it's not null
+        // this line breaks? no waiting, just a 500 error gets returned before I can do anything.
+        // info: PUT /containers/4/import/datasources/4/files?... 500
+        // error: <Azurite Container Error> changes depending on azurite status.
+        part?.pipe(part_passthrough);
+
+        Logger.debug("await the promise (of better days)");
+        await new Promise((resolve, reject) => {
+            Logger.debug("in the promise we find peace");
+            part_passthrough.on("end", resolve);
+            part_passthrough.on("error", reject);
+        });
+
+        Logger.debug("PassThrough end!");
+        Logger.debug(`totalLen: ${totalLen}`);
+
+        const buffer = Buffer.concat(chunks);
+
+        Logger.debug("Attempting upload...");
+        const result = await blob_client.stageBlock(part_id, buffer, totalLen);
 
         if (result.errorCode) {
-            return Promise.resolve(Result.Failure(`${result.errorCode} on part_id: ${part_id}`));
+            return Promise.resolve(
+                Result.Failure(`${result.errorCode} on part_id: ${part_id}`)
+            );
         }
 
         return Promise.resolve(Result.Success(part_id));
@@ -227,9 +259,9 @@ export default class AzureBlobImpl implements BlobStorage {
         parts: string[],
         options?: BlobUploadOptions
     ): Promise<Result<BlobUploadResponse>> {
-        let blob_client = this._ContainerClient.getBlockBlobClient(`${filepath}${fileUUID}${filename}`);
+        const blob_client = this._ContainerClient.getBlockBlobClient(`${filepath}${fileUUID}${filename}`);
 
-        let result = await blob_client.commitBlockList(parts);
+        const result = await blob_client.commitBlockList(parts);
 
         if (result.errorCode) {
             return Promise.resolve(Result.Failure(`Failed to commit uploaded parts for ${filepath}${filename} to it's blob in Azure`));
