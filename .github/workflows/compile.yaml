@@ -1,0 +1,57 @@
+name: "Compile"
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - "2.0/**"
+  push:
+    branches:
+      - "2.0/**"
+    tags:
+      - "v*"
+
+env:
+  MIX_ENV: "prod"
+
+  
+permissions:
+  contents: write
+
+jobs:
+  compile:
+    runs-on: ${{ matrix.os }}
+    name: OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}} / ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        otp: ['27.2.1']
+        elixir: ['1.18.2']
+        rebar3: ['3.24.0']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{matrix.otp}}
+          elixir-version: ${{matrix.elixir}}
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: startsWith(${{matrix.os}}, 'windows')
+        with:
+          arch: x64
+      - run: mix deps.get
+      - run: mix deps.compile
+      - run: cd assets && npm ci --progress=false --no-audit --loglevel=error
+      - run: mix assets.deploy
+      - run: mix release
+      - run: tar -czvf deeplynx-${{matrix.os}}-${{github.run_number}}.tar.gz _build/prod/rel/datum
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deeplynx-${{matrix.os}}-${{github.run_number}}
+          path: deeplynx-${{matrix.os}}-${{github.run_number}}.tar.gz
+          if-no-files-found: warn
+          retention-days: 5
+          compression-level: 0
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: deeplynx-${{matrix.os}}-${{github.run_number}}.tar.gz

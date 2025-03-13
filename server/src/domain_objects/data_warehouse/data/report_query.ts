@@ -1,6 +1,7 @@
 import { BaseDomainClass } from "../../../common_classes/base_domain_class";
 import {IsArray, IsOptional, IsString} from 'class-validator';
 import Report from './report';
+import { User } from "../../access_management/user";
 
 /*
     ReportQuery represents a query and its execution status.
@@ -37,6 +38,26 @@ export default class ReportQuery extends BaseDomainClass{
             if (input.status_message) { this.status_message = input.status_message};
         }
     }
+}
+
+// input type for passing info between query methods
+export type ReportQueryMetadata = {
+    container_id: string;
+    data_source_id: string;
+    request: TimeseriesInitialRequest;
+    user: User;
+    report_id: string;
+    query: ReportQuery;
+    query_id: string;
+}
+
+// domain object for the results of checkQueryExists query
+export class CompletedQueryMatch {
+    @IsString()
+    query_id?: string;
+
+    @IsString()
+    status_message?: string;
 }
 
 // initial object used to create request for the timeseries rust module

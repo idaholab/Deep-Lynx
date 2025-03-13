@@ -21,7 +21,7 @@ import Result from '../common_classes/result';
 import GraphQLJSON from 'graphql-type-json';
 import Metatype from '../domain_objects/data_warehouse/ontology/metatype';
 import MetatypeRelationship from '../domain_objects/data_warehouse/ontology/metatype_relationship';
-import {dataTypeToParquetType, stringToValidPropertyName} from '../services/utilities';
+import { dataTypeToParquetType, stringToValidPropertyName } from '../services/utilities';
 import NodeRepository from '../data_access_layer/repositories/data_warehouse/data/node_repository';
 import Logger from '../services/logger';
 import MetatypeRelationshipPairRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_pair_repository';
@@ -29,16 +29,16 @@ import EdgeRepository from '../data_access_layer/repositories/data_warehouse/dat
 import MetatypeRelationshipRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_repository';
 import NodeLeafRepository from '../data_access_layer/repositories/data_warehouse/data/node_leaf_repository';
 import OntologyVersionRepository from '../data_access_layer/repositories/data_warehouse/ontology/versioning/ontology_version_repository';
-import {plainToClass} from "class-transformer";
+import { plainToClass } from "class-transformer";
 import Node from "../domain_objects/data_warehouse/data/node";
-import {Transform} from "stream";
+import { Transform } from "stream";
 import Edge from "../domain_objects/data_warehouse/data/edge";
 import pMap from "p-map";
 import gql from "graphql-tag";
 import MetatypeRelationshipPair from "../domain_objects/data_warehouse/ontology/metatype_relationship_pair";
-import {isMainThread, Worker} from "worker_threads";
+import { isMainThread, Worker } from "worker_threads";
 import OntologyVersion from '../domain_objects/data_warehouse/ontology/versioning/ontology_version';
-import {Repository} from "../data_access_layer/repositories/repository";
+import { Repository } from "../data_access_layer/repositories/repository";
 
 // GraphQLSchemaGenerator takes a container and generates a valid GraphQL schema for all contained metatypes. This will
 // allow users to query and filter data based on node type, the various properties that type might have, and other bits
@@ -58,14 +58,14 @@ export default class GraphQLRunner {
 
     // RunQuery is a simple wrapper over the schema generation followed by running the actual query
     async RunQuery(containerID: string, query: Query, options: ResolverOptions): Promise<any> {
-        if(isMainThread){
+        if (isMainThread) {
             options.metatypes = this.metatypesFromQuery(query.query)
             options.relationships = this.relationshipsFromQuery(query.query)
             const isNodesQuery = this.isNodesQuery(query.query)
 
-            if(options.metatypes.length > 0 || options.relationships.length > 0 || isNodesQuery) {
+            if (options.metatypes.length > 0 || options.relationships.length > 0 || isNodesQuery) {
                 const schema = await this.ForContainer(containerID, options)
-                if(schema.isError) return Promise.reject(schema.error)
+                if (schema.isError) return Promise.reject(schema.error)
 
                 const queryResult = await graphql({
                     schema: schema.value,
@@ -88,7 +88,7 @@ export default class GraphQLRunner {
                 return queryResult
             } else {
                 options.fullSchema = true;
-                const worker = new Worker(__dirname+'/schema_worker.js', {
+                const worker = new Worker(__dirname + '/schema_worker.js', {
                     workerData: {
                         containerID,
                         query,
@@ -101,17 +101,17 @@ export default class GraphQLRunner {
                         reject(`worker error for graphql generation ${err}`)
                     })
 
-                    worker.on('message', (message:string) => {
+                    worker.on('message', (message: string) => {
                         resolve(JSON.parse(message))
                     })
-                } )
+                })
             }
 
             // if we're not the main thread then this is an introspective query which needs
             // the entire object
         } else {
             const schema = await this.ForContainer(containerID, options)
-            if(schema.isError) return Promise.reject(schema.error)
+            if (schema.isError) return Promise.reject(schema.error)
 
             return graphql({
                 schema: schema.value,
@@ -131,7 +131,7 @@ export default class GraphQLRunner {
         let ontResults: any = null
 
         // if pointInTime is supplied, fetch the ontology version that was active at that time
-        if(options.pointInTime && options.ontologyVersionID) {
+        if (options.pointInTime && options.ontologyVersionID) {
             // if ontology version and pointInTime are both passed, ensure version is valid otherwise return error
 
             ontResults = await this.#ontologyRepo
@@ -141,11 +141,11 @@ export default class GraphQLRunner {
                 .status('eq', 'published')
                 .and()
                 .publishedAt('<', new Date(options.pointInTime))
-                .list({sortBy: 'id', sortDesc: true});
+                .list({ sortBy: 'id', sortDesc: true });
 
             let ontVersionFound = false;
             ontResults.value.forEach((ontVersion: OntologyVersion) => {
-                if(ontVersion.id === options.ontologyVersionID) {
+                if (ontVersion.id === options.ontologyVersionID) {
                     ontVersionFound = true;
                 }
             });
@@ -166,7 +166,7 @@ export default class GraphQLRunner {
                 .status('eq', 'published')
                 .and()
                 .createdAt('<', options.pointInTime)
-                .list({sortBy: 'id', sortDesc: true});
+                .list({ sortBy: 'id', sortDesc: true });
 
             if (ontResults.isError || ontResults.value.length === 0) {
                 const error = 'unable to fetch ontology for the point in time provided, or no currently published ontology';
@@ -184,7 +184,7 @@ export default class GraphQLRunner {
                 .containerID('eq', containerID)
                 .and()
                 .status('eq', 'published')
-                .list({sortBy: 'id', sortDesc: true});
+                .list({ sortBy: 'id', sortDesc: true });
 
             if (ontResults.isError || ontResults.value.length === 0) {
                 Logger.error('unable to fetch current ontology, or no currently published ontology');
@@ -195,29 +195,29 @@ export default class GraphQLRunner {
         }
 
         let metatypeIDs: string[] = []
-        if(options.fullSchema || (options.metatypes && options.metatypes.length > 0)) {
+        if (options.fullSchema || (options.metatypes && options.metatypes.length > 0)) {
             let metatypeRepo = this.#metatypeRepo
                 .where()
                 .containerID('eq', containerID)
                 .and()
                 .ontologyVersion('eq', options.ontologyVersionID)
 
-            if(options.metatypes && options.metatypes.length > 0) {
+            if (options.metatypes && options.metatypes.length > 0) {
                 metatypeRepo = metatypeRepo.and().name("%", options.metatypes)
             }
 
             // load metatypes with the keys loaded from the materialized view for speed's sake
-            const metatypeResults = await metatypeRepo.list(true, true, {sortBy: 'id', loadFromView: true});
+            const metatypeResults = await metatypeRepo.list(true, true, { sortBy: 'id', loadFromView: true });
             if (metatypeResults.isError) {
                 return Promise.resolve(Result.Pass(metatypeResults));
             }
 
-            metatypes= metatypeResults.value
+            metatypes = metatypeResults.value
             metatypeIDs = metatypeResults.value.map((m) => m.id!);
         }
 
         // fetch all metatype relationship pairs - used for _relationship queries.
-        if(metatypeIDs.length > 0) {
+        if (metatypeIDs.length > 0) {
             const metatypePairResults = await this.#metatypePairRepo
                 .where()
                 .containerID('eq', containerID)
@@ -251,7 +251,7 @@ export default class GraphQLRunner {
         }
 
 
-        if(options.fullSchema || (options.relationships && options.relationships.length > 0)) {
+        if (options.fullSchema || (options.relationships && options.relationships.length > 0)) {
             // fetch all relationship types. Used for relationship wrapper queries.
             let relationshipRepo = this.#relationshipRepo
                 .where()
@@ -259,7 +259,7 @@ export default class GraphQLRunner {
                 .and()
                 .ontologyVersion('eq', options.ontologyVersionID)
 
-            if(options.relationships && options.relationships.length > 0) {
+            if (options.relationships && options.relationships.length > 0) {
                 relationshipRepo = relationshipRepo.and()
                     .name("%", options.relationships)
             }
@@ -274,7 +274,7 @@ export default class GraphQLRunner {
 
 
         // used for querying edges based on node (see input._relationship resolver)
-        const metatypePairObjects: {[key: string]: any} = {};
+        const metatypePairObjects: { [key: string]: any } = {};
         metatypePairs.forEach((pair) => {
             const origin = stringToValidPropertyName(pair.origin_metatype_name!);
             const rel = stringToValidPropertyName(pair.relationship_name!);
@@ -287,121 +287,135 @@ export default class GraphQLRunner {
                 metatypePairObjects[origin][rel] = {};
             }
             if (!(dest in metatypePairObjects[origin][rel])) {
-                metatypePairObjects[origin][rel][dest] = {type: GraphQLString};
+                metatypePairObjects[origin][rel][dest] = { type: GraphQLString };
             }
         });
 
-        const metatypeGraphQLObjects: {[key: string]: any} = {};
+        const metatypeGraphQLObjects: { [key: string]: any } = {};
 
         // we must declare the metadata input object beforehand so we can include it in the final schema entry for each
         // metatype
         const recordInputType = new GraphQLInputObjectType({
             name: 'record_input',
             fields: {
-                id: {type: new GraphQLInputObjectType({
-                    name: "record_input_id",
-                    fields: {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLString)}
-                    }
-                })},
-                data_source_id: {type: new GraphQLInputObjectType({
-                    name: "record_input_data_source_id",
-                    fields : {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLString)}
-                    }
-                })},
-                original_id: {type: new GraphQLInputObjectType({
-                    name: "record_input_original_id",
-                    fields : {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLJSON)}
-                    }
-                })}, // since the original ID might be a number, treat it as valid JSON
-                import_id: {type: new GraphQLInputObjectType({
-                    name: "record_input_import_id",
-                    fields : {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLString)}
-                    }
-                })},
-                created_at: {type: new GraphQLInputObjectType({
-                    name: "record_input_created_at",
-                    fields : {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLString)}
-                    }
-                })},
-                modified_at: {type: new GraphQLInputObjectType({
-                    name: "record_input_modified_at",
-                    fields : {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLString)}
-                    }
-                })},
-                metatype_uuid: {type: new GraphQLInputObjectType({
-                    name: "record_input_metatype_uuid",
-                    fields: {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLString)}
-                    }
-                })},
-                sortBy: {type: GraphQLString},
-                sortDesc: {type: GraphQLBoolean},
-                sortProp: {type: GraphQLBoolean},
-                limit: {type: GraphQLInt, defaultValue: 10000},
-                page: {type: GraphQLInt, defaultValue: 1},
+                id: {
+                    type: new GraphQLInputObjectType({
+                        name: "record_input_id",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLString) }
+                        }
+                    })
+                },
+                data_source_id: {
+                    type: new GraphQLInputObjectType({
+                        name: "record_input_data_source_id",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLString) }
+                        }
+                    })
+                },
+                original_id: {
+                    type: new GraphQLInputObjectType({
+                        name: "record_input_original_id",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLJSON) }
+                        }
+                    })
+                }, // since the original ID might be a number, treat it as valid JSON
+                import_id: {
+                    type: new GraphQLInputObjectType({
+                        name: "record_input_import_id",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLString) }
+                        }
+                    })
+                },
+                created_at: {
+                    type: new GraphQLInputObjectType({
+                        name: "record_input_created_at",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLString) }
+                        }
+                    })
+                },
+                modified_at: {
+                    type: new GraphQLInputObjectType({
+                        name: "record_input_modified_at",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLString) }
+                        }
+                    })
+                },
+                metatype_uuid: {
+                    type: new GraphQLInputObjectType({
+                        name: "record_input_metatype_uuid",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLString) }
+                        }
+                    })
+                },
+                sortBy: { type: GraphQLString },
+                sortDesc: { type: GraphQLBoolean },
+                sortProp: { type: GraphQLBoolean },
+                limit: { type: GraphQLInt, defaultValue: 10000 },
+                page: { type: GraphQLInt, defaultValue: 1 },
             },
         });
 
         const recordInfo = new GraphQLObjectType({
             name: 'recordInfo',
             fields: {
-                id: {type: GraphQLString},
-                container_id: {type: GraphQLString},
-                data_source_id: {type: GraphQLString},
-                original_id: {type: GraphQLJSON}, // since the original ID might be a number, treat it as valid JSON
-                import_id: {type: GraphQLString},
-                metatype_id: {type: GraphQLString},
-                metatype_name: {type: GraphQLString},
-                metatype_uuid: {type: GraphQLString},
-                created_at: {type: GraphQLString},
-                deleted_at: {type: GraphQLString},
-                created_by: {type: GraphQLString},
-                modified_at: {type: GraphQLString},
-                modified_by: {type: GraphQLString},
-                metadata: {type: GraphQLJSON},
-                metadata_properties: {type: GraphQLJSON},
-                properties: {type: GraphQLJSON},
-                count: {type: GraphQLInt},
-                page: {type: GraphQLInt},
+                id: { type: GraphQLString },
+                container_id: { type: GraphQLString },
+                data_source_id: { type: GraphQLString },
+                original_id: { type: GraphQLJSON }, // since the original ID might be a number, treat it as valid JSON
+                import_id: { type: GraphQLString },
+                metatype_id: { type: GraphQLString },
+                metatype_name: { type: GraphQLString },
+                metatype_uuid: { type: GraphQLString },
+                created_at: { type: GraphQLString },
+                deleted_at: { type: GraphQLString },
+                created_by: { type: GraphQLString },
+                modified_at: { type: GraphQLString },
+                modified_by: { type: GraphQLString },
+                metadata: { type: GraphQLJSON },
+                metadata_properties: { type: GraphQLJSON },
+                properties: { type: GraphQLJSON },
+                count: { type: GraphQLInt },
+                page: { type: GraphQLInt },
             },
         });
 
         const recordInfoWithRawData = new GraphQLObjectType({
             name: 'recordInfoWithRawData',
             fields: {
-                id: {type: GraphQLString},
-                container_id: {type: GraphQLString},
-                data_source_id: {type: GraphQLString},
-                original_id: {type: GraphQLJSON}, // since the original ID might be a number, treat it as valid JSON
-                import_id: {type: GraphQLString},
-                metatype_id: {type: GraphQLString},
-                metatype_name: {type: GraphQLString},
-                metatype_uuid: {type: GraphQLString},
-                created_at: {type: GraphQLString},
-                deleted_at: {type: GraphQLString},
-                created_by: {type: GraphQLString},
-                modified_at: {type: GraphQLString},
-                modified_by: {type: GraphQLString},
-                metadata: {type: GraphQLJSON},
-                metadata_properties: {type: GraphQLJSON},
-                properties: {type: GraphQLJSON},
-                count: {type: GraphQLInt},
-                page: {type: GraphQLInt},
-                raw_data_properties: {type: GraphQLJSON},
-                raw_data_history: {type: GraphQLJSON},
+                id: { type: GraphQLString },
+                container_id: { type: GraphQLString },
+                data_source_id: { type: GraphQLString },
+                original_id: { type: GraphQLJSON }, // since the original ID might be a number, treat it as valid JSON
+                import_id: { type: GraphQLString },
+                metatype_id: { type: GraphQLString },
+                metatype_name: { type: GraphQLString },
+                metatype_uuid: { type: GraphQLString },
+                created_at: { type: GraphQLString },
+                deleted_at: { type: GraphQLString },
+                created_by: { type: GraphQLString },
+                modified_at: { type: GraphQLString },
+                modified_by: { type: GraphQLString },
+                metadata: { type: GraphQLJSON },
+                metadata_properties: { type: GraphQLJSON },
+                properties: { type: GraphQLJSON },
+                count: { type: GraphQLInt },
+                page: { type: GraphQLInt },
+                raw_data_properties: { type: GraphQLJSON },
+                raw_data_history: { type: GraphQLJSON },
             },
         });
 
@@ -409,12 +423,12 @@ export default class GraphQLRunner {
         const fileInfo = new GraphQLObjectType({
             name: 'fileInfo',
             fields: {
-                id: {type: GraphQLString},
-                file_name: {type: GraphQLString},
-                file_size: {type: GraphQLFloat},
-                md5hash: {type: GraphQLString},
-                metadata: {type: GraphQLJSON},
-                url: {type: GraphQLString},
+                id: { type: GraphQLString },
+                file_name: { type: GraphQLString },
+                file_size: { type: GraphQLFloat },
+                md5hash: { type: GraphQLString },
+                metadata: { type: GraphQLJSON },
+                url: { type: GraphQLString },
             },
         });
 
@@ -422,10 +436,10 @@ export default class GraphQLRunner {
             new GraphQLInputObjectType({
                 name: 'raw_data_input',
                 fields: {
-                    key: {type: GraphQLString},
-                    operator: {type: GraphQLString},
-                    value: {type: GraphQLString},
-                    historical: {type: GraphQLBoolean}, // used to specify query type
+                    key: { type: GraphQLString },
+                    operator: { type: GraphQLString },
+                    value: { type: GraphQLString },
+                    historical: { type: GraphQLBoolean }, // used to specify query type
                 }
             })
         );
@@ -434,9 +448,9 @@ export default class GraphQLRunner {
             new GraphQLInputObjectType({
                 name: 'metadata_input',
                 fields: {
-                    key: {type: GraphQLString},
-                    operator: {type: GraphQLString},
-                    value: {type: GraphQLString},
+                    key: { type: GraphQLString },
+                    operator: { type: GraphQLString },
+                    value: { type: GraphQLString },
                 }
             })
         );
@@ -451,11 +465,11 @@ export default class GraphQLRunner {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
                 fields: () => {
-                    const fields: {[key: string]: {[key: string]: any}} = {};
+                    const fields: { [key: string]: { [key: string]: any } } = {};
                     if (metatypePairObjects[stringToValidPropertyName(metatype.name)]) {
                         Object.keys(metatypePairObjects[stringToValidPropertyName(metatype.name)]).forEach((pair) => {
                             Object.keys(metatypePairObjects[stringToValidPropertyName(metatype.name)][pair]).forEach((dest) => {
-                                fields[dest] = {type: GraphQLBoolean};
+                                fields[dest] = { type: GraphQLBoolean };
                             });
                         });
                     }
@@ -468,14 +482,14 @@ export default class GraphQLRunner {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
                 fields: () => {
-                    const fields: {[key: string]: {[key: string]: GraphQLNamedType | GraphQLList<any>}} = {};
+                    const fields: { [key: string]: { [key: string]: GraphQLNamedType | GraphQLList<any> } } = {};
                     if (metatypePairObjects[metatype.name]) {
                         Object.keys(metatypePairObjects[metatype.name]).forEach((rel) => {
-                            fields[rel] = {type: new GraphQLList(destinationInputType)};
+                            fields[rel] = { type: new GraphQLList(destinationInputType) };
                         });
                     } else {
                         // if no relationships exists, set relationship to _none: true
-                        fields._none = {type: GraphQLBoolean};
+                        fields._none = { type: GraphQLBoolean };
                     }
                     return fields;
                 },
@@ -486,11 +500,11 @@ export default class GraphQLRunner {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
                 fields: () => {
-                    const fields: {[key: string]: any} = {};
+                    const fields: { [key: string]: any } = {};
                     if (metatypePairObjects[metatype.name]) {
                         Object.keys(metatypePairObjects[metatype.name]).forEach((pair) => {
                             Object.keys(metatypePairObjects[metatype.name][pair]).forEach((dest) => {
-                                fields[dest] = {type: GraphQLString};
+                                fields[dest] = { type: GraphQLString };
                             });
                         });
                     }
@@ -503,14 +517,14 @@ export default class GraphQLRunner {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
                 fields: () => {
-                    const fields: {[key: string]: any} = {};
+                    const fields: { [key: string]: any } = {};
                     if (metatypePairObjects[metatype.name]) {
                         Object.keys(metatypePairObjects[metatype.name]).forEach((pair) => {
-                            fields[pair] = {type: destinationInfo};
+                            fields[pair] = { type: destinationInfo };
                         });
                     } else {
                         // if no relationships exists, set relationship to _none: true
-                        fields._none = {type: GraphQLBoolean};
+                        fields._none = { type: GraphQLBoolean };
                     }
                     return fields;
                 },
@@ -519,10 +533,10 @@ export default class GraphQLRunner {
             return [stringToValidPropertyName(metatype.name), {
                 args: {
                     ...this.inputFieldsForMetatype(metatype),
-                    _record: {type: recordInputType},
-                    _relationship: {type: relationshipInputType},
-                    raw_data_properties: {type: rawDataInputType},
-                    metadata_properties: {type: metadataInputType},
+                    _record: { type: recordInputType },
+                    _relationship: { type: relationshipInputType },
+                    raw_data_properties: { type: rawDataInputType },
+                    metadata_properties: { type: metadataInputType },
                 },
                 description: metatype.description,
                 type: options.returnFile
@@ -534,15 +548,15 @@ export default class GraphQLRunner {
                             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                             // @ts-ignore
                             fields: () => {
-                                const output: {[key: string]: {[key: string]: GraphQLNamedType | GraphQLList<any>}} = {};
-                                output._record = {type: recordInfo};
-                                output._relationship = {type: relationshipInfo};
-                                output.metadata_properties = {type: GraphQLJSON};
+                                const output: { [key: string]: { [key: string]: GraphQLNamedType | GraphQLList<any> } } = {};
+                                output._record = { type: recordInfo };
+                                output._relationship = { type: relationshipInfo };
+                                output.metadata_properties = { type: GraphQLJSON };
                                 if (options.rawMetadataEnabled) {
-                                    output.raw_data_properties = {type: GraphQLJSON};
-                                    output.raw_data_history = {type: GraphQLJSON};
+                                    output.raw_data_properties = { type: GraphQLJSON };
+                                    output.raw_data_history = { type: GraphQLJSON };
                                 }
-                                output._file = {type: fileInfo};
+                                output._file = { type: fileInfo };
 
                                 metatype.keys?.forEach((metatypeKey) => {
                                     // keys must match the regex format of /^[_a-zA-Z][_a-zA-Z0-9]*$/ in order to be considered
@@ -567,6 +581,8 @@ export default class GraphQLRunner {
                                             break;
                                         }
 
+
+                                        // @ts-expect-error TS2872
                                         case 'string' || 'date' || 'file': {
                                             output[propertyName] = {
                                                 type: GraphQLString,
@@ -582,7 +598,7 @@ export default class GraphQLRunner {
                                         }
 
                                         case 'enumeration': {
-                                            const enumMap: {[key: string]: GraphQLEnumValueConfig} = {};
+                                            const enumMap: { [key: string]: GraphQLEnumValueConfig } = {};
 
                                             if (metatypeKey.options) {
                                                 metatypeKey.options.forEach((option) => {
@@ -620,127 +636,149 @@ export default class GraphQLRunner {
                 resolve: this.resolverForMetatype(containerID, metatype, options),
             }];
         };
-        const results = await pMap(metatypes, metatypeMapper, {concurrency: 10})
+        const results = await pMap(metatypes, metatypeMapper, { concurrency: 10 })
 
         results.forEach((result) => {
-            if(result) {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
+            if (result) {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
                 metatypeGraphQLObjects[result[0]] = result[1]
             }
 
         })
 
-        const relationshipGraphQLObjects: {[key: string]: any} = {};
+        const relationshipGraphQLObjects: { [key: string]: any } = {};
 
         // metadata objects for edges (metatype relationships)
         const edgeRecordInputType = new GraphQLInputObjectType({
             name: 'edge_record_input',
             fields: {
-                id: {type: new GraphQLInputObjectType({
-                    name: "edge_record_input_id",
-                    fields: {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLString)}
-                    }
-                })},
-                pair_id: {type: new GraphQLInputObjectType({
-                    name: "edge_record_input_pair_id",
-                    fields: {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLString)}
-                    }
-                })},
-                data_source_id: {type: new GraphQLInputObjectType({
-                    name: "edge_record_data_source_id",
-                    fields: {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLString)}
-                    }
-                })},
-                import_id: {type: new GraphQLInputObjectType({
-                    name: "edge_record_input_import_id",
-                    fields: {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLString)}
-                    }
-                })},
-                origin_id: {type: new GraphQLInputObjectType({
-                    name: "edge_record_input_origin_id",
-                    fields: {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLString)}
-                    }
-                })},
-                destination_id: {type: new GraphQLInputObjectType({
-                    name: "edge_record_input_destination_id",
-                    fields: {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLString)}
-                    }
-                })},
-                created_at: {type: new GraphQLInputObjectType({
-                    name: "edge_record_input_created_at",
-                    fields : {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLString)}
-                    }
-                })},
-                modified_at: {type: new GraphQLInputObjectType({
-                    name: "edge_record_input_modified_at",
-                    fields : {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLString)}
-                    }
-                })},
-                relationship_pair_uuid: {type: new GraphQLInputObjectType({
-                    name: "edge_record_relationship_pair_uuid",
-                    fields: {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLString)}
-                    }
-                })},
-                origin_metatype_uuid: {type: new GraphQLInputObjectType({
-                    name: "edge_record_origin_metatype_uuid",
-                    fields: {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLString)}
-                    }
-                })},
-                destination_metatype_uuid: {type: new GraphQLInputObjectType({
-                    name: "edge_record_destination_metatype_uuid",
-                    fields: {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLString)}
-                    }
-                })},
-                limit: {type: GraphQLInt, defaultValue: 10000},
-                page: {type: GraphQLInt, defaultValue: 1},
+                id: {
+                    type: new GraphQLInputObjectType({
+                        name: "edge_record_input_id",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLString) }
+                        }
+                    })
+                },
+                pair_id: {
+                    type: new GraphQLInputObjectType({
+                        name: "edge_record_input_pair_id",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLString) }
+                        }
+                    })
+                },
+                data_source_id: {
+                    type: new GraphQLInputObjectType({
+                        name: "edge_record_data_source_id",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLString) }
+                        }
+                    })
+                },
+                import_id: {
+                    type: new GraphQLInputObjectType({
+                        name: "edge_record_input_import_id",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLString) }
+                        }
+                    })
+                },
+                origin_id: {
+                    type: new GraphQLInputObjectType({
+                        name: "edge_record_input_origin_id",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLString) }
+                        }
+                    })
+                },
+                destination_id: {
+                    type: new GraphQLInputObjectType({
+                        name: "edge_record_input_destination_id",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLString) }
+                        }
+                    })
+                },
+                created_at: {
+                    type: new GraphQLInputObjectType({
+                        name: "edge_record_input_created_at",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLString) }
+                        }
+                    })
+                },
+                modified_at: {
+                    type: new GraphQLInputObjectType({
+                        name: "edge_record_input_modified_at",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLString) }
+                        }
+                    })
+                },
+                relationship_pair_uuid: {
+                    type: new GraphQLInputObjectType({
+                        name: "edge_record_relationship_pair_uuid",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLString) }
+                        }
+                    })
+                },
+                origin_metatype_uuid: {
+                    type: new GraphQLInputObjectType({
+                        name: "edge_record_origin_metatype_uuid",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLString) }
+                        }
+                    })
+                },
+                destination_metatype_uuid: {
+                    type: new GraphQLInputObjectType({
+                        name: "edge_record_destination_metatype_uuid",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLString) }
+                        }
+                    })
+                },
+                limit: { type: GraphQLInt, defaultValue: 10000 },
+                page: { type: GraphQLInt, defaultValue: 1 },
             },
         });
 
         const edgeRecordInfo = new GraphQLObjectType({
             name: 'edge_recordInfo',
             fields: {
-                id: {type: GraphQLString},
-                pair_id: {type: GraphQLString},
-                data_source_id: {type: GraphQLString},
-                import_id: {type: GraphQLString},
-                origin_id: {type: GraphQLString},
-                origin_metatype_id: {type: GraphQLString},
-                origin_metatype_uuid: {type: GraphQLString},
-                destination_id: {type: GraphQLString},
-                destination_metatype_id: {type: GraphQLString},
-                destination_metatype_uuid: {type: GraphQLString},
-                relationship_name: {type: GraphQLString},
-                relationship_pair_uuid: {type: GraphQLString},
-                created_at: {type: GraphQLString},
-                created_by: {type: GraphQLString},
-                modified_at: {type: GraphQLString},
-                modified_by: {type: GraphQLString},
-                metadata: {type: GraphQLJSON},
-                count: {type: GraphQLInt},
-                page: {type: GraphQLInt},
+                id: { type: GraphQLString },
+                pair_id: { type: GraphQLString },
+                data_source_id: { type: GraphQLString },
+                import_id: { type: GraphQLString },
+                origin_id: { type: GraphQLString },
+                origin_metatype_id: { type: GraphQLString },
+                origin_metatype_uuid: { type: GraphQLString },
+                destination_id: { type: GraphQLString },
+                destination_metatype_id: { type: GraphQLString },
+                destination_metatype_uuid: { type: GraphQLString },
+                relationship_name: { type: GraphQLString },
+                relationship_pair_uuid: { type: GraphQLString },
+                created_at: { type: GraphQLString },
+                created_by: { type: GraphQLString },
+                modified_at: { type: GraphQLString },
+                modified_by: { type: GraphQLString },
+                metadata: { type: GraphQLJSON },
+                count: { type: GraphQLInt },
+                page: { type: GraphQLInt },
             },
         });
 
@@ -748,9 +786,9 @@ export default class GraphQLRunner {
             return [stringToValidPropertyName(relationship.name), {
                 args: {
                     ...this.inputFieldsForRelationship(relationship),
-                    _record: {type: edgeRecordInputType},
-                    raw_data_properties: {type: rawDataInputType},
-                    metadata_properties: {type: metadataInputType},
+                    _record: { type: edgeRecordInputType },
+                    raw_data_properties: { type: rawDataInputType },
+                    metadata_properties: { type: metadataInputType },
                 },
                 description: relationship.description,
                 type: (options.returnFile) ? fileInfo : new GraphQLList(
@@ -760,12 +798,12 @@ export default class GraphQLRunner {
                         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                         // @ts-ignore
                         fields: () => {
-                            const output: {[key: string]: {[key: string]: GraphQLNamedType | GraphQLList<any>}} = {};
-                            output._record = {type: edgeRecordInfo};
-                            output.metadata_properties = {type: GraphQLJSON};
+                            const output: { [key: string]: { [key: string]: GraphQLNamedType | GraphQLList<any> } } = {};
+                            output._record = { type: edgeRecordInfo };
+                            output.metadata_properties = { type: GraphQLJSON };
                             if (options.rawMetadataEnabled) {
-                                output.raw_data_properties = {type: GraphQLJSON};
-                                output.raw_data_history = {type: GraphQLJSON};
+                                output.raw_data_properties = { type: GraphQLJSON };
+                                output.raw_data_history = { type: GraphQLJSON };
                             }
 
                             relationship.keys?.forEach((relationshipKey) => {
@@ -788,6 +826,8 @@ export default class GraphQLRunner {
                                         break;
                                     }
 
+
+                                    // @ts-expect-error TS2872
                                     case 'string' || 'date' || 'file': {
                                         output[propertyName] = {
                                             type: GraphQLString,
@@ -803,7 +843,7 @@ export default class GraphQLRunner {
                                     }
 
                                     case 'enumeration': {
-                                        const enumMap: {[key: string]: GraphQLEnumValueConfig} = {};
+                                        const enumMap: { [key: string]: GraphQLEnumValueConfig } = {};
 
                                         if (relationshipKey.options) {
                                             relationshipKey.options.forEach((option) => {
@@ -837,11 +877,11 @@ export default class GraphQLRunner {
             }];
         };
 
-        const rResults= await pMap(relationships, relationshipMapper, {concurrency: 10})
+        const rResults = await pMap(relationships, relationshipMapper, { concurrency: 10 })
         rResults.forEach((result) => {
-            if(result) {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
+            if (result) {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
                 relationshipGraphQLObjects[result[0]] = result[1]
             }
         })
@@ -860,35 +900,35 @@ export default class GraphQLRunner {
         const nodeInputType = new GraphQLInputObjectType({
             name: 'node_input',
             fields: {
-                name: {type: GraphQLString},
-                id: {type: GraphQLString},
-                uuid: {type: GraphQLString},
-                origin_name: {type: GraphQLString},
-                origin_id: {type: GraphQLString},
-                origin_uuid: {type: GraphQLString},
-                destination_name: {type: GraphQLString},
-                destination_id: {type: GraphQLString},
-                destination_uuid: {type: GraphQLString},
+                name: { type: GraphQLString },
+                id: { type: GraphQLString },
+                uuid: { type: GraphQLString },
+                origin_name: { type: GraphQLString },
+                origin_id: { type: GraphQLString },
+                origin_uuid: { type: GraphQLString },
+                destination_name: { type: GraphQLString },
+                destination_id: { type: GraphQLString },
+                destination_uuid: { type: GraphQLString },
             },
         });
 
         const edgeInputType = new GraphQLInputObjectType({
             name: 'edge_input',
             fields: {
-                name: {type: GraphQLString},
-                id: {type: GraphQLString},
-                uuid: {type: GraphQLString},
+                name: { type: GraphQLString },
+                id: { type: GraphQLString },
+                uuid: { type: GraphQLString },
             },
         });
 
         // the fields on which a user can filter the graph return
-        const graphInput: {[key: string]: any} = {
-            root_node: {type: new GraphQLNonNull(GraphQLString)}, // root node must be specified
-            node_type: {type: nodeInputType},
-            edge_type: {type: edgeInputType},
-            depth: {type: new GraphQLNonNull(GraphQLString)}, // depth must be specified
-            edge_direction: {type: GraphQLString},
-            use_original_id: {type: GraphQLBoolean},
+        const graphInput: { [key: string]: any } = {
+            root_node: { type: new GraphQLNonNull(GraphQLString) }, // root node must be specified
+            node_type: { type: nodeInputType },
+            edge_type: { type: edgeInputType },
+            depth: { type: new GraphQLNonNull(GraphQLString) }, // depth must be specified
+            edge_direction: { type: GraphQLString },
+            use_original_id: { type: GraphQLBoolean },
         };
 
         const graphType = new GraphQLList(
@@ -898,56 +938,56 @@ export default class GraphQLRunner {
                     // For more advanced querying these may become an Object type of their own
                     // to retrieve only specific properties from origin, edge and destination.
                     // For now json will do.
-                    origin_properties: {type: GraphQLJSON},
-                    edge_properties: {type: GraphQLJSON},
-                    destination_properties: {type: GraphQLJSON},
+                    origin_properties: { type: GraphQLJSON },
+                    edge_properties: { type: GraphQLJSON },
+                    destination_properties: { type: GraphQLJSON },
                     // origin data
-                    origin_id: {type: GraphQLString},
-                    origin_metatype_name: {type: GraphQLString},
-                    origin_metatype_id: {type: GraphQLString},
-                    origin_metatype_uuid: {type: GraphQLString},
-                    origin_data_source: {type: GraphQLString},
-                    origin_metadata: {type: GraphQLJSON},
-                    origin_metadata_properties: {type: GraphQLJSON},
-                    origin_created_by: {type: GraphQLString},
-                    origin_created_at: {type: GraphQLString},
-                    origin_modified_by: {type: GraphQLString},
-                    origin_modified_at: {type: GraphQLString},
+                    origin_id: { type: GraphQLString },
+                    origin_metatype_name: { type: GraphQLString },
+                    origin_metatype_id: { type: GraphQLString },
+                    origin_metatype_uuid: { type: GraphQLString },
+                    origin_data_source: { type: GraphQLString },
+                    origin_metadata: { type: GraphQLJSON },
+                    origin_metadata_properties: { type: GraphQLJSON },
+                    origin_created_by: { type: GraphQLString },
+                    origin_created_at: { type: GraphQLString },
+                    origin_modified_by: { type: GraphQLString },
+                    origin_modified_at: { type: GraphQLString },
                     // edge data
-                    edge_id: {type: GraphQLString},
-                    relationship_name: {type: GraphQLString},
-                    relationship_pair_id: {type: GraphQLString},
-                    relationship_pair_uuid: {type: GraphQLString},
-                    relationship_id: {type: GraphQLString},
-                    relationship_uuid: {type: GraphQLString},
-                    edge_data_source: {type: GraphQLString},
-                    edge_metadata: {type: GraphQLJSON},
-                    edge_metadata_properties: {type: GraphQLJSON},
-                    edge_created_by: {type: GraphQLString},
-                    edge_created_at: {type: GraphQLString},
-                    edge_modified_by: {type: GraphQLString},
-                    edge_modified_at: {type: GraphQLString},
+                    edge_id: { type: GraphQLString },
+                    relationship_name: { type: GraphQLString },
+                    relationship_pair_id: { type: GraphQLString },
+                    relationship_pair_uuid: { type: GraphQLString },
+                    relationship_id: { type: GraphQLString },
+                    relationship_uuid: { type: GraphQLString },
+                    edge_data_source: { type: GraphQLString },
+                    edge_metadata: { type: GraphQLJSON },
+                    edge_metadata_properties: { type: GraphQLJSON },
+                    edge_created_by: { type: GraphQLString },
+                    edge_created_at: { type: GraphQLString },
+                    edge_modified_by: { type: GraphQLString },
+                    edge_modified_at: { type: GraphQLString },
                     // destination data
-                    destination_id: {type: GraphQLString},
-                    destination_metatype_name: {type: GraphQLString},
-                    destination_metatype_id: {type: GraphQLString},
-                    destination_metatype_uuid: {type: GraphQLString},
-                    destination_data_source: {type: GraphQLString},
-                    destination_metadata: {type: GraphQLJSON},
-                    destination_metadata_properties: {type: GraphQLJSON},
-                    destination_created_by: {type: GraphQLString},
-                    destination_created_at: {type: GraphQLString},
-                    destination_modified_by: {type: GraphQLString},
-                    destination_modified_at: {type: GraphQLString},
+                    destination_id: { type: GraphQLString },
+                    destination_metatype_name: { type: GraphQLString },
+                    destination_metatype_id: { type: GraphQLString },
+                    destination_metatype_uuid: { type: GraphQLString },
+                    destination_data_source: { type: GraphQLString },
+                    destination_metadata: { type: GraphQLJSON },
+                    destination_metadata_properties: { type: GraphQLJSON },
+                    destination_created_by: { type: GraphQLString },
+                    destination_created_at: { type: GraphQLString },
+                    destination_modified_by: { type: GraphQLString },
+                    destination_modified_at: { type: GraphQLString },
                     // graph metadata
-                    edge_direction: {type: GraphQLString},
-                    depth: {type: GraphQLInt},
-                    path: {type: GraphQLList(GraphQLString)},
+                    edge_direction: { type: GraphQLString },
+                    depth: { type: GraphQLInt },
+                    path: { type: GraphQLList(GraphQLString) },
                 },
             }),
         );
 
-        const fields: {[key: string]: any} = {};
+        const fields: { [key: string]: any } = {};
 
         if (Object.keys(metatypeGraphQLObjects).length > 0) {
             fields.metatypes = {
@@ -968,94 +1008,114 @@ export default class GraphQLRunner {
         }
 
         fields.graph = {
-            args: {...graphInput},
+            args: { ...graphInput },
             type: (options.returnFile) ? fileInfo : graphType,
             resolve: this.resolverForGraph(containerID, options) as any,
         };
 
         fields.nodes = {
             args: {
-                id: {type: new GraphQLInputObjectType({
-                    name: "node_input_id",
-                    fields: {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLJSON)}
-                    }
-                })},
-                data_source_id: {type: new GraphQLInputObjectType({
-                    name: "node_input_data_source_id",
-                    fields : {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLJSON)}
-                    }
-                })},
-                metatype_id: {type: new GraphQLInputObjectType({
-                    name: "node_input_metatype_id",
-                    fields : {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLJSON)}
-                    }
-                })},
-                metatype_uuid: {type: new GraphQLInputObjectType({
-                    name: "node_input_metatype_uuid",
-                    fields : {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLJSON)}
-                    }
-                })},
-                metatype_name: {type: new GraphQLInputObjectType({
-                    name: "node_input_metatype_name",
-                    fields : {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLJSON)}
-                    }
-                })},
-                original_id: {type: new GraphQLInputObjectType({
-                    name: "node_input_original_id",
-                    fields : {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLJSON)}
-                    }
-                })},
-                properties:{type: new GraphQLList( new GraphQLInputObjectType({
-                    name: "node_input_properties",
-                    fields : {
-                        key: {type: GraphQLString},
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLJSON)}
-                    }
-                }))}, // since the original ID might be a number, treat it as valid JSON
-                import_id: {type: new GraphQLInputObjectType({
-                    name: "node_input_import_id",
-                    fields : {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLJSON)}
-                    }
-                })},
-                created_at: {type: new GraphQLInputObjectType({
-                    name: "node_record_input_created_at",
-                    fields : {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLJSON)}
-                    }
-                })},
-                modified_at: {type: new GraphQLInputObjectType({
-                    name: "node_record_input_modified_at",
-                    fields : {
-                        operator: {type: GraphQLString},
-                        value: {type: new GraphQLList(GraphQLJSON)}
-                    }
-                })},
-                metadata_properties: {type: metadataInputType},
-                limit: {type: GraphQLInt, defaultValue: 10000},
-                page: {type: GraphQLInt, defaultValue: 1},
+                id: {
+                    type: new GraphQLInputObjectType({
+                        name: "node_input_id",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLJSON) }
+                        }
+                    })
+                },
+                data_source_id: {
+                    type: new GraphQLInputObjectType({
+                        name: "node_input_data_source_id",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLJSON) }
+                        }
+                    })
+                },
+                metatype_id: {
+                    type: new GraphQLInputObjectType({
+                        name: "node_input_metatype_id",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLJSON) }
+                        }
+                    })
+                },
+                metatype_uuid: {
+                    type: new GraphQLInputObjectType({
+                        name: "node_input_metatype_uuid",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLJSON) }
+                        }
+                    })
+                },
+                metatype_name: {
+                    type: new GraphQLInputObjectType({
+                        name: "node_input_metatype_name",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLJSON) }
+                        }
+                    })
+                },
+                original_id: {
+                    type: new GraphQLInputObjectType({
+                        name: "node_input_original_id",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLJSON) }
+                        }
+                    })
+                },
+                properties: {
+                    type: new GraphQLList(new GraphQLInputObjectType({
+                        name: "node_input_properties",
+                        fields: {
+                            key: { type: GraphQLString },
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLJSON) }
+                        }
+                    }))
+                }, // since the original ID might be a number, treat it as valid JSON
+                import_id: {
+                    type: new GraphQLInputObjectType({
+                        name: "node_input_import_id",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLJSON) }
+                        }
+                    })
+                },
+                created_at: {
+                    type: new GraphQLInputObjectType({
+                        name: "node_record_input_created_at",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLJSON) }
+                        }
+                    })
+                },
+                modified_at: {
+                    type: new GraphQLInputObjectType({
+                        name: "node_record_input_modified_at",
+                        fields: {
+                            operator: { type: GraphQLString },
+                            value: { type: new GraphQLList(GraphQLJSON) }
+                        }
+                    })
+                },
+                metadata_properties: { type: metadataInputType },
+                limit: { type: GraphQLInt, defaultValue: 10000 },
+                page: { type: GraphQLInt, defaultValue: 1 },
             },
             type: (options.returnFile) ? fileInfo : (options.rawMetadataEnabled ? new GraphQLList(recordInfoWithRawData) : new GraphQLList(recordInfo)),
             resolve: this.resolverForNodes(containerID, options) as any
         };
 
         if (options.rawMetadataEnabled) {
-            fields.nodes.args.raw_data_properties = {type: rawDataInputType}
+            fields.nodes.args.raw_data_properties = { type: rawDataInputType }
         }
 
         const schema = new GraphQLSchema({
@@ -1068,8 +1128,8 @@ export default class GraphQLRunner {
         return Promise.resolve(Result.Success(schema));
     }
 
-    resolverForMetatype(containerID: string, metatype: Metatype, resolverOptions?: ResolverOptions): (_: any, {input}: {input: any}) => any {
-        return async (_, input: {[key: string]: any}) => {
+    resolverForMetatype(containerID: string, metatype: Metatype, resolverOptions?: ResolverOptions): (_: any, { input }: { input: any }) => any {
+        return async (_, input: { [key: string]: any }) => {
             // create a subquery of current nodes before filters are applied
             const sub = new NodeRepository().where()
                 .containerID('eq', containerID)
@@ -1085,17 +1145,17 @@ export default class GraphQLRunner {
                 // custom subquery with point in time filters
                 const pointInTime = new Repository('nodes')
                     .distinctOn(['original_data_id', 'data_source_id', 'container_id'], 'n').select('*', 'n').from('nodes', 'n')
-                    .addFields({uuid: 'metatype_uuid', name: 'metatype_name'}, 'm')
-                    .join('metatypes', {origin_col: 'metatype_id', destination_col: 'id'}, {destination_alias: 'm'})
+                    .addFields({ uuid: 'metatype_uuid', name: 'metatype_name' }, 'm')
+                    .join('metatypes', { origin_col: 'metatype_id', destination_col: 'id' }, { destination_alias: 'm' })
                     .where()
-                    .query('created_at', '<=', resolverOptions.pointInTime, {dataType: 'date', tableAlias: 'n'})
+                    .query('created_at', '<=', resolverOptions.pointInTime, { dataType: 'date', tableAlias: 'n' })
                     .and(new Repository('nodes')
-                        .query('deleted_at', '>', resolverOptions.pointInTime, {dataType: 'date', tableAlias: 'n'})
+                        .query('deleted_at', '>', resolverOptions.pointInTime, { dataType: 'date', tableAlias: 'n' })
                         .or()
-                        .query('deleted_at', 'is null', undefined, {tableAlias: 'n'})
+                        .query('deleted_at', 'is null', undefined, { tableAlias: 'n' })
                     )
-                    .and().query('container_id', 'eq', containerID, {tableAlias: 'n'})
-                    .and().query('uuid', 'eq', metatype.uuid, {tableAlias: 'm'})
+                    .and().query('container_id', 'eq', containerID, { tableAlias: 'n' })
+                    .and().query('uuid', 'eq', metatype.uuid, { tableAlias: 'm' })
                     .sortBy(['original_data_id', 'data_source_id', 'container_id'])
                     .sortBy('created_at', undefined, true);
 
@@ -1108,7 +1168,7 @@ export default class GraphQLRunner {
             // needed as we've already dictated what metatype to look for based on the query itself
             if (input._record) {
                 if (input._record.id) {
-                    if(Array.isArray(input._record.id.value) && input._record.id.value.length === 1) {
+                    if (Array.isArray(input._record.id.value) && input._record.id.value.length === 1) {
                         input._record.id.value = input._record.id.value[0];
                     }
 
@@ -1116,7 +1176,7 @@ export default class GraphQLRunner {
                 }
 
                 if (input._record.data_source_id) {
-                    if(Array.isArray(input._record.data_source_id.value) && input._record.data_source_id.value.length === 1) {
+                    if (Array.isArray(input._record.data_source_id.value) && input._record.data_source_id.value.length === 1) {
                         input._record.data_source_id.value = input._record.data_source_id.value[0];
                     }
 
@@ -1124,7 +1184,7 @@ export default class GraphQLRunner {
                 }
 
                 if (input._record.original_id) {
-                    if(Array.isArray(input._record.original_id.value) && input._record.original_id.value.length === 1) {
+                    if (Array.isArray(input._record.original_id.value) && input._record.original_id.value.length === 1) {
                         input._record.original_id.value = input._record.original_id.value[0];
                     }
 
@@ -1132,7 +1192,7 @@ export default class GraphQLRunner {
                 }
 
                 if (input._record.import_id) {
-                    if(Array.isArray(input._record.import_id.value) && input._record.import_id.value.length === 1) {
+                    if (Array.isArray(input._record.import_id.value) && input._record.import_id.value.length === 1) {
                         input._record.import_id.value = input._record.import_id.value[0];
                     }
 
@@ -1140,7 +1200,7 @@ export default class GraphQLRunner {
                 }
 
                 if (input._record.created_at) {
-                    if(Array.isArray(input._record.created_at.value) && input._record.created_at.value.length === 1) {
+                    if (Array.isArray(input._record.created_at.value) && input._record.created_at.value.length === 1) {
                         input._record.created_at.value = input._record.created_at.value[0];
                     }
 
@@ -1148,7 +1208,7 @@ export default class GraphQLRunner {
                 }
 
                 if (input._record.modified_at) {
-                    if(Array.isArray(input._record.modified_at.value) && input._record.modified_at.value.length === 1) {
+                    if (Array.isArray(input._record.modified_at.value) && input._record.modified_at.value.length === 1) {
                         input._record.modified_at.value = input._record.modified_at.value[0];
                     }
 
@@ -1157,7 +1217,7 @@ export default class GraphQLRunner {
 
                 // metatype_id can be used to filter on a specific ontolgy version's metatype ID instead of global metatype UUID
                 if (input._record.metatype_id) {
-                    if(Array.isArray(input._record.metatype_id.value) && input._record.metatype_id.value.length === 1) {
+                    if (Array.isArray(input._record.metatype_id.value) && input._record.metatype_id.value.length === 1) {
                         input._record.metatype_id.value = input._record.metatype_id.value[0];
                     }
 
@@ -1173,15 +1233,15 @@ export default class GraphQLRunner {
                     // apply conditions only if historical is specified
                     if (prop.historical) {
                         joinTable = 'nodes' // override table that we are joining with
-                        repo = repo.join('nodes', {origin_col: 'id', destination_col: 'id'})
+                        repo = repo.join('nodes', { origin_col: 'id', destination_col: 'id' })
                     }
                     // join to data staging to get raw data
                     repo = repo
-                        .join('data_staging', {origin_col: 'data_staging_id', destination_col: 'id'}, {origin: joinTable})
+                        .join('data_staging', { origin_col: 'data_staging_id', destination_col: 'id' }, { origin: joinTable })
                     repo = repo.and().queryJsonb(
                         prop.key, 'data',
                         prop.operator, prop.value,
-                        {tableName: 'data_staging'}
+                        { tableName: 'data_staging' }
                     )
                     // reset join table
                     joinTable = undefined;
@@ -1198,7 +1258,7 @@ export default class GraphQLRunner {
             }
 
             // variable to store results of edge DB call if _relationship input
-            let edgeResults: {[key: string]: any} = {};
+            let edgeResults: { [key: string]: any } = {};
             if (input._relationship) {
                 const edgeRepo = new EdgeRepository();
 
@@ -1227,29 +1287,29 @@ export default class GraphQLRunner {
 
             // build parquet schema as a just in case, so we don't have to iterate keys again, building first the
             // record portion which is a nested schema
-            const parquet_schema: {[key: string]: any} = {}
-            parquet_schema._deep_lynx_id = {type: 'INT64'}
+            const parquet_schema: { [key: string]: any } = {}
+            parquet_schema._deep_lynx_id = { type: 'INT64' }
             parquet_schema._record = {
-                fields :{
-                    id: {type: 'INT64'},
-                    data_source_id: {type: 'INT64', optional: true},
-                    original_id: {type: 'UTF8', optional: true},
-                    import_id: {type: 'INT64', optional: true},
-                    metatype_id: {type: 'INT64'},
-                    metatype_name: {type: 'UTF8'},
-                    metatype_uuid: {type: 'UTF8'},
-                    metadata: {type: 'JSON', optional: true},
-                    created_at: {type: 'TIMESTAMP_MILLIS'},
-                    created_by: {type: 'UTF8'},
-                    modified_at: {type: 'TIMESTAMP_MILLIS'},
-                    modified_by: {type: 'UTF8', optional: true},
-                    deleted_at: {type: 'TIMESTAMP_MILLIS', optional: true},
+                fields: {
+                    id: { type: 'INT64' },
+                    data_source_id: { type: 'INT64', optional: true },
+                    original_id: { type: 'UTF8', optional: true },
+                    import_id: { type: 'INT64', optional: true },
+                    metatype_id: { type: 'INT64' },
+                    metatype_name: { type: 'UTF8' },
+                    metatype_uuid: { type: 'UTF8' },
+                    metadata: { type: 'JSON', optional: true },
+                    created_at: { type: 'TIMESTAMP_MILLIS' },
+                    created_by: { type: 'UTF8' },
+                    modified_at: { type: 'TIMESTAMP_MILLIS' },
+                    modified_by: { type: 'UTF8', optional: true },
+                    deleted_at: { type: 'TIMESTAMP_MILLIS', optional: true },
                 }
             }
-            parquet_schema.metadata_properties = {type: 'JSON', optional: true};
+            parquet_schema.metadata_properties = { type: 'JSON', optional: true };
             if (resolverOptions?.rawMetadataEnabled) {
-                parquet_schema.raw_data_properties = {type: 'JSON'}
-                parquet_schema.raw_data_history = {type: 'JSON'}
+                parquet_schema.raw_data_properties = { type: 'JSON' }
+                parquet_schema.raw_data_history = { type: 'JSON' }
             }
 
             // we must map out what the graphql refers to a metatype's keys are vs. what they actually are so
@@ -1267,7 +1327,7 @@ export default class GraphQLRunner {
                     data_type: key.data_type,
                 };
 
-                parquet_schema[key.property_name] = {type: dataTypeToParquetType(key.data_type)}
+                parquet_schema[key.property_name] = { type: dataTypeToParquetType(key.data_type) }
             });
 
             // iterate through the input object, ignoring reserved properties and adding all others to
@@ -1286,7 +1346,7 @@ export default class GraphQLRunner {
             })
 
             let sortBy: string | undefined = input._record?.sortBy
-            if(input._record?.sortProp) {
+            if (input._record?.sortProp) {
                 sortBy = `properties->${sortBy}`;
             }
 
@@ -1299,77 +1359,79 @@ export default class GraphQLRunner {
                         .addFields('jsonb_agg(data) AS history', 'raw_data')
                         .from('nodes', 'historical_nodes')
                         .join('data_staging',
-                            {origin_col: 'data_staging_id', destination_col: 'id'},
-                            {destination_alias: 'raw_data'})
+                            { origin_col: 'data_staging_id', destination_col: 'id' },
+                            { destination_alias: 'raw_data' })
                         .groupBy('id', 'historical_nodes')
                 )
 
                 // join to subquery
                 repo = repo
-                    .join('data_staging', {destination_col: 'id', origin_col: 'data_staging_id'})
+                    .join('data_staging', { destination_col: 'id', origin_col: 'data_staging_id' })
                     .addFields('data', 'data_staging')
                     .join(history,
-                        {origin_col: 'id', destination_col: 'id'},
-                        {destination_alias: 'raw_data_history'})
+                        { origin_col: 'id', destination_col: 'id' },
+                        { destination_alias: 'raw_data_history' })
                     .addFields('history', 'raw_data_history')
             }
 
             // wrapping the end resolver in a promise ensures that we don't return prior to all results being
             // fetched
-            if(resolverOptions && resolverOptions.returnFile) {
+            if (resolverOptions && resolverOptions.returnFile) {
                 // first we build a transform stream so that the raw node return is formatted correctly
                 // note that we know that originating stream is in object mode so we're able to cast correctly
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
-                const transform = new Transform({objectMode: true, transform: (chunk: object, _: any, done: (o: any, a: any) => any ) => {
-                    const node = plainToClass(Node, chunk)
+                const transform = new Transform({
+                    objectMode: true, transform: (chunk: object, _: any, done: (o: any, a: any) => any) => {
+                        const node = plainToClass(Node, chunk)
 
-                    if (resolverOptions.rawMetadataEnabled) {
-                        done(null, {
-                            _deep_lynx_id: node.id,
-                            ...node.properties,
-                            _record: {
-                                id: node.id,
-                                data_source_id: node.data_source_id,
-                                original_id: node.original_data_id,
-                                import_id: node.import_data_id,
-                                metatype_id: node.metatype_id,
-                                metatype_uuid: node.metatype_uuid,
-                                metatype_name: node.metatype_name,
-                                metadata: node.metadata,
-                                created_at: node.created_at?.toISOString(),
-                                created_by: node.created_by,
-                                modified_at: node.modified_at?.toISOString(),
-                                modified_by: node.modified_by,
-                                deleted_at: node.deleted_at,
-                            },
-                            metadata_properties: node.metadata_properties,
-                            raw_data_properties: node['data' as keyof object],
-                            raw_data_history: node['history' as keyof object],
-                        });
-                    } else {
-                        done(null, {
-                            _deep_lynx_id: node.id,
-                            ...node.properties,
-                            _record: {
-                                id: node.id,
-                                data_source_id: node.data_source_id,
-                                original_id: node.original_data_id,
-                                import_id: node.import_data_id,
-                                metatype_id: node.metatype_id,
-                                metatype_uuid: node.metatype_uuid,
-                                metatype_name: node.metatype_name,
-                                metadata: node.metadata,
-                                created_at: node.created_at?.toISOString(),
-                                created_by: node.created_by,
-                                modified_at: node.modified_at?.toISOString(),
-                                modified_by: node.modified_by,
-                                deleted_at: node.deleted_at,
-                            },
-                            metadata_properties: node.metadata_properties,
-                        });
+                        if (resolverOptions.rawMetadataEnabled) {
+                            done(null, {
+                                _deep_lynx_id: node.id,
+                                ...node.properties,
+                                _record: {
+                                    id: node.id,
+                                    data_source_id: node.data_source_id,
+                                    original_id: node.original_data_id,
+                                    import_id: node.import_data_id,
+                                    metatype_id: node.metatype_id,
+                                    metatype_uuid: node.metatype_uuid,
+                                    metatype_name: node.metatype_name,
+                                    metadata: node.metadata,
+                                    created_at: node.created_at?.toISOString(),
+                                    created_by: node.created_by,
+                                    modified_at: node.modified_at?.toISOString(),
+                                    modified_by: node.modified_by,
+                                    deleted_at: node.deleted_at,
+                                },
+                                metadata_properties: node.metadata_properties,
+                                raw_data_properties: node['data' as keyof object],
+                                raw_data_history: node['history' as keyof object],
+                            });
+                        } else {
+                            done(null, {
+                                _deep_lynx_id: node.id,
+                                ...node.properties,
+                                _record: {
+                                    id: node.id,
+                                    data_source_id: node.data_source_id,
+                                    original_id: node.original_data_id,
+                                    import_id: node.import_data_id,
+                                    metatype_id: node.metatype_id,
+                                    metatype_uuid: node.metatype_uuid,
+                                    metatype_name: node.metatype_name,
+                                    metadata: node.metadata,
+                                    created_at: node.created_at?.toISOString(),
+                                    created_by: node.created_by,
+                                    modified_at: node.modified_at?.toISOString(),
+                                    modified_by: node.modified_by,
+                                    deleted_at: node.deleted_at,
+                                },
+                                metadata_properties: node.metadata_properties,
+                            });
+                        }
                     }
-                }})
+                })
 
 
                 // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -1380,7 +1442,8 @@ export default class GraphQLRunner {
                             file_name: `${metatype.name}-${new Date().toDateString()}`,
                             transformStreams: [transform],
                             parquet_schema,
-                            containerID}, {
+                            containerID
+                        }, {
                             sortBy,
                             sortDesc: input._record?.sortDesc
                         })
@@ -1411,10 +1474,10 @@ export default class GraphQLRunner {
                                 resolve([]);
                             }
 
-                            const nodeOutput: {[key: string]: any}[] = [];
+                            const nodeOutput: { [key: string]: any }[] = [];
 
                             results.value.forEach((node) => {
-                                const properties: {[key: string]: any} = {};
+                                const properties: { [key: string]: any } = {};
                                 if (node.properties) {
                                     Object.keys(node.properties).forEach((key) => {
                                         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -1423,7 +1486,7 @@ export default class GraphQLRunner {
                                     });
                                 }
 
-                                const toPush: {[key: string]: any} = {
+                                const toPush: { [key: string]: any } = {
                                     _deep_lynx_id: node.id,
                                     ...properties,
                                     _record: {
@@ -1445,7 +1508,7 @@ export default class GraphQLRunner {
 
                                 if (resolverOptions?.rawMetadataEnabled) {
                                     toPush.raw_data_properties = node['data' as keyof object],
-                                    toPush.raw_data_history = node['history' as keyof object]
+                                        toPush.raw_data_history = node['history' as keyof object]
                                 };
 
                                 nodeOutput.push(toPush);
@@ -1462,8 +1525,8 @@ export default class GraphQLRunner {
         };
     }
 
-    resolverForNodes(containerID: string, resolverOptions?: ResolverOptions): (_: any, {input}: {input: any}) => any {
-        return async (_, input: {[key: string]: any}) => {
+    resolverForNodes(containerID: string, resolverOptions?: ResolverOptions): (_: any, { input }: { input: any }) => any {
+        return async (_, input: { [key: string]: any }) => {
             // create a subquery of current nodes before filters are applied
             const sub = new NodeRepository().where()
                 .containerID('eq', containerID);
@@ -1477,16 +1540,16 @@ export default class GraphQLRunner {
                 // custom subquery with point in time filters
                 const pointInTime = new Repository('nodes')
                     .distinctOn(['original_data_id', 'data_source_id', 'container_id'], 'n').select('*', 'n').from('nodes', 'n')
-                    .addFields({uuid: 'metatype_uuid', name: 'metatype_name'}, 'm')
-                    .join('metatypes', {origin_col: 'metatype_id', destination_col: 'id'}, {destination_alias: 'm'})
+                    .addFields({ uuid: 'metatype_uuid', name: 'metatype_name' }, 'm')
+                    .join('metatypes', { origin_col: 'metatype_id', destination_col: 'id' }, { destination_alias: 'm' })
                     .where()
-                    .query('created_at', '<=', resolverOptions.pointInTime, {dataType: 'date', tableAlias: 'n'})
+                    .query('created_at', '<=', resolverOptions.pointInTime, { dataType: 'date', tableAlias: 'n' })
                     .and(new Repository('nodes')
-                        .query('deleted_at', '>', resolverOptions.pointInTime, {dataType: 'date', tableAlias: 'n'})
+                        .query('deleted_at', '>', resolverOptions.pointInTime, { dataType: 'date', tableAlias: 'n' })
                         .or()
-                        .query('deleted_at', 'is null', undefined, {tableAlias: 'n'})
+                        .query('deleted_at', 'is null', undefined, { tableAlias: 'n' })
                     )
-                    .and().query('container_id', 'eq', containerID, {tableAlias: 'n'})
+                    .and().query('container_id', 'eq', containerID, { tableAlias: 'n' })
                     .sortBy(['original_data_id', 'data_source_id', 'container_id'])
                     .sortBy('created_at', undefined, true);
 
@@ -1496,7 +1559,7 @@ export default class GraphQLRunner {
             }
 
             if (input.id) {
-                if(Array.isArray(input.id.value) && input.id.value.length === 1) {
+                if (Array.isArray(input.id.value) && input.id.value.length === 1) {
                     input.id.value = input.id.value[0];
                 }
 
@@ -1504,7 +1567,7 @@ export default class GraphQLRunner {
             }
 
             if (input.data_source_id) {
-                if(Array.isArray(input.data_source_id.value) && input.data_source_id.value.length === 1) {
+                if (Array.isArray(input.data_source_id.value) && input.data_source_id.value.length === 1) {
                     input.data_source_id.value = input.data_source_id.value[0];
                 }
 
@@ -1512,7 +1575,7 @@ export default class GraphQLRunner {
             }
 
             if (input.metatype_id) {
-                if(Array.isArray(input.metatype_id.value) && input.metatype_id.value.length === 1) {
+                if (Array.isArray(input.metatype_id.value) && input.metatype_id.value.length === 1) {
                     input.metatype_id.value = input.metatype_id.value[0];
                 }
 
@@ -1520,7 +1583,7 @@ export default class GraphQLRunner {
             }
 
             if (input.metatype_uuid) {
-                if(Array.isArray(input.metatype_uuid.value) && input.metatype_uuid.value.length === 1) {
+                if (Array.isArray(input.metatype_uuid.value) && input.metatype_uuid.value.length === 1) {
                     input.metatype_uuid.value = input.metatype_uuid.value[0];
                 }
 
@@ -1528,7 +1591,7 @@ export default class GraphQLRunner {
             }
 
             if (input.metatype_name) {
-                if(Array.isArray(input.metatype_name.value) && input.metatype_name.value.length === 1) {
+                if (Array.isArray(input.metatype_name.value) && input.metatype_name.value.length === 1) {
                     input.metatype_name.value = input.metatype_name.value[0];
                 }
 
@@ -1536,7 +1599,7 @@ export default class GraphQLRunner {
             }
 
             if (input.original_id) {
-                if(Array.isArray(input.original_id.value) && input.original_id.value.length === 1) {
+                if (Array.isArray(input.original_id.value) && input.original_id.value.length === 1) {
                     input.original_id.value = input.original_id.value[0];
                 }
 
@@ -1544,7 +1607,7 @@ export default class GraphQLRunner {
             }
 
             if (input.import_id) {
-                if(Array.isArray(input.import_id.value) && input.import_id.value.length === 1) {
+                if (Array.isArray(input.import_id.value) && input.import_id.value.length === 1) {
                     input.import_id.value = input.import_id.value[0];
                 }
 
@@ -1553,7 +1616,7 @@ export default class GraphQLRunner {
 
             // disallow this filter if pointInTime is supplied
             if (input.created_at && !resolverOptions?.pointInTime) {
-                if(Array.isArray(input.created_at.value) && input.created_at.value.length === 1) {
+                if (Array.isArray(input.created_at.value) && input.created_at.value.length === 1) {
                     input.created_at.value = input.created_at.value[0];
                 }
 
@@ -1561,7 +1624,7 @@ export default class GraphQLRunner {
             }
 
             if (input.modified_at) {
-                if(Array.isArray(input.modified_at.value) && input.modified_at.value.length === 1) {
+                if (Array.isArray(input.modified_at.value) && input.modified_at.value.length === 1) {
                     input.modified_at.value = input.modified_at.value[0];
                 }
 
@@ -1570,7 +1633,7 @@ export default class GraphQLRunner {
 
             if (input.properties && Array.isArray(input.properties)) {
                 input.properties.forEach((prop) => {
-                    if(Array.isArray(prop.value) && prop.value.length === 1) {
+                    if (Array.isArray(prop.value) && prop.value.length === 1) {
                         prop.value = prop.value[0];
                     }
 
@@ -1584,15 +1647,15 @@ export default class GraphQLRunner {
                     // apply conditions only if historical is specified
                     if (prop.historical) {
                         joinTable = 'nodes' // override table that we are joining with
-                        repo = repo.join('nodes', {origin_col: 'id', destination_col: 'id'})
+                        repo = repo.join('nodes', { origin_col: 'id', destination_col: 'id' })
                     }
                     // join to data staging to get raw data
                     repo = repo
-                        .join('data_staging', {origin_col: 'data_staging_id', destination_col: 'id'}, {origin: joinTable})
+                        .join('data_staging', { origin_col: 'data_staging_id', destination_col: 'id' }, { origin: joinTable })
                     repo = repo.and().queryJsonb(
                         prop.key, 'data',
                         prop.operator, prop.value,
-                        {tableName: 'data_staging'}
+                        { tableName: 'data_staging' }
                     )
                     // reset join table
                     joinTable = undefined;
@@ -1609,7 +1672,7 @@ export default class GraphQLRunner {
             }
 
             let sortBy: string | undefined = input._record?.sortBy
-            if(input._record?.sortProp) {
+            if (input._record?.sortProp) {
                 sortBy = `properties->${sortBy}`;
             }
 
@@ -1623,69 +1686,71 @@ export default class GraphQLRunner {
                         .from('nodes', 'historical_nodes')
                         .join(
                             'data_staging',
-                            {origin_col: 'data_staging_id', destination_col: 'id'},
-                            {destination_alias: 'raw_data'}
+                            { origin_col: 'data_staging_id', destination_col: 'id' },
+                            { destination_alias: 'raw_data' }
                         )
                         .groupBy('id', 'historical_nodes')
                 )
 
                 repo = repo
-                    .join('data_staging', {destination_col: 'id', origin_col: 'data_staging_id'})
+                    .join('data_staging', { destination_col: 'id', origin_col: 'data_staging_id' })
                     .addFields('data', 'data_staging')
                     .join(history,
-                        {origin_col: 'id', destination_col: 'id'},
-                        {destination_alias: 'raw_data_history'})
+                        { origin_col: 'id', destination_col: 'id' },
+                        { destination_alias: 'raw_data_history' })
                     .addFields('history', 'raw_data_history')
             }
 
             // wrapping the end resolver in a promise ensures that we don't return prior to all results being
             // fetched
-            if(resolverOptions && resolverOptions.returnFile) {
+            if (resolverOptions && resolverOptions.returnFile) {
                 // first we build a transform stream so that the raw node return is formatted correctly
                 // note that we know that originating stream is in object mode so we're able to cast correctly
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
-                const transform = new Transform({objectMode: true, transform: (chunk: object, _: any, done: (o: any, a: any) => any ) => {
-                    const node = plainToClass(Node, chunk)
+                const transform = new Transform({
+                    objectMode: true, transform: (chunk: object, _: any, done: (o: any, a: any) => any) => {
+                        const node = plainToClass(Node, chunk)
 
-                    if (resolverOptions.rawMetadataEnabled) {
-                        done(null, {
-                            id: node.id,
-                            data_source_id: node.data_source_id,
-                            original_id: node.original_data_id,
-                            import_id: node.import_data_id,
-                            metatype_id: node.metatype_id,
-                            metatype_name: node.metatype_name,
-                            metatype_uuid: node.metatype_uuid,
-                            metadata: node.metadata,
-                            created_at: node.created_at?.toISOString(),
-                            created_by: node.created_by,
-                            modified_at: node.modified_at?.toISOString(),
-                            modified_by: node.modified_by,
-                            properties: node.properties,
-                            metadata_properties: node.metadata_properties,
-                            raw_data_properties: node['data' as keyof object],
-                            raw_data_history: node['history' as keyof object],
-                        })
-                    } else {
-                        done(null, {
-                            id: node.id,
-                            data_source_id: node.data_source_id,
-                            original_id: node.original_data_id,
-                            import_id: node.import_data_id,
-                            metatype_id: node.metatype_id,
-                            metatype_name: node.metatype_name,
-                            metatype_uuid: node.metatype_uuid,
-                            metadata: node.metadata,
-                            created_at: node.created_at?.toISOString(),
-                            created_by: node.created_by,
-                            modified_at: node.modified_at?.toISOString(),
-                            modified_by: node.modified_by,
-                            properties: node.properties,
-                            metadata_properties: node.metadata_properties,
-                        })
+                        if (resolverOptions.rawMetadataEnabled) {
+                            done(null, {
+                                id: node.id,
+                                data_source_id: node.data_source_id,
+                                original_id: node.original_data_id,
+                                import_id: node.import_data_id,
+                                metatype_id: node.metatype_id,
+                                metatype_name: node.metatype_name,
+                                metatype_uuid: node.metatype_uuid,
+                                metadata: node.metadata,
+                                created_at: node.created_at?.toISOString(),
+                                created_by: node.created_by,
+                                modified_at: node.modified_at?.toISOString(),
+                                modified_by: node.modified_by,
+                                properties: node.properties,
+                                metadata_properties: node.metadata_properties,
+                                raw_data_properties: node['data' as keyof object],
+                                raw_data_history: node['history' as keyof object],
+                            })
+                        } else {
+                            done(null, {
+                                id: node.id,
+                                data_source_id: node.data_source_id,
+                                original_id: node.original_data_id,
+                                import_id: node.import_data_id,
+                                metatype_id: node.metatype_id,
+                                metatype_name: node.metatype_name,
+                                metatype_uuid: node.metatype_uuid,
+                                metadata: node.metadata,
+                                created_at: node.created_at?.toISOString(),
+                                created_by: node.created_by,
+                                modified_at: node.modified_at?.toISOString(),
+                                modified_by: node.modified_by,
+                                properties: node.properties,
+                                metadata_properties: node.metadata_properties,
+                            })
+                        }
                     }
-                }})
+                })
 
                 // eslint-disable-next-line @typescript-eslint/no-misused-promises
                 return new Promise((resolve, reject) =>
@@ -1694,7 +1759,8 @@ export default class GraphQLRunner {
                             file_type: (resolverOptions && resolverOptions.returnFileType) ? resolverOptions.returnFileType : 'json',
                             file_name: `${new Date().toDateString()}`,
                             transformStreams: [transform],
-                            containerID}, {
+                            containerID
+                        }, {
                             sortBy,
                             sortDesc: input._records?.sortDesc
                         })
@@ -1725,10 +1791,10 @@ export default class GraphQLRunner {
                                 resolve([]);
                             }
 
-                            const nodeOutput: {[key: string]: any}[] = [];
+                            const nodeOutput: { [key: string]: any }[] = [];
 
                             results.value.forEach((node) => {
-                                const properties: {[key: string]: any} = {};
+                                const properties: { [key: string]: any } = {};
                                 if (node.properties) {
                                     Object.keys(node.properties).forEach((key) => {
                                         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -1737,7 +1803,7 @@ export default class GraphQLRunner {
                                     });
                                 }
 
-                                const toPush: {[key: string]: any} = {
+                                const toPush: { [key: string]: any } = {
                                     id: node.id,
                                     container_id: node.container_id,
                                     data_source_id: node.data_source_id,
@@ -1757,7 +1823,7 @@ export default class GraphQLRunner {
 
                                 if (resolverOptions?.rawMetadataEnabled) {
                                     toPush.raw_data_properties = node['data' as keyof object],
-                                    toPush.raw_data_history = node['history' as keyof object]
+                                        toPush.raw_data_history = node['history' as keyof object]
                                 }
 
                                 nodeOutput.push(toPush);
@@ -1775,8 +1841,8 @@ export default class GraphQLRunner {
     }
 
     // each key in the metatype should be included on the input object as a field to be filtered on
-    inputFieldsForMetatype(metatype: Metatype): {[key: string]: any} {
-        const fields: {[key: string]: any} = {};
+    inputFieldsForMetatype(metatype: Metatype): { [key: string]: any } {
+        const fields: { [key: string]: any } = {};
 
         metatype.keys?.forEach((metatypeKey) => {
             const propertyName = stringToValidPropertyName(metatypeKey.property_name);
@@ -1787,8 +1853,8 @@ export default class GraphQLRunner {
                         type: new GraphQLInputObjectType({
                             name: stringToValidPropertyName(`z_${metatype.id}` + metatypeKey.property_name),
                             fields: {
-                                operator: {type: GraphQLString},
-                                value: {type: new GraphQLList(GraphQLInt)},
+                                operator: { type: GraphQLString },
+                                value: { type: new GraphQLList(GraphQLInt) },
                             },
                         }),
                     };
@@ -1800,8 +1866,8 @@ export default class GraphQLRunner {
                         type: new GraphQLInputObjectType({
                             name: stringToValidPropertyName(`z_${metatype.id}` + metatypeKey.property_name),
                             fields: {
-                                operator: {type: GraphQLString},
-                                value: {type: new GraphQLList(GraphQLFloat)},
+                                operator: { type: GraphQLString },
+                                value: { type: new GraphQLList(GraphQLFloat) },
                             },
                         }),
                     };
@@ -1813,21 +1879,22 @@ export default class GraphQLRunner {
                         type: new GraphQLInputObjectType({
                             name: stringToValidPropertyName(`z_${metatype.id}` + metatypeKey.property_name),
                             fields: {
-                                operator: {type: GraphQLString},
-                                value: {type: new GraphQLList(GraphQLBoolean)},
+                                operator: { type: GraphQLString },
+                                value: { type: new GraphQLList(GraphQLBoolean) },
                             },
                         }),
                     };
                     break;
                 }
 
+                // @ts-expect-error TS2872
                 case 'string' || 'date' || 'file': {
                     fields[propertyName] = {
                         type: new GraphQLInputObjectType({
                             name: stringToValidPropertyName(`z_${metatype.id}` + metatypeKey.property_name),
                             fields: {
-                                operator: {type: GraphQLString},
-                                value: {type: new GraphQLList(GraphQLString)},
+                                operator: { type: GraphQLString },
+                                value: { type: new GraphQLList(GraphQLString) },
                             },
                         }),
                     };
@@ -1839,8 +1906,8 @@ export default class GraphQLRunner {
                         type: new GraphQLInputObjectType({
                             name: stringToValidPropertyName(`z_${metatype.id}` + metatypeKey.property_name),
                             fields: {
-                                operator: {type: GraphQLString},
-                                value: {type: new GraphQLList(GraphQLJSON)},
+                                operator: { type: GraphQLString },
+                                value: { type: new GraphQLList(GraphQLJSON) },
                             },
                         }),
                     };
@@ -1852,8 +1919,8 @@ export default class GraphQLRunner {
                         type: new GraphQLInputObjectType({
                             name: stringToValidPropertyName(`z_${metatype.id}` + metatypeKey.property_name),
                             fields: {
-                                operator: {type: GraphQLString},
-                                value: {type: new GraphQLList(GraphQLString)},
+                                operator: { type: GraphQLString },
+                                value: { type: new GraphQLList(GraphQLString) },
                             },
                         }),
                     };
@@ -1864,14 +1931,14 @@ export default class GraphQLRunner {
         return fields;
     }
 
-    resolverForRelationships(containerID: string, relationship: MetatypeRelationship, options?: ResolverOptions): (_: any, {input}: {input: any}) => any {
-        return async (_, input: {[key: string]: any}) => {
+    resolverForRelationships(containerID: string, relationship: MetatypeRelationship, options?: ResolverOptions): (_: any, { input }: { input: any }) => any {
+        return async (_, input: { [key: string]: any }) => {
             let repo = new EdgeRepository();
             repo = repo.where().containerID('eq', containerID).and().relationshipName('eq', relationship.name);
 
             if (input._record) {
                 if (input._record.id) {
-                    if(Array.isArray(input._record.id.value) && input._record.id.value.length === 1) {
+                    if (Array.isArray(input._record.id.value) && input._record.id.value.length === 1) {
                         input._record.id.value = input._record.id.value[0];
                     }
 
@@ -1879,7 +1946,7 @@ export default class GraphQLRunner {
                 }
 
                 if (input._record.pair_id) {
-                    if(Array.isArray(input._record.pair_id.value) && input._record.pair_id.value.length === 1) {
+                    if (Array.isArray(input._record.pair_id.value) && input._record.pair_id.value.length === 1) {
                         input._record.pair_id.value = input._record.pair_id.value[0];
                     }
 
@@ -1887,7 +1954,7 @@ export default class GraphQLRunner {
                 }
 
                 if (input._record.data_source_id) {
-                    if(Array.isArray(input._record.data_source_id.value) && input._record.data_source_id.value.length === 1) {
+                    if (Array.isArray(input._record.data_source_id.value) && input._record.data_source_id.value.length === 1) {
                         input._record.data_source_id.value = input._record.data_source_id.value[0];
                     }
 
@@ -1895,7 +1962,7 @@ export default class GraphQLRunner {
                 }
 
                 if (input._record.import_id) {
-                    if(Array.isArray(input._record.import_id.value) && input._record.import_id.value.length === 1) {
+                    if (Array.isArray(input._record.import_id.value) && input._record.import_id.value.length === 1) {
                         input._record.import_id.value = input._record.import_id.value[0];
                     }
 
@@ -1903,7 +1970,7 @@ export default class GraphQLRunner {
                 }
 
                 if (input._record.origin_id) {
-                    if(Array.isArray(input._record.origin_id.value) && input._record.origin_id.value.length === 1) {
+                    if (Array.isArray(input._record.origin_id.value) && input._record.origin_id.value.length === 1) {
                         input._record.origin_id.value = input._record.origin_id.value[0];
                     }
 
@@ -1911,7 +1978,7 @@ export default class GraphQLRunner {
                 }
 
                 if (input._record.destination_id) {
-                    if(Array.isArray(input._record.destination_id.value) && input._record.destination_id.value.length === 1) {
+                    if (Array.isArray(input._record.destination_id.value) && input._record.destination_id.value.length === 1) {
                         input._record.destination_id.value = input._record.destination_id.value[0];
                     }
 
@@ -1919,7 +1986,7 @@ export default class GraphQLRunner {
                 }
 
                 if (input._record.relationship_pair_uuid) {
-                    if(Array.isArray(input._record.relationship_pair_uuid.value) && input._record.relationship_pair_uuid.value.length === 1) {
+                    if (Array.isArray(input._record.relationship_pair_uuid.value) && input._record.relationship_pair_uuid.value.length === 1) {
                         input._record.relationship_pair_uuid.value = input._record.relationship_pair_uuid.value[0];
                     }
 
@@ -1927,7 +1994,7 @@ export default class GraphQLRunner {
                 }
 
                 if (input._record.destination_metatype_uuid) {
-                    if(Array.isArray(input._record.destination_metatype_uuid.value) && input._record.destination_metatype_uuid.value.length === 1) {
+                    if (Array.isArray(input._record.destination_metatype_uuid.value) && input._record.destination_metatype_uuid.value.length === 1) {
                         input._record.destination_metatype_uuid.value = input._record.destination_metatype_uuid.value[0];
                     }
 
@@ -1935,7 +2002,7 @@ export default class GraphQLRunner {
                 }
 
                 if (input._record.origin_metatype_uuid) {
-                    if(Array.isArray(input._record.origin_metatype_uuid.value) && input._record.origin_metatype_uuid.value.length === 1) {
+                    if (Array.isArray(input._record.origin_metatype_uuid.value) && input._record.origin_metatype_uuid.value.length === 1) {
                         input._record.origin_metatype_uuid.value = input._record.origin_metatype_uuid.value[0];
                     }
 
@@ -1949,15 +2016,15 @@ export default class GraphQLRunner {
                     // apply conditions only if historical is specified
                     if (prop.historical) {
                         joinTable = 'edges' // override table that we are joining with
-                        repo = repo.join('edges', {origin_col: 'id', destination_col: 'id'})
+                        repo = repo.join('edges', { origin_col: 'id', destination_col: 'id' })
                     }
                     // join to data staging to get raw data
                     repo = repo
-                        .join('data_staging', {origin_col: 'data_staging_id', destination_col: 'id'}, {origin: joinTable})
+                        .join('data_staging', { origin_col: 'data_staging_id', destination_col: 'id' }, { origin: joinTable })
                     repo = repo.and().queryJsonb(
                         prop.key, 'data',
                         prop.operator, prop.value,
-                        {tableName: 'data_staging'}
+                        { tableName: 'data_staging' }
                     )
                     // reset join table
                     joinTable = undefined;
@@ -2014,81 +2081,83 @@ export default class GraphQLRunner {
                         .from('edges', 'historical_edges')
                         .join(
                             'data_staging',
-                            {origin_col: 'data_staging_id', destination_col: 'id'},
-                            {destination_alias: 'raw_data'}
+                            { origin_col: 'data_staging_id', destination_col: 'id' },
+                            { destination_alias: 'raw_data' }
                         )
                         .groupBy('id', 'historical_edges')
                 )
 
                 repo = repo
-                    .join('data_staging', {destination_col: 'id', origin_col: 'data_staging_id'})
+                    .join('data_staging', { destination_col: 'id', origin_col: 'data_staging_id' })
                     .addFields('data', 'data_staging')
                     .join(history,
-                        {origin_col: 'id', destination_col: 'id'},
-                        {destination_alias: 'raw_data_history'})
+                        { origin_col: 'id', destination_col: 'id' },
+                        { destination_alias: 'raw_data_history' })
                     .addFields('history', 'raw_data_history')
             }
 
-            if(options && options.returnFile) {
+            if (options && options.returnFile) {
                 // first we build a transform stream so that the raw edge return is formatted correctly
                 // note that we know that originating stream is in object mode, so we're able to cast correctly
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
-                const transform = new Transform({objectMode: true, transform: (chunk: object, _: any, done: (o: any, a: any) => any ) => {
-                    const edge = plainToClass(Edge, chunk)
+                const transform = new Transform({
+                    objectMode: true, transform: (chunk: object, _: any, done: (o: any, a: any) => any) => {
+                        const edge = plainToClass(Edge, chunk)
 
-                    if (options.rawMetadataEnabled) {
-                        done(null, {
-                            ...edge.properties,
-                            _record: {
-                                id: edge.id,
-                                pair_id: edge.relationship_pair_id,
-                                data_source_id: edge.data_source_id,
-                                import_id: edge.import_data_id,
-                                origin_id: edge.origin_id,
-                                origin_metatype_id: edge.origin_metatype_id,
-                                origin_metatype_uuid: edge.origin_metatype_uuid,
-                                destination_id: edge.destination_id,
-                                destination_metatype_id: edge.destination_metatype_id,
-                                destination_metatype_uuid: edge.destination_metatype_uuid,
-                                relationship_name: edge.metatype_relationship_name,
-                                relationship_pair_uuid: edge.metatype_relationship_uuid,
-                                metadata: edge.metadata,
-                                created_at: edge.created_at?.toISOString(),
-                                created_by: edge.created_by,
-                                modified_at: edge.modified_at?.toISOString(),
-                                modified_by: edge.modified_by,
-                            },
-                            metadata_properties: edge.metadata_properties,
-                            raw_data_properties: edge['data' as keyof object],
-                            raw_data_history: edge['history' as keyof object],
-                        });
-                    } else {
-                        done(null, {
-                            ...edge.properties,
-                            _record: {
-                                id: edge.id,
-                                pair_id: edge.relationship_pair_id,
-                                data_source_id: edge.data_source_id,
-                                import_id: edge.import_data_id,
-                                origin_id: edge.origin_id,
-                                origin_metatype_id: edge.origin_metatype_id,
-                                origin_metatype_uuid: edge.origin_metatype_uuid,
-                                destination_id: edge.destination_id,
-                                destination_metatype_id: edge.destination_metatype_id,
-                                destination_metatype_uuid: edge.destination_metatype_uuid,
-                                relationship_name: edge.metatype_relationship_name,
-                                relationship_pair_uuid: edge.metatype_relationship_uuid,
-                                metadata: edge.metadata,
-                                created_at: edge.created_at?.toISOString(),
-                                created_by: edge.created_by,
-                                modified_at: edge.modified_at?.toISOString(),
-                                modified_by: edge.modified_by,
-                            },
-                            metadata_properties: edge.metadata_properties,
-                        });
+                        if (options.rawMetadataEnabled) {
+                            done(null, {
+                                ...edge.properties,
+                                _record: {
+                                    id: edge.id,
+                                    pair_id: edge.relationship_pair_id,
+                                    data_source_id: edge.data_source_id,
+                                    import_id: edge.import_data_id,
+                                    origin_id: edge.origin_id,
+                                    origin_metatype_id: edge.origin_metatype_id,
+                                    origin_metatype_uuid: edge.origin_metatype_uuid,
+                                    destination_id: edge.destination_id,
+                                    destination_metatype_id: edge.destination_metatype_id,
+                                    destination_metatype_uuid: edge.destination_metatype_uuid,
+                                    relationship_name: edge.metatype_relationship_name,
+                                    relationship_pair_uuid: edge.metatype_relationship_uuid,
+                                    metadata: edge.metadata,
+                                    created_at: edge.created_at?.toISOString(),
+                                    created_by: edge.created_by,
+                                    modified_at: edge.modified_at?.toISOString(),
+                                    modified_by: edge.modified_by,
+                                },
+                                metadata_properties: edge.metadata_properties,
+                                raw_data_properties: edge['data' as keyof object],
+                                raw_data_history: edge['history' as keyof object],
+                            });
+                        } else {
+                            done(null, {
+                                ...edge.properties,
+                                _record: {
+                                    id: edge.id,
+                                    pair_id: edge.relationship_pair_id,
+                                    data_source_id: edge.data_source_id,
+                                    import_id: edge.import_data_id,
+                                    origin_id: edge.origin_id,
+                                    origin_metatype_id: edge.origin_metatype_id,
+                                    origin_metatype_uuid: edge.origin_metatype_uuid,
+                                    destination_id: edge.destination_id,
+                                    destination_metatype_id: edge.destination_metatype_id,
+                                    destination_metatype_uuid: edge.destination_metatype_uuid,
+                                    relationship_name: edge.metatype_relationship_name,
+                                    relationship_pair_uuid: edge.metatype_relationship_uuid,
+                                    metadata: edge.metadata,
+                                    created_at: edge.created_at?.toISOString(),
+                                    created_by: edge.created_by,
+                                    modified_at: edge.modified_at?.toISOString(),
+                                    modified_by: edge.modified_by,
+                                },
+                                metadata_properties: edge.metadata_properties,
+                            });
+                        }
                     }
-                }})
+                })
 
 
                 // wrapping the end resolver in a promise ensures that we don't return prior to all results being
@@ -2101,7 +2170,8 @@ export default class GraphQLRunner {
                             file_type: (options && options.returnFileType) ? options.returnFileType : 'json',
                             file_name: `${relationship.name}-${new Date().toDateString()}`,
                             transformStreams: [transform],
-                            containerID})
+                            containerID
+                        })
                         .then((result) => {
                             if (result.isError) {
                                 reject(`unable to list edges to file ${result.error?.error}`);
@@ -2119,17 +2189,17 @@ export default class GraphQLRunner {
                 // eslint-disable-next-line @typescript-eslint/no-misused-promises
                 return new Promise((resolve) =>
                     repo
-                        .list(false, {limit: input._record?.limit ? input._record.limit : 10000})
+                        .list(false, { limit: input._record?.limit ? input._record.limit : 10000 })
                         .then((results) => {
                             if (results.isError) {
                                 Logger.error(`unable to list edges ${results.error?.error}`);
                                 resolve([]);
                             }
 
-                            const edgeOutput: {[key: string]: any}[] = [];
+                            const edgeOutput: { [key: string]: any }[] = [];
 
                             results.value.forEach((edge) => {
-                                const properties: {[key: string]: any} = {};
+                                const properties: { [key: string]: any } = {};
                                 if (edge.properties) {
                                     Object.keys(edge.properties).forEach((key) => {
                                         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -2138,7 +2208,7 @@ export default class GraphQLRunner {
                                     });
                                 }
 
-                                const toPush: {[key: string]: any} = {
+                                const toPush: { [key: string]: any } = {
                                     ...properties,
                                     _record: {
                                         id: edge.id,
@@ -2164,7 +2234,7 @@ export default class GraphQLRunner {
 
                                 if (options?.rawMetadataEnabled) {
                                     toPush.raw_data_properties = edge['data' as keyof object],
-                                    toPush.raw_data_history = edge['history' as keyof object]
+                                        toPush.raw_data_history = edge['history' as keyof object]
                                 }
 
                                 edgeOutput.push(toPush);
@@ -2181,8 +2251,8 @@ export default class GraphQLRunner {
     }
 
     // each key in the relationship should be included on the input object as a field to be filtered on
-    inputFieldsForRelationship(relationship: MetatypeRelationship): {[key: string]: any} {
-        const fields: {[key: string]: any} = {};
+    inputFieldsForRelationship(relationship: MetatypeRelationship): { [key: string]: any } {
+        const fields: { [key: string]: any } = {};
 
         relationship.keys?.forEach((relationshipKey) => {
             const propertyName = stringToValidPropertyName(relationshipKey.property_name);
@@ -2193,8 +2263,8 @@ export default class GraphQLRunner {
                         type: new GraphQLInputObjectType({
                             name: stringToValidPropertyName(`z_${relationship.id}` + relationshipKey.property_name),
                             fields: {
-                                operator: {type: GraphQLString},
-                                value: {type: new GraphQLList(GraphQLInt)},
+                                operator: { type: GraphQLString },
+                                value: { type: new GraphQLList(GraphQLInt) },
                             },
                         }),
                     };
@@ -2206,8 +2276,8 @@ export default class GraphQLRunner {
                         type: new GraphQLInputObjectType({
                             name: stringToValidPropertyName(`z_${relationship.id}` + relationshipKey.property_name),
                             fields: {
-                                operator: {type: GraphQLString},
-                                value: {type: new GraphQLList(GraphQLFloat)},
+                                operator: { type: GraphQLString },
+                                value: { type: new GraphQLList(GraphQLFloat) },
                             },
                         }),
                     };
@@ -2220,21 +2290,22 @@ export default class GraphQLRunner {
                         type: new GraphQLInputObjectType({
                             name: stringToValidPropertyName(`z_${relationship.id}` + relationshipKey.property_name),
                             fields: {
-                                operator: {type: GraphQLString},
-                                value: {type: new GraphQLList(GraphQLBoolean)},
+                                operator: { type: GraphQLString },
+                                value: { type: new GraphQLList(GraphQLBoolean) },
                             },
                         }),
                     };
                     break;
                 }
 
+                // @ts-expect-error TS2872
                 case 'string' || 'date' || 'file': {
                     fields[propertyName] = {
                         type: new GraphQLInputObjectType({
                             name: stringToValidPropertyName(`z_${relationship.id}` + relationshipKey.property_name),
                             fields: {
-                                operator: {type: GraphQLString},
-                                value: {type: new GraphQLList(GraphQLString)},
+                                operator: { type: GraphQLString },
+                                value: { type: new GraphQLList(GraphQLString) },
                             },
                         }),
                     };
@@ -2246,8 +2317,8 @@ export default class GraphQLRunner {
                         type: new GraphQLInputObjectType({
                             name: stringToValidPropertyName(`z_${relationship.id}` + relationshipKey.property_name),
                             fields: {
-                                operator: {type: GraphQLString},
-                                value: {type: new GraphQLList(GraphQLJSON)},
+                                operator: { type: GraphQLString },
+                                value: { type: new GraphQLList(GraphQLJSON) },
                             },
                         }),
                     };
@@ -2264,8 +2335,8 @@ export default class GraphQLRunner {
         return fields;
     }
 
-    resolverForGraph(containerID: string, options?: ResolverOptions): (_: any, {input}: {input: any}) => any {
-        return async (_, input: {[key: string]: any}) => {
+    resolverForGraph(containerID: string, options?: ResolverOptions): (_: any, { input }: { input: any }) => any {
+        return async (_, input: { [key: string]: any }) => {
             let repo = new NodeLeafRepository(input.root_node, containerID, input.depth, input.use_original_id);
 
             if (input.edge_type) {
@@ -2284,21 +2355,21 @@ export default class GraphQLRunner {
             if (input.node_type) {
                 if (input.node_type.id) {
                     const query = this.breakQuery(input.node_type.id);
-                    repo = repo.and((new NodeLeafRepository('','',''))
+                    repo = repo.and((new NodeLeafRepository('', '', ''))
                         .originMetatypeId(query[0], query[1])
                         .or()
                         .destinationMetatypeId(query[0], query[1])
                     );
                 } else if (input.node_type.name) {
                     const query = this.breakQuery(input.node_type.name);
-                    repo = repo.and((new NodeLeafRepository('','',''))
+                    repo = repo.and((new NodeLeafRepository('', '', ''))
                         .originMetatypeName(query[0], query[1])
                         .or()
                         .destinationMetatypeName(query[0], query[1])
                     );
                 } else if (input.node_type.uuid) {
                     const query = this.breakQuery(input.node_type.uuid);
-                    repo = repo.and((new NodeLeafRepository('','',''))
+                    repo = repo.and((new NodeLeafRepository('', '', ''))
                         .originMetatypeUUID(query[0], query[1])
                         .or()
                         .destinationMetatypeUUID(query[0], query[1])
@@ -2336,14 +2407,15 @@ export default class GraphQLRunner {
                 }
             }
 
-            if(options && options.returnFile) {
+            if (options && options.returnFile) {
                 // eslint-disable-next-line @typescript-eslint/no-misused-promises
                 return new Promise((resolve, reject) =>
                     repo
                         .listAllToFile({
                             file_type: (options && options.returnFileType) ? options.returnFileType : 'json',
                             file_name: `GraphResults-${new Date().toDateString()}`,
-                            containerID})
+                            containerID
+                        })
                         .then((result) => {
                             if (result.isError) {
                                 reject(`unable to list graph results to file ${result.error?.error}`);
@@ -2359,17 +2431,17 @@ export default class GraphQLRunner {
                 // eslint-disable-next-line @typescript-eslint/no-misused-promises
                 return new Promise((resolve) =>
                     repo
-                        .list({sortBy: 'depth'})
+                        .list({ sortBy: 'depth' })
                         .then((results) => {
                             if (results.isError) {
                                 Logger.error(`unable to list nodeLeaf objects ${results.error?.error}`);
                                 resolve([]);
                             }
 
-                            const nodeLeafOutput: {[key: string]: any}[] = [];
+                            const nodeLeafOutput: { [key: string]: any }[] = [];
 
                             results.value.forEach((nodeLeaf: any) => {
-                                nodeLeafOutput.push({...nodeLeaf});
+                                nodeLeafOutput.push({ ...nodeLeaf });
                             });
 
                             resolve(nodeLeafOutput);
@@ -2400,27 +2472,27 @@ export default class GraphQLRunner {
     // metatypeFromQuery breaks down a query, parsing it into an object, and then checking that object to see if there
     // are metatypes it needs to build into the schema
     private metatypesFromQuery(query: string | undefined): string[] {
-        if(!query) return [];
+        if (!query) return [];
         const results: string[] = [];
 
-        const search = (root: {[key: string]: any} | undefined, r: string[]) => {
-            if(!root) return r;
+        const search = (root: { [key: string]: any } | undefined, r: string[]) => {
+            if (!root) return r;
             // if root object or non-field send in the definitions
-            if(root.kind === 'Document') {
+            if (root.kind === 'Document') {
                 root.definitions.forEach((def: any) => search(def, r))
             }
 
-            if(root.kind === 'OperationDefinition') {
+            if (root.kind === 'OperationDefinition') {
                 search(root.selectionSet, r)
             }
 
-            if(root.kind === 'Field' && root.name?.value === 'metatypes') {
+            if (root.kind === 'Field' && root.name?.value === 'metatypes') {
                 search(root.selectionSet, r)
             }
 
-            if(root.kind === 'SelectionSet') {
-                root.selections?.forEach((selection: {[key: string]: any}) => {
-                    if(selection.name?.value === 'metatypes') {
+            if (root.kind === 'SelectionSet') {
+                root.selections?.forEach((selection: { [key: string]: any }) => {
+                    if (selection.name?.value === 'metatypes') {
                         search(selection.selectionSet, r)
                     } else if (selection.name.value === '__type') {
                         selection.arguments.forEach((argument: any) => {
@@ -2428,44 +2500,44 @@ export default class GraphQLRunner {
                                 search(argument, r)
                             }
                         })
-                    } else if(selection.name?.value !== '__schema' && selection.name?.value !== 'relationships') {
-                        if(selection.name?.value) r.push(selection.name.value);
+                    } else if (selection.name?.value !== '__schema' && selection.name?.value !== 'relationships') {
+                        if (selection.name?.value) r.push(selection.name.value);
                     }
                 })
             }
 
-            if(root.kind === 'Argument') {
-                if(root.value.value){r.push(root.value.value)};
+            if (root.kind === 'Argument') {
+                if (root.value.value) { r.push(root.value.value) };
             }
 
             return r
         }
 
-        return search(gql(query),results)
+        return search(gql(query), results)
     }
 
     private relationshipsFromQuery(query: string | undefined): string[] {
-        if(!query) return [];
+        if (!query) return [];
         const results: string[] = [];
 
-        const search = (root: {[key: string]: any} | undefined, r: string[]) => {
-            if(!root) return r;
+        const search = (root: { [key: string]: any } | undefined, r: string[]) => {
+            if (!root) return r;
             // if root object or non-field send in the definitions
-            if(root.kind === 'Document') {
+            if (root.kind === 'Document') {
                 root.definitions.forEach((def: any) => search(def, r))
             }
 
-            if(root.kind === 'OperationDefinition') {
+            if (root.kind === 'OperationDefinition') {
                 search(root.selectionSet, r)
             }
 
-            if(root.kind === 'Field' && root.name?.value === 'relationships') {
+            if (root.kind === 'Field' && root.name?.value === 'relationships') {
                 search(root.selectionSet, r)
             }
 
-            if(root.kind === 'SelectionSet') {
-                root.selections?.forEach((selection: {[key: string]: any}) => {
-                    if(selection.name?.value === 'relationships') {
+            if (root.kind === 'SelectionSet') {
+                root.selections?.forEach((selection: { [key: string]: any }) => {
+                    if (selection.name?.value === 'relationships') {
                         search(selection.selectionSet, r)
                     } else if (selection.name.value === '__type') {
                         selection.arguments.forEach((argument: any) => {
@@ -2473,46 +2545,46 @@ export default class GraphQLRunner {
                                 search(argument, r)
                             }
                         })
-                    } else if(selection.name?.value !== '__schema' && selection.name?.value !== 'metatypes') {
-                        if(selection.name?.value) r.push(selection.name.value);
+                    } else if (selection.name?.value !== '__schema' && selection.name?.value !== 'metatypes') {
+                        if (selection.name?.value) r.push(selection.name.value);
                     }
                 })
             }
 
-            if(root.kind === 'Argument') {
-                if(root.value.value){r.push(root.value.value)};
+            if (root.kind === 'Argument') {
+                if (root.value.value) { r.push(root.value.value) };
             }
 
             return r
         }
 
-        return search(gql(query),results)
+        return search(gql(query), results)
     }
 
     private isNodesQuery(query: string | undefined): boolean {
-        if(!query) return false;
+        if (!query) return false;
         const results: boolean[] = [];
 
-        const search = (root: {[key: string]: any} | undefined, r: boolean[]) => {
-            if(!root) return r;
+        const search = (root: { [key: string]: any } | undefined, r: boolean[]) => {
+            if (!root) return r;
             // if root object or non-field send in the definitions
-            if(root.kind === 'Document') {
+            if (root.kind === 'Document') {
                 root.definitions.forEach((def: any) => search(def, r))
             }
 
-            if(root.kind === 'OperationDefinition') {
+            if (root.kind === 'OperationDefinition') {
                 search(root.selectionSet, r)
             }
 
-            if(root.kind === 'SelectionSet') {
+            if (root.kind === 'SelectionSet') {
                 root.selections?.forEach((selection: any) => {
-                    if(selection.name?.value === 'nodes') {
+                    if (selection.name?.value === 'nodes') {
                         r.push(true)
                     }
                 })
             }
 
-            if(root.kind === 'Field' && root.name?.value === 'nodes') {
+            if (root.kind === 'Field' && root.name?.value === 'nodes') {
                 r.push(true)
             }
 

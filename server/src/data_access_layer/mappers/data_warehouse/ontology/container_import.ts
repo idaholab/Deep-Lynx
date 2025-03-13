@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/restrict-plus-operands */
-import axios, {AxiosRequestConfig} from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 import MetatypeKeyMapper from './metatype_key_mapper';
 import Result from '../../../../common_classes/result';
 import Logger from '../../../../services/logger';
 import ContainerRepository from '../../../repositories/data_warehouse/ontology/container_repository';
-import Container, {ContainerAlert, ContainerConfig} from "../../../../domain_objects/data_warehouse/ontology/container";
+import Container, { ContainerAlert, ContainerConfig } from "../../../../domain_objects/data_warehouse/ontology/container";
 import MetatypeRepository from '../../../repositories/data_warehouse/ontology/metatype_repository';
 import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
 import MetatypeRelationshipRepository from '../../../repositories/data_warehouse/ontology/metatype_relationship_repository';
@@ -13,10 +13,10 @@ import MetatypeRelationshipPairRepository from '../../../repositories/data_wareh
 import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
 import MetatypeKeyRepository from '../../../repositories/data_warehouse/ontology/metatype_key_repository';
 import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
-import {User} from '../../../../domain_objects/access_management/user';
+import { User } from '../../../../domain_objects/access_management/user';
 import NodeRepository from '../../../repositories/data_warehouse/data/node_repository';
 import EdgeRepository from '../../../repositories/data_warehouse/data/edge_repository';
-import {stringToValidPropertyName} from "../../../../services/utilities";
+import { stringToValidPropertyName } from "../../../../services/utilities";
 import OntologyVersionRepository from "../../../repositories/data_warehouse/ontology/versioning/ontology_version_repository";
 import OntologyVersion from "../../../../domain_objects/data_warehouse/ontology/versioning/ontology_version";
 const convert = require('xml-js');
@@ -32,8 +32,8 @@ const metatypeKeyRepo = new MetatypeKeyRepository();
 const ontologyRepo = new OntologyVersionRepository();
 const nodeRepo = new NodeRepository();
 const edgeRepo = new EdgeRepository();
-import {Worker} from "worker_threads";
-import {plainToInstance} from "class-transformer";
+import { Worker } from "worker_threads";
+import { plainToInstance } from "class-transformer";
 import MetatypeMapper from "./metatype_mapper";
 import MetatypeRelationshipPairMapper from "./metatype_relationship_pair_mapper";
 
@@ -197,9 +197,10 @@ export default class ContainerImport {
         for (const property in owlClass) {
             const value = owlClass[property];
 
-            switch(property) {
+            switch (property) {
                 // owl:unionOf and owl:intersectionOf are currently being treated the same, but could be broken out in the future
                 // to support ontology reasoner type capability
+                // @ts-expect-error TS2872
                 case 'owl:unionOf' || 'owl:intersectionOf':
                     include ? includedClasses.push(...this.findClasses(value)) : excludedClasses.push(...this.findClasses(value));
 
@@ -249,16 +250,16 @@ export default class ContainerImport {
         dirname?: string, // override the dirname, needed for testing
     ): Promise<Result<string>> {
         let workerLocation: string
-        if(dirname) {
-            workerLocation = dirname+'/container_import_worker.js'
+        if (dirname) {
+            workerLocation = dirname + '/container_import_worker.js'
         } else {
-            workerLocation = __dirname+'/container_import_worker.js'
+            workerLocation = __dirname + '/container_import_worker.js'
         }
         let container: Container;
         let ontologyVersionID: string | undefined;
 
         // only do container creation and whatnot if a dryrun
-        if(!dryrun) {
+        if (!dryrun) {
             if (!update) {
                 container = new Container({
                     name: input.name,
@@ -281,9 +282,9 @@ export default class ContainerImport {
 
             // if it's an update we need to set the ontology version manually so that we're not actually updating
             // the ontology if versioning is enabled
-            if(container.config!.ontology_versioning_enabled && update) {
-                if(container.config!.ontology_versioning_enabled) {
-                    const ontologyVersion  =  new OntologyVersion({
+            if (container.config!.ontology_versioning_enabled && update) {
+                if (container.config!.ontology_versioning_enabled) {
+                    const ontologyVersion = new OntologyVersion({
                         container_id: container.id!,
                         name: `Update - ${new Date().toDateString()}`,
                         description: 'Updates created from uploading an .OWL file',
@@ -292,7 +293,7 @@ export default class ContainerImport {
 
                     const saved = await ontologyRepo.save(ontologyVersion, user)
 
-                    if(saved.isError) {
+                    if (saved.isError) {
                         Logger.error(`unable to create ontology version for update from .OWL file ${saved.error?.error}`)
                     } else {
                         ontologyVersionID = ontologyVersion.id
@@ -330,10 +331,10 @@ export default class ContainerImport {
                     Logger.error(`An unexpected error occurred: ${error}`);
                 }
             }
-            if(ontologyVersionID) {
-            // now we set the ontology version's status to generating
+            if (ontologyVersionID) {
+                // now we set the ontology version's status to generating
                 const set = await ontologyRepo.setStatus(ontologyVersionID, 'generating')
-                if(set.isError) {
+                if (set.isError) {
                     Logger.error(`unable to set ontology version status to generating ${set.error}`)
                 }
             }
@@ -350,7 +351,7 @@ export default class ContainerImport {
                 responseType: 'text',
             };
 
-            try{
+            try {
                 const resp = await axios.get(input.path, axiosConfig);
                 return new Promise<Result<string>>((resolve, reject) => {
                     if (resp.status < 200 || resp.status > 299) reject(resp.status);
@@ -386,7 +387,7 @@ export default class ContainerImport {
                     })
 
                     worker.on('close', (code) => {
-                        if(code === 1) {
+                        if (code === 1) {
                             void this.rollbackVersion(
                                 container.id!,
                                 ontologyVersionID!,
@@ -401,17 +402,17 @@ export default class ContainerImport {
                     })
 
                     // if we have a dir assume it's a test and be sync
-                    if(dirname) {
-                        worker.on('message', (message:string) => {
+                    if (dirname) {
+                        worker.on('message', (message: string) => {
                             const result = plainToInstance(Result, JSON.parse(message) as object)
 
                             resolve(result)
                         })
                     } else {
-                        worker.on('message', (message:string) => {
+                        worker.on('message', (message: string) => {
                             const result = plainToInstance(Result, JSON.parse(message) as object)
 
-                            if(result.isError) {
+                            if (result.isError) {
                                 void this.rollbackVersion(
                                     container.id!,
                                     ontologyVersionID!,
@@ -430,7 +431,7 @@ export default class ContainerImport {
                 }).catch((e) => {
                     return Promise.reject(Result.Failure(e));
                 });
-            } catch(e: any) {
+            } catch (e: any) {
                 return Promise.resolve(Result.Error(e))
             }
 
@@ -451,7 +452,7 @@ export default class ContainerImport {
             const isEntities = doctypeRegexTest.test(xml)
             if (isEntities) {
                 const matchedEntities = xml.matchAll(entityRegex) || []
-                const entities: {[key: string]: string} = {}
+                const entities: { [key: string]: string } = {}
 
                 for (const entity of matchedEntities) {
                     // the name of the entity will be captured in the group, or second entry of the regex array
@@ -495,8 +496,8 @@ export default class ContainerImport {
                 xml = this.replaceAll(xml, docRegex, '')
             }
 
-            const json = await xmlParser.xmlToJson(xml, (err: any,json: any)=>{
-                if(err) {
+            const json = await xmlParser.xmlToJson(xml, (err: any, json: any) => {
+                if (err) {
                     // error handling - most likely invalid XML syntax
                     // exit and return error
                     Logger.error(err)
@@ -511,15 +512,17 @@ export default class ContainerImport {
 
             return new Promise<Result<string>>((resolve, reject) => {
                 const worker = new Worker(workerLocation, {
-                    workerData:{ input: {
-                        user,
-                        json,
-                        name: input.name,
-                        description: input.description || '',
-                        data_versioning_enabled: input.data_versioning_enabled,
-                        ontology_versioning_enabled: input.ontology_versioning_enabled,
-                        dryrun, update, container, ontologyVersionID
-                    }}
+                    workerData: {
+                        input: {
+                            user,
+                            json,
+                            name: input.name,
+                            description: input.description || '',
+                            data_versioning_enabled: input.data_versioning_enabled,
+                            ontology_versioning_enabled: input.ontology_versioning_enabled,
+                            dryrun, update, container, ontologyVersionID
+                        }
+                    }
                 })
 
                 worker.on('error', (err: any) => {
@@ -543,17 +546,17 @@ export default class ContainerImport {
                 })
 
                 // if we have a dir assume it's a test and be sync
-                if(dirname) {
-                    worker.on('message', (message:string) => {
+                if (dirname) {
+                    worker.on('message', (message: string) => {
                         const result = plainToInstance(Result, JSON.parse(message) as object)
 
                         resolve(result)
                     })
                 } else {
-                    worker.on('message', (message:string) => {
+                    worker.on('message', (message: string) => {
                         const result = plainToInstance(Result, JSON.parse(message) as object)
 
-                        if(result.isError) {
+                        if (result.isError) {
                             void this.rollbackVersion(
                                 container.id!,
                                 ontologyVersionID!,
@@ -578,7 +581,8 @@ export default class ContainerImport {
     }
 
     async parseOntology(
-        input: {user: User | any,
+        input: {
+            user: User | any,
             json: any,
             name: string,
             description: string,
@@ -587,11 +591,12 @@ export default class ContainerImport {
             dryrun: boolean,
             update: boolean,
             container: Container,
-            ontologyVersionID?: string}
+            ontologyVersionID?: string
+        }
     ): Promise<Result<string>> {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         return new Promise<Result<string>>(async (resolve) => {
-            let ontologyHead: {[key: string]: any} = {};
+            let ontologyHead: { [key: string]: any } = {};
             let objectProperties = [];
             let datatypeProperties = [];
             let classes = [];
@@ -635,11 +640,11 @@ export default class ContainerImport {
                 modified_at?: string | Date | undefined;
                 db_id?: string;
                 parent_id?: string;
-                properties: {[key: string]: any};
-                keys: {[key: string]: any};
-                relationships: {[key: string]: any};
+                properties: { [key: string]: any };
+                keys: { [key: string]: any };
+                relationships: { [key: string]: any };
                 updateKeys: Map<string, any>;
-                updateKeyNames: {[key: string]: any};
+                updateKeyNames: { [key: string]: any };
                 update: boolean;
                 ontology_version?: string;
             };
@@ -695,7 +700,7 @@ export default class ContainerImport {
                 }
 
                 let parentID;
-                const properties: {[key: string]: PropertyT} = {};
+                const properties: { [key: string]: PropertyT } = {};
                 // if rdfs:subClassOf is not provided, there are no properties on the class and no parent has been identified
                 // default the parent to owl:Thing at the highest level of the ontology
                 // else if rdfs:subClassOf is provided: 1) ensure it's an array 2) grab the rdf:resource and set as parent if found
@@ -719,7 +724,7 @@ export default class ContainerImport {
 
                         const property = item['owl:Restriction'];
                         // if the property is not found, continue
-                        if (typeof(property) === 'undefined') {
+                        if (typeof (property) === 'undefined') {
                             continue;
                         }
                         const onProperty = property['owl:onProperty']['rdf:resource'];
@@ -875,7 +880,7 @@ export default class ContainerImport {
             }
 
             // Relationships
-            if(objectProperties) {
+            if (objectProperties) {
                 for (const relationship of objectProperties) {
                     // skip empty objects (no rdf:about property)
                     if (typeof relationship['rdf:about'] === 'undefined') {
@@ -1088,7 +1093,7 @@ export default class ContainerImport {
                     for (const metatype of oldMetatypes) {
                         // metatype has been removed
                         if (!classListMap.has(metatype.name)) {
-                            const nodes = (await nodeRepo.where().metatypeID('eq', metatype.id!).list(false, {limit: 10})).value;
+                            const nodes = (await nodeRepo.where().metatypeID('eq', metatype.id!).list(false, { limit: 10 })).value;
 
                             if (nodes.length > 0) {
                                 resolve(
@@ -1120,7 +1125,7 @@ export default class ContainerImport {
 
                             for (const key of oldMetatypeKeys) {
                                 if (!newMetatypeKeys.includes(key.name)) {
-                                    const nodes = (await nodeRepo.where().metatypeID('eq', metatype.id!).list(false, {limit: 10})).value;
+                                    const nodes = (await nodeRepo.where().metatypeID('eq', metatype.id!).list(false, { limit: 10 })).value;
 
                                     if (nodes.length > 0) {
                                         await this.rollbackVersion(
@@ -1145,7 +1150,7 @@ export default class ContainerImport {
                                                 input.ontologyVersionID!,
                                                 input.ontology_versioning_enabled,
                                                 input.update,
-                                                `Unable to delete metatype key ${key.name}` )
+                                                `Unable to delete metatype key ${key.name}`)
                                             return resolve(Result.Failure(`Unable to delete metatype key ${key.name}`));
                                         }
                                     }
@@ -1164,7 +1169,7 @@ export default class ContainerImport {
 
                             for (const pair of oldMetatypeRelationshipPairs) {
                                 if (!newRelationshipPairs.includes(pair.name)) {
-                                    const edges = (await edgeRepo.where().relationshipPairID('eq', pair.id!).list(true, {limit: 10})).value;
+                                    const edges = (await edgeRepo.where().relationshipPairID('eq', pair.id!).list(true, { limit: 10 })).value;
                                     if (edges.length > 0) {
                                         resolve(
                                             Result.Failure(`Attempting to remove metatype relationship pair ${pair.name}.
@@ -1328,7 +1333,7 @@ export default class ContainerImport {
                             //         break;
                             // }
 
-                            if(!dataProp?.name) {
+                            if (!dataProp?.name) {
                                 resolve(Result.Failure('unable to load .owl file, data property missing label or name'))
                                 return
                             }
@@ -1442,7 +1447,7 @@ export default class ContainerImport {
                     }
                 }
 
-                const propertyResults: Result<boolean>[] = await pAll(propertyPromises, {concurrency: 2});
+                const propertyResults: Result<boolean>[] = await pAll(propertyPromises, { concurrency: 2 });
 
                 // refresh metatype keys view just once now that all keys have been saved
                 metatypeKeyRepo.RefreshView().catch((e) => {
@@ -1471,7 +1476,7 @@ export default class ContainerImport {
                         resolve(Result.Pass(propResult))
                     }
                 }
-                if(!input.container.config!.ontology_versioning_enabled) {
+                if (!input.container.config!.ontology_versioning_enabled) {
 
                     await ontologyRepo.setStatus(input.ontologyVersionID!, 'published')
                 } else {
@@ -1480,7 +1485,7 @@ export default class ContainerImport {
 
                 await containerRepo.createAlert(new ContainerAlert({
                     containerID: input.container.id!,
-                    type: 'info' ,
+                    type: 'info',
                     message: `Container ontology successfully loaded from OWL file or URL`
                 }))
 
@@ -1498,7 +1503,7 @@ export default class ContainerImport {
         isUpdate?: boolean,
         errorMessage?: string
     ): Promise<void> {
-        if(!versioningEnabled) {
+        if (!versioningEnabled) {
             await ontologyRepo.setStatus(ontologyVersionID, 'published')
         } else {
             await ontologyRepo.setStatus(ontologyVersionID, 'error', errorMessage)
