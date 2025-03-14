@@ -203,7 +203,7 @@ export default class AzureBlobImpl implements BlobStorage {
         filepath: string,
         fileUUID: string,
         part_id: string,
-        part: Readable | null,
+        part: Buffer | null,
     ): Promise<Result<string>> {
         if (!part) {
             return Promise.resolve(
@@ -211,56 +211,11 @@ export default class AzureBlobImpl implements BlobStorage {
             );
         }
 
+        Logger.debug(`file path: ${filepath}`);
         const blob_client = this._ContainerClient.getBlockBlobClient(`${filepath}${fileUUID}_${part_id}`);
 
-        Logger.debug(`part: ${part}`);
-        Logger.debug("staging block...");
-
-        const part_passthrough = new PassThrough();
-        let totalLen = 0;
-        const chunks: Buffer[] = [];
-
-        Logger.debug("PassThrough begin");
-        part_passthrough.on("data", (chunk: Buffer) => {
-            chunks.push(chunk);
-            // hmmm never see this. Maybe it's not on data? idk
-            Logger.debug(`chunk len: ${chunk.length}`)
-            totalLen += chunk.length;
-        });
-
-        part_passthrough.on("end", () => {
-            Logger.debug("PassThrough stream ended");
-        });
-
-        part_passthrough.on("error", (error) => {
-            Logger.debug("Error in PassThrough stream:", error);
-        });
-
-        Logger.debug(`totalLen: ${totalLen}`);
-
-        Logger.debug("pipe the part");
-        // next line breaks? either that or early return
-        part.pipe(part_passthrough);
-
-        Logger.debug("await the promise (of better days)");
-        await new Promise<void>((resolve, reject) => {
-            Logger.debug("in the promise we find peace");
-            part_passthrough.on("end", () => {
-                Logger.debug("PassThrough stream ended inside promise");
-                resolve();
-            });
-            part_passthrough.on("error", () => {
-                Logger.debug("PassThrough stream error inside promise");
-                reject();
-            });
-        });
-
-        Logger.debug("PassThrough end!");
-
-        const buffer = Buffer.concat(chunks);
-
-        Logger.debug("Attempting upload...");
-        const result = await blob_client.stageBlock(part_id, buffer, totalLen);
+        Logger.debug("attempting upload...");
+        const result = await blob_client.stageBlock(part_id, part, part.length);
 
         if (result.errorCode) {
             return Promise.resolve(

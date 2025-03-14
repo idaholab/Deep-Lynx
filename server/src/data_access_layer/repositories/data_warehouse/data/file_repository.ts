@@ -245,7 +245,7 @@ export default class FileRepository extends Repository implements RepositoryInte
         data_source_id: string,
         fileUUID: string,
         part_id: string,
-        part: Readable
+        part: Buffer
     ): Promise<Result<string>> {
         const provider = BlobStorageProvider();
 

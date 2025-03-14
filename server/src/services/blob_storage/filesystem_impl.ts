@@ -205,7 +205,7 @@ export default class Filesystem implements BlobStorage {
         filepath: string,
         fileUUID: string,
         part_id: string,
-        part: Readable | null,
+        part: Buffer | null,
     ): Promise<Result<string>> {
         throw new Error('Method not implemented.');
     }

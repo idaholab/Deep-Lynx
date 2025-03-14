@@ -122,7 +122,7 @@ export default class MinioBlobImpl implements BlobStorage {
         filepath: string,
         fileUUID: string,
         part_id: string,
-        part: Readable | null,
+        part: Buffer | null,
     ): Promise<Result<string>> {
         // don't need the uuid because s3/minio does it differently from azure
         if (part) {

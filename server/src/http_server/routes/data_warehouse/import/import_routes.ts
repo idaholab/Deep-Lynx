@@ -489,8 +489,14 @@ export default class ImportRoutes {
     public static uploadPartial(req: Request, res: Response, next: NextFunction) {
         const fileRepo = new FileRepository();
 
+
         if (req.query.action) {
             if (req.query.action === 'uploadPart') {
+                // const stream = Readable.from(req.body);
+                // Logger.debug(`body obj details: ${Object.keys(req.body)} ${req.body.constructor.name}`);
+                // Logger.debug(`body typecheck: ${typeof req.body}, ${req.body.data instanceof Readable}`);
+                Logger.debug(`body length: ${req.body.length}`);
+
                 // key is the file_uuid
                 // block_id is the base64 id for identifying partial objects/blobs
                 // body for uploadPart is the raw file data part

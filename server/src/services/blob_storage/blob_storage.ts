@@ -27,7 +27,7 @@ export interface BlobStorage {
         filepath: string,
         fileUUID: string,
         part_id: string,
-        part: Readable | null,
+        part: Buffer | null,
     ): Promise<Result<string>>;
     commitParts(
         filepath: string,
