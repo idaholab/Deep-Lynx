@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import Config from '../../../services/config';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
 import Result from '../../../common_classes/result';
+import Logger from '../../../services/logger';
 import {User} from '../../../domain_objects/access_management/user';
 import {serialize} from 'class-transformer';
 
@@ -13,7 +14,10 @@ export function SetSamlAdfs(app: express.Application) {
     // do not set the auth strategy if we don't have a public/private key pair.
     // If a user attempts to auth with this strategy attempting the login routes
     // without a public/private key present the application will return an error
-    if (!Config.saml_adfs_private_cert_path || !Config.saml_adfs_public_cert_path) return;
+    if (!Config.saml_adfs_private_cert_path || !Config.saml_adfs_public_cert_path) {
+        Logger.info(`No public/private key pair. ${Config.toString()}`);
+        return;
+    }
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore - as of 1/6/2021 passport.js types haven't been updated
@@ -27,12 +31,15 @@ export function SetSamlAdfs(app: express.Application) {
 
     passport.deserializeUser((user: string, done: any) => {
         void UserMapper.Instance.Retrieve(user).then((result) => {
+            Logger.info(`Deserializing User. Is error: ${result.isError}`);
             if (result.isError) done('unable to retrieve user', null);
 
+            Logger.info(`Returned user: ${result.value.toString}`)
             done(null, result.value);
         });
     });
 
+    // TODO: LOG
     passport.use(
         new SamlStrategy(
             {
