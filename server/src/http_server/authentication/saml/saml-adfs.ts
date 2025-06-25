@@ -58,12 +58,14 @@ export function SetSamlAdfs(app: express.Application) {
             },
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
             (profile: any, done: any) => {
+                Logger.info(`In passport.use. ${Config.toString}`);
                 const storage = UserMapper.Instance;
 
                 return new Promise((resolve) => {
                     storage
                         .RetrieveByEmail(profile[Config.saml_claims_email])
                         .then((result) => {
+                            Logger.info(`Retrieved user: ${result.value.toString}`)
                             if (result.isError && result.error?.errorCode !== 404) {
                                 resolve(done(result.error, false));
                             }
@@ -98,7 +100,10 @@ export function SetSamlAdfs(app: express.Application) {
                                 resolve(done(null, serialize(result.value)));
                             }
                         })
-                        .catch((error) => resolve(done(error, false)));
+                        .catch((error) => {
+                            Logger.error(`Error retrieving user by email. ${error}`)
+                            resolve(done(error, false))
+                });
                 });
             },
         ),
