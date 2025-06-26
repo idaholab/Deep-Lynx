@@ -39,7 +39,6 @@ export function SetSamlAdfs(app: express.Application) {
         });
     });
 
-    // TODO: LOG
     passport.use(
         new SamlStrategy(
             {
@@ -67,6 +66,7 @@ export function SetSamlAdfs(app: express.Application) {
                         .then((result) => {
                             Logger.info(`Retrieved user: ${result.value.toString}`)
                             if (result.isError && result.error?.errorCode !== 404) {
+                                Logger.error(`Error with retrieved user. Error code is not 404. ${result.error}`);
                                 resolve(done(result.error, false));
                             }
 
@@ -75,6 +75,7 @@ export function SetSamlAdfs(app: express.Application) {
                                     // if there are no other users of this DeepLynx instance
                                     // we go ahead and assign admin status to this newly created
                                     // user
+                                    Logger.info(`User not found. Creating new user. Users found: ${users.value.length}`);
                                     void storage
                                         .Create(
                                             'saml-adfs login',
@@ -90,18 +91,21 @@ export function SetSamlAdfs(app: express.Application) {
                                         )
                                         .then((user: Result<User>) => {
                                             if (user.isError) {
+                                                Logger.error(`Error creating user ${user.error}`)
                                                 resolve(done(user.error, false));
                                             }
 
+                                            Logger.info(`User created. ${user.value.toString}`)
                                             resolve(done(null, serialize(user.value)));
                                         });
                                 });
                             } else {
+                                Logger.info('Resolving with user')
                                 resolve(done(null, serialize(result.value)));
                             }
                         })
                         .catch((error) => {
-                            Logger.error(`Error retrieving user by email. ${error}`)
+                            Logger.error(`Caught error retrieving user by email. ${error}`)
                             resolve(done(error, false))
                 });
                 });
