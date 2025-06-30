@@ -363,20 +363,24 @@ export default class OAuthRoutes {
     }
 
     private static loginSaml(req: Request, res: Response) {
+        Logger.info('start loginSaml');
         const oauthRequest = oauthRepo.authorizationFromRequest(req);
 
         // if this login is part of an OAuth request flow, we must save it in cache
         // so that we can restore it as part of the redirect
         if (oauthRequest) {
+            Logger.info(`In oauthRequest: ${oauthRequest.toString}`);
             const token = Buffer.from(uuidv4()).toString('base64');
             Cache.set(token, serialize(oauthRequest), 60 * 10).then((set) => {
                 if (!set) {
+                    Logger.error('Error with setting oauth token. unable to set RelayState in cache');
                     res.redirect(buildUrl('/oauth', { queryParams: { error: `unable to set RelayState in cache` } }));
                     return;
                 }
 
                 req.query.RelayState = token;
 
+                Logger.info('Saml authenticate attempt');
                 passport.authenticate('saml', {
                     failureRedirect: '/unauthorized',
                     failureFlash: true,
@@ -384,6 +388,7 @@ export default class OAuthRoutes {
                 })(req, res);
             });
         } else {
+            Logger.info('No oauthRequest. Saml authenticate attempt');
             passport.authenticate('saml', {
                 failureRedirect: '/unauthorized',
                 failureFlash: true,
@@ -393,12 +398,16 @@ export default class OAuthRoutes {
     }
 
     private static saml(req: Request, res: Response, next: NextFunction) {
+        Logger.info('start saml');
         passport.authenticate('saml', { keepSessionInfo: true }, (err: any, user: any, info: any) => {
             if (err) {
+                Logger.error(`saml authenticate err: ${err}`);
+                Logger.info(`Redirecting to: ${buildUrl('/oauth', {queryParams: {error: `${err}`}})}`);
                 res.redirect(buildUrl('/oauth', { queryParams: { error: `${err}` } }));
                 return;
             }
 
+            Logger.info(`saml authenticate user: ${user}`);
             if (!user) {
                 return res.redirect('/oauth');
             }
@@ -407,6 +416,8 @@ export default class OAuthRoutes {
                 if (req.body.RelayState) {
                     Cache.get<object>(req.body.RelayState as string).then((oauthRequest) => {
                         if (oauthRequest) {
+                            // eslint-disable-next-line @typescript-eslint/no-base-to-string
+                            Logger.info(`Redirecting to /oauth/authorize with query param: ${oauthRequest}`);
                             res.redirect(
                                 buildUrl('/oauth/authorize', {
                                     queryParams: oauthRequest,
@@ -416,6 +427,7 @@ export default class OAuthRoutes {
                         }
                     });
                 } else {
+                    Logger.info('Redirecting to /oauth/profile');
                     res.redirect('/oauth/profile');
                     return;
                 }

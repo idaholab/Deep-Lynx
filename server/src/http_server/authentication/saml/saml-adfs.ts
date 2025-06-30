@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import Config from '../../../services/config';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
 import Result from '../../../common_classes/result';
+import Logger from '../../../services/logger';
 import {User} from '../../../domain_objects/access_management/user';
 import {serialize} from 'class-transformer';
 
@@ -13,7 +14,10 @@ export function SetSamlAdfs(app: express.Application) {
     // do not set the auth strategy if we don't have a public/private key pair.
     // If a user attempts to auth with this strategy attempting the login routes
     // without a public/private key present the application will return an error
-    if (!Config.saml_adfs_private_cert_path || !Config.saml_adfs_public_cert_path) return;
+    if (!Config.saml_adfs_private_cert_path || !Config.saml_adfs_public_cert_path) {
+        Logger.info(`No public/private key pair. ${Config.toString()}`);
+        return;
+    }
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore - as of 1/6/2021 passport.js types haven't been updated
@@ -27,8 +31,10 @@ export function SetSamlAdfs(app: express.Application) {
 
     passport.deserializeUser((user: string, done: any) => {
         void UserMapper.Instance.Retrieve(user).then((result) => {
+            Logger.info(`Deserializing User. Is error: ${result.isError}`);
             if (result.isError) done('unable to retrieve user', null);
 
+            Logger.info(`Returned user: ${result.value.toString}`)
             done(null, result.value);
         });
     });
@@ -51,13 +57,16 @@ export function SetSamlAdfs(app: express.Application) {
             },
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
             (profile: any, done: any) => {
+                Logger.info(`In passport.use. ${Config.toString}`);
                 const storage = UserMapper.Instance;
 
                 return new Promise((resolve) => {
                     storage
                         .RetrieveByEmail(profile[Config.saml_claims_email])
                         .then((result) => {
+                            Logger.info(`Retrieved user: ${result.value.toString}`)
                             if (result.isError && result.error?.errorCode !== 404) {
+                                Logger.error(`Error with retrieved user. Error code is not 404. ${result.error}`);
                                 resolve(done(result.error, false));
                             }
 
@@ -66,6 +75,7 @@ export function SetSamlAdfs(app: express.Application) {
                                     // if there are no other users of this DeepLynx instance
                                     // we go ahead and assign admin status to this newly created
                                     // user
+                                    Logger.info(`User not found. Creating new user. Users found: ${users.value.length}`);
                                     void storage
                                         .Create(
                                             'saml-adfs login',
@@ -81,17 +91,23 @@ export function SetSamlAdfs(app: express.Application) {
                                         )
                                         .then((user: Result<User>) => {
                                             if (user.isError) {
+                                                Logger.error(`Error creating user ${user.error}`)
                                                 resolve(done(user.error, false));
                                             }
 
+                                            Logger.info(`User created. ${user.value.toString}`)
                                             resolve(done(null, serialize(user.value)));
                                         });
                                 });
                             } else {
+                                Logger.info('Resolving with user')
                                 resolve(done(null, serialize(result.value)));
                             }
                         })
-                        .catch((error) => resolve(done(error, false)));
+                        .catch((error) => {
+                            Logger.error(`Caught error retrieving user by email. ${error}`)
+                            resolve(done(error, false))
+                });
                 });
             },
         ),

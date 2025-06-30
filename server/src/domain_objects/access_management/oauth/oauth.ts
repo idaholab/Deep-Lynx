@@ -121,6 +121,19 @@ export class OAuthRequest extends BaseDomainClass {
             this.scope = input.scope;
         }
     }
+
+    toString(): string {
+        return `OAuthRequest {
+            response_type: ${this.response_type},
+            client_id: ${this.client_id || 'undefined'},
+            redirect_uri: ${this.redirect_uri || 'undefined'},
+            state: ${this.state || 'undefined'},
+            scope: ${this.scope},
+            user_id: ${this.user_id || 'undefined'},
+            code_challenge: ${this.code_challenge || 'undefined'},
+            code_challenge_method: ${this.code_challenge_method || 'undefined'}
+        }`;
+    }
 }
 
 /*

@@ -163,6 +163,23 @@ export class User extends BaseDomainClass {
             }
         }
     }
+
+    toString(): string {
+        return `User {
+            id: ${this.id || 'undefined'},
+            identity_provider: ${this.identity_provider},
+            identity_provider_id: ${this.identity_provider_id || 'undefined'},
+            display_name: ${this.display_name},
+            email: ${this.email},
+            admin: ${this.admin},
+            active: ${this.active},
+            reset_required: ${this.reset_required},
+            email_valid: ${this.email_valid},
+            type: ${this.type},
+            permissions: ${JSON.stringify(this.permissions)},
+            roles: ${JSON.stringify(this.roles)}
+        }`;
+    }
 }
 
 export class DisplayUser {
