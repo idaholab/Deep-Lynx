@@ -677,7 +677,6 @@ export class Client {
     }
 
     async uploadFile(containerID: string, dataSourceID: string, file: File, timeseries?: boolean, describe?: boolean): Promise<FileT> {
-        console.log(describe);
         let results: ResultT<ResultT<FileT>[]> | null = null;
         if (timeseries) {
             results = await this.postFileRawReturn<ResultT<ResultT<FileT>[]>>(
