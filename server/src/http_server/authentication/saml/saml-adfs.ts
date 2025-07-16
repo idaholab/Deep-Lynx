@@ -31,10 +31,8 @@ export function SetSamlAdfs(app: express.Application) {
 
     passport.deserializeUser((user: string, done: any) => {
         void UserMapper.Instance.Retrieve(user).then((result) => {
-            Logger.info(`Deserializing User. Is error: ${result.isError}`);
             if (result.isError) done('unable to retrieve user', null);
 
-            Logger.info(`Returned user: ${result.value})}`)
             done(null, result.value);
         });
     });
@@ -57,7 +55,6 @@ export function SetSamlAdfs(app: express.Application) {
             },
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
             (profile: any, done: any) => {
-                Logger.info(`In passport.use. ${Config}`);
                 Logger.info(`Saml email key: ${Config.saml_claims_email}`);
                 Logger.info(`Saml email value: ${profile[Config.saml_claims_email]}`);
                 const storage = UserMapper.Instance;
@@ -77,7 +74,6 @@ export function SetSamlAdfs(app: express.Application) {
                                     // if there are no other users of this DeepLynx instance
                                     // we go ahead and assign admin status to this newly created
                                     // user
-                                    Logger.info(`User not found. Creating new user. Users found: ${users.value.length}`);
                                     void storage
                                         .Create(
                                             'saml-adfs login',
@@ -93,23 +89,17 @@ export function SetSamlAdfs(app: express.Application) {
                                         )
                                         .then((user: Result<User>) => {
                                             if (user.isError) {
-                                                Logger.error(`Error creating user ${user.error}`)
                                                 resolve(done(user.error, false));
                                             }
 
-                                            Logger.info(`User created. ${user.value}`)
                                             resolve(done(null, serialize(user.value)));
                                         });
                                 });
                             } else {
-                                Logger.info('Resolving with user')
                                 resolve(done(null, serialize(result.value)));
                             }
                         })
-                        .catch((error) => {
-                            Logger.error(`Caught error retrieving user by email. ${error}`)
-                            resolve(done(error, false))
-                });
+                        .catch((error) => resolve(done(error, false)));
                 });
             },
         ),
