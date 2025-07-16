@@ -4468,7 +4468,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"deeplynx@npm:^1.7.4, deeplynx@workspace:NodeLibraries/deeplynx":
+"deeplynx@npm:^1.7.4.1, deeplynx@workspace:NodeLibraries/deeplynx":
   version: 0.0.0-use.local
   resolution: "deeplynx@workspace:NodeLibraries/deeplynx"
   dependencies:
