@@ -58,7 +58,8 @@ export function SetSamlAdfs(app: express.Application) {
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
             (profile: any, done: any) => {
                 Logger.info(`In passport.use. ${Config}`);
-                Logger.info(`USER EMAIL: ${Config.saml_claims_email}`);
+                Logger.info(`Saml email key: ${Config.saml_claims_email}`);
+                Logger.info(`Saml email value: ${profile[Config.saml_claims_email]}`);
                 const storage = UserMapper.Instance;
 
                 return new Promise((resolve) => {
