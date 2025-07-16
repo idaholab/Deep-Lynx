@@ -369,7 +369,7 @@ export default class OAuthRoutes {
         // if this login is part of an OAuth request flow, we must save it in cache
         // so that we can restore it as part of the redirect
         if (oauthRequest) {
-            Logger.info(`In oauthRequest: ${oauthRequest.toString}`);
+            Logger.info(`In oauthRequest: ${oauthRequest}`);
             const token = Buffer.from(uuidv4()).toString('base64');
             Cache.set(token, serialize(oauthRequest), 60 * 10).then((set) => {
                 if (!set) {
