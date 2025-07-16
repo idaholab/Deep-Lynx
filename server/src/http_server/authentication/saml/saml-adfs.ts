@@ -15,7 +15,7 @@ export function SetSamlAdfs(app: express.Application) {
     // If a user attempts to auth with this strategy attempting the login routes
     // without a public/private key present the application will return an error
     if (!Config.saml_adfs_private_cert_path || !Config.saml_adfs_public_cert_path) {
-        Logger.info(`No public/private key pair. ${Config.toString()}`);
+        Logger.info(`No public/private key pair. ${Config}`);
         return;
     }
 
@@ -34,7 +34,7 @@ export function SetSamlAdfs(app: express.Application) {
             Logger.info(`Deserializing User. Is error: ${result.isError}`);
             if (result.isError) done('unable to retrieve user', null);
 
-            Logger.info(`Returned user: ${result.value.toString}`)
+            Logger.info(`Returned user: ${result.value})}`)
             done(null, result.value);
         });
     });
@@ -57,14 +57,15 @@ export function SetSamlAdfs(app: express.Application) {
             },
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
             (profile: any, done: any) => {
-                Logger.info(`In passport.use. ${Config.toString}`);
+                Logger.info(`In passport.use. ${Config}`);
+                Logger.info(`USER EMAIL: ${Config.saml_claims_email}`);
                 const storage = UserMapper.Instance;
 
                 return new Promise((resolve) => {
                     storage
                         .RetrieveByEmail(profile[Config.saml_claims_email])
                         .then((result) => {
-                            Logger.info(`Retrieved user: ${result.value.toString}`)
+                            Logger.info(`Retrieved user: ${result.value}`)
                             if (result.isError && result.error?.errorCode !== 404) {
                                 Logger.error(`Error with retrieved user. Error code is not 404. ${result.error}`);
                                 resolve(done(result.error, false));
@@ -95,7 +96,7 @@ export function SetSamlAdfs(app: express.Application) {
                                                 resolve(done(user.error, false));
                                             }
 
-                                            Logger.info(`User created. ${user.value.toString}`)
+                                            Logger.info(`User created. ${user.value}`)
                                             resolve(done(null, serialize(user.value)));
                                         });
                                 });
