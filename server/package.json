@@ -208,6 +208,7 @@
         "dompurify": "^3.2.4",
         "cookie": "^0.7.0",
         "serialize-javascript": "^6.0.2",
-        "on-headers": "^1.1.0"
+        "on-headers": "^1.1.0",
+        "nanoid": "^3.3.8"
     }
 }
