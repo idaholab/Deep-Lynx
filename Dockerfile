@@ -1,4 +1,4 @@
-FROM rust:1.88.0-alpine3.22 as build
+FROM rust:alpine as build
 
 ENV RUSTFLAGS="-C target-feature=-crt-static"
 ENV RUN_MODE="build"
@@ -46,7 +46,7 @@ WORKDIR /srv/deeplynx/server
 RUN yarn install;
 RUN yarn run build;
 
-FROM node:20-alpine3.22 as production
+FROM node:alpine as production
 ENV DEVELOPMENT_MODE=false
 
 RUN apk update && apk add --no-cache supervisor openssl
