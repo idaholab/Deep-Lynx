@@ -4401,7 +4401,7 @@ __metadata:
     csv-stringify: "npm:^6.5.1"
     csvtojson: "npm:^2.0.10"
     date-fns: "npm:^2.30.0"
-    deeplynx: "npm:^1.7.2"
+    deeplynx: "npm:^1.6.9"
     dev-null: "npm:^0.1.1"
     digest-stream: "npm:^2.0.0"
     dot-prop: "npm:^5.3.0"
@@ -4491,7 +4491,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"deeplynx@npm:^1.7.2, deeplynx@workspace:NodeLibraries/deeplynx":
+"deeplynx@npm:^1.6.9, deeplynx@workspace:NodeLibraries/deeplynx":
   version: 0.0.0-use.local
   resolution: "deeplynx@workspace:NodeLibraries/deeplynx"
   dependencies:

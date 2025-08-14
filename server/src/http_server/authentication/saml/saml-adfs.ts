@@ -8,7 +8,7 @@ import Logger from '../../../services/logger';
 import { User } from '../../../domain_objects/access_management/user';
 import { serialize } from 'class-transformer';
 
-const { Strategy: SamlStrategy } = require('@node-saml/passport-saml');
+const SamlStrategy = require('@node-saml/passport-saml').Strategy;
 
 export function SetSamlAdfs(app: express.Application) {
     // do not set the auth strategy if we don't have a public/private key pair.
